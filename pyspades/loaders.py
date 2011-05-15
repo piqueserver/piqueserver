@@ -20,6 +20,9 @@ from pyspades import debug
 
 class PacketLoader(object):
     id = None
+    ack = None
+    byte = None
+    sequence = None
     def __init__(self, reader = None):
         if reader is not None:
             self.read(reader)
@@ -31,12 +34,15 @@ class PacketLoader(object):
         raise NotImplementedError('write() not implemented')
 
 class Ack(PacketLoader):
-    unknown = None
     sequence2 = None
     timer = None
     def read(self, reader): # uses byte
         self.sequence2 = reader.readShort(True) # sequence number?
         self.timer = reader.readShort(True) # timer?
+    
+    def write(self, reader):
+        reader.writeShort(self.sequence2, True)
+        reader.writeShort(self.timer, True)
 
 class ConnectionRequest(PacketLoader):
     auth_value = None
@@ -55,7 +61,7 @@ class ConnectionRequest(PacketLoader):
         dword_5 = reader.readInt(True)
         # server responds with this in packet 3
         dword_6 = reader.readInt(True, False)
-        dword_7 = reader.readInt(True) # version
+        dword_7 = reader.readInt(True, False) # version
         
         check_default(word_1, 0)
         check_default(v10, -1)
@@ -70,7 +76,21 @@ class ConnectionRequest(PacketLoader):
         check_default(dword_5, 2)
         self.auth_val = dword_6
         self.version = dword_7
-        print 'version:', self.version
+    
+    def write(self, reader):
+        reader.writeShort(0)
+        reader.writeByte(-1)
+        reader.writeByte(-1)
+        reader.writeInt(1400)
+        reader.writeInt(32768)
+        reader.writeInt(1)
+        reader.writeInt(0)
+        reader.writeInt(0)
+        reader.writeInt(5000)
+        reader.writeInt(2)
+        reader.writeInt(2)
+        reader.writeInt(self.auth_val, True, False)
+        reader.writeInt(self.version, True, False)
 
 class ConnectionResponse(PacketLoader):
     connection_id = None
@@ -105,21 +125,48 @@ class ConnectionResponse(PacketLoader):
         check_default(dword_8, 2)
         
         self.auth_val = dword_9
+    
+    def write(self, reader):
+        reader.writeShort(self.connection_id, True)
+        reader.writeByte(self.unique)
+        reader.writeByte(self.unique)
+        reader.writeInt(91750400, True)
+        reader.writeInt(32768, True)
+        reader.writeInt(1, True)
+        reader.writeInt(0, True)
+        reader.writeInt(0, True)
+        reader.writeInt(5000, True)
+        reader.writeInt(2, True)
+        reader.writeInt(2, True)
+        reader.writeInt(self.auth_val, True, False)
 
 class Disconnect(PacketLoader):
     def read(self, reader):
         dword_1 = reader.readInt(True)
         check_default(dword_1, 0)
+    
+    def write(self, reader):
+        reader.writeInt(0)
 
 class Ping(PacketLoader):
     def read(self, reader):
         pass # uses both sequence and byte
+    
+    def write(self, reader):
+        pass
 
 class UserInput(PacketLoader):
+    input_type = None
+    data = None
     def read(self, reader): # uses byte
         size = reader.readShort(True)
-        new_data = reader.readReader(size)
-        type = new_data.readByte(True)
+        data = reader.readReader(size)
+        type = data.readByte(True)
+        self.data = data
+    
+    def write(self, reader):
+        reader.writeShort(len(self.data))
+        reader.write(str(self.data))
 
 class Packet7(PacketLoader):
     def read(self, reader): # uses byte
@@ -128,28 +175,64 @@ class Packet7(PacketLoader):
         new_data = reader.readReader(size)
 
 class Packet8(PacketLoader):
+    short_1 = None
+    v27 = None
+    v28 = None
+    v14 = None
+    v16 = None
+    data = None
     def read(self, reader): # uses both
-        reader.skipBytes(2)
+        self.short_1 = reader.readShort(True) # skipped?
         size = reader.readShort(True)
-        v27 = reader.readInt(True)
-        v28 = reader.readInt(True)
-        v14 = reader.readInt(True)
-        v16 = reader.readInt(True)
-        new_data = reader.readReader(size)
+        self.v27 = reader.readInt(True)
+        self.v28 = reader.readInt(True)
+        self.v14 = reader.readInt(True)
+        self.v16 = reader.readInt(True)
+        self.data = reader.readReader(size)
+        
+    def write(self, reader):
+        reader.writeShort(self.short_1)
+        reader.writeShort(len(self.data), True)
+        reader.writeInt(self.v27, True)
+        reader.writeInt(self.v28, True)
+        reader.writeInt(self.v14, True)
+        reader.writeInt(self.v16, True)
+        reader.write(str(self.data))
 
 class Packet9(PacketLoader):
     def read(self, reader): # uses byte
-        word_1 = reader.readShort(True)
+        self.word_1 = reader.readShort(True) # sequence?
         size = reader.readShort(True)
-        new_data = reader.readReader(size)
+        self.data = reader.readReader(size)
+        print self.word_1, hexify(str(self.data))
+    
+    def write(self, reader):
+        reader.writeShort(self.word_1, True)
+        reader.writeShort(len(self.data))
+        reader.write(str(self.data))
 
 class Packet10(PacketLoader):
-    def read(self, reader): # 
-        dword_1 = reader.readInt(True)
-        dword_2 = reader.readInt(True)
+    dword_1 = None
+    dword_2 = None
+    def read(self, reader):
+        self.dword_1 = reader.readInt(True)
+        self.dword_2 = reader.readInt(True)
+        check_default(self.dword_1, 0)
+        check_default(self.dword_2, 0)
+    
+    def write(self, reader):
+        reader.writeInt(self.dword_1, True)
+        reader.writeInt(self.dword_2, True)
 
 class Packet11(PacketLoader):
     def read(self, reader):
-        dword_1 = reader.readInt(True)
-        dword_2 = reader.readInt(True)
-        dword_3 = reader.readInt(True)
+        self.dword_1 = reader.readInt(True)
+        self.dword_2 = reader.readInt(True)
+        self.dword_3 = reader.readInt(True)
+        print 'PACKET 11:', self.dword_1, self.dword_2, self.dword_3
+        raw_input()
+    
+    def write(self, reader):
+        reader.writeInt(self.dword_1, True)
+        reader.writeInt(self.dword_2, True)
+        reader.writeInt(self.dword_3, True)

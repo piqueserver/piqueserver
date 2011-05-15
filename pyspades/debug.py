@@ -16,3 +16,13 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 isClient = None
+mapBytes = 0
+packets = 0
+map_data = open('testy.vxl', 'wb')
+sequence = None
+
+current_id = 0
+def write_packet(data):
+    global current_id
+    open('packets/%s.dat' % current_id, 'wb').write(str(data))
+    current_id += 1

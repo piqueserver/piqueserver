@@ -44,4 +44,5 @@ def open_debugger(name, locals):
 
 def check_default(value, default):
     if value != default:
+        raw_input('check_default() failed')
         raise NotImplementedError('was %s, should be %s' % (value, default))

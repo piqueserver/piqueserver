@@ -7,5 +7,5 @@ class TestProtocol(ClientProtocol):
 HOST = '127.0.0.1'
 PORT = 32887
 
-reactor.listenUDP(0, TestProtocol(HOST, 32887))
+reactor.listenUDP(0, TestProtocol(HOST, PORT))
 reactor.run()
