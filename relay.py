@@ -4,13 +4,15 @@ from pyspades.tools import get_server_ip
 from pyspades.packet import Packet
 from pyspades.common import *
 from pyspades.loaders import *
+from pyspades import debug
+debug.is_relay = True
 
 from cStringIO import StringIO
 
 HOST = '127.0.0.1'
 PORT = 32886
 
-# HOST = get_server_ip('aos://922725974')
+# HOST = get_server_ip('aos://1656594257')
 # PORT = 32887
 
 class ClientProtocol(DatagramProtocol):
@@ -33,14 +35,31 @@ def print_packet(input, packet, isClient):
         offset = 2
     else:
         offset = 4
-    fromEnd = ['server', 'client'][int(isClient)]
-    
     printable = '%s %s' % (hexify(input[:offset]), hexify(str(packet.data)))
-    print 'from %s (%s %s):\t%s' % (fromEnd, packet.unique, packet.connectionId, printable)
+    print 'from %s (%s %s):\t%s' % (get_name(isClient), packet.unique, packet.connectionId, printable)
 
 def print_packet_list(packet, isClient):
-    fromEnd = ['server', 'client'][int(isClient)]
-    print 'from %s:\t%s' % (fromEnd, packet.packets)
+    print 'from %s:\t%s' % (get_name(isClient), packet.packets)
+
+def get_name(isClient):
+    return ['server', 'client'][int(isClient)]
+
+server_seq = 0
+client_seq = 0
+
+server_seqs = set()
+client_seqs = set()
+
+def is_clean(the_set):
+    start = 1
+    gap = []
+    for value in sorted(the_set):
+        if value != start:
+            while start < value:
+                gap.append(start)
+                start += 1
+        start += 1
+    return gap
 
 def parse_packet(input, isClient):
     packet.read(input, isClient)
@@ -57,8 +76,33 @@ def parse_packet(input, isClient):
         # print item.id
         # if item.id in (10, 1):
             # return False
+    # global server_seq
+    # global client_seq
+    # for item in packet.packets[:]:
+        # sequence = item.sequence
+        # if item.id == Ack.id:
+            
+        # print get_name(isClient), item.sequence, item
+        # if item.byte != 0:
+            # print 'WTF!?', get_name(isClient), item.byte, item
+        # else:
+            # if isClient:
+                # if sequence < client_seq:
+                    # print 'what? client', client_seq
+                # else:
+                    # client_seq = sequence
+                # client_seqs.add(sequence)
+            # else:
+                # if sequence < server_seq:
+                    # print 'what? server', client_seq
+                # else:
+                    # server_seq = sequence
+                # server_seqs.add(sequence)
     
-    # print_packet(packet, isClient)
+    # print 'client clean:', is_clean(client_seqs)
+    # print 'server clean:', is_clean(server_seqs)
+        # item.byte = 0
+    # print_packet(input, packet, isClient)
     # for item in packet.packets:
         # packetId = item.pop(0)
         # elif packetId == 6:

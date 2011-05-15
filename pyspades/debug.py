@@ -18,8 +18,13 @@
 isClient = None
 mapBytes = 0
 packets = 0
-map_data = open('testy.vxl', 'wb')
+map_data = {}
+is_relay = False
 sequence = None
+
+from pyspades.bytereader import ByteReader
+
+chunks = {}
 
 current_id = 0
 def write_packet(data):

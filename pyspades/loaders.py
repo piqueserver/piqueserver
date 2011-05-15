@@ -150,7 +150,8 @@ class Disconnect(PacketLoader):
 
 class Ping(PacketLoader):
     def read(self, reader):
-        pass # uses both sequence and byte
+        pass
+        # uses both sequence and byte
     
     def write(self, reader):
         pass
@@ -174,7 +175,7 @@ class Packet7(PacketLoader):
         size = reader.readShort(True)
         new_data = reader.readReader(size)
 
-class Packet8(PacketLoader):
+class MapData(PacketLoader):
     short_1 = None
     v27 = None
     v28 = None
@@ -182,21 +183,21 @@ class Packet8(PacketLoader):
     v16 = None
     data = None
     def read(self, reader): # uses both
-        self.short_1 = reader.readShort(True) # skipped?
+        self.sequence2 = reader.readShort(True) # seq at which this was sent at
         size = reader.readShort(True)
-        self.v27 = reader.readInt(True)
-        self.v28 = reader.readInt(True)
-        self.v14 = reader.readInt(True)
-        self.v16 = reader.readInt(True)
+        self.total_num = reader.readInt(True) # total num
+        self.num = reader.readInt(True) # packet num?
+        self.data_size = reader.readInt(True) # total
+        self.current_pos = reader.readInt(True) # current pos
         self.data = reader.readReader(size)
         
     def write(self, reader):
-        reader.writeShort(self.short_1)
+        reader.writeShort(self.sequence2)
         reader.writeShort(len(self.data), True)
-        reader.writeInt(self.v27, True)
-        reader.writeInt(self.v28, True)
-        reader.writeInt(self.v14, True)
-        reader.writeInt(self.v16, True)
+        reader.writeInt(self.total_num, True)
+        reader.writeInt(self.num, True)
+        reader.writeInt(self.data_size, True)
+        reader.writeInt(self.current_pos, True)
         reader.write(str(self.data))
 
 class Packet9(PacketLoader):
@@ -204,7 +205,6 @@ class Packet9(PacketLoader):
         self.word_1 = reader.readShort(True) # sequence?
         size = reader.readShort(True)
         self.data = reader.readReader(size)
-        print self.word_1, hexify(str(self.data))
     
     def write(self, reader):
         reader.writeShort(self.word_1, True)
