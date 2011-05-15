@@ -3,7 +3,6 @@ from twisted.internet import reactor
 from pyspades.tools import get_server_ip
 from pyspades.packet import Packet
 from pyspades.common import *
-from bytereader import ByteReader
 from pyspades.loaders import *
 
 from cStringIO import StringIO
