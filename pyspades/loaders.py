@@ -162,7 +162,6 @@ class UserInput(PacketLoader):
     def read(self, reader): # uses byte
         size = reader.readShort(True)
         data = reader.readReader(size)
-        type = data.readByte(True)
         self.data = data
     
     def write(self, reader):

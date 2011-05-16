@@ -8,7 +8,7 @@ class TestProtocol(ClientProtocol):
 HOST = '127.0.0.1'
 PORT = 32886
 
-# HOST = get_server_ip('aos://2094462306')
+# HOST = get_server_ip('aos://626598556')
 # PORT = 32887
 
 reactor.listenUDP(0, TestProtocol(HOST, PORT))
