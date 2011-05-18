@@ -128,8 +128,9 @@ class ConnectionResponse(PacketLoader):
     
     def write(self, reader):
         reader.writeShort(self.connection_id, True)
-        reader.writeByte(self.unique)
-        reader.writeByte(self.unique)
+        print self.unique
+        reader.writeByte(self.unique, True)
+        reader.writeByte(self.unique, True)
         reader.writeInt(91750400, True)
         reader.writeInt(32768, True)
         reader.writeInt(1, True)
@@ -235,3 +236,5 @@ class Packet11(PacketLoader):
         reader.writeInt(self.dword_1, True)
         reader.writeInt(self.dword_2, True)
         reader.writeInt(self.dword_3, True)
+
+# contained packets

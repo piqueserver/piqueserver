@@ -1,19 +1,20 @@
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 from pyspades.tools import get_server_ip
-from pyspades.packet import Packet
+from pyspades.packet import Packet, load_server_packet, load_client_packet
 from pyspades.common import *
 from pyspades.loaders import *
 from pyspades import debug
+from pyspades.bytereader import ByteReader
 debug.is_relay = True
 
 from cStringIO import StringIO
 
-HOST = '127.0.0.1'
-PORT = 32886
+# HOST = '127.0.0.1'
+# PORT = 32886
 
-# HOST = get_server_ip('aos://1328939181')
-# PORT = 32887
+HOST = get_server_ip('aos://1450595000')
+PORT = 32887
 
 class ClientProtocol(DatagramProtocol):
     def __init__(self, server):
@@ -44,20 +45,33 @@ def print_packet_list(packet, isClient):
 def get_name(isClient):
     return ['server', 'client'][int(isClient)]
 
-def is_clean(the_set):
-    start = 1
-    gap = []
-    for value in sorted(the_set):
-        if value != start:
-            while start < value:
-                gap.append(start)
-                start += 1
-        start += 1
-    return gap
-
+def print_item(item):
+    print item,
+    try:
+        printable = hexify(str(item.data)),
+        firstByte = ord(str(item.data)[0])
+        type = firstByte & 0xF
+        print type, printable
+    except AttributeError:
+        pass
+    print ''
+    
 def parse_packet(input, isClient):
     packet.read(input, isClient)
-    # print_packet(input, packet, isClient)
+    for item in packet.packets:
+        if hasattr(item, 'data') and item.id != MapData.id:
+            if isClient:
+                contained = load_client_packet(item.data)
+            else:
+                contained = load_server_packet(item.data)
+            # print contained
+            if item.data.dataLeft():
+                raw_input('packet not properly parsed')
+            reader = ByteReader()
+            contained.write(reader)
+            item.data = reader
+        elif item.id in (Ack.id,):
+            continue
 
 class ServerProtocol(DatagramProtocol):
     def __init__(self, host, port):
