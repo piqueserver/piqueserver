@@ -2,6 +2,7 @@ from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 from pyspades.tools import get_server_ip
 from pyspades.packet import Packet, load_server_packet, load_client_packet
+from pyspades import clientloaders, serverloaders
 from pyspades.common import *
 from pyspades.loaders import *
 from pyspades import debug
@@ -10,11 +11,12 @@ debug.is_relay = True
 
 from cStringIO import StringIO
 
-# HOST = '127.0.0.1'
-# PORT = 32886
+HOST = '127.0.0.1'
+# PORT = 32885
+PORT = 32886
 
-HOST = get_server_ip('aos://1450595000')
-PORT = 32887
+# HOST = get_server_ip('aos://1289779525')
+# PORT = 32887
 
 class ClientProtocol(DatagramProtocol):
     def __init__(self, server):
@@ -37,10 +39,10 @@ def print_packet(input, packet, isClient):
     else:
         offset = 4
     printable = '%s %s' % (hexify(input[:offset]), hexify(str(packet.data)))
-    print 'from %s (%s %s):\t%s' % (get_name(isClient), packet.unique, packet.connectionId, printable)
+    print 'from %s (%s %s):\t%s' % (get_name(isClient), packet.unique, packet.connection_id, printable)
 
 def print_packet_list(packet, isClient):
-    print 'from %s:\t%s' % (get_name(isClient), packet.packets)
+    print 'from %s:\t%s' % (get_name(isClient), packet.items)
 
 def get_name(isClient):
     return ['server', 'client'][int(isClient)]
@@ -57,9 +59,13 @@ def print_item(item):
     print ''
     
 def parse_packet(input, isClient):
-    packet.read(input, isClient)
-    for item in packet.packets:
+    packet.read(input)
+    # print 'received packet:', vars(packet)
+    # print get_name(isClient), packet.items
+    for item in packet.items[:]:
+        # print get_name(isClient), item, item.sequence, item.byte, item.ack
         if hasattr(item, 'data') and item.id != MapData.id:
+            orig = str(item.data)
             if isClient:
                 contained = load_client_packet(item.data)
             else:
@@ -69,6 +75,13 @@ def parse_packet(input, isClient):
                 raw_input('packet not properly parsed')
             reader = ByteReader()
             contained.write(reader)
+            if contained.id == 12:
+                print '12!', vars(contained)
+            else:
+                if orig != str(reader):
+                    print contained.id, 'not written correctly', isClient
+                    print hexify(orig)
+                    print hexify(str(reader))
             item.data = reader
         elif item.id in (Ack.id,):
             continue

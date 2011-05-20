@@ -47,6 +47,8 @@ class Ack(PacketLoader):
 class ConnectionRequest(PacketLoader):
     auth_value = None
     version = None
+    client = True
+    value = None
     def read(self, reader):
         word_1 = reader.readShort(True)
         v10 = reader.readByte()
@@ -61,11 +63,17 @@ class ConnectionRequest(PacketLoader):
         dword_5 = reader.readInt(True)
         # server responds with this in packet 3
         dword_6 = reader.readInt(True, False)
-        dword_7 = reader.readInt(True, False) # version
+        dword_7 = reader.readInt(True, False) # version, CRC32 of exe
         
-        check_default(word_1, 0)
-        check_default(v10, -1)
-        check_default(v12, -1)
+        if word_1 not in (0, 1):
+            raw_input('unknown word_1: %s' % word_1)
+        if v10 == -1 and v12 == -1:
+            self.client = True
+        elif v10 != v12:
+            raw_input('unknown v10 and v12: %s %s' % (v10, v12))
+        else:
+            self.client = False
+            self.value = v10
         check_default(v16, 1400)
         check_default(v21, 32768)
         check_default(v2, 1)
@@ -76,11 +84,16 @@ class ConnectionRequest(PacketLoader):
         check_default(dword_5, 2)
         self.auth_val = dword_6
         self.version = dword_7
+        print vars(self)
     
     def write(self, reader):
         reader.writeShort(0)
-        reader.writeByte(-1)
-        reader.writeByte(-1)
+        if self.client:
+            value = -1
+        else:
+            value = self.value or 0
+        for _ in xrange(2):
+            reader.writeByte(value)
         reader.writeInt(1400)
         reader.writeInt(32768)
         reader.writeInt(1)
@@ -128,7 +141,6 @@ class ConnectionResponse(PacketLoader):
     
     def write(self, reader):
         reader.writeShort(self.connection_id, True)
-        print self.unique
         reader.writeByte(self.unique, True)
         reader.writeByte(self.unique, True)
         reader.writeInt(91750400, True)
@@ -157,7 +169,7 @@ class Ping(PacketLoader):
     def write(self, reader):
         pass
 
-class UserInput(PacketLoader):
+class SizedData(PacketLoader):
     input_type = None
     data = None
     def read(self, reader): # uses byte
@@ -176,11 +188,11 @@ class Packet7(PacketLoader):
         new_data = reader.readReader(size)
 
 class MapData(PacketLoader):
-    short_1 = None
-    v27 = None
-    v28 = None
-    v14 = None
-    v16 = None
+    sequence2 = None
+    total_num = None
+    num = None
+    data_size = None
+    current_pos = None
     data = None
     def read(self, reader): # uses both
         self.sequence2 = reader.readShort(True) # seq at which this was sent at
@@ -200,14 +212,14 @@ class MapData(PacketLoader):
         reader.writeInt(self.current_pos, True)
         reader.write(str(self.data))
 
-class Packet9(PacketLoader):
+class SizedSequenceData(PacketLoader):
     def read(self, reader): # uses byte
-        self.word_1 = reader.readShort(True) # sequence?
+        self.sequence2 = reader.readShort(True) # sequence?
         size = reader.readShort(True)
         self.data = reader.readReader(size)
     
     def write(self, reader):
-        reader.writeShort(self.word_1, True)
+        reader.writeShort(self.sequence2, True)
         reader.writeShort(len(self.data))
         reader.write(str(self.data))
 
@@ -221,8 +233,8 @@ class Packet10(PacketLoader):
         check_default(self.dword_2, 0)
     
     def write(self, reader):
-        reader.writeInt(self.dword_1, True)
-        reader.writeInt(self.dword_2, True)
+        reader.writeInt(self.dword_1 or 0, True)
+        reader.writeInt(self.dword_2 or 0, True)
 
 class Packet11(PacketLoader):
     def read(self, reader):
@@ -237,4 +249,6 @@ class Packet11(PacketLoader):
         reader.writeInt(self.dword_2, True)
         reader.writeInt(self.dword_3, True)
 
-# contained packets
+__all__ = ['Ack', 'ConnectionRequest', 'ConnectionResponse', 'Disconnect',
+    'Ping', 'SizedData', 'Packet7', 'MapData', 'SizedSequenceData', 'Packet10',
+    'Packet11']

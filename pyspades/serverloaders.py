@@ -1,3 +1,20 @@
+# Copyright (c) Mathias Kaerlev 2011.
+
+# This file is part of pyspades.
+
+# pyspades is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# pyspades is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
+
 from pyspades.common import *
 from pyspades.loaders import PacketLoader
 
@@ -15,7 +32,7 @@ class _InformationCommon(PacketLoader):
     
     def write(self, reader):
         reader.writeByte(self.id, True)
-        reader.writeByte(self.player_id)
+        reader.writeByte(self.player_id, True)
         reader.writeFloat(self.x, False)
         reader.writeFloat(self.y, False)
         reader.writeFloat(self.z, False)
@@ -90,7 +107,7 @@ class GrenadePacket(PacketLoader):
         self.value = reader.readFloat(False)
     
     def write(self, reader):
-        reader.writeByte(self.id)
+        reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
         reader.writeFloat(self.value, False)
 
@@ -151,8 +168,8 @@ class ExistingPlayer(PacketLoader):
         value |= (self.something or 0) << 10
         value |= self.kills << 13
         byte1 = self.color & 0xFF
-        byte2 = self.color & 0xFF00
-        byte3 = self.color & 0xFF0000
+        byte2 = (self.color & 0xFF00) >> 8
+        byte3 = (self.color & 0xFF0000) >> 16
         reader.writeInt(value, True, False)
         reader.rewind(1)
         reader.writeByte(byte1, True)
@@ -163,20 +180,32 @@ class ExistingPlayer(PacketLoader):
 class IntelAction(PacketLoader):
     player_id = None
     action_type = None
+    game_end = False
     x = None
     y = None
     z = None
-    something1 = None
-    something2 = None
+    move_type = None
+    
+    blue_flag_x = None
+    blue_flag_y = None
+    green_flag_x = None
+    green_flag_y = None
+    blue_base_x = None
+    blue_base_y = None
+    green_base_x = None
+    green_base_y = None
     def read(self, reader):
         firstByte = reader.readByte(True)
         self.action_type = action_type = (firstByte >> 4) & 7
         if action_type == 0:
             byte = reader.readByte(True)
-            self.something1 = byte & 3
-            self.something2 = byte >> 2
-            print '9:', action_type, something2, something3
-        elif action_type == 1:
+            self.move_type = byte & 3
+            # 0 -> move blue flag
+            # 1 -> move green flag
+            # 2 -> move blue base
+            # 3 -> move green base
+            self.z = byte >> 2 # z
+        elif action_type == 1: # taken intel
             self.player_id = reader.readByte(True)
         elif action_type == 2: # dropped intel
             reader.rewind(1)
@@ -189,25 +218,64 @@ class IntelAction(PacketLoader):
             reader.rewind(1)
             firstInt = reader.readInt(True, False)
             self.player_id = (firstInt >> 7) & 0x1F
-            self.x = (firstInt >> 12) & 0x1FF # x?
-            self.y = firstInt >> 21 # y?
-            self.z = reader.readByte(True) # z?
+            if firstInt & 0x1000: # end of game
+                self.game_end = True
+                secondInt = reader.readInt(True, False)
+                firstShort = reader.readShort(True, False)
+                self.blue_flag_x = (firstInt >> 13) & 0x7F
+                self.blue_flag_y = (firstInt >> 20) & 0xFF + 128
+                
+                self.green_flag_x = secondInt & 0x7F + 384
+                self.green_flag_y = (secondInt >> 7) & 0xFF + 128
+                
+                self.blue_base_x = (secondInt >> 15) & 0x7F 
+                self.blue_base_y = (secondInt >> 22) & 0xFF + 128
+                
+                self.green_base_x = firstShort & 0x7F + 384
+                self.green_base_y = (firstShort >> 7) & 0xFF + 128
+            else: # normal got intel
+                self.game_end = False
+                self.x = (firstInt >> 13) & 0x1FF # x?
+                self.y = firstInt >> 22 # y?
+        elif action_type == 4: # give ammo, health, etc.
+            pass
         
     def write(self, reader):
         value = self.id | (self.action_type << 4)
         if self.action_type == 0:
             reader.writeByte(value, True)
-            byte = self.something1 | (self.something2 << 2)
+            byte = self.move_type | (self.z << 2)
             reader.writeByte(byte, True)
         elif self.action_type == 1:
             reader.writeByte(value, True)
             reader.writeByte(self.player_id, True)
-        elif self.action_type in (2, 3):
+        elif self.action_type == 2:
             value |= self.player_id << 7
             value |= self.x << 12
             value |= self.y << 21
             reader.writeInt(value, True, False)
             reader.writeByte(self.z, True)
+        elif self.action_type == 3:
+            value |= self.player_id << 7
+            if self.game_end:
+                value |= 0x1000
+                value |= self.blue_flag_x << 13
+                value |= (self.blue_flag_y - 128) << 20
+                reader.writeInt(value, True, False)
+                value2 = self.green_flag_x - 384
+                value2 |= (self.green_flag_y - 128) << 7
+                value2 |= self.blue_base_x << 15
+                value2 |= (self.blue_base_y - 128) << 22
+                reader.writeInt(value2, True, False)
+                value3 = (self.green_base_x - 384)
+                value3 |= (self.green_base_y - 128) << 7
+                reader.writeShort(value3, True, False)
+            else:
+                value |= self.x << 12
+                value |= self.y << 21
+                reader.writeInt(value, True, False)
+        elif self.action_type == 4: # give ammo
+            reader.writeByte(value, True)
 
 class CreatePlayer(PacketLoader):
     player_id = None
@@ -216,7 +284,8 @@ class CreatePlayer(PacketLoader):
     def read(self, reader):
         # new player + spawn player
         firstInt = reader.readInt(True, False)
-        self.name = reader.readString()
+        if reader.dataLeft():
+            self.name = reader.readString()
         self.player_id = (firstInt >> 4) & 31
         self.x = (firstInt >> 9) & 0x1FF
         self.y = (firstInt >> 18) & 0xFF
@@ -229,7 +298,8 @@ class CreatePlayer(PacketLoader):
         value |= self.y << 18
         value |= self.z << 26
         reader.writeInt(value, True, False)
-        reader.writeString(self.name)
+        if self.name is not None:
+            reader.writeString(self.name)
 
 class BlockAction(PacketLoader):
     x = y = z = None
@@ -278,6 +348,8 @@ class PlayerData(PacketLoader):
     green_flag_x = None
     green_flag_y = None
     green_flag_z = None
+    
+    max_score = None
     def read(self, reader):
         firstByte = reader.readByte(True)
         if firstByte & 16: # player left
@@ -287,28 +359,29 @@ class PlayerData(PacketLoader):
             # initial reader
             firstInt = reader.readInt(True, False)
             self.count = (firstInt >> 5) & 0x1F # number of players?
-            self.blue_score = (firstInt >> 10) & 0x3FF # team score 1?
-            self.green_score = (firstInt >> 20) & 0x3FF # team score 2?
+            self.blue_score = (firstInt >> 10) & 0x7F # team score 1?
+            self.green_score = (firstInt >> 17) & 0x7F # team score 2?
+            self.max_score = (firstInt >> 24) & 0x7F
             if firstInt & 0x40000000:
-                self.blue_flag_player = reader.readByte(True)
+                self.green_flag_player = reader.readByte(True)
                 reader.skipBytes(2)
             else:
                 byte = reader.readByte(True)
                 byte2 = reader.readByte(True)
                 byte3 = reader.readByte(True)
-                self.blue_flag_x = byte | ((byte2 & 1) << 8)
-                self.blue_flag_y = (byte2 >> 1) | ((byte3 & 3) << 7)
-                self.blue_flag_z = byte3 >> 2
-            if (firstByte >> 31) & 1:
-                self.green_flag_player = reader.readByte(True)
+                self.green_flag_x = byte | ((byte2 & 1) << 8)
+                self.green_flag_y = (byte2 >> 1) | ((byte3 & 3) << 7)
+                self.green_flag_z = byte3 >> 2
+            if firstInt & 0x80000000:
+                self.blue_flag_player = reader.readByte(True)
                 reader.skipBytes(2)
             else:
                 byte4 = reader.readByte(True)
                 byte5 = reader.readByte(True)
                 byte6 = reader.readByte(True)
-                self.green_flag_x = byte4 | ((byte5 & 1) << 8)
-                self.green_flag_y = (byte5 >> 1) | ((byte6 & 3) << 7)
-                self.green_flag_z = byte6 >> 2
+                self.blue_flag_x = byte4 | ((byte5 & 1) << 8)
+                self.blue_flag_y = (byte5 >> 1) | ((byte6 & 3) << 7)
+                self.blue_flag_z = byte6 >> 2
             byte7 = reader.readByte(True)
             byte8 = reader.readByte(True)
             byte9 = reader.readByte(True)
@@ -331,12 +404,23 @@ class PlayerData(PacketLoader):
         else:
             value |= (self.count << 5)
             value |= (self.blue_score << 10)
-            value |= (self.green_score << 20)
-            if self.blue_flag_player is not None:
-                value |= 0x40000000
+            value |= (self.green_score << 17)
+            value |= (self.max_score << 24)
             if self.green_flag_player is not None:
+                value |= 0x40000000
+            if self.blue_flag_player is not None:
                 value |= 0x80000000
             reader.writeInt(value, True, False)
+            if self.green_flag_player is not None:
+                reader.writeByte(self.green_flag_player, True)
+                reader.writeByte(0)
+                reader.writeByte(0)
+            else:
+                a, b, c = make_coordinate_bytes(self.green_flag_x,
+                    self.green_flag_y, self.green_flag_z)
+                reader.writeByte(a, True)
+                reader.writeByte(b, True)
+                reader.writeByte(c, True)
             if self.blue_flag_player is not None:
                 reader.writeByte(self.blue_flag_player, True)
                 reader.writeByte(0)
@@ -344,12 +428,6 @@ class PlayerData(PacketLoader):
             else:
                 a, b, c = make_coordinate_bytes(self.blue_flag_x,
                     self.blue_flag_y, self.blue_flag_z)
-                reader.writeByte(a, True)
-                reader.writeByte(b, True)
-                reader.writeByte(c, True)
-            if self.green_flag_player is not None:
-                a, b, c = make_coordinate_bytes(self.green_flag_x,
-                    self.green_flag_y, self.green_flag_z)
                 reader.writeByte(a, True)
                 reader.writeByte(b, True)
                 reader.writeByte(c, True)
@@ -396,5 +474,5 @@ class ChatMessage(PacketLoader):
         else:
             byte |= 32
         reader.writeByte(byte, True)
-        reader.writeByte(self.player_id)
+        reader.writeByte(self.player_id, True)
         reader.writeString(self.value)

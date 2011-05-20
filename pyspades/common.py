@@ -16,19 +16,20 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 def binify(data, size = 2):
-    binText = bin(data)[2:]
+    binText = bin(str(data))[2:]
     binText = (2 * 8 - len(binText)) * '0' + binText
     return binText
 
 MAX_HEX_SIZE = 110
 
 def hexify(data, max = MAX_HEX_SIZE):
-    hexed = data.encode('hex')
+    hexed = str(data).encode('hex')
     if max is not None and len(hexed) > max:
         hexed = '%s (...)' % hexed[:max]
     return hexed
 
 def stringify(data, max = MAX_HEX_SIZE):
+    data = str(data)
     if max is not None and len(data) > max:
         data = '%s (...)' % data[:max]
     return '%r' % data
@@ -46,3 +47,7 @@ def check_default(value, default):
     if value != default:
         raw_input('check_default() failed')
         raise NotImplementedError('was %s, should be %s' % (value, default))
+
+import zlib
+def crc32(data):
+    return zlib.crc32(data) & 0xffffffff

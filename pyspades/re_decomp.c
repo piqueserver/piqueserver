@@ -31,36 +31,7 @@
 #define LODWORD(l) ((DWORD)((DWORDLONG)(l)))
 #define HIDWORD(l) ((DWORD)(((DWORDLONG)(l)>>32)&0xFFFFFFFF))
 
-__int16 __cdecl sub_4181D0(int a1)
-{
-  __int16 v1; // di@1
-  int v2; // esi@1
-  int v3; // eax@2
-  unsigned __int8 v4; // al@2
-  __int16 v5; // dx@2
-  int v6; // eax@4
-
-  v2 = a1;
-  v1 = 0;
-  while ( 1 )
-  {
-    v4 = *(_BYTE *)(v2 + 1) - (*(_BYTE *)(v2 + 1) >> 1);
-    v5 = v4;
-    *(_BYTE *)(v2 + 1) = v4;
-    v3 = *(_WORD *)(v2 + 4);
-    *(_WORD *)(v2 + 2) = v5;
-    if ( (_WORD)v3 )
-      *(_WORD *)(v2 + 2) += sub_4181D0(v2 + 16 * v3);
-    v6 = *(_WORD *)(v2 + 6);
-    v1 += *(_WORD *)(v2 + 2);
-    if ( !(_WORD)v6 )
-      break;
-    v2 += 16 * v6;
-  }
-  return v1;
-}
-
-struct CodeEntry
+struct struct_code_tables
 {
   char byte_value;
   unsigned __int8 field_1;
@@ -73,10 +44,39 @@ struct CodeEntry
   _WORD prev_index;
 };
 
-unsigned int decompress_1(CodeEntry * code_tables, unsigned char * in_data, 
+__int16 __cdecl do_codeentry_stuff(struct_code_tables * code_entry)
+{
+  __int16 v1; // di@1
+  struct_code_tables *v2; // esi@1
+  int v3; // eax@2
+  unsigned __int8 v4; // al@2
+  __int16 v5; // dx@2
+  int v6; // eax@4
+
+  v2 = code_entry;
+  v1 = 0;
+  while ( 1 )
+  {
+    v4 = v2->field_1 - (v2->field_1 >> 1);
+    v5 = v4;
+    v2->field_1 = v4;
+    v3 = v2->skip_entries1;
+    v2->field_2 = v5;
+    if ( (_WORD)v3 )
+      v2->field_2 += do_codeentry_stuff(&v2[v3]);
+    v6 = v2->skip_entries2;
+    v1 += v2->field_2;
+    if ( !(_WORD)v6 )
+      break;
+    v2 += v6;
+  }
+  return v1;
+}
+
+unsigned int decompress_1(struct_code_tables * code_tables, unsigned char * in_data, 
     unsigned int in_size, unsigned char *out_data, int out_size)
 {
-  unsigned int in_end; // edx@1
+  unsigned char * in_end; // edx@1
   int v6; // edi@1
   unsigned int v7; // esi@1
   unsigned __int8 *v8; // eax@4
@@ -84,11 +84,11 @@ unsigned int decompress_1(CodeEntry * code_tables, unsigned char * in_data,
   unsigned __int8 *v10; // eax@5
   int v11; // ecx@5
   int v12; // esi@5
-  int v13; // eax@6
+  unsigned char * v13; // eax@6
   int v14; // ecx@6
   int v15; // esi@6
-  CodeEntry *v16; // eax@8
-  CodeEntry *v17; // ebx@8
+  struct_code_tables *v16; // eax@8
+  struct_code_tables *v17; // ebx@8
   int v18; // esi@8
   int v19; // ecx@9
   unsigned int v20; // eax@10
@@ -100,14 +100,14 @@ unsigned int decompress_1(CodeEntry * code_tables, unsigned char * in_data,
   int v26; // eax@21
   unsigned int v27; // ecx@21
   int v28; // eax@22
-  CodeEntry *v29; // eax@23
+  struct_code_tables *v29; // eax@23
   unsigned __int8 v30; // bl@23
   unsigned __int16 v31; // di@23
-  CodeEntry *v32; // edx@23
+  struct_code_tables *v32; // edx@23
   int v33; // eax@24
-  int v34; // ecx@24
+  intptr_t v34; // ecx@24
   unsigned __int16 v35; // bx@24
-  int v36; // eax@25
+  intptr_t v36; // eax@25
   int v37; // edx@27
   int v38; // ecx@27
   int v39; // edi@27
@@ -119,12 +119,12 @@ unsigned int decompress_1(CodeEntry * code_tables, unsigned char * in_data,
   unsigned __int16 v45; // dx@33
   unsigned __int8 v46; // cl@33
   unsigned __int8 *v47; // ecx@33
-  CodeEntry *v48; // esi@33
+  struct_code_tables *v48; // esi@33
   int v49; // edi@33
   int v50; // eax@43
   __int16 v51; // cx@44
   unsigned __int16 v52; // ax@46
-  int i; // ecx@47
+  intptr_t i; // ecx@47
   int v54; // eax@48
   unsigned __int16 v55; // dx@48
   int v56; // edi@48
@@ -143,18 +143,18 @@ unsigned int decompress_1(CodeEntry * code_tables, unsigned char * in_data,
   int v69; // eax@66
   __int16 v70; // cx@67
   unsigned __int16 v71; // ax@69
-  CodeEntry *v72; // esi@70
-  CodeEntry *v73; // ebp@71
+  struct_code_tables *v72; // esi@70
+  struct_code_tables *v73; // ebp@71
   int v74; // eax@72
-  CodeEntry *v75; // eax@73
+  struct_code_tables *v75; // eax@73
   signed int v76; // edx@73
-  int j; // ecx@74
+  intptr_t j; // ecx@74
   int v78; // eax@76
   int v79; // eax@79
   signed int v80; // edx@81
   signed int v81; // edx@82
   unsigned __int8 v82; // al@83
-  int v83; // edx@84
+  int * v83; // edx@84
   int v84; // eax@88
   __int16 v85; // cx@89
   unsigned __int16 v86; // ax@91
@@ -163,19 +163,19 @@ unsigned int decompress_1(CodeEntry * code_tables, unsigned char * in_data,
   signed int v90; // [sp+Ch] [bp-38h]@3
   int v91; // [sp+10h] [bp-34h]@1
   int v92; // [sp+10h] [bp-34h]@24
-  CodeEntry *v93; // [sp+14h] [bp-30h]@8
+  struct_code_tables *v93; // [sp+14h] [bp-30h]@8
   int v94; // [sp+18h] [bp-2Ch]@22
   int v95; // [sp+18h] [bp-2Ch]@24
   signed __int16 v96; // [sp+1Ch] [bp-28h]@22
   unsigned __int16 v97; // [sp+1Ch] [bp-28h]@72
   int v98; // [sp+20h] [bp-24h]@1
   unsigned int v99; // [sp+24h] [bp-20h]@1
-  unsigned int in_end2; // [sp+28h] [bp-1Ch]@1
-  int v101; // [sp+2Ch] [bp-18h]@8
+  unsigned char * in_end2; // [sp+28h] [bp-1Ch]@1
+  int * v101; // [sp+2Ch] [bp-18h]@8
   int v102; // [sp+30h] [bp-14h]@48
   unsigned int v103; // [sp+34h] [bp-10h]@21
-  CodeEntry *v104; // [sp+38h] [bp-Ch]@8
-  unsigned int out_end; // [sp+3Ch] [bp-8h]@1
+  struct_code_tables *v104; // [sp+38h] [bp-Ch]@8
+  unsigned char * out_end; // [sp+3Ch] [bp-8h]@1
   unsigned __int8 *v106; // [sp+40h] [bp-4h]@1
   int v107; // [sp+50h] [bp+Ch]@1
   unsigned int v108; // [sp+58h] [bp+14h]@21
@@ -185,10 +185,10 @@ unsigned int decompress_1(CodeEntry * code_tables, unsigned char * in_data,
 
   v106 = out_data;
   v7 = in_size;
-  out_end = (unsigned int)&out_data[out_size];
-  in_end = (unsigned int)&in_data[in_size];
+  out_end = &out_data[out_size];
+  in_end = &in_data[in_size];
   v6 = -1;
-  in_end2 = (unsigned int)&in_data[in_size];
+  in_end2 = &in_data[in_size];
   v91 = 0;
   v107 = 0;
   v98 = 0;
@@ -203,29 +203,29 @@ unsigned int decompress_1(CodeEntry * code_tables, unsigned char * in_data,
   v90 = 1;
   *(_DWORD *)&code_tables->byte_value = 0;
   code_tables->next_index = 0;
-  if ( (unsigned int)in_data < in_end )
+  if (in_data < in_end)
   {
     v8 = in_data + 1;
     v9 = *in_data << 24;
     v107 = *in_data << 24;
     in_data = v8;
-    if ( (unsigned int)v8 < in_end )
+    if (v8 < in_end )
     {
       v12 = *v8 << 16;
       v10 = v8 + 1;
       v11 = v12 | v9;
       v107 = v11;
       in_data = v10;
-      if ( (unsigned int)v10 < in_end )
+      if (v10 < in_end )
       {
         v15 = *v10 << 8;
-        v13 = (int)(v10 + 1);
+        v13 = v10 + 1;
         v14 = v15 | v11;
         v107 = v14;
-        in_data = (unsigned __int8 *)v13;
+        in_data = v13;
         if ( v13 < in_end )
         {
-          v107 = *(_BYTE *)v13 | v14;
+          v107 = *v13 | v14;
           in_data = (unsigned __int8 *)(v13 + 1);
         }
       }
@@ -235,7 +235,7 @@ unsigned int decompress_1(CodeEntry * code_tables, unsigned char * in_data,
   {
     v17 = code_tables;
     v18 = v91;
-    v101 = (int)&v98;
+    v101 = &v98;
     v16 = &code_tables[(unsigned __int16)v98];
     v104 = v16;
     v93 = &code_tables[(unsigned __int16)v98];
@@ -255,7 +255,7 @@ LABEL_21:
         v96 = 1;
         if ( (_WORD)v28 )
         {
-          for ( i = (int)&v17[v28]; ; i += 16 * v57 )
+          for ( i = (intptr_t)&v17[v28]; ; i += 16 * v57 )
           {
             while ( 1 )
             {
@@ -274,7 +274,7 @@ LABEL_21:
                 v31 = v64;
                 *(_BYTE *)(i + 1) += 3;
                 v96 = v63 + 1;
-                v29 = (CodeEntry *)i;
+                v29 = (struct_code_tables *)i;
                 goto LABEL_57;
               }
               *(_WORD *)(i + 2) = v56 + 3;
@@ -358,7 +358,7 @@ LABEL_57:
               {
                 v69 = code_tables->next_index;
                 if ( (_WORD)v69 )
-                  v70 = sub_4181D0((int)&code_tables[v69]);
+                  v70 = do_codeentry_stuff(&code_tables[v69]);
                 else
                   v70 = 0;
                 v71 = code_tables->dwordA - (code_tables->dwordA >> 1);
@@ -370,7 +370,7 @@ LABEL_57:
             v6 = -v65 & 0xFFFF;
           }
           v66 <<= 8;
-          if ( (unsigned int)v67 < in_end2 )
+          if (v67 < in_end2)
             v66 |= *v67++;
           v6 <<= 8;
           v65 <<= 8;
@@ -386,7 +386,7 @@ LABEL_57:
             return out_data - v106;
           v87 = -v18 & 0xFFFF;
         }
-        if ( (unsigned int)v88 < in_end2 )
+        if (v88 < in_end2 )
           ++v88;
         v87 <<= 8;
         v18 <<= 8;
@@ -429,7 +429,7 @@ LABEL_19:
           v6 = -v18 & 0xFFFF;
         }
         v107 <<= 8;
-        if ( (unsigned int)v25 < in_end2 )
+        if (v25 < in_end2 )
         {
           v107 |= *v25++;
           in_data = v25;
@@ -438,7 +438,7 @@ LABEL_19:
         v18 <<= 8;
       }
     }
-    v34 = (int)v93;
+    v34 = (intptr_t)v93;
     v33 = v93->next_index;
     v35 = v21 - v93->dwordA;
     v92 = v18;
@@ -479,7 +479,7 @@ LABEL_26:
     *(_BYTE *)(v36 + 1) = v46 + 2;
     v49 = v39 - v40;
     v48 = v93;
-    v111 = (unsigned __int16)((v36 - (_DWORD)code_tables) >> 4);
+    v111 = (unsigned __int16)((v36 - (uintptr_t)code_tables) >> 4);
     v44 = v22 * (v93->dwordA + (unsigned __int16)v49) + v92;
     v6 = v22 * v46;
     v47 = in_data;
@@ -492,7 +492,7 @@ LABEL_26:
       v6 = -v44 & 0xFFFF;
 LABEL_37:
       v107 <<= 8;
-      if ( (unsigned int)v47 < in_end2 )
+      if (v47 < in_end2)
       {
         v107 |= *v47;
         v48 = v93;
@@ -512,7 +512,7 @@ LABEL_37:
     }
     v50 = v48->next_index;
     if ( (_WORD)v50 )
-      v51 = sub_4181D0((int)&v93[v50]);
+      v51 = do_codeentry_stuff(&v93[v50]);
     else
       v51 = 0;
     v52 = v93->dwordA - (v93->dwordA >> 1);
@@ -529,7 +529,7 @@ LABEL_70:
         v97 = 0;
         if ( (_WORD)v74 )
         {
-          for ( j = (int)&v72[v74]; ; j += 16 * v79 )
+          for ( j = (intptr_t)&v72[v74]; ; j += 16 * v79 )
           {
             while ( v30 < *(_BYTE *)j )
             {
@@ -581,7 +581,7 @@ LABEL_70:
           *(_WORD *)(j + 2) += 2;
           *(_BYTE *)(j + 1) = v82 + 2;
           v97 = v82;
-          v75 = (CodeEntry *)j;
+          v75 = (struct_code_tables *)j;
         }
         else
         {
@@ -599,7 +599,7 @@ LABEL_70:
         }
 LABEL_84:
         v83 = v101;
-        v101 = (int)&v75->prev_index;
+        v101 = (int*)(&v75->prev_index);
         *(_WORD *)v83 = (signed int)((char *)v75 - (char *)code_tables) >> 4;
         if ( !v97 )
         {
@@ -611,7 +611,7 @@ LABEL_84:
         {
           v84 = v72->next_index;
           if ( (_WORD)v84 )
-            v85 = sub_4181D0((int)&v72[v84]);
+            v85 = do_codeentry_stuff(&v72[v84]);
           else
             v85 = 0;
           v86 = v72->dwordA - (v72->dwordA >> 1);
@@ -623,7 +623,7 @@ LABEL_84:
       while ( v72 != v93 );
     }
     *(_WORD *)v101 = v111;
-    if ( (unsigned int)out_data < out_end )
+    if (out_data < out_end )
     {
       *out_data++ = v30;
       if ( v99 < 2 )

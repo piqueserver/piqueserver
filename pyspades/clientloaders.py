@@ -1,3 +1,20 @@
+# Copyright (c) Mathias Kaerlev 2011.
+
+# This file is part of pyspades.
+
+# pyspades is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# pyspades is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
+
 from pyspades.common import *
 from pyspades.loaders import PacketLoader
 
@@ -12,10 +29,10 @@ class _InformationCommon(PacketLoader):
         self.z = reader.readFloat(False) # z
     
     def write(self, reader):
-        reader.writeByte(self.id)
-        reader.writeFloat(self.x)
-        reader.writeFloat(self.y)
-        reader.writeFloat(self.z)
+        reader.writeByte(self.id, True)
+        reader.writeFloat(self.x, False)
+        reader.writeFloat(self.y, False)
+        reader.writeFloat(self.z, False)
 
 class PositionData(_InformationCommon):
     pass
@@ -81,11 +98,11 @@ class HitPacket(PacketLoader):
         if self.player_id is None:
             byte |= 0x10
             reader.writeByte(byte, True)
-            reader.writeByte(self.value)
+            reader.writeByte(self.value, True)
         else:
             byte |= self.value << 5
             reader.writeByte(byte, True)
-            reader.writeByte(self.player_id)
+            reader.writeByte(self.player_id, True)
 
 class GrenadePacket(PacketLoader):
     value = None
@@ -94,7 +111,7 @@ class GrenadePacket(PacketLoader):
         self.value = reader.readFloat(False)
     
     def write(self, reader):
-        reader.writeByte(self.id)
+        reader.writeByte(self.id, True)
         reader.writeFloat(self.value, False)
 
 class SetWeapon(PacketLoader):
@@ -160,8 +177,8 @@ class KillAction(PacketLoader):
         self.player_id = reader.readByte(True)
     
     def write(self, reader):
-        reader.writeByte(self.id)
-        reader.writeByte(self.player_id)
+        reader.writeByte(self.id, True)
+        reader.writeByte(self.player_id, True)
 
 class ChatMessage(PacketLoader):
     global_message = None
