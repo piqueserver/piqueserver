@@ -296,7 +296,7 @@ LABEL_21:
                 v29->byte_value = v30;
                 v29->field_1 = 3;
                 v31 = v109;
-                *(_WORD *)(i + 4) = (signed int)((char *)v29 - i) >> 4;
+                *(_WORD *)(i + 4) = (intptr_t)((char *)v29 - i) >> 4;
                 goto LABEL_57;
               }
               i += 16 * v58;
@@ -321,7 +321,7 @@ LABEL_21:
           v29->byte_value = v30;
           v29->field_1 = 3;
           v31 = v109;
-          *(_WORD *)(i + 6) = (signed int)((char *)v29 - i) >> 4;
+          *(_WORD *)(i + 6) = (intptr_t)((char *)v29 - i) >> 4;
         }
         else
         {
@@ -547,7 +547,7 @@ LABEL_70:
                 v73->dwordA = 0;
                 v73->code_no = 0;
                 v73->prev_index = 0;
-                v80 = (signed int)((char *)v73 - j);
+                v80 = (intptr_t)((char *)v73 - j);
                 ++v73;
                 v75->byte_value = v30;
                 *(_WORD *)(j + 4) = v80 >> 4;
@@ -570,7 +570,7 @@ LABEL_70:
               v73->dwordA = 0;
               v73->code_no = 0;
               v73->prev_index = 0;
-              v81 = (signed int)((char *)v73 - j);
+              v81 = (intptr_t)((char *)v73 - j);
               ++v73;
               v75->byte_value = v30;
               *(_WORD *)(j + 6) = v81 >> 4;
