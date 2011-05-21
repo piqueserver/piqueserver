@@ -83,6 +83,7 @@ sized_data = SizedData()
 
 class BaseConnection(object):
     unique = None
+    send_id = True
     connection_id = None
     
     in_packet = None
@@ -162,7 +163,7 @@ class BaseConnection(object):
         out_packet.items = [loader]
         self.send_data(str(out_packet.generate()))
         key = (loader.sequence, loader.byte)
-        call = reactor.callLater(timeout, self.resend, key, loader)
+        call = reactor.callLater(timeout, self.resend, key, loader, timeout)
         self.packet_deferreds[key] = (defer, call)
 
     def send_loader(self, loader, ack = False, byte = 0, timeout = 0.5):
@@ -174,7 +175,10 @@ class BaseConnection(object):
         loader.sequence = sequence
         loader.ack = ack
         out_packet.unique = self.unique
-        out_packet.connection_id = self.connection_id
+        if self.send_id:
+            out_packet.connection_id = self.connection_id
+        else:
+            out_packet.connection_id = 0
         out_packet.timer = timer
         out_packet.items = [loader]
         self.send_data(str(out_packet.generate()))

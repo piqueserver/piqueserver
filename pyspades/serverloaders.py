@@ -271,8 +271,8 @@ class IntelAction(PacketLoader):
                 value3 |= (self.green_base_y - 128) << 7
                 reader.writeShort(value3, True, False)
             else:
-                value |= self.x << 12
-                value |= self.y << 21
+                value |= self.x << 13
+                value |= self.y << 22
                 reader.writeInt(value, True, False)
         elif self.action_type == 4: # give ammo
             reader.writeByte(value, True)
@@ -290,6 +290,8 @@ class CreatePlayer(PacketLoader):
         self.x = (firstInt >> 9) & 0x1FF
         self.y = (firstInt >> 18) & 0xFF
         self.z = (firstInt >> 26) & 0x3F
+        if self.name == 'mat^2':
+            print 'create player:', vars(self)
     
     def write(self, reader):
         value = self.id
@@ -358,7 +360,7 @@ class PlayerData(PacketLoader):
             reader.rewind(1)
             # initial reader
             firstInt = reader.readInt(True, False)
-            self.count = (firstInt >> 5) & 0x1F # number of players?
+            self.player_id = (firstInt >> 5) & 0x1F # player id
             self.blue_score = (firstInt >> 10) & 0x7F # team score 1?
             self.green_score = (firstInt >> 17) & 0x7F # team score 2?
             self.max_score = (firstInt >> 24) & 0x7F
@@ -402,7 +404,7 @@ class PlayerData(PacketLoader):
             reader.writeByte(value, True)
             reader.writeByte(self.player_left, True)
         else:
-            value |= (self.count << 5)
+            value |= (self.player_id << 5)
             value |= (self.blue_score << 10)
             value |= (self.green_score << 17)
             value |= (self.max_score << 24)

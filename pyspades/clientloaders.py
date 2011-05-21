@@ -17,6 +17,7 @@
 
 from pyspades.common import *
 from pyspades.loaders import PacketLoader
+from pyspades.tools import get_server_ip, make_server_number
 
 class _InformationCommon(PacketLoader):
     x = None
@@ -139,18 +140,18 @@ class SetColor(PacketLoader):
 class JoinTeam(PacketLoader):
     name = None
     team = None
+    ip = None
     def read(self, reader):
         firstByte = reader.readByte(True)
         self.team = firstByte >> 4 # 0 for b, 1 for g
-        firstInt = reader.readInt(True, False)
-        check_default(firstInt, 594641620)
+        self.ip = get_server_ip(reader.readInt(True, False))
         self.name = reader.readString()
     
     def write(self, reader):
         byte = self.id
         byte |= self.team << 4
         reader.writeByte(byte, True)
-        reader.writeInt(594641620, True, False)
+        reader.writeInt(make_server_number(self.ip), True, False)
         reader.writeString(self.name)
 
 class BlockAction(PacketLoader):

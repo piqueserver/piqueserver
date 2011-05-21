@@ -49,11 +49,13 @@ chat_message = serverloaders.ChatMessage()
 
 class ServerConnection(BaseConnection):
     protocol = None
+    send_id = False
     address = None
     player_id = None
     map_packets_sent = 0
     team = None
     name = None
+    kills = 0
     
     up = down = left = right = False
     position = orientation = None
@@ -71,12 +73,15 @@ class ServerConnection(BaseConnection):
                 self.disconnect()
                 return
             self.auth_val = loader.auth_val
-            self.player_id = self.protocol.id_pool.pop()
+            if loader.client:
+                self.connection_id = self.protocol.connection_ids.pop()
+            else:
+                self.connection_id = 0
             self.unique = random.randint(0, 3)
             connection_response = ConnectionResponse()
             connection_response.auth_val = loader.auth_val
             connection_response.unique = self.unique
-            connection_response.connection_id = self.player_id
+            connection_response.connection_id = self.connection_id
             
             self.map_data = ByteReader(self.protocol.map_data)
             self.send_loader(connection_response, True, 0xFF).addCallback(
@@ -184,13 +189,27 @@ class ServerConnection(BaseConnection):
             return
         BaseConnection.disconnect(self)
         del self.protocol.connections[self.address]
+        if self.connection_id is not None:
+            self.protocol.connection_ids.put_back(self.connection_id)
         if self.player_id is not None:
-            self.protocol.id_pool.put_back(self.player_id)
+            self.protocol.player_ids.put_back(self.player_id)
         if self.name is not None:
             del self.protocol.players[self]
     
     def send_map(self, ack = None):
         if not self.map_data.dataLeft():
+            # send players
+            for player in self.protocol.players.values():
+                if player.name is None:
+                    continue
+                existing_player.name = player.name
+                existing_player.player_id = player.player_id
+                existing_player.kills = player.kills
+                existing_player.team = player.team.id
+                existing_player.color = 0
+                self.send_contained(existing_player)
+            
+            # send initial data
             blue = self.protocol.green_team
             green = self.protocol.green_team
             blue_flag = blue.flag
@@ -198,7 +217,9 @@ class ServerConnection(BaseConnection):
             blue_base = blue.base
             green_base = green.base
             
-            player_data.count = 0
+            self.player_id = self.protocol.player_ids.pop()
+            player_data.player_id = self.player_id
+            player_data.max_score = self.protocol.max_score
             player_data.blue_score = blue.score
             player_data.green_score = green.score
             
@@ -220,22 +241,22 @@ class ServerConnection(BaseConnection):
             
             self.send_contained(player_data)
             return
-        # self.ping()
-        sequence = self.packet_handler1.sequence + 1
-        data_size = min(4096, self.map_data.dataLeft())
-        new_data = ByteReader('\x0F' + self.map_data.read(data_size))
-        new_data_size = len(new_data)
-        nums = int(math.ceil(new_data_size / 1024.0))
-        for i in xrange(nums):
-            map_data = MapData()
-            map_data.data = new_data.readReader(1024)
-            map_data.sequence2 = sequence
-            map_data.num = i
-            map_data.total_num = nums
-            map_data.data_size = new_data_size
-            map_data.current_pos = i * 1024
-            self.send_loader(map_data, True).addCallback(self.got_map_ack)
-            self.map_packets_sent += 1
+        for _ in xrange(4):
+            sequence = self.packet_handler1.sequence + 1
+            data_size = min(4096, self.map_data.dataLeft())
+            new_data = ByteReader('\x0F' + self.map_data.read(data_size))
+            new_data_size = len(new_data)
+            nums = int(math.ceil(new_data_size / 1024.0))
+            for i in xrange(nums):
+                map_data = MapData()
+                map_data.data = new_data.readReader(1024)
+                map_data.sequence2 = sequence
+                map_data.num = i
+                map_data.total_num = nums
+                map_data.data_size = new_data_size
+                map_data.current_pos = i * 1024
+                self.send_loader(map_data, True).addCallback(self.got_map_ack)
+                self.map_packets_sent += 1
     
     def got_map_ack(self, ack):
         self.map_packets_sent -= 1
@@ -261,7 +282,8 @@ class Team(object):
     score = 0
     flag = None
     
-    def __init__(self, base_pos, flag_pos):
+    def __init__(self, id, base_pos, flag_pos):
+        self.id = id
         self.flag = Flag(*flag_pos)
         self.base = Vertex3(*base_pos)
 
@@ -270,20 +292,25 @@ class ServerProtocol(DatagramProtocol):
     max_players = 20
 
     connections = None
-    id_pool = None
-    master = None
+    connection_ids = None
+    player_ids = None
+    master = False
+    max_score = 10
+    
+    master_connection = None
     
     def __init__(self):
         self.connections = {}
         self.players = MultikeyDict()
-        self.id_pool = IDPool()
+        self.connection_ids = IDPool()
+        self.player_ids = IDPool()
         self.map_data = open('sinc0.vxl', 'rb').read()
         self.ip_list = []
         ip_list = open('ip_list.txt', 'rb').read().splitlines()
         for ip in ip_list:
             reactor.resolve(ip).addCallback(self.add_ip)
-        self.blue_team = Team((20, 20, 20), (40, 40, 40))
-        self.green_team = Team((20, 20, 20), (40, 40, 40))
+        self.blue_team = Team(0, (20, 20, 20), (40, 40, 40))
+        self.green_team = Team(1, (20, 20, 20), (40, 40, 40))
     
     def add_ip(self, ip):
         self.ip_list.append(ip)
@@ -291,11 +318,12 @@ class ServerProtocol(DatagramProtocol):
     
     def startProtocol(self):
         self.version = crc32(open('client.exe', 'rb').read())
-        get_master_connection(self.name, self.max_players).addCallback(
-            self.got_master_connection)
+        if self.master:
+            get_master_connection(self.name, self.max_players).addCallback(
+                self.got_master_connection)
         
     def got_master_connection(self, connection):
-        self.master = connection
+        self.master_connection = connection
     
     def datagramReceived(self, data, address):
         if address[0] not in self.ip_list:
@@ -314,7 +342,7 @@ class ServerProtocol(DatagramProtocol):
         data = ByteReader()
         contained.write(data)
         loader.data = data
-        for player in self.players.values():
-            if player is sender:
+        for player in self.connections.values():
+            if player is sender or player.player_id is None:
                 continue
             player.send_loader(loader, sequence is None)

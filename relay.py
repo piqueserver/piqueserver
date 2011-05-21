@@ -11,12 +11,12 @@ debug.is_relay = True
 
 from cStringIO import StringIO
 
-HOST = '127.0.0.1'
+# HOST = '127.0.0.1'
 # PORT = 32885
-PORT = 32886
+# PORT = 32886
 
-# HOST = get_server_ip('aos://1289779525')
-# PORT = 32887
+HOST = get_server_ip('aos://816986541')
+PORT = 32887
 
 class ClientProtocol(DatagramProtocol):
     def __init__(self, server):
@@ -57,9 +57,12 @@ def print_item(item):
     except AttributeError:
         pass
     print ''
-    
+
+ids = set()
+
 def parse_packet(input, isClient):
     packet.read(input)
+    print 'got packet:', packet.connection_id, isClient
     # print 'received packet:', vars(packet)
     # print get_name(isClient), packet.items
     for item in packet.items[:]:
@@ -77,6 +80,9 @@ def parse_packet(input, isClient):
             contained.write(reader)
             if contained.id == 12:
                 print '12!', vars(contained)
+                print hexify(orig)
+                print hexify(str(reader))
+                print ids
             else:
                 if orig != str(reader):
                     print contained.id, 'not written correctly', isClient
