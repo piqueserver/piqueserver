@@ -56,6 +56,7 @@ class ServerConnection(BaseConnection):
     team = None
     name = None
     kills = 0
+    orientation_sequence = 0
     
     up = down = left = right = False
     position = orientation = None
@@ -83,7 +84,7 @@ class ServerConnection(BaseConnection):
             connection_response.unique = self.unique
             connection_response.connection_id = self.connection_id
             
-            self.map_data = ByteReader(self.protocol.map_data)
+            self.map_data = ByteReader(self.protocol.map.generate())
             self.send_loader(connection_response, True, 0xFF).addCallback(
                 self.send_map)
         elif loader.id == Ack.id:
@@ -97,25 +98,31 @@ class ServerConnection(BaseConnection):
         elif loader.id in (SizedData.id, SizedSequenceData.id):
             contained = load_client_packet(loader.data)
             if contained.id == clientloaders.JoinTeam.id:
-                self.team = [self.protocol.blue_team, 
-                    self.protocol.green_team][contained.team]
-                self.name = contained.name
-                self.protocol.players[self.name, self.player_id] = self
-                create_player.name = self.name
+                if self.team is None:
+                    self.team = [self.protocol.blue_team, 
+                        self.protocol.green_team][contained.team]
+                    self.name = contained.name
+                    self.protocol.players[self.name, self.player_id] = self
+                    create_player.name = self.name
+                    
                 create_player.player_id = self.player_id
                 self.orientation = Vertex3(0, 0, 0)
-                self.position = position = Vertex3(20, 20, 30)
+                self.position = position = Vertex3(20, 20, 48)
+                if self.team != self.protocol.blue_team:
+                    position.x += 256
                 create_player.x = position.x
                 create_player.y = position.y
                 create_player.z = position.z
-                self.send_contained(create_player)
+                self.protocol.send_contained(create_player)
             if contained.id == clientloaders.OrientationData.id:
                 self.orientation.set(contained.x, contained.y, contained.z)
                 orientation_data.x = contained.x
                 orientation_data.y = contained.y
                 orientation_data.z = contained.z
                 orientation_data.player_id = self.player_id
-                self.protocol.send_contained(orientation_data, 0)
+                # self.protocol.send_contained(orientation_data,
+                    # self.orientation_sequence, sender = self)
+                # self.orientation_sequence += 1
             elif contained.id == clientloaders.PositionData.id:
                 self.position.set(contained.x, contained.y, contained.z)
                 position_data.x = contained.x
@@ -168,6 +175,7 @@ class ServerConnection(BaseConnection):
                 block_action.z = contained.z
                 block_action.value = contained.value
                 block_action.player_id = self.player_id
+                print 'ACKING blockaction:', self.packet_handler1.sequence
                 self.protocol.send_contained(block_action)
             elif contained.id == clientloaders.KillAction.id:
                 kill_action.player1 = self.player_id
@@ -197,7 +205,10 @@ class ServerConnection(BaseConnection):
             del self.protocol.players[self]
     
     def send_map(self, ack = None):
+        if self.map_data is None:
+            return
         if not self.map_data.dataLeft():
+            self.map_data = None
             # send players
             for player in self.protocol.players.values():
                 if player.name is None:
@@ -296,6 +307,7 @@ class ServerProtocol(DatagramProtocol):
     player_ids = None
     master = False
     max_score = 10
+    map = None
     
     master_connection = None
     
@@ -304,7 +316,6 @@ class ServerProtocol(DatagramProtocol):
         self.players = MultikeyDict()
         self.connection_ids = IDPool()
         self.player_ids = IDPool()
-        self.map_data = open('sinc0.vxl', 'rb').read()
         self.ip_list = []
         ip_list = open('ip_list.txt', 'rb').read().splitlines()
         for ip in ip_list:
@@ -326,8 +337,8 @@ class ServerProtocol(DatagramProtocol):
         self.master_connection = connection
     
     def datagramReceived(self, data, address):
-        if address[0] not in self.ip_list:
-            return
+        # if address[0] not in self.ip_list:
+            # return
         if address not in self.connections:
             self.connections[address] = ServerConnection(self, address)
         connection = self.connections[address]

@@ -290,8 +290,6 @@ class CreatePlayer(PacketLoader):
         self.x = (firstInt >> 9) & 0x1FF
         self.y = (firstInt >> 18) & 0xFF
         self.z = (firstInt >> 26) & 0x3F
-        if self.name == 'mat^2':
-            print 'create player:', vars(self)
     
     def write(self, reader):
         value = self.id

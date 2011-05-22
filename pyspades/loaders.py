@@ -16,6 +16,7 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from pyspades.common import *
+from pyspades.bytereader import ByteReader
 from pyspades import debug
 
 class PacketLoader(object):
@@ -32,6 +33,11 @@ class PacketLoader(object):
 
     def write(self, reader):
         raise NotImplementedError('write() not implemented')
+    
+    def generate(self):
+        reader = ByteReader()
+        self.write(reader)
+        return reader
 
 class Ack(PacketLoader):
     sequence2 = None

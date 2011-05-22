@@ -18,10 +18,11 @@
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 from pyspades.bytereader import ByteReader
-from pyspades.packet import Packet, load_server_packet
+from pyspades.packet import Packet, load_server_packet, generate_loader_data
 from pyspades.loaders import Ack
 from twisted.internet.defer import Deferred
 from pyspades.loaders import *
+from twisted.internet.task import LoopingCall
 
 import time
 
@@ -97,12 +98,20 @@ class BaseConnection(object):
     
     disconnected = False
     
+    resend_interval = 0.5
+    ping_loop = None
+    ping_interval = 5
+    ping_call = None
+    timeout = 10
+    
     def __init__(self):
         self.packet_handler1 = PacketHandler(self)
         self.packet_handler2 = PacketHandler(self)
         self.timer = Timer(0)
         self.packets = {}
         self.packet_deferreds = {}
+        self.ping_loop = LoopingCall(self.ping)
+        self.ping_loop.start(self.ping_interval, False)
     
     def data_received(self, data):
         reader = ByteReader(data)
@@ -131,9 +140,14 @@ class BaseConnection(object):
     def disconnect(self):
         if self.disconnected:
             return
+        self.ping_loop.stop()
+        if self.ping_call is not None:
+            self.ping_call.cancel()
+            self.ping_call = None
         self.disconnected = True
         for _, call in self.packet_deferreds.values():
             call.cancel()
+        self.packet_deferreds = {}
     
     def loader_received(self, loader):
         raise NotImplementedError('loader_received() not implemented')
@@ -150,42 +164,50 @@ class BaseConnection(object):
             defer.callback(loader)
             call.cancel()
         except KeyError:
+            return
             print 'ack:', sequence, timer, byte
             print 'no such ack!'
             print self.packet_deferreds.keys()
     
-    def resend(self, key, loader, timeout):
+    def resend(self, key, loader, resend_interval):
         defer, _ = self.packet_deferreds.pop(key)
         timer = self.timer.get_value()
-        out_packet.unique = self.unique
-        out_packet.connection_id = self.connection_id
-        out_packet.timer = timer
-        out_packet.items = [loader]
-        self.send_data(str(out_packet.generate()))
-        key = (loader.sequence, loader.byte)
-        call = reactor.callLater(timeout, self.resend, key, loader, timeout)
-        self.packet_deferreds[key] = (defer, call)
-
-    def send_loader(self, loader, ack = False, byte = 0, timeout = 0.5):
-        if self.disconnected:
-            return
-        sequence = self.get_packet_handler(byte).get_sequence(ack)
-        timer = self.timer.get_value()
-        loader.byte = byte
-        loader.sequence = sequence
-        loader.ack = ack
         out_packet.unique = self.unique
         if self.send_id:
             out_packet.connection_id = self.connection_id
         else:
             out_packet.connection_id = 0
         out_packet.timer = timer
-        out_packet.items = [loader]
+        out_packet.data = loader
+        self.send_data(str(out_packet.generate()))
+        call = reactor.callLater(resend_interval, self.resend, key, loader, 
+            resend_interval)
+        self.packet_deferreds[key] = (defer, call)
+
+    def send_loader(self, loader, ack = False, byte = 0, resend_interval = None):
+        if self.disconnected:
+            return
+        if resend_interval is None:
+            resend_interval = self.resend_interval
+        sequence = self.get_packet_handler(byte).get_sequence(ack)
+        timer = self.timer.get_value()
+        loader.byte = byte
+        loader.sequence = sequence
+        loader.ack = ack
+        loader = generate_loader_data(loader)
+        out_packet.unique = self.unique
+        if self.send_id:
+            out_packet.connection_id = self.connection_id
+        else:
+            out_packet.connection_id = 0
+        out_packet.timer = timer
+        out_packet.data = loader
         self.send_data(str(out_packet.generate()))
         if ack:
             defer = Deferred()
             key = (sequence, byte)
-            call = reactor.callLater(timeout, self.resend, key, loader, timeout)
+            call = reactor.callLater(resend_interval, self.resend, key, loader, 
+                resend_interval)
             self.packet_deferreds[key] = (defer, call)
             return defer
     
@@ -197,8 +219,23 @@ class BaseConnection(object):
         else:
             raise NotImplementedError('invalid byte')
             
-    def ping(self):
-        return self.send_loader(ping, True, 0xFF)
+    def ping(self, timeout = None):
+        if self.ping_call is not None:
+            return
+        if timeout is None:
+            timeout = self.timeout
+        self.ping_call = reactor.callLater(timeout, self.timed_out)
+        return self.send_loader(ping, True, 0xFF).addCallback(self.got_ping)
+        
+    def got_ping(self, ack):
+        if self.ping_call is not None:
+            self.ping_call.cancel()
+            self.ping_call = None
+    
+    def timed_out(self):
+        self.ping_call = None
+        print 'TIMED OUT!'
+        self.disconnect()
     
     def send_contained(self, contained, sequence = None):
         if sequence is not None:

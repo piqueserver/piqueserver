@@ -142,17 +142,21 @@ class JoinTeam(PacketLoader):
     team = None
     ip = None
     def read(self, reader):
+        # respawn?
+        print hexify(reader)
         firstByte = reader.readByte(True)
         self.team = firstByte >> 4 # 0 for b, 1 for g
-        self.ip = get_server_ip(reader.readInt(True, False))
-        self.name = reader.readString()
+        if reader.dataLeft():
+            self.ip = get_server_ip(reader.readInt(True, False))
+            self.name = reader.readString()
     
     def write(self, reader):
         byte = self.id
         byte |= self.team << 4
         reader.writeByte(byte, True)
-        reader.writeInt(make_server_number(self.ip), True, False)
-        reader.writeString(self.name)
+        if self.ip is not None and self.name is not None:
+            reader.writeInt(make_server_number(self.ip), True, False)
+            reader.writeString(self.name)
 
 class BlockAction(PacketLoader):
     x = y = z = None

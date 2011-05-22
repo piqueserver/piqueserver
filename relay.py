@@ -15,7 +15,7 @@ from cStringIO import StringIO
 # PORT = 32885
 # PORT = 32886
 
-HOST = get_server_ip('aos://816986541')
+HOST = get_server_ip('aos://32744877')
 PORT = 32887
 
 class ClientProtocol(DatagramProtocol):
@@ -62,10 +62,16 @@ ids = set()
 
 def parse_packet(input, isClient):
     packet.read(input)
-    print 'got packet:', packet.connection_id, isClient
+    # print 'got packet:', packet.connection_id, isClient
     # print 'received packet:', vars(packet)
     # print get_name(isClient), packet.items
     for item in packet.items[:]:
+        if not item.ack:
+            item.sequence = 0
+        if isClient:
+            if item.byte == 0xFF:
+                if item.ack:
+                    print item, item.sequence
         # print get_name(isClient), item, item.sequence, item.byte, item.ack
         if hasattr(item, 'data') and item.id != MapData.id:
             orig = str(item.data)
@@ -73,7 +79,7 @@ def parse_packet(input, isClient):
                 contained = load_client_packet(item.data)
             else:
                 contained = load_server_packet(item.data)
-            # print contained
+            # print contained, vars(contained)
             if item.data.dataLeft():
                 raw_input('packet not properly parsed')
             reader = ByteReader()
