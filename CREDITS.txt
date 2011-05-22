@@ -1,0 +1,4 @@
+CREDITS/CONTRIBUTIONS/ACKNOWLEDGEMENTS:
+
+Mathias "Mat^2" Kaerlev - all of the code so far
+"Tegu" - logo and testing, thanks a lot!

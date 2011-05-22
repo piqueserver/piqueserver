@@ -98,13 +98,13 @@ class ServerConnection(BaseConnection):
         elif loader.id in (SizedData.id, SizedSequenceData.id):
             contained = load_client_packet(loader.data)
             if contained.id == clientloaders.JoinTeam.id:
-                if self.team is None:
-                    self.team = [self.protocol.blue_team, 
-                        self.protocol.green_team][contained.team]
+                if self.name is None and contained.name is not None:
                     self.name = contained.name
                     self.protocol.players[self.name, self.player_id] = self
                     create_player.name = self.name
-                    
+        
+                self.team = [self.protocol.blue_team, 
+                    self.protocol.green_team][contained.team]
                 create_player.player_id = self.player_id
                 self.orientation = Vertex3(0, 0, 0)
                 self.position = position = Vertex3(20, 20, 48)
@@ -120,9 +120,9 @@ class ServerConnection(BaseConnection):
                 orientation_data.y = contained.y
                 orientation_data.z = contained.z
                 orientation_data.player_id = self.player_id
-                # self.protocol.send_contained(orientation_data,
-                    # self.orientation_sequence, sender = self)
-                # self.orientation_sequence += 1
+                self.protocol.send_contained(orientation_data,
+                    self.orientation_sequence, sender = self)
+                self.orientation_sequence += 1
             elif contained.id == clientloaders.PositionData.id:
                 self.position.set(contained.x, contained.y, contained.z)
                 position_data.x = contained.x
