@@ -71,6 +71,17 @@ cdef class VXLData:
         a = (((color & 0xFF000000) >> 24) / 128.0) * 255
         return (solid, (r, g, b, a))
     
+    def get_z(self, int x, int y, int start = 0):
+        cdef int z
+        for z in range(start, 64):
+            if self.geometry[x][y][z]:
+                return z
+        return None
+    
+    def remove_point(self, int x, int y, int z):
+        self.geometry[x][y][z] = 0
+        
+    
     def set_point(self, int x, int y, int z, char solid, tuple color_tuple):
         r, g, b, a = color_tuple
         cdef int color = b | (g << 8) | (r << 16) | (((a / 255.0) * 128) << 24)

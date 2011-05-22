@@ -23,10 +23,12 @@ from pyspades.bytereader import ByteReader
 from pyspades.packet import Packet, load_client_packet
 from pyspades.loaders import *
 from pyspades.common import *
+from pyspades.constants import *
 from pyspades import serverloaders, clientloaders
 from pyspades.multidict import MultikeyDict
 from pyspades.idpool import IDPool
 from pyspades.master import get_master_connection
+from pyspades.collision import vector_collision
 
 import random
 import math
@@ -57,6 +59,10 @@ class ServerConnection(BaseConnection):
     name = None
     kills = 0
     orientation_sequence = 0
+    hp = None
+    tool = None
+    color = 7368816
+    grenades = None
     
     up = down = left = right = False
     position = orientation = None
@@ -107,12 +113,14 @@ class ServerConnection(BaseConnection):
                     self.protocol.green_team][contained.team]
                 create_player.player_id = self.player_id
                 self.orientation = Vertex3(0, 0, 0)
-                self.position = position = Vertex3(20, 20, 48)
-                if self.team != self.protocol.blue_team:
-                    position.x += 256
+                x, y, z = self.team.get_random_position()
+                self.position = position = Vertex3(x, y, z)
                 create_player.x = position.x
-                create_player.y = position.y
+                create_player.y = position.y - 128
                 create_player.z = position.z
+                self.hp = 100
+                self.tool = 3
+                self.grenades = 2
                 self.protocol.send_contained(create_player)
             if contained.id == clientloaders.OrientationData.id:
                 self.orientation.set(contained.x, contained.y, contained.z)
@@ -129,6 +137,14 @@ class ServerConnection(BaseConnection):
                 position_data.y = contained.y
                 position_data.z = contained.z
                 position_data.player_id = self.player_id
+                other_flag = self.team.other.flag
+                if vector_collision(self.position, self.team.base):
+                    self.refill()
+                    if other_flag.player is self:
+                        self.capture_flag()
+                if other_flag.player is None and vector_collision(
+                self.position, other_flag):
+                    self.take_flag()
                 self.protocol.send_contained(position_data, sender = self)
             elif contained.id == clientloaders.MovementData.id:
                 self.up = contained.up
@@ -155,17 +171,21 @@ class ServerConnection(BaseConnection):
             elif contained.id == clientloaders.HitPacket.id:
                 if contained.player_id is not None:
                     player, = self.protocol.players[contained.player_id]
-                    hit_packet.value = contained.value
-                    player.send_contained(hit_packet)
+                    player.hit(HIT_VALUES[contained.value], self)
+                else:
+                    self.hit(contained.value)
             elif contained.id == clientloaders.GrenadePacket.id:
+                self.grenades -= 1
                 grenade_packet.player_id = self.player_id
                 grenade_packet.value = contained.value
                 self.protocol.send_contained(grenade_packet, sender = self)
             elif contained.id == clientloaders.SetWeapon.id:
+                self.tool = contained.value
                 set_weapon.player_id = self.player_id
                 set_weapon.value = contained.value
                 self.protocol.send_contained(set_weapon, sender = self)
             elif contained.id == clientloaders.SetColor.id:
+                self.color = contained.value
                 set_color.player_id = self.player_id
                 set_color.value = contained.value
                 self.protocol.send_contained(set_color, sender = self)
@@ -175,12 +195,10 @@ class ServerConnection(BaseConnection):
                 block_action.z = contained.z
                 block_action.value = contained.value
                 block_action.player_id = self.player_id
-                print 'ACKING blockaction:', self.packet_handler1.sequence
                 self.protocol.send_contained(block_action)
             elif contained.id == clientloaders.KillAction.id:
-                kill_action.player1 = self.player_id
-                kill_action.player2 = contained.player_id
-                self.protocol.send_contained(kill_action, sender = self)
+                other_player, = self.protocol.players[contained.player_id]
+                self.kill(other_player)
             elif contained.id == clientloaders.ChatMessage.id:
                 chat_message.global_message = contained.global_message
                 chat_message.value = contained.value
@@ -192,6 +210,67 @@ class ServerConnection(BaseConnection):
             print 'received:', loader
             raw_input('unknown loader')
     
+    def refill(self):
+        self.hp = 100
+        self.grenades = 2
+        intel_action.action_type = 4
+        self.send_contained(intel_action)
+    
+    def take_flag(self):
+        flag = self.team.other.flag
+        intel_action.action_type = 1
+        intel_action.player_id = self.player_id
+        self.protocol.send_contained(intel_action)
+    
+    def capture_flag(self):
+        other_team = self.team.other
+        flag = other_team.flag
+        player = flag.player
+        if player is not self:
+            return
+        intel_action.action_type = 3
+        intel_action.player_id = self.player_id
+        if self.team.score + 1 >= self.protocol.max_score:
+            intel_action.game_end = True
+            blue_team = self.protocol.blue_team
+            green_team = self.protocol.green_team
+            blue_team.initialize()
+            green_team.initialize()
+            intel_action.blue_flag_x = green_team.flag.x
+            intel_action.blue_flag_y = green_team.flag.y
+            intel_action.blue_base_x = green_team.base.x
+            intel_action.blue_base_y = green_team.base.y
+            intel_action.green_flag_x = green_team.flag.x
+            intel_action.green_flag_y = green_team.flag.y
+            intel_action.green_base_x = green_team.base.x
+            intel_action.green_base_y = green_team.base.y
+        else:
+            intel_action.game_end = False
+            self.team.score += 1
+            flag = other_team.set_flag()
+            intel_action.x = flag.x
+            intel_action.y = flag.y
+        self.protocol.send_contained(intel_action)
+    
+    def drop_flag(self):
+        flag = self.team.other.flag
+        player = flag.player
+        if player is not self:
+            return
+        position = self.position
+        x = int(position.x)
+        y = int(position.y)
+        z = int(position.z)
+        z = self.protocol.map.get_z(x, y, z)
+        flag.set_vector(x, y, z)
+        flag.player = None
+        intel_action.action_type = 2
+        intel_action.player_id = self.player_id
+        intel_action.x = flag.x
+        intel_action.y = flag.y
+        intel_action.z = flag.z
+        self.protocol.send_contained(intel_action)
+    
     def disconnect(self):
         if self.disconnected:
             return
@@ -202,7 +281,32 @@ class ServerConnection(BaseConnection):
         if self.player_id is not None:
             self.protocol.player_ids.put_back(self.player_id)
         if self.name is not None:
+            self.drop_flag()
+            player_data.player_left = self.player_id
+            self.protocol.send_contained(player_data, sender = self)
             del self.protocol.players[self]
+    
+    def hit(self, value, by = None):
+        self.hp -= value
+        if self.hp <= 0:
+            self.kill(by)
+            return
+        if by is not None:
+            hit_packet.value = HIT_CONSTANTS[value]
+            self.send_contained(hit_packet)
+    
+    def kill(self, by = None):
+        self.drop_flag()
+        if by is None:
+            kill_action.player1 = self.player_id
+        else:
+            kill_action.player1 = by.player_id
+        kill_action.player2 = self.player_id
+        if by is self:
+            sender = self
+        else:
+            sender = None
+        self.protocol.send_contained(kill_action, sender = sender)
     
     def send_map(self, ack = None):
         if self.map_data is None:
@@ -215,13 +319,14 @@ class ServerConnection(BaseConnection):
                     continue
                 existing_player.name = player.name
                 existing_player.player_id = player.player_id
+                existing_player.tool = player.tool
                 existing_player.kills = player.kills
                 existing_player.team = player.team.id
-                existing_player.color = 0
+                existing_player.color = player.color
                 self.send_contained(existing_player)
             
             # send initial data
-            blue = self.protocol.green_team
+            blue = self.protocol.blue_team
             green = self.protocol.green_team
             blue_flag = blue.flag
             green_flag = green.flag
@@ -229,6 +334,7 @@ class ServerConnection(BaseConnection):
             green_base = green.base
             
             self.player_id = self.protocol.player_ids.pop()
+            player_data.player_left = None
             player_data.player_id = self.player_id
             player_data.max_score = self.protocol.max_score
             player_data.blue_score = blue.score
@@ -285,18 +391,40 @@ class Vertex3(object):
         self.x = x
         self.y = y
         self.z = z
+    
+    def set_vector(self, vector):
+        self.set(vector.x, vector.y, vector.z)
 
 class Flag(Vertex3):
     player = None
+    team = None
 
 class Team(object):
-    score = 0
+    score = None
     flag = None
+    other = None
+    map = None
     
-    def __init__(self, id, base_pos, flag_pos):
+    def __init__(self, id, map):
         self.id = id
-        self.flag = Flag(*flag_pos)
-        self.base = Vertex3(*base_pos)
+        self.map = map
+        self.initialize()
+    
+    def initialize(self):
+        self.score = 0
+        self.set_flag()
+        self.base = Vertex3(*self.get_random_position())
+    
+    def set_flag(self):
+        self.flag = Flag(*self.get_random_position())
+        self.flag.team = self
+        return self.flag
+    
+    def get_random_position(self):
+        x = self.id * 384 + random.randrange(128)
+        y = 128 + random.randrange(256)
+        z = self.map.get_z(x, y)
+        return x, y, z
 
 class ServerProtocol(DatagramProtocol):
     name = 'pyspades WIP test'
@@ -320,8 +448,10 @@ class ServerProtocol(DatagramProtocol):
         ip_list = open('ip_list.txt', 'rb').read().splitlines()
         for ip in ip_list:
             reactor.resolve(ip).addCallback(self.add_ip)
-        self.blue_team = Team(0, (20, 20, 20), (40, 40, 40))
-        self.green_team = Team(1, (20, 20, 20), (40, 40, 40))
+        self.blue_team = Team(0, self.map)
+        self.green_team = Team(1, self.map)
+        self.blue_team.other = self.green_team
+        self.green_team.other = self.blue_team
     
     def add_ip(self, ip):
         self.ip_list.append(ip)

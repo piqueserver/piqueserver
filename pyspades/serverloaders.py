@@ -143,7 +143,7 @@ class SetColor(PacketLoader):
 class ExistingPlayer(PacketLoader):
     player_id = None
     team = None
-    something = None
+    tool = None
     kills = None
     color = None
     name = None
@@ -152,7 +152,7 @@ class ExistingPlayer(PacketLoader):
         firstInt = reader.readInt(True, False)
         self.player_id = (firstInt >> 4) & 0x1F
         self.team = (firstInt >> 9) & 9 # team
-        self.something = (firstInt >> 10) & 7 # something?
+        self.tool = (firstInt >> 10) & 7 # something?
         self.kills = (firstInt >> 13) & 0x7FF # kills
         reader.rewind(1)
         byte1 = reader.readByte(True)
@@ -165,7 +165,7 @@ class ExistingPlayer(PacketLoader):
         value = self.id
         value |= self.player_id << 4
         value |= self.team << 9
-        value |= (self.something or 0) << 10
+        value |= (self.tool or 0) << 10
         value |= self.kills << 13
         byte1 = self.color & 0xFF
         byte2 = (self.color & 0xFF00) >> 8

@@ -15,8 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+pyspades - Ace of Spades network protocol implementations
+"""
+
 __author__ = 'Mathias Kaerlev'
 __copyright__ = 'Copyright 2011, Mathias Kaerlev'
-__credits__ = ['Mathias "Mat^2" Kaerlev', '']
+__credits__ = ['Mathias "Mat^2" Kaerlev']
 __version__ = '0.1'
 __email__ = 'matpow2@gmail.com'
