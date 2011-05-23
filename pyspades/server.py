@@ -61,7 +61,7 @@ class ServerConnection(BaseConnection):
     orientation_sequence = 0
     hp = None
     tool = None
-    color = 7368816
+    color = (0x70, 0x70, 0x70)
     grenades = None
     
     up = down = left = right = False
@@ -185,14 +185,32 @@ class ServerConnection(BaseConnection):
                 set_weapon.value = contained.value
                 self.protocol.send_contained(set_weapon, sender = self)
             elif contained.id == clientloaders.SetColor.id:
-                self.color = contained.value
+                self.color = get_color(contained.value)
                 set_color.player_id = self.player_id
                 set_color.value = contained.value
                 self.protocol.send_contained(set_color, sender = self)
             elif contained.id == clientloaders.BlockAction.id:
-                block_action.x = contained.x
-                block_action.y = contained.y
-                block_action.z = contained.z
+                value = contained.value
+                map = self.protocol.map
+                x = contained.x
+                y = contained.y
+                z = contained.z
+                if value == BUILD_BLOCK:
+                    map.set_point(x, y, z, self.color + (255,))
+                elif value == DESTROY_BLOCK:
+                    map.remove_point(x, y, z)
+                elif value == SPADE_DESTROY:
+                    map.remove_point(x, y, z)
+                    map.remove_point(x, y, z + 1)
+                    map.remove_point(x, y, z - 1)
+                elif value == GRENADE_DESTROY:
+                    for nade_x in xrange(x - 1, x + 2):
+                        for nade_y in xrange(y - 1, y + 2):
+                            for nade_z in xrange(z - 1, z + 2):
+                                map.remove_point(nade_x, nade_y, nade_z)
+                block_action.x = x
+                block_action.y = y
+                block_action.z = z
                 block_action.value = contained.value
                 block_action.player_id = self.player_id
                 self.protocol.send_contained(block_action)
@@ -218,6 +236,9 @@ class ServerConnection(BaseConnection):
     
     def take_flag(self):
         flag = self.team.other.flag
+        if flag.player is not None:
+            return
+        flag.player = self
         intel_action.action_type = 1
         intel_action.player_id = self.player_id
         self.protocol.send_contained(intel_action)

@@ -15,6 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+def get_color(color):
+    b = color & 0xFF
+    g = (color & 0xFF00) >> 8
+    r = (color & 0xFF0000) >> 16
+    return r, g, b
+
+def make_color(r, g, b):
+    return b | (g << 8) | (r << 16)
+
 def binify(data, size = 2):
     binText = bin(str(data))[2:]
     binText = (2 * 8 - len(binText)) * '0' + binText
