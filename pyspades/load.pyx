@@ -69,9 +69,9 @@ cdef class VXLData:
     def __init__(self, fp = None):
         self.colors_python = allocate_memory(sizeof(int[MAP_X][MAP_Y][MAP_Z]),
             <char**>&self.colors)
-        self.geometry_python = allocate_memory(char[MAP_X][MAP_Y][MAP_Z],
+        self.geometry_python = allocate_memory(sizeof(char[MAP_X][MAP_Y][MAP_Z]),
             <char**>&self.geometry)
-        self.heightmap_python = allocate_memory(char[MAP_X][MAP_Y],
+        self.heightmap_python = allocate_memory(sizeof(char[MAP_X][MAP_Y]),
             <char**>&self.heightmap)
         cdef unsigned char * c_data
         if fp is not None:
