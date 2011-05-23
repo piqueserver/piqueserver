@@ -305,7 +305,7 @@ class ServerConnection(BaseConnection):
         y = int(position.y)
         z = int(position.z)
         z = self.protocol.map.get_z(x, y, z)
-        flag.set_vector((x, y, z))
+        flag.set(x, y, z)
         flag.player = None
         intel_action.action_type = 2
         intel_action.player_id = self.player_id
