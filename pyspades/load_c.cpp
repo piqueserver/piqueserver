@@ -3,7 +3,7 @@
 
     This file is part of pyspades.
 
-    pyspades program is free software: you can redistribute it and/or modify
+    pyspades is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -290,6 +290,5 @@ PyObject * save_vxl(int (*color)[MAP_X][MAP_Y][MAP_Z],
    }
    // string s = ss.str();
    // return PyString_FromStringAndSize(s.c_str(), s.size());
-   printf("yay!\n");
    return PyString_FromStringAndSize((char *)out_global, out - out_global);
 }
