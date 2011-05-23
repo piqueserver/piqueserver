@@ -1,0 +1,9 @@
+{
+    "name" : "pyspades server",
+    "max_players" : 20,
+    "cap_limit" : 10,
+    "map" : "maps/pyspades.vxl",
+    "respawn_time" : 5, 
+    "master" : true,
+    "friendly_fire" : false
+}

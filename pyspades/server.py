@@ -479,6 +479,8 @@ class Team(object):
         return x, y, z
 
 class ServerProtocol(DatagramProtocol):
+    connection_class = ServerConnection
+
     name = 'pyspades WIP test'
     max_players = 20
 
@@ -486,7 +488,7 @@ class ServerProtocol(DatagramProtocol):
     connection_ids = None
     player_ids = None
     master = False
-    max_score = 1
+    max_score = 10
     map = None
     friendly_fire = False
     
@@ -499,10 +501,6 @@ class ServerProtocol(DatagramProtocol):
         self.players = MultikeyDict()
         self.connection_ids = IDPool()
         self.player_ids = IDPool()
-        self.ip_list = []
-        ip_list = open('ip_list.txt', 'rb').read().splitlines()
-        for ip in ip_list:
-            reactor.resolve(ip).addCallback(self.add_ip)
         self.blue_team = Team(0, self.map)
         self.green_team = Team(1, self.map)
         self.blue_team.other = self.green_team
@@ -513,9 +511,6 @@ class ServerProtocol(DatagramProtocol):
             if player.name is not None:
                 player.spawn()
     
-    def add_ip(self, ip):
-        self.ip_list.append(ip)
-    
     def startProtocol(self):
         if self.master:
             get_master_connection(self.name, self.max_players).addCallback(
@@ -525,8 +520,6 @@ class ServerProtocol(DatagramProtocol):
         self.master_connection = connection
     
     def datagramReceived(self, data, address):
-        # if address[0] not in self.ip_list:
-            # return
         if address not in self.connections:
             self.connections[address] = ServerConnection(self, address)
         connection = self.connections[address]
