@@ -23,7 +23,8 @@ def make_server_number(ip):
     b = int(b)
     c = int(c)
     d = int(d)
-    return a | (b << 8) | (c << 16) | (d << 24)
+    return struct.unpack('i', struct.pack('I', 
+        a | (b << 8) | (c << 16) | (d << 24)))[0]
 
 def get_server_ip(number):
     try:
