@@ -2,12 +2,17 @@
 pyspades - default/featured server
 """
 
+import sys
+sys.path.append('..')
+
 from pyspades.server import ServerProtocol
 from pyspades.load import VXLData
 from twisted.internet import reactor
+from pyspades.common import crc32
 
 class TestProtocol(ServerProtocol):
-    map = VXLData(open('../examples/sinc0.vxl', 'rb'))
+    map = VXLData(open('../data/sinc0.vxl', 'rb'))
+    version = crc32(open('../data/client.exe', 'rb').read())
 
 PORT = 32887
 

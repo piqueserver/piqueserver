@@ -500,7 +500,6 @@ class ServerProtocol(DatagramProtocol):
         self.ip_list.append(ip)
     
     def startProtocol(self):
-        self.version = crc32(open('client.exe', 'rb').read())
         if self.master:
             get_master_connection(self.name, self.max_players).addCallback(
                 self.got_master_connection)

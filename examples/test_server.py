@@ -3,7 +3,8 @@ from pyspades.load import VXLData
 from twisted.internet import reactor
 
 class TestProtocol(ServerProtocol):
-    map = VXLData(open('sinc0.vxl', 'rb'))
+    map = VXLData(open('../data/sinc0.vxl', 'rb'))
+    version = crc32(open('../data/client.exe', 'rb').read())
 
 PORT = 32887
 
