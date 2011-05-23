@@ -22,14 +22,19 @@ pyspades - default/featured server
 import sys
 sys.path.append('..')
 
-from pyspades.server import ServerProtocol
+from pyspades.server import ServerProtocol, ServerConnection
 from pyspades.load import VXLData
 from twisted.internet import reactor
 from pyspades.common import crc32
 
 import json
 
-class TestProtocol(ServerProtocol):
+class FeatureConnection(ServerConnection):
+    def disconnect(self):
+        print self.name, 'disconnected!'
+        ServerConnection.disconnect(self)
+
+class FeatureProtocol(ServerProtocol):
     version = crc32(open('../data/client.exe', 'rb').read())
     
     def __init__(self):
@@ -44,6 +49,6 @@ class TestProtocol(ServerProtocol):
 
 PORT = 32887
 
-reactor.listenUDP(PORT, TestProtocol())
+reactor.listenUDP(PORT, FeatureProtocol())
 print 'Started server on port %s...' % PORT
 reactor.run()

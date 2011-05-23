@@ -328,6 +328,9 @@ class ServerConnection(BaseConnection):
             player_data.player_left = self.player_id
             self.protocol.send_contained(player_data, sender = self)
             del self.protocol.players[self]
+        if self.spawn_call is not None:
+            self.spawn_call.cancel()
+            self.spawn_call = None
     
     def hit(self, value, by = None):
         if self.hp is None:
