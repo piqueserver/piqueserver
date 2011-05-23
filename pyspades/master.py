@@ -97,9 +97,9 @@ class MasterConnection(BaseConnection):
     def got_it(self, ack):
         reactor.callLater(0.5, self.do_stuff)
     
-    def set_count(eslf, value):
+    def set_count(self, value):
         add_server.count = value
-        self.send_contained(value)
+        self.send_contained(add_server)
     
     def send_data(self, data):
         self.protocol.transport.write(data)
@@ -131,12 +131,15 @@ class MasterProtocol(DatagramProtocol):
     def datagramReceived(self, data, address):
         self.connection.data_received(data)
 
-def get_master_connection(name, max):
+def get_master_connection(name, max, ip = None):
     defer = Deferred()
     
     def got_ip(ip):
         reactor.listenUDP(0, MasterProtocol(name, ip, max, defer))
-        
-    get_external_ip().addCallback(got_ip)
+    
+    if ip is None:
+        get_external_ip().addCallback(got_ip)
+    else:
+        got_ip(ip)
     
     return defer

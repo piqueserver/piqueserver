@@ -102,6 +102,7 @@ class BaseConnection(object):
     ping_loop = None
     ping_interval = 5
     ping_call = None
+    ping_defer = None
     timeout = 10
     
     def __init__(self):
@@ -221,11 +222,13 @@ class BaseConnection(object):
             
     def ping(self, timeout = None):
         if self.ping_call is not None:
-            return
+            return self.ping_defer
         if timeout is None:
             timeout = self.timeout
         self.ping_call = reactor.callLater(timeout, self.timed_out)
-        return self.send_loader(ping, True, 0xFF).addCallback(self.got_ping)
+        self.ping_defer = self.send_loader(ping, True, 0xFF).addCallback(
+            self.got_ping)
+        return self.ping_defer
         
     def got_ping(self, ack):
         if self.ping_call is not None:

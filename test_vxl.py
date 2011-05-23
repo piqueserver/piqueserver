@@ -9,16 +9,18 @@ from pyspades.load import VXLData
                 # raw_input()
 
 map = VXLData(open('sinc0.vxl', 'rb'))
-new_data = map.generate()
-open('output.vxl', 'wb').write(new_data)
-if open('sinc0.vxl', 'rb').read() != new_data:
-    print 'NOOO'
+map.remove_point(20, 20, 20)
+print 'done'
+# new_data = map.generate()
+# open('output.vxl', 'wb').write(new_data)
+# if open('sinc0.vxl', 'rb').read() != new_data:
+    # print 'NOOO'
 
-# import time
+import time
 
-# for _ in xrange(10):
-    # start = time.clock()
+for _ in xrange(10):
+    start = time.clock()
     # data = map.generate()
-    # open('output.vxl', 'wb').write(data)
-    # print 'took:', (time.clock() - start)
-# raw_input()
+    map.remove_point(20, 20, 20)
+    print 'took:', (time.clock() - start)
+raw_input()
