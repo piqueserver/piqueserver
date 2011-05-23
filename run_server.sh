@@ -1,1 +1,2 @@
-python feature_server/run.py
+cd feature_server
+python run.py
