@@ -166,9 +166,9 @@ class BaseConnection(object):
             call.cancel()
         except KeyError:
             return
-            print 'ack:', sequence, timer, byte
-            print 'no such ack!'
-            print self.packet_deferreds.keys()
+            # print 'ack:', sequence, timer, byte
+            # print 'no such ack!'
+            # print self.packet_deferreds.keys()
     
     def resend(self, key, loader, resend_interval):
         defer, _ = self.packet_deferreds.pop(key)

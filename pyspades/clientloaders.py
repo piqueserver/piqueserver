@@ -143,7 +143,6 @@ class JoinTeam(PacketLoader):
     ip = None
     def read(self, reader):
         # respawn?
-        print hexify(reader)
         firstByte = reader.readByte(True)
         self.team = firstByte >> 4 # 0 for b, 1 for g
         if reader.dataLeft():

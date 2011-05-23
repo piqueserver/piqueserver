@@ -211,6 +211,7 @@ class ServerConnection(BaseConnection):
                     block_action.value = contained.value
                     block_action.player_id = self.player_id
                     self.protocol.send_contained(block_action)
+                    self.protocol.update_entities()
                 elif contained.id == clientloaders.KillAction.id:
                     other_player, = self.protocol.players[contained.player_id]
                     self.kill(other_player)
@@ -218,7 +219,12 @@ class ServerConnection(BaseConnection):
                     chat_message.global_message = contained.global_message
                     chat_message.value = contained.value
                     chat_message.player_id = self.player_id
-                    self.protocol.send_contained(chat_message, sender = self)
+                    if contained.global_message:
+                        team = None
+                    else:
+                        team = self.team
+                    self.protocol.send_contained(chat_message, 
+                        sender = self, team = team)
             return
     
     def refill(self):
@@ -272,14 +278,15 @@ class ServerConnection(BaseConnection):
             green_team = self.protocol.green_team
             blue_team.initialize()
             green_team.initialize()
-            intel_action.blue_flag_x = green_team.flag.x
-            intel_action.blue_flag_y = green_team.flag.y
-            intel_action.blue_base_x = green_team.base.x
-            intel_action.blue_base_y = green_team.base.y
+            intel_action.blue_flag_x = blue_team.flag.x
+            intel_action.blue_flag_y = blue_team.flag.y
+            intel_action.blue_base_x = blue_team.base.x
+            intel_action.blue_base_y = blue_team.base.y
             intel_action.green_flag_x = green_team.flag.x
             intel_action.green_flag_y = green_team.flag.y
             intel_action.green_base_x = green_team.base.x
             intel_action.green_base_y = green_team.base.y
+            self.protocol.reset_game()
         else:
             intel_action.game_end = False
             self.team.score += 1
@@ -298,7 +305,7 @@ class ServerConnection(BaseConnection):
         y = int(position.y)
         z = int(position.z)
         z = self.protocol.map.get_z(x, y, z)
-        flag.set_vector(x, y, z)
+        flag.set_vector((x, y, z))
         flag.player = None
         intel_action.action_type = 2
         intel_action.player_id = self.player_id
@@ -324,6 +331,9 @@ class ServerConnection(BaseConnection):
     
     def hit(self, value, by = None):
         if self.hp is None:
+            return
+        if (not self.protocol.friendly_fire and by is not None and
+        self.team is by.team):
             return
         self.hp -= value
         if self.hp <= 0:
@@ -476,8 +486,9 @@ class ServerProtocol(DatagramProtocol):
     connection_ids = None
     player_ids = None
     master = False
-    max_score = 10
+    max_score = 1
     map = None
+    friendly_fire = False
     
     respawn_time = 5
     
@@ -496,6 +507,11 @@ class ServerProtocol(DatagramProtocol):
         self.green_team = Team(1, self.map)
         self.blue_team.other = self.green_team
         self.green_team.other = self.blue_team
+    
+    def reset_game(self):
+        for player in self.players.values():
+            if player.name is not None:
+                player.spawn()
     
     def add_ip(self, ip):
         self.ip_list.append(ip)
@@ -516,7 +532,32 @@ class ServerProtocol(DatagramProtocol):
         connection = self.connections[address]
         connection.data_received(data)
     
-    def send_contained(self, contained, sequence = False, sender = None):
+    def update_entities(self):
+        blue_team = self.blue_team
+        green_team = self.green_team
+        map = self.map
+        intel_action.action_type = 0
+        for (move_type, entity) in ((MOVE_BLUE_FLAG, blue_team.flag),
+                                   (MOVE_GREEN_FLAG, green_team.flag),
+                                   (MOVE_BLUE_BASE, blue_team.base),
+                                   (MOVE_GREEN_BASE, green_team.base)):
+            moved = False
+            if map.get_solid(entity.x, entity.y, entity.z - 1):
+                moved = True
+                entity.z -= 1
+                while map.get_solid(entity.x, entity.y, entity.z - 1):
+                    entity.z -= 1
+            else:
+                while not map.get_solid(entity.x, entity.y, entity.z):
+                    moved = True
+                    entity.z += 1
+            if moved:
+                intel_action.move_type = move_type
+                intel_action.z = entity.z
+                self.send_contained(intel_action)
+    
+    def send_contained(self, contained, sequence = False, sender = None,
+                       team = None):
         if sequence:
             loader = sized_sequence
         else:
@@ -526,6 +567,8 @@ class ServerProtocol(DatagramProtocol):
         loader.data = data
         for player in self.connections.values():
             if player is sender or player.player_id is None:
+                continue
+            if team is not None and player.team is not team:
                 continue
             if sequence:
                 player.orientation_sequence = (player.orientation_sequence + 1

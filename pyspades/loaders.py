@@ -90,7 +90,6 @@ class ConnectionRequest(PacketLoader):
         check_default(dword_5, 2)
         self.auth_val = dword_6
         self.version = dword_7
-        print vars(self)
     
     def write(self, reader):
         reader.writeShort(0)
