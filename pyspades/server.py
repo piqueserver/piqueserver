@@ -126,9 +126,8 @@ class ServerConnection(BaseConnection):
                     orientation_data.y = contained.y
                     orientation_data.z = contained.z
                     orientation_data.player_id = self.player_id
-                    self.protocol.send_contained(orientation_data,
-                        self.orientation_sequence, sender = self)
-                    self.orientation_sequence += 1
+                    self.protocol.send_contained(orientation_data, 
+                        True, sender = self)
                 elif contained.id == clientloaders.PositionData.id:
                     self.position.set(contained.x, contained.y, contained.z)
                     position_data.x = contained.x
@@ -324,6 +323,8 @@ class ServerConnection(BaseConnection):
             del self.protocol.players[self]
     
     def hit(self, value, by = None):
+        if self.hp is None:
+            return
         self.hp -= value
         if self.hp <= 0:
             self.kill(by)
@@ -363,7 +364,7 @@ class ServerConnection(BaseConnection):
                 existing_player.tool = player.tool
                 existing_player.kills = player.kills
                 existing_player.team = player.team.id
-                existing_player.color = player.color
+                existing_player.color = make_color(*player.color)
                 self.send_contained(existing_player)
             
             # send initial data
@@ -474,7 +475,7 @@ class ServerProtocol(DatagramProtocol):
     connections = None
     connection_ids = None
     player_ids = None
-    master = False
+    master = True
     max_score = 10
     map = None
     
@@ -515,10 +516,9 @@ class ServerProtocol(DatagramProtocol):
         connection = self.connections[address]
         connection.data_received(data)
     
-    def send_contained(self, contained, sequence = None, sender = None):
-        if sequence is not None:
+    def send_contained(self, contained, sequence = False, sender = None):
+        if sequence:
             loader = sized_sequence
-            loader.sequence2 = sequence
         else:
             loader = sized_data
         data = ByteReader()
@@ -527,4 +527,7 @@ class ServerProtocol(DatagramProtocol):
         for player in self.connections.values():
             if player is sender or player.player_id is None:
                 continue
+            if sequence:
+                loader.sequence2 = player.orientation_sequence
+                player.orientation_sequence += 1
             player.send_loader(loader, sequence is None)

@@ -243,7 +243,7 @@ class BaseConnection(object):
     def send_contained(self, contained, sequence = None):
         if sequence is not None:
             loader = sized_sequence
-            loader.sequence = sequence
+            loader.sequence2 = sequence
         else:
             loader = sized_data
         data = ByteReader()
