@@ -160,7 +160,7 @@ void write_color(unsigned char * out, long color)
 {
    // assume color is ARGB native, but endianness is unknown
    if (color == 0)
-       color = 
+       color = DEFAULT_COLOR;
    // file format endianness is ARGB little endian, i.e. B,G,R,A
    *out = (char)(color >> 0);
    out += 1;
