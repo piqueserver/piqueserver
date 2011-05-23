@@ -21,6 +21,7 @@
 #define MAP_X 512
 #define MAP_Y 512
 #define MAP_Z 64
+#define DEFAULT_COLOR 0xFF674028
 
 #include <iostream>
 #include <sstream>
@@ -158,7 +159,8 @@ inline int is_surface(char (*map)[MAP_X][MAP_Y][MAP_Z], int x, int y, int z)
 void write_color(unsigned char * out, long color)
 {
    // assume color is ARGB native, but endianness is unknown
-
+   if (color == 0)
+       color = 
    // file format endianness is ARGB little endian, i.e. B,G,R,A
    *out = (char)(color >> 0);
    out += 1;
@@ -183,7 +185,7 @@ PyObject * save_vxl(long (*color)[MAP_X][MAP_Y][MAP_Z],
    int i,j,k;
    if (out_global == 0)
    {
-       out_global = (unsigned char *)malloc(6291456);
+       out_global = (unsigned char *)malloc(6291456); // allocate 6 mb
    }
    unsigned char * out = out_global;
    // stringstream ss(stringstream::in | stringstream::out);

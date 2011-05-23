@@ -37,5 +37,8 @@ def check_node(self, x, y, z):
     global goal_pos
     global map
     goal_pos = (x, y, self.get_height(x, y))
+    start = (x, y, z)
+    if start == goal_pos:
+        return True
     map = self
     return astar((x, y, z), neighbors, goal, 0, cost, heuristic)

@@ -1,4 +1,6 @@
 CREDITS/CONTRIBUTIONS/ACKNOWLEDGEMENTS:
 
-Mathias "Mat^2" Kaerlev - all of the code so far
-"Tegu" - logo and testing, thanks a lot!
+Mathias "Mat^2" Kaerlev - Most of the code
+"bildramer" - Floating block detection and misc. code
+"TheGrandmaster" - Tester/ideas
+"Tegu" - Logo and testing

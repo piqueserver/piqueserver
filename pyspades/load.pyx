@@ -38,6 +38,7 @@ cdef extern from "load_c.cpp":
         MAP_X
         MAP_Y
         MAP_Z
+        DEFAULT_COLOR
     void load_vxl(unsigned char * v, long (*colors)[MAP_X][MAP_Y][MAP_Z], 
                                      char (*geometry)[MAP_X][MAP_Y][MAP_Z],
                                      char (*heightmap)[MAP_X][MAP_Y])
@@ -80,6 +81,8 @@ cdef class VXLData:
     
     def get_point(self, int x, int y, int z):
         cdef long color = self.colors[0][x][y][z]
+        if color == 0:
+            color = DEFAULT_COLOR
         cdef char solid = self.geometry[0][x][y][z]
         return (solid, get_color(color))
     
@@ -106,7 +109,13 @@ cdef class VXLData:
         if not self.geometry[0][x][y][z]:
             return
         self.geometry[0][x][y][z] = 0
-        
+        cdef int h_z
+        for h_z in range(63, -1, -1):
+            if not self.geometry[0][x][y][h_z]:
+                self.heightmap[0][x][y] = h_z + 1
+                break
+        else:
+            self.heightmap[0][x][y] = 0
         for node_x, node_y, node_z in self.get_neighbors(x, y, z):
             if not check_node(self, node_x, node_y, node_z):
                 destroy_floating_blocks(node_x, node_y, node_z, self.geometry)
@@ -128,6 +137,12 @@ cdef class VXLData:
         cdef int color = make_color(r, g, b, a)
         self.geometry[0][x][y][z] = 1
         self.colors[0][x][y][z] = color
+        for h_z in range(63, -1, -1):
+            if not self.geometry[0][x][y][h_z]:
+                self.heightmap[0][x][y] = h_z + 1
+                break
+        else:
+            self.heightmap[0][x][y] = 0
         
     def generate(self):
         return save_vxl(self.colors, self.geometry)
