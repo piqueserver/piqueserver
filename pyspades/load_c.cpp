@@ -29,7 +29,7 @@
 #include <queue>
 using namespace std;
 
-void load_vxl(unsigned char * v, long (*colors)[MAP_X][MAP_Y][MAP_Z], 
+void load_vxl(unsigned char * v, int (*colors)[MAP_X][MAP_Y][MAP_Z], 
                                  char (*geometry)[MAP_X][MAP_Y][MAP_Z],
                                  char (*heightmap)[MAP_X][MAP_Y])
 {
@@ -41,7 +41,7 @@ void load_vxl(unsigned char * v, long (*colors)[MAP_X][MAP_Y][MAP_Z],
          }
          z = 0;
          for(;;) {
-            long *color;
+            int *color;
             int i;
             int number_4byte_chunks = v[0];
             int top_color_start = v[1];
@@ -54,7 +54,7 @@ void load_vxl(unsigned char * v, long (*colors)[MAP_X][MAP_Y][MAP_Z],
             for(i=z; i < top_color_start; i++)
                (*geometry)[x][y][i] = 0;
 
-            color = (long *) (v+4);
+            color = (int *) (v+4);
             for(z=top_color_start; z <= top_color_end; z++)
                (*colors)[x][y][z] = *color++;
 
@@ -156,7 +156,7 @@ inline int is_surface(char (*map)[MAP_X][MAP_Y][MAP_Z], int x, int y, int z)
    return 0;
 }
 
-void write_color(unsigned char * out, long color)
+void write_color(unsigned char * out, int color)
 {
    // assume color is ARGB native, but endianness is unknown
    if (color == 0)
@@ -179,7 +179,7 @@ void write_color(unsigned char * out, long color)
 
 unsigned char * out_global = 0;
 
-PyObject * save_vxl(long (*color)[MAP_X][MAP_Y][MAP_Z], 
+PyObject * save_vxl(int (*color)[MAP_X][MAP_Y][MAP_Z], 
                     char (*map)[MAP_X][MAP_Y][MAP_Z])
 {
    int i,j,k;

@@ -39,10 +39,10 @@ cdef extern from "load_c.cpp":
         MAP_Y
         MAP_Z
         DEFAULT_COLOR
-    void load_vxl(unsigned char * v, long (*colors)[MAP_X][MAP_Y][MAP_Z], 
+    void load_vxl(unsigned char * v, int (*colors)[MAP_X][MAP_Y][MAP_Z], 
                                      char (*geometry)[MAP_X][MAP_Y][MAP_Z],
                                      char (*heightmap)[MAP_X][MAP_Y])
-    object save_vxl(long (*color)[MAP_X][MAP_Y][MAP_Z], char (*map)[MAP_X][MAP_Y][MAP_Z])
+    object save_vxl(int (*color)[MAP_X][MAP_Y][MAP_Z], char (*map)[MAP_X][MAP_Y][MAP_Z])
     void destroy_floating_blocks(int x, int y, int z, 
                                  char (*map)[MAP_X][MAP_Y][MAP_Z])
 
@@ -61,17 +61,17 @@ cdef inline int make_color(int r, int g, int b, a):
 
 cdef class VXLData:
     cdef:
-        long (*colors)[MAP_X][MAP_Y][MAP_Z]
+        int (*colors)[MAP_X][MAP_Y][MAP_Z]
         char (*geometry)[MAP_X][MAP_Y][MAP_Z]
         char (*heightmap)[MAP_X][MAP_Y]
         object colors_python, geometry_python, heightmap_python
         
     def __init__(self, fp = None):
-        self.colors_python = allocate_memory(4 * MAP_X * MAP_Y * MAP_Z,
+        self.colors_python = allocate_memory(sizeof(int[MAP_X][MAP_Y][MAP_Z]),
             <char**>&self.colors)
-        self.geometry_python = allocate_memory(MAP_X * MAP_Y * MAP_Z,
+        self.geometry_python = allocate_memory(char[MAP_X][MAP_Y][MAP_Z],
             <char**>&self.geometry)
-        self.heightmap_python = allocate_memory(MAP_X * MAP_Y,
+        self.heightmap_python = allocate_memory(char[MAP_X][MAP_Y],
             <char**>&self.heightmap)
         cdef unsigned char * c_data
         if fp is not None:
@@ -80,7 +80,7 @@ cdef class VXLData:
             load_vxl(c_data, self.colors, self.geometry, self.heightmap)
     
     def get_point(self, int x, int y, int z):
-        cdef long color = self.colors[0][x][y][z]
+        cdef int color = self.colors[0][x][y][z]
         if color == 0:
             color = DEFAULT_COLOR
         cdef char solid = self.geometry[0][x][y][z]
