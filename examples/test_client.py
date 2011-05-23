@@ -5,9 +5,6 @@ from pyspades.tools import *
 class TestProtocol(ClientProtocol):
     pass
 
-# HOST = '95.211.73.134'
-# PORT = 32887
-
 HOST = get_server_ip('aos://458956633')
 PORT = 32887
 
