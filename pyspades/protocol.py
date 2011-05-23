@@ -237,7 +237,6 @@ class BaseConnection(object):
     
     def timed_out(self):
         self.ping_call = None
-        print 'TIMED OUT!'
         self.disconnect()
     
     def send_contained(self, contained, sequence = None):

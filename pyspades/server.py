@@ -475,7 +475,7 @@ class ServerProtocol(DatagramProtocol):
     connections = None
     connection_ids = None
     player_ids = None
-    master = True
+    master = False
     max_score = 10
     map = None
     
@@ -528,6 +528,7 @@ class ServerProtocol(DatagramProtocol):
             if player is sender or player.player_id is None:
                 continue
             if sequence:
+                player.orientation_sequence = (player.orientation_sequence + 1
+                    ) & 0xFFFF
                 loader.sequence2 = player.orientation_sequence
-                player.orientation_sequence += 1
-            player.send_loader(loader, sequence is None)
+            player.send_loader(loader, not sequence)
