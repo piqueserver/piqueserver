@@ -88,13 +88,14 @@ class FeatureConnection(ServerConnection):
             self.votekick_call = reactor.callLater(votekick_time, 
                 self.end_votekick, 'Not enough votes')
             self.votekick_loop = LoopingCall(self.update_votekick)
-            self.votekick_loop.start(votekick_time / 10.0, False)
+            self.votekick_loop.start(votekick_time / 4.0, False)
         else:
             self.votekicks.add(by)
         value = int((len(self.votekicks) / float(len(self.protocol.players))
             ) * 100.0)
         if value >= self.protocol.votekick_percentage:
             self.disconnect()
+            self.votekick_call.cancel()
             self.end_votekick('Player kicked')
     
     def update_votekick(self):
@@ -102,14 +103,13 @@ class FeatureConnection(ServerConnection):
             return
         value = int((len(self.votekicks) / float(len(self.protocol.players))
             ) * 100.0)
-        self.protocol.send_chat('Votekick for %s at %s' % (self.name,
+        self.protocol.send_chat('Votekick for %s at %s%%' % (self.name,
             value))
     
     def end_votekick(self, result):
         self.protocol.send_chat('Votekick ended for %s: %s' % (
             self.name, result))
         self.votekick_loop.stop()
-        self.votekick_call.cancel()
         self.votekick_loop = self.votekicks = self.votekick_call = None
     
     def kick(self, reason = None):

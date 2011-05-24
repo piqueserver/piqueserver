@@ -45,6 +45,13 @@ def kill(connection, value):
     connection.protocol.send_chat('%s killed %s' % (connection.name, 
         player.name))
 
+@admin
+def heal(connection, value):
+    player = get_player(connection, value)
+    player.refill()
+    connection.protocol.send_chat('%s was healed by %s' % (player.name,
+        connection.name))
+
 def votekick(connection, value, reason = None):
     player = get_player(connection, value)
     player.votekick(connection, reason)
@@ -71,10 +78,11 @@ command_list = [
     help,
     login,
     kick,
+    votekick,
     ban,
     say,
     kill,
-    votekick
+    heal
 ]
 
 commands = {}
