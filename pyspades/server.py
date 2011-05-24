@@ -509,10 +509,10 @@ class Team(object):
     def initialize(self):
         self.score = 0
         self.set_flag()
-        self.base = Vertex3(*self.get_random_position(), True)
+        self.base = Vertex3(*self.get_random_position(True))
     
     def set_flag(self):
-        self.flag = Flag(*self.get_random_position(), True)
+        self.flag = Flag(*self.get_random_position(True))
         self.flag.team = self
         return self.flag
     
@@ -563,12 +563,20 @@ class ServerProtocol(DatagramProtocol):
                 player.spawn()
     
     def startProtocol(self):
+        self.set_master()
+    
+    def set_master(self):
         if self.master:
             get_master_connection(self.name, self.max_players).addCallback(
                 self.got_master_connection)
         
     def got_master_connection(self, connection):
         self.master_connection = connection
+        connection.callback = self.master_disconnected
+    
+    def master_disconnected(self):
+        self.master_connection = None
+        self.set_master()
     
     def datagramReceived(self, data, address):
         if address not in self.connections:

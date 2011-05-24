@@ -101,6 +101,12 @@ class MasterConnection(BaseConnection):
         add_server.count = value
         self.send_contained(add_server)
     
+    def disconnect(self):
+        BaseConnection.disconnect(self)
+        callback = self.protocol.disconnect_callback
+        if callback is not None:
+            callback()
+    
     def send_data(self, data):
         self.protocol.transport.write(data)
 
@@ -111,6 +117,7 @@ def get_external_ip():
 
 class MasterProtocol(DatagramProtocol):
     connection_class = MasterConnection
+    disconnect_callback = None
     def __init__(self, name, ip, max, defer = None):
         self.name = name
         self.ip = ip
