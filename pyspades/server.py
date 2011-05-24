@@ -78,9 +78,12 @@ class ServerConnection(BaseConnection):
     def loader_received(self, loader):
         if self.connection_id is None:
             if loader.id == ConnectionRequest.id:
-                if loader.client and loader.version != self.protocol.version:
-                    self.disconnect()
-                    return
+                if loader.client:
+                    max_players = min(32, self.protocol.max_players)
+                    if (loader.version != self.protocol.version
+                    or len(self.protocol.connections) + 1 > max_players):
+                        self.disconnect()
+                        return
                 self.auth_val = loader.auth_val
                 if loader.client:
                     self.connection_id = self.protocol.connection_ids.pop()

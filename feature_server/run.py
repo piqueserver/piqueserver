@@ -187,8 +187,8 @@ class FeatureProtocol(ServerProtocol):
         ServerProtocol.__init__(self)
     
     def add_ban(self, ip):
-        for address, connection in self.connections.iteritems():
-            if address[0] == ip:
+        for connection in self.connections.values():
+            if connection.address[0] == ip:
                 connection.kick()
         self.bans.add(ip)
         json.dump(list(self.bans), open('bans.txt', 'wb'))
