@@ -35,6 +35,7 @@ import commands
 class FeatureConnection(ServerConnection):
     admin = False
     votekick_loop = None
+    votekick_call = None
     votekicks = None
     
     def on_join(self):
@@ -62,10 +63,10 @@ class FeatureConnection(ServerConnection):
                 self.name, reason or 'No reason specified'))
             self.votekicks = set([by])
             votekick_time = self.protocol.votekick_time
-            reactor.callLater(votekick_time, self.end_votekick,
-                'Not enough votes')
+            self.votekick_call = reactor.callLater(votekick_time, 
+                self.end_votekick, 'Not enough votes')
             self.votekick_loop = LoopingCall(self.update_votekick)
-            self.votekick_loop.start(votekick_time / 10, False)
+            self.votekick_loop.start(votekick_time / 10.0, False)
         else:
             self.votekicks.add(by)
         value = int((len(self.votekicks) / float(len(self.protocol.players))
@@ -86,7 +87,8 @@ class FeatureConnection(ServerConnection):
         self.protocol.send_chat('Votekick ended for %s: %s' % (
             self.name, result))
         self.votekick_loop.stop()
-        self.votekick_loop = self.votekick = None
+        self.votekick_call.cancel()
+        self.votekick_loop = self.votekicks = self.votekick_call = None
     
     def kick(self, reason = None):
         if reason is not None:
@@ -125,6 +127,7 @@ class FeatureProtocol(ServerProtocol):
         self.master = config.get('master', True)
         self.friendly_fire = config.get('friendly_fire', True)
         self.motd = config.get('motd', None)
+        self.max_players = config.get('max_players', 20)
         passwords = config.get('passwords', {})
         self.admin_passwords = passwords.get('admin', [])
         for password in self.admin_passwords:

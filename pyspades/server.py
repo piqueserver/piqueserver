@@ -514,7 +514,10 @@ class Team(object):
         self.flag.team = self
         return self.flag
     
-    def get_random_position(self):
+    def get_random_position(self, force_land = False):
+        if force_land:
+            while 1:
+                x, y, z = self.get_random_position()
         x = self.id * 384 + random.randrange(128)
         y = 128 + random.randrange(256)
         z = self.map.get_z(x, y)

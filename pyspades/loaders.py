@@ -83,7 +83,8 @@ class ConnectionRequest(PacketLoader):
         check_default(v16, 1400)
         check_default(v21, 32768)
         check_default(v2, 1)
-        check_default(dword_1, 0)
+        if dword_1 not in (0, 0x80000):
+            raw_input('unknown dword_1: %s' % dword_1)
         check_default(dword_2, 0)
         check_default(dword_3, 5000)
         check_default(dword_4, 2)

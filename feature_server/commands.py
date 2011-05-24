@@ -29,7 +29,8 @@ def kick(connection, value, reason = None):
     player.kick(reason)
 
 @admin
-def say(connection, value):
+def say(connection, *arg):
+    value = ' '.join(arg)
     connection.protocol.send_chat(value)
 
 @admin
@@ -39,9 +40,9 @@ def kill(connection, value):
     connection.protocol.send_chat('%s killed %s' % (connection.name, 
         player.name))
 
-def votekick(connection, value):
+def votekick(connection, value, reason = None):
     player = get_player(connection, value)
-    player.votekick(connection)
+    player.votekick(connection, reason)
 
 def help(connection):
     """
