@@ -118,12 +118,14 @@ class ServerConnection(BaseConnection):
                     if self.accept_team_join(team) == False:
                         if self.team is None and old_team:
                             self.team = old_team
-                        return
+                        if not old_team:
+                            return
+                    else:
+                        self.team = team
                     if self.name is None and contained.name is not None:
                         self.name = self.protocol.get_name(contained.name)
                         self.protocol.players[self.name, self.player_id] = self
                         self.protocol.update_master()
-                    self.team = team
                     if old_team is None:
                         self.on_login(self.name)
                         self.spawn(name = self.name)
