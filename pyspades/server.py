@@ -114,6 +114,7 @@ class ServerConnection(BaseConnection):
                     if self.name is None and contained.name is not None:
                         self.name = contained.name
                         self.protocol.players[self.name, self.player_id] = self
+                        self.protocol.update_master()
                     spawn_now = self.team is None
                     self.team = [self.protocol.blue_team, 
                         self.protocol.green_team][contained.team]
@@ -340,6 +341,7 @@ class ServerConnection(BaseConnection):
             player_data.player_left = self.player_id
             self.protocol.send_contained(player_data, sender = self)
             del self.protocol.players[self]
+            self.protocol.update_master()
         if self.spawn_call is not None:
             self.spawn_call.cancel()
             self.spawn_call = None
@@ -581,6 +583,11 @@ class ServerProtocol(DatagramProtocol):
     def master_disconnected(self):
         self.master_connection = None
         self.set_master()
+    
+    def update_master(self):
+        if self.master_connection is None:
+            return
+        self.master_connection.set_count(len(self.players))
     
     def datagramReceived(self, data, address):
         if address not in self.connections:
