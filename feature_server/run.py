@@ -30,7 +30,12 @@ from pyspades.common import crc32
 
 import json
 import random
+import time
 import commands
+
+def writelines(fp, lines):
+    for line in lines:
+        fp.write(line + "\r\n")
 
 class FeatureConnection(ServerConnection):
     admin = False
@@ -43,11 +48,11 @@ class FeatureConnection(ServerConnection):
             self.send_chat(self.protocol.motd)
     
     def on_login(self, name):
-        print '%s entered the game!' % name
+        self.protocol.log('%s entered the game!' % name)
     
     def disconnect(self):
         if self.name is not None:
-            print self.name, 'disconnected!'
+            self.protocol.log(self.name, 'disconnected!')
         ServerConnection.disconnect(self)
     
     def on_command(self, command, parameters):
@@ -59,7 +64,7 @@ class FeatureConnection(ServerConnection):
         pass
     
     def on_chat(self, value, global_message):
-        print '<%s> %s' % (self.name, value)
+        self.protocol.log('<%s> %s' % (self.name, value))
     
     def votekick(self, by, reason = None):
         if self.votekicks is None:
@@ -101,6 +106,14 @@ class FeatureConnection(ServerConnection):
             message = '%s kicked' % self.name
         self.protocol.send_chat(message)
         self.disconnect()
+    
+    def ban(self, reason = None):
+        if reason is not None:
+            message = '%s banned: %s' % (self.name, reason)
+        else:
+            message = '%s banned' % self.name
+        self.protocol.send_chat(message)
+        self.protocol.add_ban(self.address[0])
 
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
@@ -108,6 +121,9 @@ class FeatureProtocol(ServerProtocol):
     admin_passwords = None
     votekick_time = 60 # 1 minute
     votekick_percentage = 25.0
+    bans = None
+    timestamps = None
+    logfile = None
     
     def __init__(self):
         try:
@@ -115,6 +131,10 @@ class FeatureProtocol(ServerProtocol):
         except IOError:
             print 'no config.txt file found'
             return
+        try:
+            self.bans = set(json.load(open('bans.txt', 'rb')))
+        except IOError:
+            self.bans = set([])
         self.config = config
         self.name = config.get('name', 
             'pyspades server %s' % random.randrange(0, 2000))
@@ -135,11 +155,41 @@ class FeatureProtocol(ServerProtocol):
         passwords = config.get('passwords', {})
         self.admin_passwords = passwords.get('admin', [])
         self.server_prefix = config.get('server_prefix', '[*]')
+        self.timestamps = config.get('timestamps', False)
+        logfile = config.get('logfile', None)
+        if logfile is not None and logfile.strip():
+            self.logfile = open(logfile, 'ab')
+            writelines(self.logfile, [
+                '',
+                'pyspades server started on %s' % time.strftime('%c')
+            ])
+            
         for password in self.admin_passwords:
             if password == 'replaceme':
-                print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
+                self.log(
+                    'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!')
                 break
         ServerProtocol.__init__(self)
+    
+    def add_ban(self, ip):
+        for address, connection in self.connections.iteritems():
+            if address[0] == ip:
+                connection.kick()
+        self.bans.add(ip)
+        json.dump(list(self.bans), open('bans.txt', 'wb'))
+    
+    def datagramReceived(self, data, address):
+        if address[0] in self.bans:
+            return
+        ServerProtocol.datagramReceived(data, address)
+    
+    def log(self, *arg):
+        value = ' '.join(arg)
+        if self.timestamps:
+            value = '%s %s' % (time.strftime('[%X]'), value)
+        if self.logfile:
+            writelines(self.logfile, [value])
+        print value
 
 PORT = 32887
 

@@ -29,6 +29,11 @@ def kick(connection, value, reason = None):
     player.kick(reason)
 
 @admin
+def ban(connection, value, reason = None):
+    player = get_player(connection, value)
+    player.ban(reason)
+
+@admin
 def say(connection, *arg):
     value = ' '.join(arg)
     connection.protocol.send_chat(value)
@@ -66,6 +71,7 @@ command_list = [
     help,
     login,
     kick,
+    ban,
     say,
     kill,
     votekick

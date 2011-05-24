@@ -1,6 +1,6 @@
 {
     "name" : "pyspades server",
-    "motd" : "Welcome to the pyspades server!",
+    "motd" : "Welcome to a pyspades server! See /help for commands.",
     "max_players" : 20,
     "cap_limit" : 10,
     "map" : "maps/pyspades.vxl",
@@ -10,5 +10,7 @@
     "passwords" : {
         "admin" : ["replaceme"]
     },
-    "server_prefix" : "[*]"
+    "server_prefix" : "[*]",
+    "timestamps" : true,
+    "logfile" : "log.txt"
 }
