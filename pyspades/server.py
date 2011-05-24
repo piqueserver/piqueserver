@@ -112,7 +112,7 @@ class ServerConnection(BaseConnection):
                 contained = load_client_packet(loader.data)
                 if contained.id == clientloaders.JoinTeam.id:
                     if self.name is None and contained.name is not None:
-                        self.name = contained.name
+                        self.name = self.protocol.get_name(contained.name)
                         self.protocol.players[self.name, self.player_id] = self
                         self.protocol.update_master()
                     spawn_now = self.team is None
@@ -568,6 +568,17 @@ class ServerProtocol(DatagramProtocol):
         for player in self.players.values():
             if player.name is not None:
                 player.spawn()
+    
+    def get_name(self, name):
+        i = 0
+        new_name = name
+        while 1:
+            if new_name in self.players:
+                i += 1
+                new_name = name + str(i)
+            else:
+                break
+        return new_name
     
     def startProtocol(self):
         self.set_master()
