@@ -129,12 +129,13 @@ class BaseConnection(object):
                 self.get_packet_handler(loader.byte).loader_received(loader)
             else:
                 self.loader_received(loader)
-            if loader.ack and loader.id != ConnectionRequest.id:
-                ack_packet.timer = in_packet.timer
-                ack_packet.sequence2 = loader.sequence
-                self.send_loader(ack_packet, False, loader.byte)
-            elif loader.id == Ack.id:
-                self.ack_received(loader)
+            if self.connection_id is not None:
+                if loader.ack and loader.id:
+                    ack_packet.timer = in_packet.timer
+                    ack_packet.sequence2 = loader.sequence
+                    self.send_loader(ack_packet, False, loader.byte)
+                elif loader.id == Ack.id:
+                    self.ack_received(loader)
         if self.disconnected:
             return
     

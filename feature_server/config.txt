@@ -1,5 +1,6 @@
 {
     "name" : "pyspades server",
+    "motd" : "Welcome to the pyspades server!",
     "max_players" : 20,
     "cap_limit" : 10,
     "map" : "maps/pyspades.vxl",

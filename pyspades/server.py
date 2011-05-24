@@ -423,6 +423,7 @@ class ServerConnection(BaseConnection):
             player_data.green_flag_z = green_flag.z
             
             self.send_contained(player_data)
+            self.on_join()
             return
         for _ in xrange(4):
             sequence = self.packet_handler1.sequence + 1
@@ -451,14 +452,19 @@ class ServerConnection(BaseConnection):
     
     def send_chat(self, value, global_message = True, sender = None):
         chat_message.global_message = global_message
-        chat_message.value = value
         if sender is None:
+            # 32 is guaranteed to be out of range!
             chat_message.player_id = 32
+            value = '[*] %s' % value
         else:
             chat_message.player_id = sender.player_id
-        self.protocol.send_contained(chat_message)
+        chat_message.value = value
+        self.send_contained(chat_message)
     
     # events
+    
+    def on_join(self):
+        pass
     
     def on_chat(self, value, global_message):
         pass

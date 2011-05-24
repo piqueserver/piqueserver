@@ -25,6 +25,7 @@ sys.path.append('..')
 from pyspades.server import ServerProtocol, ServerConnection
 from pyspades.load import VXLData
 from twisted.internet import reactor
+from twisted.internet.task import LoopingCall
 from pyspades.common import crc32
 
 import json
@@ -32,24 +33,75 @@ import random
 import commands
 
 class FeatureConnection(ServerConnection):
+    admin = False
+    votekick_loop = None
+    votekicks = None
+    
+    def on_join(self):
+        if self.protocol.motd is not None:
+            self.send_chat(self.protocol.motd)
+        
     def disconnect(self):
         print self.name, 'disconnected!'
         ServerConnection.disconnect(self)
     
     def on_command(self, command, parameters):
-        self.protocol.send_chat("HI FROM THE SERVER :-)")
-        # commands.handle_command(self, command, parameters)
+        result = commands.handle_command(self, command, parameters)
+        if result is not None:
+            self.send_chat(result)
     
     def accept_chat(self, value, global_message):
         pass
     
     def on_chat(self, value, global_message):
         print '<%s> %s' % (self.name, value)
+    
+    def votekick(self, by, reason = None):
+        if self.votekicks is None:
+            self.protocol.send_chat('Votekick initiated for %s: %s' % (
+                self.name, reason or 'No reason specified'))
+            self.votekicks = set([by])
+            votekick_time = self.protocol.votekick_time
+            reactor.callLater(votekick_time, self.end_votekick,
+                'Not enough votes')
+            self.votekick_loop = LoopingCall(self.update_votekick)
+            self.votekick_loop.start(votekick_time / 10, False)
+        else:
+            self.votekicks.add(by)
+        value = int((len(self.votekicks) / float(len(self.protocol.players))
+            ) * 100.0)
+        if value >= self.protocol.votekick_percentage:
+            self.disconnect()
+            self.end_votekick('Player kicked')
+    
+    def update_votekick(self):
+        if not self.protocol.players: # no ZeroDivisionErrors for me!
+            return
+        value = int((len(self.votekicks) / float(len(self.protocol.players))
+            ) * 100.0)
+        self.protocol.send_chat('Votekick for %s at %s' % (self.name,
+            value))
+    
+    def end_votekick(self, result):
+        self.protocol.send_chat('Votekick ended for %s: %s' % (
+            self.name, result))
+        self.votekick_loop.stop()
+        self.votekick_loop = self.votekick = None
+    
+    def kick(self, reason = None):
+        if reason is not None:
+            message = '%s kicked: %s' % (self.name, reason)
+        else:
+            message = '%s kicked' % self.name
+        self.protocol.send_chat(message)
+        self.disconnect()
 
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
     version = crc32(open('../data/client.exe', 'rb').read())
     admin_passwords = None
+    votekick_time = 60 # 1 minute
+    votekick_percentage = 25.0
     
     def __init__(self):
         try:
