@@ -111,14 +111,20 @@ class ServerConnection(BaseConnection):
             if loader.id in (SizedData.id, SizedSequenceData.id):
                 contained = load_client_packet(loader.data)
                 if contained.id == clientloaders.JoinTeam.id:
+                    old_team = self.team
+                    team = [self.protocol.blue_team, 
+                        self.protocol.green_team][contained.team]
+                    self.team = None
+                    if self.accept_team_join(team) == False:
+                        if self.team is None and old_team:
+                            self.team = old_team
+                        return
                     if self.name is None and contained.name is not None:
                         self.name = self.protocol.get_name(contained.name)
                         self.protocol.players[self.name, self.player_id] = self
                         self.protocol.update_master()
-                    spawn_now = self.team is None
-                    self.team = [self.protocol.blue_team, 
-                        self.protocol.green_team][contained.team]
-                    if spawn_now:
+                    self.team = team
+                    if old_team is None:
                         self.on_login(self.name)
                         self.spawn(name = self.name)
                     else:
@@ -507,10 +513,23 @@ class Team(object):
     other = None
     map = None
     
-    def __init__(self, id, map):
+    def __init__(self, id, protocol):
         self.id = id
-        self.map = map
+        self.map = protocol.map
+        self.players = protocol.players
         self.initialize()
+    
+    def get_players(self):
+        for player in self.players.values():
+            if player.team is self:
+                yield player
+    
+    def __len__(self):
+        count = 0
+        for player in self.players.values():
+            if player.team is self:
+                count += 1
+        return count
     
     def initialize(self):
         self.score = 0
@@ -559,8 +578,8 @@ class ServerProtocol(DatagramProtocol):
         self.players = MultikeyDict()
         self.connection_ids = IDPool()
         self.player_ids = IDPool()
-        self.blue_team = Team(0, self.map)
-        self.green_team = Team(1, self.map)
+        self.blue_team = Team(0, self)
+        self.green_team = Team(1, self)
         self.blue_team.other = self.green_team
         self.green_team.other = self.blue_team
     

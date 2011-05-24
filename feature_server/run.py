@@ -48,7 +48,7 @@ class FeatureConnection(ServerConnection):
             self.send_chat(self.protocol.motd)
     
     def on_login(self, name):
-        self.protocol.log('%s entered the game!' % name)
+        self.protocol.log('%s (%s) entered the game!' % (name, self.address[0]))
     
     def disconnect(self):
         if self.name is not None:
@@ -66,6 +66,15 @@ class FeatureConnection(ServerConnection):
     
     def accept_chat(self, value, global_message):
         pass
+    
+    def accept_team_join(self, team):
+        balanced_teams = self.protocol.balanced_teams
+        if not balanced_teams:
+            return
+        other_team = team.other
+        if len(other_team) < len(team) + 1 - balanced_teams:
+            self.send_chat('Team is full. Please join the other team')
+            return False
     
     def on_chat(self, value, global_message):
         self.protocol.log('<%s> %s' % (self.name, value))
@@ -128,6 +137,7 @@ class FeatureProtocol(ServerProtocol):
     bans = None
     timestamps = None
     logfile = None
+    balanced_teams = None
     
     def __init__(self):
         try:
@@ -160,6 +170,7 @@ class FeatureProtocol(ServerProtocol):
         self.admin_passwords = passwords.get('admin', [])
         self.server_prefix = config.get('server_prefix', '[*]')
         self.timestamps = config.get('timestamps', False)
+        self.balanced_teams = config.get('balanced_teams', None)
         logfile = config.get('logfile', None)
         if logfile is not None and logfile.strip():
             self.logfile = open(logfile, 'ab')

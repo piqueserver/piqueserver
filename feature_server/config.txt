@@ -12,5 +12,6 @@
     },
     "server_prefix" : "[*]",
     "timestamps" : true,
-    "logfile" : "log.txt"
+    "logfile" : "log.txt",
+    "balanced_teams" : 1
 }
