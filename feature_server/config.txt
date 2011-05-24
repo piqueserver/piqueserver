@@ -9,5 +9,6 @@
     "friendly_fire" : false,
     "passwords" : {
         "admin" : ["replaceme"]
-    }
+    },
+    "server_prefix" : "[*]"
 }

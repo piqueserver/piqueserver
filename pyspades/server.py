@@ -458,7 +458,7 @@ class ServerConnection(BaseConnection):
         if sender is None:
             # 32 is guaranteed to be out of range!
             chat_message.player_id = 32
-            value = '[*] %s' % value
+            value = '%s %s' % (self.protocol.server_prefix, value)
         else:
             chat_message.player_id = sender.player_id
         chat_message.value = value
@@ -548,6 +548,7 @@ class ServerProtocol(DatagramProtocol):
     max_score = 10
     map = None
     friendly_fire = False
+    server_prefix = '[*]'
     
     respawn_time = 5
     

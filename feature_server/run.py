@@ -134,6 +134,7 @@ class FeatureProtocol(ServerProtocol):
         self.max_players = config.get('max_players', 20)
         passwords = config.get('passwords', {})
         self.admin_passwords = passwords.get('admin', [])
+        self.server_prefix = config.get('server_prefix', '[*]')
         for password in self.admin_passwords:
             if password == 'replaceme':
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
