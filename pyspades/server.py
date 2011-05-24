@@ -32,6 +32,7 @@ from pyspades.collision import vector_collision
 
 import random
 import math
+import shlex
 
 player_data = serverloaders.PlayerData()
 create_player = serverloaders.CreatePlayer()
@@ -216,15 +217,24 @@ class ServerConnection(BaseConnection):
                     other_player, = self.protocol.players[contained.player_id]
                     self.kill(other_player)
                 elif contained.id == clientloaders.ChatMessage.id:
-                    chat_message.global_message = contained.global_message
-                    chat_message.value = contained.value
-                    chat_message.player_id = self.player_id
-                    if contained.global_message:
-                        team = None
+                    value = contained.value
+                    if value.startswith('/'):
+                        splitted = shlex.split(value[1:])
+                        self.on_command(splitted[0], splitted[1:])
                     else:
-                        team = self.team
-                    self.protocol.send_contained(chat_message, 
-                        sender = self, team = team)
+                        global_message = contained.global_message
+                        if self.accept_chat(value, global_message) == False:
+                            return
+                        chat_message.global_message = global_message
+                        chat_message.value = value
+                        chat_message.player_id = self.player_id
+                        if contained.global_message:
+                            team = None
+                        else:
+                            team = self.team
+                        self.protocol.send_contained(chat_message, 
+                            sender = self, team = team)
+                        self.on_chat(value, global_message)
             return
     
     def refill(self):
@@ -272,7 +282,8 @@ class ServerConnection(BaseConnection):
             return
         intel_action.action_type = 3
         intel_action.player_id = self.player_id
-        if self.team.score + 1 >= self.protocol.max_score:
+        if (self.protocol.max_score not in (0, None) and 
+        self.team.score + 1 >= self.protocol.max_score):
             intel_action.game_end = True
             blue_team = self.protocol.blue_team
             green_team = self.protocol.green_team
@@ -437,6 +448,28 @@ class ServerConnection(BaseConnection):
     
     def send_data(self, data):
         self.protocol.transport.write(data, self.address)
+    
+    def send_chat(self, value, global_message = True, sender = None):
+        chat_message.global_message = global_message
+        chat_message.value = value
+        if sender is None:
+            chat_message.player_id = 32
+        else:
+            chat_message.player_id = sender.player_id
+        self.protocol.send_contained(chat_message)
+    
+    # events
+    
+    def on_chat(self, value, global_message):
+        pass
+        
+    def on_command(self, command, parameters):
+        pass
+    
+    # event hooks
+    
+    def accept_chat(self, value, global_message):
+        pass
 
 class Vertex3(object):
     def __init__(self, *arg, **kw):
@@ -524,7 +557,7 @@ class ServerProtocol(DatagramProtocol):
     
     def datagramReceived(self, data, address):
         if address not in self.connections:
-            self.connections[address] = ServerConnection(self, address)
+            self.connections[address] = self.connection_class(self, address)
         connection = self.connections[address]
         connection.data_received(data)
     
@@ -571,3 +604,7 @@ class ServerProtocol(DatagramProtocol):
                     ) & 0xFFFF
                 loader.sequence2 = player.orientation_sequence
             player.send_loader(loader, not sequence)
+    
+    def send_chat(self, *arg, **kw):
+        for player in self.players.values():
+            player.send_chat(*arg, **kw)

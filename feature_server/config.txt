@@ -5,5 +5,8 @@
     "map" : "maps/pyspades.vxl",
     "respawn_time" : 5, 
     "master" : true,
-    "friendly_fire" : false
+    "friendly_fire" : false,
+    "passwords" : {
+        "admin" : ["replaceme"]
+    }
 }

@@ -28,23 +28,57 @@ from twisted.internet import reactor
 from pyspades.common import crc32
 
 import json
+import random
+import commands
 
 class FeatureConnection(ServerConnection):
     def disconnect(self):
         print self.name, 'disconnected!'
         ServerConnection.disconnect(self)
+    
+    def on_command(self, command, parameters):
+        self.protocol.send_chat("HI FROM THE SERVER :-)")
+        # commands.handle_command(self, command, parameters)
+    
+    def accept_chat(self, value, global_message):
+        pass
+    
+    def on_chat(self, value, global_message):
+        print '<%s> %s' % (self.name, value)
 
 class FeatureProtocol(ServerProtocol):
+    connection_class = FeatureConnection
     version = crc32(open('../data/client.exe', 'rb').read())
+    admin_passwords = None
     
     def __init__(self):
-        self.config = config = json.load(open('config.txt', 'rb'))
-        self.name = config['name']
-        self.map = VXLData(open(config['map'], 'rb'))
-        self.max_scores = config['cap_limit']
-        self.respawn_time = config['respawn_time']
-        self.master = config['master']
-        self.friendly_fire = config['friendly_fire']
+        try:
+            config = json.load(open('config.txt', 'rb'))
+        except IOError:
+            print 'no config.txt file found'
+            return
+        self.config = config
+        self.name = config.get('name', 
+            'pyspades server %s' % random.randrange(0, 2000))
+        try:
+            self.map = VXLData(open(config['map'], 'rb'))
+        except KeyError:
+            print 'no map specified!'
+            return
+        except IOError:
+            print 'map not found!'
+            return
+        self.max_scores = config.get('cap_limit', None)
+        self.respawn_time = config.get('respawn_time', 5)
+        self.master = config.get('master', True)
+        self.friendly_fire = config.get('friendly_fire', True)
+        self.motd = config.get('motd', None)
+        passwords = config.get('passwords', {})
+        self.admin_passwords = passwords.get('admin', [])
+        for password in self.admin_passwords:
+            if password == 'replaceme':
+                print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
+                break
         ServerProtocol.__init__(self)
 
 PORT = 32887
