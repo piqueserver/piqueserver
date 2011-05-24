@@ -118,6 +118,7 @@ class ServerConnection(BaseConnection):
                     self.team = [self.protocol.blue_team, 
                         self.protocol.green_team][contained.team]
                     if spawn_now:
+                        self.on_login(self.name)
                         self.spawn(name = self.name)
                     else:
                         self.respawn()
@@ -464,6 +465,9 @@ class ServerConnection(BaseConnection):
     # events
     
     def on_join(self):
+        pass
+    
+    def on_login(self, name):
         pass
     
     def on_chat(self, value, global_message):

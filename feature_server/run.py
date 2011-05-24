@@ -41,9 +41,13 @@ class FeatureConnection(ServerConnection):
     def on_join(self):
         if self.protocol.motd is not None:
             self.send_chat(self.protocol.motd)
-        
+    
+    def on_login(self, name):
+        print '%s entered the game!' % name
+    
     def disconnect(self):
-        print self.name, 'disconnected!'
+        if self.name is not None:
+            print self.name, 'disconnected!'
         ServerConnection.disconnect(self)
     
     def on_command(self, command, parameters):
