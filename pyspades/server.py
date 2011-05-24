@@ -116,9 +116,9 @@ class ServerConnection(BaseConnection):
                         self.protocol.green_team][contained.team]
                     self.team = None
                     if self.accept_team_join(team) == False:
-                        if self.team is None and old_team:
+                        if self.team is None and old_team is not None:
                             self.team = old_team
-                        if not old_team:
+                        if old_team is None:
                             return
                     else:
                         self.team = team
@@ -526,7 +526,7 @@ class Team(object):
             if player.team is self:
                 yield player
     
-    def __len__(self):
+    def count(self):
         count = 0
         for player in self.players.values():
             if player.team is self:

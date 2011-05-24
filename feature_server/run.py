@@ -72,7 +72,7 @@ class FeatureConnection(ServerConnection):
         if not balanced_teams:
             return
         other_team = team.other
-        if len(other_team) < len(team) + 1 - balanced_teams:
+        if other_team.count() < team.count() + 1 - balanced_teams:
             self.send_chat('Team is full. Please join the other team')
             return False
     
