@@ -2,5 +2,6 @@ CREDITS/CONTRIBUTIONS/ACKNOWLEDGEMENTS:
 
 Mathias "Mat^2" Kaerlev - Most of the code
 "bildramer" - Floating block detection and misc. code
-"TheGrandmaster" - Tester/ideas
-"Tegu" - Logo and testing
+"TheGrandmaster" - Tester, ideas and the official map
+"Tegu" - Logo, ideas, testing and the official map
+"Enari" - Testing and ideas

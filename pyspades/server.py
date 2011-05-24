@@ -493,6 +493,8 @@ class Flag(Vertex3):
     player = None
     team = None
 
+FORCE_LAND_TRIES = 20
+
 class Team(object):
     score = None
     flag = None
@@ -507,17 +509,21 @@ class Team(object):
     def initialize(self):
         self.score = 0
         self.set_flag()
-        self.base = Vertex3(*self.get_random_position())
+        self.base = Vertex3(*self.get_random_position(), True)
     
     def set_flag(self):
-        self.flag = Flag(*self.get_random_position())
+        self.flag = Flag(*self.get_random_position(), True)
         self.flag.team = self
         return self.flag
     
     def get_random_position(self, force_land = False):
         if force_land:
-            while 1:
+            for _ in xrange(FORCE_LAND_TRIES):
                 x, y, z = self.get_random_position()
+                if z == 63:
+                    continue
+                return x, y, z
+            return x, y, z
         x = self.id * 384 + random.randrange(128)
         y = 128 + random.randrange(256)
         z = self.map.get_z(x, y)
