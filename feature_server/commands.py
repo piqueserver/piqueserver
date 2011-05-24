@@ -87,7 +87,6 @@ def handle_command(connection, command, parameters):
         command_func = commands[command]
     except KeyError:
         return 'Invalid command'
-    print command, parameters
     try:
         return command_func(connection, *parameters)
     except TypeError:

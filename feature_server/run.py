@@ -56,9 +56,13 @@ class FeatureConnection(ServerConnection):
         ServerConnection.disconnect(self)
     
     def on_command(self, command, parameters):
+        log_message = '<%s> /%s %s' % (self.name, command, 
+            ' '.join(parameters))
         result = commands.handle_command(self, command, parameters)
         if result is not None:
+            log_message += ' -> %s' % result
             self.send_chat(result)
+        self.protocol.log(log_message)
     
     def accept_chat(self, value, global_message):
         pass
@@ -181,7 +185,7 @@ class FeatureProtocol(ServerProtocol):
     def datagramReceived(self, data, address):
         if address[0] in self.bans:
             return
-        ServerProtocol.datagramReceived(data, address)
+        ServerProtocol.datagramReceived(self, data, address)
     
     def log(self, *arg):
         value = ' '.join(arg)
