@@ -40,13 +40,10 @@ cdef extern from "load_c.cpp":
         MAP_Z
         DEFAULT_COLOR
     void load_vxl(unsigned char * v, int (*colors)[MAP_X][MAP_Y][MAP_Z], 
-                                     char (*geometry)[MAP_X][MAP_Y][MAP_Z],
-                                     char (*heightmap)[MAP_X][MAP_Y])
+                                     char (*geometry)[MAP_X][MAP_Y][MAP_Z])
     object save_vxl(int (*color)[MAP_X][MAP_Y][MAP_Z], char (*map)[MAP_X][MAP_Y][MAP_Z])
-    void destroy_floating_blocks(int x, int y, int z, 
-                                 char (*map)[MAP_X][MAP_Y][MAP_Z])
-
-from pyspades.block import check_node
+    void check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z], 
+        bint destroy)
 
 cdef inline tuple get_color(color):
     cdef int a, b, c, d
@@ -63,21 +60,18 @@ cdef class VXLData:
     cdef:
         int (*colors)[MAP_X][MAP_Y][MAP_Z]
         char (*geometry)[MAP_X][MAP_Y][MAP_Z]
-        char (*heightmap)[MAP_X][MAP_Y]
-        object colors_python, geometry_python, heightmap_python
+        object colors_python, geometry_python
         
     def __init__(self, fp = None):
         self.colors_python = allocate_memory(sizeof(int[MAP_X][MAP_Y][MAP_Z]),
             <char**>&self.colors)
         self.geometry_python = allocate_memory(sizeof(char[MAP_X][MAP_Y][MAP_Z]),
             <char**>&self.geometry)
-        self.heightmap_python = allocate_memory(sizeof(char[MAP_X][MAP_Y]),
-            <char**>&self.heightmap)
         cdef unsigned char * c_data
         if fp is not None:
             data = fp.read()
             c_data = data
-            load_vxl(c_data, self.colors, self.geometry, self.heightmap)
+            load_vxl(c_data, self.colors, self.geometry)
     
     def get_point(self, int x, int y, int z):
         cdef int color = self.colors[0][x][y][z]
@@ -100,8 +94,12 @@ cdef class VXLData:
                 return z
         return None
     
-    def get_height(self, int x, int y):
-        return self.heightmap[0][x][y]
+    cpdef int get_height(self, int x, int y):
+        cdef int h_z
+        for h_z in range(63, -1, -1):
+            if not self.geometry[0][x][y][h_z]:
+                return h_z + 1
+        return 0
     
     def remove_point(self, int x, int y, int z):
         if x not in range(512) or y not in range(512) or z not in range(63):
@@ -109,12 +107,10 @@ cdef class VXLData:
         if not self.geometry[0][x][y][z]:
             return
         self.geometry[0][x][y][z] = 0
-        self.update_heightmap(x, y)
         for node_x, node_y, node_z in self.get_neighbors(x, y, z):
             if node_z >= 62:
                 continue
-            if not check_node(self, node_x, node_y, node_z):
-                destroy_floating_blocks(node_x, node_y, node_z, self.geometry)
+            self.check_node(node_x, node_y, node_z, True)
     
     cpdef bint has_neighbors(self, int x, int y, int z):
         return (
@@ -125,27 +121,21 @@ cdef class VXLData:
             self.get_solid(x, y, z + 1) or
             self.get_solid(x, y, z - 1)
         )
-    
+
     cpdef list get_neighbors(self, int x, int y, int z):
-        cdef list neighbors = []
-        for (node_x, node_y, node_z) in  ((x + 1, y, z),
-                                         (x - 1, y, z),
-                                         (x, y + 1, z),
-                                         (x, y - 1, z),
-                                         (x, y, z + 1),
-                                         (x, y, z - 1)):
-            if self.get_solid(node_x, node_y, node_z):
-                neighbors.append((node_x, node_y, node_z))
-        return neighbors
-    
-    cdef inline void update_heightmap(self, int x, int y):
-        cdef int h_z
-        for h_z in range(63, -1, -1):
-            if not self.geometry[0][x][y][h_z]:
-                self.heightmap[0][x][y] = h_z + 1
-                break
-        else:
-            self.heightmap[0][x][y] = 0
+            cdef list neighbors = []
+            for (node_x, node_y, node_z) in ((x, y, z - 1),
+                                             (x, y - 1, z),
+                                             (x, y + 1, z),
+                                             (x - 1, y, z),
+                                             (x + 1, y, z),
+                                             (x, y, z + 1)):
+                if self.get_solid(node_x, node_y, node_z):
+                    neighbors.append((node_x, node_y, node_z))
+            return neighbors
+
+    cpdef bint check_node(self, int x, int y, int z, bint destroy = False):
+        check_node(x, y, z, self.geometry, destroy)
     
     cpdef bint set_point(self, int x, int y, int z, tuple color_tuple):
         if not self.has_neighbors(x, y, z):
@@ -154,7 +144,6 @@ cdef class VXLData:
         cdef int color = make_color(r, g, b, a)
         self.geometry[0][x][y][z] = 1
         self.colors[0][x][y][z] = color
-        self.update_heightmap(x, y)
         return True
         
     def generate(self):

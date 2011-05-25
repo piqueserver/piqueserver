@@ -3,7 +3,7 @@
     "motd" : "Welcome to a pyspades server! See /help for commands.",
     "max_players" : 20,
     "cap_limit" : 10,
-    "map" : "maps/pyspades.vxl",
+    "map" : "maps/gen.vxl",
     "respawn_time" : 5, 
     "master" : true,
     "friendly_fire" : false,

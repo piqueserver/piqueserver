@@ -21,17 +21,17 @@
 #define MAP_X 512
 #define MAP_Y 512
 #define MAP_Z 64
+#define get_map_pos(x, y, z) (x + y * MAP_Y + z * MAP_Z * MAP_Y)
 #define DEFAULT_COLOR 0xFF674028
 
 #include <iostream>
 #include <sstream>
 #include "Python.h"
-#include <queue>
+#include <list>
 using namespace std;
 
 void load_vxl(unsigned char * v, int (*colors)[MAP_X][MAP_Y][MAP_Z], 
-                                 char (*geometry)[MAP_X][MAP_Y][MAP_Z],
-                                 char (*heightmap)[MAP_X][MAP_Y])
+                                 char (*geometry)[MAP_X][MAP_Y][MAP_Z])
 {
    int x,y,z;
    for (y=0; y < 512; ++y) {
@@ -80,64 +80,85 @@ void load_vxl(unsigned char * v, int (*colors)[MAP_X][MAP_Y][MAP_Z],
                (*colors)[x][y][z] = *color++;
             }
          }
-         for(z=63; z>=0; z--){
-             if(!(*geometry)[x][y][z]){
-                 (*heightmap)[x][y]=z + 1;
-                 break;
-             }
-         }
-         if(z==0 && (*geometry)[x][y][z])
-             (*heightmap)[x][y]=0;
       }
    }
 }
 
-struct Edge {
+struct Position {
     int x; 
     int y;
     int z;
+    
+    bool operator == (Position const& pos) const
+	{
+        return (x == pos.x && y == pos.y && z == pos.z);
+    }
 };
 
-void inline check_pos(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
-                      queue<Edge> & edges)
+inline void add_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
+                     list<Position> & nodes)
 {
     if (x < 0 || x > 511 ||
         y < 0 || y > 511 ||
         z < 0 || z > 63)
         return;
-    if ((*map)[x][y][z]) {
-        (*map)[x][y][z] = 0;
-        Edge new_edge;
-        new_edge.x = x;
-        new_edge.y = y;
-        new_edge.z = z;
-        edges.push(new_edge);
-    }
+    if (!(*map)[x][y][z])
+        return;
+    Position new_pos;
+    new_pos.x = x;
+    new_pos.y = y;
+    new_pos.z = z;
+    nodes.push_back(new_pos);
 }
 
-void destroy_floating_blocks(int x, int y, int z, 
-                             char (*map)[MAP_X][MAP_Y][MAP_Z])
+bool check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z], 
+                bool destroy)
 {
-    queue<Edge> edges;
-    Edge start_edge;
-    start_edge.x = x;
-    start_edge.y = y;
-    start_edge.z = z;
-    edges.push(start_edge);
-    (*map)[x][y][z] = 0;
+    bool visited;
+    list<Position> path;
+    list<Position> nodes;
+    
+    Position new_pos;
+    new_pos.x = x;
+    new_pos.y = y;
+    new_pos.z = z;
+    nodes.push_back(new_pos);
+    
+    while (!nodes.empty()) {
+        Position node = nodes.back();
+        nodes.pop_back();
+        
+        if (node.z == 63) {
+            return true;
+        }
+        
+        // already visited?
+        for (list<Position>::const_iterator iter = path.begin(); 
+             iter != path.end(); ++iter)
+        {
+            if (visited = ( (*iter) == node))
+                break;
+        }
+        if (!visited)
+        {
+            path.push_back(node);
+            x = node.x;
+            y = node.y;
+            z = node.z;
+            add_node(x, y, z - 1, map, nodes);
+            add_node(x, y - 1, z, map, nodes);
+            add_node(x, y + 1, z, map, nodes);
+            add_node(x - 1, y, z, map, nodes);
+            add_node(x + 1, y, z, map, nodes);
+            add_node(x, y, z + 1, map, nodes);
+        }
+    }
 
-    while (!edges.empty()) {
-        Edge edge = edges.front();
-        edges.pop();
-        x = edge.x;
-        y = edge.y;
-        z = edge.z;
-        check_pos(x + 1, y, z, map, edges);
-        check_pos(x - 1, y, z, map, edges);
-        check_pos(x, y + 1, z, map, edges);
-        check_pos(x, y - 1, z, map, edges);
-        check_pos(x, y, z + 1, map, edges);
-        check_pos(x, y, z - 1, map, edges);
+    // destroy the node's path!
+    for (list<Position>::const_iterator iter = path.begin(); 
+         iter != path.end(); ++iter)
+    {
+        (*map)[iter->x][iter->y][iter->z] = 0;
     }
 }
 
@@ -288,7 +309,5 @@ PyObject * save_vxl(int (*color)[MAP_X][MAP_Y][MAP_Z],
          }  
       }
    }
-   // string s = ss.str();
-   // return PyString_FromStringAndSize(s.c_str(), s.size());
    return PyString_FromStringAndSize((char *)out_global, out - out_global);
 }

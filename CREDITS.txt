@@ -1,7 +1,8 @@
 CREDITS/CONTRIBUTIONS/ACKNOWLEDGEMENTS:
 
 Mathias "Mat^2" Kaerlev - Most of the code
-"bildramer" - Floating block detection and misc. code
+"bildramer" - Floating block detection (A*) and misc. code
 "TheGrandmaster" - Tester, ideas and the official map
 "Tegu" - Logo, ideas, testing and the official map
 "Enari" - Testing and ideas
+"hompy" - Floating block detection (DFS)
