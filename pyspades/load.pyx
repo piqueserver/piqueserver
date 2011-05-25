@@ -104,7 +104,7 @@ cdef class VXLData:
         return self.heightmap[0][x][y]
     
     def remove_point(self, int x, int y, int z):
-        if x not in range(512) or y not in range(512) or z not in range(64):
+        if x not in range(512) or y not in range(512) or z not in range(63):
             return
         if not self.geometry[0][x][y][z]:
             return
