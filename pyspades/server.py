@@ -221,7 +221,7 @@ class ServerConnection(BaseConnection):
                             command = splitted.pop(0)
                         else:
                             command = ''
-                        self.on_command(command, splitted[1:])
+                        self.on_command(command, splitted)
                     else:
                         global_message = contained.global_message
                         if self.accept_chat(value, global_message) == False:
