@@ -24,8 +24,11 @@ sys.path.append('..')
 
 if sys.platform == 'win32':
     # install IOCP
-    from twisted.internet import iocpreactor 
-    iocpreactor.install()
+    try:
+        from twisted.internet import iocpreactor 
+        iocpreactor.install()
+    except ImportError:
+        print '(dependencies missing for fast IOCP, using normal reactor)'
 
 try:
     import psyco
