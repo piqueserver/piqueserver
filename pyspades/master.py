@@ -29,7 +29,7 @@ import random
 HOST = 'ace-spades.com'
 PORT = 32886
 
-IP_GETTER = 'http://www.whatismyip.com/automation/n09230945.asp'
+IP_GETTER = 'http://automation.whatismyip.com/n09230945.asp'
 
 class AddServer(PacketLoader):
     id = 4
@@ -71,7 +71,7 @@ class MasterConnection(BaseConnection):
 
         connect_request = ConnectionRequest()
         connect_request.auth_val = self.auth_val
-        connect_request.version = 0xC000000 # increments for each version
+        connect_request.version = 0xD000000 # increments for each version
         self.send_loader(connect_request, False, 255)
     
     def loader_received(self, loader):

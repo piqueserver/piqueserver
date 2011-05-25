@@ -359,9 +359,9 @@ class PlayerData(PacketLoader):
             # initial reader
             firstInt = reader.readInt(True, False)
             self.player_id = (firstInt >> 5) & 0x1F # player id
-            self.blue_score = (firstInt >> 10) & 0x7F # team score 1?
-            self.green_score = (firstInt >> 17) & 0x7F # team score 2?
-            self.max_score = (firstInt >> 24) & 0x7F
+            self.blue_score = (firstInt >> 10) & 0x3F # team score 1?
+            self.green_score = (firstInt >> 16) & 0x3F # team score 2?
+            self.max_score = (firstInt >> 22) & 0x3F
             if firstInt & 0x40000000:
                 self.green_flag_player = reader.readByte(True)
                 reader.skipBytes(2)
@@ -404,8 +404,8 @@ class PlayerData(PacketLoader):
         else:
             value |= (self.player_id << 5)
             value |= (self.blue_score << 10)
-            value |= (self.green_score << 17)
-            value |= (self.max_score << 24)
+            value |= (self.green_score << 16)
+            value |= (self.max_score << 22)
             if self.green_flag_player is not None:
                 value |= 0x40000000
             if self.blue_flag_player is not None:
