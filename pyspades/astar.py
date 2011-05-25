@@ -62,6 +62,9 @@ def astar(start_pos, neighbors, goal, start_g, cost, heuristic, limit=maxint):
 
                 # Limit the search.
                 if len(nodes) >= limit:
+                    import pyspades.block
+                    raw_input('reached limit while trying path: %s -> %s' % (
+                        start_pos, pyspades.block.goal_pos))
                     continue
 
                 # We have found a new node.

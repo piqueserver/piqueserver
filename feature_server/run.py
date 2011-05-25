@@ -22,6 +22,17 @@ pyspades - default/featured server
 import sys
 sys.path.append('..')
 
+if sys.platform == 'win32':
+    # install IOCP
+    from twisted.internet import iocpreactor 
+    iocpreactor.install()
+
+try:
+    import psyco
+    psyco.full()
+except ImportError:
+    print '(optional: install psyco for optimization)'
+
 from pyspades.server import ServerProtocol, ServerConnection
 from pyspades.load import VXLData
 from twisted.internet import reactor
@@ -185,7 +196,15 @@ class FeatureProtocol(ServerProtocol):
                     'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!')
                 break
         ServerProtocol.__init__(self)
+        
+    def got_master_connection(self, *arg, **kw):
+        print 'Master connection established.'
+        ServerProtocol.got_master_connection(self, *arg, **kw)
     
+    def master_disconnected(self, *arg, **kw):
+        print 'Master connection lost, reconnecting...'
+        ServerProtocol.master_disconnected(self, *arg, **kw)
+        
     def add_ban(self, ip):
         for connection in self.connections.values():
             if connection.address[0] == ip:
