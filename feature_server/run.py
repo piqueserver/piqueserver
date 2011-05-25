@@ -30,11 +30,12 @@ if sys.platform == 'win32':
     except ImportError:
         print '(dependencies missing for fast IOCP, using normal reactor)'
 
-try:
-    import psyco
-    psyco.full()
-except ImportError:
-    print '(optional: install psyco for optimization)'
+if sys.version_info < (2, 7):
+    try:
+        import psyco
+        psyco.full()
+    except ImportError:
+        print '(optional: install psyco for optimization)'
 
 from pyspades.server import ServerProtocol, ServerConnection
 from pyspades.load import VXLData
