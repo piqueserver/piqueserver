@@ -83,6 +83,9 @@ class FeatureConnection(ServerConnection):
         pass
     
     def accept_team_join(self, team):
+        if team.locked:
+            self.send_chat('Team is locked.')
+            return False
         balanced_teams = self.protocol.balanced_teams
         if not balanced_teams:
             return
@@ -200,6 +203,9 @@ class FeatureProtocol(ServerProtocol):
                     'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!')
                 break
         ServerProtocol.__init__(self)
+        # locked teams
+        self.blue_team.locked = False
+        self.green_team.locked = False
         
     def got_master_connection(self, *arg, **kw):
         print 'Master connection established.'

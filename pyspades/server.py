@@ -134,106 +134,94 @@ class ServerConnection(BaseConnection):
                         self.spawn(name = self.name)
                     else:
                         self.respawn()
-                elif contained.id == clientloaders.OrientationData.id:
-                    self.orientation.set(contained.x, contained.y, contained.z)
-                    orientation_data.x = contained.x
-                    orientation_data.y = contained.y
-                    orientation_data.z = contained.z
-                    orientation_data.player_id = self.player_id
-                    self.protocol.send_contained(orientation_data, 
-                        True, sender = self)
-                elif contained.id == clientloaders.PositionData.id:
-                    self.position.set(contained.x, contained.y, contained.z)
-                    position_data.x = contained.x
-                    position_data.y = contained.y
-                    position_data.z = contained.z
-                    position_data.player_id = self.player_id
-                    other_flag = self.team.other.flag
-                    if vector_collision(self.position, self.team.base):
-                        self.refill()
-                        if other_flag.player is self:
-                            self.capture_flag()
-                    if other_flag.player is None and vector_collision(
-                    self.position, other_flag):
-                        self.take_flag()
-                    self.protocol.send_contained(position_data, sender = self)
-                elif contained.id == clientloaders.MovementData.id:
-                    self.up = contained.up
-                    self.down = contained.down
-                    self.left = contained.left
-                    self.right = contained.right
-                    movement_data.up = self.up
-                    movement_data.down = self.down
-                    movement_data.left = self.left
-                    movement_data.right = self.right
-                    movement_data.player_id = self.player_id
-                    self.protocol.send_contained(movement_data, sender = self)
-                elif contained.id == clientloaders.AnimationData.id:
-                    self.fire = contained.fire
-                    self.jump = contained.jump
-                    self.crouch = contained.crouch
-                    self.aim = contained.aim
-                    animation_data.fire = self.fire
-                    animation_data.jump = self.jump
-                    animation_data.crouch = self.crouch
-                    animation_data.aim = self.aim
-                    animation_data.player_id = self.player_id
-                    self.protocol.send_contained(animation_data, sender = self)
-                elif contained.id == clientloaders.HitPacket.id:
-                    if contained.player_id is not None:
-                        player, = self.protocol.players[contained.player_id]
-                        player.hit(HIT_VALUES[contained.value], self)
-                    else:
-                        self.hit(contained.value)
-                elif contained.id == clientloaders.GrenadePacket.id:
-                    self.grenades -= 1
-                    grenade_packet.player_id = self.player_id
-                    grenade_packet.value = contained.value
-                    self.protocol.send_contained(grenade_packet, sender = self)
-                elif contained.id == clientloaders.SetWeapon.id:
-                    self.tool = contained.value
-                    set_weapon.player_id = self.player_id
-                    set_weapon.value = contained.value
-                    self.protocol.send_contained(set_weapon, sender = self)
-                elif contained.id == clientloaders.SetColor.id:
-                    self.color = get_color(contained.value)
-                    set_color.player_id = self.player_id
-                    set_color.value = contained.value
-                    self.protocol.send_contained(set_color, sender = self)
-                elif contained.id == clientloaders.BlockAction.id:
-                    value = contained.value
-                    map = self.protocol.map
-                    x = contained.x
-                    y = contained.y
-                    z = contained.z
-                    if value == BUILD_BLOCK:
-                        map.set_point(x, y, z, self.color + (255,))
-                    elif value == DESTROY_BLOCK:
-                        map.remove_point(x, y, z)
-                    elif value == SPADE_DESTROY:
-                        map.remove_point(x, y, z)
-                        map.remove_point(x, y, z + 1)
-                        map.remove_point(x, y, z - 1)
-                    elif value == GRENADE_DESTROY:
-                        for nade_x in xrange(x - 1, x + 2):
-                            for nade_y in xrange(y - 1, y + 2):
-                                for nade_z in xrange(z - 1, z + 2):
-                                    map.remove_point(nade_x, nade_y, nade_z)
-                    block_action.x = x
-                    block_action.y = y
-                    block_action.z = z
-                    block_action.value = contained.value
-                    block_action.player_id = self.player_id
-                    self.protocol.send_contained(block_action)
-                    self.protocol.update_entities()
-                elif contained.id == clientloaders.KillAction.id:
-                    other_player, = self.protocol.players[contained.player_id]
-                    self.kill(other_player)
-                elif contained.id == clientloaders.ChatMessage.id:
+                if self.hp:
+                    if contained.id == clientloaders.OrientationData.id:
+                        if not self.hp:
+                            return
+                        self.orientation.set(contained.x, contained.y, contained.z)
+                        orientation_data.x = contained.x
+                        orientation_data.y = contained.y
+                        orientation_data.z = contained.z
+                        orientation_data.player_id = self.player_id
+                        self.protocol.send_contained(orientation_data, 
+                            True, sender = self)
+                    elif contained.id == clientloaders.PositionData.id:
+                        if not self.hp:
+                            return
+                        self.position.set(contained.x, contained.y, contained.z)
+                        position_data.x = contained.x
+                        position_data.y = contained.y
+                        position_data.z = contained.z
+                        position_data.player_id = self.player_id
+                        other_flag = self.team.other.flag
+                        if vector_collision(self.position, self.team.base):
+                            self.refill()
+                            if other_flag.player is self:
+                                self.capture_flag()
+                        if other_flag.player is None and vector_collision(
+                        self.position, other_flag):
+                            self.take_flag()
+                        self.protocol.send_contained(position_data, sender = self)
+                    elif contained.id == clientloaders.MovementData.id:
+                        self.up = contained.up
+                        self.down = contained.down
+                        self.left = contained.left
+                        self.right = contained.right
+                        movement_data.up = self.up
+                        movement_data.down = self.down
+                        movement_data.left = self.left
+                        movement_data.right = self.right
+                        movement_data.player_id = self.player_id
+                        self.protocol.send_contained(movement_data, sender = self)
+                    elif contained.id == clientloaders.AnimationData.id:
+                        self.fire = contained.fire
+                        self.jump = contained.jump
+                        self.crouch = contained.crouch
+                        self.aim = contained.aim
+                        animation_data.fire = self.fire
+                        animation_data.jump = self.jump
+                        animation_data.crouch = self.crouch
+                        animation_data.aim = self.aim
+                        animation_data.player_id = self.player_id
+                        self.protocol.send_contained(animation_data, sender = self)
+                    elif contained.id == clientloaders.HitPacket.id:
+                        if contained.player_id is not None:
+                            player, = self.protocol.players[contained.player_id]
+                            player.hit(HIT_VALUES[contained.value], self)
+                        else:
+                            self.hit(contained.value)
+                    elif contained.id == clientloaders.GrenadePacket.id:
+                        self.grenades -= 1
+                        grenade_packet.player_id = self.player_id
+                        grenade_packet.value = contained.value
+                        self.protocol.send_contained(grenade_packet, sender = self)
+                    elif contained.id == clientloaders.SetWeapon.id:
+                        self.tool = contained.value
+                        set_weapon.player_id = self.player_id
+                        set_weapon.value = contained.value
+                        self.protocol.send_contained(set_weapon, sender = self)
+                    elif contained.id == clientloaders.SetColor.id:
+                        self.color = get_color(contained.value)
+                        set_color.player_id = self.player_id
+                        set_color.value = contained.value
+                        self.protocol.send_contained(set_color, sender = self)
+                    elif contained.id == clientloaders.KillAction.id:
+                        other_player, = self.protocol.players[contained.player_id]
+                        self.kill(other_player)
+                if contained.id == clientloaders.ChatMessage.id:
                     value = contained.value
                     if value.startswith('/'):
-                        splitted = shlex.split(value[1:])
-                        self.on_command(splitted[0], splitted[1:])
+                        value = value[1:]
+                        try:
+                            splitted = shlex.split(value)
+                        except ValueError:
+                            # shlex failed. let's just split per space
+                            splitted = value.split(' ')
+                        if splitted:
+                            command = splitted.pop(0)
+                        else:
+                            command = ''
+                        self.on_command(command, splitted[1:])
                     else:
                         global_message = contained.global_message
                         if self.accept_chat(value, global_message) == False:
@@ -248,6 +236,34 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(chat_message, 
                             sender = self, team = team)
                         self.on_chat(value, global_message)
+                elif contained.id == clientloaders.BlockAction.id:
+                        value = contained.value
+                        if not self.hp and value != GRENADE_DESTROY:
+                            return
+                        map = self.protocol.map
+                        x = contained.x
+                        y = contained.y
+                        z = contained.z
+                        if value == BUILD_BLOCK:
+                            map.set_point(x, y, z, self.color + (255,))
+                        elif value == DESTROY_BLOCK:
+                            map.remove_point(x, y, z)
+                        elif value == SPADE_DESTROY:
+                            map.remove_point(x, y, z)
+                            map.remove_point(x, y, z + 1)
+                            map.remove_point(x, y, z - 1)
+                        elif value == GRENADE_DESTROY:
+                            for nade_x in xrange(x - 1, x + 2):
+                                for nade_y in xrange(y - 1, y + 2):
+                                    for nade_z in xrange(z - 1, z + 2):
+                                        map.remove_point(nade_x, nade_y, nade_z)
+                        block_action.x = x
+                        block_action.y = y
+                        block_action.z = z
+                        block_action.value = contained.value
+                        block_action.player_id = self.player_id
+                        self.protocol.send_contained(block_action)
+                        self.protocol.update_entities()
             return
     
     def refill(self):
@@ -517,9 +533,11 @@ class Team(object):
     flag = None
     other = None
     map = None
+    name = None
     
-    def __init__(self, id, protocol):
+    def __init__(self, id, name, protocol):
         self.id = id
+        self.name = name
         self.map = protocol.map
         self.players = protocol.players
         self.initialize()
@@ -583,8 +601,8 @@ class ServerProtocol(DatagramProtocol):
         self.players = MultikeyDict()
         self.connection_ids = IDPool()
         self.player_ids = IDPool()
-        self.blue_team = Team(0, self)
-        self.green_team = Team(1, self)
+        self.blue_team = Team(0, 'Blue', self)
+        self.green_team = Team(1, 'Green', self)
         self.blue_team.other = self.green_team
         self.green_team.other = self.blue_team
     

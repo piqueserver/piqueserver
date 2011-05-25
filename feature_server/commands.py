@@ -20,6 +20,9 @@ import inspect
 class InvalidPlayer(Exception):
     pass
 
+class InvalidTeam(Exception):
+    pass
+
 def admin(func):
     def new_func(connection, *arg, **kw):
         if not connection.admin:
@@ -33,12 +36,21 @@ def get_player(connection, value):
         if value.startswith('#'):
             value = int(value[1:])
             return connection.protocol.players[value][0]
+        value = value.lower()
         for player in connection.protocol.players.values():
             if player.name.lower().count(value):
                 return player
     except (KeyError, IndexError, ValueError):
         pass
     raise InvalidPlayer()
+
+def get_team(connection, value):
+    value = value.lower()
+    if value == 'blue':
+        return connection.protocol.blue_team
+    elif value == 'green':
+        return connection.protocol.green_team
+    raise InvalidTeam()
 
 def join_arguments(arg, default = None):
     if not arg:
@@ -99,15 +111,36 @@ def login(connection, password):
         return None
     return 'Invalid password!'
 
+def pm(connection, value, *arg):
+    player = get_player(connection, value)
+    message = join_arguments(arg)
+    player.send_chat('PM from %s: %s' % (connection.name, message))
+    return 'PM sent to %s' % player.name
+
+@admin
+def lock(connection, value):
+    team = get_team(connection, value)
+    team.locked = True
+    connection.protocol.send_chat('%s team is now locked' % team.name)
+
+@admin
+def unlock(connection, value):
+    team = get_team(connection, value)
+    team.locked = False
+    connection.protocol.send_chat('%s team is now unlocked' % team.name)
+    
 command_list = [
     help,
+    pm,
     login,
     kick,
     votekick,
     ban,
     say,
     kill,
-    heal
+    heal,
+    lock,
+    unlock
 ]
 
 commands = {}
@@ -116,6 +149,7 @@ for command_func in command_list:
     commands[command_func.func_name] = command_func
 
 def handle_command(connection, command, parameters):
+    command = command.lower()
     try:
         command_func = commands[command]
     except KeyError:
@@ -128,3 +162,5 @@ def handle_command(connection, command, parameters):
         return 'Invalid number of arguments for %s' % command
     except InvalidPlayer:
         return 'No such player'
+    except InvalidTeam:
+        return 'Invalid team specifier'
