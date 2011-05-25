@@ -160,6 +160,7 @@ bool check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
     {
         (*map)[iter->x][iter->y][iter->z] = 0;
     }
+    return false;
 }
 
 // write_map/save_vxl function from stb/nothings - thanks a lot for the 

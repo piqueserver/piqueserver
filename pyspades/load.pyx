@@ -42,7 +42,7 @@ cdef extern from "load_c.cpp":
     void load_vxl(unsigned char * v, int (*colors)[MAP_X][MAP_Y][MAP_Z], 
                                      char (*geometry)[MAP_X][MAP_Y][MAP_Z])
     object save_vxl(int (*color)[MAP_X][MAP_Y][MAP_Z], char (*map)[MAP_X][MAP_Y][MAP_Z])
-    void check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z], 
+    bint check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z], 
         bint destroy)
 
 cdef inline tuple get_color(color):
@@ -135,7 +135,7 @@ cdef class VXLData:
             return neighbors
 
     cpdef bint check_node(self, int x, int y, int z, bint destroy = False):
-        check_node(x, y, z, self.geometry, destroy)
+        return check_node(x, y, z, self.geometry, destroy)
     
     cpdef bint set_point(self, int x, int y, int z, tuple color_tuple):
         if not self.has_neighbors(x, y, z):
