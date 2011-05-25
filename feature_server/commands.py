@@ -23,13 +23,20 @@ def get_player(connection, value):
         pass
     raise InvalidPlayer()
 
+def join_arguments(arg, default = None):
+    if not arg:
+        return default
+    return ' '.join(arg)
+
 @admin
-def kick(connection, value, reason = None):
+def kick(connection, value, *arg):
+    reason = join_arguments(arg)
     player = get_player(connection, value)
     player.kick(reason)
 
 @admin
-def ban(connection, value, reason = None):
+def ban(connection, value, *arg):
+    reason = join_arguments(arg)
     player = get_player(connection, value)
     player.ban(reason)
 
@@ -52,7 +59,8 @@ def heal(connection, value):
     connection.protocol.send_chat('%s was healed by %s' % (player.name,
         connection.name))
 
-def votekick(connection, value, reason = None):
+def votekick(connection, value, *arg):
+    reason = join_arguments(arg)
     player = get_player(connection, value)
     player.votekick(connection, reason)
 
