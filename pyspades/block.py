@@ -41,4 +41,4 @@ def check_node(self, x, y, z):
     if start == goal_pos:
         return True
     map = self
-    return astar((x, y, z), neighbors, goal, 0, cost, heuristic, 10000)
+    return astar((x, y, z), neighbors, goal, 0, cost, heuristic, 1000)

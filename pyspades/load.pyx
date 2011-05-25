@@ -109,16 +109,22 @@ cdef class VXLData:
         if not self.geometry[0][x][y][z]:
             return
         self.geometry[0][x][y][z] = 0
-        cdef int h_z
-        for h_z in range(63, -1, -1):
-            if not self.geometry[0][x][y][h_z]:
-                self.heightmap[0][x][y] = h_z + 1
-                break
-        else:
-            self.heightmap[0][x][y] = 0
+        self.update_heightmap(x, y)
         for node_x, node_y, node_z in self.get_neighbors(x, y, z):
+            if node_z >= 62:
+                continue
             if not check_node(self, node_x, node_y, node_z):
                 destroy_floating_blocks(node_x, node_y, node_z, self.geometry)
+    
+    cpdef bint has_neighbors(self, int x, int y, int z):
+        return (
+            self.get_solid(x + 1, y, z) or
+            self.get_solid(x - 1, y, z) or
+            self.get_solid(x, y + 1, z) or
+            self.get_solid(x, y - 1, z) or
+            self.get_solid(x, y, z + 1) or
+            self.get_solid(x, y, z - 1)
+        )
     
     cpdef list get_neighbors(self, int x, int y, int z):
         cdef list neighbors = []
@@ -132,17 +138,24 @@ cdef class VXLData:
                 neighbors.append((node_x, node_y, node_z))
         return neighbors
     
-    def set_point(self, int x, int y, int z, tuple color_tuple):
-        r, g, b, a = color_tuple
-        cdef int color = make_color(r, g, b, a)
-        self.geometry[0][x][y][z] = 1
-        self.colors[0][x][y][z] = color
+    cdef inline void update_heightmap(self, int x, int y):
+        cdef int h_z
         for h_z in range(63, -1, -1):
             if not self.geometry[0][x][y][h_z]:
                 self.heightmap[0][x][y] = h_z + 1
                 break
         else:
             self.heightmap[0][x][y] = 0
+    
+    cpdef bint set_point(self, int x, int y, int z, tuple color_tuple):
+        if not self.has_neighbors(x, y, z):
+            return False
+        r, g, b, a = color_tuple
+        cdef int color = make_color(r, g, b, a)
+        self.geometry[0][x][y][z] = 1
+        self.colors[0][x][y][z] = color
+        self.update_heightmap(x, y)
+        return True
         
     def generate(self):
         return save_vxl(self.colors, self.geometry)

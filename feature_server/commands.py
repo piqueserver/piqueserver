@@ -31,6 +31,12 @@ def admin(func):
     new_func.func_name = func.func_name
     return new_func
 
+def name(name):
+    def dec(func):
+        func.func_name = name
+        return func
+    return dec
+
 def get_player(connection, value):
     try:
         if value.startswith('#'):
@@ -128,6 +134,17 @@ def unlock(connection, value):
     team = get_team(connection, value)
     team.locked = False
     connection.protocol.send_chat('%s team is now unlocked' % team.name)
+
+@name('setbalance')
+@admin
+def set_balance(connection, value):
+    try:
+        value = int(value)
+    except ValueError:
+        return 'Invalid value %r. Use 0 for off, 1 and up for on' % value
+    protocol = connection.protocol
+    protocol.balanced_teams = value
+    protocol.send_chat('Balanced teams set to %s' % value)
     
 command_list = [
     help,
@@ -140,7 +157,8 @@ command_list = [
     kill,
     heal,
     lock,
-    unlock
+    unlock,
+    set_balance
 ]
 
 commands = {}
@@ -157,10 +175,10 @@ def handle_command(connection, command, parameters):
     try:
         return command_func(connection, *parameters)
     except TypeError:
-        import traceback
-        traceback.print_exc()
         return 'Invalid number of arguments for %s' % command
     except InvalidPlayer:
         return 'No such player'
     except InvalidTeam:
         return 'Invalid team specifier'
+    except ValueError:
+        return 'Invalid parameters'
