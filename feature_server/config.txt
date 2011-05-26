@@ -9,7 +9,7 @@
     ],
     "max_players" : 32,
     "cap_limit" : 10,
-    "map" : "maps/BridgeWars.vxl",
+    "map" : "maps/pyspades.vxl",
     "respawn_time" : 5, 
     "master" : true,
     "friendly_fire" : false,
