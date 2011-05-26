@@ -111,10 +111,19 @@ inline void add_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
     nodes.push_back(new_pos);
 }
 
+char (*marked)[MAP_X][MAP_Y][MAP_Z] = 0;
+
 bool check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z], 
                 bool destroy)
 {
-    bool visited;
+    if (marked == 0) {
+        marked = (char (*)[MAP_X][MAP_Y][MAP_Z])malloc(
+            sizeof(char[MAP_X][MAP_Y][MAP_Z]));
+    }
+
+    memset((void*)marked, 0, sizeof(sizeof(char[MAP_X][MAP_Y][MAP_Z])));
+        
+    // bool visited;
     list<Position> path;
     list<Position> nodes;
     
@@ -128,23 +137,16 @@ bool check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
         Position node = nodes.back();
         nodes.pop_back();
         
-        if (node.z == 63) {
+        if (node.z >= 62) {
             return true;
         }
-        
+        x = node.x;
+        y = node.y;
+        z = node.z;
         // already visited?
-        for (list<Position>::const_iterator iter = path.begin(); 
-             iter != path.end(); ++iter)
-        {
-            if (visited = ( (*iter) == node))
-                break;
-        }
-        if (!visited)
-        {
+        if (!(*marked)[x][y][z]) {
+            (*marked)[x][y][z] = 1;
             path.push_back(node);
-            x = node.x;
-            y = node.y;
-            z = node.z;
             add_node(x, y, z - 1, map, nodes);
             add_node(x, y - 1, z, map, nodes);
             add_node(x, y + 1, z, map, nodes);
@@ -178,7 +180,7 @@ inline int is_surface(char (*map)[MAP_X][MAP_Y][MAP_Z], int x, int y, int z)
    return 0;
 }
 
-void write_color(unsigned char * out, int color)
+inline void write_color(unsigned char * out, int color)
 {
    // assume color is ARGB native, but endianness is unknown
    if (color == 0)

@@ -209,6 +209,8 @@ class ServerConnection(BaseConnection):
                         other_player, = self.protocol.players[contained.player_id]
                         self.kill(other_player)
                 if contained.id == clientloaders.ChatMessage.id:
+                    if not self.name:
+                        return
                     value = contained.value
                     if value.startswith('/'):
                         value = value[1:]
@@ -245,9 +247,10 @@ class ServerConnection(BaseConnection):
                         y = contained.y
                         z = contained.z
                         if value == BUILD_BLOCK:
-                            map.set_point(x, y, z, self.color + (255,))
+                            if not map.set_point(x, y, z, self.color + (255,)):
+                                return
                         elif value == DESTROY_BLOCK:
-                            map.remove_point(x, y, z)
+                            map.remove_point(x, y, z):
                         elif value == SPADE_DESTROY:
                             map.remove_point(x, y, z)
                             map.remove_point(x, y, z + 1)
