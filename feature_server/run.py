@@ -60,13 +60,15 @@ class FeatureConnection(ServerConnection):
     
     def on_join(self):
         if self.protocol.motd is not None:
-            self.send_chat(self.protocol.motd)
+            self.send_lines(self.protocol.motd)
     
     def on_login(self, name):
+        self.protocol.send_chat('%s entered the game!' % name)
         self.protocol.log('%s (%s) entered the game!' % (name, self.address[0]))
     
     def disconnect(self):
         if self.name is not None:
+            self.protocol.send_chat('%s left the game' % self.name)
             self.protocol.log(self.name, 'disconnected!')
         ServerConnection.disconnect(self)
     
@@ -79,10 +81,23 @@ class FeatureConnection(ServerConnection):
             self.send_chat(result)
         self.protocol.log(log_message)
     
-    def accept_chat(self, value, global_message):
-        pass
+    def on_block_build(self, x, y, z):
+        if not self.protocol.building:
+            return False
+        
+    def on_block_destroy(self, x, y, z, mode):
+        if not self.protocol.building:
+            return False
     
-    def accept_team_join(self, team):
+    def on_hit(self, hit_amount, player):
+        if not self.protocol.killing:
+            return False
+    
+    def on_grenade(self, time_left):
+        if not self.protocol.killing:
+            return False
+    
+    def on_team_join(self, team):
         if team.locked:
             self.send_chat('Team is locked.')
             return False
@@ -145,6 +160,12 @@ class FeatureConnection(ServerConnection):
             message = '%s banned' % self.name
         self.protocol.send_chat(message)
         self.protocol.add_ban(self.address[0])
+    
+    def send_lines(self, lines):
+        current_time = 0
+        for line in lines:
+            reactor.callLater(current_time, self.send_chat, line)
+            current_time += 0.5
 
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
@@ -156,6 +177,8 @@ class FeatureProtocol(ServerProtocol):
     timestamps = None
     logfile = None
     balanced_teams = None
+    building = True
+    killing = True
     
     def __init__(self):
         try:
@@ -189,6 +212,7 @@ class FeatureProtocol(ServerProtocol):
         self.server_prefix = config.get('server_prefix', '[*]')
         self.timestamps = config.get('timestamps', False)
         self.balanced_teams = config.get('balanced_teams', None)
+        self.rules = config.get('rules', None)
         logfile = config.get('logfile', None)
         if logfile is not None and logfile.strip():
             self.logfile = open(logfile, 'ab')

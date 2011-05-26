@@ -33,6 +33,7 @@ from pyspades.collision import vector_collision
 import random
 import math
 import shlex
+import textwrap
 
 player_data = serverloaders.PlayerData()
 create_player = serverloaders.CreatePlayer()
@@ -118,7 +119,7 @@ class ServerConnection(BaseConnection):
                     team = [self.protocol.blue_team, 
                         self.protocol.green_team][contained.team]
                     self.team = None
-                    if self.accept_team_join(team) == False:
+                    if self.on_team_join(team) == False:
                         if self.team is None and old_team is not None:
                             self.team = old_team
                         if old_team is None:
@@ -134,6 +135,7 @@ class ServerConnection(BaseConnection):
                         self.spawn(name = self.name)
                     else:
                         self.respawn()
+                    return
                 if self.hp:
                     if contained.id == clientloaders.OrientationData.id:
                         if not self.hp:
@@ -187,11 +189,16 @@ class ServerConnection(BaseConnection):
                     elif contained.id == clientloaders.HitPacket.id:
                         if contained.player_id is not None:
                             player, = self.protocol.players[contained.player_id]
-                            player.hit(HIT_VALUES[contained.value], self)
+                            hit_amount = HIT_VALUES[contained.value]
+                            if self.on_hit(hit_amount, player) == False:
+                                return
+                            player.hit(hit_amount, self)
                         else:
                             self.hit(contained.value)
                     elif contained.id == clientloaders.GrenadePacket.id:
                         self.grenades -= 1
+                        if self.on_grenade(contained.value) == False:
+                            return
                         grenade_packet.player_id = self.player_id
                         grenade_packet.value = contained.value
                         self.protocol.send_contained(grenade_packet, sender = self)
@@ -226,7 +233,7 @@ class ServerConnection(BaseConnection):
                         self.on_command(command, splitted)
                     else:
                         global_message = contained.global_message
-                        if self.accept_chat(value, global_message) == False:
+                        if self.on_chat(value, global_message) == False:
                             return
                         chat_message.global_message = global_message
                         chat_message.value = value
@@ -237,7 +244,6 @@ class ServerConnection(BaseConnection):
                             team = self.team
                         self.protocol.send_contained(chat_message, 
                             sender = self, team = team)
-                        self.on_chat(value, global_message)
                 elif contained.id == clientloaders.BlockAction.id:
                         value = contained.value
                         if not self.hp and value != GRENADE_DESTROY:
@@ -247,19 +253,25 @@ class ServerConnection(BaseConnection):
                         y = contained.y
                         z = contained.z
                         if value == BUILD_BLOCK:
-                            if not map.set_point(x, y, z, self.color + (255,)):
+                            if self.on_block_build(x, y, z) == False:
                                 return
-                        elif value == DESTROY_BLOCK:
-                            map.remove_point(x, y, z)
-                        elif value == SPADE_DESTROY:
-                            map.remove_point(x, y, z)
-                            map.remove_point(x, y, z + 1)
-                            map.remove_point(x, y, z - 1)
-                        elif value == GRENADE_DESTROY:
-                            for nade_x in xrange(x - 1, x + 2):
-                                for nade_y in xrange(y - 1, y + 2):
-                                    for nade_z in xrange(z - 1, z + 2):
-                                        map.remove_point(nade_x, nade_y, nade_z)
+                            elif not map.set_point(x, y, z, self.color + (255,)):
+                                return
+                        else:
+                            if self.on_block_destroy(x, y, z, value) == False:
+                                return
+                            elif value == DESTROY_BLOCK:
+                                map.remove_point(x, y, z)
+                            elif value == SPADE_DESTROY:
+                                map.remove_point(x, y, z)
+                                map.remove_point(x, y, z + 1)
+                                map.remove_point(x, y, z - 1)
+                            elif value == GRENADE_DESTROY:
+                                for nade_x in xrange(x - 1, x + 2):
+                                    for nade_y in xrange(y - 1, y + 2):
+                                        for nade_z in xrange(z - 1, z + 2):
+                                            map.remove_point(nade_x, nade_y, 
+                                                nade_z)
                         block_action.x = x
                         block_action.y = y
                         block_action.z = z
@@ -485,6 +497,11 @@ class ServerConnection(BaseConnection):
         self.protocol.transport.write(data, self.address)
     
     def send_chat(self, value, global_message = True, sender = None):
+        if len(value) > MAX_CHAT_SIZE:
+            lines = textwrap.wrap(value, MAX_CHAT_SIZE)
+            for line in lines:
+                self.send_chat(line, global_message, sender)
+            return
         chat_message.global_message = global_message
         if sender is None:
             # 32 is guaranteed to be out of range!
@@ -495,7 +512,7 @@ class ServerConnection(BaseConnection):
         chat_message.value = value
         self.send_contained(chat_message)
     
-    # events
+    # events/hooks
     
     def on_join(self):
         pass
@@ -509,9 +526,19 @@ class ServerConnection(BaseConnection):
     def on_command(self, command, parameters):
         pass
     
-    # event hooks
+    def on_hit(self, hit_amount, hit_player):
+        pass
     
-    def accept_chat(self, value, global_message):
+    def on_team_join(self, team):
+        pass
+    
+    def on_grenade(self, time_left):
+        pass
+        
+    def on_block_build(self, x, y, z):
+        pass
+
+    def on_block_destroy(self, x, y, z, mode):
         pass
 
 class Vertex3(object):

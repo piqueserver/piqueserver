@@ -1,9 +1,15 @@
 {
     "name" : "pyspades server",
-    "motd" : "Welcome to a pyspades server! See /help for commands.",
-    "max_players" : 20,
+    "motd" : [
+        "Welcome to our server! See /help for commands.",
+        "(server powered by pyspades)"
+    ],
+    "rules" : [
+        "No griefing, no bad words, etc."
+    ],
+    "max_players" : 32,
     "cap_limit" : 10,
-    "map" : "maps/pyspades.vxl",
+    "map" : "maps/BridgeWars.vxl",
     "respawn_time" : 5, 
     "master" : true,
     "friendly_fire" : false,

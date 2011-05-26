@@ -99,6 +99,12 @@ def votekick(connection, value, *arg):
     player = get_player(connection, value)
     player.votekick(connection, reason)
 
+def rules(connection):
+    lines = connection.protocol.rules
+    if lines is None:
+        return
+    connection.send_lines(lines)
+
 def help(connection):
     """
     This help
@@ -145,6 +151,30 @@ def set_balance(connection, value):
     protocol = connection.protocol
     protocol.balanced_teams = value
     protocol.send_chat('Balanced teams set to %s' % value)
+
+@name('togglebuild')
+@admin
+def toggle_build(connection):
+    value = not connection.protocol.building
+    connection.protocol.building = value
+    connection.protocol.send_chat('Building has been toggled %s!' % (
+        ['OFF', 'ON'][int(value)]))
+    
+@name('togglekill')
+@admin
+def toggle_kill(connection):
+    value = not connection.protocol.killing
+    connection.protocol.killing = value
+    connection.protocol.send_chat('Killing has been toggled %s!' % (
+        ['OFF', 'ON'][int(value)]))
+
+@name('toggleteamkill')
+@admin
+def toggle_teamkill(connection):
+    value = not connection.protocol.friendly_fire
+    connection.protocol.friendly_fire = value
+    connection.protocol.send_chat('Friendly fire has been toggled %s!' % (
+        ['ON', 'OFF'][int(value)]))
     
 command_list = [
     help,
@@ -158,7 +188,11 @@ command_list = [
     heal,
     lock,
     unlock,
-    set_balance
+    set_balance,
+    rules,
+    toggle_build,
+    toggle_kill,
+    toggle_teamkill
 ]
 
 commands = {}

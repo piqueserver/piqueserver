@@ -113,15 +113,15 @@ inline void add_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
 
 char (*marked)[MAP_X][MAP_Y][MAP_Z] = 0;
 
-bool check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z], 
-                bool destroy)
+int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z], 
+                int destroy)
 {
     if (marked == 0) {
         marked = (char (*)[MAP_X][MAP_Y][MAP_Z])malloc(
             sizeof(char[MAP_X][MAP_Y][MAP_Z]));
     }
 
-    memset((void*)marked, 0, sizeof(sizeof(char[MAP_X][MAP_Y][MAP_Z])));
+    memset((void*)marked, 0, sizeof(char[MAP_X][MAP_Y][MAP_Z]));
         
     // bool visited;
     vector<Position> path;
@@ -138,7 +138,7 @@ bool check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
         nodes.pop_back();
         
         if (node.z >= 62) {
-            return true;
+            return 1;
         }
         x = node.x;
         y = node.y;
@@ -157,12 +157,14 @@ bool check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
     }
 
     // destroy the node's path!
-    for (vector<Position>::const_iterator iter = path.begin(); 
-         iter != path.end(); ++iter)
-    {
-        (*map)[iter->x][iter->y][iter->z] = 0;
+    if (destroy) {
+        for (vector<Position>::const_iterator iter = path.begin(); 
+             iter != path.end(); ++iter)
+        {
+            (*map)[iter->x][iter->y][iter->z] = 0;
+        }
     }
-    return false;
+    return 0;
 }
 
 // write_map/save_vxl function from stb/nothings - thanks a lot for the 
