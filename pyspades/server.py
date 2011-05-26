@@ -250,7 +250,7 @@ class ServerConnection(BaseConnection):
                             if not map.set_point(x, y, z, self.color + (255,)):
                                 return
                         elif value == DESTROY_BLOCK:
-                            map.remove_point(x, y, z):
+                            map.remove_point(x, y, z)
                         elif value == SPADE_DESTROY:
                             map.remove_point(x, y, z)
                             map.remove_point(x, y, z + 1)
