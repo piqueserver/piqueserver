@@ -35,7 +35,7 @@ if sys.version_info < (2, 7):
         import psyco
         psyco.full()
     except ImportError:
-        print '(optional: install psyco for optimization)'
+        print '(optional: install psyco for optimizations)'
 
 from pyspades.server import ServerProtocol, ServerConnection
 from pyspades.load import VXLData

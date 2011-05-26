@@ -56,6 +56,8 @@ cdef inline tuple get_color(color):
 cdef inline int make_color(int r, int g, int b, a):
     return b | (g << 8) | (r << 16) | (<int>((a / 255.0) * 128) << 24)
 
+import time
+
 cdef class VXLData:
     cdef:
         int (*colors)[MAP_X][MAP_Y][MAP_Z]
@@ -101,16 +103,22 @@ cdef class VXLData:
                 return h_z + 1
         return 0
     
-    def remove_point(self, int x, int y, int z):
+    def remove_point(self, int x, int y, int z, bint user = True):
         if x not in range(512) or y not in range(512) or z not in range(63):
+            return
+        if user and z == 62:
             return
         if not self.geometry[0][x][y][z]:
             return
         self.geometry[0][x][y][z] = 0
+        start = time.time()
         for node_x, node_y, node_z in self.get_neighbors(x, y, z):
             if node_z >= 62:
                 continue
             self.check_node(node_x, node_y, node_z, True)
+        taken = time.time() - start
+        if taken > 0.1:
+            print 'removing block at', x, y, z, 'took:', taken
     
     cpdef bint has_neighbors(self, int x, int y, int z):
         return (
@@ -137,8 +145,9 @@ cdef class VXLData:
     cpdef bint check_node(self, int x, int y, int z, bint destroy = False):
         return check_node(x, y, z, self.geometry, destroy)
     
-    cpdef bint set_point(self, int x, int y, int z, tuple color_tuple):
-        if not self.has_neighbors(x, y, z):
+    cpdef bint set_point(self, int x, int y, int z, tuple color_tuple, 
+                         bint user = True):
+        if user and (z not in range(62) or not self.has_neighbors(x, y, z)):
             return False
         r, g, b, a = color_tuple
         cdef int color = make_color(r, g, b, a)
