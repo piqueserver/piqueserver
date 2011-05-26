@@ -27,7 +27,7 @@
 #include <iostream>
 #include <sstream>
 #include "Python.h"
-#include <list>
+#include <vector>
 using namespace std;
 
 void load_vxl(unsigned char * v, int (*colors)[MAP_X][MAP_Y][MAP_Z], 
@@ -96,7 +96,7 @@ struct Position {
 };
 
 inline void add_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
-                     list<Position> & nodes)
+                     vector<Position> & nodes)
 {
     if (x < 0 || x > 511 ||
         y < 0 || y > 511 ||
@@ -124,8 +124,8 @@ bool check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
     memset((void*)marked, 0, sizeof(sizeof(char[MAP_X][MAP_Y][MAP_Z])));
         
     // bool visited;
-    list<Position> path;
-    list<Position> nodes;
+    vector<Position> path;
+    vector<Position> nodes;
     
     Position new_pos;
     new_pos.x = x;
@@ -157,7 +157,7 @@ bool check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
     }
 
     // destroy the node's path!
-    for (list<Position>::const_iterator iter = path.begin(); 
+    for (vector<Position>::const_iterator iter = path.begin(); 
          iter != path.end(); ++iter)
     {
         (*map)[iter->x][iter->y][iter->z] = 0;

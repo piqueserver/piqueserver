@@ -403,6 +403,7 @@ class ServerConnection(BaseConnection):
         if by is self:
             sender = self
         else:
+            by.kills += 1
             sender = None
         self.protocol.send_contained(kill_action, sender = sender)
         self.respawn()
