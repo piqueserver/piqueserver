@@ -181,14 +181,14 @@ def mute(connection, value):
     player = get_player(connection, value)
     player.mute = True
     connection.protocol.send_chat('%s has been muted by %s' % (
-        connection.name, player.name))
+        player.name, connection.name))
 
 @admin
 def unmute(connection, value):
     player = get_player(connection, value)
     player.mute = False
     connection.protocol.send_chat('%s has been unmuted by %s' % (
-        connection.name, player.name))
+        player.name, connection.name))
     
 command_list = [
     help,
