@@ -20,12 +20,13 @@ Client implementation - WIP
 """
 
 from twisted.internet.protocol import DatagramProtocol
+from twisted.internet import reactor
 from pyspades.protocol import BaseConnection
 from pyspades.bytereader import ByteReader
 from pyspades.packet import Packet, load_server_packet
 from pyspades.loaders import *
 from pyspades.common import *
-from pyspades import clientloaders
+from pyspades import clientloaders, serverloaders
 from pyspades.multidict import MultikeyDict
 
 import random
@@ -47,10 +48,10 @@ class ClientConnection(BaseConnection):
         
         connect_request = ConnectionRequest()
         connect_request.auth_val = self.auth_val
-        connect_request.version = crc32(open('../client.exe', 'rb').read())
+        connect_request.version = crc32(open('./data/client.exe', 'rb').read())
         self.send_loader(connect_request, False, 255)
     
-    def sendJoin(self):
+    def send_join(self):
         loader = SizedData()
         data = ByteReader()
         join = clientloaders.JoinTeam()
@@ -61,11 +62,12 @@ class ClientConnection(BaseConnection):
         self.send_loader(loader, byte = 255)
     
     def loader_received(self, packet):
-        print 'got:', packet
+        # print 'got:', packet
         if packet.id == ConnectionResponse.id:
             self.connection_id = packet.connection_id
             self.unique = packet.unique
             self.connected = True
+            print 'connected'
         elif hasattr(packet, 'data') and packet.id != MapData.id:
             print 'yay'
             if packet.id == SizedData.id and self.map is not None:
@@ -76,11 +78,10 @@ class ClientConnection(BaseConnection):
             contained = load_server_packet(data)
             if data.dataLeft():
                 raw_input('not completely parsed')
+            print contained, vars(contained)
             newdata = ByteReader()
             contained.write(newdata)
-            if contained.id == 12:
-                print '12!', vars(contained)
-            else:
+            if contained.id != serverloaders.PlayerData.id:
                 if str(data) != str(newdata):
                     print hexify(data)
                     print hexify(newdata)
@@ -103,7 +104,8 @@ class ClientConnection(BaseConnection):
             raw_input('unknown packet')
     
     def send_data(self, data):
-        self.protocol.transport.write(data)
+        reactor.callLater(0.15, self.protocol.transport.write, data)
+        # self.protocol.transport.write(data)
 
 class ClientProtocol(DatagramProtocol):    
     def __init__(self, host, port):

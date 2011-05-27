@@ -50,6 +50,7 @@ intel_action = serverloaders.IntelAction()
 block_action = serverloaders.BlockAction()
 kill_action = serverloaders.KillAction()
 chat_message = serverloaders.ChatMessage()
+map_data = MapData()
 
 class ServerConnection(BaseConnection):
     protocol = None
@@ -66,6 +67,7 @@ class ServerConnection(BaseConnection):
     color = (0x70, 0x70, 0x70)
     grenades = None
     spawn_call = None
+    saved_loaders = None
     
     up = down = left = right = False
     position = orientation = None
@@ -99,6 +101,52 @@ class ServerConnection(BaseConnection):
                 self.map_data = ByteReader(self.protocol.map.generate())
                 self.send_loader(connection_response, True, 0xFF).addCallback(
                     self.send_map)
+                    
+                # send players
+                self.saved_loaders = saved_loaders = []
+                for player in self.protocol.players.values():
+                    if player.name is None:
+                        continue
+                    existing_player.name = player.name
+                    existing_player.player_id = player.player_id
+                    existing_player.tool = player.tool
+                    existing_player.kills = player.kills
+                    existing_player.team = player.team.id
+                    existing_player.color = make_color(*player.color)
+                    saved_loaders.append(existing_player.generate())
+            
+                # send initial data
+                blue = self.protocol.blue_team
+                green = self.protocol.green_team
+                blue_flag = blue.flag
+                green_flag = green.flag
+                blue_base = blue.base
+                green_base = green.base
+                
+                self.player_id = self.protocol.player_ids.pop()
+                player_data.player_left = None
+                player_data.player_id = self.player_id
+                player_data.max_score = self.protocol.max_score
+                player_data.blue_score = blue.score
+                player_data.green_score = green.score
+                
+                player_data.blue_base_x = blue_base.x
+                player_data.blue_base_y = blue_base.y
+                player_data.blue_base_z = blue_base.z
+                
+                player_data.green_base_x = green_base.x
+                player_data.green_base_y = green_base.y
+                player_data.green_base_z = green_base.z
+                
+                player_data.blue_flag_x = blue_flag.x
+                player_data.blue_flag_y = blue_flag.y
+                player_data.blue_flag_z = blue_flag.z
+                
+                player_data.green_flag_x = green_flag.x
+                player_data.green_flag_y = green_flag.y
+                player_data.green_flag_z = green_flag.z
+                
+                saved_loaders.append(player_data.generate())
             return
         else:
             if loader.id == Ack.id:
@@ -140,7 +188,8 @@ class ServerConnection(BaseConnection):
                     if contained.id == clientloaders.OrientationData.id:
                         if not self.hp:
                             return
-                        self.orientation.set(contained.x, contained.y, contained.z)
+                        self.orientation.set(contained.x, contained.y, 
+                            contained.z)
                         orientation_data.x = contained.x
                         orientation_data.y = contained.y
                         orientation_data.z = contained.z
@@ -174,7 +223,8 @@ class ServerConnection(BaseConnection):
                         movement_data.left = self.left
                         movement_data.right = self.right
                         movement_data.player_id = self.player_id
-                        self.protocol.send_contained(movement_data, sender = self)
+                        self.protocol.send_contained(movement_data, 
+                            sender = self)
                     elif contained.id == clientloaders.AnimationData.id:
                         self.fire = contained.fire
                         self.jump = contained.jump
@@ -211,7 +261,8 @@ class ServerConnection(BaseConnection):
                         self.color = get_color(contained.value)
                         set_color.player_id = self.player_id
                         set_color.value = contained.value
-                        self.protocol.send_contained(set_color, sender = self)
+                        self.protocol.send_contained(set_color, sender = self,
+                            save = True)
                     elif contained.id == clientloaders.KillAction.id:
                         other_player, = self.protocol.players[contained.player_id]
                         self.kill(other_player)
@@ -277,7 +328,7 @@ class ServerConnection(BaseConnection):
                         block_action.z = z
                         block_action.value = contained.value
                         block_action.player_id = self.player_id
-                        self.protocol.send_contained(block_action)
+                        self.protocol.send_contained(block_action, save = True)
                         self.protocol.update_entities()
             return
     
@@ -294,7 +345,7 @@ class ServerConnection(BaseConnection):
         flag.player = self
         intel_action.action_type = 1
         intel_action.player_id = self.player_id
-        self.protocol.send_contained(intel_action)
+        self.protocol.send_contained(intel_action, save = True)
     
     def respawn(self):
         if self.spawn_call is None:
@@ -316,7 +367,7 @@ class ServerConnection(BaseConnection):
         self.hp = 100
         self.tool = 3
         self.grenades = 2
-        self.protocol.send_contained(create_player)
+        self.protocol.send_contained(create_player, save = True)
     
     def capture_flag(self):
         other_team = self.team.other
@@ -348,7 +399,7 @@ class ServerConnection(BaseConnection):
             flag = other_team.set_flag()
             intel_action.x = flag.x
             intel_action.y = flag.y
-        self.protocol.send_contained(intel_action)
+        self.protocol.send_contained(intel_action, save = True)
     
     def drop_flag(self):
         flag = self.team.other.flag
@@ -367,7 +418,7 @@ class ServerConnection(BaseConnection):
         intel_action.x = flag.x
         intel_action.y = flag.y
         intel_action.z = flag.z
-        self.protocol.send_contained(intel_action)
+        self.protocol.send_contained(intel_action, save = True)
     
     def disconnect(self):
         if self.disconnected:
@@ -381,7 +432,8 @@ class ServerConnection(BaseConnection):
         if self.name is not None:
             self.drop_flag()
             player_data.player_left = self.player_id
-            self.protocol.send_contained(player_data, sender = self)
+            self.protocol.send_contained(player_data, sender = self,
+                save = True)
             del self.protocol.players[self]
             self.protocol.update_master()
         if self.spawn_call is not None:
@@ -417,7 +469,7 @@ class ServerConnection(BaseConnection):
         else:
             by.kills += 1
             sender = None
-        self.protocol.send_contained(kill_action, sender = sender)
+        self.protocol.send_contained(kill_action, sender = sender, save = True)
         self.respawn()
     
     def send_map(self, ack = None):
@@ -425,50 +477,11 @@ class ServerConnection(BaseConnection):
             return
         if not self.map_data.dataLeft():
             self.map_data = None
-            # send players
-            for player in self.protocol.players.values():
-                if player.name is None:
-                    continue
-                existing_player.name = player.name
-                existing_player.player_id = player.player_id
-                existing_player.tool = player.tool
-                existing_player.kills = player.kills
-                existing_player.team = player.team.id
-                existing_player.color = make_color(*player.color)
-                self.send_contained(existing_player)
-            
-            # send initial data
-            blue = self.protocol.blue_team
-            green = self.protocol.green_team
-            blue_flag = blue.flag
-            green_flag = green.flag
-            blue_base = blue.base
-            green_base = green.base
-            
-            self.player_id = self.protocol.player_ids.pop()
-            player_data.player_left = None
-            player_data.player_id = self.player_id
-            player_data.max_score = self.protocol.max_score
-            player_data.blue_score = blue.score
-            player_data.green_score = green.score
-            
-            player_data.blue_base_x = blue_base.x
-            player_data.blue_base_y = blue_base.y
-            player_data.blue_base_z = blue_base.z
-            
-            player_data.green_base_x = green_base.x
-            player_data.green_base_y = green_base.y
-            player_data.green_base_z = green_base.z
-            
-            player_data.blue_flag_x = blue_flag.x
-            player_data.blue_flag_y = blue_flag.y
-            player_data.blue_flag_z = blue_flag.z
-            
-            player_data.green_flag_x = green_flag.x
-            player_data.green_flag_y = green_flag.y
-            player_data.green_flag_z = green_flag.z
-            
-            self.send_contained(player_data)
+            # get the saved loaders
+            for data in self.saved_loaders:
+                sized_data.data = data
+                self.send_loader(sized_data, True)
+            self.saved_loaders = None
             self.on_join()
             return
         for _ in xrange(4):
@@ -478,7 +491,6 @@ class ServerConnection(BaseConnection):
             new_data_size = len(new_data)
             nums = int(math.ceil(new_data_size / 1024.0))
             for i in xrange(nums):
-                map_data = MapData()
                 map_data.data = new_data.readReader(1024)
                 map_data.sequence2 = sequence
                 map_data.num = i
@@ -599,7 +611,7 @@ class Team(object):
         if force_land:
             for _ in xrange(FORCE_LAND_TRIES):
                 x, y, z = self.get_random_position()
-                if z == 63:
+                if z >= 62:
                     continue
                 return x, y, z
             return x, y, z
@@ -611,7 +623,7 @@ class Team(object):
 class ServerProtocol(DatagramProtocol):
     connection_class = ServerConnection
 
-    name = 'pyspades WIP test'
+    name = 'pyspades server'
     player_count = 0
     max_players = 20
 
@@ -706,7 +718,7 @@ class ServerProtocol(DatagramProtocol):
                 self.send_contained(intel_action)
     
     def send_contained(self, contained, sequence = False, sender = None,
-                       team = None):
+                       team = None, save = False):
         if sequence:
             loader = sized_sequence
         else:
@@ -723,7 +735,10 @@ class ServerProtocol(DatagramProtocol):
                 player.orientation_sequence = (player.orientation_sequence + 1
                     ) & 0xFFFF
                 loader.sequence2 = player.orientation_sequence
-            player.send_loader(loader, not sequence)
+            if player.saved_loaders is not None and save:
+                player.saved_loaders.append(data)
+            else:
+                player.send_loader(loader, not sequence)
     
     def send_chat(self, *arg, **kw):
         for player in self.players.values():

@@ -172,7 +172,7 @@ class FeatureConnection(ServerConnection):
         current_time = 0
         for line in lines:
             reactor.callLater(current_time, self.send_chat, line)
-            current_time += 0.5
+            current_time += 2
 
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
