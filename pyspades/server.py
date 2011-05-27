@@ -497,20 +497,20 @@ class ServerConnection(BaseConnection):
         self.protocol.transport.write(data, self.address)
     
     def send_chat(self, value, global_message = True, sender = None):
-        if len(value) > MAX_CHAT_SIZE:
-            lines = textwrap.wrap(value, MAX_CHAT_SIZE)
-            for line in lines:
-                self.send_chat(line, global_message, sender)
-            return
         chat_message.global_message = global_message
         if sender is None:
             # 32 is guaranteed to be out of range!
             chat_message.player_id = 32
-            value = '%s %s' % (self.protocol.server_prefix, value)
+            prefix = self.protocol.server_prefix
+            lines = textwrap.wrap(value, MAX_CHAT_SIZE - len(prefix) - 1)
+            for line in lines:
+                chat_message.value = '%s %s' % (self.protocol.server_prefix, 
+                    value)
+                self.send_contained(chat_message)
         else:
             chat_message.player_id = sender.player_id
-        chat_message.value = value
-        self.send_contained(chat_message)
+            chat_message.value = value
+            self.send_contained(chat_message)
     
     # events/hooks
     
