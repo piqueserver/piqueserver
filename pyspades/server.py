@@ -505,7 +505,7 @@ class ServerConnection(BaseConnection):
             lines = textwrap.wrap(value, MAX_CHAT_SIZE - len(prefix) - 1)
             for line in lines:
                 chat_message.value = '%s %s' % (self.protocol.server_prefix, 
-                    value)
+                    line)
                 self.send_contained(chat_message)
         else:
             chat_message.player_id = sender.player_id
