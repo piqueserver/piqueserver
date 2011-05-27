@@ -116,9 +116,6 @@ int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
                 int destroy)
 {
     std::map<int, bool> marked;
-    
-    // bool visited;
-    vector<Position> path;
     vector<Position> nodes;
     
     Position new_pos;
@@ -139,13 +136,12 @@ int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
         y = node.y;
         z = node.z;
         
-	int i = get_map_pos(x, y, z);
+        int i = get_map_pos(x, y, z);
 	
-	// already visited?
+        // already visited?
         if (!marked[i]) {
             marked[i] = true;
 	    
-            path.push_back(node);
             add_node(x, y, z - 1, map, nodes);
             add_node(x, y - 1, z, map, nodes);
             add_node(x, y + 1, z, map, nodes);
@@ -156,11 +152,13 @@ int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
     }
 
     // destroy the node's path!
+    char* plain_map = (char*)map;
+    
     if (destroy) {
-        for (vector<Position>::const_iterator iter = path.begin(); 
-             iter != path.end(); ++iter)
+        for (std::map<int, bool>::const_iterator iter = marked.begin(); 
+             iter != marked.end(); ++iter)
         {
-            (*map)[iter->x][iter->y][iter->z] = 0;
+	    plain_map[iter->first] = 0;
         }
     }
     
