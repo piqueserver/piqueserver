@@ -104,8 +104,7 @@ class ClientConnection(BaseConnection):
             raw_input('unknown packet')
     
     def send_data(self, data):
-        reactor.callLater(0.15, self.protocol.transport.write, data)
-        # self.protocol.transport.write(data)
+        self.protocol.transport.write(data)
 
 class ClientProtocol(DatagramProtocol):    
     def __init__(self, host, port):

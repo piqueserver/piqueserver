@@ -41,6 +41,7 @@ from pyspades.server import ServerProtocol, ServerConnection
 from pyspades.load import VXLData
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
+from ssh import RemoteConsole
 from pyspades.common import crc32
 
 import json
@@ -186,6 +187,7 @@ class FeatureProtocol(ServerProtocol):
     balanced_teams = None
     building = True
     killing = True
+    remote_console = None
     
     def __init__(self):
         try:
@@ -221,6 +223,9 @@ class FeatureProtocol(ServerProtocol):
         self.balanced_teams = config.get('balanced_teams', None)
         self.rules = config.get('rules', None)
         logfile = config.get('logfile', None)
+        ssh = config.get('ssh', {})
+        if ssh.get('enabled', False):
+            self.remote_console = RemoteConsole(self, ssh)
         if logfile is not None and logfile.strip():
             self.logfile = open(logfile, 'ab')
             writelines(self.logfile, [

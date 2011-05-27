@@ -16,6 +16,13 @@
     "passwords" : {
         "admin" : ["replaceme"]
     },
+    "ssh" : {
+        "enabled" : false,
+        "port" : 38827,
+        "users" : {
+            "user" : "pass"
+        }
+    },
     "server_prefix" : "[*]",
     "timestamps" : true,
     "logfile" : "log.txt",
