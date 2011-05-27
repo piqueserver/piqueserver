@@ -41,7 +41,6 @@ from pyspades.server import ServerProtocol, ServerConnection
 from pyspades.load import VXLData
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
-from ssh import RemoteConsole
 from pyspades.common import crc32
 
 import json
@@ -225,6 +224,7 @@ class FeatureProtocol(ServerProtocol):
         logfile = config.get('logfile', None)
         ssh = config.get('ssh', {})
         if ssh.get('enabled', False):
+            from ssh import RemoteConsole
             self.remote_console = RemoteConsole(self, ssh)
         if logfile is not None and logfile.strip():
             self.logfile = open(logfile, 'ab')
