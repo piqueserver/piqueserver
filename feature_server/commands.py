@@ -174,7 +174,7 @@ def toggle_teamkill(connection):
     value = not connection.protocol.friendly_fire
     connection.protocol.friendly_fire = value
     connection.protocol.send_chat('Friendly fire has been toggled %s!' % (
-        ['ON', 'OFF'][int(value)]))
+        ['OFF', 'ON'][int(value)]))
     
 command_list = [
     help,
