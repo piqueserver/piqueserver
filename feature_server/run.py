@@ -154,9 +154,9 @@ class FeatureConnection(ServerConnection):
     
     def kick(self, reason = None):
         if reason is not None:
-            message = '%s kicked: %s' % (self.name, reason)
+            message = '%s was kicked: %s' % (self.name, reason)
         else:
-            message = '%s kicked' % self.name
+            message = '%s was kicked' % self.name
         self.protocol.send_chat(message)
         self.disconnect()
     
