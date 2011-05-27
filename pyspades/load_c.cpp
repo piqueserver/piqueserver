@@ -28,6 +28,7 @@
 #include <sstream>
 #include "Python.h"
 #include <vector>
+#include <map>
 using namespace std;
 
 void load_vxl(unsigned char * v, int (*colors)[MAP_X][MAP_Y][MAP_Z], 
@@ -111,18 +112,11 @@ inline void add_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
     nodes.push_back(new_pos);
 }
 
-char (*marked)[MAP_X][MAP_Y][MAP_Z] = 0;
-
 int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z], 
                 int destroy)
 {
-    if (marked == 0) {
-        marked = (char (*)[MAP_X][MAP_Y][MAP_Z])malloc(
-            sizeof(char[MAP_X][MAP_Y][MAP_Z]));
-    }
-
-    memset((void*)marked, 0, sizeof(char[MAP_X][MAP_Y][MAP_Z]));
-        
+    std::map<int, bool> marked;
+    
     // bool visited;
     vector<Position> path;
     vector<Position> nodes;
@@ -140,12 +134,17 @@ int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
         if (node.z >= 62) {
             return 1;
         }
+	
         x = node.x;
         y = node.y;
         z = node.z;
-        // already visited?
-        if (!(*marked)[x][y][z]) {
-            (*marked)[x][y][z] = 1;
+        
+	int i = get_map_pos( x, y, z );
+	
+	// already visited?
+        if (!marked[i]) {
+            marked[i] = true;
+	    
             path.push_back(node);
             add_node(x, y, z - 1, map, nodes);
             add_node(x, y - 1, z, map, nodes);
@@ -164,6 +163,7 @@ int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
             (*map)[iter->x][iter->y][iter->z] = 0;
         }
     }
+    
     return 0;
 }
 
