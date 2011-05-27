@@ -142,11 +142,11 @@ class BaseConnection(object):
     def disconnect(self):
         if self.disconnected:
             return
+        self.disconnected = True
         self.ping_loop.stop()
         if self.ping_call is not None:
             self.ping_call.cancel()
             self.ping_call = None
-        self.disconnected = True
         for _, call in self.packet_deferreds.values():
             call.cancel()
         self.packet_deferreds = {}
