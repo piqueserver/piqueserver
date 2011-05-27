@@ -139,7 +139,7 @@ int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
         y = node.y;
         z = node.z;
         
-	int i = get_map_pos( x, y, z );
+	int i = get_map_pos(x, y, z);
 	
 	// already visited?
         if (!marked[i]) {

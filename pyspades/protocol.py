@@ -111,8 +111,9 @@ class BaseConnection(object):
         self.timer = Timer(0)
         self.packets = {}
         self.packet_deferreds = {}
-        self.ping_loop = LoopingCall(self.ping)
-        self.ping_loop.start(self.ping_interval, False)
+        ping_loop = LoopingCall(self.ping)
+        ping_loop.start(self.ping_interval, False)
+        self.ping_loop = ping_loop
     
     def data_received(self, data):
         reader = ByteReader(data)
@@ -143,7 +144,8 @@ class BaseConnection(object):
         if self.disconnected:
             return
         self.disconnected = True
-        self.ping_loop.stop()
+        if self.ping_loop is not None and self.ping_loop.running:
+            self.ping_loop.stop()
         if self.ping_call is not None:
             self.ping_call.cancel()
             self.ping_call = None

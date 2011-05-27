@@ -57,6 +57,7 @@ class FeatureConnection(ServerConnection):
     votekick_loop = None
     votekick_call = None
     votekicks = None
+    mute = False
     
     def on_join(self):
         if self.protocol.motd is not None:
@@ -110,7 +111,13 @@ class FeatureConnection(ServerConnection):
             return False
     
     def on_chat(self, value, global_message):
-        self.protocol.log('<%s> %s' % (self.name, value))
+        message = '<%s> %s' % (self.name, value)
+        if self.mute:
+            message = '(MUTED) %s' % message
+        self.protocol.log(message)
+        if self.mute:
+            self.send_chat('(Chat not sent - you are muted)')
+            return False
     
     def votekick(self, by, reason = None):
         if self.votekicks is None:

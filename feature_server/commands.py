@@ -175,6 +175,20 @@ def toggle_teamkill(connection):
     connection.protocol.friendly_fire = value
     connection.protocol.send_chat('Friendly fire has been toggled %s!' % (
         ['OFF', 'ON'][int(value)]))
+
+@admin
+def mute(connection, value):
+    player = get_player(connection, value)
+    player.mute = True
+    connection.protocol.send_chat('%s has been muted by %s' % (
+        connection.name, player.name))
+
+@admin
+def unmute(connection, value):
+    player = get_player(connection, value)
+    player.mute = False
+    connection.protocol.send_chat('%s has been unmuted by %s' % (
+        connection.name, player.name))
     
 command_list = [
     help,
@@ -183,6 +197,8 @@ command_list = [
     kick,
     votekick,
     ban,
+    mute,
+    unmute,
     say,
     kill,
     heal,
