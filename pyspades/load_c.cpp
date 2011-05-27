@@ -21,7 +21,8 @@
 #define MAP_X 512
 #define MAP_Y 512
 #define MAP_Z 64
-#define get_map_pos(x, y, z) (x + y * MAP_Y + z * MAP_Z * MAP_Y)
+#define get_map_pos(x, y, z) (x + y * MAP_Y + z * MAP_X * MAP_Y)
+#define get_map_sop(x, y, z) (x * MAP_X * MAP_Y + y * MAP_Y + z)
 #define DEFAULT_COLOR 0xFF674028
 
 #include <iostream>
@@ -91,7 +92,7 @@ struct Position {
     int z;
     
     bool operator == (Position const& pos) const
-	{
+        {
         return (x == pos.x && y == pos.y && z == pos.z);
     }
 };
@@ -115,9 +116,9 @@ inline void add_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
 int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z], 
                 int destroy)
 {
-    std::map<int, bool> marked;
     vector<Position> nodes;
     
+    std::map<char*, bool> marked;
     Position new_pos;
     new_pos.x = x;
     new_pos.y = y;
@@ -131,17 +132,17 @@ int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
         if (node.z >= 62) {
             return 1;
         }
-	
+        
         x = node.x;
         y = node.y;
         z = node.z;
         
-        int i = get_map_pos(x, y, z);
+        char* i = &((*map)[x][y][z]);
 	
         // already visited?
         if (!marked[i]) {
             marked[i] = true;
-	    
+            
             add_node(x, y, z - 1, map, nodes);
             add_node(x, y - 1, z, map, nodes);
             add_node(x, y + 1, z, map, nodes);
@@ -152,13 +153,12 @@ int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
     }
 
     // destroy the node's path!
-    char* plain_map = (char*)map;
     
     if (destroy) {
-        for (std::map<int, bool>::const_iterator iter = marked.begin(); 
+        for (std::map<char*, bool>::const_iterator iter = marked.begin(); 
              iter != marked.end(); ++iter)
         {
-	    plain_map[iter->first] = 0;
+            (*iter->first) = 0;
         }
     }
     
