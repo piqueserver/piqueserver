@@ -375,6 +375,7 @@ class ServerConnection(BaseConnection):
         player = flag.player
         if player is not self:
             return
+        self.kills += 10 # 10 points for intel
         intel_action.action_type = 3
         intel_action.player_id = self.player_id
         if (self.protocol.max_score not in (0, None) and 

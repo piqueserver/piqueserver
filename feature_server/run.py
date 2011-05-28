@@ -19,8 +19,15 @@
 pyspades - default/featured server
 """
 
-import sys
-sys.path.append('..')
+frozen = hasattr(sys, 'frozen')
+
+if frozen:
+    CLIENT_VERSION = int(open('client_version', 'rb').read())
+else:
+    import sys
+    sys.path.append('..')
+    from pyspades.common import crc32
+    CLIENT_VERSION = crc32(open('../data/client.exe', 'rb').read())
 
 if sys.platform == 'win32':
     # install IOCP
@@ -41,7 +48,6 @@ from pyspades.server import ServerProtocol, ServerConnection
 from pyspades.load import VXLData
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
-from pyspades.common import crc32
 
 import json
 import random
@@ -176,7 +182,7 @@ class FeatureConnection(ServerConnection):
 
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
-    version = crc32(open('../data/client.exe', 'rb').read())
+    version = CLIENT_VERSION
     admin_passwords = None
     votekick_time = 60 # 1 minute
     votekick_percentage = 25.0
