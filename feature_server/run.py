@@ -21,10 +21,11 @@ pyspades - default/featured server
 
 frozen = hasattr(sys, 'frozen')
 
+import sys
+
 if frozen:
     CLIENT_VERSION = int(open('client_version', 'rb').read())
 else:
-    import sys
     sys.path.append('..')
     from pyspades.common import crc32
     CLIENT_VERSION = crc32(open('../data/client.exe', 'rb').read())
