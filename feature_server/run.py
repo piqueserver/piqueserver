@@ -61,9 +61,7 @@ def writelines(fp, lines):
 
 class FeatureConnection(ServerConnection):
     admin = False
-    votekick_loop = None
-    votekick_call = None
-    votekicks = None
+    last_votekick = None
     mute = False
     
     def on_join(self):
@@ -126,45 +124,13 @@ class FeatureConnection(ServerConnection):
             self.send_chat('(Chat not sent - you are muted)')
             return False
     
-    def votekick(self, by, reason = None):
-        if self.votekicks is None:
-            self.protocol.send_chat('Votekick initiated for %s: %s' % (
-                self.name, reason or 'No reason specified'))
-            self.votekicks = set([by])
-            votekick_time = self.protocol.votekick_time
-            self.votekick_call = reactor.callLater(votekick_time, 
-                self.end_votekick, 'Not enough votes')
-            self.votekick_loop = LoopingCall(self.update_votekick)
-            self.votekick_loop.start(votekick_time / 4.0, False)
-        else:
-            self.votekicks.add(by)
-        value = int((len(self.votekicks) / float(len(self.protocol.players))
-            ) * 100.0)
-        if value >= self.protocol.votekick_percentage:
-            self.disconnect()
-            self.votekick_call.cancel()
-            self.end_votekick('Player kicked')
-    
-    def update_votekick(self):
-        if not self.protocol.players: # no ZeroDivisionErrors for me!
-            return
-        value = int((len(self.votekicks) / float(len(self.protocol.players))
-            ) * 100.0)
-        self.protocol.send_chat('Votekick for %s at %s%%' % (self.name,
-            value))
-    
-    def end_votekick(self, result):
-        self.protocol.send_chat('Votekick ended for %s: %s' % (
-            self.name, result))
-        self.votekick_loop.stop()
-        self.votekick_loop = self.votekicks = self.votekick_call = None
-    
-    def kick(self, reason = None):
-        if reason is not None:
-            message = '%s was kicked: %s' % (self.name, reason)
-        else:
-            message = '%s was kicked' % self.name
-        self.protocol.send_chat(message)
+    def kick(self, reason = None, silent = False):
+        if not silent:
+            if reason is not None:
+                message = '%s was kicked: %s' % (self.name, reason)
+            else:
+                message = '%s was kicked' % self.name
+            self.protocol.send_chat(message)
         self.disconnect()
     
     def ban(self, reason = None):
@@ -185,8 +151,6 @@ class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
     version = CLIENT_VERSION
     admin_passwords = None
-    votekick_time = 60 # 1 minute
-    votekick_percentage = 25.0
     bans = None
     timestamps = None
     logfile = None
@@ -194,6 +158,14 @@ class FeatureProtocol(ServerProtocol):
     building = True
     killing = True
     remote_console = None
+    # votekick
+    votekick_time = 60 # 1 minute
+    votekick_interval = 3 * 60 # 3 minutes
+    votekick_percentage = 40.0
+    votes_left = None
+    votekick_player = None
+    voting_player = None
+    votes = None
     
     def __init__(self):
         try:
@@ -261,7 +233,7 @@ class FeatureProtocol(ServerProtocol):
     def add_ban(self, ip):
         for connection in self.connections.values():
             if connection.address[0] == ip:
-                connection.kick()
+                connection.kick(silent = True)
         self.bans.add(ip)
         json.dump(list(self.bans), open('bans.txt', 'wb'))
     
@@ -277,6 +249,70 @@ class FeatureProtocol(ServerProtocol):
         if self.logfile:
             writelines(self.logfile, [value])
         print value
+        
+    # votekick
+    
+    def start_votekick(self, connection, player):
+        if self.votes is not None:
+            return 'Votekick in progress.'
+        last_votekick = connection.last_votekick
+        if (last_votekick is not None and 
+        reactor.seconds() - last_votekick < self.votekick_interval):
+            return "You can't start a votekick now."
+        votes_left = int((len(self.players) / 100.0
+            ) * self.votekick_percentage)
+        if votes_left == 0:
+            return 'Not enough players on server.'
+        self.votes_left = votes_left
+        self.votes = {connection : True}
+        votekick_time = self.votekick_time
+        self.votekick_call = reactor.callLater(votekick_time, 
+            self.end_votekick, False, 'Votekick timed out')
+        self.send_chat('%s initiated a VOTEKICK against player %s. '
+            'Say /y to agree and /n to decline.' % (connection.name, 
+            player.name), sender = connection)
+        self.votekick_player = player
+        self.voting_player = connection
+        return 'You initiated a votekick. Say /cancel to stop it at any time.'
+    
+    def votekick(self, connection, value):
+        if self.votes is None or connection in self.votes:
+            return
+        self.votes_left -= 1
+        self.votes[connection] = value
+        if self.votes_left:
+            self.send_chat('%s voted %s. %s more players required.' % (
+                connection.name, ['NO', 'YES'][int(value)], self.votes_left))
+        else:
+            self.votekick_call.cancel()
+            self.end_votekick(True)
+    
+    def cancel_votekick(self, connection):
+        if self.votes is None:
+            return 'No votekick in progress.'
+        if not connection.admin and connection is not self.voting_player:
+            return 'You did not start the votekick.'
+        self.votekick_call.cancel()
+        self.end_votekick(False, 'Cancelled by %s' % connection.name)
+    
+    def end_votekick(self, enough, result = None):
+        kick = False
+        if enough:
+            if sum(self.votes.values()) > len(self.votes) / 2:
+                # kick!
+                result = 'Player kicked'
+                kick = True
+            else:
+                result = 'Too many negative votes'
+                # not enough!
+        self.send_chat('Votekick for %s has ended. %s.' % (
+            self.votekick_player.name, result))
+        if kick:
+            self.votekick_player.kick(silent = True)
+        elif not self.voting_player.admin: # admins are powerful, yeah
+            self.voting_player.last_votekick = reactor.seconds()
+        self.votes = self.votekick_call = self.votekick_player = None
+        self.voting_player = None
 
 PORT = 32887
 

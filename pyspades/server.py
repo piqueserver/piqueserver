@@ -509,20 +509,15 @@ class ServerConnection(BaseConnection):
     def send_data(self, data):
         self.protocol.transport.write(data, self.address)
     
-    def send_chat(self, value, global_message = True, sender = None):
+    def send_chat(self, value, global_message = True):
         chat_message.global_message = global_message
-        if sender is None:
-            # 32 is guaranteed to be out of range!
-            chat_message.player_id = 32
-            prefix = self.protocol.server_prefix
-            lines = textwrap.wrap(value, MAX_CHAT_SIZE - len(prefix) - 1)
-            for line in lines:
-                chat_message.value = '%s %s' % (self.protocol.server_prefix, 
-                    line)
-                self.send_contained(chat_message)
-        else:
-            chat_message.player_id = sender.player_id
-            chat_message.value = value
+        # 32 is guaranteed to be out of range!
+        chat_message.player_id = 32
+        prefix = self.protocol.server_prefix
+        lines = textwrap.wrap(value, MAX_CHAT_SIZE - len(prefix) - 1)
+        for line in lines:
+            chat_message.value = '%s %s' % (self.protocol.server_prefix, 
+                line)
             self.send_contained(chat_message)
     
     # events/hooks
@@ -741,6 +736,8 @@ class ServerProtocol(DatagramProtocol):
             else:
                 player.send_loader(loader, not sequence)
     
-    def send_chat(self, *arg, **kw):
+    def send_chat(self, value, global_message = True, sender = None):
         for player in self.players.values():
-            player.send_chat(*arg, **kw)
+            if player is sender:
+                continue
+            player.send_chat(value, global_message)

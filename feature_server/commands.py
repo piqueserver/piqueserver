@@ -94,10 +94,21 @@ def heal(connection, value):
     connection.protocol.send_chat('%s was healed by %s' % (player.name,
         connection.name))
 
-def votekick(connection, value, *arg):
-    reason = join_arguments(arg)
+def votekick(connection, value):
     player = get_player(connection, value)
-    player.votekick(connection, reason)
+    return connection.protocol.start_votekick(connection, player)
+
+@name('y')
+def vote_yes(connection):
+    connection.protocol.votekick(connection, True)
+
+@name('n')
+def vote_no(connection):
+    connection.protocol.votekick(connection, False)
+
+@name('cancel')
+def cancel_vote(connection):
+    return connection.protocol.cancel_votekick(connection)
 
 def rules(connection):
     lines = connection.protocol.rules
@@ -196,6 +207,9 @@ command_list = [
     login,
     kick,
     votekick,
+    vote_yes,
+    vote_no,
+    cancel_vote,
     ban,
     mute,
     unmute,
@@ -224,8 +238,8 @@ def handle_command(connection, command, parameters):
         return 'Invalid command'
     try:
         return command_func(connection, *parameters)
-    except TypeError:
-        return 'Invalid number of arguments for %s' % command
+    # except TypeError:
+        # return 'Invalid number of arguments for %s' % command
     except InvalidPlayer:
         return 'No such player'
     except InvalidTeam:
