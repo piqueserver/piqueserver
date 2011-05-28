@@ -210,7 +210,7 @@ class MapData(PacketLoader):
         self.data = reader.readReader(size)
         
     def write(self, reader):
-        reader.writeShort(self.sequence2)
+        reader.writeShort(self.sequence2, True)
         reader.writeShort(len(self.data), True)
         reader.writeInt(self.total_num, True)
         reader.writeInt(self.num, True)
