@@ -19,9 +19,9 @@
 pyspades - default/featured server
 """
 
-frozen = hasattr(sys, 'frozen')
-
 import sys
+
+frozen = hasattr(sys, 'frozen')
 
 if frozen:
     CLIENT_VERSION = int(open('client_version', 'rb').read())

@@ -24,3 +24,7 @@ __copyright__ = 'Copyright 2011, Mathias Kaerlev'
 __credits__ = ['Mathias "Mat^2" Kaerlev']
 __version__ = '0.1'
 __email__ = 'matpow2@gmail.com'
+
+__all__ = ['compression', 'load', 'bytereader', 'client', 'clientloaders',
+    'collision', 'common', 'constants', 'debug', 'idpool', 'loaders', 'master',
+    'multidict', 'packet', 'protocol', 'server', 'serverloaders', 'tools']
