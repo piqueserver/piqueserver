@@ -46,10 +46,11 @@ if sys.version_info < (2, 7):
         print '(optional: install psyco for optimizations)'
 
 from pyspades.server import ServerProtocol, ServerConnection
-from pyspades.load import VXLData
+from map import Map
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from pyspades.common import encode, decode
+from pyspades.constants import *
 
 import json
 import random
@@ -96,6 +97,23 @@ class FeatureConnection(ServerConnection):
             return False
         
     def on_block_destroy(self, x, y, z, mode):
+        if self.protocol.indestructable_blocks:
+            is_indestructable = self.protocol.is_indestructable
+            if mode == DESTROY_BLOCK:
+                if is_indestructable(x, y, z):
+                    return False
+            elif mode == SPADE_DESTROY:
+                if (is_indestructable(x, y, z) or
+                is_indestructable(x, y, z + 1) or
+                is_indestructable(x, y, z - 1)):
+                    return False
+            elif mode == GRENADE_DESTROY:
+                for nade_x in xrange(x - 1, x + 2):
+                    for nade_y in xrange(y - 1, y + 2):
+                        for nade_z in xrange(z - 1, z + 2):
+                            if is_indestructable(nade_x, nade_y, nade_z):
+                                return False
+
         if not self.protocol.building:
             return False
     
@@ -161,6 +179,11 @@ def encode_lines(value):
         for line in value:
             lines.append(encode(line))
         return lines
+
+def make_range_object(value):
+    if len(value) == 1:
+        return xrange(value, value + 1)
+    return xrange(value[0], value[1])
         
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
@@ -184,6 +207,9 @@ class FeatureProtocol(ServerProtocol):
     voting_player = None
     votes = None
     
+    map_info = None
+    indestructable_blocks = None
+    
     def __init__(self):
         try:
             config = json.load(open('config.txt', 'rb'))
@@ -198,25 +224,34 @@ class FeatureProtocol(ServerProtocol):
         self.name = config.get('name', 
             'pyspades server %s' % random.randrange(0, 2000))
         try:
-            self.map = VXLData(open(config['map'], 'rb'))
+            map = Map(config['map'])
+            self.map = map.data
+            self.map_info = map
         except KeyError:
             print 'no map specified!'
             return
         except IOError:
             print 'map not found!'
             return
+        self.indestructable_blocks = indestructable_blocks = []
+        for r, g, b in map.indestructable_blocks:
+            r = make_range_object(r)
+            g = make_range_object(g)
+            b = make_range_object(b)
+            indestructable_blocks.append((r, g, b))
+            
         self.max_scores = config.get('cap_limit', None)
         self.respawn_time = config.get('respawn_time', 5)
         self.master = config.get('master', True)
         self.friendly_fire = config.get('friendly_fire', True)
-        self.motd = encode_lines(config.get('motd', None))
+        self.motd = self.format_lines(config.get('motd', None))
         self.max_players = config.get('max_players', 20)
         passwords = config.get('passwords', {})
         self.admin_passwords = passwords.get('admin', [])
         self.server_prefix = encode(config.get('server_prefix', '[*]'))
         self.timestamps = config.get('timestamps', False)
         self.balanced_teams = config.get('balanced_teams', None)
-        self.rules = encode_lines(config.get('rules', None))
+        self.rules = self.format_lines(config.get('rules', None))
         self.login_retries = config.get('login_retries', 1)
         logfile = config.get('logfile', None)
         ssh = config.get('ssh', {})
@@ -243,6 +278,28 @@ class FeatureProtocol(ServerProtocol):
         # locked teams
         self.blue_team.locked = False
         self.green_team.locked = False
+    
+    def is_indestructable(self, x, y, z):
+        r, g, b = self.map.get_point(x, y, z)[1][:-1]
+        for r_range, g_range, b_range in self.indestructable_blocks:
+            if r in r_range and g in g_range and b in b_range:
+                return True
+        return False
+    
+    def format_lines(self, value):
+        if value is None:
+            return
+        map = self.map_info
+        format_dict = {
+            'server_name' : self.name,
+            'map_name' : map.name,
+            'map_author' : map.author,
+            'map_description' : map.description
+        }
+        lines = []
+        for line in value:
+            lines.append(encode(line % format_dict))
+        return lines
         
     def got_master_connection(self, *arg, **kw):
         print 'Master connection established.'

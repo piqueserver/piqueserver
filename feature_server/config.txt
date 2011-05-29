@@ -1,7 +1,8 @@
 {
     "name" : "pyspades server",
     "motd" : [
-        "Welcome to our server! See /help for commands.",
+        "Welcome to %(server_name)s! See /help for commands.",
+        "Map is %(map_name)s by %(map_author)s.",
         "(server powered by pyspades)"
     ],
     "rules" : [
@@ -9,7 +10,7 @@
     ],
     "max_players" : 32,
     "cap_limit" : 10,
-    "map" : "maps/pyspades.vxl",
+    "map" : "pyspades",
     "respawn_time" : 5, 
     "master" : true,
     "friendly_fire" : false,
