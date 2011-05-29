@@ -289,8 +289,9 @@ class FeatureProtocol(ServerProtocol):
         self.send_chat('%s initiated a VOTEKICK against player %s. '
             'Say /y to agree and /n to decline.' % (connection.name, 
             player.name), sender = connection)
-        connection.protocol.irc_relay.send('%s initiated a votekick against player %s.'
-            % (connection.name, player.name))
+        self.irc_say.send(
+            '%s initiated a votekick against player %s.' % (connection.name, 
+            player.name))
         self.votekick_player = player
         self.voting_player = connection
         return 'You initiated a votekick. Say /cancel to stop it at any time.'
@@ -326,7 +327,7 @@ class FeatureProtocol(ServerProtocol):
     def end_votekick(self, enough, result):
         message = 'Votekick for %s has ended. %s.' % (
             self.votekick_player.name, result)
-        self.send_chat(message)
+        self.send_chat(message, irc = True)
         connection.protocol.irc_relay.send(message)
         if enough:
             self.votekick_player.kick(silent = True)
@@ -334,6 +335,11 @@ class FeatureProtocol(ServerProtocol):
             self.voting_player.last_votekick = reactor.seconds()
         self.votes = self.votekick_call = self.votekick_player = None
         self.voting_player = None
+    
+    def send_chat(self, value, global_message = True, sender = None, irc = False):
+        if irc:
+            self.irc_say(value)
+        ServerProtocol.send_chat(self, value, global_message, sender)
 
 PORT = 32887
 

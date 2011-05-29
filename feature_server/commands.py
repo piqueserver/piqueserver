@@ -78,24 +78,21 @@ def ban(connection, value, *arg):
 @admin
 def say(connection, *arg):
     value = ' '.join(arg)
-    connection.protocol.send_chat(value)
-    connection.protocol.irc_say(value)
+    connection.protocol.send_chat(value, irc = True)
 
 @admin
 def kill(connection, value):
     player = get_player(connection, value)
     player.kill()
     message = '%s killed %s' % (connection.name, player.name)
-    connection.protocol.send_chat(message)
-    connection.protocol.irc_say(message)
+    connection.protocol.send_chat(message, irc = True)
 
 @admin
 def heal(connection, value):
     player = get_player(connection, value)
     player.refill()
     message = '%s was healed by %s' % (player.name, connection.name)
-    connection.protocol.send_chat(message)
-    connection.protocol.irc_say(message)
+    connection.protocol.send_chat(message, irc = True)
 
 def votekick(connection, value):
     player = get_player(connection, value)
@@ -134,8 +131,7 @@ def login(connection, password):
     if password in passwords:
         connection.admin = True
         message = '%s logged in as admin' % connection.name
-        connection.protocol.send_chat(message)
-        connection.protocol.irc_say(message)
+        connection.protocol.send_chat(message, irc = True)
         return None
     if connection.login_retries is None:
         connection.login_retries = connection.protocol.login_retries - 1
@@ -156,14 +152,16 @@ def lock(connection, value):
     team = get_team(connection, value)
     team.locked = True
     connection.protocol.send_chat('%s team is now locked' % team.name)
-    connection.protocol.irc_say('%s locked %s team' % (connection.name, team.name))
+    connection.protocol.irc_say('%s locked %s team' % (connection.name, 
+        team.name))
 
 @admin
 def unlock(connection, value):
     team = get_team(connection, value)
     team.locked = False
     connection.protocol.send_chat('%s team is now unlocked' % team.name)
-    connection.protocol.irc_say('%s unlocked %s team' % (connection.name, team.name))
+    connection.protocol.irc_say('%s unlocked %s team' % (connection.name, 
+        team.name))
 
 @name('setbalance')
 @admin
@@ -175,7 +173,8 @@ def set_balance(connection, value):
     protocol = connection.protocol
     protocol.balanced_teams = value
     protocol.send_chat('Balanced teams set to %s' % value)
-    connection.protocol.irc_say('%s set balanced teams to %s' % (connection.name, value))
+    connection.protocol.irc_say('%s set balanced teams to %s' % (
+        connection.name, value))
 
 @name('togglebuild')
 @admin
@@ -184,7 +183,8 @@ def toggle_build(connection):
     connection.protocol.building = value
     on_off = ['OFF', 'ON'][int(value)]
     connection.protocol.send_chat('Building has been toggled %s!' % on_off)
-    connection.protocol.irc_say('%s toggled building %s' % (connection.name, on_off))
+    connection.protocol.irc_say('%s toggled building %s' % (connection.name, 
+        on_off))
     
 @name('togglekill')
 @admin
@@ -193,7 +193,8 @@ def toggle_kill(connection):
     connection.protocol.killing = value
     on_off = ['OFF', 'ON'][int(value)]
     connection.protocol.send_chat('Killing has been toggled %s!' % on_off)
-    connection.protocol.irc_say('%s toggled killing %s' % (connection.name, on_off))
+    connection.protocol.irc_say('%s toggled killing %s' % (connection.name, 
+        on_off))
 
 @name('toggleteamkill')
 @admin
@@ -202,23 +203,22 @@ def toggle_teamkill(connection):
     connection.protocol.friendly_fire = value
     on_off = ['OFF', 'ON'][int(value)]
     connection.protocol.send_chat('Friendly fire has been toggled %s!' % on_off)
-    connection.protocol.irc_say('%s toggled friendly fire %s' % (connection.name, on_off))
+    connection.protocol.irc_say('%s toggled friendly fire %s' % (
+        connection.name, on_off))
 
 @admin
 def mute(connection, value):
     player = get_player(connection, value)
     player.mute = True
     message = '%s has been muted by %s' % (player.name, connection.name)
-    connection.protocol.send_chat(message)
-    connection.protocol.irc_say(message)
+    connection.protocol.send_chat(message, irc = True)
 
 @admin
 def unmute(connection, value):
     player = get_player(connection, value)
     player.mute = False
     message = '%s has been unmuted by %s' % (player.name, connection.name)
-    connection.protocol.send_chat(message)
-    connection.protocol.irc_say(message)
+    connection.protocol.send_chat(message, irc = True)
     
 command_list = [
     help,
@@ -257,8 +257,8 @@ def handle_command(connection, command, parameters):
         return 'Invalid command'
     try:
         return command_func(connection, *parameters)
-    # except TypeError:
-        # return 'Invalid number of arguments for %s' % command
+    except TypeError:
+        return 'Invalid number of arguments for %s' % command
     except InvalidPlayer:
         return 'No such player'
     except InvalidTeam:

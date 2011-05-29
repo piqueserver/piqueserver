@@ -26,4 +26,4 @@ HIT_CONSTANTS = dict([(v, k) for (k, v) in HIT_VALUES.iteritems()])
 BUILD_BLOCK, DESTROY_BLOCK, SPADE_DESTROY, GRENADE_DESTROY = xrange(4)
 MOVE_BLUE_FLAG, MOVE_GREEN_FLAG, MOVE_BLUE_BASE, MOVE_GREEN_BASE = xrange(4)
 
-MAX_CHAT_SIZE = 80 # more like 95, but just to make sure
+MAX_CHAT_SIZE = 90 # more like 95, but just to make sure
