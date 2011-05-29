@@ -88,10 +88,14 @@ def kill(connection, value):
     connection.protocol.send_chat(message, irc = True)
 
 @admin
-def heal(connection, value):
-    player = get_player(connection, value)
+def heal(connection, player = None):
+    if player is not None:
+        player = get_player(connection, value)
+        message = '%s was healed by %s' % (player.name, connection.name)
+    else:
+        player = connection
+        message = '%s was healed' % (connection.name)
     player.refill()
-    message = '%s was healed by %s' % (player.name, connection.name)
     connection.protocol.send_chat(message, irc = True)
 
 def votekick(connection, value):
