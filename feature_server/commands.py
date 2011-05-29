@@ -79,7 +79,8 @@ def ban(connection, value, *arg):
 @admin
 def say(connection, *arg):
     value = ' '.join(arg)
-    connection.protocol.send_chat(value, irc = True)
+    connection.protocol.send_chat(value)
+    connection.protocol.irc_say(value)
 
 @admin
 def kill(connection, value):
@@ -158,7 +159,7 @@ def lock(connection, value):
     team = get_team(connection, value)
     team.locked = True
     connection.protocol.send_chat('%s team is now locked' % team.name)
-    connection.protocol.irc_say('%s locked %s team' % (connection.name, 
+    connection.protocol.irc_say('* %s locked %s team' % (connection.name, 
         team.name))
 
 @admin
@@ -166,7 +167,7 @@ def unlock(connection, value):
     team = get_team(connection, value)
     team.locked = False
     connection.protocol.send_chat('%s team is now unlocked' % team.name)
-    connection.protocol.irc_say('%s unlocked %s team' % (connection.name, 
+    connection.protocol.irc_say('* %s unlocked %s team' % (connection.name, 
         team.name))
 
 @name('setbalance')
@@ -179,7 +180,7 @@ def set_balance(connection, value):
     protocol = connection.protocol
     protocol.balanced_teams = value
     protocol.send_chat('Balanced teams set to %s' % value)
-    connection.protocol.irc_say('%s set balanced teams to %s' % (
+    connection.protocol.irc_say('* %s set balanced teams to %s' % (
         connection.name, value))
 
 @name('togglebuild')
@@ -189,7 +190,7 @@ def toggle_build(connection):
     connection.protocol.building = value
     on_off = ['OFF', 'ON'][int(value)]
     connection.protocol.send_chat('Building has been toggled %s!' % on_off)
-    connection.protocol.irc_say('%s toggled building %s' % (connection.name, 
+    connection.protocol.irc_say('* %s toggled building %s' % (connection.name, 
         on_off))
     
 @name('togglekill')
@@ -199,7 +200,7 @@ def toggle_kill(connection):
     connection.protocol.killing = value
     on_off = ['OFF', 'ON'][int(value)]
     connection.protocol.send_chat('Killing has been toggled %s!' % on_off)
-    connection.protocol.irc_say('%s toggled killing %s' % (connection.name, 
+    connection.protocol.irc_say('* %s toggled killing %s' % (connection.name, 
         on_off))
 
 @name('toggleteamkill')
@@ -209,7 +210,7 @@ def toggle_teamkill(connection):
     connection.protocol.friendly_fire = value
     on_off = ['OFF', 'ON'][int(value)]
     connection.protocol.send_chat('Friendly fire has been toggled %s!' % on_off)
-    connection.protocol.irc_say('%s toggled friendly fire %s' % (
+    connection.protocol.irc_say('* %s toggled friendly fire %s' % (
         connection.name, on_off))
 
 @admin

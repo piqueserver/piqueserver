@@ -74,13 +74,13 @@ class FeatureConnection(ServerConnection):
     def on_login(self, name):
         self.protocol.send_chat('%s entered the game!' % name)
         self.protocol.log('%s (%s) entered the game!' % (name, self.address[0]))
-        self.protocol.irc_say( "%s entered the game" % name)
+        self.protocol.irc_say( "* %s entered the game" % name)
             
     def disconnect(self):
         if self.name is not None:
             self.protocol.send_chat('%s left the game' % self.name)
             self.protocol.log(self.name, 'disconnected!')
-            self.protocol.irc_say( "%s disconnected" % self.name)
+            self.protocol.irc_say( "* %s disconnected" % self.name)
         ServerConnection.disconnect(self)
     
     def on_command(self, command, parameters):
@@ -154,8 +154,7 @@ class FeatureConnection(ServerConnection):
                 message = '%s was kicked: %s' % (self.name, reason)
             else:
                 message = '%s was kicked' % self.name
-            self.protocol.send_chat(message)
-            self.protocol.irc_say(message)
+            self.protocol.send_chat(message, irc = True)
         self.disconnect()
     
     def ban(self, reason = None):
@@ -163,8 +162,7 @@ class FeatureConnection(ServerConnection):
             message = '%s banned: %s' % (self.name, reason)
         else:
             message = '%s banned' % self.name
-        self.protocol.send_chat(message)
-        self.protocol.irc_say(message)
+        self.protocol.send_chat(message, irc = True)
         self.protocol.add_ban(self.address[0])
     
     def send_lines(self, lines):
@@ -355,7 +353,7 @@ class FeatureProtocol(ServerProtocol):
             'Say /y to agree and /n to decline.' % (connection.name, 
             player.name), sender = connection)
         self.irc_say(
-            '%s initiated a votekick against player %s.' % (connection.name, 
+            '* %s initiated a votekick against player %s.' % (connection.name, 
             player.name))
         self.votekick_player = player
         self.voting_player = connection
@@ -403,7 +401,7 @@ class FeatureProtocol(ServerProtocol):
     
     def send_chat(self, value, global_message = True, sender = None, irc = False):
         if irc:
-            self.irc_say(value)
+            self.irc_say('* %s' % value)
         ServerProtocol.send_chat(self, value, global_message, sender)
 
 PORT = 32887
