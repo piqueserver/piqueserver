@@ -65,15 +65,17 @@ class IRCBot(irc.IRCClient):
     
     @channel
     def modeChanged(self, user, channel, set, modes, args):
-        l = {'o' : self.ops, 'v' : self.voices}
-        if not modes in l:
-            return
-        l = l[modes]
-        target = args[0]
-        if target not in l and set:
-            l.append(target)
-        elif target in l and not set:
-            l.remove(target)
+        print modes, args
+        ll = {'o' : self.ops, 'v' : self.voices}
+        for i in range(len(args)):
+            mode, name = modes[i], args[i]
+            if mode not in ll:
+                continue
+            l = ll[mode]
+            if name not in l and set:
+                l.append(name)
+            elif name in l and not set:
+                l.remove(name)
     
     @channel
     def privmsg(self, user, channel, msg):
