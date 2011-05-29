@@ -20,6 +20,17 @@ cdef inline tuple get_color(color):
 cdef inline int make_color(int r, int g, int b, a):
     return b | (g << 8) | (r << 16) | (<int>((a / 255.0) * 128) << 24)
 
+cdef inline unsigned int column_size(char * column):
+    cdef char * v = column
+
+    while 1:
+        v+=v[0]*4
+        if not v[0]:
+            break
+    return v - column + (v[2]-v[1]+1) * 4 + 4
+
+from pyspades.bytereader import ByteReader
+
 cdef class CompressedVXLData:
     cdef:
         char * columns[XY_DIM][XY_DIM]
@@ -109,7 +120,7 @@ cdef class CompressedVXLData:
         while 1:
             if z <= v[2]:
                 if z < v[1]:
-                    return(0)
+                    return 0
                 return <uintptr_t>(&v[(z-v[1])*4+4])
                 
             ceilnum = v[2]-v[1]-v[0]+2
@@ -127,11 +138,13 @@ cdef class CompressedVXLData:
         # if x|y >= XY_DIM:
             # return
         # cdef char * v = self.columns[x][y]
+        # cdef char * span_start
+        # cdef char * span_end;
         # cdef int ceilnum
         # while 1:
             # if z <= v[2]:
                 # if z < v[1]:
-                    # return(0)
+                    # return
                 # return <uintptr_t>(&v[(z-v[1])*4+4])
                 
             # ceilnum = v[2]-v[1]-v[0]+2
@@ -142,7 +155,7 @@ cdef class CompressedVXLData:
 
             # if z < v[3]:
                 # if z-v[3] < ceilnum:
-                    # return 1
+                    # return
                 # return <uintptr_t>(&v[(z-v[3])*4])
     
     def get_point(self, int x, int y, int z):
@@ -158,4 +171,13 @@ cdef class CompressedVXLData:
         r, g, b, a = color_tuple
         cdef int color = b | (g << 8) | (r << 16) | (((a / 255.0) * 128) << 24)
         cdef char * data = self.columns[x][y]
-        
+    
+    def generate(self):
+        reader = ByteReader()
+        cdef int x, y
+        cdef char * column
+        for x in range(XY_DIM):
+            for y in range(XY_DIM):
+                column = self.columns[x][y]
+                reader.write(column[:column_size(column)])
+        return str(reader)

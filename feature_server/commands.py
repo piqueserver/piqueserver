@@ -132,7 +132,13 @@ def login(connection, password):
         connection.admin = True
         connection.protocol.send_chat('%s logged in as admin' % connection.name)
         return None
-    return 'Invalid password!'
+    if connection.login_retries is None:
+        connection.login_retries = connection.protocol.login_retries - 1
+    if not connection.login_retries:
+        connection.kick('Ran out of login attempts')
+        return
+    return 'Invalid password - you have %s tries left' % (
+        connection.login_retries)
 
 def pm(connection, value, *arg):
     player = get_player(connection, value)

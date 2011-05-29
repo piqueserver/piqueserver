@@ -63,6 +63,7 @@ class FeatureConnection(ServerConnection):
     admin = False
     last_votekick = None
     mute = False
+    login_retries = None
     
     def on_join(self):
         if self.protocol.motd is not None:
@@ -200,6 +201,7 @@ class FeatureProtocol(ServerProtocol):
         self.timestamps = config.get('timestamps', False)
         self.balanced_teams = config.get('balanced_teams', None)
         self.rules = config.get('rules', None)
+        self.login_retries = config.get('login_retries', 1)
         logfile = config.get('logfile', None)
         ssh = config.get('ssh', {})
         if ssh.get('enabled', False):
