@@ -49,6 +49,7 @@ from pyspades.server import ServerProtocol, ServerConnection
 from pyspades.load import VXLData
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
+from pyspades.common import encode, decode
 
 import json
 import random
@@ -154,6 +155,13 @@ class FeatureConnection(ServerConnection):
             reactor.callLater(current_time, self.send_chat, line)
             current_time += 2
 
+def encode_lines(value):
+    if value is not None:
+        lines = []
+        for line in value:
+            lines.append(encode(line))
+        return lines
+        
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
     version = CLIENT_VERSION
@@ -201,14 +209,14 @@ class FeatureProtocol(ServerProtocol):
         self.respawn_time = config.get('respawn_time', 5)
         self.master = config.get('master', True)
         self.friendly_fire = config.get('friendly_fire', True)
-        self.motd = config.get('motd', None)
+        self.motd = encode_lines(config.get('motd', None))
         self.max_players = config.get('max_players', 20)
         passwords = config.get('passwords', {})
         self.admin_passwords = passwords.get('admin', [])
-        self.server_prefix = config.get('server_prefix', '[*]')
+        self.server_prefix = encode(config.get('server_prefix', '[*]'))
         self.timestamps = config.get('timestamps', False)
         self.balanced_teams = config.get('balanced_teams', None)
-        self.rules = config.get('rules', None)
+        self.rules = encode_lines(config.get('rules', None))
         self.login_retries = config.get('login_retries', 1)
         logfile = config.get('logfile', None)
         ssh = config.get('ssh', {})

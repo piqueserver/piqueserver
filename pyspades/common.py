@@ -60,3 +60,13 @@ def check_default(value, default):
 import zlib
 def crc32(data):
     return zlib.crc32(data) & 0xffffffff
+
+# Ace of Spades uses the CP437 character set
+
+def encode(value):
+    if value is not None:
+        return value.encode('cp437')
+
+def decode(value):
+    if value is not None:
+        return value.decode('cp437')
