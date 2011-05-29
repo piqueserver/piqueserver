@@ -90,7 +90,7 @@ def kill(connection, value):
 @admin
 def heal(connection, player = None):
     if player is not None:
-        player = get_player(connection, value)
+        player = get_player(connection, player)
         message = '%s was healed by %s' % (player.name, connection.name)
     else:
         player = connection
