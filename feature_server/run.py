@@ -162,7 +162,8 @@ class FeatureProtocol(ServerProtocol):
     # votekick
     votekick_time = 60 # 1 minute
     votekick_interval = 3 * 60 # 3 minutes
-    votekick_percentage = 40.0
+    votekick_percentage = 25.0
+    votekick_max_percentage = 40.0 # too many no-votes?
     votes_left = None
     votekick_player = None
     voting_player = None
@@ -280,14 +281,22 @@ class FeatureProtocol(ServerProtocol):
     def votekick(self, connection, value):
         if self.votes is None or connection in self.votes:
             return
-        self.votes_left -= 1
+        if value:
+            self.votes_left -= 1
+        else:
+            self.votes_left += 1
+        max = int((len(self.players) / 100.0) * self.votekick_max_percentage)
+        if self.votes_left >= max:
+            self.votekick_call.cancel()
+            self.end_votekick(False, 'Too many negative votes')
+            return
         self.votes[connection] = value
         if self.votes_left:
             self.send_chat('%s voted %s. %s more players required.' % (
                 connection.name, ['NO', 'YES'][int(value)], self.votes_left))
         else:
             self.votekick_call.cancel()
-            self.end_votekick(True)
+            self.end_votekick(True, 'Player kicked')
     
     def cancel_votekick(self, connection):
         if self.votes is None:
@@ -297,19 +306,10 @@ class FeatureProtocol(ServerProtocol):
         self.votekick_call.cancel()
         self.end_votekick(False, 'Cancelled by %s' % connection.name)
     
-    def end_votekick(self, enough, result = None):
-        kick = False
-        if enough:
-            if sum(self.votes.values()) > len(self.votes) / 2:
-                # kick!
-                result = 'Player kicked'
-                kick = True
-            else:
-                result = 'Too many negative votes'
-                # not enough!
+    def end_votekick(self, enough, result):
         self.send_chat('Votekick for %s has ended. %s.' % (
             self.votekick_player.name, result))
-        if kick:
+        if enough:
             self.votekick_player.kick(silent = True)
         elif not self.voting_player.admin: # admins are powerful, yeah
             self.voting_player.last_votekick = reactor.seconds()
