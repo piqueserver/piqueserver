@@ -72,11 +72,13 @@ class FeatureConnection(ServerConnection):
     def on_login(self, name):
         self.protocol.send_chat('%s entered the game!' % name)
         self.protocol.log('%s (%s) entered the game!' % (name, self.address[0]))
-    
+        self.protocol.irc_say( "%s entered the game" % name)
+            
     def disconnect(self):
         if self.name is not None:
             self.protocol.send_chat('%s left the game' % self.name)
             self.protocol.log(self.name, 'disconnected!')
+            self.protocol.irc_say( "%s disconnected" % self.name)
         ServerConnection.disconnect(self)
     
     def on_command(self, command, parameters):
@@ -120,6 +122,8 @@ class FeatureConnection(ServerConnection):
         message = '<%s> %s' % (self.name, value)
         if self.mute:
             message = '(MUTED) %s' % message
+        elif global_message:
+            self.protocol.irc_say("<%s> %s" % (self.name, value))
         self.protocol.log(message)
         if self.mute:
             self.send_chat('(Chat not sent - you are muted)')
@@ -132,6 +136,7 @@ class FeatureConnection(ServerConnection):
             else:
                 message = '%s was kicked' % self.name
             self.protocol.send_chat(message)
+            self.protocol.irc_say(message)
         self.disconnect()
     
     def ban(self, reason = None):
@@ -140,6 +145,7 @@ class FeatureConnection(ServerConnection):
         else:
             message = '%s banned' % self.name
         self.protocol.send_chat(message)
+        self.protocol.irc_say(message)
         self.protocol.add_ban(self.address[0])
     
     def send_lines(self, lines):
@@ -155,6 +161,7 @@ class FeatureProtocol(ServerProtocol):
     bans = None
     timestamps = None
     logfile = None
+    irc_relay = None
     balanced_teams = None
     building = True
     killing = True
@@ -208,6 +215,10 @@ class FeatureProtocol(ServerProtocol):
         if ssh.get('enabled', False):
             from ssh import RemoteConsole
             self.remote_console = RemoteConsole(self, ssh)
+        irc = config.get('irc', {})
+        if irc.get('enabled', False):
+            from irc import IRCRelay
+            self.irc_relay = IRCRelay(self, irc)
         if logfile is not None and logfile.strip():
             self.logfile = open(logfile, 'ab')
             writelines(self.logfile, [
@@ -253,6 +264,10 @@ class FeatureProtocol(ServerProtocol):
             writelines(self.logfile, [value])
         print value
         
+    def irc_say(self, msg):
+        if self.irc_relay:
+            self.irc_relay.send(msg)
+    
     # votekick
     
     def start_votekick(self, connection, player):
@@ -274,6 +289,8 @@ class FeatureProtocol(ServerProtocol):
         self.send_chat('%s initiated a VOTEKICK against player %s. '
             'Say /y to agree and /n to decline.' % (connection.name, 
             player.name), sender = connection)
+        connection.protocol.irc_relay.send('%s initiated a votekick against player %s.'
+            % (connection.name, player.name))
         self.votekick_player = player
         self.voting_player = connection
         return 'You initiated a votekick. Say /cancel to stop it at any time.'
@@ -307,8 +324,10 @@ class FeatureProtocol(ServerProtocol):
         self.end_votekick(False, 'Cancelled by %s' % connection.name)
     
     def end_votekick(self, enough, result):
-        self.send_chat('Votekick for %s has ended. %s.' % (
-            self.votekick_player.name, result))
+        message = 'Votekick for %s has ended. %s.' % (
+            self.votekick_player.name, result)
+        self.send_chat(message)
+        connection.protocol.irc_relay.send(message)
         if enough:
             self.votekick_player.kick(silent = True)
         elif not self.voting_player.admin: # admins are powerful, yeah

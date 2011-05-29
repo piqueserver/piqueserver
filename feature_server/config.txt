@@ -27,5 +27,14 @@
     "timestamps" : true,
     "logfile" : "log.txt",
     "balanced_teams" : 1,
-    "login_retries" : 1
+    "login_retries" : 1,
+    "irc" : {
+	"enabled" : false,
+	"nickname" : "pyspades",
+	"username" : "pyspades",
+	"realname" : "pyspades server bot",
+	"server" : "irc.quakenet.org",
+	"port" : 6667,
+	"channel" : "#pyspades.bots"
+    }
 }
