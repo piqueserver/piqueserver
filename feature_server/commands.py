@@ -29,6 +29,7 @@ def admin(func):
             return 'No administrator rights!'
         func(connection, *arg, **kw)
     new_func.func_name = func.func_name
+    new_func.admin = True
     return new_func
 
 def name(name):
@@ -124,7 +125,8 @@ def help(connection):
     """
     This help
     """
-    names = [command.func_name for command in command_list]
+    names = [command.func_name for command in command_list
+        if hasattr(command, 'admin') in (connection.admin, False)]
     return 'Available commands: %s' % (', '.join(names))
 
 def login(connection, password):
