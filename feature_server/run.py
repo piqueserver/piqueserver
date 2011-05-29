@@ -289,7 +289,7 @@ class FeatureProtocol(ServerProtocol):
         self.send_chat('%s initiated a VOTEKICK against player %s. '
             'Say /y to agree and /n to decline.' % (connection.name, 
             player.name), sender = connection)
-        self.irc_say.send(
+        self.irc_say(
             '%s initiated a votekick against player %s.' % (connection.name, 
             player.name))
         self.votekick_player = player
