@@ -126,6 +126,7 @@ class IRCClientFactory(protocol.ClientFactory):
     def buildProtocol(self, address):
         p = self.protocol()
         p.factory = self
+        p.protocol = self.protocol
         self.bot = p
         return p
 
