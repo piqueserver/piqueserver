@@ -372,7 +372,7 @@ class FeatureProtocol(ServerProtocol):
             self.end_votekick(False, 'Too many negative votes')
             return
         self.votes[connection] = value
-        if self.votes_left <= 0:
+        if self.votes_left > 0:
             self.send_chat('%s voted %s. %s more players required.' % (
                 connection.name, ['NO', 'YES'][int(value)], self.votes_left))
         else:
