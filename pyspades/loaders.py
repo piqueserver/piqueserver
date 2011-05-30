@@ -71,7 +71,7 @@ class ConnectionRequest(PacketLoader):
         dword_6 = reader.readInt(True, False)
         dword_7 = reader.readInt(True, False) # version, CRC32 of exe
         
-        if word_1 not in (0, 1):
+        if word_1 not in (0, 1, 2):
             raw_input('unknown word_1: %s' % word_1)
         if v10 == -1 and v12 == -1:
             self.client = True

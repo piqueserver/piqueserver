@@ -684,6 +684,8 @@ class ServerProtocol(DatagramProtocol):
         self.master_connection.set_count(len(self.players))
     
     def datagramReceived(self, data, address):
+        if not data:
+            return
         if address not in self.connections:
             self.connections[address] = self.connection_class(self, address)
         connection = self.connections[address]
