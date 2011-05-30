@@ -36,10 +36,6 @@ class IRCBot(irc.IRCClient):
     ops = None
     voices = None
     
-    def __init__(self):
-        self.ops = []
-        self.voices = []
-    
     def _get_nickname(self):
         return self.factory.nickname
     nickname = property(_get_nickname)
@@ -48,6 +44,9 @@ class IRCBot(irc.IRCClient):
         self.join(self.factory.channel)
     
     def joined(self, channel):
+        if channel == self.factory.channel:
+            self.ops = []
+            self.voices = []
         print "Joined channel %s" % channel
     
     def irc_RPL_NAMREPLY(self, *arg):
@@ -65,7 +64,6 @@ class IRCBot(irc.IRCClient):
     
     @channel
     def modeChanged(self, user, channel, set, modes, args):
-        print modes, args
         ll = {'o' : self.ops, 'v' : self.voices}
         for i in range(len(args)):
             mode, name = modes[i], args[i]
@@ -79,11 +77,16 @@ class IRCBot(irc.IRCClient):
     
     @channel
     def privmsg(self, user, channel, msg):
-        if user in self.ops or user in self.voices:
-            max_size = MAX_IRC_CHAT_SIZE - len(self.protocol.server_prefix) - 1
-            message = ("<%s> %s" % (('@' if user in self.ops else '+') + user, msg))[:max_size]
-            self.factory.server.log(message)
-            self.factory.server.send_chat(message)
+        if (user in self.ops) or (user in self.voices):
+            if msg.startswith(self.factory.commandprefix):
+                params = msg[len(self.factory.commandprefix):].split()
+                handle_command(self, user, params[0], params[1:])
+            else:
+                max_size = MAX_IRC_CHAT_SIZE - len(self.protocol.server_prefix) - 1
+                message = ("<%s> %s" % (('@' if user in self.ops else '+') +
+                    user, msg))[:max_size]
+                self.factory.server.log(message)
+                self.factory.server.send_chat(message)
     
     @channel
     def userLeft(self, user, channel):
@@ -96,7 +99,7 @@ class IRCBot(irc.IRCClient):
         self.msg(self.factory.channel, msg)
     
     def me(self, msg):
-        self.me(self.factory.channel, msg)
+        self.describe(self.factory.channel, msg)
 
 class IRCClientFactory(protocol.ClientFactory):
     protocol = IRCBot
@@ -111,6 +114,7 @@ class IRCClientFactory(protocol.ClientFactory):
         self.username = config.get('username', 'pyspades').encode('ascii')
         self.realname = config.get('realname', server.name).encode('ascii')
         self.channel = config.get('channel', "#pyspades.bots").encode('ascii')
+        self.commandprefix = config.get('commandprefix', '.').encode('ascii')
     
     def startedConnecting(self, connector):
         print "Connecting to IRC server..."
@@ -144,4 +148,46 @@ class IRCRelay(object):
         self.factory.bot.send(msg)
     
     def me(self, msg):
-        self.factory.bot.me(msg)
+        self.factory.bot.describe(msg)
+
+def admin(func):
+    def new_func(bot, user, *arg, **kw):
+        if not user in bot.ops:
+            return
+        func(bot, user, *arg, **kw)
+    new_func.func_name = func.func_name
+    return new_func
+
+@admin
+def who(bot, user):
+    names = [conn.name for conn in bot.factory.server.players.values()]
+    if len(names) == 0:
+        bot.me( "players: none" )
+        return
+    bot.me( "players: %s" % (', '.join(names)))
+
+def players(bot, user):
+    c = len(bot.factory.server.players)
+    bot.me( "has %s player%s connected" % ( "no" if c == 0 else c,
+        "" if c == 1 else "s" ) )
+
+command_list = [
+    who,
+    players
+]
+
+commands = {}
+
+for command_func in command_list:
+    commands[command_func.func_name] = command_func
+
+def handle_command(bot, user, command, parameters):
+    command = command.lower()
+    try:
+        command_func = commands[command]
+    except KeyError:
+        return #'Invalid command'
+    try:
+        return command_func(bot, user, *parameters)
+    except ValueError:
+        return #'Invalid parameters'

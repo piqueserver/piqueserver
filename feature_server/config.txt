@@ -36,6 +36,7 @@
         "realname" : "pyspades server bot",
         "server" : "irc.quakenet.org",
         "port" : 6667,
-        "channel" : "#pyspades.bots"
+        "channel" : "#pyspades.bots",
+        "commandprefix" : "."
     }
 }

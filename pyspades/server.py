@@ -621,7 +621,6 @@ class ServerProtocol(DatagramProtocol):
     connection_class = ServerConnection
 
     name = 'pyspades server'
-    player_count = 0
     max_players = 20
 
     connections = None
