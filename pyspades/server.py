@@ -673,7 +673,7 @@ class ServerProtocol(DatagramProtocol):
         
     def got_master_connection(self, connection):
         self.master_connection = connection
-        connection.callback = self.master_disconnected
+        connection.disconnect_callback = self.master_disconnected
     
     def master_disconnected(self):
         self.master_connection = None

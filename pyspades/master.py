@@ -58,6 +58,7 @@ class AddServer(PacketLoader):
 add_server = AddServer()
 
 class MasterConnection(BaseConnection):
+    disconnect_callback = None
     def __init__(self, protocol, name, ip, max, defer):
         BaseConnection.__init__(self)
 
@@ -103,7 +104,7 @@ class MasterConnection(BaseConnection):
     
     def disconnect(self):
         BaseConnection.disconnect(self)
-        callback = self.protocol.disconnect_callback
+        callback = self.disconnect_callback
         if callback is not None:
             callback()
     
@@ -117,7 +118,6 @@ def get_external_ip():
 
 class MasterProtocol(DatagramProtocol):
     connection_class = MasterConnection
-    disconnect_callback = None
     def __init__(self, name, ip, max, defer = None):
         self.name = name
         self.ip = ip
