@@ -226,6 +226,17 @@ def unmute(connection, value):
     player.mute = False
     message = '%s has been unmuted by %s' % (player.name, connection.name)
     connection.protocol.send_chat(message, irc = True)
+
+from pyspades.server import position_data
+
+@admin
+def teleport(connection, value):
+    player = get_player(connection, value)
+    position_data.x = player.position.x
+    position_data.y = player.position.y
+    position_data.z = player.position.z
+    position_data.player_id = connection.player_id
+    connection.send_contained(position_data)
     
 command_list = [
     help,
