@@ -259,7 +259,8 @@ command_list = [
     rules,
     toggle_build,
     toggle_kill,
-    toggle_teamkill
+    toggle_teamkill,
+    teleport
 ]
 
 commands = {}
