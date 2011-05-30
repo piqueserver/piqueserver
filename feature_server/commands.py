@@ -43,10 +43,14 @@ def get_player(connection, value):
         if value.startswith('#'):
             value = int(value[1:])
             return connection.protocol.players[value][0]
-        value = value.lower()
-        for player in connection.protocol.players.values():
-            if player.name.lower().count(value):
-                return player
+        players = connection.protocol.players
+        try:
+            return players[value][0]
+        except KeyError:
+            value = value.lower()
+            for player in players.values():
+                if player.name.lower().count(value):
+                    return player
     except (KeyError, IndexError, ValueError):
         pass
     raise InvalidPlayer()
