@@ -71,7 +71,7 @@ class MasterConnection(BaseConnection):
 
         connect_request = ConnectionRequest()
         connect_request.auth_val = self.auth_val
-        connect_request.version = 0xD000000 # increments for each version
+        connect_request.version = 0xE000000 # increments for each version
         self.send_loader(connect_request, False, 255)
     
     def loader_received(self, loader):
