@@ -391,7 +391,6 @@ class FeatureProtocol(ServerProtocol):
         message = 'Votekick for %s has ended. %s.' % (
             self.votekick_player.name, result)
         self.send_chat(message, irc = True)
-        connection.protocol.irc_relay.send(message)
         if enough:
             self.votekick_player.kick(silent = True)
         elif not self.voting_player.admin: # admins are powerful, yeah
