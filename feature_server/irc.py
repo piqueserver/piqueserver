@@ -181,25 +181,20 @@ def kick(bot, user, arg):
     player = get_player(bot.protocol, arg[0])
     player.kick(reason)
 
-@admin
 def who(bot, user):
     names = [conn.name for conn in bot.factory.server.players.values()]
-    if len(names) == 0:
-        bot.me( "players: none" )
-        return
-    bot.me( "players: %s" % (', '.join(names)))
-
-def players(bot, user):
-    c = len(bot.factory.server.players)
-    bot.me( "has %s player%s connected" % ( "no" if c == 0 else c,
-        "" if c == 1 else "s" ) )
+    c = len(names)
+    msg = "has %s player%s connected" % ( "no" if c == 0 else c,
+        "" if c == 1 else "s" )
+    if c > 0:
+        msg += ": %s" % (', '.join(names))
+    bot.me( msg )
 
 command_list = [
     mute,
     unmute,
     kick,
-    who,
-    players
+    who
 ]
 
 commands = {}

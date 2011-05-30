@@ -1,5 +1,5 @@
 {
-    "name" : "pyspades server",
+    "name" : "local",
     "motd" : [
         "Welcome to %(server_name)s! See /help for commands.",
         "Map is %(map_name)s by %(map_author)s.",
@@ -8,14 +8,14 @@
     "rules" : [
         "No griefing, no bad words, etc."
     ],
-    "max_players" : 32,
+    "max_players" : 2,
     "cap_limit" : 10,
     "map" : "pyspades",
     "respawn_time" : 5, 
-    "master" : true,
+    "master" : false,
     "friendly_fire" : false,
     "passwords" : {
-        "admin" : ["replaceme"]
+        "admin" : ["ass"]
     },
     "ssh" : {
         "enabled" : false,
@@ -30,13 +30,13 @@
     "balanced_teams" : 1,
     "login_retries" : 1,
     "irc" : {
-        "enabled" : false,
-        "nickname" : "pyspades",
+        "enabled" : true,
+        "nickname" : "hungus",
         "username" : "pyspades",
         "realname" : "pyspades server bot",
-        "server" : "irc.quakenet.org",
+        "server" : "irc.esper.net",
         "port" : 6667,
-        "channel" : "#pyspades.bots",
+        "channel" : "#hungus",
         "commandprefix" : "."
     }
 }
