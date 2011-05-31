@@ -241,6 +241,11 @@ def teleport(connection, value):
     position_data.z = player.position.z
     position_data.player_id = connection.player_id
     connection.send_contained(position_data)
+
+@admin
+def reset_game(connection):
+    connection.reset_game()
+    connection.protocol.send_chat('Game has been reset by %s' % (connection.name), irc = True)
     
 command_list = [
     help,
@@ -264,7 +269,8 @@ command_list = [
     toggle_build,
     toggle_kill,
     toggle_teamkill,
-    teleport
+    teleport,
+    reset_game
 ]
 
 commands = {}
