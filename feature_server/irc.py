@@ -162,23 +162,23 @@ def admin(func):
     return new_func
 
 @admin
-def mute(bot, user, target):
-    player = get_player(bot.protocol, target)
+def mute(bot, user, value):
+    player = get_player(bot.protocol, value)
     player.mute = True
     message = '%s has been muted by %s' % (player.name, user)
     bot.protocol.send_chat(message, irc = True)
 
 @admin
-def unmute(bot, user, target):
-    player = get_player(bot.protocol, target)
+def unmute(bot, user, value):
+    player = get_player(bot.protocol, value)
     player.mute = False
     message = '%s has been unmuted by %s' % (player.name, user)
     bot.protocol.send_chat(message, irc = True)
 
 @admin
-def kick(bot, user, arg):
-    reason = join_arguments(arg[1:])
-    player = get_player(bot.protocol, arg[0])
+def kick(bot, user, value, *arg):
+    reason = join_arguments(arg)
+    player = get_player(bot.protocol, value)
     player.kick(reason)
 
 def who(bot, user):
