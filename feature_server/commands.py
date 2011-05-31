@@ -238,7 +238,8 @@ def teleport(connection, player1, player2 = None):
     player1 = get_player(connection.protocol, value)
     if player2 is not None:
         player, target = player1, get_player(connection.protocol, player2)
-        message = '%s teleported %s to %s' % (connection.name, player.name, target.name)
+        message = '%s teleported %s to %s' % (connection.name, player.name, 
+            target.name)
     else:
         player, target = connection, player1
         message = '%s teleported to %s' % (connection.name, target.name)
@@ -248,6 +249,18 @@ def teleport(connection, player1, player2 = None):
     position_data.z = target.position.z
     position_data.player_id = player.player_id
     connection.send_contained(position_data)
+    connection.send_chat(message, irc = True)
+
+@admin
+def god(connection, value = None):
+    if player is not None:
+        connection = get_player(connection.protocol, player)
+    connection.god = not connection.god
+    if connection.god:
+        message = '%s entered GOD MODE!' % connection.name
+    else:
+        message = '%s returned to being a mere human.' % connection.name
+    connection.protocol.send_chat(message, irc = True)
     
 command_list = [
     help,
@@ -271,7 +284,8 @@ command_list = [
     toggle_build,
     toggle_kill,
     toggle_teamkill,
-    teleport
+    teleport,
+    god
 ]
 
 commands = {}

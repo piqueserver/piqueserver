@@ -66,6 +66,7 @@ class FeatureConnection(ServerConnection):
     last_votekick = None
     mute = False
     login_retries = None
+    god = False
     
     def on_join(self):
         if self.protocol.motd is not None:
@@ -95,6 +96,8 @@ class FeatureConnection(ServerConnection):
     def on_block_build(self, x, y, z):
         if not self.protocol.building:
             return False
+        if self.god:
+            self.refill()
         
     def on_block_destroy(self, x, y, z, mode):
         if self.protocol.indestructable_blocks:
@@ -118,12 +121,14 @@ class FeatureConnection(ServerConnection):
             return False
     
     def on_hit(self, hit_amount, player):
-        if not self.protocol.killing:
+        if not self.protocol.killing or self.god:
             return False
     
     def on_grenade(self, time_left):
         if not self.protocol.killing:
             return False
+        if self.god:
+            self.refill()
     
     def on_team_join(self, team):
         if team.locked:
