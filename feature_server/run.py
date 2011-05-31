@@ -121,7 +121,7 @@ class FeatureConnection(ServerConnection):
             return False
     
     def on_hit(self, hit_amount, player):
-        if not self.protocol.killing or self.god:
+        if not self.protocol.killing or player.god:
             return False
     
     def on_grenade(self, time_left):
