@@ -253,8 +253,8 @@ def teleport(connection, player1, player2 = None):
 
 @admin
 def god(connection, value = None):
-    if player is not None:
-        connection = get_player(connection.protocol, player)
+    if value is not None:
+        connection = get_player(connection.protocol, value)
     connection.god = not connection.god
     if connection.god:
         message = '%s entered GOD MODE!' % connection.name
