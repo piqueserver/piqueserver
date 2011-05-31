@@ -39,13 +39,17 @@ cdef extern from "load_c.cpp":
         MAP_Y
         MAP_Z
         DEFAULT_COLOR
-    void load_vxl(unsigned char * v, int (*colors)[MAP_X][MAP_Y][MAP_Z], 
-                                     char (*geometry)[MAP_X][MAP_Y][MAP_Z])
-    object save_vxl(int (*color)[MAP_X][MAP_Y][MAP_Z], char (*map)[MAP_X][MAP_Y][MAP_Z])
-    int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z], 
-        int destroy)
+    struct MapData:
+        pass
+    MapData * load_vxl(unsigned char * v)
+    void delete_vxl(MapData * map)
+    object save_vxl(MapData * map)
+    int check_node(int x, int y, int z, MapData * map, int destroy)
+    bint get_solid(int x, int y, int z, MapData * map)
+    int get_color(int x, int y, int z, MapData * map)
+    void set_point(int x, int y, int z, MapData * map, bint solid, int color)
 
-cdef inline tuple get_color(color):
+cdef inline tuple get_color_tuple(color):
     cdef int a, b, c, d
     b = color & 0xFF
     g = (color & 0xFF00) >> 8
@@ -59,47 +63,37 @@ cdef inline int make_color(int r, int g, int b, a):
 import time
 
 cdef class VXLData:
-    cdef:
-        int (*colors)[MAP_X][MAP_Y][MAP_Z]
-        char (*geometry)[MAP_X][MAP_Y][MAP_Z]
-        object colors_python, geometry_python
+    cdef MapData * map
         
     def __init__(self, fp = None):
-        self.colors_python = allocate_memory(sizeof(int[MAP_X][MAP_Y][MAP_Z]),
-            <char**>&self.colors)
-        self.geometry_python = allocate_memory(sizeof(char[MAP_X][MAP_Y][MAP_Z]),
-            <char**>&self.geometry)
         cdef unsigned char * c_data
         if fp is not None:
             data = fp.read()
             c_data = data
-            load_vxl(c_data, self.colors, self.geometry)
+            self.map = load_vxl(c_data)
     
     def get_point(self, int x, int y, int z):
-        cdef int color = self.colors[0][x][y][z]
-        if color == 0:
-            color = DEFAULT_COLOR
-        cdef char solid = self.geometry[0][x][y][z]
-        return (solid, get_color(color))
+        return (get_solid(x, y, z, self.map), get_color_tuple(get_color(
+            x, y, z, self.map)))
     
     cpdef int get_solid(self, int x, int y, int z):
         if (x not in range(512) or
             y not in range(512) or
             z not in range(64)):
             return 0
-        return self.geometry[0][x][y][z]
+        return get_solid(x, y, z, self.map)
     
     def get_z(self, int x, int y, int start = 0):
         cdef int z
         for z in range(start, 64):
-            if self.geometry[0][x][y][z]:
+            if get_solid(x, y, z, self.map):
                 return z
         return None
     
     cpdef int get_height(self, int x, int y):
         cdef int h_z
         for h_z in range(63, -1, -1):
-            if not self.geometry[0][x][y][h_z]:
+            if not get_solid(x, y, h_z, self.map):
                 return h_z + 1
         return 0
     
@@ -108,9 +102,9 @@ cdef class VXLData:
             return
         if user and z == 62:
             return
-        if not self.geometry[0][x][y][z]:
+        if not get_solid(x, y, z, self.map):
             return
-        self.geometry[0][x][y][z] = 0
+        set_point(x, y, z, self.map, 0, 0)
         start = time.time()
         for node_x, node_y, node_z in self.get_neighbors(x, y, z):
             if node_z >= 62:
@@ -143,7 +137,7 @@ cdef class VXLData:
             return neighbors
 
     cpdef bint check_node(self, int x, int y, int z, bint destroy = False):
-        return check_node(x, y, z, self.geometry, destroy)
+        return check_node(x, y, z, self.map, destroy)
     
     cpdef bint set_point(self, int x, int y, int z, tuple color_tuple, 
                          bint user = True):
@@ -151,9 +145,12 @@ cdef class VXLData:
             return False
         r, g, b, a = color_tuple
         cdef int color = make_color(r, g, b, a)
-        self.geometry[0][x][y][z] = 1
-        self.colors[0][x][y][z] = color
+        set_point(x, y, z, self.map, 1, color)
         return True
         
     def generate(self):
-        return save_vxl(self.colors, self.geometry)
+        return save_vxl(self.map)
+    
+    def __dealloc__(self):
+        if self.map != NULL:
+            delete_vxl(self.map)

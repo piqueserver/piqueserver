@@ -21,8 +21,7 @@
 #define MAP_X 512
 #define MAP_Y 512
 #define MAP_Z 64
-#define get_map_pos(x, y, z) (x + y * MAP_Y + z * MAP_X * MAP_Y)
-#define get_map_sop(x, y, z) (x * MAP_X * MAP_Y + y * MAP_Y + z)
+#define get_pos(x, y, z) (x + (y) * MAP_Y + (z) * MAP_X * MAP_Y)
 #define DEFAULT_COLOR 0xFF674028
 
 #include <iostream>
@@ -30,16 +29,43 @@
 #include "Python.h"
 #include <vector>
 #include <map>
+#include <bitset>
 using namespace std;
 
-void load_vxl(unsigned char * v, int (*colors)[MAP_X][MAP_Y][MAP_Z], 
-                                 char (*geometry)[MAP_X][MAP_Y][MAP_Z])
+struct MapData
 {
+    bitset<MAP_X * MAP_Y * MAP_Z> geometry;
+    std::map<int, int> colors;
+};
+
+int inline get_solid(int x, int y, int z, MapData * map)
+{
+    return map->geometry[get_pos(x, y, z)];
+}
+
+int inline get_color(int x, int y, int z, MapData * map)
+{
+    return map->colors[get_pos(x, y, z)];
+}
+
+void inline set_point(int x, int y, int z, MapData * map, bool solid, int color)
+{
+    int i = get_pos(x, y, z);
+    map->geometry[i] = solid;
+    if (!solid)
+        map->colors.erase(i);
+    else
+        map->colors[i] = color;
+}
+
+MapData * load_vxl(unsigned char * v)
+{
+   MapData * map = new MapData;
    int x,y,z;
    for (y=0; y < 512; ++y) {
       for (x=0; x < 512; ++x) {
          for (z=0; z < 64; ++z) {
-            (*geometry)[x][y][z] = 1;
+            map->geometry[get_pos(x, y, z)] = 1;
          }
          z = 0;
          for(;;) {
@@ -54,11 +80,11 @@ void load_vxl(unsigned char * v, int (*colors)[MAP_X][MAP_Y][MAP_Z],
             int len_bottom;
 
             for(i=z; i < top_color_start; i++)
-               (*geometry)[x][y][i] = 0;
+               map->geometry[get_pos(x, y, i)] = 0;
 
             color = (int *) (v+4);
             for(z=top_color_start; z <= top_color_end; z++)
-               (*colors)[x][y][z] = *color++;
+               map->colors[get_pos(x, y, z)] = *color++;
 
             len_bottom = top_color_end - top_color_start + 1;
 
@@ -79,11 +105,17 @@ void load_vxl(unsigned char * v, int (*colors)[MAP_X][MAP_Y][MAP_Z],
             bottom_color_start = bottom_color_end - len_top;
 
             for(z=bottom_color_start; z < bottom_color_end; ++z) {
-               (*colors)[x][y][z] = *color++;
+               map->colors[get_pos(x, y, z)] = *color++;
             }
          }
       }
    }
+   return map;
+}
+
+void inline delete_vxl(MapData * map)
+{
+    delete map;
 }
 
 struct Position {
@@ -97,14 +129,14 @@ struct Position {
     }
 };
 
-inline void add_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
+inline void add_node(int x, int y, int z, MapData * map,
                      vector<Position> & nodes)
 {
     if (x < 0 || x > 511 ||
         y < 0 || y > 511 ||
         z < 0 || z > 63)
         return;
-    if (!(*map)[x][y][z])
+    if (!map->geometry[get_pos(x, y, z)])
         return;
     Position new_pos;
     new_pos.x = x;
@@ -113,12 +145,11 @@ inline void add_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
     nodes.push_back(new_pos);
 }
 
-int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z], 
-                int destroy)
+int check_node(int x, int y, int z, MapData * map, int destroy)
 {
     vector<Position> nodes;
     
-    std::map<char*, bool> marked;
+    std::map<int, bool> marked;
     Position new_pos;
     new_pos.x = x;
     new_pos.y = y;
@@ -137,7 +168,7 @@ int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
         y = node.y;
         z = node.z;
         
-        char* i = &((*map)[x][y][z]);
+        int i = get_pos(x, y, z);
 	
         // already visited?
         if (!marked[i]) {
@@ -155,10 +186,11 @@ int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
     // destroy the node's path!
     
     if (destroy) {
-        for (std::map<char*, bool>::const_iterator iter = marked.begin(); 
+        for (std::map<int, bool>::const_iterator iter = marked.begin(); 
              iter != marked.end(); ++iter)
         {
-            (*iter->first) = 0;
+            map->geometry[iter->first] = 0;
+            map->colors[iter->first] = 0;
         }
     }
     
@@ -168,15 +200,15 @@ int check_node(int x, int y, int z, char (*map)[MAP_X][MAP_Y][MAP_Z],
 // write_map/save_vxl function from stb/nothings - thanks a lot for the 
 // public-domain code!
 
-inline int is_surface(char (*map)[MAP_X][MAP_Y][MAP_Z], int x, int y, int z)
+inline int is_surface(MapData * map, int x, int y, int z)
 {
-   if ((*map)[x][y][z]==0) return 0;
-   if (x > 0 && (*map)[x-1][y][z]==0) return 1;
-   if (x+1 < MAP_X && (*map)[x+1][y][z]==0) return 1;
-   if (y > 0 && (*map)[x][y-1][z]==0) return 1;
-   if (y+1 < MAP_Y && (*map)[x][y+1][z]==0) return 1;
-   if (z > 0 && (*map)[x][y][z-1]==0) return 1;
-   if (z+1 < MAP_Z && (*map)[x][y][z+1]==0) return 1;
+   if (map->geometry[get_pos(x, y, z)] == 0) return 0;
+   if (x > 0 && map->geometry[get_pos(x-1, y, z)]==0) return 1;
+   if (x+1 < MAP_X && map->geometry[get_pos(x+1, y, z)]==0) return 1;
+   if (y > 0 && map->geometry[get_pos(x, y-1, z)]==0) return 1;
+   if (y+1 < MAP_Y && map->geometry[get_pos(x, y+1, z)]==0) return 1;
+   if (z > 0 && map->geometry[get_pos(x, y, z-1)]==0) return 1;
+   if (z+1 < MAP_Z && map->geometry[get_pos(x, y, z+1)]==0) return 1;
    return 0;
 }
 
@@ -194,17 +226,11 @@ inline void write_color(unsigned char * out, int color)
    out += 1;
    *out = (char) (color >> 24);
    out += 1;
-   
-   // ss.put((char)(color >> 0));
-   // ss.put((char) (color >> 8));
-   // ss.put((char) (color >> 16));
-   // ss.put((char) (color >> 24));
 }
 
 unsigned char * out_global = 0;
 
-PyObject * save_vxl(int (*color)[MAP_X][MAP_Y][MAP_Z], 
-                    char (*map)[MAP_X][MAP_Y][MAP_Z])
+PyObject * save_vxl(MapData * map)
 {
    int i,j,k;
    if (out_global == 0)
@@ -212,7 +238,6 @@ PyObject * save_vxl(int (*color)[MAP_X][MAP_Y][MAP_Z],
        out_global = (unsigned char *)malloc(6291456); // allocate 6 mb
    }
    unsigned char * out = out_global;
-   // stringstream ss(stringstream::in | stringstream::out);
 
    for (j=0; j < MAP_Y; ++j) {
       for (i=0; i < MAP_X; ++i) {
@@ -234,12 +259,10 @@ PyObject * save_vxl(int (*color)[MAP_X][MAP_Y][MAP_Z],
             int top_colors_len;
             int bottom_colors_len;
             int colors;
-
             // find the air region
             air_start = k;
-            while (k < MAP_Z && !(*map)[i][j][k])
+            while (k < MAP_Z && !map->geometry[get_pos(i, j, k)])
                ++k;
-
             // find the top region
             top_colors_start = k;
             while (k < MAP_Z && is_surface(map, i,j,k))
@@ -247,7 +270,8 @@ PyObject * save_vxl(int (*color)[MAP_X][MAP_Y][MAP_Z],
             top_colors_end = k;
 
             // now skip past the solid voxels
-            while (k < MAP_Z && (*map)[i][j][k] && !is_surface(map, i,j,k))
+            while (k < MAP_Z && map->geometry[get_pos(i, j, k)] && 
+                   !is_surface(map, i,j,k))
                ++k;
 
             // at the end of the solid voxels, we have colored voxels.
@@ -281,13 +305,11 @@ PyObject * save_vxl(int (*color)[MAP_X][MAP_Y][MAP_Z],
             {
                *out = 0;
                out += 1;
-               // ss.put(0); // last span
             }
             else
             {
                *out = colors + 1;
                out += 1;
-               // ss.put(colors + 1);
             }
             *out = top_colors_start;
             out += 1;
@@ -295,18 +317,17 @@ PyObject * save_vxl(int (*color)[MAP_X][MAP_Y][MAP_Z],
             out += 1;
             *out = air_start;
             out += 1;
-            // ss.put(top_colors_start);
-            // ss.put(top_colors_end-1);
-            // ss.put(air_start);
 
             for (z=0; z < top_colors_len; ++z)
             {
-               write_color(out, (*color)[i][j][top_colors_start + z]);
+               write_color(out, map->colors[get_pos(i, j, 
+                   top_colors_start + z)]);
                out += 4;
             }
             for (z=0; z < bottom_colors_len; ++z)
             {
-               write_color(out, (*color)[i][j][bottom_colors_start + z]);
+               write_color(out, map->colors[get_pos(i, j, 
+                   bottom_colors_start + z)]);
                out += 4;
             }
          }  
