@@ -38,12 +38,12 @@ def name(name):
         return func
     return dec
 
-def get_player(connection, value):
+def get_player(protocol, value):
     try:
         if value.startswith('#'):
             value = int(value[1:])
-            return connection.protocol.players[value][0]
-        players = connection.protocol.players
+            return protocol.players[value][0]
+        players = protocol.players
         try:
             return players[value][0]
         except KeyError:
@@ -71,13 +71,13 @@ def join_arguments(arg, default = None):
 @admin
 def kick(connection, value, *arg):
     reason = join_arguments(arg)
-    player = get_player(connection, value)
+    player = get_player(connection.protocol, value)
     player.kick(reason)
 
 @admin
 def ban(connection, value, *arg):
     reason = join_arguments(arg)
-    player = get_player(connection, value)
+    player = get_player(connection.protocol, value)
     player.ban(reason)
 
 @admin
@@ -88,7 +88,7 @@ def say(connection, *arg):
 
 @admin
 def kill(connection, value):
-    player = get_player(connection, value)
+    player = get_player(connection.protocol, value)
     player.kill()
     message = '%s killed %s' % (connection.name, player.name)
     connection.protocol.send_chat(message, irc = True)
@@ -96,7 +96,7 @@ def kill(connection, value):
 @admin
 def heal(connection, player = None):
     if player is not None:
-        player = get_player(connection, player)
+        player = get_player(connection.protocol, player)
         message = '%s was healed by %s' % (player.name, connection.name)
     else:
         player = connection
@@ -105,7 +105,7 @@ def heal(connection, player = None):
     connection.protocol.send_chat(message, irc = True)
 
 def votekick(connection, value):
-    player = get_player(connection, value)
+    player = get_player(connection.protocol, value)
     return connection.protocol.start_votekick(connection, player)
 
 @name('y')
@@ -153,7 +153,7 @@ def login(connection, password):
         connection.login_retries)
 
 def pm(connection, value, *arg):
-    player = get_player(connection, value)
+    player = get_player(connection.protocol, value)
     message = join_arguments(arg)
     player.send_chat('PM from %s: %s' % (connection.name, message))
     return 'PM sent to %s' % player.name
@@ -219,14 +219,14 @@ def toggle_teamkill(connection):
 
 @admin
 def mute(connection, value):
-    player = get_player(connection, value)
+    player = get_player(connection.protocol, value)
     player.mute = True
     message = '%s has been muted by %s' % (player.name, connection.name)
     connection.protocol.send_chat(message, irc = True)
 
 @admin
 def unmute(connection, value):
-    player = get_player(connection, value)
+    player = get_player(connection.protocol, value)
     player.mute = False
     message = '%s has been unmuted by %s' % (player.name, connection.name)
     connection.protocol.send_chat(message, irc = True)
@@ -235,7 +235,7 @@ from pyspades.server import position_data
 
 @admin
 def teleport(connection, value):
-    player = get_player(connection, value)
+    player = get_player(connection.protocol, value)
     position_data.x = player.position.x
     position_data.y = player.position.y
     position_data.z = player.position.z

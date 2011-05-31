@@ -18,6 +18,7 @@
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
 from pyspades.constants import MAX_CHAT_SIZE
+from commands import get_player, join_arguments, InvalidPlayer, InvalidTeam
 
 import random
 import string
@@ -78,13 +79,15 @@ class IRCBot(irc.IRCClient):
     @channel
     def privmsg(self, user, channel, msg):
         if (user in self.ops) or (user in self.voices):
+            prefixed_username = ('@' if user in self.ops else '+') + user
             if msg.startswith(self.factory.commandprefix):
                 params = msg[len(self.factory.commandprefix):].split()
-                handle_command(self, user, params[0], params[1:])
+                result = handle_command(self, prefixed_username, params[0], params[1:])
+                if result is not None:
+                    self.send(result)
             else:
-                max_size = MAX_IRC_CHAT_SIZE - len(self.protocol.server_prefix) - 1
-                message = ("<%s> %s" % (('@' if user in self.ops else '+') +
-                    user, msg))[:max_size]
+                max_len = MAX_IRC_CHAT_SIZE - len(self.protocol.server_prefix) - 1
+                message = ("<%s> %s" % (prefixed_username, msg))[:max_len]
                 self.factory.server.log(message)
                 self.factory.server.send_chat(message)
     
@@ -152,28 +155,46 @@ class IRCRelay(object):
 
 def admin(func):
     def new_func(bot, user, *arg, **kw):
-        if not user in bot.ops:
+        if not user[0] == '@':
             return
         func(bot, user, *arg, **kw)
     new_func.func_name = func.func_name
     return new_func
 
 @admin
+def mute(bot, user, value):
+    player = get_player(bot.protocol, value)
+    player.mute = True
+    message = '%s has been muted by %s' % (player.name, user)
+    bot.protocol.send_chat(message, irc = True)
+
+@admin
+def unmute(bot, user, value):
+    player = get_player(bot.protocol, value)
+    player.mute = False
+    message = '%s has been unmuted by %s' % (player.name, user)
+    bot.protocol.send_chat(message, irc = True)
+
+@admin
+def kick(bot, user, value, *arg):
+    reason = join_arguments(arg)
+    player = get_player(bot.protocol, value)
+    player.kick(reason)
+
 def who(bot, user):
     names = [conn.name for conn in bot.factory.server.players.values()]
-    if len(names) == 0:
-        bot.me( "players: none" )
-        return
-    bot.me( "players: %s" % (', '.join(names)))
-
-def players(bot, user):
-    c = len(bot.factory.server.players)
-    bot.me( "has %s player%s connected" % ( "no" if c == 0 else c,
-        "" if c == 1 else "s" ) )
+    c = len(names)
+    msg = "has %s player%s connected" % ( "no" if c == 0 else c,
+        "" if c == 1 else "s" )
+    if c > 0:
+        msg += ": %s" % (', '.join(names))
+    bot.me( msg )
 
 command_list = [
-    who,
-    players
+    mute,
+    unmute,
+    kick,
+    who
 ]
 
 commands = {}
@@ -189,5 +210,11 @@ def handle_command(bot, user, command, parameters):
         return #'Invalid command'
     try:
         return command_func(bot, user, *parameters)
+    except TypeError:
+        return '%s: Invalid number of arguments for %s' % (user[1:], command)
+    except InvalidPlayer:
+        return '%s: No such player' % user[1:]
+    except InvalidTeam:
+        return '%s: Invalid team specifier' % user[1:]
     except ValueError:
-        return #'Invalid parameters'
+        return '%s: Invalid parameters' % user[1:]
