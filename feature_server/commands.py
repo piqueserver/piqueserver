@@ -248,7 +248,7 @@ def teleport(connection, player1, player2 = None):
     position_data.y = target.position.y
     position_data.z = target.position.z
     position_data.player_id = player.player_id
-    connection.send_contained(position_data)
+    player.send_contained(position_data)
     connection.protocol.send_chat(message, irc = True)
 
 @admin
