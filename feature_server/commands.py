@@ -235,7 +235,7 @@ from pyspades.server import position_data
 
 @admin
 def teleport(connection, player1, player2 = None):
-    player1 = get_player(connection.protocol, value)
+    player1 = get_player(connection.protocol, player1)
     if player2 is not None:
         player, target = player1, get_player(connection.protocol, player2)
         message = '%s teleported %s to %s' % (connection.name, player.name, 
@@ -249,7 +249,7 @@ def teleport(connection, player1, player2 = None):
     position_data.z = target.position.z
     position_data.player_id = player.player_id
     connection.send_contained(position_data)
-    connection.send_chat(message, irc = True)
+    connection.protocol.send_chat(message, irc = True)
 
 @admin
 def god(connection, value = None):
