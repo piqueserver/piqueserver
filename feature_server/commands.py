@@ -234,12 +234,19 @@ def unmute(connection, value):
 from pyspades.server import position_data
 
 @admin
-def teleport(connection, value):
-    player = get_player(connection.protocol, value)
-    position_data.x = player.position.x
-    position_data.y = player.position.y
-    position_data.z = player.position.z
-    position_data.player_id = connection.player_id
+def teleport(connection, player1, player2 = None):
+    player1 = get_player(connection.protocol, value)
+    if player2 is not None:
+        player, target = player1, get_player(connection.protocol, player2)
+        message = '%s teleported %s to %s' % (connection.name, player.name, target.name)
+    else:
+        player, target = connection, player1
+        message = '%s teleported to %s' % (connection.name, target.name)
+    
+    position_data.x = target.position.x
+    position_data.y = target.position.y
+    position_data.z = target.position.z
+    position_data.player_id = player.player_id
     connection.send_contained(position_data)
     
 command_list = [

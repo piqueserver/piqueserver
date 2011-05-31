@@ -184,11 +184,11 @@ def kick(bot, user, value, *arg):
 def who(bot, user):
     names = [conn.name for conn in bot.factory.server.players.values()]
     c = len(names)
-    msg = "has %s player%s connected" % ( "no" if c == 0 else c,
-        "" if c == 1 else "s" )
+    msg = "has %s player%s connected" % ("no" if c == 0 else c,
+        "" if c == 1 else "s")
     if c > 0:
-        msg += ": %s" % (', '.join(names))
-    bot.me( msg )
+        msg += ": %s" % (', '.join(names.sort()))
+    bot.me(msg)
 
 command_list = [
     mute,
