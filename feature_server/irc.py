@@ -187,7 +187,8 @@ def who(bot, user):
     msg = "has %s player%s connected" % ("no" if c == 0 else c,
         "" if c == 1 else "s")
     if c > 0:
-        msg += ": %s" % (', '.join(names.sort()))
+        names.sort()
+        msg += ": %s" % (', '.join(names))
     bot.me(msg)
 
 command_list = [
@@ -208,13 +209,13 @@ def handle_command(bot, user, command, parameters):
         command_func = commands[command]
     except KeyError:
         return #'Invalid command'
-    try:
-        return command_func(bot, user, *parameters)
-    except TypeError:
-        return '%s: Invalid number of arguments for %s' % (user[1:], command)
-    except InvalidPlayer:
-        return '%s: No such player' % user[1:]
-    except InvalidTeam:
-        return '%s: Invalid team specifier' % user[1:]
-    except ValueError:
-        return '%s: Invalid parameters' % user[1:]
+    #try:
+    return command_func(bot, user, *parameters)
+    #except TypeError:
+        #return '%s: Invalid number of arguments for %s' % (user[1:], command)
+    #except InvalidPlayer:
+        #return '%s: No such player' % user[1:]
+    #except InvalidTeam:
+        #return '%s: Invalid team specifier' % user[1:]
+    #except ValueError:
+        #return '%s: Invalid parameters' % user[1:]
