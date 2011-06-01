@@ -122,8 +122,7 @@ class ServerConnection(BaseConnection):
                 green_flag = green.flag
                 blue_base = blue.base
                 green_base = green.base
-                
-                self.follow = None
+               
                 self.player_id = self.protocol.player_ids.pop()
                 player_data.player_left = None
                 player_data.player_id = self.player_id
@@ -434,7 +433,6 @@ class ServerConnection(BaseConnection):
     def disconnect(self):
         if self.disconnected:
             return
-        self.drop_followers()
         BaseConnection.disconnect(self)
         del self.protocol.connections[self.address]
         if self.connection_id is not None:

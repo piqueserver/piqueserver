@@ -67,6 +67,7 @@ class FeatureConnection(ServerConnection):
     mute = False
     login_retries = None
     god = False
+    follow = None
     
     def on_join(self):
         if self.protocol.motd is not None:
@@ -78,6 +79,7 @@ class FeatureConnection(ServerConnection):
         self.protocol.irc_say('* %s entered the game' % name)
     
     def disconnect(self):
+        self.drop_followers()
         if self.name is not None:
             self.protocol.send_chat('%s left the game' % self.name)
             self.protocol.log(self.name, 'disconnected!')
@@ -149,7 +151,7 @@ class FeatureConnection(ServerConnection):
             if other_team.count() < team.count() + 1 - balanced_teams:
                 self.send_chat('Team is full. Please join the other team')
                 return False
-        if not self.team == team:
+        if self.team is not team:
             self.drop_followers()
     
     def on_chat(self, value, global_message):
@@ -182,7 +184,7 @@ class FeatureConnection(ServerConnection):
     
     def get_followers(self):
         return [player for player in self.protocol.players.values()
-            if player.follow == self]
+            if player.follow is self]
     
     def drop_followers(self):
         for player in self.get_followers():
