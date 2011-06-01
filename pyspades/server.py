@@ -655,7 +655,7 @@ class ServerProtocol(DatagramProtocol):
         i = 0
         new_name = name
         while 1:
-            if new_name.lower() in [s.lower() for s in self.players.values()]:
+            if new_name.lower() in [s.name.lower() for s in self.players.values()]:
                 i += 1
                 new_name = name + str(i)
             else:
