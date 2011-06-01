@@ -146,7 +146,7 @@ def login(connection, password):
         return None
     if connection.login_retries is None:
         connection.login_retries = connection.protocol.login_retries - 1
-    else
+    else:
         connection.login_retries -= 1
     if not connection.login_retries:
         connection.kick('Ran out of login attempts')
@@ -176,7 +176,7 @@ def follow(connection, value):
     if len(curfollowed) >= followlimit:
         return '%s has too many followers!' % (player.name)
     connection.follow = player
-    return 'Next time you die you will now spawn where %s is.' % (player.name)
+    return 'Next time you die you will spawn where %s is.' % (player.name)
 
 def unfollow(connection):
     if connection.follow is not None:

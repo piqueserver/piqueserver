@@ -149,7 +149,7 @@ class FeatureConnection(ServerConnection):
             if other_team.count() < team.count() + 1 - balanced_teams:
                 self.send_chat('Team is full. Please join the other team')
                 return False
-        if (self.team is not team):
+        if not self.team == team:
             self.drop_followers()
     
     def on_chat(self, value, global_message):
@@ -191,10 +191,10 @@ class FeatureConnection(ServerConnection):
     
     def get_follow_position(self):
         try:
-            followplayer = self.protocol.players[self.follow][0]
-            if followplayer.hp<1:
+            target = self.follow
+            if not target.hp:
                 return self.team.get_random_position()
-            position = followplayer.position
+            position = target.position
             x = int(position.x)
             y = int(position.y)
             z = int(position.z)
