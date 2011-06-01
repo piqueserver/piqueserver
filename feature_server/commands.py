@@ -261,6 +261,11 @@ def god(connection, value = None):
     else:
         message = '%s returned to being a mere human.' % connection.name
     connection.protocol.send_chat(message, irc = True)
+
+@admin
+def reset_game(connection):
+    connection.reset_game()
+    connection.protocol.send_chat('Game has been reset by %s' % (connection.name), irc = True)
     
 command_list = [
     help,
@@ -285,7 +290,8 @@ command_list = [
     toggle_kill,
     toggle_teamkill,
     teleport,
-    god
+    god,
+    reset_game
 ]
 
 commands = {}

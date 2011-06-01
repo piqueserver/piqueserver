@@ -368,6 +368,30 @@ class ServerConnection(BaseConnection):
         self.tool = 3
         self.grenades = 2
         self.protocol.send_contained(create_player, save = True)
+
+    def sync_team_items(self):
+        blue_team = self.protocol.blue_team
+        green_team = self.protocol.green_team
+        intel_action.blue_flag_x = blue_team.flag.x
+        intel_action.blue_flag_y = blue_team.flag.y
+        intel_action.blue_base_x = blue_team.base.x
+        intel_action.blue_base_y = blue_team.base.y
+        intel_action.green_flag_x = green_team.flag.x
+        intel_action.green_flag_y = green_team.flag.y
+        intel_action.green_base_x = green_team.base.x
+        intel_action.green_base_y = green_team.base.y
+
+    def reset_game(self):
+        blue_team = self.protocol.blue_team
+        green_team = self.protocol.green_team
+        blue_team.initialize()
+        green_team.initialize()
+        self.sync_team_items()
+        self.protocol.reset_game()
+        intel_action.action_type = 3
+        intel_action.player_id = self.player_id
+        intel_action.game_end = True
+        self.protocol.send_contained(intel_action, save = True)
     
     def capture_flag(self):
         other_team = self.team.other
@@ -381,26 +405,14 @@ class ServerConnection(BaseConnection):
         if (self.protocol.max_score not in (0, None) and 
         self.team.score + 1 >= self.protocol.max_score):
             intel_action.game_end = True
-            blue_team = self.protocol.blue_team
-            green_team = self.protocol.green_team
-            blue_team.initialize()
-            green_team.initialize()
-            intel_action.blue_flag_x = blue_team.flag.x
-            intel_action.blue_flag_y = blue_team.flag.y
-            intel_action.blue_base_x = blue_team.base.x
-            intel_action.blue_base_y = blue_team.base.y
-            intel_action.green_flag_x = green_team.flag.x
-            intel_action.green_flag_y = green_team.flag.y
-            intel_action.green_base_x = green_team.base.x
-            intel_action.green_base_y = green_team.base.y
-            self.protocol.reset_game()
+            self.reset_game()
         else:
             intel_action.game_end = False
             self.team.score += 1
             flag = other_team.set_flag()
             intel_action.x = flag.x
             intel_action.y = flag.y
-        self.protocol.send_contained(intel_action, save = True)
+            self.protocol.send_contained(intel_action, save = True)
     
     def drop_flag(self):
         flag = self.team.other.flag
@@ -597,12 +609,15 @@ class Team(object):
     def initialize(self):
         self.score = 0
         self.set_flag()
-        self.base = Vertex3(*self.get_random_position(True))
+        self.set_base()
     
     def set_flag(self):
         self.flag = Flag(*self.get_random_position(True))
         self.flag.team = self
         return self.flag
+
+    def set_base(self):    
+        self.base = Vertex3(*self.get_random_position(True))
     
     def get_random_position(self, force_land = False):
         if force_land:
