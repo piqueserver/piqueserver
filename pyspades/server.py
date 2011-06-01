@@ -215,7 +215,8 @@ class ServerConnection(BaseConnection):
                         if other_flag.player is None and vector_collision(
                         self.position, other_flag):
                             self.take_flag()
-                        self.protocol.send_contained(position_data, sender = self)
+                        self.protocol.send_contained(position_data, 
+                            sender = self)
                     elif contained.id == clientloaders.MovementData.id:
                         self.up = contained.up
                         self.down = contained.down

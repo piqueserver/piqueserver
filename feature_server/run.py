@@ -88,12 +88,7 @@ class FeatureConnection(ServerConnection):
     
     def on_spawn(self, pos, name):
         if self.follow is not None:
-            x, y, z = self.get_follow_position()
-            position_data.x = x
-            position_data.y = y
-            position_data.z = z
-            position_data.player_id = self.player_id
-            self.protocol.send_contained(position_data)
+            self.set_position(self.get_follow_position())
     
     def on_command(self, command, parameters):
         log_message = '<%s> /%s %s' % (self.name, command, 
@@ -192,24 +187,30 @@ class FeatureConnection(ServerConnection):
             player.send_chat('You are no longer following %s.' % self.name)
     
     def get_follow_position(self):
-        try:
-            target = self.follow
-            if not target.hp:
-                return self.team.get_random_position()
-            position = target.position
-            x = int(position.x)
-            y = int(position.y)
-            z = int(position.z)
-            z = self.protocol.map.get_z(x, y, z)
-            return x,y,z
-        except KeyError:
+        target = self.follow
+        if not target.hp:
             return self.team.get_random_position()
+        position = target.position
+        return position.x, position.y, position.z
     
     def send_lines(self, lines):
         current_time = 0
         for line in lines:
             reactor.callLater(current_time, self.send_chat, line)
             current_time += 2
+    
+    # position methods
+    
+    def get_position(self):
+        position = self.position
+        return position.x, position.y, position.z
+    
+    def set_position(self, (x, y, z)):
+        position_data.x = x
+        position_data.y = y
+        position_data.z = z
+        position_data.player_id = self.player_id
+        self.protocol.send_contained(position_data)
 
 def encode_lines(value):
     if value is not None:
