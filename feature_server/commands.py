@@ -158,6 +158,28 @@ def pm(connection, value, *arg):
     player.send_chat('PM from %s: %s' % (connection.name, message))
     return 'PM sent to %s' % player.name
 
+def follow(connection, value):
+    """Follow a player; on your next spawn, you'll spawn at their position, similar to the squad spawning feature
+       of Battlefield."""
+    player = get_player(connection.protocol, value)
+    curfollowed = player.get_followers()
+    # TODO - server option for follow limits
+    followlimit = connection.protocol.max_followers
+    if player.player_id==connection.player_id:
+        return "You can't follow yourself!"
+    if connection.team!=player.team:
+        return '%s is not on your team.' % (player.name)
+    if player.player_id==connection.follow:
+        return "You're already following %s" % (player.name)
+    if len(curfollowed)>=followlimit:
+        return '%s has too many followers (limit %s)' % (player.name, followlimit)
+    connection.set_follower(player.player_id)
+    return 'You will now spawn where %s is.' % (player.name)
+
+def unfollow(connection):
+    connection.set_follower(None)
+    return 'You are no longer following players.'
+
 @admin
 def lock(connection, value):
     team = get_team(connection, value)
@@ -291,6 +313,8 @@ command_list = [
     toggle_teamkill,
     teleport,
     god,
+    follow,
+    unfollow,
     reset_game
 ]
 

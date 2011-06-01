@@ -123,6 +123,7 @@ class ServerConnection(BaseConnection):
                 blue_base = blue.base
                 green_base = green.base
                 
+                self.follow = None
                 self.player_id = self.protocol.player_ids.pop()
                 player_data.player_left = None
                 player_data.player_id = self.player_id
@@ -258,7 +259,7 @@ class ServerConnection(BaseConnection):
                         set_weapon.value = contained.value
                         self.protocol.send_contained(set_weapon, sender = self)
                     elif contained.id == clientloaders.SetColor.id:
-                        self.color = get_color(contained.value)
+                        self.color = get_color(contained.value)                        
                         set_color.player_id = self.player_id
                         set_color.value = contained.value
                         self.protocol.send_contained(set_color, sender = self,
@@ -351,13 +352,45 @@ class ServerConnection(BaseConnection):
         if self.spawn_call is None:
             self.spawn_call = reactor.callLater(
                 self.protocol.respawn_time, self.spawn)
+
+    def set_follower(self, followid):
+        self.follow = followid
+
+    def get_followers(self):
+        return [player for player in self.protocol.players.values() if player.follow==self.player_id]
+
+    def drop_followers(self):
+        for player in self.get_followers():
+            player.follow = None
+            player.send_chat('You are no longer following %s.' % self.name)
+
+    def get_follow_position(self):
+        try:
+            followplayer = self.protocol.players[self.follow][0]
+            if followplayer.hp<1:
+                return self.team.get_random_position()
+            if self.team!=followplayer.team:
+                self.send_chat('%s changed teams, following stopped!' % followplayer.name)
+                self.follow = None
+                return self.team.get_random_position()
+            position = followplayer.position
+            x = int(position.x)
+            y = int(position.y)
+            z = int(position.z)
+            z = self.protocol.map.get_z(x, y, z)
+            return x,y,z
+        except KeyError:
+            return self.team.get_random_position()
     
     def spawn(self, pos = None, name = None):
         self.spawn_call = None
         create_player.player_id = self.player_id
         self.orientation = Vertex3(0, 0, 0)
         if pos is None:
-            pos = self.team.get_random_position()
+            if self.follow is None:
+                pos = self.team.get_random_position()
+            else:
+                pos = self.get_follow_position()
         x, y, z = pos
         self.position = position = Vertex3(x, y, z)
         create_player.name = name
@@ -436,6 +469,7 @@ class ServerConnection(BaseConnection):
     def disconnect(self):
         if self.disconnected:
             return
+        self.drop_followers()
         BaseConnection.disconnect(self)
         del self.protocol.connections[self.address]
         if self.connection_id is not None:

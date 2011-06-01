@@ -256,6 +256,7 @@ class FeatureProtocol(ServerProtocol):
         self.balanced_teams = config.get('balanced_teams', None)
         self.rules = self.format_lines(config.get('rules', None))
         self.login_retries = config.get('login_retries', 1)
+        self.max_followers = config.get('max_followers', 3)
         logfile = config.get('logfile', None)
         ssh = config.get('ssh', {})
         if ssh.get('enabled', False):

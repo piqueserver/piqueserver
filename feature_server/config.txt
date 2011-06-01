@@ -12,6 +12,7 @@
     "cap_limit" : 10,
     "map" : "pyspades",
     "respawn_time" : 5, 
+    "max_followers" : 3,
     "master" : true,
     "friendly_fire" : false,
     "passwords" : {
