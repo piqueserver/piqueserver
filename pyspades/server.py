@@ -178,7 +178,7 @@ class ServerConnection(BaseConnection):
                         name = contained.name
                         if name == 'Deuce': # vanilla AoS behaviour
                             name = name + str(self.player_id)
-                        self.name = self.protocol.get_name(contained.name)
+                        self.name = self.protocol.get_name(name)
                         self.protocol.players[self.name, self.player_id] = self
                         self.protocol.update_master()
                     if old_team is None:
