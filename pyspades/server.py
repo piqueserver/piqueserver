@@ -369,7 +369,11 @@ class ServerConnection(BaseConnection):
         self.grenades = 2
         self.protocol.send_contained(create_player, save = True)
 
-    def sync_team_items(self):
+    def reset_game(self):
+        blue_team = self.protocol.blue_team
+        green_team = self.protocol.green_team
+        blue_team.initialize()
+        green_team.initialize()
         blue_team = self.protocol.blue_team
         green_team = self.protocol.green_team
         intel_action.blue_flag_x = blue_team.flag.x
@@ -380,13 +384,6 @@ class ServerConnection(BaseConnection):
         intel_action.green_flag_y = green_team.flag.y
         intel_action.green_base_x = green_team.base.x
         intel_action.green_base_y = green_team.base.y
-
-    def reset_game(self):
-        blue_team = self.protocol.blue_team
-        green_team = self.protocol.green_team
-        blue_team.initialize()
-        green_team.initialize()
-        self.sync_team_items()
         self.protocol.reset_game()
         intel_action.action_type = 3
         intel_action.player_id = self.player_id
@@ -400,13 +397,12 @@ class ServerConnection(BaseConnection):
         if player is not self:
             return
         self.kills += 10 # 10 points for intel
-        intel_action.action_type = 3
-        intel_action.player_id = self.player_id
         if (self.protocol.max_score not in (0, None) and 
         self.team.score + 1 >= self.protocol.max_score):
-            intel_action.game_end = True
             self.reset_game()
         else:
+            intel_action.action_type = 3
+            intel_action.player_id = self.player_id
             intel_action.game_end = False
             self.team.score += 1
             flag = other_team.set_flag()
