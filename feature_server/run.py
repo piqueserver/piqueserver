@@ -45,7 +45,7 @@ if sys.version_info < (2, 7):
     except ImportError:
         print '(optional: install psyco for optimizations)'
 
-from pyspades.server import ServerProtocol, ServerConnection
+from pyspades.server import ServerProtocol, ServerConnection, position_data
 from map import Map
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
@@ -75,14 +75,23 @@ class FeatureConnection(ServerConnection):
     def on_login(self, name):
         self.protocol.send_chat('%s entered the game!' % name)
         self.protocol.log('%s (%s) entered the game!' % (name, self.address[0]))
-        self.protocol.irc_say( "* %s entered the game" % name)
-            
+        self.protocol.irc_say('* %s entered the game' % name)
+    
     def disconnect(self):
         if self.name is not None:
             self.protocol.send_chat('%s left the game' % self.name)
             self.protocol.log(self.name, 'disconnected!')
-            self.protocol.irc_say( "* %s disconnected" % self.name)
+            self.protocol.irc_say('* %s disconnected' % self.name)
         ServerConnection.disconnect(self)
+    
+    def on_spawn(self, pos, name):
+        if self.follow is not None:
+            x, y, z = self.get_follow_position()
+            position_data.x = x
+            position_data.y = y
+            position_data.z = z
+            position_data.player_id = self.player_id
+            self.protocol.send_contained(position_data)
     
     def on_command(self, command, parameters):
         log_message = '<%s> /%s %s' % (self.name, command, 
@@ -98,7 +107,7 @@ class FeatureConnection(ServerConnection):
             return False
         if self.god:
             self.refill()
-        
+    
     def on_block_destroy(self, x, y, z, mode):
         if self.protocol.indestructable_blocks:
             is_indestructable = self.protocol.is_indestructable
@@ -116,7 +125,7 @@ class FeatureConnection(ServerConnection):
                         for nade_z in xrange(z - 1, z + 2):
                             if is_indestructable(nade_x, nade_y, nade_z):
                                 return False
-
+        
         if not self.protocol.building:
             return False
     
@@ -135,19 +144,20 @@ class FeatureConnection(ServerConnection):
             self.send_chat('Team is locked.')
             return False
         balanced_teams = self.protocol.balanced_teams
-        if not balanced_teams:
-            return
-        other_team = team.other
-        if other_team.count() < team.count() + 1 - balanced_teams:
-            self.send_chat('Team is full. Please join the other team')
-            return False
+        if balanced_teams:
+            other_team = team.other
+            if other_team.count() < team.count() + 1 - balanced_teams:
+                self.send_chat('Team is full. Please join the other team')
+                return False
+        if (self.team is not team):
+            self.drop_followers()
     
     def on_chat(self, value, global_message):
         message = '<%s> %s' % (self.name, value)
         if self.mute:
             message = '(MUTED) %s' % message
         elif global_message:
-            self.protocol.irc_say("<%s> %s" % (self.name, value))
+            self.protocol.irc_say('<%s> %s' % (self.name, value))
         self.protocol.log(message)
         if self.mute:
             self.send_chat('(Chat not sent - you are muted)')
@@ -170,6 +180,29 @@ class FeatureConnection(ServerConnection):
         self.protocol.send_chat(message, irc = True)
         self.protocol.add_ban(self.address[0])
     
+    def get_followers(self):
+        return [player for player in self.protocol.players.values()
+            if player.follow == self]
+    
+    def drop_followers(self):
+        for player in self.get_followers():
+            player.follow = None
+            player.send_chat('You are no longer following %s.' % self.name)
+    
+    def get_follow_position(self):
+        try:
+            followplayer = self.protocol.players[self.follow][0]
+            if followplayer.hp<1:
+                return self.team.get_random_position()
+            position = followplayer.position
+            x = int(position.x)
+            y = int(position.y)
+            z = int(position.z)
+            z = self.protocol.map.get_z(x, y, z)
+            return x,y,z
+        except KeyError:
+            return self.team.get_random_position()
+    
     def send_lines(self, lines):
         current_time = 0
         for line in lines:
@@ -187,7 +220,7 @@ def make_range_object(value):
     if len(value) == 1:
         return xrange(value, value + 1)
     return xrange(value[0], value[1])
-        
+
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
     version = CLIENT_VERSION

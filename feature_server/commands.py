@@ -146,6 +146,8 @@ def login(connection, password):
         return None
     if connection.login_retries is None:
         connection.login_retries = connection.protocol.login_retries - 1
+    else
+        connection.login_retries -= 1
     if not connection.login_retries:
         connection.kick('Ran out of login attempts')
         return
@@ -159,26 +161,28 @@ def pm(connection, value, *arg):
     return 'PM sent to %s' % player.name
 
 def follow(connection, value):
-    """Follow a player; on your next spawn, you'll spawn at their position, similar to the squad spawning feature
-       of Battlefield."""
+    """Follow a player; on your next spawn, you'll spawn at their position,
+        similar to the squad spawning feature of Battlefield."""
     player = get_player(connection.protocol, value)
     curfollowed = player.get_followers()
     # TODO - server option for follow limits
     followlimit = connection.protocol.max_followers
-    if player.player_id==connection.player_id:
+    if connection == player:
         return "You can't follow yourself!"
-    if connection.team!=player.team:
+    if not connection.team == player.team:
         return '%s is not on your team.' % (player.name)
-    if player.player_id==connection.follow:
+    if connection.follow == player:
         return "You're already following %s" % (player.name)
-    if len(curfollowed)>=followlimit:
-        return '%s has too many followers (limit %s)' % (player.name, followlimit)
-    connection.set_follower(player.player_id)
-    return 'You will now spawn where %s is.' % (player.name)
+    if len(curfollowed) >= followlimit:
+        return '%s has too many followers!' % (player.name)
+    connection.follow = player
+    return 'Next time you die you will now spawn where %s is.' % (player.name)
 
 def unfollow(connection):
-    connection.set_follower(None)
-    return 'You are no longer following players.'
+    if connection.follow is not None:
+        message = 'You are no longer following %s.' % (connection.follow.name)
+        connection.follow = None
+        return message
 
 @admin
 def lock(connection, value):

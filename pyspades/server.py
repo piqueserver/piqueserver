@@ -352,35 +352,6 @@ class ServerConnection(BaseConnection):
         if self.spawn_call is None:
             self.spawn_call = reactor.callLater(
                 self.protocol.respawn_time, self.spawn)
-
-    def set_follower(self, followid):
-        self.follow = followid
-
-    def get_followers(self):
-        return [player for player in self.protocol.players.values() if player.follow==self.player_id]
-
-    def drop_followers(self):
-        for player in self.get_followers():
-            player.follow = None
-            player.send_chat('You are no longer following %s.' % self.name)
-
-    def get_follow_position(self):
-        try:
-            followplayer = self.protocol.players[self.follow][0]
-            if followplayer.hp<1:
-                return self.team.get_random_position()
-            if self.team!=followplayer.team:
-                self.send_chat('%s changed teams, following stopped!' % followplayer.name)
-                self.follow = None
-                return self.team.get_random_position()
-            position = followplayer.position
-            x = int(position.x)
-            y = int(position.y)
-            z = int(position.z)
-            z = self.protocol.map.get_z(x, y, z)
-            return x,y,z
-        except KeyError:
-            return self.team.get_random_position()
     
     def spawn(self, pos = None, name = None):
         self.spawn_call = None
@@ -398,15 +369,7 @@ class ServerConnection(BaseConnection):
         self.tool = 3
         self.grenades = 2
         self.protocol.send_contained(create_player, save = True)
-
-        # teleport the player post-spawn(this prevents the client from changing teams on us) 
-        if self.follow is not None:
-            x,y,z = self.get_follow_position()
-            position_data.x = x
-            position_data.y = y
-            position_data.z = z
-            position_data.player_id = self.player_id
-            self.protocol.send_contained(position_data)
+        self.on_spawn(pos, name)
 
     def reset_game(self):
         blue_team = self.protocol.blue_team
@@ -577,6 +540,9 @@ class ServerConnection(BaseConnection):
     def on_login(self, name):
         pass
     
+    def on_spawn(self, pos, name):
+        pass
+    
     def on_chat(self, value, global_message):
         pass
         
@@ -591,7 +557,7 @@ class ServerConnection(BaseConnection):
     
     def on_grenade(self, time_left):
         pass
-        
+    
     def on_block_build(self, x, y, z):
         pass
 
@@ -706,7 +672,7 @@ class ServerProtocol(DatagramProtocol):
         i = 0
         new_name = name
         while 1:
-            if new_name.lower() in [s.name.lower() for s in self.players.values()]:
+            if new_name.lower() in [p.name.lower() for p in self.players.values()]:
                 i += 1
                 new_name = name + str(i)
             else:
