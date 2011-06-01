@@ -175,6 +175,9 @@ class ServerConnection(BaseConnection):
                     else:
                         self.team = team
                     if self.name is None and contained.name is not None:
+                        name = contained.name
+                        if name == 'Deuce': # vanilla AoS behaviour
+                            name = name + str(self.player_id)
                         self.name = self.protocol.get_name(contained.name)
                         self.protocol.players[self.name, self.player_id] = self
                         self.protocol.update_master()
