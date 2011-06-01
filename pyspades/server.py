@@ -387,10 +387,7 @@ class ServerConnection(BaseConnection):
         create_player.player_id = self.player_id
         self.orientation = Vertex3(0, 0, 0)
         if pos is None:
-            if self.follow is None:
-                pos = self.team.get_random_position()
-            else:
-                pos = self.get_follow_position()
+            pos = self.team.get_random_position()
         x, y, z = pos
         self.position = position = Vertex3(x, y, z)
         create_player.name = name
@@ -401,6 +398,15 @@ class ServerConnection(BaseConnection):
         self.tool = 3
         self.grenades = 2
         self.protocol.send_contained(create_player, save = True)
+
+        # teleport the player post-spawn(this prevents the client from changing teams on us) 
+        if self.follow is not None:
+            x,y,z = self.get_follow_position()
+            position_data.x = x
+            position_data.y = y
+            position_data.z = z
+            position_data.player_id = self.player_id
+            self.protocol.send_contained(position_data)
 
     def reset_game(self):
         blue_team = self.protocol.blue_team
