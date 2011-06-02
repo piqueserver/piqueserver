@@ -191,8 +191,8 @@ def no_follow(connection):
     connection.followable = not connection.followable
     if not connection.followable:
         connection.drop_followers()
-    return 'Teammates will %s be able to follow you' %
-        'now' if connection.followable else 'no longer'
+    return ('Teammates will %s be able to follow you' %
+        'now' if connection.followable else 'no longer')
 
 @admin
 def lock(connection, value):
