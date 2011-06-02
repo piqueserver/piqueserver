@@ -307,7 +307,6 @@ class FeatureProtocol(ServerProtocol):
             for f in (open(logfile, 'a'), sys.stdout):
                 observer = log.FileLogObserver(f)
                 log.addObserver(observer.emit)
-            log.startLogging(open(logfile, 'a'))
             log.msg('pyspades server started on %s' % time.strftime('%c'))
         else:
             log.startLogging(sys.stdout) # force twisted logging
