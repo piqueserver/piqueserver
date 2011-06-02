@@ -65,7 +65,6 @@ import random
 
 cdef class VXLData:
     cdef MapData * map
-    cdef list spawn_cache
         
     def __init__(self, fp = None):
         cdef unsigned char * c_data
@@ -73,7 +72,6 @@ cdef class VXLData:
             data = fp.read()
             c_data = data
             self.map = load_vxl(c_data)
-            self.cache_spawnable_land()
     
     def get_point(self, int x, int y, int z):
         return (get_solid(x, y, z, self.map), get_color_tuple(get_color(
@@ -157,21 +155,3 @@ cdef class VXLData:
     def __dealloc__(self):
         if self.map != NULL:
             delete_vxl(self.map)
-    
-    def cache_spawnable_land(self):
-        self.spawn_cache = [[],[]]
-        for team in [0,1]:
-            for x in xrange(team*384,128):
-                for y in xrange(128,256+128):
-                    z = self.get_z(x, y)
-                    if z>62:
-                        continue
-                    else:
-                        self.spawn_cache[team].append((x,y,z))
-
-    def get_random_spawnable(self, team):
-        valid = self.spawn_cache[team]
-        try:
-            return random.choice(valid)
-        except IndexError: # the spawn area is all water
-            return None

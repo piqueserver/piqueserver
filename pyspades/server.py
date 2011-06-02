@@ -361,7 +361,7 @@ class ServerConnection(BaseConnection):
         create_player.player_id = self.player_id
         self.orientation = Vertex3(0, 0, 0)
         if pos is None:
-            pos = self.team.get_random_position()
+            pos = self.team.get_random_position(True)
         x, y, z = pos
         self.position = position = Vertex3(x, y, z)
         create_player.name = name
@@ -582,7 +582,10 @@ class Flag(Vertex3):
     player = None
     team = None
 
-FORCE_LAND_TRIES = 20
+spawn_positions = []
+for x in xrange(128):
+    for y in xrange(256):
+        spawn_positions.append((x, y))
 
 class Team(object):
     score = None
@@ -624,13 +627,21 @@ class Team(object):
         self.base = Vertex3(*self.get_random_position(True))
     
     def get_random_position(self, force_land = False):
+        get_z = self.map.get_z
+        z_offset = self.id * 384
         if force_land:
-            result = self.map.get_random_spawnable(self.id)
-            if result is not None:
-                return result
-        x = self.id * 384 + random.randrange(128)
+            check_positions = list(spawn_positions)
+            while check_positions:
+                value = random.choice(check_positions)
+                x, y = value
+                x += z_offset
+                z = get_z(x, y)
+                if z < 62:
+                    return x, y, z
+                check_positions.remove(value)
+        x = z_offset + random.randrange(128)
         y = 128 + random.randrange(256)
-        z = self.map.get_z(x, y)
+        z = get_z(x, y)
         return x, y, z
 
 class ServerProtocol(DatagramProtocol):
