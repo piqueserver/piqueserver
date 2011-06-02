@@ -26,6 +26,7 @@
         }
     },
     "server_prefix" : "[*]",
+    "user_blocks_only" : false,
     "logfile" : "log.txt",
     "balanced_teams" : 1,
     "login_retries" : 1,

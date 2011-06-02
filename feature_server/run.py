@@ -105,9 +105,12 @@ class FeatureConnection(ServerConnection):
             return False
         if self.god:
             self.refill()
+        if self.protocol.user_blocks is not None:
+            self.protocol.user_blocks.add((x, y, z))
     
     def on_block_destroy(self, x, y, z, mode):
-        if self.protocol.indestructable_blocks:
+        if (self.protocol.indestructable_blocks or
+            self.protocol.user_blocks is not None):
             is_indestructable = self.protocol.is_indestructable
             if mode == DESTROY_BLOCK:
                 if is_indestructable(x, y, z):
@@ -250,6 +253,7 @@ class FeatureProtocol(ServerProtocol):
     
     map_info = None
     indestructable_blocks = None
+    user_blocks = None
     
     def __init__(self):
         try:
@@ -293,6 +297,8 @@ class FeatureProtocol(ServerProtocol):
         self.balanced_teams = config.get('balanced_teams', None)
         self.rules = self.format_lines(config.get('rules', None))
         self.login_retries = config.get('login_retries', 1)
+        if config.get('user_blocks_only', False):
+            self.user_blocks = set()
         self.max_followers = config.get('max_followers', 3)
         logfile = config.get('logfile', None)
         ssh = config.get('ssh', {})
@@ -304,12 +310,10 @@ class FeatureProtocol(ServerProtocol):
             from irc import IRCRelay
             self.irc_relay = IRCRelay(self, irc)
         if logfile is not None and logfile.strip():
-            for f in (open(logfile, 'a'), sys.stdout):
-                observer = log.FileLogObserver(f)
-                log.addObserver(observer.emit)
+            observer = log.FileLogObserver(open(logfile, 'a'))
+            log.addObserver(observer.emit)
             log.msg('pyspades server started on %s' % time.strftime('%c'))
-        else:
-            log.startLogging(sys.stdout) # force twisted logging
+        log.startLogging(sys.stdout) # force twisted logging
             
         for password in self.admin_passwords:
             if password == 'replaceme':
@@ -321,10 +325,14 @@ class FeatureProtocol(ServerProtocol):
         self.green_team.locked = False
     
     def is_indestructable(self, x, y, z):
-        r, g, b = self.map.get_point(x, y, z)[1][:-1]
-        for r_range, g_range, b_range in self.indestructable_blocks:
-            if r in r_range and g in g_range and b in b_range:
+        if self.user_blocks is not None:
+            if (x, y, z) not in self.user_blocks:
                 return True
+        if self.indestructable_blocks:
+            r, g, b = self.map.get_point(x, y, z)[1][:-1]
+            for r_range, g_range, b_range in self.indestructable_blocks:
+                if r in r_range and g in g_range and b in b_range:
+                    return True
         return False
     
     def format_lines(self, value):
