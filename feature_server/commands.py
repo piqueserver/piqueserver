@@ -160,31 +160,29 @@ def pm(connection, value, *arg):
     player.send_chat('PM from %s: %s' % (connection.name, message))
     return 'PM sent to %s' % player.name
 
-def follow(connection, value):
-    """
-    Follow a player; on your next spawn, you'll spawn at their position,
-    similar to the squad spawning feature of Battlefield.
-    """
-    player = get_player(connection.protocol, value)
+def follow(connection, player = None):
+    """Follow a player; on your next spawn, you'll spawn at their position,
+        similar to the squad spawning feature of Battlefield."""
+    if player is None:
+        if connection.follow is not None:
+            player = connection.follow
+            connection.follow = None
+            return 'You are no longer following %s.' % (player.name)
+        return
+    player = get_player(connection.protocol, player)
     curfollowed = player.get_followers()
     # TODO - server option for follow limits
     followlimit = connection.protocol.max_followers
-    if connection is player:
+    if connection == player:
         return "You can't follow yourself!"
-    if not connection.team is player.team:
+    if not connection.team == player.team:
         return '%s is not on your team.' % (player.name)
-    if connection.follow is player:
+    if connection.follow == player:
         return "You're already following %s" % (player.name)
     if len(curfollowed) >= followlimit:
         return '%s has too many followers!' % (player.name)
     connection.follow = player
     return 'Next time you die you will spawn where %s is.' % (player.name)
-
-def unfollow(connection):
-    if connection.follow is not None:
-        message = 'You are no longer following %s.' % (connection.follow.name)
-        connection.follow = None
-        return message
 
 @admin
 def lock(connection, value):
@@ -272,7 +270,10 @@ def teleport(connection, player1, player2 = None):
         player, target = connection, player1
         message = '%s teleported to %s' % (connection.name, target.name)
     
-    player.set_position(target.get_position())
+    position_data.x = target.position.x
+    position_data.y = target.position.y
+    position_data.z = target.position.z
+    position_data.player_id = player.player_id
     player.send_contained(position_data)
     connection.protocol.send_chat(message, irc = True)
 
@@ -290,8 +291,7 @@ def god(connection, value = None):
 @admin
 def reset_game(connection):
     connection.reset_game()
-    connection.protocol.send_chat('Game has been reset by %s' % (
-        connection.name), irc = True)
+    connection.protocol.send_chat('Game has been reset by %s' % (connection.name), irc = True)
     
 command_list = [
     help,
@@ -318,7 +318,6 @@ command_list = [
     teleport,
     god,
     follow,
-    unfollow,
     reset_game
 ]
 
