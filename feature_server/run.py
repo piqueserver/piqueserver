@@ -189,7 +189,9 @@ class FeatureConnection(ServerConnection):
     def get_follow_position(self):
         target = self.follow
         if not target.hp:
-            return self.team.get_random_position()
+            position = self.team.get_random_position()
+            position.z -= 1
+            return position
         position = target.position
         return position.x, position.y, position.z
     
