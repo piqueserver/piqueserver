@@ -584,7 +584,7 @@ class Flag(Vertex3):
 
 spawn_positions = []
 for x in xrange(128):
-    for y in xrange(128, 386):
+    for y in xrange(128, 384):
         spawn_positions.append((x, y))
 
 class Team(object):
@@ -593,12 +593,20 @@ class Team(object):
     other = None
     map = None
     name = None
+    spawns = None
     
     def __init__(self, id, name, protocol):
         self.id = id
         self.name = name
         self.map = protocol.map
         self.players = protocol.players
+        x_offset = id * 384
+        self.spawns = spawns = []
+        for x in xrange(x_offset, 128 + x_offset):
+            for y in xrange(128, 384):
+                z = self.map.get_z(x, y)
+                if z < 62:
+                    spawns.append((x, y))
         self.initialize()
     
     def get_players(self):
@@ -627,21 +635,13 @@ class Team(object):
         self.base = Vertex3(*self.get_random_position(True))
     
     def get_random_position(self, force_land = False):
-        get_z = self.map.get_z
-        x_offset = self.id * 384
         if force_land:
-            check_positions = list(spawn_positions)
-            while check_positions:
-                value = random.choice(check_positions)
-                x, y = value
-                x += x_offset
-                z = get_z(x, y)
-                if z < 62:
-                    return x, y, z
-                check_positions.remove(value)
-        x = x_offset + random.randrange(128)
+            x, y = random.choice(self.spawns)
+            return (x, y, self.map.get_z(x, y))
+        x_offset = self.id * 384
+        x = self.id * 384 + random.randrange(128)
         y = 128 + random.randrange(256)
-        z = get_z(x, y)
+        z = self.map.get_z(x, y)
         return x, y, z
 
 class ServerProtocol(DatagramProtocol):

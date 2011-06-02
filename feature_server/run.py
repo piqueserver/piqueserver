@@ -241,6 +241,7 @@ class FeatureProtocol(ServerProtocol):
     building = True
     killing = True
     remote_console = None
+    
     # votekick
     votekick_time = 60 # 1 minute
     votekick_interval = 3 * 60 # 3 minutes
@@ -253,6 +254,7 @@ class FeatureProtocol(ServerProtocol):
     
     map_info = None
     indestructable_blocks = None
+    spawns = None
     user_blocks = None
     
     def __init__(self):
@@ -278,6 +280,7 @@ class FeatureProtocol(ServerProtocol):
         except IOError:
             print 'map not found!'
             return
+        
         self.indestructable_blocks = indestructable_blocks = []
         for r, g, b in map.indestructable_blocks:
             r = make_range_object(r)
