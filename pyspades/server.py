@@ -625,12 +625,9 @@ class Team(object):
     
     def get_random_position(self, force_land = False):
         if force_land:
-            for _ in xrange(FORCE_LAND_TRIES):
-                x, y, z = self.get_random_position()
-                if z >= 62:
-                    continue
-                return x, y, z
-            return x, y, z
+            result = self.map.get_random_spawnable(self.id)
+            if result is not None:
+                return result
         x = self.id * 384 + random.randrange(128)
         y = 128 + random.randrange(256)
         z = self.map.get_z(x, y)
