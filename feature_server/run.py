@@ -49,6 +49,7 @@ from pyspades.server import ServerProtocol, ServerConnection, position_data
 from map import Map
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
+from twisted.python import log
 from pyspades.common import encode, decode
 from pyspades.constants import *
 
@@ -75,14 +76,14 @@ class FeatureConnection(ServerConnection):
     
     def on_login(self, name):
         self.protocol.send_chat('%s entered the game!' % name)
-        self.protocol.log('%s (%s) entered the game!' % (name, self.address[0]))
+        print '%s (%s) entered the game!' % (name, self.address[0])
         self.protocol.irc_say('* %s entered the game' % name)
     
     def disconnect(self):
         self.drop_followers()
         if self.name is not None:
             self.protocol.send_chat('%s left the game' % self.name)
-            self.protocol.log(self.name, 'disconnected!')
+            print self.name, 'disconnected!'
             self.protocol.irc_say('* %s disconnected' % self.name)
         ServerConnection.disconnect(self)
     
@@ -97,7 +98,7 @@ class FeatureConnection(ServerConnection):
         if result is not None:
             log_message += ' -> %s' % result
             self.send_chat(result)
-        self.protocol.log(log_message)
+        print log_message
     
     def on_block_build(self, x, y, z):
         if not self.protocol.building:
@@ -155,7 +156,7 @@ class FeatureConnection(ServerConnection):
             message = '(MUTED) %s' % message
         elif global_message:
             self.protocol.irc_say('<%s> %s' % (self.name, value))
-        self.protocol.log(message)
+        print message
         if self.mute:
             self.send_chat('(Chat not sent - you are muted)')
             return False
@@ -231,10 +232,9 @@ class FeatureProtocol(ServerProtocol):
     version = CLIENT_VERSION
     admin_passwords = None
     bans = None
-    timestamps = None
-    logfile = None
     irc_relay = None
     balanced_teams = None
+    timestamps = None
     building = True
     killing = True
     remote_console = None
@@ -290,7 +290,6 @@ class FeatureProtocol(ServerProtocol):
         passwords = config.get('passwords', {})
         self.admin_passwords = passwords.get('admin', [])
         self.server_prefix = encode(config.get('server_prefix', '[*]'))
-        self.timestamps = config.get('timestamps', False)
         self.balanced_teams = config.get('balanced_teams', None)
         self.rules = self.format_lines(config.get('rules', None))
         self.login_retries = config.get('login_retries', 1)
@@ -305,16 +304,17 @@ class FeatureProtocol(ServerProtocol):
             from irc import IRCRelay
             self.irc_relay = IRCRelay(self, irc)
         if logfile is not None and logfile.strip():
-            self.logfile = open(logfile, 'ab')
-            writelines(self.logfile, [
-                '',
-                'pyspades server started on %s' % time.strftime('%c')
-            ])
+            for f in (open(logfile, 'a'), sys.stdout):
+                observer = log.FileLogObserver(f)
+                log.addObserver(observer.emit)
+            log.startLogging(open(logfile, 'a'))
+            log.msg('pyspades server started on %s' % time.strftime('%c'))
+        else:
+            log.startLogging(sys.stdout) # force twisted logging
             
         for password in self.admin_passwords:
             if password == 'replaceme':
-                self.log(
-                    'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!')
+                print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
                 break
         ServerProtocol.__init__(self)
         # locked teams
@@ -362,14 +362,6 @@ class FeatureProtocol(ServerProtocol):
         if address[0] in self.bans:
             return
         ServerProtocol.datagramReceived(self, data, address)
-    
-    def log(self, *arg):
-        value = ' '.join(arg)
-        if self.timestamps:
-            value = '%s %s' % (time.strftime('[%X]'), value)
-        if self.logfile:
-            writelines(self.logfile, [value])
-        print value
         
     def irc_say(self, msg):
         if self.irc_relay:

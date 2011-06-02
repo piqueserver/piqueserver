@@ -26,7 +26,6 @@
         }
     },
     "server_prefix" : "[*]",
-    "timestamps" : true,
     "logfile" : "log.txt",
     "balanced_teams" : 1,
     "login_retries" : 1,

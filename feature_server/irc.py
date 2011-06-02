@@ -89,7 +89,7 @@ class IRCBot(irc.IRCClient):
             else:
                 max_len = MAX_IRC_CHAT_SIZE - len(self.protocol.server_prefix) - 1
                 message = ("<%s> %s" % (prefixed_username, msg))[:max_len]
-                self.factory.server.log(message)
+                print message
                 self.factory.server.send_chat(encode(message))
     
     @channel
