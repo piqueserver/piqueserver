@@ -18,6 +18,7 @@
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
 from pyspades.constants import MAX_CHAT_SIZE
+from pyspades.common import encode, decode
 from commands import get_player, join_arguments, InvalidPlayer, InvalidTeam
 
 import random
@@ -89,7 +90,7 @@ class IRCBot(irc.IRCClient):
                 max_len = MAX_IRC_CHAT_SIZE - len(self.protocol.server_prefix) - 1
                 message = ("<%s> %s" % (prefixed_username, msg))[:max_len]
                 self.factory.server.log(message)
-                self.factory.server.send_chat(message)
+                self.factory.server.send_chat(encode(message))
     
     @channel
     def userLeft(self, user, channel):
