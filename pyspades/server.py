@@ -584,7 +584,7 @@ class Flag(Vertex3):
 
 spawn_positions = []
 for x in xrange(128):
-    for y in xrange(256):
+    for y in xrange(128, 386):
         spawn_positions.append((x, y))
 
 class Team(object):
@@ -628,18 +628,18 @@ class Team(object):
     
     def get_random_position(self, force_land = False):
         get_z = self.map.get_z
-        z_offset = self.id * 384
+        x_offset = self.id * 384
         if force_land:
             check_positions = list(spawn_positions)
             while check_positions:
                 value = random.choice(check_positions)
                 x, y = value
-                x += z_offset
+                x += x_offset
                 z = get_z(x, y)
                 if z < 62:
                     return x, y, z
                 check_positions.remove(value)
-        x = z_offset + random.randrange(128)
+        x = x_offset + random.randrange(128)
         y = 128 + random.randrange(256)
         z = get_z(x, y)
         return x, y, z
