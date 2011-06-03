@@ -50,7 +50,7 @@ cdef extern from "load_c.cpp":
     void set_point(int x, int y, int z, MapData * map, bint solid, int color)
 
 cdef inline tuple get_color_tuple(color):
-    cdef int a, b, c, d
+    cdef int r, g, b, a
     b = color & 0xFF
     g = (color & 0xFF00) >> 8
     r = (color & 0xFF0000) >> 16
@@ -62,6 +62,13 @@ cdef inline int make_color(int r, int g, int b, a):
 
 import time
 import random
+
+cdef inline int get_z(int x, int y, MapData * map, int start = 0):
+    cdef int z
+    for z in range(start, 64):
+        if get_solid(x, y, z, map):
+            return z
+    return -1
 
 cdef class VXLData:
     cdef MapData * map
@@ -84,12 +91,8 @@ cdef class VXLData:
             return 0
         return get_solid(x, y, z, self.map)
     
-    def get_z(self, int x, int y, int start = 0):
-        cdef int z
-        for z in range(start, 64):
-            if get_solid(x, y, z, self.map):
-                return z
-        return None
+    cpdef int get_z(self, int x, int y, int start = 0):
+        return get_z(x, y, self.map, start)
     
     cpdef int get_height(self, int x, int y):
         cdef int h_z
@@ -148,6 +151,21 @@ cdef class VXLData:
         cdef int color = make_color(r, g, b, a)
         set_point(x, y, z, self.map, 1, color)
         return True
+    
+    def get_overview(self):
+        cdef unsigned int * data
+        data_python = allocate_memory(sizeof(int[512][512]), <char**>&data)
+        cdef unsigned int i, x, y, z, r, g, b, color
+        i = 0
+        for y in range(512):
+            for x in range(512):
+                color = get_color(x, y, get_z(x, y, self.map), self.map)
+                b = color & 0xFF
+                g = (color & 0xFF00) >> 8
+                r = (color & 0xFF0000) >> 16
+                data[i] = r | (g << 8) | (b << 16) | (255 << 24)
+                i += 1
+        return data_python
         
     def generate(self):
         return save_vxl(self.map)

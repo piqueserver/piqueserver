@@ -272,6 +272,7 @@ def teleport(connection, player1, player2 = None):
         player, target = connection, player1
         message = '%s teleported to %s' % (connection.name, target.name)
     
+    # set location!
     player.set_position(target.get_position())
     player.send_contained(position_data)
     connection.protocol.send_chat(message, irc = True)

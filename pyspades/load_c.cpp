@@ -35,6 +35,7 @@ using namespace std;
 struct MapData
 {
     bitset<MAP_X * MAP_Y * MAP_Z> geometry;
+    // char geometry[MAP_X * MAP_Y * MAP_Z];
     std::map<int, int> colors;
 };
 
@@ -265,7 +266,7 @@ PyObject * save_vxl(MapData * map)
                ++k;
             // find the top region
             top_colors_start = k;
-            while (k < MAP_Z && is_surface(map, i,j,k))
+            while (k < MAP_Z && is_surface(map, i,j, k))
                ++k;
             top_colors_end = k;
 
@@ -283,7 +284,7 @@ PyObject * save_vxl(MapData * map)
             bottom_colors_start = k;
 
             z = k;
-            while (z < MAP_Z && is_surface(map, i,j,z))
+            while (z < MAP_Z && is_surface(map, i,j, z))
                ++z;
 
             if (z == MAP_Z || 0)

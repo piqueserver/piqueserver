@@ -501,7 +501,7 @@ class ServerConnection(BaseConnection):
             return
         for _ in xrange(4):
             sequence = self.packet_handler1.sequence + 1
-            data_size = min(4096, self.map_data.dataLeft())
+            data_size = min(5120, self.map_data.dataLeft())
             new_data = ByteReader('\x0F' + self.map_data.read(data_size))
             new_data_size = len(new_data)
             nums = int(math.ceil(new_data_size / 1024.0))
