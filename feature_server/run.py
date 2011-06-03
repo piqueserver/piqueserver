@@ -192,9 +192,9 @@ class FeatureConnection(ServerConnection):
             player.follow = None
             player.send_chat('You are no longer following %s.' % self.name)
     
-    def get_follow_position(self):
-        x, y, z = (self.follow.position if self.follow.hp else
-            self.team.get_random_position())
+    def get_follow_location(self):
+        x, y, z = (self.follow.position.get() if self.follow.hp else
+            self.team.get_random_location())
         z -= 1
         return x, y, z
     
@@ -206,11 +206,11 @@ class FeatureConnection(ServerConnection):
     
     # position methods
     
-    def get_position(self):
+    def get_location(self):
         position = self.position
         return position.x, position.y, position.z
     
-    def set_position(self, (x, y, z)):
+    def set_location(self, (x, y, z)):
         position_data.x = x
         position_data.y = y
         position_data.z = z

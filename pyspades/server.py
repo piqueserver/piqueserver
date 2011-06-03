@@ -361,7 +361,7 @@ class ServerConnection(BaseConnection):
         create_player.player_id = self.player_id
         self.orientation = Vertex3(0, 0, 0)
         if pos is None:
-            pos = self.team.get_random_position(True)
+            pos = self.team.get_random_location(True)
         x, y, z = pos
         self.position = position = Vertex3(x, y, z)
         create_player.name = name
@@ -570,6 +570,9 @@ class Vertex3(object):
     def __init__(self, *arg, **kw):
         self.set(*arg, **kw)
     
+    def get(self):
+        return self.x, self.y, self.z
+    
     def set(self, x, y, z):
         self.x = x
         self.y = y
@@ -627,14 +630,14 @@ class Team(object):
         self.set_base()
     
     def set_flag(self):
-        self.flag = Flag(*self.get_random_position(True))
+        self.flag = Flag(*self.get_random_location(True))
         self.flag.team = self
         return self.flag
 
     def set_base(self):    
-        self.base = Vertex3(*self.get_random_position(True))
+        self.base = Vertex3(*self.get_random_location(True))
     
-    def get_random_position(self, force_land = False):
+    def get_random_location(self, force_land = False):
         if force_land:
             x, y = random.choice(self.spawns)
             return (x, y, self.map.get_z(x, y))
