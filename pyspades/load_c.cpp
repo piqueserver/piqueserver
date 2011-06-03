@@ -35,7 +35,6 @@ using namespace std;
 struct MapData
 {
     bitset<MAP_X * MAP_Y * MAP_Z> geometry;
-    // char geometry[MAP_X * MAP_Y * MAP_Z];
     std::map<int, int> colors;
 };
 
@@ -79,14 +78,12 @@ MapData * load_vxl(unsigned char * v)
             int bottom_color_end; // exclusive
             int len_top;
             int len_bottom;
-
+            
             for(i=z; i < top_color_start; i++)
                map->geometry[get_pos(x, y, i)] = 0;
-
             color = (int *) (v+4);
             for(z=top_color_start; z <= top_color_end; z++)
                map->colors[get_pos(x, y, z)] = *color++;
-
             len_bottom = top_color_end - top_color_start + 1;
 
             // check for end of data marker
@@ -104,7 +101,6 @@ MapData * load_vxl(unsigned char * v)
 
             bottom_color_end   = v[3]; // aka air start
             bottom_color_start = bottom_color_end - len_top;
-
             for(z=bottom_color_start; z < bottom_color_end; ++z) {
                map->colors[get_pos(x, y, z)] = *color++;
             }
@@ -203,17 +199,17 @@ int check_node(int x, int y, int z, MapData * map, int destroy)
 
 inline int is_surface(MapData * map, int x, int y, int z)
 {
-   if (map->geometry[get_pos(x, y, z)] == 0) return 0;
-   if (x > 0 && map->geometry[get_pos(x-1, y, z)]==0) return 1;
-   if (x+1 < MAP_X && map->geometry[get_pos(x+1, y, z)]==0) return 1;
-   if (y > 0 && map->geometry[get_pos(x, y-1, z)]==0) return 1;
-   if (y+1 < MAP_Y && map->geometry[get_pos(x, y+1, z)]==0) return 1;
-   if (z > 0 && map->geometry[get_pos(x, y, z-1)]==0) return 1;
-   if (z+1 < MAP_Z && map->geometry[get_pos(x, y, z+1)]==0) return 1;
+   if (map->geometry[get_pos(x, y, z)]==0) return 0;
+   if (x   >   0 && map->geometry[get_pos(x-1, y, z)]==0) return 1;
+   if (x+1 < 512 && map->geometry[get_pos(x+1, y, z)]==0) return 1;
+   if (y   >   0 && map->geometry[get_pos(x, y-1, z)]==0) return 1;
+   if (y+1 < 512 && map->geometry[get_pos(x, y+1, z)]==0) return 1;
+   if (z   >   0 && map->geometry[get_pos(x, y, z-1)]==0) return 1;
+   if (z+1 <  64 && map->geometry[get_pos(x, y, z+1)]==0) return 1;
    return 0;
 }
 
-inline void write_color(unsigned char * out, int color)
+inline void write_color(char * out, int color)
 {
    // assume color is ARGB native, but endianness is unknown
    if (color == 0)
@@ -229,21 +225,20 @@ inline void write_color(unsigned char * out, int color)
    out += 1;
 }
 
-unsigned char * out_global = 0;
+char * out_global = 0;
 
 PyObject * save_vxl(MapData * map)
 {
    int i,j,k;
    if (out_global == 0)
    {
-       out_global = (unsigned char *)malloc(6291456); // allocate 6 mb
+       out_global = (char *)malloc(6291456); // allocate 6 mb
    }
-   unsigned char * out = out_global;
+   char * out = out_global;
 
    for (j=0; j < MAP_Y; ++j) {
       for (i=0; i < MAP_X; ++i) {
          int written_colors = 0;
-         int backpatch_address = -1;
          int previous_bottom_colors = 0;
          int current_bottom_colors = 0;
          int middle_start = 0;
@@ -266,7 +261,7 @@ PyObject * save_vxl(MapData * map)
                ++k;
             // find the top region
             top_colors_start = k;
-            while (k < MAP_Z && is_surface(map, i,j, k))
+            while (k < MAP_Z && is_surface(map, i, j, k))
                ++k;
             top_colors_end = k;
 
@@ -314,7 +309,10 @@ PyObject * save_vxl(MapData * map)
             }
             *out = top_colors_start;
             out += 1;
-            *out = top_colors_end - 1;
+            if (top_colors_end == 0)
+                *out = 0;
+            else
+                *out = top_colors_end - 1;
             out += 1;
             *out = air_start;
             out += 1;
