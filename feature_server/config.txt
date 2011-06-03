@@ -20,7 +20,7 @@
     },
     "ssh" : {
         "enabled" : false,
-        "port" : 38827,
+        "port" : 32887,
         "users" : {
             "user" : "pass"
         }
