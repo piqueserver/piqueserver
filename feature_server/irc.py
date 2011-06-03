@@ -51,6 +51,16 @@ class IRCBot(irc.IRCClient):
             self.voices = []
         print "Joined channel %s" % channel
     
+    def irc_NICK(self, prefix, params):
+        user = prefix.split('!', 1)[0]
+        new_user = params[0]
+        if user in self.ops:
+            self.ops.remove(user)
+            self.ops.append(new_user)
+        if user in self.voices:
+            self.voices.remove(user)
+            self.voices.append(new_user)
+    
     def irc_RPL_NAMREPLY(self, *arg):
         if not arg[1][2] == self.factory.channel:
             return
@@ -184,10 +194,10 @@ def kick(bot, user, value, *arg):
 
 def who(bot, user):
     names = [conn.name for conn in bot.factory.server.players.values()]
-    c = len(names)
-    msg = "has %s player%s connected" % ("no" if c == 0 else c,
-        "" if c == 1 else "s")
-    if c > 0:
+    count = len(names)
+    msg = "has %s player%s connected" % ("no" if not count else count,
+        "" if count == 1 else "s")
+    if count:
         names.sort()
         msg += ": %s" % (', '.join(names))
     bot.me(msg)
