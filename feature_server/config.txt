@@ -10,7 +10,7 @@
     ],
     "max_players" : 32,
     "cap_limit" : 10,
-    "map" : "Anticbridge",
+    "map" : "pyspades",
     "respawn_time" : 5, 
     "max_followers" : 3,
     "master" : true,
