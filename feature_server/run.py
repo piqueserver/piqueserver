@@ -90,7 +90,7 @@ class FeatureConnection(ServerConnection):
     
     def on_spawn(self, pos, name):
         if self.follow is not None:
-            self.set_position(self.get_follow_position())
+            self.set_location(self.get_follow_location())
     
     def on_command(self, command, parameters):
         log_message = '<%s> /%s %s' % (self.name, command, 

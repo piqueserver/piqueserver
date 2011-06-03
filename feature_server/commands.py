@@ -170,9 +170,7 @@ def follow(connection, player = None):
             return 'You are no longer following %s.' % player.name
         return
     player = get_player(connection.protocol, player)
-    curfollowed = player.get_followers()
     # TODO - server option for follow limits
-    followlimit = connection.protocol.max_followers
     if connection == player:
         return "You can't follow yourself!"
     if not connection.team == player.team:
@@ -181,7 +179,7 @@ def follow(connection, player = None):
         return "You're already following %s" % player.name
     if not player.followable:
         return "%s doesn't want to be followed." % player.name
-    if len(curfollowed) >= followlimit:
+    if len(player.get_followers()) >= connection.protocol.max_followers:
         return '%s has too many followers!' % player.name
     connection.follow = player
     return 'Next time you die you will spawn where %s is.' % player.name
@@ -281,7 +279,7 @@ def teleport(connection, player1, player2 = None):
         message = '%s teleported to %s' % (connection.name, target.name)
 
     # set location!
-    player.set_position(target.get_position())
+    player.set_location(target.get_location())
     player.send_contained(position_data)
     connection.protocol.send_chat(message, irc = True)
 
