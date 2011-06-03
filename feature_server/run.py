@@ -69,6 +69,7 @@ class FeatureConnection(ServerConnection):
     login_retries = None
     god = False
     follow = None
+    followable = True
     
     def on_join(self):
         if self.protocol.motd is not None:
@@ -152,6 +153,7 @@ class FeatureConnection(ServerConnection):
                 return False
         if self.team is not team:
             self.drop_followers()
+            self.follow = None
     
     def on_chat(self, value, global_message):
         message = '<%s> %s' % (self.name, value)
@@ -191,13 +193,10 @@ class FeatureConnection(ServerConnection):
             player.send_chat('You are no longer following %s.' % self.name)
     
     def get_follow_position(self):
-        target = self.follow
-        if not target.hp:
-            position = self.team.get_random_position()
-            position.z -= 1
-            return position
-        position = target.position
-        return position.x, position.y, position.z
+        x, y, z = (self.follow.position if self.follow.hp else
+            self.team.get_random_position())
+        z -= 1
+        return x, y, z
     
     def send_lines(self, lines):
         current_time = 0
