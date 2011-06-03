@@ -170,7 +170,6 @@ def follow(connection, player = None):
             return 'You are no longer following %s.' % player.name
         return
     player = get_player(connection.protocol, player)
-    # TODO - server option for follow limits
     if connection == player:
         return "You can't follow yourself!"
     if not connection.team == player.team:
@@ -182,6 +181,7 @@ def follow(connection, player = None):
     if len(player.get_followers()) >= connection.protocol.max_followers:
         return '%s has too many followers!' % player.name
     connection.follow = player
+    player.send_chat('%s is now following you.' % connection.name)
     return 'Next time you die you will spawn where %s is.' % player.name
 
 @name('nofollow')
@@ -189,7 +189,7 @@ def no_follow(connection):
     connection.followable = not connection.followable
     if not connection.followable:
         connection.drop_followers()
-    return 'Teammates will %s be able to follow you' % (
+    return 'Teammates will %s be able to follow you.' % (
         'now' if connection.followable else 'no longer')
 
 @admin
