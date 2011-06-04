@@ -164,11 +164,14 @@ def follow(connection, player = None):
     """Follow a player; on your next spawn, you'll spawn at their position,
         similar to the squad spawning feature of Battlefield."""
     if player is None:
-        if connection.follow is not None:
+        if connection.follow is None:
+            return "You aren't following anybody. To follow a player say /follow <nickname>"
+        else:
             player = connection.follow
             connection.follow = None
+            player.send_chat('%s is no longer following you.' % connection.name)
             return 'You are no longer following %s.' % player.name
-        return
+    
     player = get_player(connection.protocol, player)
     if connection == player:
         return "You can't follow yourself!"
@@ -182,7 +185,7 @@ def follow(connection, player = None):
         return '%s has too many followers!' % player.name
     connection.follow = player
     player.send_chat('%s is now following you.' % connection.name)
-    return 'Next time you die you will spawn where %s is.' % player.name
+    return 'Next time you die you will spawn where %s is. To stop following him say /follow' % player.name
 
 @name('nofollow')
 def no_follow(connection):

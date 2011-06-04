@@ -132,7 +132,10 @@ class FeatureConnection(ServerConnection):
                                     return False
     
     def on_hit(self, hit_amount, player):
-        if not self.protocol.killing or player.god:
+        if not self.protocol.killing:
+            return False
+        elif player.god:
+            self.send_chat("You can't hurt %s! That player is in *god mode*" % player.name)
             return False
     
     def on_grenade(self, time_left):
