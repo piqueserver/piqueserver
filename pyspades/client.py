@@ -22,7 +22,7 @@ Client implementation - WIP
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 from pyspades.protocol import BaseConnection
-from pyspades.bytereader import ByteReader
+from pyspades.bytes import ByteReader, ByteWriter
 from pyspades.packet import Packet, load_server_packet
 from pyspades.loaders import *
 from pyspades.common import *
@@ -43,7 +43,7 @@ class ClientConnection(BaseConnection):
         BaseConnection.__init__(self)
         self.protocol = protocol
         self.auth_val = random.randint(0, 0xFFFF)
-        self.map = ByteReader()
+        self.map = ByteWriter()
         self.connections = MultikeyDict()
         
         connect_request = ConnectionRequest()
@@ -53,7 +53,7 @@ class ClientConnection(BaseConnection):
     
     def send_join(self):
         loader = SizedData()
-        data = ByteReader()
+        data = ByteWriter()
         join = clientloaders.JoinTeam()
         join.team = 1
         join.name = 'flotothelo'
@@ -79,7 +79,7 @@ class ClientConnection(BaseConnection):
             if data.dataLeft():
                 raw_input('not completely parsed')
             print contained, vars(contained)
-            newdata = ByteReader()
+            newdata = ByteWriter()
             contained.write(newdata)
             if contained.id != serverloaders.PlayerData.id:
                 if str(data) != str(newdata):

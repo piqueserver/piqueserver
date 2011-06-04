@@ -17,7 +17,7 @@
 
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
-from pyspades.bytereader import ByteReader
+from pyspades.bytes import ByteReader, ByteWriter
 from pyspades.packet import Packet, load_server_packet, generate_loader_data
 from pyspades.loaders import Ack
 from twisted.internet.defer import Deferred
@@ -169,9 +169,6 @@ class BaseConnection(object):
             call.cancel()
         except KeyError:
             return
-            # print 'ack:', sequence, timer, byte
-            # print 'no such ack!'
-            # print self.packet_deferreds.keys()
     
     def resend(self, key, loader, resend_interval):
         defer, _ = self.packet_deferreds.pop(key)
@@ -248,7 +245,7 @@ class BaseConnection(object):
             loader.sequence2 = sequence
         else:
             loader = sized_data
-        data = ByteReader()
+        data = ByteWriter()
         contained.write(data)
         loader.data = data
         return self.send_loader(loader, True)

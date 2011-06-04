@@ -29,7 +29,7 @@ cdef inline unsigned int column_size(char * column):
             break
     return v - column + (v[2]-v[1]+1) * 4 + 4
 
-from pyspades.bytereader import ByteReader
+from pyspades.bytes import ByteWriter
 
 cdef class CompressedVXLData:
     cdef:
@@ -173,7 +173,7 @@ cdef class CompressedVXLData:
         cdef char * data = self.columns[x][y]
     
     def generate(self):
-        reader = ByteReader()
+        reader = ByteWriter()
         cdef int x, y
         cdef char * column
         for x in range(XY_DIM):

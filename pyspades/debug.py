@@ -22,8 +22,6 @@ map_data = {}
 is_relay = False
 sequence = None
 
-from pyspades.bytereader import ByteReader
-
 chunks = {}
 
 current_id = 0
@@ -31,3 +29,7 @@ def write_packet(data):
     global current_id
     open('packets/%s.dat' % current_id, 'wb').write(str(data))
     current_id += 1
+
+import bytes
+from bytereader_old import ByteReader
+# bytes.ByteReader = ByteReader

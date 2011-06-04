@@ -8,7 +8,8 @@ ext_modules = []
 names = [
     'pyspades.compression',
     'pyspades.load',
-    'pyspades.compressedvxl'
+    'pyspades.compressedvxl',
+    'pyspades.bytes'
 ]
 
 for name in names:

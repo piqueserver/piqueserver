@@ -19,7 +19,7 @@ from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 from pyspades.protocol import (BaseConnection, sized_sequence, 
     sized_data, in_packet, out_packet)
-from pyspades.bytereader import ByteReader
+from pyspades.bytes import ByteReader, ByteWriter
 from pyspades.packet import Packet, load_client_packet
 from pyspades.loaders import *
 from pyspades.common import *
@@ -751,7 +751,7 @@ class ServerProtocol(DatagramProtocol):
             loader = sized_sequence
         else:
             loader = sized_data
-        data = ByteReader()
+        data = ByteWriter()
         contained.write(data)
         loader.data = data
         for player in self.connections.values():
