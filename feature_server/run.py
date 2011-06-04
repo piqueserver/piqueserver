@@ -262,9 +262,8 @@ class FeatureProtocol(ServerProtocol):
     def __init__(self):
         try:
             config = json.load(open('config.txt', 'rb'))
-        except IOError:
-            print 'no config.txt file found'
-            return
+        except IOError, e:
+            raise SystemExit('no config.txt file found')
         try:
             self.bans = set(json.load(open('bans.txt', 'rb')))
         except IOError:
@@ -277,10 +276,10 @@ class FeatureProtocol(ServerProtocol):
             self.map = map.data
             self.map_info = map
         except KeyError:
-            print 'no map specified!'
+            raise SystemExit('no map specified!')
             return
         except IOError:
-            print 'map not found!'
+            raise SystemExit('map not found!')
             return
         
         self.indestructable_blocks = indestructable_blocks = []
