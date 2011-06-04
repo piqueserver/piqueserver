@@ -29,3 +29,9 @@ def write_packet(data):
     global current_id
     open('packets/%s.dat' % current_id, 'wb').write(str(data))
     current_id += 1
+
+if False: # use old ByteReader?
+    import bytereader_old
+    import pyspades.bytes
+    pyspades.bytes.ByteReader = bytereader_old.ByteReader
+    pyspades.bytes.ByteWriter = bytereader_old.ByteReader

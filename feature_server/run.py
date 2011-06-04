@@ -45,6 +45,7 @@ if sys.version_info < (2, 7):
     except ImportError:
         print '(optional: install psyco for optimizations)'
 
+import pyspades.debug
 from pyspades.server import ServerProtocol, ServerConnection, position_data
 from map import Map
 from twisted.internet import reactor
