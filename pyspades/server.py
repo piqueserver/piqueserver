@@ -423,7 +423,7 @@ class ServerConnection(BaseConnection):
         position = self.position
         x = int(position.x)
         y = int(position.y)
-        z = int(position.z)
+        z = max(0, int(position.z))
         z = self.protocol.map.get_z(x, y, z)
         flag.set(x, y, z)
         flag.player = None

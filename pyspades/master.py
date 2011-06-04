@@ -107,6 +107,7 @@ class MasterConnection(BaseConnection):
         callback = self.disconnect_callback
         if callback is not None:
             callback()
+        self.disconnect_callback = None
     
     def send_data(self, data):
         self.protocol.transport.write(data)
