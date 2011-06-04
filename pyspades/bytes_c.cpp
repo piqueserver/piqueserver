@@ -188,6 +188,12 @@ inline void write(void * stream, char * data, size_t size)
     ss->write(data, size);
 }
 
+inline void rewind_stream(void * stream, int bytes)
+{
+    stringstream * ss = (stringstream*)stream;
+    ss->seekp(-bytes, stringstream::cur);
+}
+
 inline size_t get_stream_size(void * stream)
 {
     stringstream * ss = (stringstream*)stream;

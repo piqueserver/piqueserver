@@ -40,6 +40,7 @@ cdef extern from "bytes_c.cpp":
     void write_float(void * stream, double value, int big_endian)
     void write_string(void * stream, char * data, size_t size)
     void write(void * stream, char * data, size_t size)
+    void rewind_stream(void * stream, int bytes)
     object get_stream(void * stream)
     size_t get_stream_size(void * stream)
 
@@ -171,6 +172,9 @@ cdef class ByteWriter:
     
     def writeString(self, value):
         write_string(self.stream, value, len(value))
+    
+    def rewind(self, int bytes):
+        rewind_stream(self.stream, bytes)
     
     def __str__(self):
         return get_stream(self.stream)
