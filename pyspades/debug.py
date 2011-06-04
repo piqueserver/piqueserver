@@ -29,7 +29,3 @@ def write_packet(data):
     global current_id
     open('packets/%s.dat' % current_id, 'wb').write(str(data))
     current_id += 1
-
-import bytes
-from bytereader_old import ByteReader
-# bytes.ByteReader = ByteReader
