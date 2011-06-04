@@ -638,7 +638,7 @@ class Team(object):
         self.base = Vertex3(*self.get_random_location(True))
     
     def get_random_location(self, force_land = False):
-        if force_land:
+        if force_land and len(self.spawns) > 0:
             x, y = random.choice(self.spawns)
             return (x, y, self.map.get_z(x, y))
         x_offset = self.id * 384
