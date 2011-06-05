@@ -21,55 +21,48 @@ from twisted.web.resource import Resource
 from string import Template
 import json
 
-class StatusServer(Resource):
-        
-    info = None
-   
-    def setInfo(self, info):
-        self.info = info     
+class StatusResource(Resource):
+    protocol = None
+    
+    def __init__(self, protocol):
+        self.protocol = protocol
+        Resource.__init__(self)
 
     def getChild(self, name, request):
         return self
 
     def render_GET(self, request):
-                
         blues = []
         greens = []
     
-        for player in self.info.players.values():
-            if player.team is self.info.blue_team:
+        for player in self.protocol.players.values():
+            if player.team is self.protocol.blue_team:
                 blues.append(player.name)
             else:
                 greens.appnd(player.name)
                                 
-        dictionary = {"serverName": self.info.name,
-            "serverVersion": self.info.version,
+        dictionary = {
+            "serverName": self.protocol.name,
+            "serverVersion": self.protocol.version,
             "map": {
-                "name": self.info.map_info.name,
-                "version": self.info.map_info.version
+                "name": self.protocol.map_info.name,
+                "version": self.protocol.map_info.version
             },
             "players": {
                 "blue": blues,
                 "green": greens,
-                "maxPlayers": self.info.max_players,
+                "maxPlayers": self.protocol.max_players,
             },
             "scores": {
-                "currentBlueScore": self.info.blue_team.score,
-                "currentGreenScore": self.info.green_team.score,
-            "maxScore": self.info.max_scores}
+                "currentBlueScore": self.protocol.blue_team.score,
+                "currentGreenScore": self.protocol.green_team.score,
+            "maxScore": self.protocol.max_scores}
             }
 
-        return StatusEncoder().encode(dictionary)
-
-class StatusEncoder(json.JSONEncoder):
-     def default(self, obj):
-         if isinstance(obj, complex):
-             return [obj.real, obj.imag]
-         return json.JSONEncoder.default(self, obj)
+        return json.dumps(dictionary)
 
 class StatusServerFactory(object):
-    def __init__(self, pyServer, config):
-        statusServer = StatusServer()
-        site = server.Site(statusServer)
-        statusServer.setInfo(pyServer)
+    def __init__(self, protocol, config):
+        status_resource = StatusResource(protocol)
+        site = server.Site(status_resource)
         reactor.listenTCP(config.get('port', 38826), site)

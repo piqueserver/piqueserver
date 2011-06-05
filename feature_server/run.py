@@ -314,10 +314,10 @@ class FeatureProtocol(ServerProtocol):
         if irc.get('enabled', False):
             from irc import IRCRelay
             self.irc_relay = IRCRelay(self, irc)
-        statusserver = config.get('statusServer', {})
-        if statusserver.get('enabled', False):
+        status = config.get('status_server', {})
+        if status.get('enabled', False):
             from statusserver import StatusServerFactory
-            self.status_server = StatusServerFactory(statusserver)
+            self.status_server = StatusServerFactory(self, status)
                     
         if logfile is not None and logfile.strip():
             observer = log.FileLogObserver(open(logfile, 'a'))
