@@ -25,7 +25,7 @@
             "user" : "pass"
         }
     },
-    "statusServer" : {
+    "status_server" : {
         "enabled" : false,
         "port" : 38826
     }, 

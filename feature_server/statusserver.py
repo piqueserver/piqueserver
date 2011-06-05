@@ -15,13 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-
 from twisted.internet import reactor
 from twisted.web import static, server
 from twisted.web.resource import Resource
 from string import Template
 import json
-
 
 class StatusServer(Resource):
         
@@ -43,8 +41,7 @@ class StatusServer(Resource):
                 blues.append(player.name)
             else:
                 greens.appnd(player.name)
-                
-                
+                                
         dictionary = {"serverName": self.info.name,
             "serverVersion": self.info.version,
             "map": {
