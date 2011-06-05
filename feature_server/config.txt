@@ -25,6 +25,10 @@
             "user" : "pass"
         }
     },
+    "statusServer" : {
+        "enabled" : false,
+        "port" : 38826
+    }, 
     "server_prefix" : "[*]",
     "user_blocks_only" : false,
     "logfile" : "log.txt",
