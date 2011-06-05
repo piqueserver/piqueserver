@@ -62,23 +62,7 @@ class StatusServer(Resource):
             "maxScore": self.info.max_scores}
             }
 
-        output = StatusEncoder().encode(dictionary)
-                
-        #json = self.json_template.substitute(
-        #server_version = str(self.info.version),
-        #name = str(self.info.name),
-        #map_name = str(self.info.map_info.name),
-        #map_version = str(self.info.map_info.version),
-        #blue_players = str(self.info.blue_team.count()),
-        #green_players = str(self.info.green_team.count()),
-        #max_players = str(self.info.max_players),
-        #blue_score= str(self.info.blue_team.score),
-        #green_score = str(self.info.green_team.score),
-        #max_score = str(self.info.max_scores)
-        #)
-
-        
-        return output
+        return StatusEncoder().encode(dictionary)
 
 class StatusEncoder(json.JSONEncoder):
      def default(self, obj):
