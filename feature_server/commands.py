@@ -169,6 +169,7 @@ def follow(connection, player = None):
         else:
             player = connection.follow
             connection.follow = None
+            connection.respawn_time = connection.protocol.respawn_time
             player.send_chat('%s is no longer following you.' % connection.name)
             return 'You are no longer following %s.' % player.name
     
@@ -184,8 +185,9 @@ def follow(connection, player = None):
     if len(player.get_followers()) >= connection.protocol.max_followers:
         return '%s has too many followers!' % player.name
     connection.follow = player
+    connection.respawn_time = connection.protocol.follow_respawn_time
     player.send_chat('%s is now following you.' % connection.name)
-    return 'Next time you die you will spawn where %s is. To stop following him say /follow' % player.name
+    return 'Next time you die you will spawn where %s is. To stop, type /follow' % player.name
 
 @name('nofollow')
 def no_follow(connection):
@@ -210,6 +212,14 @@ def unlock(connection, value):
     connection.protocol.send_chat('%s team is now unlocked' % team.name)
     connection.protocol.irc_say('* %s unlocked %s team' % (connection.name, 
         team.name))
+
+@admin
+def switch(connection, value = None):
+    if value is not None:
+        connection = get_player(connection.protocol, value)
+    connection.team = connection.team.other
+    connection.kill()
+    connection.protocol.send_chat('%s has switched teams' % connection.name)
 
 @name('setbalance')
 @admin
@@ -318,6 +328,7 @@ command_list = [
     heal,
     lock,
     unlock,
+    switch,
     set_balance,
     rules,
     toggle_build,

@@ -68,6 +68,7 @@ class ServerConnection(BaseConnection):
     grenades = None
     spawn_call = None
     saved_loaders = None
+    respawn_time = protocol.respawn_time
     
     up = down = left = right = False
     position = orientation = None
@@ -354,7 +355,7 @@ class ServerConnection(BaseConnection):
     def respawn(self):
         if self.spawn_call is None:
             self.spawn_call = reactor.callLater(
-                self.protocol.respawn_time, self.spawn)
+                self.respawn_time, self.spawn)
     
     def spawn(self, pos = None, name = None):
         self.spawn_call = None

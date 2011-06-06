@@ -194,6 +194,7 @@ class FeatureConnection(ServerConnection):
     def drop_followers(self):
         for player in self.get_followers():
             player.follow = None
+            player.respawn_time = player.protocol.respawn_time
             player.send_chat('You are no longer following %s.' % self.name)
     
     def get_follow_location(self):
@@ -292,6 +293,7 @@ class FeatureProtocol(ServerProtocol):
             
         self.max_scores = config.get('cap_limit', None)
         self.respawn_time = config.get('respawn_time', 5)
+        self.follow_respawn_time = config.get('follow_respawn_time', self.respawn_time)
         self.master = config.get('master', True)
         self.friendly_fire = config.get('friendly_fire', True)
         self.motd = self.format_lines(config.get('motd', None))
