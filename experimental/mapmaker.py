@@ -69,6 +69,56 @@ class Heightmap:
                     self.set_repeat(x + halfspan, y + halfspan, center)
             span = span >> 1
             spanscaling = spanscaling * spanscalingmultiplier
+    def level_against_heightmap(self, other, height):
+        """Use another heightmap as an alpha-mask to force values to a specific height"""
+        for x in xrange(0, self.width):
+            for y in xrange(0, self.height):
+                orig = self.get_repeat(x,y)
+                dist = orig - height
+                self.set_repeat(x,y, orig - dist * other.get_repeat(x,y))
+    def blend_heightmaps(self, alphamap, heightmap):
+        """Blend according to two heightmaps: one as an alpha-mask,
+            the other contains desired heights"""
+        for x in xrange(0, self.width):
+            for y in xrange(0, self.height):
+                orig = self.get_repeat(x,y)
+                dist = orig - heightmap.get_repeat(x,y)
+                self.set_repeat(x,y, orig - dist * alphamap.get_repeat(x,y))
+    def rect_gradient(self, x, y, w, h, algorithm):
+        maxx = x+w
+        maxy = y+h
+        midx = maxx/2.
+        midy = maxy/2.
+        if algorithm == 'xy':
+            for xx in xrange(x, maxx):
+                for yy in xrange(y, maxy):
+                    qty = ((midx-abs(xx - midx))/midx + (midy-abs(yy - midy))/midy)/2
+                    self.set_repeat(xx,yy,qty)
+        elif algorithm == 'invxy':
+            for xx in xrange(x, maxx):
+                for yy in xrange(y, maxy):
+                    qty = ((abs(xx - midx))/midx + (abs(yy - midy))/midy)/2
+                    self.set_repeat(xx,yy,qty)
+        elif algorithm == 'x':
+            for xx in xrange(x, maxx):
+                for yy in xrange(y, maxy):
+                    qty = (midx-abs(xx - midx))/midx
+                    self.set_repeat(xx,yy,qty)
+        elif algorithm == 'invx':
+            for xx in xrange(x, maxx):
+                for yy in xrange(y, maxy):
+                    qty = (abs(xx - midx))/midx
+                    self.set_repeat(xx,yy,qty)
+        elif algorithm == 'y':
+            for xx in xrange(x, maxx):
+                for yy in xrange(y, maxy):
+                    qty = (midy-abs(yy - midy))/midx
+                    self.set_repeat(xx,yy,qty)
+        elif algorithm == 'invy':
+            for xx in xrange(x, maxx):
+                for yy in xrange(y, maxy):
+                    qty = (abs(yy - midy))/midx
+                    self.set_repeat(xx,yy,qty)
 
 hmap = Heightmap()
 
@@ -98,8 +148,15 @@ def algorithm_3(hmap):
     hmap.dipping()
     hmap.smoothing()
     hmap.smoothing()
-    
-algorithm_3(hmap)
+
+algorithm_2(hmap)
+hmap2 = Heightmap()
+algorithm_2(hmap2)
+hmap3 = Heightmap()
+algorithm_1(hmap3)
+hmap.blend_heightmaps(hmap2,hmap3)
+
+#TODO use the heightmap class, not these horrible anonymous heightmaps, and eliminate the functions I bootstrapped on
 
 result = Image.new('RGB',(hmap.width,hmap.height))
 converted = []
