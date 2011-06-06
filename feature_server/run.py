@@ -158,6 +158,7 @@ class FeatureConnection(ServerConnection):
         if self.team is not team:
             self.drop_followers()
             self.follow = None
+            self.respawn_time = self.protocol.respawn_time
     
     def on_chat(self, value, global_message):
         message = '<%s> %s' % (self.name, value)
