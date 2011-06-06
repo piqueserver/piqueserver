@@ -67,8 +67,8 @@ class ServerConnection(BaseConnection):
     color = (0x70, 0x70, 0x70)
     grenades = None
     spawn_call = None
+    respawn_time = None
     saved_loaders = None
-    respawn_time = protocol.respawn_time
     
     up = down = left = right = False
     position = orientation = None
@@ -78,6 +78,7 @@ class ServerConnection(BaseConnection):
         BaseConnection.__init__(self)
         self.protocol = protocol
         self.address = address
+        self.respawn_time = protocol.respawn_time
     
     def loader_received(self, loader):
         if self.connection_id is None:
