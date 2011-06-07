@@ -293,7 +293,7 @@ class FeatureProtocol(ServerProtocol):
             g = make_range_object(g)
             b = make_range_object(b)
             indestructable_blocks.append((r, g, b))
-            
+        
         self.max_scores = config.get('cap_limit', None)
         self.respawn_time = config.get('respawn_time', 5)
         self.follow_respawn_time = config.get('follow_respawn_time', self.respawn_time)
@@ -452,6 +452,7 @@ class FeatureProtocol(ServerProtocol):
     
     def end_votekick(self, enough, result):
         victim = self.votekick_player
+        self.votekick_player = None
         message = 'Votekick for %s has ended. %s.' % (
             victim.name, result)
         self.send_chat(message, irc = True)
@@ -464,7 +465,7 @@ class FeatureProtocol(ServerProtocol):
                 victim.kick(silent = True)
         elif not self.voting_player.admin: # admins are powerful, yeah
             self.voting_player.last_votekick = reactor.seconds()
-        self.votes = self.votekick_call = self.votekick_player = None
+        self.votes = self.votekick_call = None
         self.voting_player = None
     
     def send_chat(self, value, global_message = True, sender = None, irc = False):
