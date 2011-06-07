@@ -455,10 +455,10 @@ class FeatureProtocol(ServerProtocol):
             self.votekick_player.name, result)
         self.send_chat(message, irc = True)
         if enough:
-            if self.protocol.votekick_ban_duration:
-                self.protocol.add_ban(self.address[0], temporary = True)
-                reactor.callLater(self.protocol.votekick_ban_duration * 60,
-                    self.protocol.remove_ban, self.address[0])
+            if self.votekick_ban_duration:
+                self.add_ban(self.address[0], temporary = True)
+                reactor.callLater(self.votekick_ban_duration * 60,
+                    self.remove_ban, self.address[0])
             else:
                 self.votekick_player.kick(silent = True)
         elif not self.voting_player.admin: # admins are powerful, yeah
