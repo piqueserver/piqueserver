@@ -451,16 +451,17 @@ class FeatureProtocol(ServerProtocol):
         self.end_votekick(False, 'Cancelled by %s' % connection.name)
     
     def end_votekick(self, enough, result):
+        victim = self.votekick_player
         message = 'Votekick for %s has ended. %s.' % (
-            self.votekick_player.name, result)
+            victim.name, result)
         self.send_chat(message, irc = True)
         if enough:
             if self.votekick_ban_duration:
-                self.add_ban(self.address[0], temporary = True)
+                self.add_ban(victim.address[0], temporary = True)
                 reactor.callLater(self.votekick_ban_duration * 60,
-                    self.remove_ban, self.address[0])
+                    self.remove_ban, victim.address[0])
             else:
-                self.votekick_player.kick(silent = True)
+                victim.kick(silent = True)
         elif not self.voting_player.admin: # admins are powerful, yeah
             self.voting_player.last_votekick = reactor.seconds()
         self.votes = self.votekick_call = self.votekick_player = None
