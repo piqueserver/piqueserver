@@ -35,6 +35,7 @@
     "logfile" : "log.txt",
     "balanced_teams" : 1,
     "login_retries" : 1,
+    "votekick_ban_duration" : 10,
     "irc" : {
         "enabled" : false,
         "nickname" : "pyspades",

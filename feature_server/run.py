@@ -87,6 +87,8 @@ class FeatureConnection(ServerConnection):
             self.protocol.send_chat('%s left the game' % self.name)
             print self.name, 'disconnected!'
             self.protocol.irc_say('* %s disconnected' % self.name)
+            if self.protocol.votekick_player is self:
+                self.protocol.end_votekick(False, 'Player left the game')
         ServerConnection.disconnect(self)
     
     def on_spawn(self, pos, name):
@@ -305,6 +307,7 @@ class FeatureProtocol(ServerProtocol):
         self.balanced_teams = config.get('balanced_teams', None)
         self.rules = self.format_lines(config.get('rules', None))
         self.login_retries = config.get('login_retries', 1)
+        self.votekick_ban_duration = config.get('votekick_ban_duration', 5)
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
         self.max_followers = config.get('max_followers', 3)
@@ -371,12 +374,16 @@ class FeatureProtocol(ServerProtocol):
         print 'Master connection lost, reconnecting...'
         ServerProtocol.master_disconnected(self, *arg, **kw)
         
-    def add_ban(self, ip):
+    def add_ban(self, ip, temporary = False):
         for connection in self.connections.values():
             if connection.address[0] == ip:
                 connection.kick(silent = True)
         self.bans.add(ip)
-        json.dump(list(self.bans), open('bans.txt', 'wb'))
+        if not temporary:
+            json.dump(list(self.bans), open('bans.txt', 'wb'))
+    
+    def remove_ban(self, ip):
+        self.bans.discard(ip)
     
     def datagramReceived(self, data, address):
         if address[0] in self.bans:
@@ -448,7 +455,12 @@ class FeatureProtocol(ServerProtocol):
             self.votekick_player.name, result)
         self.send_chat(message, irc = True)
         if enough:
-            self.votekick_player.kick(silent = True)
+            if self.protocol.votekick_ban_duration:
+                self.protocol.add_ban(self.address[0], temporary = True)
+                reactor.callLater(self.protocol.votekick_ban_duration * 60,
+                    self.protocol.remove_ban, self.address[0])
+            else:
+                self.votekick_player.kick(silent = True)
         elif not self.voting_player.admin: # admins are powerful, yeah
             self.voting_player.last_votekick = reactor.seconds()
         self.votes = self.votekick_call = self.votekick_player = None
