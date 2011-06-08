@@ -384,7 +384,7 @@ class FeatureProtocol(ServerProtocol):
         json.dump(list(self.bans), open('bans.txt', 'wb'))
     
     def datagramReceived(self, data, address):
-        if address[0] in self.bans:
+        if address[0] in self.bans or address[0] in self.temp_bans:
             return
         ServerProtocol.datagramReceived(self, data, address)
         
