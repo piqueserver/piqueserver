@@ -375,13 +375,14 @@ class FeatureProtocol(ServerProtocol):
     def master_disconnected(self, *arg, **kw):
         print 'Master connection lost, reconnecting...'
         ServerProtocol.master_disconnected(self, *arg, **kw)
-        
-    def add_ban(self, ip):
+    
+    def add_ban(self, ip, temporary = False):
         for connection in self.connections.values():
             if connection.address[0] == ip:
                 connection.kick(silent = True)
-        self.bans.add(ip)
-        json.dump(list(self.bans), open('bans.txt', 'wb'))
+        if not temporary:
+            self.bans.add(ip)
+            json.dump(list(self.bans), open('bans.txt', 'wb'))
     
     def datagramReceived(self, data, address):
         if address[0] in self.bans or address[0] in self.temp_bans:
@@ -456,10 +457,12 @@ class FeatureProtocol(ServerProtocol):
         self.send_chat(message, irc = True)
         if enough:
             if self.votekick_ban_duration:
+                self.add_ban(victim.address[0], temporary = True)
                 self.temp_bans.add(victim.address[0])
                 reactor.callLater(self.votekick_ban_duration * 60,
                     self.temp_bans.discard, victim.address[0])
-            victim.kick(silent = True)
+            else:
+                victim.kick(silent = True)
         elif not self.voting_player.admin: # admins are powerful, yeah
             self.voting_player.last_votekick = reactor.seconds()
         self.votes = self.votekick_call = None
