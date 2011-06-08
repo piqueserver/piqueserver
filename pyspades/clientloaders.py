@@ -146,15 +146,13 @@ class JoinTeam(PacketLoader):
         firstByte = reader.readByte(True)
         self.team = firstByte >> 4 # 0 for b, 1 for g
         if reader.dataLeft():
-            self.ip = get_server_ip(reader.readInt(True, False))
             self.name = reader.readString()
     
     def write(self, reader):
         byte = self.id
         byte |= self.team << 4
         reader.writeByte(byte, True)
-        if self.ip is not None and self.name is not None:
-            reader.writeInt(make_server_number(self.ip), True, False)
+        if self.name is not None:
             reader.writeString(self.name)
 
 class BlockAction(PacketLoader):
