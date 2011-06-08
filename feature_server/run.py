@@ -242,6 +242,7 @@ class FeatureProtocol(ServerProtocol):
     version = CLIENT_VERSION
     admin_passwords = None
     bans = None
+    temp_bans = None
     irc_relay = None
     balanced_teams = None
     timestamps = None
@@ -273,6 +274,7 @@ class FeatureProtocol(ServerProtocol):
             self.bans = set(json.load(open('bans.txt', 'rb')))
         except IOError:
             self.bans = set([])
+        temp_bans = set([])
         self.config = config
         self.name = config.get('name', 
             'pyspades server %s' % random.randrange(0, 2000))
@@ -374,13 +376,12 @@ class FeatureProtocol(ServerProtocol):
         print 'Master connection lost, reconnecting...'
         ServerProtocol.master_disconnected(self, *arg, **kw)
         
-    def add_ban(self, ip, temporary = False):
+    def add_ban(self, ip):
         for connection in self.connections.values():
             if connection.address[0] == ip:
                 connection.kick(silent = True)
         self.bans.add(ip)
-        if not temporary:
-            json.dump(list(self.bans), open('bans.txt', 'wb'))
+        json.dump(list(self.bans), open('bans.txt', 'wb'))
     
     def remove_ban(self, ip):
         self.bans.discard(ip)
@@ -458,11 +459,10 @@ class FeatureProtocol(ServerProtocol):
         self.send_chat(message, irc = True)
         if enough:
             if self.votekick_ban_duration:
-                self.add_ban(victim.address[0], temporary = True)
+                self.temp_bans.add(victim.address[0])
                 reactor.callLater(self.votekick_ban_duration * 60,
-                    self.remove_ban, victim.address[0])
-            else:
-                victim.kick(silent = True)
+                    self.temp_bans.discard, victim.address[0])
+            victim.kick(silent = True)
         elif not self.voting_player.admin: # admins are powerful, yeah
             self.voting_player.last_votekick = reactor.seconds()
         self.votes = self.votekick_call = None
