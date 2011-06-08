@@ -33,7 +33,6 @@ class AddServer(PacketLoader):
     id = 4
     count = None
     
-    ip = None
     max_players = None
     name = None
     def read(self, reader):
@@ -77,7 +76,6 @@ class MasterConnection(BaseConnection):
             
             add_server.count = None
             add_server.name = self.name
-            add_server.ip = self.ip
             add_server.max_players = self.max
             self.send_contained(add_server)
             

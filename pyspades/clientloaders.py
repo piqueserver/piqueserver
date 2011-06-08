@@ -140,7 +140,6 @@ class SetColor(PacketLoader):
 class JoinTeam(PacketLoader):
     name = None
     team = None
-    ip = None
     def read(self, reader):
         # respawn?
         firstByte = reader.readByte(True)
