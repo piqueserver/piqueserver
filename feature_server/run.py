@@ -274,7 +274,7 @@ class FeatureProtocol(ServerProtocol):
             self.bans = set(json.load(open('bans.txt', 'rb')))
         except IOError:
             self.bans = set([])
-        temp_bans = set([])
+        self.temp_bans = set([])
         self.config = config
         self.name = config.get('name', 
             'pyspades server %s' % random.randrange(0, 2000))
@@ -382,9 +382,6 @@ class FeatureProtocol(ServerProtocol):
                 connection.kick(silent = True)
         self.bans.add(ip)
         json.dump(list(self.bans), open('bans.txt', 'wb'))
-    
-    def remove_ban(self, ip):
-        self.bans.discard(ip)
     
     def datagramReceived(self, data, address):
         if address[0] in self.bans:
