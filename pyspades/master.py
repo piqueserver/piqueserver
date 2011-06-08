@@ -29,8 +29,6 @@ import random
 HOST = 'ace-spades.com'
 PORT = 32886
 
-IP_GETTER = 'http://automation.whatismyip.com/n09230945.asp'
-
 class AddServer(PacketLoader):
     id = 4
     count = None
@@ -42,14 +40,11 @@ class AddServer(PacketLoader):
         if reader.dataLeft() == 1:
             self.count = reader.readByte(True)
         else:
-            ip = reader.readInt(True, False)
-            self.ip = get_server_ip(ip)
             self.max_players = reader.readByte(True)
             self.name = reader.readString()
     
     def write(self, reader):
         if self.count is None:
-            reader.writeInt(make_server_number(self.ip), True, False)
             reader.writeByte(self.max_players)
             reader.writeString(self.name)
         else:
@@ -59,13 +54,12 @@ add_server = AddServer()
 
 class MasterConnection(BaseConnection):
     disconnect_callback = None
-    def __init__(self, protocol, name, ip, max, defer):
+    def __init__(self, protocol, name, max, defer):
         BaseConnection.__init__(self)
 
         self.protocol = protocol
     
         self.name = name
-        self.ip = ip
         self.max = max
         self.defer = defer
         self.auth_val = random.randint(0, 0xFFFF)
@@ -86,17 +80,10 @@ class MasterConnection(BaseConnection):
             add_server.ip = self.ip
             add_server.max_players = self.max
             self.send_contained(add_server)
-            self.do_stuff()
             
             if self.defer is not None:
                 self.defer.callback(self)
                 self.defer = None
-    
-    def do_stuff(self):
-        self.ping().addCallback(self.got_it)
-    
-    def got_it(self, ack):
-        reactor.callLater(0.5, self.do_stuff)
     
     def set_count(self, value):
         add_server.count = value
@@ -119,9 +106,8 @@ def get_external_ip():
 
 class MasterProtocol(DatagramProtocol):
     connection_class = MasterConnection
-    def __init__(self, name, ip, max, defer = None):
+    def __init__(self, name, max, defer = None):
         self.name = name
-        self.ip = ip
         self.max = max
         self.defer = defer
         
@@ -130,7 +116,7 @@ class MasterProtocol(DatagramProtocol):
     
     def hostResolved(self, ip):
         self.transport.connect(ip, PORT)
-        self.connection = self.connection_class(self, self.name, self.ip, 
+        self.connection = self.connection_class(self, self.name, 
             self.max, self.defer)
         
     def set_count(self, value):
@@ -139,15 +125,7 @@ class MasterProtocol(DatagramProtocol):
     def datagramReceived(self, data, address):
         self.connection.data_received(data)
 
-def get_master_connection(name, max, ip = None):
+def get_master_connection(name, max):
     defer = Deferred()
-    
-    def got_ip(ip):
-        reactor.listenUDP(0, MasterProtocol(name, ip, max, defer))
-    
-    if ip is None:
-        get_external_ip().addCallback(got_ip)
-    else:
-        got_ip(ip)
-    
+    reactor.listenUDP(0, MasterProtocol(name, max, defer))
     return defer
