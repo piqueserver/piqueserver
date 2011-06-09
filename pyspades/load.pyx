@@ -118,6 +118,9 @@ cdef class VXLData:
         if taken > 0.1:
             print 'removing block at', x, y, z, 'took:', taken
     
+    def remove_point_unsafe(self, int x, int y, int z):
+        set_point(x, y, z, self.map, 0, 0)
+            
     cpdef bint has_neighbors(self, int x, int y, int z):
         return (
             self.get_solid(x + 1, y, z) or
@@ -147,6 +150,12 @@ cdef class VXLData:
                          bint user = True):
         if user and (z not in range(62) or not self.has_neighbors(x, y, z)):
             return False
+        r, g, b, a = color_tuple
+        cdef int color = make_color(r, g, b, a)
+        set_point(x, y, z, self.map, 1, color)
+        return True
+    
+    cpdef bint set_point_unsafe(self, int x, int y, int z, tuple color_tuple):
         r, g, b, a = color_tuple
         cdef int color = make_color(r, g, b, a)
         set_point(x, y, z, self.map, 1, color)

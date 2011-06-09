@@ -1,7 +1,26 @@
 import array
 import random
-import Image
 import math
+import sys
+
+sys.path.append('..')
+from pyspades.load import VXLData
+
+"""NOTES:
+
+we have no "populate empty vxl" function, and using standard remove_point() to
+force an empty vxl is extremely slow!
+
+filling an entire z column(index 0-63) with set_point() caused corruption,
+but only after I filled a 2x2 x/y area. Is this expected behavior?
+
+For now my policy is to set 1-63 for sets, 1-61 for typical removes,
+and remove 62-63 only when I plan to repaint the ground/water.
+
+It turns out that I require unsafe_set and unsafe_remove; besides being faster,
+the regular versions of those functions won't let me change the ground or water.
+
+"""
 
 class Heightmap:
     def __init__(self):
@@ -119,6 +138,15 @@ class Heightmap:
                 for yy in xrange(y, maxy):
                     qty = (abs(yy - midy))/midx
                     self.set_repeat(xx,yy,qty)
+    def truncate(self):
+        for idx in xrange(0,len(self.data)):
+            self.data[idx] = min(max(self.data[idx],0.0),1.0)
+    def offset_z(self,qty):
+        for idx in xrange(0,len(self.data)):
+            self.data[idx] = self.data[idx]+qty
+    def rescale_z(self,multiple):
+        for idx in xrange(0,len(self.data)):
+            self.data[idx] = self.data[idx]*multiple
 
 hmap = Heightmap()
 
@@ -151,17 +179,50 @@ def algorithm_3(hmap):
 
 algorithm_2(hmap)
 hmap2 = Heightmap()
-algorithm_2(hmap2)
+algorithm_3(hmap2)
 hmap3 = Heightmap()
 algorithm_1(hmap3)
 hmap.blend_heightmaps(hmap2,hmap3)
+hmap.offset_z(-0.05)
+hmap.rescale_z(0.6)
+hmap.truncate() # important!
 
-#TODO use the heightmap class, not these horrible anonymous heightmaps, and eliminate the functions I bootstrapped on
+def output_heightmap_image(heightmap):   
+    import Image
+    result = Image.new('RGB',(hmap.width,hmap.height))
+    converted = []
+    for px in hmap.data:
+        val = int(px*255)
+        converted.append((val,val,val))
+    result.putdata(converted)
+    result.save("result.bmp")
 
-result = Image.new('RGB',(hmap.width,hmap.height))
-converted = []
-for px in hmap.data:
-    val = int(min(max(px,0.0),1.0)*255)
-    converted.append((val,val,val))
-result.putdata(converted)
-result.save("result.bmp")
+zcoltable = [(12,15,117,255),(54,74,13,255)] # water and "beach" z-levels
+for n in xrange(0,62):
+    gradient_pct = (n+20.)/(62+20.)
+    color = (int(118*gradient_pct),int(222*gradient_pct),int(106*gradient_pct),255)
+    zcoltable.append(color)
+zcoltable.reverse()
+
+def build_vxl(heightmap):
+    vxlfile = open('../feature_server/maps/pyspades.vxl','rb')
+    vxl = VXLData(vxlfile)
+    vxlfile.close()
+    print("emptying")
+    for x in xrange(0,512):
+        for y in xrange(0,512):
+            for z in xrange(1,63):
+                vxl.remove_point_unsafe(x,y,z)
+    print("filling")
+    for x in xrange(0,512):
+        for y in xrange(0,512):
+            height = 63 - (int(hmap.get(x,y)*62))
+            for z in xrange(height,64):
+                vxl.set_point_unsafe(x,y,z,zcoltable[z])
+    print("writing")
+    vxlfile = open("../feature_server/maps/autogen.vxl",'wb')
+    vxlfile.write(vxl.generate())
+    vxlfile.close()
+    print("success")
+
+build_vxl(hmap)
