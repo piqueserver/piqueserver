@@ -612,7 +612,6 @@ class Team(object):
                 z = self.map.get_z(x, y)
                 if z < 63:
                     spawns.append((x, y))
-        print(self.spawns)
         self.initialize()
     
     def get_players(self):
