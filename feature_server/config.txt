@@ -34,7 +34,7 @@
     "user_blocks_only" : false,
     "logfile" : "log.txt",
     "balanced_teams" : 1,
-    "login_retries" : 1,
+    "login_retries" : 3,
     "votekick_ban_duration" : 10,
     "irc" : {
         "enabled" : false,
