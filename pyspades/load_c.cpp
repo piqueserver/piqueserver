@@ -61,6 +61,8 @@ void inline set_point(int x, int y, int z, MapData * map, bool solid, int color)
 MapData * load_vxl(unsigned char * v)
 {
    MapData * map = new MapData;
+   if (v == NULL)
+    return map;
    int x,y,z;
    for (y=0; y < 512; ++y) {
       for (x=0; x < 512; ++x) {

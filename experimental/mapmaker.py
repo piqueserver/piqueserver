@@ -205,17 +205,10 @@ for n in xrange(0,62):
 zcoltable.reverse()
 
 def build_vxl(heightmap):
-    vxlfile = open('../feature_server/maps/pyspades.vxl','rb')
-    vxl = VXLData(vxlfile)
-    vxlfile.close()
-    print("emptying")
-    for x in xrange(0,512):
-        for y in xrange(0,512):
-            for z in xrange(1,63):
-                vxl.remove_point_unsafe(x,y,z)
+    vxl = VXLData()
     print("filling")
-    for x in xrange(0,512):
-        for y in xrange(0,512):
+    for x in xrange(0, 512):
+        for y in xrange(0, 512):
             height = 63 - (int(hmap.get(x,y)*62))
             for z in xrange(height,64):
                 vxl.set_point_unsafe(x,y,z,zcoltable[z])

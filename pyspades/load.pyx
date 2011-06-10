@@ -78,7 +78,9 @@ cdef class VXLData:
         if fp is not None:
             data = fp.read()
             c_data = data
-            self.map = load_vxl(c_data)
+        else:
+            c_data = NULL
+        self.map = load_vxl(c_data)
     
     def get_point(self, int x, int y, int z):
         return (get_solid(x, y, z, self.map), get_color_tuple(get_color(
@@ -180,5 +182,8 @@ cdef class VXLData:
         return save_vxl(self.map)
     
     def __dealloc__(self):
+        cdef MapData * map
         if self.map != NULL:
-            delete_vxl(self.map)
+            map = self.map
+            self.map = NULL
+            delete_vxl(map)
