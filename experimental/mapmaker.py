@@ -8,9 +8,6 @@ from pyspades.load import VXLData
 
 """NOTES:
 
-we have no "populate empty vxl" function, and using standard remove_point() to
-force an empty vxl is extremely slow!
-
 filling an entire z column(index 0-63) with set_point() caused corruption,
 but only after I filled a 2x2 x/y area. Is this expected behavior?
 
@@ -24,33 +21,34 @@ the regular versions of those functions won't let me change the ground or water.
 
 class Heightmap:
     def __init__(self):
-        self.width = 512
-        self.height = 512
-        self.data = array.array('f',[0. for n in xrange(0, self.width*self.height)])
+        self.width = 512//4
+        self.height = 512//4
+        self.hmap = array.array('f',[0. for n in xrange(0, self.width*self.height)])
+        self.style = array.array('i',[0 for n in xrange(0, self.width*self.height)])
     def get(self, x, y):
-        return self.data[x+y*self.height]
+        return self.hmap[x+y*self.height]
     def get_repeat(self, x, y):
         """This allows the algorithm to tile at the edges."""
-        return self.data[(x%self.width)+(y%self.height)*self.width]
+        return self.hmap[(x%self.width)+(y%self.height)*self.width]
     def set_repeat(self, x, y, val):
         """This allows the algorithm to tile at the edges."""
-        self.data[(x%self.width)+(y%self.height)*self.width] = val
+        self.hmap[(x%self.width)+(y%self.height)*self.width] = val
     def seed(self, jitter, midpoint):
         halfjitter = jitter * 0.5
-        for idx in xrange(len(self.data)):
-            self.data[idx] = midpoint + (random.random()*jitter - halfjitter) # TUNABLE
+        for idx in xrange(len(self.hmap)):
+            self.hmap[idx] = midpoint + (random.random()*jitter - halfjitter) # TUNABLE
     def peaking(self):
         """Adds a "peaking" feel to the map."""
-        for idx in xrange(len(self.data)):
-            self.data[idx] = self.data[idx] * self.data[idx]
+        for idx in xrange(len(self.hmap)):
+            self.hmap[idx] = self.hmap[idx] * self.hmap[idx]
     def dipping(self):
         """Adds a "dipping" feel to the map."""
-        for idx in xrange(len(self.data)):
-            self.data[idx] = math.sin(self.data[idx]*(math.pi))
+        for idx in xrange(len(self.hmap)):
+            self.hmap[idx] = math.sin(self.hmap[idx]*(math.pi))
     def rolling(self):
         """Adds a "rolling" feel to the map."""
-        for idx in xrange(len(self.data)):
-            self.data[idx] = math.sin(self.data[idx]*(math.pi/2))
+        for idx in xrange(len(self.hmap)):
+            self.hmap[idx] = math.sin(self.hmap[idx]*(math.pi/2))
     def smoothing(self):
         """Does some simple averaging to bring down the noise level."""
         for x in xrange(0,self.width):
@@ -59,15 +57,15 @@ class Heightmap:
                 left = self.get_repeat(x-1,y)
                 right = self.get_repeat(x+1,y)
                 bot = self.get_repeat(x,y+1)
-                center = self.data[x+y*self.width]
-                self.data[x+y*self.width] = (top + left + right + bot + center)/5
+                center = self.hmap[x+y*self.width]
+                self.hmap[x+y*self.width] = (top + left + right + bot + center)/5
     def midpoint_displace(self, jittervalue, spanscalingmultiplier):
         """Midpoint displacement with the diamond-square algorithm."""
         
         span = self.width+1
         spanscaling = 1.
 
-        for iterations in xrange(10):
+        for iterations in xrange(8):
             jitterrange = jittervalue * spanscaling
             jitteroffset = - jitterrange / 2
             print(jitterrange)
@@ -139,14 +137,70 @@ class Heightmap:
                     qty = (abs(yy - midy))/midx
                     self.set_repeat(xx,yy,qty)
     def truncate(self):
-        for idx in xrange(0,len(self.data)):
-            self.data[idx] = min(max(self.data[idx],0.0),1.0)
+        for idx in xrange(0,len(self.hmap)):
+            self.hmap[idx] = min(max(self.hmap[idx],0.0),1.0)
     def offset_z(self,qty):
-        for idx in xrange(0,len(self.data)):
-            self.data[idx] = self.data[idx]+qty
+        for idx in xrange(0,len(self.hmap)):
+            self.hmap[idx] = self.hmap[idx]+qty
     def rescale_z(self,multiple):
-        for idx in xrange(0,len(self.data)):
-            self.data[idx] = self.data[idx]*multiple
+        for idx in xrange(0,len(self.hmap)):
+            self.hmap[idx] = self.hmap[idx]*multiple
+    def writeVXL(self):
+        self.truncate()
+        vxl = VXLData()
+        
+        zcoltable = [(12,15,117,255),(54,74,13,255)] # water and "beach" z-levels
+        for n in xrange(0,62):
+            gradient_pct = (n+20.)/(62+20.)
+            color = (int(118*gradient_pct),int(222*gradient_pct),int(106*gradient_pct),255)
+            zcoltable.append(color)
+        zcoltable.reverse()
+        
+        helpers = []
+        """Helpers for filling and detailing the 4x4 tiles."""
+        for x in xrange(0,4):
+            for y in xrange(0,4):
+                adder = (x,y)
+                offsetx = 0
+                offsety = 0
+                if x==0:
+                    offsetx-=1
+                elif x==3:
+                    offsetx+=1
+                if y==0:
+                    offsety-=1
+                elif y==3:
+                    offsety+=1
+                gradient = (offsetx,offsety)
+                helpers.append((adder,gradient))
+
+        for x in xrange(0, self.width):
+            mx = x * 4
+            for y in xrange(0, self.height):
+                my = y * 4
+                curheight = self.get(x,y)
+                for point in helpers:
+                    adder = point[0]
+                    gradient = point[1]
+                    nearbyheight1 = self.get_repeat(x,y+gradient[1])
+                    nearbyheight2 = self.get_repeat(x+gradient[0],y)
+                    nearbyheight3 = self.get_repeat(x+gradient[0],y+gradient[1])
+                    avg = ((nearbyheight1 + nearbyheight2 + nearbyheight3) / 3. + curheight) / 2.
+                    modavg = 63 - int(avg*63)
+                    col = zcoltable[modavg]
+                    for z in xrange(0, 64):
+                        if modavg<=z:
+                            vxl.set_point_unsafe(mx+adder[0], my+adder[1], z, col)
+        return vxl.generate()
+    def writeBMP(self):
+        import Image
+        result = Image.new('RGB',(hmap.width,hmap.height))
+        converted = []
+        for px in hmap.data:
+            val = int(px*255)
+            converted.append((val,val,val))
+        result.putdata(converted)
+        result.save("result.bmp")
 
 hmap = Heightmap()
 
@@ -184,38 +238,7 @@ hmap3 = Heightmap()
 algorithm_1(hmap3)
 hmap.blend_heightmaps(hmap2,hmap3)
 hmap.offset_z(-0.05)
-hmap.rescale_z(0.6)
-hmap.truncate() # important!
 
-def output_heightmap_image(heightmap):   
-    import Image
-    result = Image.new('RGB',(hmap.width,hmap.height))
-    converted = []
-    for px in hmap.data:
-        val = int(px*255)
-        converted.append((val,val,val))
-    result.putdata(converted)
-    result.save("result.bmp")
-
-zcoltable = [(12,15,117,255),(54,74,13,255)] # water and "beach" z-levels
-for n in xrange(0,62):
-    gradient_pct = (n+20.)/(62+20.)
-    color = (int(118*gradient_pct),int(222*gradient_pct),int(106*gradient_pct),255)
-    zcoltable.append(color)
-zcoltable.reverse()
-
-def build_vxl(heightmap):
-    vxl = VXLData()
-    print("filling")
-    for x in xrange(0, 512):
-        for y in xrange(0, 512):
-            height = 63 - (int(hmap.get(x,y)*62))
-            for z in xrange(height,64):
-                vxl.set_point_unsafe(x,y,z,zcoltable[z])
-    print("writing")
-    vxlfile = open("../feature_server/maps/autogen.vxl",'wb')
-    vxlfile.write(vxl.generate())
-    vxlfile.close()
-    print("success")
-
-build_vxl(hmap)
+vxlfile = open("../feature_server/maps/autogen.vxl",'wb')
+vxlfile.write(hmap.writeVXL())
+vxlfile.close()
