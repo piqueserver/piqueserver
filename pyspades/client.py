@@ -115,5 +115,4 @@ class ClientProtocol(DatagramProtocol):
         self.connection = ClientConnection(self)
     
     def datagramReceived(self, data, address):
-        print 'weeee'
         self.connection.data_received(data)
