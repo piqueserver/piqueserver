@@ -93,7 +93,7 @@ class ConnectionRequest(PacketLoader):
         self.version = dword_7
     
     def write(self, reader):
-        reader.writeShort(0)
+        reader.writeShort(5) # fix again
         if self.client:
             value = -1
         else:

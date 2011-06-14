@@ -7,8 +7,12 @@ sys.path.insert(0, '../feature_server')
 
 setup(
     console = ['../feature_server/run.py'],
+    zipfile = None,
     options = {
         'py2exe' : {
+            'compressed' : 1,
+            'optimize' : 2,
+            'bundle_files' : 1,
             'includes' : ['zope.interface', 'twisted.web.resource'],
             'packages' : ['pyspades', 'win32com']
         }}
