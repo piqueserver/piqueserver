@@ -68,7 +68,6 @@ class Heightmap:
         for iterations in xrange(8):
             jitterrange = jittervalue * spanscaling
             jitteroffset = - jitterrange / 2
-            print(jitterrange)
             for x in xrange(0,self.width,span):
                 for y in xrange(0,self.height,span):
                     halfspan = span >> 1
@@ -188,10 +187,11 @@ class Heightmap:
                     avg = ((nearbyheight1 + nearbyheight2 + nearbyheight3) / 3. + curheight) / 2.
                     modavg = 63 - int(avg*63)
                     col = zcoltable[modavg]
-                    for z in xrange(0, 64):
+                    for z in xrange(2, 63):
                         if modavg<=z:
                             vxl.set_point_unsafe(mx+adder[0], my+adder[1], z, col)
-        return vxl.generate()
+                    vxl.set_point_unsafe(mx+adder[0], my+adder[1], 63, col)
+        return vxl
     def writeBMP(self):
         import Image
         result = Image.new('RGB',(hmap.width,hmap.height))
@@ -201,8 +201,6 @@ class Heightmap:
             converted.append((val,val,val))
         result.putdata(converted)
         result.save("result.bmp")
-
-hmap = Heightmap()
 
 def algorithm_1(hmap):
     """Large mountain peaks, rough foothills, lakes"""
@@ -231,14 +229,17 @@ def algorithm_3(hmap):
     hmap.smoothing()
     hmap.smoothing()
 
-algorithm_2(hmap)
-hmap2 = Heightmap()
-algorithm_3(hmap2)
-hmap3 = Heightmap()
-algorithm_1(hmap3)
-hmap.blend_heightmaps(hmap2,hmap3)
-hmap.offset_z(-0.05)
+def generator_random():
 
-vxlfile = open("../feature_server/maps/autogen.vxl",'wb')
-vxlfile.write(hmap.writeVXL())
-vxlfile.close()
+    print("""Please wait, running "random" map generator.""")
+    hmap = Heightmap()
+
+    algorithm_2(hmap)
+    hmap2 = Heightmap()
+    algorithm_3(hmap2)
+    hmap3 = Heightmap()
+    algorithm_1(hmap3)
+    hmap.blend_heightmaps(hmap2,hmap3)
+    hmap.offset_z(-0.05)
+
+    return hmap.writeVXL()
