@@ -1,11 +1,4 @@
-{
-    "name" : "pyspades",
-    "version" : "1.0",
-    "author" : "TheGrandmaster and Tegu",
-    "description" : "Official pyspades default map!",
-    
-    "_comment" : "Indestructable blocks that cannot be destroyed",
-    "_comment" : "Format is [[r1, r2], [g1, g2], [b1, b2]], as in color ranges",
-    "_comment" : "Indestructable blocks can still be destroyed if they 'fall'",
-    "indestructable_blocks" : []
-}
+name = 'pyspades'
+version = '1.0'
+author = 'TheGrandmaster and Tegu'
+description = 'Official pyspades default map!'

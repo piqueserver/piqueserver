@@ -116,8 +116,7 @@ class FeatureConnection(ServerConnection):
         if not self.god:
             if not self.protocol.building:
                 return False
-            elif (self.protocol.indestructable_blocks or
-                self.protocol.user_blocks is not None):
+            elif self.protocol.user_blocks is not None:
                 is_indestructable = self.protocol.is_indestructable
                 if mode == DESTROY_BLOCK:
                     if is_indestructable(x, y, z):
@@ -232,11 +231,6 @@ def encode_lines(value):
             lines.append(encode(line))
         return lines
 
-def make_range_object(value):
-    if len(value) == 1:
-        return xrange(value, value + 1)
-    return xrange(value[0], value[1])
-
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
     version = CLIENT_VERSION
@@ -261,15 +255,12 @@ class FeatureProtocol(ServerProtocol):
     votes = None
     
     map_info = None
-    indestructable_blocks = None
     spawns = None
     user_blocks = None
     
-    def __init__(self):
-        try:
-            config = json.load(open('config.txt', 'rb'))
-        except IOError, e:
-            raise SystemExit('no config.txt file found')
+    def __init__(self, config, map):
+        self.map = map.data
+        self.map_info = map
         try:
             self.bans = set(json.load(open('bans.txt', 'rb')))
         except IOError:
@@ -278,23 +269,6 @@ class FeatureProtocol(ServerProtocol):
         self.config = config
         self.name = config.get('name', 
             'pyspades server %s' % random.randrange(0, 2000))
-        try:
-            map = Map(config['map'])
-            self.map = map.data
-            self.map_info = map
-        except KeyError:
-            raise SystemExit('no map specified!')
-            return
-        except IOError:
-            raise SystemExit('map not found!')
-            return
-        
-        self.indestructable_blocks = indestructable_blocks = []
-        for r, g, b in map.indestructable_blocks:
-            r = make_range_object(r)
-            g = make_range_object(g)
-            b = make_range_object(b)
-            indestructable_blocks.append((r, g, b))
         
         self.max_scores = config.get('cap_limit', None)
         self.respawn_time = config.get('respawn_time', 5)
@@ -346,11 +320,6 @@ class FeatureProtocol(ServerProtocol):
         if self.user_blocks is not None:
             if (x, y, z) not in self.user_blocks:
                 return True
-        if self.indestructable_blocks:
-            r, g, b = self.map.get_point(x, y, z)[1][:-1]
-            for r_range, g_range, b_range in self.indestructable_blocks:
-                if r in r_range and g in g_range and b in b_range:
-                    return True
         return False
     
     def format_lines(self, value):
@@ -475,6 +444,37 @@ class FeatureProtocol(ServerProtocol):
 
 PORT = 32887
 
-reactor.listenUDP(PORT, FeatureProtocol())
+try:
+    config = json.load(open('config.txt', 'rb'))
+except IOError, e:
+    raise SystemExit('no config.txt file found')
+
+try:
+    map = Map(config['map'])
+except KeyError:
+    raise SystemExit('no map specified!')
+except IOError:
+    raise SystemExit('map not found!')
+
+# apply scripts
+
+protocol_class = FeatureProtocol
+connection_class = FeatureConnection
+
+script_objects = []
+
+for script in config.get('scripts', []):
+    module = __import__('scripts.%s' % script, globals(), locals(), [script])
+    script_objects.append(module)
+
+script_objects.append(map)
+
+for script in script_objects:
+    protocol_class, connection_class = script.apply_script(protocol_class,
+        connection_class, config)
+
+protocol_class.connection_class = connection_class
+
+reactor.listenUDP(PORT, protocol_class(config, map))
 print 'Started server on port %s...' % PORT
 reactor.run()

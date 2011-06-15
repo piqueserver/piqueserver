@@ -1,8 +1,5 @@
-{
-    "name" : "Mesa",
-    "version" : "4.0",
-    "author" : "Triplefox",
-    "description" : "Aliens have landed in the desert. Blue and Green fight for control over their technology.",
-    
-    "indestructable_blocks" : []
-}
+name = 'Mesa'
+version = '4.0'
+author = 'Triplefox'
+description = """Aliens have landed in the desert. Blue and Green fight for the
+control over their technology."""

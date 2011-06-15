@@ -45,5 +45,13 @@
         "port" : 6667,
         "channel" : "#pyspades.bots",
         "commandprefix" : "."
+    },
+
+    "scripts" : [
+        "welcome"
+    ],
+    
+    "welcomes" : {
+        "mat^2" : "The very likeable mat^2 has entered!"
     }
 }
