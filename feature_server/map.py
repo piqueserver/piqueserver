@@ -1,7 +1,7 @@
 from pyspades.load import VXLData
 
 import os
-import json
+import imp
 
 import mapmaker
 
@@ -13,33 +13,39 @@ class Map(object):
     author = None
     version = None
     description = None
-    indestructable_blocks = None
     
     data = None
     info = None
     def __init__(self, name, load_dir = './maps'):
-        self.loadInfo(name, load_dir)       
-        if not self.generator(name, load_dir):
-            self.loadVXL(name, load_dir)
-    def loadInfo(self, name, load_dir):
+        self.load_information(name, load_dir)
+        if not self.generate_map(name):
+            self.load_vxl(name, load_dir)
+
+    def load_information(self, name, load_dir):
         info_file = os.path.join(load_dir, '%s.txt' % name)
         try:
-            info = json.load(open(info_file, 'rb'))
+            info = imp.load_source(name, info_file)
         except IOError:
-            info = {}
-            
-        self.name = info.get('name', name)
-        self.author = info.get('author', '(unknown)')
-        self.version = info.get('version', '1.0')
-        self.description = info.get('description', '')
-        self.indestructable_blocks = info.get('indestructable_blocks', [])
-    def loadVXL(self, name, load_dir):
+            info = None
+        self.name = getattr(info, 'name', name)
+        self.author = getattr(info, 'author', '(unknown)')
+        self.version = getattr(info, 'version', '1.0')
+        self.description = getattr(info, 'description', '')
+        self.script = getattr(info, 'apply_script', None)
+        
+    def apply_script(self, protocol, connection, config):
+        if self.script is not None:
+            protocol, connection = self.script(protocol, connection, config)
+        return protocol, connection
+
+    def load_vxl(self, name, load_dir):
         data_file = os.path.join(load_dir, '%s.vxl' % name)
         if not os.path.isfile(data_file):
             raise MapNotFound('map %s does not exist' % name)
         self.data = VXLData(open(data_file, 'rb'))
-    def generator(self, name, load_dir):
-        if name=="random":
+
+    def generate_map(self, name):
+        if name == 'random':
             self.data = mapmaker.generator_random()
             self.author = "Triplefox"
             return True

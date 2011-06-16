@@ -346,6 +346,11 @@ commands = {}
 for command_func in command_list:
     commands[command_func.func_name] = command_func
 
+def add(self, func, name = None):
+    if name is None:
+        name = func.func_name
+    commands[name.lower()] = func
+
 def handle_command(connection, command, parameters):
     command = command.lower()
     try:
