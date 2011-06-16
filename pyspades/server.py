@@ -74,6 +74,8 @@ class ServerConnection(BaseConnection):
     position = orientation = None
     fire = jump = aim = crouch = None
     
+    speed_limit_grace = 5
+    
     def __init__(self, protocol, address):
         BaseConnection.__init__(self)
         self.protocol = protocol
@@ -204,10 +206,9 @@ class ServerConnection(BaseConnection):
                     elif contained.id == clientloaders.PositionData.id:
                         if not self.hp:
                             return
-                        self.position.set(contained.x, contained.y, contained.z)
-                        position_data.x = contained.x
-                        position_data.y = contained.y
-                        position_data.z = contained.z
+                        
+                        self.enforce_speed_limit(contained)
+                        
                         position_data.player_id = self.player_id
                         other_flag = self.team.other.flag
                         if vector_collision(self.position, self.team.base):
@@ -337,6 +338,43 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(block_action, save = True)
                         self.protocol.update_entities()
             return
+
+    def disable_speed_limit(self):
+        self.speed_limit_grace = 5
+    def enforce_speed_limit(self, contained):
+        """Regulates the maximum movement speed to combat cheating.
+        A grace period variable is used to accomodate server
+        manipulations of position.
+
+        Observed max walk speed: ~6.7 units/frame
+        Observed max fall speed: ~31 units/frame
+        Observed max climb speed: ~5 units/frame
+
+        These values may need further tuning.
+        """
+        
+        xdiff = abs(self.position.x-contained.x)
+        ydiff = abs(self.position.y-contained.y)
+        zdiff = self.position.z-contained.z
+        
+        if self.speed_limit_grace<1 and (xdiff>7 or ydiff>7 or zdiff<-35 or zdiff>5.1):
+            # They went too fast, throw their old pos back at them.
+            position_data.x = self.position.x
+            position_data.y = self.position.y
+            position_data.z = self.position.z
+            position_data.player_id = self.player_id
+            self.protocol.send_contained(position_data)
+            position_data.x = self.position.x
+            position_data.y = self.position.y
+            position_data.z = self.position.z
+        else:
+            if xdiff != 0 or ydiff != 0 or zdiff != 0:
+                # As soon as they start moving we start dropping the grace period.
+                self.speed_limit_grace -= 1
+            self.position.set(contained.x, contained.y, contained.z)
+            position_data.x = contained.x
+            position_data.y = contained.y
+            position_data.z = contained.z
     
     def refill(self):
         self.hp = 100
@@ -359,6 +397,7 @@ class ServerConnection(BaseConnection):
                 self.respawn_time, self.spawn)
     
     def spawn(self, pos = None, name = None):
+        self.disable_speed_limit()
         self.spawn_call = None
         create_player.player_id = self.player_id
         self.orientation = Vertex3(0, 0, 0)

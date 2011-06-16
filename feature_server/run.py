@@ -219,6 +219,7 @@ class FeatureConnection(ServerConnection):
         return position.x, position.y, position.z
     
     def set_location(self, (x, y, z)):
+        self.disable_speed_limit()
         position_data.x = x
         position_data.y = y
         position_data.z = z
