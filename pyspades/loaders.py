@@ -56,7 +56,7 @@ class ConnectionRequest(PacketLoader):
     client = True
     value = None
     def read(self, reader):
-        word_1 = reader.readShort(True)
+        word_1 = reader.readShort(True) # usually 0, 1, 2, 3
         v10 = reader.readByte()
         v12 = reader.readByte()
         v16 = reader.readInt(True)
@@ -70,9 +70,7 @@ class ConnectionRequest(PacketLoader):
         # server responds with this in packet 3
         dword_6 = reader.readInt(True, False)
         dword_7 = reader.readInt(True, False) # version, CRC32 of exe
-        
-        if word_1 not in (0, 1, 2, 3):
-            raw_input('unknown word_1: %s' % word_1)
+
         if v10 == -1 and v12 == -1:
             self.client = True
         elif v10 != v12:
