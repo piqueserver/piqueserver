@@ -2,7 +2,8 @@ from map import Map
 from commands import add, admin
 from pyspades.common import coordinates
 from pyspades.server import block_action, set_color
-
+from twisted.internet import reactor
+from pyspades.constants import *
 import time
 
 @admin
