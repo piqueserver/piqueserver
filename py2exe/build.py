@@ -3,8 +3,8 @@ import py2exe
 
 # just so we always get commands.py first, not the stdlib commands.py
 import sys
-sys.path.insert(0, '..)
-sys.path.append('../feature_server')
+sys.path.insert(0, '../feature_server')
+sys.path.append('..')
 
 setup(
     console = ['../feature_server/run.py'],
