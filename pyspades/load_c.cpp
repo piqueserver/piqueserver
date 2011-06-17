@@ -80,7 +80,6 @@ MapData * load_vxl(unsigned char * v)
             int bottom_color_end; // exclusive
             int len_top;
             int len_bottom;
-            
             for(i=z; i < top_color_start; i++)
                map->geometry[get_pos(x, y, i)] = 0;
             color = (int *) (v+4);
@@ -94,7 +93,7 @@ MapData * load_vxl(unsigned char * v)
                v += 4 * (len_bottom + 1);
                break;
             }
-
+            
             // infer the number of bottom colors in next span from chunk length
             len_top = (number_4byte_chunks-1) - len_bottom;
 
@@ -201,6 +200,7 @@ int check_node(int x, int y, int z, MapData * map, int destroy)
 
 inline int is_surface(MapData * map, int x, int y, int z)
 {
+   if (z == 0) return 1;
    if (map->geometry[get_pos(x, y, z)]==0) return 0;
    if (x   >   0 && map->geometry[get_pos(x-1, y, z)]==0) return 1;
    if (x+1 < 512 && map->geometry[get_pos(x+1, y, z)]==0) return 1;
@@ -234,7 +234,7 @@ PyObject * save_vxl(MapData * map)
    int i,j,k;
    if (out_global == 0)
    {
-       out_global = (char *)malloc(6291456); // allocate 6 mb
+       out_global = (char *)malloc(6 * 1024 * 1024); // allocate 6 mb
    }
    char * out = out_global;
 
@@ -284,7 +284,7 @@ PyObject * save_vxl(MapData * map)
             while (z < MAP_Z && is_surface(map, i,j, z))
                ++z;
 
-            if (z == MAP_Z || 0)
+            if (z == MAP_Z)
                ; // in this case, the bottom colors of this span are empty, because we'l emit as top colors
             else {
                // otherwise, these are real bottom colors so we can write them
@@ -311,22 +311,21 @@ PyObject * save_vxl(MapData * map)
             }
             *out = top_colors_start;
             out += 1;
-            if (top_colors_end == 0)
-                *out = 0;
-            else
-                *out = top_colors_end - 1;
+            *out = top_colors_end - 1;
             out += 1;
             *out = air_start;
             out += 1;
 
             for (z=0; z < top_colors_len; ++z)
             {
+               // printf("writing top color at %d\n", out - out_global);
                write_color(out, map->colors[get_pos(i, j, 
                    top_colors_start + z)]);
                out += 4;
             }
             for (z=0; z < bottom_colors_len; ++z)
             {
+               // printf("writing top color at %d\n", out - out_global);
                write_color(out, map->colors[get_pos(i, j, 
                    bottom_colors_start + z)]);
                out += 4;
