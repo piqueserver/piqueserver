@@ -81,6 +81,14 @@ def ban(connection, value, *arg):
     player.ban(reason)
 
 @admin
+def unban(connection, ip):
+    try:
+        connection.protocol.remove_ban(ip)
+        return 'IP unbanned.'
+    except KeyError:
+        return 'IP not found in ban list.'
+
+@admin
 def say(connection, *arg):
     value = ' '.join(arg)
     connection.protocol.send_chat(value)
@@ -165,7 +173,8 @@ def follow(connection, player = None):
         similar to the squad spawning feature of Battlefield."""
     if player is None:
         if connection.follow is None:
-            return "You aren't following anybody. To follow a player say /follow <nickname>"
+            return ("You aren't following anybody. To follow a player say "
+                    "/follow <nickname>")
         else:
             player = connection.follow
             connection.follow = None
@@ -187,7 +196,8 @@ def follow(connection, player = None):
     connection.follow = player
     connection.respawn_time = connection.protocol.follow_respawn_time
     player.send_chat('%s is now following you.' % connection.name)
-    return 'Next time you die you will spawn where %s is. To stop, type /follow' % player.name
+    return ('Next time you die you will spawn where %s is. '
+            'To stop, type /follow' % player.name)
 
 @name('nofollow')
 def no_follow(connection):
@@ -309,7 +319,8 @@ def god(connection, value = None):
 @admin
 def reset_game(connection):
     connection.reset_game()
-    connection.protocol.send_chat('Game has been reset by %s' % (connection.name), irc = True)
+    connection.protocol.send_chat('Game has been reset by %s' % (
+        connection.name), irc = True)
     
 command_list = [
     help,
@@ -321,6 +332,7 @@ command_list = [
     vote_no,
     cancel_vote,
     ban,
+    unban,
     mute,
     unmute,
     say,
@@ -347,6 +359,9 @@ for command_func in command_list:
     commands[command_func.func_name] = command_func
 
 def add(self, func, name = None):
+    """
+    Function to add a command from scripts
+    """
     if name is None:
         name = func.func_name
     commands[name.lower()] = func

@@ -352,7 +352,14 @@ class FeatureProtocol(ServerProtocol):
                 connection.kick(silent = True)
         if not temporary:
             self.bans.add(ip)
-            json.dump(list(self.bans), open('bans.txt', 'wb'))
+            self.save_bans()
+    
+    def remove_ban(self, ip):
+        self.bans.remove(ip)
+        self.save_bans()
+    
+    def save_bans(self):
+        json.dump(list(self.bans), open('bans.txt', 'wb'))
     
     def datagramReceived(self, data, address):
         if address[0] in self.bans or address[0] in self.temp_bans:

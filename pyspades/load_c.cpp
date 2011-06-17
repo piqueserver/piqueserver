@@ -318,14 +318,12 @@ PyObject * save_vxl(MapData * map)
 
             for (z=0; z < top_colors_len; ++z)
             {
-               // printf("writing top color at %d\n", out - out_global);
                write_color(out, map->colors[get_pos(i, j, 
                    top_colors_start + z)]);
                out += 4;
             }
             for (z=0; z < bottom_colors_len; ++z)
             {
-               // printf("writing top color at %d\n", out - out_global);
                write_color(out, map->colors[get_pos(i, j, 
                    bottom_colors_start + z)]);
                out += 4;
