@@ -51,6 +51,8 @@ from map import Map
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.python import log
+from twisted.internet.stdio import StandardIO
+from twisted.protocols.basic import LineReceiver
 from pyspades.common import encode, decode
 from pyspades.constants import *
 
@@ -58,6 +60,15 @@ import json
 import random
 import time
 import commands
+
+class ConsoleInput(LineReceiver):
+    delimiter = '\n'
+    protocol = None
+    def __init__(self, protocol):
+        self.protocol = protocol
+
+    def lineReceived(self, line):
+        self.protocol.send_chat(line)
 
 def writelines(fp, lines):
     for line in lines:
@@ -307,7 +318,11 @@ class FeatureProtocol(ServerProtocol):
             log.addObserver(observer.emit)
             log.msg('pyspades server started on %s' % time.strftime('%c'))
         log.startLogging(sys.stdout) # force twisted logging
-            
+        
+        if sys.platform != 'win32':
+            self.console = ConsoleInput(self)
+            StandardIO(self.console)
+        
         for password in self.admin_passwords:
             if password == 'replaceme':
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
@@ -445,7 +460,8 @@ class FeatureProtocol(ServerProtocol):
         self.votes = self.votekick_call = None
         self.voting_player = None
     
-    def send_chat(self, value, global_message = True, sender = None, irc = False):
+    def send_chat(self, value, global_message = True, sender = None, 
+                  irc = False):
         if irc:
             self.irc_say('* %s' % value)
         ServerProtocol.send_chat(self, value, global_message, sender)
