@@ -1,9 +1,9 @@
-from pyspades.server import (ServerProtocol, ServerConnection,
-                            position_data, orientation_data, grenade_packet,
-                            block_action, set_color, intel_action)
+from pyspades.server import orientation_data, grenade_packet
 from pyspades.serverloaders import PositionData
 from pyspades.common import coordinates
 from pyspades.collision import distance_3d_vector
+from twisted.internet import reactor
+import random
 import commands
 
 def airstrike(connection, value = None):

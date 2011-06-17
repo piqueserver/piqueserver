@@ -106,7 +106,8 @@ cdef class VXLData:
                 return h_z + 1
         return 0
     
-    def remove_point(self, int x, int y, int z, bint user = True, bint no_collapse = False):
+    def remove_point(self, int x, int y, int z, bint user = True, 
+                     bint no_collapse = False):
         if x < 0 or x >= 512 or y < 0 or y >= 512 or z < 0 or z >= 64:
             return
         if user and z == 62:
