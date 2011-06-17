@@ -353,18 +353,16 @@ class ServerConnection(BaseConnection):
         ydiff = (self.position.y - contained.y)
         xydiff = math.sqrt(xdiff * xdiff + ydiff * ydiff) / delta_time
         zdiff = (self.position.z-contained.z) / delta_time
-
-        if self.speed_limit_grace<1 and (xydiff>MAX_WALK_SPEED or
-            zdiff<MAX_FALL_SPEED or zdiff>MAX_CLIMB_SPEED):
-            ## They went too fast, throw their old pos back at them.
+        
+        position_data.player_id = self.player_id
+        
+        if self.speed_limit_grace < 1 and (xydiff > MAX_WALK_SPEED or
+           zdiff < MAX_FALL_SPEED or zdiff > MAX_CLIMB_SPEED):
+            # They went too fast, throw their old pos back at them.
             position_data.x = self.position.x
             position_data.y = self.position.y
             position_data.z = self.position.z
-            position_data.player_id = self.player_id
             self.protocol.send_contained(position_data)
-            position_data.x = self.position.x
-            position_data.y = self.position.y
-            position_data.z = self.position.z
         else:
             if xdiff != 0 or ydiff != 0 or zdiff != 0:
                 # As soon as they start moving we start dropping the grace period.
@@ -373,6 +371,7 @@ class ServerConnection(BaseConnection):
             position_data.x = contained.x
             position_data.y = contained.y
             position_data.z = contained.z
+            self.protocol.send_contained(position_data)
     
     def refill(self):
         self.hp = 100
