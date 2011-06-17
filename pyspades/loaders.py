@@ -246,7 +246,6 @@ class Packet11(PacketLoader):
         self.dword_2 = reader.readInt(True)
         self.dword_3 = reader.readInt(True)
         print 'PACKET 11:', self.dword_1, self.dword_2, self.dword_3
-        raw_input()
     
     def write(self, reader):
         reader.writeInt(self.dword_1, True)
