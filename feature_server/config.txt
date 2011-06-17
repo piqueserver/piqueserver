@@ -25,6 +25,7 @@
     "max_followers" : 3,
     "master" : true,
     "friendly_fire" : false,
+    "network_interface" : "",
     "passwords" : {
         "admin" : ["replaceme"]
     },

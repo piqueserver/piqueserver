@@ -20,11 +20,14 @@ pyspades - default/featured server
 """
 
 import sys
+import os
 
 frozen = hasattr(sys, 'frozen')
 
 if frozen:
     CLIENT_VERSION = int(open('client_version', 'rb').read())
+    path = os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding()))
+    sys.path.append(path)
 else:
     sys.path.append('..')
     from pyspades.common import crc32
@@ -531,6 +534,7 @@ for script in script_objects:
 
 protocol_class.connection_class = connection_class
 
-reactor.listenUDP(PORT, protocol_class(config, map))
+reactor.listenUDP(PORT, protocol_class(config, map), 
+    config.get('network_interface', ''))
 print 'Started server on port %s...' % PORT
 reactor.run()

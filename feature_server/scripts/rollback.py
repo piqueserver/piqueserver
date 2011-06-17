@@ -36,6 +36,7 @@ for func in (rollmap, rollback, rollbackcancel):
 def apply_script(protocol, connection, config):
     rollback_on_game_end = config.get('rollback_on_game_end', False)
     rollback_map = Map(config['map']).data
+    
     class RollbackConnection(connection):
         def on_block_color(self, (r, g, b)):
             if (self.protocol.rollback_in_progress and
