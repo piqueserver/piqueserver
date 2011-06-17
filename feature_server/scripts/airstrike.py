@@ -7,8 +7,6 @@ from pyspades.collision import distance_3d_vector
 import commands
 
 def airstrike(connection, value = None):
-    if not connection.protocol.airstrikes:
-        return
     return connection.start_airstrike(value)
 
 commands.add(airstrike)
@@ -119,32 +117,32 @@ def apply_script(protocol, connection, config):
                     reactor.callLater(time, self.desync_grenade, x, y, z,
                         orientation_x, fuse)
 
-    def add_score(self, score):
-        connection.add_score(self, score)
-        score_req = self.protocol.airstrike_min_score_req
-        streak_req = self.protocol.airstrike_streak_req
-        score_met = (self.kills >= score_req)
-        streak_met = (self.streak >= streak_req)
-        give_strike = False
-        if not score_met:
-            return
-        if self.kills - score < score_req:
-            self.send_chat('You have unlocked airstrike support!')
-            self.send_chat('Each %s-kill streak will clear you for one '
-                           'airstrike.' % streak_req)
-            if streak_met:
-                give_strike = True
-        if not streak_met:
-            return
-        if (self.streak % streak_req == 0 or give_strike):
-            self.send_chat('Airstrike support ready! Launch with e.g. '
-                           '/airstrike B4')
-            self.airstrike = True
-            self.refill()
+        def add_score(self, score):
+            connection.add_score(self, score)
+            score_req = self.protocol.airstrike_min_score_req
+            streak_req = self.protocol.airstrike_streak_req
+            score_met = (self.kills >= score_req)
+            streak_met = (self.streak >= streak_req)
+            give_strike = False
+            if not score_met:
+                return
+            if self.kills - score < score_req:
+                self.send_chat('You have unlocked airstrike support!')
+                self.send_chat('Each %s-kill streak will clear you for one '
+                               'airstrike.' % streak_req)
+                if streak_met:
+                    give_strike = True
+            if not streak_met:
+                return
+            if (self.streak % streak_req == 0 or give_strike):
+                self.send_chat('Airstrike support ready! Launch with e.g. '
+                               '/airstrike B4')
+                self.airstrike = True
+                self.refill()
     
     class AirstrikeProtocol(protocol):
         airstrike_min_score_req = 15
         airstrike_streak_req = 6
         airstrike_interval = 20
     
-    return protocol, AirstrikeConnection
+    return AirstrikeProtocol, AirstrikeConnection

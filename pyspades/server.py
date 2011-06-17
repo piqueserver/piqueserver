@@ -215,7 +215,7 @@ class ServerConnection(BaseConnection):
                             if other_flag.player is self:
                                 self.capture_flag()
                             last_refill = self.last_refill
-                            if (last_refill is not None and 
+                            if (last_refill is None or 
                             reactor.seconds() - last_refill > 
                             self.protocol.refill_interval):
                                 self.last_refill = reactor.seconds()
