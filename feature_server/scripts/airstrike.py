@@ -35,10 +35,10 @@ def apply_script(protocol, connection, config):
                 for packet in packets:
                     packet.player_id = self.aux.player_id
                     if packet is orientation_data:
-                        target.send_contained(packet, 
-                            target.get_orientation_sequence())
+                        self.send_contained(packet, 
+                            self.get_orientation_sequence())
                     else:
-                        target.send_contained(packet)
+                        self.send_contained(packet)
             else:
                 for packet in packets:
                     self.protocol.send_contained(packet)
