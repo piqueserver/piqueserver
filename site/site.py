@@ -1,3 +1,12 @@
+import sys
+
+args = sys.argv[1:]
+
+if len(args) != 1:
+    raise SystemExit('usage: %s <output html path>' % sys.argv[0])
+
+OUTPUT = args[0]
+
 from twisted.internet import reactor
 from twisted.internet.protocol import DatagramProtocol
 from pyspades.site import get_servers
@@ -6,7 +15,6 @@ from pyspades.tools import make_server_number
 UPDATE_INTERVAL = 10
 PYSPADES_TIMEOUT = 2
 INPUT = 'in.html'
-OUTPUT = 'index.html'
 
 SERVER_TEMPLATE = """
 <tr>
