@@ -62,7 +62,7 @@ class ClientConnection(BaseConnection):
         self.send_loader(loader, byte = 255)
     
     def loader_received(self, packet):
-        # print 'got:', packet
+        print 'got:', packet
         if packet.id == ConnectionResponse.id:
             self.connection_id = packet.connection_id
             self.unique = packet.unique
@@ -106,13 +106,14 @@ class ClientConnection(BaseConnection):
     def send_data(self, data):
         self.protocol.transport.write(data)
 
-class ClientProtocol(DatagramProtocol):    
+class ClientProtocol(DatagramProtocol):
+    connection_class = ClientConnection
     def __init__(self, host, port):
         self.host, self.port = host, port
     
     def startProtocol(self):
         self.transport.connect(self.host, self.port)
-        self.connection = ClientConnection(self)
+        self.connection = self.connection_class(self)
     
     def datagramReceived(self, data, address):
         self.connection.data_received(data)
