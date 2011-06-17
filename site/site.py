@@ -7,6 +7,8 @@ if len(args) != 1:
 
 OUTPUT = args[0]
 
+sys.path.append('..')
+
 from twisted.internet import reactor
 from twisted.internet.protocol import DatagramProtocol
 from pyspades.site import get_servers
