@@ -55,7 +55,6 @@ class QueryProtocol(DatagramProtocol):
         html = LIST_TEMPLATE % {'servers' : '\n'.join(html_servers)}
         data = data % {'servers' : '%s' % html}
         open(OUTPUT, 'wb').write(data)
-        print 'done'
         self.pyspades_set = None
     
     def got_servers(self, servers):
@@ -71,7 +70,6 @@ class QueryProtocol(DatagramProtocol):
     def datagramReceived(self, data, address):
         if self.pyspades_set is None or data != 'HI':
             return
-        print 'yay'
         self.pyspades_set.add(address[0])
     
 reactor.listenUDP(0, QueryProtocol())
