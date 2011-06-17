@@ -248,4 +248,4 @@ class BaseConnection(object):
         data = ByteWriter()
         contained.write(data)
         loader.data = data
-        return self.send_loader(loader, True)
+        return self.send_loader(loader, sequence is None)
