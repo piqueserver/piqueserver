@@ -43,6 +43,15 @@ def stringify(data, max = MAX_HEX_SIZE):
         data = '%s (...)' % data[:max]
     return '%r' % data
 
+def coordinates(data):
+    if len(data) != 2:
+        raise ValueError()
+    x = (ord(data[0].lower()) - ord('a')) * 64
+    y = (int(data[1]) - 1) * 64
+    if x < 0 or x >= 512 or y < 0 or y >= 512:
+        raise ValueError()
+    return x, y
+
 def compare_reader(reader, value, name):
     if reader.read(len(value)) != value:
         print '%s is wrong' % name

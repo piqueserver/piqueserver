@@ -138,9 +138,12 @@ def help(connection):
     """
     This help
     """
-    names = [command.func_name for command in command_list
-        if hasattr(command, 'admin') in (connection.admin, False)]
-    return 'Available commands: %s' % (', '.join(names))
+    if connection.protocol.help is not None and not connection.god:
+        connection.send_lines(connection.protocol.help)
+    else:
+        names = [command.func_name for command in command_list
+            if hasattr(command, 'admin') in (connection.admin, False)]
+        return 'Available commands: %s' % (', '.join(names))
 
 def login(connection, password):
     """
@@ -171,6 +174,8 @@ def pm(connection, value, *arg):
 def follow(connection, player = None):
     """Follow a player; on your next spawn, you'll spawn at their position,
         similar to the squad spawning feature of Battlefield."""
+    if not connection.protocol.max_followers:
+        return
     if player is None:
         if connection.follow is None:
             return ("You aren't following anybody. To follow a player say "
@@ -196,17 +201,22 @@ def follow(connection, player = None):
     connection.follow = player
     connection.respawn_time = connection.protocol.follow_respawn_time
     player.send_chat('%s is now following you.' % connection.name)
-    return ('Next time you die you will spawn where %s is. '
-            'To stop, type /follow' % player.name)
+    return ('Next time you die you will spawn where %s is. To stop, type /follow' %
+        player.name)
 
 @name('nofollow')
 def no_follow(connection):
+    if not connection.protocol.max_followers:
+        return
     connection.followable = not connection.followable
     if not connection.followable:
         connection.drop_followers()
     return 'Teammates will %s be able to follow you.' % (
         'now' if connection.followable else 'no longer')
 
+def streak(connection):
+    return ('Your current kill streak is %s. Best is %s kills.' %
+        (connection.streak, connection.best_streak))
 @admin
 def lock(connection, value):
     team = get_team(connection, value)
@@ -227,6 +237,9 @@ def unlock(connection, value):
 def switch(connection, value = None):
     if value is not None:
         connection = get_player(connection.protocol, value)
+    connection.follow = None
+    connection.drop_followers()
+    connection.respawn_time = connection.protocol.respawn_time
     connection.team = connection.team.other
     connection.kill()
     connection.protocol.send_chat('%s has switched teams' % connection.name)
@@ -288,8 +301,6 @@ def unmute(connection, value):
     message = '%s has been unmuted by %s' % (player.name, connection.name)
     connection.protocol.send_chat(message, irc = True)
 
-from pyspades.server import position_data
-
 @admin
 def teleport(connection, player1, player2 = None):
     player1 = get_player(connection.protocol, player1)
@@ -305,6 +316,17 @@ def teleport(connection, player1, player2 = None):
     player.set_location(target.get_location())
     connection.protocol.send_chat(message, irc = True)
 
+from pyspades.common import coordinates
+
+@admin
+def goto(connection, value):
+    x, y = coordinates(value)
+    x += 32
+    y += 32
+    connection.set_location((x, y, connection.protocol.map.get_height(x, y) - 2))
+    message = '%s teleported to location %s' % (connection.name, value.upper())
+    connection.protocol.send_chat(message, irc = True)
+
 @admin
 def god(connection, value = None):
     if value is not None:
@@ -316,11 +338,12 @@ def god(connection, value = None):
         message = '%s returned to being a mere human.' % connection.name
     connection.protocol.send_chat(message, irc = True)
 
+@name ('resetgame')
 @admin
 def reset_game(connection):
-    connection.reset_game()
-    connection.protocol.send_chat('Game has been reset by %s' % (
-        connection.name), irc = True)
+    connection.protocol.reset_game(connection)
+    connection.protocol.send_chat('Game has been reset by %s' % connection.name,
+        irc = True)
     
 command_list = [
     help,
@@ -347,9 +370,11 @@ command_list = [
     toggle_kill,
     toggle_teamkill,
     teleport,
+    goto,
     god,
     follow,
     no_follow,
+    streak,
     reset_game
 ]
 
@@ -358,7 +383,7 @@ commands = {}
 for command_func in command_list:
     commands[command_func.func_name] = command_func
 
-def add(self, func, name = None):
+def add(func, name = None):
     """
     Function to add a command from scripts
     """

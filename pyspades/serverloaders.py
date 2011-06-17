@@ -23,6 +23,12 @@ class _InformationCommon(PacketLoader):
     y = None
     z = None
     player_id = None
+    def set(self, (x, y, z), player_id):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.player_id = player_id
+    
     def read(self, reader):
         reader.skipBytes(1)
         self.player_id = reader.readByte(True)

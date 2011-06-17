@@ -69,9 +69,10 @@ class ServerConnection(BaseConnection):
     spawn_call = None
     respawn_time = None
     saved_loaders = None
+    last_refill = None
 
     speed_limit_grace = 5
-    movement_timestamp = 0.
+    movement_timestamp = 0.0
     
     up = down = left = right = False
     position = orientation = None
@@ -181,7 +182,8 @@ class ServerConnection(BaseConnection):
                         self.team = team
                     if self.name is None and contained.name is not None:
                         name = contained.name
-                        if name == 'Deuce': # vanilla AoS behaviour
+                         # vanilla AoS behaviour
+                        if name == 'Deuce':
                             name = name + str(self.player_id)
                         self.name = self.protocol.get_name(name)
                         self.protocol.players[self.name, self.player_id] = self
@@ -207,14 +209,18 @@ class ServerConnection(BaseConnection):
                     elif contained.id == clientloaders.PositionData.id:
                         if not self.hp:
                             return
-                        
                         self.update_position(contained)
-
                         other_flag = self.team.other.flag
                         if vector_collision(self.position, self.team.base):
-                            self.refill()
                             if other_flag.player is self:
                                 self.capture_flag()
+                            last_refill = self.last_refill
+                            if (last_refill is not None and 
+                            reactor.seconds() - last_refill > 
+                            self.protocol.refill_interval):
+                                self.last_refill = reactor.seconds()
+                                if self.on_refill() != False:
+                                    self.refill()
                         if other_flag.player is None and vector_collision(
                         self.position, other_flag):
                             self.take_flag()
@@ -263,7 +269,10 @@ class ServerConnection(BaseConnection):
                         set_weapon.value = contained.value
                         self.protocol.send_contained(set_weapon, sender = self)
                     elif contained.id == clientloaders.SetColor.id:
-                        self.color = get_color(contained.value)                        
+                        color = get_color(contained.value)
+                        if self.on_color_set(color) == False:
+                            return
+                        self.color = color
                         set_color.player_id = self.player_id
                         set_color.value = contained.value
                         self.protocol.send_contained(set_color, sender = self,
@@ -336,6 +345,11 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(block_action, save = True)
                         self.protocol.update_entities()
             return
+    
+    def get_orientation_sequence(self):
+        sequence = self.orientation_sequence
+        self.orientation_sequence = (sequence + 1) & 0xFFFF
+        return sequence
 
     def disable_speed_limit(self):
         self.speed_limit_grace = 5
@@ -411,27 +425,6 @@ class ServerConnection(BaseConnection):
         self.grenades = 2
         self.protocol.send_contained(create_player, save = True)
         self.on_spawn(pos, name)
-
-    def reset_game(self):
-        blue_team = self.protocol.blue_team
-        green_team = self.protocol.green_team
-        blue_team.initialize()
-        green_team.initialize()
-        blue_team = self.protocol.blue_team
-        green_team = self.protocol.green_team
-        intel_action.blue_flag_x = blue_team.flag.x
-        intel_action.blue_flag_y = blue_team.flag.y
-        intel_action.blue_base_x = blue_team.base.x
-        intel_action.blue_base_y = blue_team.base.y
-        intel_action.green_flag_x = green_team.flag.x
-        intel_action.green_flag_y = green_team.flag.y
-        intel_action.green_base_x = green_team.base.x
-        intel_action.green_base_y = green_team.base.y
-        self.protocol.reset_game()
-        intel_action.action_type = 3
-        intel_action.player_id = self.player_id
-        intel_action.game_end = True
-        self.protocol.send_contained(intel_action, save = True)
     
     def capture_flag(self):
         other_team = self.team.other
@@ -439,10 +432,11 @@ class ServerConnection(BaseConnection):
         player = flag.player
         if player is not self:
             return
-        self.kills += 10 # 10 points for intel
+        self.add_score(10) # 10 points for intel
         if (self.protocol.max_score not in (0, None) and 
         self.team.score + 1 >= self.protocol.max_score):
-            self.reset_game()
+            self.protocol.reset_game()
+            self.protocol.on_game_end(self)
         else:
             intel_action.action_type = 3
             intel_action.player_id = self.player_id
@@ -509,6 +503,7 @@ class ServerConnection(BaseConnection):
     def kill(self, by = None):
         if self.hp is None:
             return
+        self.on_kill(by)
         self.hp = None
         self.drop_flag()
         if by is None:
@@ -520,10 +515,13 @@ class ServerConnection(BaseConnection):
             sender = self
         else:
             if by is not None:
-                by.kills += 1
+                by.add_score(1)
             sender = None
         self.protocol.send_contained(kill_action, sender = sender, save = True)
         self.respawn()
+
+    def add_score(self, score):
+        self.kills += score
     
     def send_map(self, ack = None):
         if self.map_data is None:
@@ -592,6 +590,9 @@ class ServerConnection(BaseConnection):
     def on_hit(self, hit_amount, hit_player):
         pass
     
+    def on_kill(self, killer):
+        pass
+    
     def on_team_join(self, team):
         pass
     
@@ -602,6 +603,12 @@ class ServerConnection(BaseConnection):
         pass
 
     def on_block_destroy(self, x, y, z, mode):
+        pass
+    
+    def on_refill(self):
+        pass
+    
+    def on_color_set(self, color):
         pass
 
 class Vertex3(object):
@@ -701,6 +708,7 @@ class ServerProtocol(DatagramProtocol):
     server_prefix = '[*]'
     
     respawn_time = 5
+    refill_interval = 20
     
     master_connection = None
     
@@ -715,6 +723,25 @@ class ServerProtocol(DatagramProtocol):
         self.green_team.other = self.blue_team
     
     def reset_game(self):
+        blue_team = self.blue_team
+        green_team = self.green_team
+        blue_team.initialize()
+        green_team.initialize()
+        blue_team = self.blue_team
+        green_team = self.green_team
+        intel_action.blue_flag_x = blue_team.flag.x
+        intel_action.blue_flag_y = blue_team.flag.y
+        intel_action.blue_base_x = blue_team.base.x
+        intel_action.blue_base_y = blue_team.base.y
+        intel_action.green_flag_x = green_team.flag.x
+        intel_action.green_flag_y = green_team.flag.y
+        intel_action.green_base_x = green_team.base.x
+        intel_action.green_base_y = green_team.base.y
+        intel_action.action_type = 3
+        intel_action.player_id = self.player_id
+        intel_action.game_end = True
+        self.send_contained(intel_action, save = True)
+
         for player in self.players.values():
             if player.name is not None:
                 player.spawn()
@@ -798,16 +825,22 @@ class ServerProtocol(DatagramProtocol):
             if team is not None and player.team is not team:
                 continue
             if sequence:
-                player.orientation_sequence = (player.orientation_sequence + 1
-                    ) & 0xFFFF
-                loader.sequence2 = player.orientation_sequence
+                loader.sequence2 = player.get_orientation_sequence()
             if player.saved_loaders is not None and save:
                 player.saved_loaders.append(data)
             else:
                 player.send_loader(loader, not sequence)
     
-    def send_chat(self, value, global_message = True, sender = None):
+    def send_chat(self, value, global_message = True, sender = None,
+                  team = None):
         for player in self.players.values():
             if player is sender:
                 continue
+            if team is not None and player.team is not team:
+                continue
             player.send_chat(value, global_message)
+
+    # events
+    
+    def on_game_end(self, player):
+        pass

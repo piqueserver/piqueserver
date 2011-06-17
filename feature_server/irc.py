@@ -202,11 +202,16 @@ def who(bot, user):
         msg += ": %s" % (', '.join(names))
     bot.me(msg)
 
+def score(bot, user):
+    bot.me("scores: Blue %s - Green %s" % (bot.factory.server.blue_team.score,
+        bot.factory.server.green_team.score))
+
 command_list = [
     mute,
     unmute,
     kick,
-    who
+    who,
+    score
 ]
 
 commands = {}

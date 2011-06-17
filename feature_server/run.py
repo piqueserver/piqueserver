@@ -82,6 +82,8 @@ class FeatureConnection(ServerConnection):
     god = False
     follow = None
     followable = True
+    streak = 0
+    best_streak = 0
     
     def on_join(self):
         if self.protocol.motd is not None:
@@ -146,10 +148,27 @@ class FeatureConnection(ServerConnection):
     
     def on_hit(self, hit_amount, player):
         if not self.protocol.killing:
+            self.send_chat(
+                "You can't kill anyone right now! Damage is turned OFF")
             return False
         elif player.god:
-            self.send_chat("You can't hurt %s! That player is in *god mode*" % player.name)
+            self.send_chat("You can't hurt %s! That player is in *god mode*" %
+                player.name)
             return False
+        if self.god:
+            self.protocol.send_chat('%s, killing in god mode is forbidden!' %
+                self.name, irc = True)
+            self.protocol.send_chat('%s returned to being a mere human.' %
+                self.name, irc = True)
+            self.god = False
+
+    def on_kill(self, killer):
+        self.streak = 0
+        self.airstrike = False
+        if killer is None:
+            return
+        killer.streak += 1
+        killer.best_streak = max(killer.streak, killer.best_streak)
     
     def on_grenade(self, time_left):
         if not self.protocol.killing:
@@ -213,7 +232,7 @@ class FeatureConnection(ServerConnection):
     def get_follow_location(self):
         x, y, z = (self.follow.position.get() if self.follow.hp else
             self.team.get_random_location())
-        z -= 1
+        z -= 2
         return x, y, z
     
     def send_lines(self, lines):
@@ -288,6 +307,11 @@ class FeatureProtocol(ServerProtocol):
         self.master = config.get('master', True)
         self.friendly_fire = config.get('friendly_fire', True)
         self.motd = self.format_lines(config.get('motd', None))
+        self.help = self.format_lines(config.get('help', None))
+        self.tips = self.format_lines(config.get('tips', None))
+        self.tip_frequency = config.get('tip_frequency', 0)
+        if self.tips is not None and self.tip_frequency > 0:
+            reactor.callLater(self.tip_frequency * 60, self.send_tip)
         self.max_players = config.get('max_players', 20)
         passwords = config.get('passwords', {})
         self.admin_passwords = passwords.get('admin', [])
@@ -388,6 +412,11 @@ class FeatureProtocol(ServerProtocol):
     def irc_say(self, msg):
         if self.irc_relay:
             self.irc_relay.send(msg)
+            
+    def send_tip(self):
+        line = self.tips[random.randrange(len(self.tips))]
+        self.send_chat(line)
+        reactor.callLater(self.tip_frequency * 60, self.send_tip)
     
     # votekick
     
@@ -448,9 +477,8 @@ class FeatureProtocol(ServerProtocol):
     def end_votekick(self, enough, result):
         victim = self.votekick_player
         self.votekick_player = None
-        message = 'Votekick for %s has ended. %s.' % (
-            victim.name, result)
-        self.send_chat(message, irc = True)
+        self.send_chat('Votekick for %s has ended. %s.' % (victim.name, result),
+            irc = True)
         if enough:
             if self.votekick_ban_duration:
                 self.add_ban(victim.address[0], temporary = True)
@@ -464,11 +492,11 @@ class FeatureProtocol(ServerProtocol):
         self.votes = self.votekick_call = None
         self.voting_player = None
     
-    def send_chat(self, value, global_message = True, sender = None, 
-                  irc = False):
+    def send_chat(self, value, global_message = True, sender = None,
+                  team = None, irc = False):
         if irc:
             self.irc_say('* %s' % value)
-        ServerProtocol.send_chat(self, value, global_message, sender)
+        ServerProtocol.send_chat(self, value, global_message, sender, team)
 
 PORT = 32887
 

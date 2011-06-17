@@ -87,11 +87,14 @@ cdef class VXLData:
             x, y, z, self.map)))
     
     cpdef int get_solid(self, int x, int y, int z):
-        if (x not in range(512) or
-            y not in range(512) or
-            z not in range(64)):
+        if x < 0 or x >= 512 or y < 0 or y >= 512 or z < 0 or z >= 64:
             return 0
         return get_solid(x, y, z, self.map)
+    
+    cpdef int get_color(self, int x, int y, int z):
+        if x < 0 or x >= 512 or y < 0 or y >= 512 or z < 0 or z >= 64:
+            return 0
+        return get_color(x, y, z, self.map)
     
     cpdef int get_z(self, int x, int y, int start = 0):
         return get_z(x, y, self.map, start)
@@ -103,14 +106,16 @@ cdef class VXLData:
                 return h_z + 1
         return 0
     
-    def remove_point(self, int x, int y, int z, bint user = True):
-        if x not in range(512) or y not in range(512) or z not in range(63):
+    def remove_point(self, int x, int y, int z, bint user = True, bint no_collapse = False):
+        if x < 0 or x >= 512 or y < 0 or y >= 512 or z < 0 or z >= 64:
             return
         if user and z == 62:
             return
         if not get_solid(x, y, z, self.map):
             return
         set_point(x, y, z, self.map, 0, 0)
+        if no_collapse:
+            return
         start = time.time()
         for node_x, node_y, node_z in self.get_neighbors(x, y, z):
             if node_z >= 62:
@@ -132,7 +137,17 @@ cdef class VXLData:
             self.get_solid(x, y, z + 1) or
             self.get_solid(x, y, z - 1)
         )
-
+    
+    cpdef bint is_surface(self, int x, int y, int z):
+        return (
+            not self.get_solid(x, y, z - 1) or
+            not self.get_solid(x, y, z + 1) or
+            not self.get_solid(x + 1, y, z) or
+            not self.get_solid(x - 1, y, z) or
+            not self.get_solid(x, y + 1, z) or
+            not self.get_solid(x, y - 1, z)
+        )
+    
     cpdef list get_neighbors(self, int x, int y, int z):
             cdef list neighbors = []
             for (node_x, node_y, node_z) in ((x, y, z - 1),
@@ -144,7 +159,7 @@ cdef class VXLData:
                 if self.get_solid(node_x, node_y, node_z):
                     neighbors.append((node_x, node_y, node_z))
             return neighbors
-
+    
     cpdef bint check_node(self, int x, int y, int z, bint destroy = False):
         return check_node(x, y, z, self.map, destroy)
     
@@ -163,6 +178,9 @@ cdef class VXLData:
         set_point(x, y, z, self.map, 1, color)
         return True
     
+    def set_point_unsafe_int(self, int x, int y, int z, int color):
+        set_point(x, y, z, self.map, 1, color)
+    
     def get_overview(self):
         cdef unsigned int * data
         data_python = allocate_memory(sizeof(int[512][512]), <char**>&data)
@@ -177,7 +195,7 @@ cdef class VXLData:
                 data[i] = r | (g << 8) | (b << 16) | (255 << 24)
                 i += 1
         return data_python
-        
+    
     def generate(self):
         return save_vxl(self.map)
     
