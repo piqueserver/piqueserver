@@ -10,7 +10,7 @@
     ],
     "max_players" : 32,
     "cap_limit" : 10,
-    "map" : "pyspades",
+    "map" : "random",
     "respawn_time" : 5,
     "follow_respawn_time" : 8,
     "max_followers" : 3,
