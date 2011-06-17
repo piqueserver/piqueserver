@@ -503,6 +503,8 @@ class FeatureProtocol(ServerProtocol):
 
 PORT = 32887
 
+
+
 try:
     config = json.load(open('config.txt', 'rb'))
 except IOError, e:
@@ -523,8 +525,12 @@ connection_class = FeatureConnection
 script_objects = []
 
 for script in config.get('scripts', []):
-    module = __import__('scripts.%s' % script, globals(), locals(), [script])
-    script_objects.append(module)
+    try:
+        module = __import__('scripts.%s' % script, globals(), locals(), 
+            [script])
+        script_objects.append(module)
+    except ImportError:
+        pass # script not found
 
 script_objects.append(map)
 
