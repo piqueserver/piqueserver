@@ -73,7 +73,7 @@ def apply_script(protocol, connection, config):
                 return 'Airstrike support ready! Use with e.g. /airstrike A1'
             if not self.god:
                 if self.kills < score_req:
-                    return ('You need a total score of %s (kills and intel) to '
+                    return ('You need a total score of %s (kills or intel) to '
                             'unlock airstrikes!' % score_req)
                 elif not self.airstrike:
                     kills_left = streak_req - (self.streak % streak_req)
