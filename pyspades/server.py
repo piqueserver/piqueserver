@@ -70,6 +70,7 @@ class ServerConnection(BaseConnection):
     respawn_time = None
     saved_loaders = None
     last_refill = None
+    last_block_destroy = None
 
     speed_limit_grace = 5
     movement_timestamp = 0.0
@@ -318,40 +319,41 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(chat_message, 
                             sender = self, team = team)
                 elif contained.id == clientloaders.BlockAction.id:
-                        value = contained.value
-                        if not self.hp and value != GRENADE_DESTROY:
+                    value = contained.value
+                    if not self.hp and value != GRENADE_DESTROY:
+                        return
+                    map = self.protocol.map
+                    x = contained.x
+                    y = contained.y
+                    z = contained.z
+                    if value == BUILD_BLOCK:
+                        if self.on_block_build(x, y, z) == False:
                             return
-                        map = self.protocol.map
-                        x = contained.x
-                        y = contained.y
-                        z = contained.z
-                        if value == BUILD_BLOCK:
-                            if self.on_block_build(x, y, z) == False:
-                                return
-                            elif not map.set_point(x, y, z, self.color + (255,)):
-                                return
-                        else:
-                            if self.on_block_destroy(x, y, z, value) == False:
-                                return
-                            elif value == DESTROY_BLOCK:
-                                map.remove_point(x, y, z)
-                            elif value == SPADE_DESTROY:
-                                map.remove_point(x, y, z)
-                                map.remove_point(x, y, z + 1)
-                                map.remove_point(x, y, z - 1)
-                            elif value == GRENADE_DESTROY:
-                                for nade_x in xrange(x - 1, x + 2):
-                                    for nade_y in xrange(y - 1, y + 2):
-                                        for nade_z in xrange(z - 1, z + 2):
-                                            map.remove_point(nade_x, nade_y, 
-                                                nade_z)
-                        block_action.x = x
-                        block_action.y = y
-                        block_action.z = z
-                        block_action.value = contained.value
-                        block_action.player_id = self.player_id
-                        self.protocol.send_contained(block_action, save = True)
-                        self.protocol.update_entities()
+                        elif not map.set_point(x, y, z, self.color + (255,)):
+                            return
+                    else:
+                        if self.on_block_destroy(x, y, z, value) == False:
+                            return
+                        elif value == DESTROY_BLOCK:
+                            map.remove_point(x, y, z)
+                        elif value == SPADE_DESTROY:
+                            map.remove_point(x, y, z)
+                            map.remove_point(x, y, z + 1)
+                            map.remove_point(x, y, z - 1)
+                        elif value == GRENADE_DESTROY:
+                            for nade_x in xrange(x - 1, x + 2):
+                                for nade_y in xrange(y - 1, y + 2):
+                                    for nade_z in xrange(z - 1, z + 2):
+                                        map.remove_point(nade_x, nade_y, 
+                                            nade_z)
+                        self.last_block_destroy = reactor.seconds()
+                    block_action.x = x
+                    block_action.y = y
+                    block_action.z = z
+                    block_action.value = contained.value
+                    block_action.player_id = self.player_id
+                    self.protocol.send_contained(block_action, save = True)
+                    self.protocol.update_entities()
             return
     
     def get_orientation_sequence(self):
@@ -501,9 +503,14 @@ class ServerConnection(BaseConnection):
     def hit(self, value, by = None):
         if self.hp is None:
             return
-        if (not self.protocol.friendly_fire and by is not None and
-        self.team is by.team):
-            return
+        if by is not None and self.team is by.team:
+            friendly_fire = self.protocol.friendly_fire
+            hit_time = self.protocol.friendly_fire_time
+            if (friendly_fire == 'grief' and (self.last_block_destroy is None 
+            or reactor.seconds() - self.last_block_destroy >= hit_time)):
+                return
+            elif friendly_fire:
+                return
         self.hp -= value
         if self.hp <= 0:
             self.kill(by)
@@ -717,6 +724,7 @@ class ServerProtocol(DatagramProtocol):
     max_score = 10
     map = None
     friendly_fire = False
+    friendly_fire_time = 2
     server_prefix = '[*]'
     
     respawn_time = 5
