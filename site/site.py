@@ -52,12 +52,13 @@ class QueryProtocol(DatagramProtocol):
         self.update()
     
     def write_html(self, servers):
+        pyspades_set = self.pyspades_set or set()
         data = open(INPUT, 'rb').read()
         html_servers = []
         for server in servers:
             address = 'aos://%s' % make_server_number(server.ip)
             html_servers.append(SERVER_TEMPLATE % {
-                'pyspades' : ['No', 'Yes'][int(server.ip in self.pyspades_set)],
+                'pyspades' : ['No', 'Yes'][int(server.ip in pyspades_set)],
                 'ratio' : '%s/%s' % (server.players, server.max),
                 'ping' : server.ping,
                 'url' : '<a href="%s">%s</a>' % (address, server.name),
@@ -67,7 +68,7 @@ class QueryProtocol(DatagramProtocol):
         data = data % {'servers' : '%s' % html}
         open(OUTPUT, 'wb').write(data)
         pyspades_numbers = [str(make_server_number(item)) for item in
-            self.pyspades_set]
+            pyspades_set]
         open(PYSPADES_LIST_FILE, 'wb').write('\n'.join(pyspades_numbers))
         self.pyspades_set = None
     

@@ -509,7 +509,7 @@ class ServerConnection(BaseConnection):
             if (friendly_fire == 'on_grief' and (self.last_block_destroy is None 
             or reactor.seconds() - self.last_block_destroy >= hit_time)):
                 return
-            elif friendly_fire:
+            elif not friendly_fire:
                 return
         self.hp -= value
         if self.hp <= 0:
