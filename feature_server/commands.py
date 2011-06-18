@@ -179,13 +179,21 @@ def follow(connection, player = None):
     if player is None:
         if connection.follow is None:
             return ("You aren't following anybody. To follow a player say "
-                    "/follow <nickname>")
+                    "/follow <nickname> or /follow attack")
         else:
             player = connection.follow
             connection.follow = None
             connection.respawn_time = connection.protocol.respawn_time
             player.send_chat('%s is no longer following you.' % connection.name)
             return 'You are no longer following %s.' % player.name
+    if player == "attack":
+        if connection.follow == "attack":
+            return "You're already an attacker."
+        else:
+            connection.follow = player
+            connection.respawn_time = connection.protocol.follow_respawn_time
+            return ("You are now an attacker and will spawn with players "
+                    "close to the enemy.")
     
     player = get_player(connection.protocol, player)
     if connection == player:
