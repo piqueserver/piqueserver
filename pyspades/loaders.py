@@ -39,6 +39,15 @@ class PacketLoader(object):
         self.write(reader)
         return reader
 
+class Packet0(PacketLoader):
+    def read(self, reader):
+        print 'THE MAGICAL PACKET0 (please send this to mat^2):',
+        print repr(str(reader))
+        reader.read()
+
+    def write(self, reader):
+        pass
+
 class Ack(PacketLoader):
     sequence2 = None
     timer = None
@@ -256,4 +265,4 @@ class Packet11(PacketLoader):
 
 __all__ = ['Ack', 'ConnectionRequest', 'ConnectionResponse', 'Disconnect',
     'Ping', 'SizedData', 'Packet7', 'MapData', 'SizedSequenceData', 'Packet10',
-    'Packet11']
+    'Packet11', 'Packet0']
