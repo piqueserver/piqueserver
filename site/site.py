@@ -65,7 +65,8 @@ class QueryProtocol(DatagramProtocol):
                 'address' : address
             })
         html = LIST_TEMPLATE % {'servers' : '\n'.join(html_servers)}
-        data = data % {'servers' : '%s' % html}
+        data = data % {'servers' : '%s' % html, 
+            'percentage' : (float(len(pyspades_set)) / len(servers)) * 100}
         open(OUTPUT, 'wb').write(data)
         pyspades_numbers = [str(make_server_number(item)) for item in
             pyspades_set]
