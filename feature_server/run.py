@@ -329,7 +329,7 @@ class FeatureProtocol(ServerProtocol):
         self.name = config.get('name', 
             'pyspades server %s' % random.randrange(0, 2000))
         
-        self.max_scores = config.get('cap_limit', None)
+        self.max_score = config.get('cap_limit', None)
         self.respawn_time = config.get('respawn_time', 5)
         self.follow_respawn_time = config.get('follow_respawn_time', self.respawn_time)
         self.master = config.get('master', True)
