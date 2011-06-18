@@ -373,8 +373,12 @@ class ServerConnection(BaseConnection):
         self.movement_timestamp = curtime
         xdiff = (self.position.x - contained.x)
         ydiff = (self.position.y - contained.y)
-        xydiff = math.sqrt(xdiff * xdiff + ydiff * ydiff) / delta_time
-        zdiff = (self.position.z-contained.z) / delta_time
+        if delta_time == 0:
+            xydiff = 0
+            zdiff = 0
+        else:
+            xydiff = math.sqrt(xdiff * xdiff + ydiff * ydiff) / delta_time
+            zdiff = (self.position.z-contained.z) / delta_time
         
         position_data.player_id = self.player_id
         

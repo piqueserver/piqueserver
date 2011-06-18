@@ -242,10 +242,12 @@ class Packet10(PacketLoader):
 
 class Packet11(PacketLoader):
     def read(self, reader):
+        print 'THE MAGICAL PACKET11 (please send this to mat^2):',
+        print repr(str(reader)),
         self.dword_1 = reader.readInt(True)
         self.dword_2 = reader.readInt(True)
         self.dword_3 = reader.readInt(True)
-        print 'PACKET 11:', self.dword_1, self.dword_2, self.dword_3
+        print self.dword_1, self.dword_2, self.dword_3
     
     def write(self, reader):
         reader.writeInt(self.dword_1, True)
