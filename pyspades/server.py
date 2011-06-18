@@ -447,7 +447,7 @@ class ServerConnection(BaseConnection):
         self.add_score(10) # 10 points for intel
         if (self.protocol.max_score not in (0, None) and 
         self.team.score + 1 >= self.protocol.max_score):
-            self.protocol.reset_game()
+            self.protocol.reset_game(self)
             self.protocol.on_game_end(self)
         else:
             intel_action.action_type = 3
