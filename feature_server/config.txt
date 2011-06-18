@@ -65,7 +65,8 @@
         "welcome",
         "airstrike",
         "rollback",
-        "trusted"
+        "trusted",
+        "autohelp"
     ],
     
     "welcomes" : {
