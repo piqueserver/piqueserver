@@ -7,20 +7,20 @@ def trusted_login(connection, password):
         return 'Logged in as trusted user.'
     return 'Invalid password.'
 
-commands.add(airstrike)
+commands.add(trusted_login)
 
 def apply_script(protocol, connection, config):
-    trusted_passwords = config.get('passwords', {}).get('trusted', [])
-
+    passwords = config.get('passwords', {}).get('trusted', [])
+    
     class ProtectConnection(connection):
         trusted = False
     
     class ProtectProtocol(protocol):
-        trusted_passwords = trusted_passwords
+        trusted_passwords = passwords
         
         def start_votekick(self, connection, player):
             if player.trusted:
                 return 'Cannot votekick a trusted player.'
             protocol.start_votekick(self, connection, player)
         
-    return ProtectProtocol, connection
+    return ProtectProtocol, ProtectConnection
