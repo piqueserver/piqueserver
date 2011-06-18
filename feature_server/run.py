@@ -104,6 +104,7 @@ class FeatureConnection(ServerConnection):
             print self.name, 'disconnected!'
             self.protocol.irc_say('* %s disconnected' % self.name)
             if self.protocol.votekick_player is self:
+                self.protocol.votekick_call.cancel()
                 self.protocol.end_votekick(False, 'Player left the game')
         ServerConnection.disconnect(self)
     
@@ -436,8 +437,7 @@ class FeatureProtocol(ServerProtocol):
             return 'Not enough players on server.'
         self.votes_left = votes_left
         self.votes = {connection : True}
-        votekick_time = self.votekick_time
-        self.votekick_call = reactor.callLater(votekick_time,
+        self.votekick_call = reactor.callLater(self.votekick_time,
             self.end_votekick, False, 'Votekick timed out')
         self.send_chat('%s initiated a VOTEKICK against player %s. '
             'Say /y to agree and /n to decline.' % (connection.name,
@@ -502,8 +502,6 @@ class FeatureProtocol(ServerProtocol):
         ServerProtocol.send_chat(self, value, global_message, sender, team)
 
 PORT = 32887
-
-
 
 try:
     config = json.load(open('config.txt', 'rb'))
