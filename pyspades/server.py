@@ -144,13 +144,21 @@ class ServerConnection(BaseConnection):
                 player_data.green_base_y = green_base.y
                 player_data.green_base_z = green_base.z
                 
-                player_data.blue_flag_x = blue_flag.x
-                player_data.blue_flag_y = blue_flag.y
-                player_data.blue_flag_z = blue_flag.z
+                if blue_flag.player is None:
+                    player_data.blue_flag = None
+                    player_data.blue_flag_x = blue_flag.x
+                    player_data.blue_flag_y = blue_flag.y
+                    player_data.blue_flag_z = blue_flag.z
+                else:
+                    player_data.blue_flag_player = blue_flag.player.player_id
                 
-                player_data.green_flag_x = green_flag.x
-                player_data.green_flag_y = green_flag.y
-                player_data.green_flag_z = green_flag.z
+                if green_flag.player is None:
+                    player_data.green_flag_player = None
+                    player_data.green_flag_x = green_flag.x
+                    player_data.green_flag_y = green_flag.y
+                    player_data.green_flag_z = green_flag.z
+                else:
+                    player_data.green_flag_player = green_flag.player.player_id
                 
                 saved_loaders.append(player_data.generate())
             return
