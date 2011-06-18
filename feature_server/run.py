@@ -427,7 +427,7 @@ class FeatureProtocol(ServerProtocol):
         if self.votes is not None:
             return 'Votekick in progress.'
         last_votekick = connection.last_votekick
-        if (last_votekick is not None and 
+        if (last_votekick is not None and
         reactor.seconds() - last_votekick < self.votekick_interval):
             return "You can't start a votekick now."
         votes_left = int((len(self.players) / 100.0
@@ -437,13 +437,13 @@ class FeatureProtocol(ServerProtocol):
         self.votes_left = votes_left
         self.votes = {connection : True}
         votekick_time = self.votekick_time
-        self.votekick_call = reactor.callLater(votekick_time, 
+        self.votekick_call = reactor.callLater(votekick_time,
             self.end_votekick, False, 'Votekick timed out')
         self.send_chat('%s initiated a VOTEKICK against player %s. '
-            'Say /y to agree and /n to decline.' % (connection.name, 
+            'Say /y to agree and /n to decline.' % (connection.name,
             player.name), sender = connection)
         self.irc_say(
-            '* %s initiated a votekick against player %s.' % (connection.name, 
+            '* %s initiated a votekick against player %s.' % (connection.name,
             player.name))
         self.votekick_player = player
         self.voting_player = connection
