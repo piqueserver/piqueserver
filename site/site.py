@@ -5,7 +5,9 @@ args = sys.argv[1:]
 if len(args) != 1:
     raise SystemExit('usage: %s <output html path>' % sys.argv[0])
 
-OUTPUT = args[0]
+path = args[0]
+OUTPUT = os.path.join(path, 'index.html')
+PYSPADES_LIST_FILE = os.path.join(path, 'list')
 
 sys.path.append('..')
 
@@ -49,9 +51,7 @@ class QueryProtocol(DatagramProtocol):
         self.update()
     
     def write_html(self, servers):
-        f = open(INPUT, 'rb')
-        data = f.read()
-        f.close()
+        data = open(INPUT, 'rb').read()
         html_servers = []
         for server in servers:
             address = 'aos://%s' % make_server_number(server.ip)
@@ -65,6 +65,7 @@ class QueryProtocol(DatagramProtocol):
         html = LIST_TEMPLATE % {'servers' : '\n'.join(html_servers)}
         data = data % {'servers' : '%s' % html}
         open(OUTPUT, 'wb').write(data)
+        open(PYSPADES_LIST_FILE, 'wb').write('\n'.join(self.pyspades_set))
         self.pyspades_set = None
     
     def got_servers(self, servers):
