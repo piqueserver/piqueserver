@@ -19,11 +19,8 @@ from pyspades.common import *
 from pyspades.bytes import ByteWriter
 from pyspades import debug
 
-class PacketLoader(object):
-    id = None
-    ack = None
-    byte = None
-    sequence = None
+class Loader(object):
+    __slots__ = ('id',)
     def __init__(self, reader = None):
         if reader is not None:
             self.read(reader)
@@ -39,6 +36,9 @@ class PacketLoader(object):
         self.write(reader)
         return reader
 
+class PacketLoader(Loader):
+    __slots__ =  ('ack', 'byte', 'sequence')
+
 class Packet0(PacketLoader):
     def read(self, reader):
         print 'THE MAGICAL PACKET0 (please send this to mat^2):',
@@ -49,8 +49,8 @@ class Packet0(PacketLoader):
         pass
 
 class Ack(PacketLoader):
-    sequence2 = None
-    timer = None
+    __slots__ = ('sequence2', 'timer')
+
     def read(self, reader): # uses byte
         self.sequence2 = reader.readShort(True) # sequence number?
         self.timer = reader.readShort(True) # timer?
@@ -60,10 +60,7 @@ class Ack(PacketLoader):
         reader.writeShort(self.timer, True)
 
 class ConnectionRequest(PacketLoader):
-    auth_value = None
-    version = None
-    client = True
-    value = None
+    __slots__ = ('auth_val', 'version', 'client', 'value')
     def read(self, reader):
         word_1 = reader.readShort(True) # usually 0, 1, 2, 3
         v10 = reader.readByte()
@@ -119,9 +116,8 @@ class ConnectionRequest(PacketLoader):
         reader.writeInt(self.version, True, False)
 
 class ConnectionResponse(PacketLoader):
-    connection_id = None
-    unique = None
-    auth_val = None
+    __slots__ = ('connection_id', 'unique', 'auth_val')
+
     def read(self, reader):
         word_1 = reader.readShort(True)
         byte_1 = reader.readByte(True)
@@ -167,6 +163,8 @@ class ConnectionResponse(PacketLoader):
         reader.writeInt(self.auth_val, True, False)
 
 class Disconnect(PacketLoader):
+    __slots__ = []
+
     def read(self, reader):
         dword_1 = reader.readInt(True)
         check_default(dword_1, 0)
@@ -175,6 +173,7 @@ class Disconnect(PacketLoader):
         reader.writeInt(0)
 
 class Ping(PacketLoader):
+    __slots__ = []
     def read(self, reader):
         pass
         # uses both sequence and byte
@@ -183,8 +182,7 @@ class Ping(PacketLoader):
         pass
 
 class SizedData(PacketLoader):
-    input_type = None
-    data = None
+    __slots__ = ('data')
     def read(self, reader): # uses byte
         size = reader.readShort(True)
         data = reader.readReader(size)
@@ -195,18 +193,19 @@ class SizedData(PacketLoader):
         reader.write(str(self.data))
 
 class Packet7(PacketLoader):
+    __slots__ = []
+
     def read(self, reader): # uses byte
+        print 'THE MAGICAL PACKET7 (please send this to mat^2):',
+        print repr(str(reader))
         reader.skipBytes(2)
         size = reader.readShort(True)
         new_data = reader.readReader(size)
 
 class MapData(PacketLoader):
-    sequence2 = None
-    total_num = None
-    num = None
-    data_size = None
-    current_pos = None
-    data = None
+    __slots__ = ('sequence2', 'total_num', 'num', 'data_size', 'current_pos',
+        'data')
+
     def read(self, reader): # uses both
         self.sequence2 = reader.readShort(True) # seq at which this was sent at
         size = reader.readShort(True)
@@ -226,6 +225,7 @@ class MapData(PacketLoader):
         reader.write(str(self.data))
 
 class SizedSequenceData(PacketLoader):
+    __slots__ = ('sequence2', 'data')
     def read(self, reader): # uses byte
         self.sequence2 = reader.readShort(True) # sequence?
         size = reader.readShort(True)
@@ -237,8 +237,8 @@ class SizedSequenceData(PacketLoader):
         reader.write(str(self.data))
 
 class Packet10(PacketLoader):
-    dword_1 = None
-    dword_2 = None
+    __slots__ = ('dword_1', 'dword_2')
+
     def read(self, reader):
         self.dword_1 = reader.readInt(True)
         self.dword_2 = reader.readInt(True)
@@ -250,6 +250,8 @@ class Packet10(PacketLoader):
         reader.writeInt(self.dword_2 or 0, True)
 
 class Packet11(PacketLoader):
+    __slots__ = ('dword_1', 'dword_2', 'dword_3')
+
     def read(self, reader):
         print 'THE MAGICAL PACKET11 (please send this to mat^2):',
         print repr(str(reader)),

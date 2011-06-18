@@ -16,13 +16,12 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from pyspades.common import *
-from pyspades.loaders import PacketLoader
+from pyspades.loaders import Loader
 from pyspades.tools import get_server_ip, make_server_number
 
-class _InformationCommon(PacketLoader):
-    x = None
-    y = None
-    z = None
+class _InformationCommon(Loader):
+    __slots__ = ('x', 'y', 'z')
+
     def read(self, reader):
         reader.skipBytes(1)
         self.x = reader.readFloat(False) # x
@@ -41,11 +40,9 @@ class PositionData(_InformationCommon):
 class OrientationData(_InformationCommon):
     pass
 
-class MovementData(PacketLoader):
-    up = None
-    down = None
-    left = None
-    right = None
+class MovementData(Loader):
+    __slots__ = ('up', 'down', 'left', 'right')
+    
     def read(self, reader):
         firstByte = reader.readByte(True)
         self.up = (firstByte >> 4) & 1 # going forward?
@@ -61,11 +58,9 @@ class MovementData(PacketLoader):
         byte = self.id | (up << 4) | (down << 5) | (left << 6) | (right << 7)
         reader.writeByte(byte, True)
 
-class AnimationData(PacketLoader):
-    fire = None
-    jump = None
-    crouch = None
-    aim = None
+class AnimationData(Loader):
+    __slots__ = ('fire', 'jump', 'crouch', 'aim')
+
     def read(self, reader):
         firstByte = reader.readByte(True)
         self.fire = (firstByte >> 4) & 1
@@ -81,9 +76,9 @@ class AnimationData(PacketLoader):
         byte = self.id | (fire << 4) | (jump << 5) | (crouch << 6) | (aim << 7)
         reader.writeByte(byte, True)
 
-class HitPacket(PacketLoader):
-    player_id = None
-    value = None
+class HitPacket(Loader):
+    __slots__ = ('player_id', 'value')
+    
     def read(self, reader):
         firstByte = reader.readByte(True)
         byte = reader.readByte(True)
@@ -105,8 +100,9 @@ class HitPacket(PacketLoader):
             reader.writeByte(byte, True)
             reader.writeByte(self.player_id, True)
 
-class GrenadePacket(PacketLoader):
-    value = None
+class GrenadePacket(Loader):
+    __slots__ = ('value',)
+
     def read(self, reader):
         reader.skipBytes(1)
         self.value = reader.readFloat(False)
@@ -115,8 +111,9 @@ class GrenadePacket(PacketLoader):
         reader.writeByte(self.id, True)
         reader.writeFloat(self.value, False)
 
-class SetWeapon(PacketLoader):
-    value = None
+class SetWeapon(Loader):
+    __slots__ = ('value',)
+
     def read(self, reader):
         firstByte = reader.readByte(True)
         self.value = firstByte >> 4 # tool
@@ -127,7 +124,9 @@ class SetWeapon(PacketLoader):
         byte |= self.value << 4
         reader.writeByte(byte, True)
 
-class SetColor(PacketLoader):
+class SetColor(Loader):
+    __slots__ = ('value',)
+    
     def read(self, reader):
         firstInt = reader.readInt(True, False)
         self.value = firstInt >> 4
@@ -137,9 +136,9 @@ class SetColor(PacketLoader):
         value |= self.value << 4
         reader.writeInt(value, True, False)
 
-class JoinTeam(PacketLoader):
-    name = None
-    team = None
+class JoinTeam(Loader):
+    __slots__ = ('name', 'team')
+    
     def read(self, reader):
         # respawn?
         firstByte = reader.readByte(True)
@@ -154,9 +153,9 @@ class JoinTeam(PacketLoader):
         if self.name is not None:
             reader.writeString(self.name)
 
-class BlockAction(PacketLoader):
-    x = y = z = None
-    value = None
+class BlockAction(Loader):
+    __slots__ = ('x', 'y', 'z', 'value')
+
     def read(self, reader):
         firstInt = reader.readInt(True, False)
         self.x = (firstInt >> 6) & 0x1FF # x
@@ -170,8 +169,8 @@ class BlockAction(PacketLoader):
             (self.value << 4))
         reader.writeInt(value, True, False)
 
-class KillAction(PacketLoader):
-    player_id = None
+class KillAction(Loader):
+    __slots__ = ('player_id',)
     
     def read(self, reader):
         reader.skipBytes(1)
@@ -181,9 +180,8 @@ class KillAction(PacketLoader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
 
-class ChatMessage(PacketLoader):
-    global_message = None
-    value = None
+class ChatMessage(Loader):
+    __slots__ = ('global_message', 'value')
     
     def read(self, reader):
         firstByte = reader.readByte(True)

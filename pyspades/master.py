@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from pyspades.loaders import PacketLoader
+from pyspades.loaders import Loader
 from pyspades.protocol import BaseConnection
 from pyspades.tools import make_server_number, get_server_ip
 from twisted.internet.protocol import DatagramProtocol
@@ -29,12 +29,11 @@ import random
 HOST = 'ace-spades.com'
 PORT = 32886
 
-class AddServer(PacketLoader):
+class AddServer(Loader):
+    __slots__ = ['count', 'max_players', 'name']
+
     id = 4
-    count = None
-    
-    max_players = None
-    name = None
+
     def read(self, reader):
         if reader.dataLeft() == 1:
             self.count = reader.readByte(True)
@@ -66,6 +65,7 @@ class MasterConnection(BaseConnection):
         connect_request = ConnectionRequest()
         connect_request.auth_val = self.auth_val
         connect_request.version = 0xF000000 # increments for each version
+        connect_request.client = True
         self.send_loader(connect_request, False, 255)
     
     def loader_received(self, loader):

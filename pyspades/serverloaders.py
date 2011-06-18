@@ -16,13 +16,11 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from pyspades.common import *
-from pyspades.loaders import PacketLoader
+from pyspades.loaders import Loader
 
-class _InformationCommon(PacketLoader):
-    x = None
-    y = None
-    z = None
-    player_id = None
+class _InformationCommon(Loader):
+    __slots__ = ('x', 'y', 'z', 'player_id')
+
     def set(self, (x, y, z), player_id):
         self.x = x
         self.y = y
@@ -49,12 +47,9 @@ class PositionData(_InformationCommon):
 class OrientationData(_InformationCommon):
     pass
 
-class MovementData(PacketLoader):
-    up = None
-    down = None
-    left = None
-    right = None
-    player_id = None
+class MovementData(Loader):
+    __slots__ = ('up', 'down', 'left', 'right', 'player_id')
+
     def read(self, reader):
         firstByte = reader.readByte(True)
         self.player_id = reader.readByte(True)
@@ -72,11 +67,9 @@ class MovementData(PacketLoader):
         reader.writeByte(byte, True)
         reader.writeByte(self.player_id, True)
 
-class AnimationData(PacketLoader):
-    fire = None
-    jump = None
-    crouch = None
-    aim = None
+class AnimationData(Loader):
+    __slots__ = ('fire', 'jump', 'crouch', 'aim', 'player_id')
+
     def read(self, reader):
         firstByte = reader.readByte(True)
         self.player_id = reader.readByte(True)
@@ -94,8 +87,9 @@ class AnimationData(PacketLoader):
         reader.writeByte(byte, True)
         reader.writeByte(self.player_id, True)
 
-class HitPacket(PacketLoader):
-    value = None
+class HitPacket(Loader):
+    __slots__ = ('value',)
+
     def read(self, reader):
         firstByte = reader.readByte(True)
         self.value = firstByte >> 5
@@ -105,8 +99,9 @@ class HitPacket(PacketLoader):
         byte |= (self.value << 5)
         reader.writeByte(byte, True)
 
-class GrenadePacket(PacketLoader):
-    value = None
+class GrenadePacket(Loader):
+    __slots__ = ('value', 'player_id')
+
     def read(self, reader):
         reader.skipBytes(1)
         self.player_id = reader.readByte(True)
@@ -117,9 +112,9 @@ class GrenadePacket(PacketLoader):
         reader.writeByte(self.player_id, True)
         reader.writeFloat(self.value, False)
 
-class SetWeapon(PacketLoader):
-    value = None
-    player_id = None
+class SetWeapon(Loader):
+    __slots__ = ('value', 'player_id')
+
     def read(self, reader):
         firstByte = reader.readByte(True)
         self.player_id = reader.readByte(True)
@@ -132,9 +127,9 @@ class SetWeapon(PacketLoader):
         reader.writeByte(byte, True)
         reader.writeByte(self.player_id, True)
 
-class SetColor(PacketLoader):
-    value = None
-    player_id = None
+class SetColor(Loader):
+    __slots__ = ('value', 'player_id')
+
     def read(self, reader):
         firstInt = reader.readInt(True, False)
         self.player_id = reader.readByte(True)
@@ -146,13 +141,8 @@ class SetColor(PacketLoader):
         reader.writeInt(value, True, False)
         reader.writeByte(self.player_id, True)
 
-class ExistingPlayer(PacketLoader):
-    player_id = None
-    team = None
-    tool = None
-    kills = None
-    color = None
-    name = None
+class ExistingPlayer(Loader):
+    __slots__ = ('player_id', 'team', 'tool', 'kills', 'color', 'name')
     
     def read(self, reader):
         firstInt = reader.readInt(True, False)
@@ -183,23 +173,12 @@ class ExistingPlayer(PacketLoader):
         reader.writeByte(byte3, True)
         reader.writeString(self.name)
 
-class IntelAction(PacketLoader):
-    player_id = None
-    action_type = None
-    game_end = False
-    x = None
-    y = None
-    z = None
-    move_type = None
+class IntelAction(Loader):
+    __slots__ = ('player_id', 'action_type', 'game_end', 'x', 'y', 'z',
+        'move_type', 'blue_flag_x', 'blue_flag_y', 'green_flag_x',
+        'green_flag_y', 'blue_base_x', 'blue_base_y', 'green_base_x',
+        'green_base_y')
     
-    blue_flag_x = None
-    blue_flag_y = None
-    green_flag_x = None
-    green_flag_y = None
-    blue_base_x = None
-    blue_base_y = None
-    green_base_x = None
-    green_base_y = None
     def read(self, reader):
         firstByte = reader.readByte(True)
         self.action_type = action_type = (firstByte >> 4) & 7
@@ -283,10 +262,9 @@ class IntelAction(PacketLoader):
         elif self.action_type == 4: # give ammo
             reader.writeByte(value, True)
 
-class CreatePlayer(PacketLoader):
-    player_id = None
-    name = None
-    x = y = z = None
+class CreatePlayer(Loader):
+    __slots__ = ('player_id', 'name', 'x', 'y', 'z')
+
     def read(self, reader):
         # new player + spawn player
         firstInt = reader.readInt(True, False)
@@ -307,10 +285,9 @@ class CreatePlayer(PacketLoader):
         if self.name is not None:
             reader.writeString(self.name)
 
-class BlockAction(PacketLoader):
-    x = y = z = None
-    value = None
-    player_id = None
+class BlockAction(Loader):
+    __slots__ = ('x', 'y', 'z', 'value', 'player_id')
+
     def read(self, reader):
         firstInt = reader.readInt(True, False)
         self.x = (firstInt >> 6) & 0x1FF # x
@@ -334,28 +311,13 @@ def make_coordinate_bytes(x, y, z):
     byte3 = (y >> 7) | (z << 2)
     return byte1, byte2, byte3
 
-class PlayerData(PacketLoader):
-    player_left = None
+class PlayerData(Loader):
+    __slots__ = ('player_left', 'blue_base_x', 'blue_base_y', 'blue_base_z',
+        'green_base_x', 'green_base_y', 'green_base_z', 'blue_flag_player',
+        'blue_flag_x', 'blue_flag_y', 'blue_flag_z', 'green_flag_player',
+        'green_flag_x', 'green_flag_y', 'green_flag_z', 'max_score',
+        'player_id', 'blue_score', 'green_score')
 
-    blue_base_x = None
-    blue_base_y = None
-    blue_base_z = None
-    
-    green_base_x = None
-    green_base_y = None
-    green_base_z = None
-    
-    blue_flag_player = None
-    blue_flag_x = None
-    blue_flag_y = None
-    blue_flag_z = None
-    
-    green_flag_player = None
-    green_flag_x = None
-    green_flag_y = None
-    green_flag_z = None
-    
-    max_score = None
     def read(self, reader):
         firstByte = reader.readByte(True)
         if firstByte & 16: # player left
@@ -448,8 +410,8 @@ class PlayerData(PacketLoader):
             reader.writeByte(b, True)
             reader.writeByte(c, True)
 
-class KillAction(PacketLoader):
-    player1 = player2 = None
+class KillAction(Loader):
+    __slots__ = ('player1', 'player2')
     
     def read(self, reader):
         firstShort = reader.readShort(True, False)
@@ -462,10 +424,8 @@ class KillAction(PacketLoader):
         value |= self.player2 << 9
         reader.writeShort(value, True, False)
 
-class ChatMessage(PacketLoader):
-    global_message = None
-    value = None
-    player_id = None
+class ChatMessage(Loader):
+    __slots__ = ('global_message', 'value', 'player_id')
     
     def read(self, reader):
         firstByte = reader.readByte(True)

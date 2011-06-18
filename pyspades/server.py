@@ -146,7 +146,7 @@ class ServerConnection(BaseConnection):
                 player_data.green_base_z = green_base.z
                 
                 if blue_flag.player is None:
-                    player_data.blue_flag = None
+                    player_data.blue_flag_player = None
                     player_data.blue_flag_x = blue_flag.x
                     player_data.blue_flag_y = blue_flag.y
                     player_data.blue_flag_z = blue_flag.z
