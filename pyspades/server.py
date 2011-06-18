@@ -506,7 +506,7 @@ class ServerConnection(BaseConnection):
         if by is not None and self.team is by.team:
             friendly_fire = self.protocol.friendly_fire
             hit_time = self.protocol.friendly_fire_time
-            if (friendly_fire == 'grief' and (self.last_block_destroy is None 
+            if (friendly_fire == 'on_grief' and (self.last_block_destroy is None 
             or reactor.seconds() - self.last_block_destroy >= hit_time)):
                 return
             elif friendly_fire:
