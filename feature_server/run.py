@@ -93,6 +93,8 @@ class FeatureConnection(ServerConnection):
             self.send_lines(self.protocol.motd)
     
     def on_login(self, name):
+        if self.protocol.follow_attack == 2:
+            self.follow = "attack"
         self.protocol.send_chat('%s entered the game!' % name)
         print '%s (%s) entered the game!' % (name, self.address[0])
         self.protocol.irc_say('* %s entered the game' % name)
@@ -110,7 +112,13 @@ class FeatureConnection(ServerConnection):
     
     def on_spawn(self, pos, name):
         if self.follow is not None:
-            self.set_location(self.get_follow_location())
+            if self.follow == "attack":
+                attackers = self.get_attackers()
+                if attackers is not None:
+                    attacker = random.choice(attackers)
+                    self.set_location(self.get_follow_location(attacker))
+            else:
+                self.set_location(self.get_follow_location(self.follow))
     
     def on_command(self, command, parameters):
         log_message = '<%s> /%s %s' % (self.name, command, 
@@ -222,6 +230,22 @@ class FeatureConnection(ServerConnection):
             message = '%s banned' % self.name
         self.protocol.send_chat(message, irc = True)
         self.protocol.add_ban(self.address[0])
+
+    def get_attackers(self):
+        """Return 1/4th of followable teammates
+            farthest from base(by x)"""
+        initial = filter(lambda player: player.hp and player.followable,
+                         self.team.get_players())
+        attackers = sorted(initial,
+                            key=lambda player: player.position.x)
+        if len(attackers) < 1:
+            return None
+        if self.team.id is 1:
+            attackers.reverse()
+        
+        stripqty = int(max(1, len(attackers) / 4 ))
+        attackers = attackers[-stripqty:]
+        return attackers
     
     def get_followers(self):
         return [player for player in self.protocol.players.values()
@@ -233,8 +257,8 @@ class FeatureConnection(ServerConnection):
             player.respawn_time = player.protocol.respawn_time
             player.send_chat('You are no longer following %s.' % self.name)
     
-    def get_follow_location(self):
-        x, y, z = (self.follow.position.get() if self.follow.hp else
+    def get_follow_location(self, follow):
+        x, y, z = (follow.position.get() if follow.hp else
             self.team.get_random_location())
         z -= 2
         return x, y, z
@@ -327,6 +351,7 @@ class FeatureProtocol(ServerProtocol):
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
         self.max_followers = config.get('max_followers', 3)
+        self.follow_attack = config.get('follow_attack', 2)
         logfile = config.get('logfile', None)
         ssh = config.get('ssh', {})
         if ssh.get('enabled', False):
