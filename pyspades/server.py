@@ -91,7 +91,7 @@ class ServerConnection(BaseConnection):
                 if loader.client:
                     max_players = min(32, self.protocol.max_players)
                     if (loader.version != self.protocol.version
-                    or len(self.protocol.connections) + 1 > max_players):
+                    or len(self.protocol.connections) > max_players):
                         self.disconnect()
                         return
                 self.auth_val = loader.auth_val
@@ -105,9 +105,13 @@ class ServerConnection(BaseConnection):
                 connection_response.unique = self.unique
                 connection_response.connection_id = self.connection_id
                 
-                self.map_data = ByteReader(self.protocol.map.generate())
                 self.send_loader(connection_response, True, 0xFF).addCallback(
                     self.send_map)
+                
+                if not loader.client:
+                    return
+                
+                self.map_data = ByteReader(self.protocol.map.generate())
                     
                 # send players
                 self.saved_loaders = saved_loaders = []
