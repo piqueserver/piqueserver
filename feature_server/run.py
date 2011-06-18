@@ -93,7 +93,7 @@ class FeatureConnection(ServerConnection):
             self.send_lines(self.protocol.motd)
     
     def on_login(self, name):
-        if self.protocol.follow_attack == 2:
+        if self.protocol.follow_attack == 'auto':
             self.follow = "attack"
         self.protocol.send_chat('%s entered the game!' % name)
         print '%s (%s) entered the game!' % (name, self.address[0])
@@ -351,7 +351,7 @@ class FeatureProtocol(ServerProtocol):
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
         self.max_followers = config.get('max_followers', 3)
-        self.follow_attack = config.get('follow_attack', 2)
+        self.follow_attack = config.get('follow_attack', False)
         logfile = config.get('logfile', None)
         ssh = config.get('ssh', {})
         if ssh.get('enabled', False):
