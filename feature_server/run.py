@@ -348,6 +348,7 @@ class FeatureProtocol(ServerProtocol):
         self.rules = self.format_lines(config.get('rules', None))
         self.login_retries = config.get('login_retries', 1)
         self.votekick_ban_duration = config.get('votekick_ban_duration', 5)
+        self.votekick_percentage = config.get('votekick_percentage', 25)
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
         self.max_followers = config.get('max_followers', 3)
