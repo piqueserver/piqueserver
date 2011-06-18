@@ -107,6 +107,8 @@ def heal(connection, player = None):
         player = get_player(connection.protocol, player)
         message = '%s was healed by %s' % (player.name, connection.name)
     else:
+        if connection not in connection.protocol.players:
+            raise ValueError()
         player = connection
         message = '%s was healed' % (connection.name)
     player.refill()
@@ -138,7 +140,7 @@ def help(connection):
     """
     This help
     """
-    if connection.protocol.help is not None and not connection.god:
+    if connection.protocol.help is not None and not connection.admin:
         connection.send_lines(connection.protocol.help)
     else:
         names = [command.func_name for command in command_list
@@ -149,6 +151,8 @@ def login(connection, password):
     """
     Login as admin
     """
+    if connection not in connection.protocol.players:
+        raise KeyError()
     passwords = connection.protocol.admin_passwords
     if password in passwords:
         connection.admin = True
@@ -182,8 +186,10 @@ def send_unfollow_message(connection):
 def follow(connection, player = None):
     """Follow a player; on your next spawn, you'll spawn at their position,
         similar to the squad spawning feature of Battlefield."""
+    if connection not in connection.protocol.players:
+        raise KeyError()
     if not connection.protocol.max_followers:
-        return
+        raise KeyError()
     
     # TODO  make "attack" case-insensitive
     #       move this feature into a script
@@ -229,8 +235,10 @@ def follow(connection, player = None):
 
 @name('nofollow')
 def no_follow(connection):
+    if connection not in connection.protocol.players:
+        raise KeyError()
     if not connection.protocol.max_followers:
-        return
+        raise KeyError()
     connection.followable = not connection.followable
     if not connection.followable:
         connection.drop_followers()
@@ -238,6 +246,8 @@ def no_follow(connection):
         'now' if connection.followable else 'no longer')
 
 def streak(connection):
+    if connection not in connection.protocol.players:
+        raise KeyError()
     return ('Your current kill streak is %s. Best is %s kills.' %
         (connection.streak, connection.best_streak))
 @admin
@@ -260,12 +270,15 @@ def unlock(connection, value):
 def switch(connection, value = None):
     if value is not None:
         connection = get_player(connection.protocol, value)
+    elif connection not in connection.protocol.players:
+        raise ValueError()
     connection.follow = None
     connection.drop_followers()
     connection.respawn_time = connection.protocol.respawn_time
     connection.team = connection.team.other
     connection.kill()
-    connection.protocol.send_chat('%s has switched teams' % connection.name)
+    connection.protocol.send_chat('%s has switched teams' % connection.name,
+        irc = True)
 
 @name('setbalance')
 @admin
@@ -332,6 +345,8 @@ def teleport(connection, player1, player2 = None):
         message = '%s teleported %s to %s' % (connection.name, player.name, 
             target.name)
     else:
+        if connection not in connection.protocol.players:
+            raise ValueError()
         player, target = connection, player1
         message = '%s teleported to %s' % (connection.name, target.name)
 
@@ -343,6 +358,8 @@ from pyspades.common import coordinates
 
 @admin
 def goto(connection, value):
+    if connection not in connection.protocol.players:
+        raise KeyError()
     x, y = coordinates(value)
     x += 32
     y += 32
@@ -354,6 +371,8 @@ def goto(connection, value):
 def god(connection, value = None):
     if value is not None:
         connection = get_player(connection.protocol, value)
+    elif connection not in connection.protocol.players:
+        raise ValueError()
     connection.god = not connection.god
     if connection.god:
         message = '%s entered GOD MODE!' % connection.name
@@ -364,7 +383,15 @@ def god(connection, value = None):
 @name ('resetgame')
 @admin
 def reset_game(connection):
-    connection.protocol.reset_game(connection)
+    resetting_player = connection
+    if resetting_player not in connection.protocol.players:
+        for player in connection.protocol.players.values():
+            resetting_player = player
+            if player.admin:
+                break
+        if resetting_player is connection:
+            return
+    connection.protocol.reset_game(resetting_player)
     connection.protocol.send_chat('Game has been reset by %s' % connection.name,
         irc = True)
     
@@ -422,6 +449,8 @@ def handle_command(connection, command, parameters):
         return 'Invalid command'
     try:
         return command_func(connection, *parameters)
+    except KeyError:
+        return 'Invalid command'
     except TypeError:
         return 'Invalid number of arguments for %s' % command
     except InvalidPlayer:

@@ -19,7 +19,7 @@ from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
 from pyspades.constants import MAX_CHAT_SIZE
 from pyspades.common import encode, decode
-from commands import get_player, join_arguments, InvalidPlayer, InvalidTeam
+from commands import *
 
 import random
 import string
@@ -92,10 +92,12 @@ class IRCBot(irc.IRCClient):
         if (user in self.ops) or (user in self.voices):
             prefixed_username = ('@' if user in self.ops else '+') + user
             if msg.startswith(self.factory.commandprefix):
+                self.admin = (user in self.ops)
+                self.name = prefixed_username
                 params = msg[len(self.factory.commandprefix):].split()
-                result = handle_command(self, prefixed_username, params[0], params[1:])
+                result = handle_command(self, params[0], params[1:])
                 if result is not None:
-                    self.send(result)
+                    self.send("%s: %s" % (user, result))
             else:
                 max_len = MAX_IRC_CHAT_SIZE - len(self.protocol.server_prefix) - 1
                 message = ("<%s> %s" % (prefixed_username, msg))[:max_len]
@@ -155,7 +157,7 @@ class IRCRelay(object):
     
     def __init__(self, protocol, config):
         self.factory = IRCClientFactory(protocol, config)
-        reactor.connectTCP(config.get('server'), config.get('port', 6667), 
+        reactor.connectTCP(config.get('server'), config.get('port', 6667),
             self.factory)
     
     def send(self, msg):
@@ -164,74 +166,24 @@ class IRCRelay(object):
     def me(self, msg):
         self.factory.bot.describe(msg)
 
-def admin(func):
-    def new_func(bot, user, *arg, **kw):
-        if not user[0] == '@':
-            return
-        func(bot, user, *arg, **kw)
-    new_func.func_name = func.func_name
-    return new_func
-
-@admin
-def mute(bot, user, value):
-    player = get_player(bot.protocol, value)
-    player.mute = True
-    message = '%s has been muted by %s' % (player.name, user)
-    bot.protocol.send_chat(message, irc = True)
-
-@admin
-def unmute(bot, user, value):
-    player = get_player(bot.protocol, value)
-    player.mute = False
-    message = '%s has been unmuted by %s' % (player.name, user)
-    bot.protocol.send_chat(message, irc = True)
-
-@admin
-def kick(bot, user, value, *arg):
-    reason = join_arguments(arg)
-    player = get_player(bot.protocol, value)
-    player.kick(reason)
-
-def who(bot, user):
-    names = [conn.name for conn in bot.factory.server.players.values()]
+def who(connection):
+    if connection in connection.protocol.players:
+        raise KeyError()
+    names = [conn.name for conn in connection.protocol.players.values()]
     count = len(names)
     msg = "has %s player%s connected" % ("no" if not count else count,
         "" if count == 1 else "s")
     if count:
         names.sort()
         msg += ": %s" % (', '.join(names))
-    bot.me(msg)
+    connection.me(msg)
 
-def score(bot, user):
-    bot.me("scores: Blue %s - Green %s" % (bot.factory.server.blue_team.score,
-        bot.factory.server.green_team.score))
+def score(connection):
+    if connection in connection.protocol.players:
+        raise KeyError()
+    connection.me("scores: Blue %s - Green %s" % (
+        connection.protocol.blue_team.score,
+        connection.protocol.green_team.score))
 
-command_list = [
-    mute,
-    unmute,
-    kick,
-    who,
-    score
-]
-
-commands = {}
-
-for command_func in command_list:
-    commands[command_func.func_name] = command_func
-
-def handle_command(bot, user, command, parameters):
-    command = command.lower()
-    try:
-        command_func = commands[command]
-    except KeyError:
-        return #'Invalid command'
-    try:
-        return command_func(bot, user, *parameters)
-    except TypeError:
-        return '%s: Invalid number of arguments for %s' % (user[1:], command)
-    except InvalidPlayer:
-        return '%s: No such player' % user[1:]
-    except InvalidTeam:
-        return '%s: Invalid team specifier' % user[1:]
-    except ValueError:
-        return '%s: Invalid parameters' % user[1:]
+for func in (who, score):
+    add(func)
