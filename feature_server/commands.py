@@ -115,15 +115,21 @@ def heal(connection, player = None):
     connection.protocol.send_chat(message, irc = True)
 
 def votekick(connection, value):
+    if connection not in connection.protocol.players:
+        raise KeyError()
     player = get_player(connection.protocol, value)
     return connection.protocol.start_votekick(connection, player)
 
 @name('y')
 def vote_yes(connection):
+    if connection not in connection.protocol.players:
+        raise KeyError()
     connection.protocol.votekick(connection, True)
 
 @name('n')
 def vote_no(connection):
+    if connection not in connection.protocol.players:
+        raise KeyError()
     connection.protocol.votekick(connection, False)
 
 @name('cancel')
@@ -131,6 +137,8 @@ def cancel_vote(connection):
     return connection.protocol.cancel_votekick(connection)
 
 def rules(connection):
+    if connection not in connection.protocol.players:
+        raise KeyError()
     lines = connection.protocol.rules
     if lines is None:
         return
@@ -446,11 +454,11 @@ def handle_command(connection, command, parameters):
     try:
         command_func = commands[command]
     except KeyError:
-        return 'Invalid command'
+        return #'Invalid command'
     try:
         return command_func(connection, *parameters)
     except KeyError:
-        return 'Invalid command'
+        return #'Invalid command'
     except TypeError:
         return 'Invalid number of arguments for %s' % command
     except InvalidPlayer:
