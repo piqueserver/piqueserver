@@ -66,7 +66,9 @@ class QueryProtocol(DatagramProtocol):
         html = LIST_TEMPLATE % {'servers' : '\n'.join(html_servers)}
         data = data % {'servers' : '%s' % html}
         open(OUTPUT, 'wb').write(data)
-        open(PYSPADES_LIST_FILE, 'wb').write('\n'.join(self.pyspades_set))
+        pyspades_numbers = [str(make_server_number(item)) for item in
+            self.pyspades_set]
+        open(PYSPADES_LIST_FILE, 'wb').write('\n'.join(pyspades_numbers))
         self.pyspades_set = None
     
     def got_servers(self, servers):
