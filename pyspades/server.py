@@ -730,7 +730,7 @@ class ServerProtocol(DatagramProtocol):
         self.blue_team.other = self.green_team
         self.green_team.other = self.blue_team
     
-    def reset_game(self):
+    def reset_game(self, player):
         blue_team = self.blue_team
         green_team = self.green_team
         blue_team.initialize()
@@ -746,7 +746,7 @@ class ServerProtocol(DatagramProtocol):
         intel_action.green_base_x = green_team.base.x
         intel_action.green_base_y = green_team.base.y
         intel_action.action_type = 3
-        intel_action.player_id = self.player_id
+        intel_action.player_id = player.player_id
         intel_action.game_end = True
         self.send_contained(intel_action, save = True)
 
