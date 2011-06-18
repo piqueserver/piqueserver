@@ -7,6 +7,7 @@
     ],
     "help" : [
         "/FOLLOW    Choose a teammate as squad leader, who will act as your spawnpoint",
+	"/FOLLOW attack    to spawn with a random teammate close to the enemy",
         "/STREAK    Shows how many kills in a row you got without dying",
         "/AIRSTRIKE Air support!  Try it out just like that for more details"
     ],
@@ -23,6 +24,7 @@
     "respawn_time" : 5,
     "follow_respawn_time" : 8,
     "max_followers" : 3,
+    "follow_attack" : 2,
     "master" : true,
     "friendly_fire" : false,
     "network_interface" : "",

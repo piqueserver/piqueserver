@@ -171,26 +171,39 @@ def pm(connection, value, *arg):
     player.send_chat('PM from %s: %s' % (connection.name, message))
     return 'PM sent to %s' % player.name
 
+def send_unfollow_message(connection):
+    if connection.follow == "attack":
+        return 'You are no longer an attacker.'
+    else:        
+        connection.follow.send_chat('%s is no longer following you.' %
+                                connection.name)
+        return 'You are no longer following %s.' % connection.follow.name
+
 def follow(connection, player = None):
     """Follow a player; on your next spawn, you'll spawn at their position,
         similar to the squad spawning feature of Battlefield."""
     if not connection.protocol.max_followers:
         return
+    
+    # TODO  make "attack" case-insensitive
+    #       move this feature into a script
+
     if player is None:
         if connection.follow is None:
-            return ("You aren't following anybody. To follow a player say "
+            return ("You aren't following anybody. To follow, say "
                     "/follow <nickname> or /follow attack")
         else:
-            player = connection.follow
-            connection.follow = None
             connection.respawn_time = connection.protocol.respawn_time
-            player.send_chat('%s is no longer following you.' % connection.name)
-            return 'You are no longer following %s.' % player.name
-    if player == "attack":
+            confirmation = send_unfollow_message(connection)
+            connection.follow = None
+            return confirmation
+    if player == "attack" and connection.protocol.follow_attack:
         if connection.follow == "attack":
             return "You're already an attacker."
         else:
-            connection.follow = player
+            if connection.follow is not None:
+                connection.send_chat(send_unfollow_message(connection))
+            connection.follow = "attack"
             connection.respawn_time = connection.protocol.follow_respawn_time
             return ("You are now an attacker and will spawn with players "
                     "close to the enemy.")
@@ -206,6 +219,8 @@ def follow(connection, player = None):
         return "%s doesn't want to be followed." % player.name
     if len(player.get_followers()) >= connection.protocol.max_followers:
         return '%s has too many followers!' % player.name
+    if connection.follow is not None:
+        connection.send_chat(send_unfollow_message(connection))
     connection.follow = player
     connection.respawn_time = connection.protocol.follow_respawn_time
     player.send_chat('%s is now following you.' % connection.name)
