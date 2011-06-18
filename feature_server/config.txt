@@ -29,7 +29,8 @@
     "friendly_fire" : false,
     "network_interface" : "",
     "passwords" : {
-        "admin" : ["replaceme"]
+        "admin" : ["replaceme"],
+        "trusted" : []
     },
     "ssh" : {
         "enabled" : false,
@@ -62,7 +63,8 @@
     "scripts" : [
         "welcome",
         "airstrike",
-        "rollback"
+        "rollback",
+        "trusted"
     ],
     
     "welcomes" : {
