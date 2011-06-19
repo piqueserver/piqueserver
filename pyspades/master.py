@@ -123,7 +123,8 @@ class MasterProtocol(DatagramProtocol):
     def datagramReceived(self, data, address):
         self.connection.data_received(data)
 
-def get_master_connection(name, max):
+def get_master_connection(name, max, interface = ''):
     defer = Deferred()
-    reactor.listenUDP(0, MasterProtocol(name, max, defer))
+    reactor.listenUDP(0, MasterProtocol(name, max, defer), 
+        interface = interface)
     return defer

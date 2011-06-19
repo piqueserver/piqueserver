@@ -787,7 +787,8 @@ class ServerProtocol(DatagramProtocol):
     
     def set_master(self):
         if self.master:
-            get_master_connection(self.name, self.max_players).addCallback(
+            get_master_connection(self.name, self.max_players,
+                self.transport.interface).addCallback(
                 self.got_master_connection)
         
     def got_master_connection(self, connection):

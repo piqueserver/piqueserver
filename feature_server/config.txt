@@ -31,7 +31,7 @@
     "network_interface" : "",
     "passwords" : {
         "admin" : ["replaceme"],
-        "trusted" : []
+        "trusted" : ["hey"]
     },
     "ssh" : {
         "enabled" : false,
