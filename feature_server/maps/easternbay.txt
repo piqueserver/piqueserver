@@ -1,0 +1,4 @@
+name = 'Eastern Bay'
+version = '1.2'
+author = 'Sasquatch'
+description = 'A slice of the Adirondack State Park in New York.'

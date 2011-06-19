@@ -1,0 +1,4 @@
+name = 'AcidCrackMeth'
+version = '1.0'
+author = 'Sasquatch'
+description = 'A very novel map that you will hate but get a kick out of.'

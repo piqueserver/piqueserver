@@ -1,0 +1,6 @@
+name = 'Scandinavia'
+version = '1.0'
+author = 'Sasquatch'
+description = ('A frozen wasteland encasing the northern European countries or '
+               'Norway, Sweden, Finland, and Denmark. One of the best battle '
+               'fronts in AoS over the Gulf of Bothnia.')
