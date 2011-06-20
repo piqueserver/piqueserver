@@ -19,12 +19,15 @@ def rollmap(connection, filename = None, first_arg = None, second_arg = None):
         start_x, start_y = coordinates(first_arg)
         end_x, end_y = start_x + 64, start_y + 64
         z_offset = int(second_arg)
-    return connection.protocol.start_rollback(connection, filename,
+    rollback_player = connection
+    if connection not in connection.protocol.players:
+        rollback_player = None
+    return connection.protocol.start_rollback(rollback_player, filename,
         start_x, start_y, end_x, end_y, z_offset)
 
 @admin
-def rollback(connection, value = None):
-    return rollmap(connection, first_arg = value)
+def rollback(connection, first_arg = None, second_arg = None):
+    return rollmap(connection, first_arg, second_arg)
 
 @admin
 def rollbackcancel(connection):

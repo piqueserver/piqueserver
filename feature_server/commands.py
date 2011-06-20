@@ -415,6 +415,8 @@ def reset_game(connection):
 
 def ping(connection, value = None):
     if value is None:
+        if connection not in connection.protocol.players:
+            raise ValueError()
         player = connection
     else:
         player = get_player(connection.protocol, value)
@@ -422,6 +424,8 @@ def ping(connection, value = None):
         int(player.latency * 1000) or 0)
 
 def intel(connection):
+    if connection not in connection.protocol.players:
+        raise KeyError()
     flag = connection.team.other.flag
     if flag.player is not None:
         return "%s has the other team's intel" % flag.player.name
