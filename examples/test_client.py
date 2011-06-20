@@ -22,7 +22,7 @@ from pyspades.tools import *
 class TestProtocol(ClientProtocol):
     pass
 
-HOST = get_server_ip('aos://578863941')
+HOST = get_server_ip('aos://1796321603')
 PORT = 32887
 # HOST = '127.0.0.1'
 # PORT = 32887

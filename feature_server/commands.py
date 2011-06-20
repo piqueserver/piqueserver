@@ -420,6 +420,12 @@ def ping(connection, value = None):
         player = get_player(connection.protocol, value)
     return '%s has a ping of %s' % (player.name, 
         int(player.latency * 1000) or 0)
+
+def intel(connection):
+    flag = connection.team.flag
+    if flag.player is not None:
+        return "%s has the other team's intel" % flag.player.name
+    return "Nobody currently has the other team's intel"
     
 command_list = [
     help,
@@ -430,6 +436,7 @@ command_list = [
     vote_yes,
     vote_no,
     cancel_vote,
+    intel,
     ip,
     ban,
     unban,
