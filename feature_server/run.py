@@ -49,7 +49,8 @@ if sys.version_info < (2, 7):
         print '(optional: install psyco for optimizations)'
 
 import pyspades.debug
-from pyspades.server import ServerProtocol, ServerConnection, position_data
+from pyspades.server import (ServerProtocol, ServerConnection, position_data,
+    grenade_packet)
 from map import Map
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
@@ -187,6 +188,13 @@ class FeatureConnection(ServerConnection):
             return False
         if self.god:
             self.refill()
+        grenade_packet.player_id = self.player_id
+        grenade_packet.value = time_left
+        for player in self.protocol.connections.values():
+            if player is self or player.player_id is None or player.god:
+                continue
+            player.send_contained(grenade_packet)
+        return False
     
     def on_team_join(self, team):
         if team.locked:

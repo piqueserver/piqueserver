@@ -169,9 +169,7 @@ class ServerConnection(BaseConnection):
                 saved_loaders.append(player_data.generate())
             return
         else:
-            if loader.id == Ack.id:
-                return
-            elif loader.id == Packet10.id:
+            if loader.id == Packet10.id:
                 return
             elif loader.id == Disconnect.id:
                 self.disconnect()
@@ -279,7 +277,8 @@ class ServerConnection(BaseConnection):
                             return
                         grenade_packet.player_id = self.player_id
                         grenade_packet.value = contained.value
-                        self.protocol.send_contained(grenade_packet, sender = self)
+                        self.protocol.send_contained(grenade_packet, 
+                            sender = self)
                     elif contained.id == clientloaders.SetWeapon.id:
                         self.tool = contained.value
                         set_weapon.player_id = self.player_id
