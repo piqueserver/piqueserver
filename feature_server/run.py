@@ -20,6 +20,7 @@ pyspades - default/featured server
 """
 
 IOCP = True
+PROFILE = False
 
 import sys
 import os
@@ -592,4 +593,9 @@ protocol_class.connection_class = connection_class
 reactor.listenUDP(PORT, protocol_class(config, map), 
     config.get('network_interface', ''))
 print 'Started server on port %s...' % PORT
-reactor.run()
+
+if PROFILE:
+    import cProfile
+    cProfile.run('reactor.run()', 'profile.dat')
+else:
+    reactor.run()
