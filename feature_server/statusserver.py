@@ -39,7 +39,7 @@ class StatusResource(Resource):
             if player.team is self.protocol.blue_team:
                 blues.append(player.name)
             else:
-                greens.appnd(player.name)
+                greens.append(player.name)
                                 
         dictionary = {
             "serverName": self.protocol.name,
