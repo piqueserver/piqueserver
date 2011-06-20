@@ -98,14 +98,16 @@ class FeatureConnection(ServerConnection):
     def on_login(self, name):
         if self.protocol.follow_attack == 'auto':
             self.follow = "attack"
-        self.protocol.send_chat('%s entered the game!' % name)
+        if self.protocol.join_part_messages:
+            self.protocol.send_chat('%s entered the game!' % name)
         print '%s (%s) entered the game!' % (name, self.address[0])
         self.protocol.irc_say('* %s entered the game' % name)
     
     def disconnect(self):
         self.drop_followers()
         if self.name is not None:
-            self.protocol.send_chat('%s left the game' % self.name)
+            if self.protocol.join_part_messages:
+                self.protocol.send_chat('%s left the game' % self.name)
             print self.name, 'disconnected!'
             self.protocol.irc_say('* %s disconnected' % self.name)
             if self.protocol.votekick_player is self:
@@ -344,6 +346,7 @@ class FeatureProtocol(ServerProtocol):
             'pyspades server %s' % random.randrange(0, 2000))
         
         self.max_score = config.get('cap_limit', None)
+        self.join_part_messages = config.get('join_part_messages', False)
         self.respawn_time = config.get('respawn_time', 5)
         self.follow_respawn_time = config.get('follow_respawn_time', self.respawn_time)
         self.master = config.get('master', True)
