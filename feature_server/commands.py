@@ -27,7 +27,7 @@ def admin(func):
     def new_func(connection, *arg, **kw):
         if not connection.admin:
             return 'No administrator rights!'
-        func(connection, *arg, **kw)
+        return func(connection, *arg, **kw)
     new_func.func_name = func.func_name
     new_func.admin = True
     return new_func
@@ -388,10 +388,19 @@ def god(connection, value = None):
         message = '%s returned to being a mere human.' % connection.name
     connection.protocol.send_chat(message, irc = True)
 
+@admin
+def ip(connection, value = None):
+    if value is None:
+        player = connection
+    else:
+        player = get_player(connection.protocol, value)
+    return 'The IP of %s is %s' % (player.name, player.address[0])
+
 @name ('resetgame')
 @admin
 def reset_game(connection):
     resetting_player = connection
+    # irc compatibility
     if resetting_player not in connection.protocol.players:
         for player in connection.protocol.players.values():
             resetting_player = player
@@ -402,6 +411,14 @@ def reset_game(connection):
     connection.protocol.reset_game(resetting_player)
     connection.protocol.send_chat('Game has been reset by %s' % connection.name,
         irc = True)
+
+def ping(connection, value = None):
+    if value is None:
+        player = connection
+    else:
+        player = get_player(connection.protocol, value)
+    return '%s has a ping of %s' % (player.name, 
+        int(player.latency * 1000) or 0)
     
 command_list = [
     help,
@@ -412,6 +429,7 @@ command_list = [
     vote_yes,
     vote_no,
     cancel_vote,
+    ip,
     ban,
     unban,
     mute,
@@ -433,7 +451,8 @@ command_list = [
     follow,
     no_follow,
     streak,
-    reset_game
+    reset_game,
+    ping
 ]
 
 commands = {}
@@ -454,11 +473,9 @@ def handle_command(connection, command, parameters):
     try:
         command_func = commands[command]
     except KeyError:
-        return #'Invalid command'
+        return # 'Invalid command'
     try:
         return command_func(connection, *parameters)
-    except KeyError:
-        return #'Invalid command'
     except TypeError:
         return 'Invalid number of arguments for %s' % command
     except InvalidPlayer:

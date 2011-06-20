@@ -56,7 +56,7 @@ class StatusResource(Resource):
             "scores": {
                 "currentBlueScore": self.protocol.blue_team.score,
                 "currentGreenScore": self.protocol.green_team.score,
-            "maxScore": self.protocol.max_scores}
+            "maxScore": self.protocol.max_score}
             }
 
         return json.dumps(dictionary)
