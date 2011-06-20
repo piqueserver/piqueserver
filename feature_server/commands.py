@@ -490,6 +490,8 @@ def handle_command(connection, command, parameters):
         return # 'Invalid command'
     try:
         return command_func(connection, *parameters)
+    except KeyError:
+        return # 'Invalid command'
     except TypeError:
         return 'Invalid number of arguments for %s' % command
     except InvalidPlayer:
