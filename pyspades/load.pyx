@@ -68,7 +68,7 @@ cdef inline int get_z(int x, int y, MapData * map, int start = 0):
     for z in range(start, 64):
         if get_solid(x, y, z, map):
             return z
-    return -1
+    return 0
 
 cdef class VXLData:
     cdef MapData * map
