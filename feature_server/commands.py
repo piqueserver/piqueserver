@@ -422,7 +422,7 @@ def ping(connection, value = None):
         int(player.latency * 1000) or 0)
 
 def intel(connection):
-    flag = connection.team.flag
+    flag = connection.team.other.flag
     if flag.player is not None:
         return "%s has the other team's intel" % flag.player.name
     return "Nobody currently has the other team's intel"
