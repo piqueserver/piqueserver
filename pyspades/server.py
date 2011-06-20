@@ -67,6 +67,7 @@ class ServerConnection(BaseConnection):
     tool = None
     color = (0x70, 0x70, 0x70)
     grenades = None
+    blocks = None
     spawn_call = None
     respawn_time = None
     saved_loaders = None
@@ -335,6 +336,10 @@ class ServerConnection(BaseConnection):
                     y = contained.y
                     z = contained.z
                     if value == BUILD_BLOCK:
+                        if not self.blocks:
+                            self.on_hack_attempt()
+                            return
+                        self.blocks -= 1
                         if self.on_block_build(x, y, z) == False:
                             return
                         elif not map.set_point(x, y, z, self.color + (255,)):
@@ -343,6 +348,7 @@ class ServerConnection(BaseConnection):
                         if self.on_block_destroy(x, y, z, value) == False:
                             return
                         elif value == DESTROY_BLOCK:
+                            self.blocks += 1
                             map.remove_point(x, y, z)
                         elif value == SPADE_DESTROY:
                             map.remove_point(x, y, z)
@@ -415,6 +421,7 @@ class ServerConnection(BaseConnection):
     def refill(self):
         self.hp = 100
         self.grenades = 2
+        self.blocks = 50
         intel_action.action_type = 4
         self.send_contained(intel_action)
     
@@ -448,6 +455,7 @@ class ServerConnection(BaseConnection):
         self.hp = 100
         self.tool = 3
         self.grenades = 2
+        self.blocks = 50
         self.protocol.send_contained(create_player, save = True)
         self.on_spawn(pos, name)
     
