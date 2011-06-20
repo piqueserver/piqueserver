@@ -189,7 +189,7 @@ class FeatureConnection(ServerConnection):
         if self.god:
             self.refill()
         grenade_packet.player_id = self.player_id
-        grenade_packet.value = contained.value
+        grenade_packet.value = time_left
         for player in self.protocol.connections.values():
             if player is self or player.player_id is None or player.god:
                 continue
