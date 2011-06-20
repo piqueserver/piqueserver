@@ -41,6 +41,9 @@ class Timer(object):
     def set_current(self, value):
         self.offset = value
         self.current = timer()
+    
+    def set_latency(self, value):
+        pass
 
 class PacketHandler(object):
     other_sequence = None
