@@ -269,6 +269,9 @@ class FeatureConnection(ServerConnection):
             reactor.callLater(current_time, self.send_chat, line)
             current_time += 2
     
+    def on_hack_attempt(self):
+        self.kick('Hack attempt detected')
+    
     # position methods
     
     def get_location(self):

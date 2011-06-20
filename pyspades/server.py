@@ -270,6 +270,9 @@ class ServerConnection(BaseConnection):
                         else:
                             self.hit(contained.value)
                     elif contained.id == clientloaders.GrenadePacket.id:
+                        if not self.grenades:
+                            self.on_hack_attempt()
+                            return
                         self.grenades -= 1
                         if self.on_grenade(contained.value) == False:
                             return
@@ -633,6 +636,9 @@ class ServerConnection(BaseConnection):
         pass
     
     def on_color_set(self, color):
+        pass
+    
+    def on_hack_attempt(self):
         pass
 
 class Vertex3(object):
