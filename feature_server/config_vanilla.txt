@@ -14,6 +14,7 @@
     "respawn_time" : 5,
     "master" : true,
     "friendly_fire" : "on_grief",
+    "grief_friendly_fire_time" : 2,
     "votekick_percentage" : 25,
     "network_interface" : "",
     "passwords" : {

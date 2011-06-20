@@ -351,6 +351,7 @@ class FeatureProtocol(ServerProtocol):
         self.follow_respawn_time = config.get('follow_respawn_time', self.respawn_time)
         self.master = config.get('master', True)
         self.friendly_fire = config.get('friendly_fire', True)
+        self.friendly_fire_time = config.get('grief_friendly_fire_time', 2.0)
         self.motd = self.format_lines(config.get('motd', None))
         self.help = self.format_lines(config.get('help', None))
         self.tips = self.format_lines(config.get('tips', None))
