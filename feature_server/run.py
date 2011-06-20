@@ -19,7 +19,7 @@
 pyspades - default/featured server
 """
 
-IOCP = False
+IOCP = True
 
 import sys
 import os
