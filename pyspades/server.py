@@ -294,7 +294,8 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(set_color, sender = self,
                             save = True)
                     elif contained.id == clientloaders.KillAction.id:
-                        other_player, = self.protocol.players[contained.player_id]
+                        other_player, = self.protocol.players[
+                            contained.player_id]
                         self.kill(other_player)
                 if contained.id == clientloaders.ChatMessage.id:
                     if not self.name:

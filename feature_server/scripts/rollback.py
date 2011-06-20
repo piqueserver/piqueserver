@@ -38,7 +38,7 @@ def apply_script(protocol, connection, config):
     rollback_map = Map(config['map']).data
     
     class RollbackConnection(connection):
-        def on_block_color(self, (r, g, b)):
+        def on_color_set(self, (r, g, b)):
             if (self.protocol.rollback_in_progress and
                 self.protocol.rollbacking_player is self):
                 return False
