@@ -368,7 +368,7 @@ class FeatureProtocol(ServerProtocol):
         logfile = config.get('logfile', None)
         self.debug_log = config.get('debug_log', False)
         if self.debug_log:
-            pyspades.debug.open_log()
+            pyspades.debug.open_debug_log()
         ssh = config.get('ssh', {})
         if ssh.get('enabled', False):
             from ssh import RemoteConsole
