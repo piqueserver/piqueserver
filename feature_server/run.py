@@ -33,7 +33,7 @@ else:
     from pyspades.common import crc32
     CLIENT_VERSION = crc32(open('../data/client.exe', 'rb').read())
 
-if sys.platform == 'win32':
+if False:#:sys.platform == 'win32':
     # install IOCP
     try:
         from twisted.internet import iocpreactor 
