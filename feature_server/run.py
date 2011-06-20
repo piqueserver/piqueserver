@@ -33,7 +33,7 @@ else:
     from pyspades.common import crc32
     CLIENT_VERSION = crc32(open('../data/client.exe', 'rb').read())
 
-if False:#sys.platform == 'win32':
+if sys.platform == 'win32':
     # install IOCP
     try:
         from twisted.internet import iocpreactor 
@@ -468,6 +468,8 @@ class FeatureProtocol(ServerProtocol):
     def start_votekick(self, connection, player):
         if self.votes is not None:
             return 'Votekick in progress.'
+        elif player.admin:
+            return 'Cannot votekick an administrator.'
         last_votekick = connection.last_votekick
         if (last_votekick is not None and
         reactor.seconds() - last_votekick < self.votekick_interval):
