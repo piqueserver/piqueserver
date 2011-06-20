@@ -31,6 +31,7 @@ def timer():
 
 class Timer(object):
     offset = None
+    latency = None
     def __init__(self, offset = 0):
         self.set_current(offset)
     
@@ -38,10 +39,6 @@ class Timer(object):
         return int((self.offset + timer() - self.current) & 0xFFFF)
     
     def set_current(self, value):
-        # if self.offset is not None:
-            # diff = value - self.offset
-            # if diff != 0:
-                # print diff
         self.offset = value
         self.current = timer()
 
@@ -103,8 +100,10 @@ class BaseConnection(object):
     
     disconnected = False
     
+    latency = None
     resend_interval = 0.5
     ping_loop = None
+    ping_time = None
     ping_interval = 5
     ping_call = None
     ping_defer = None
@@ -232,6 +231,7 @@ class BaseConnection(object):
         if timeout is None:
             timeout = self.timeout
         self.ping_call = reactor.callLater(timeout, self.timed_out)
+        self.ping_time = reactor.seconds()
         self.ping_defer = self.send_loader(ping, True, 0xFF).addCallback(
             self.got_ping)
         return self.ping_defer
@@ -239,6 +239,8 @@ class BaseConnection(object):
     def got_ping(self, ack):
         if self.ping_call is not None:
             self.ping_call.cancel()
+            self.latency = reactor.seconds() - self.ping_time
+            self.other_timer.set_latency(self.latency)
             self.ping_call = None
     
     def timed_out(self):
