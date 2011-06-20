@@ -313,6 +313,7 @@ class FeatureProtocol(ServerProtocol):
     building = True
     killing = True
     remote_console = None
+    debug_log = None
     
     # votekick
     votekick_time = 60 # 1 minute
@@ -365,6 +366,9 @@ class FeatureProtocol(ServerProtocol):
         self.max_followers = config.get('max_followers', 3)
         self.follow_attack = config.get('follow_attack', False)
         logfile = config.get('logfile', None)
+        self.debug_log = config.get('debug_log', False)
+        if self.debug_log:
+            pyspades.debug.open_log()
         ssh = config.get('ssh', {})
         if ssh.get('enabled', False):
             from ssh import RemoteConsole

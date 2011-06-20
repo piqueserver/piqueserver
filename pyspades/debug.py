@@ -35,3 +35,15 @@ if False: # use old ByteReader?
     import pyspades.bytes
     pyspades.bytes.ByteReader = bytereader_old.ByteReader
     pyspades.bytes.ByteWriter = bytereader_old.ByteReader
+
+def open_debug_log():
+    DebugLog.filehandle = open('debug.log','w')
+
+def debug_csv_line(listdata):
+    if DebugLog.filehandle:
+        DebugLog.filehandle.write(','.join(map(str, listdata)) )
+        DebugLog.filehandle.write('\n')
+        DebugLog.filehandle.flush()
+    
+class DebugLog:
+    filehandle = None

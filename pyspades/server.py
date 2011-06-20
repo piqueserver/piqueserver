@@ -29,6 +29,7 @@ from pyspades.multidict import MultikeyDict
 from pyspades.idpool import IDPool
 from pyspades.master import get_master_connection
 from pyspades.collision import vector_collision
+from pyspades.debug import *
 
 import random
 import math
@@ -392,6 +393,9 @@ class ServerConnection(BaseConnection):
         
         if self.speed_limit_grace < 1 and (xydiff > MAX_WALK_SPEED or
            zdiff < MAX_FALL_SPEED or zdiff > MAX_CLIMB_SPEED):
+            
+            debug_csv_line((self.player_id,xydiff,zdiff,delta_time))
+            
             # They went too fast, throw their old pos back at them.
             position_data.x = self.position.x
             position_data.y = self.position.y
@@ -489,6 +493,7 @@ class ServerConnection(BaseConnection):
     def disconnect(self):
         if self.disconnected:
             return
+        debug_csv_line((self.player_id,"dc"))
         BaseConnection.disconnect(self)
         del self.protocol.connections[self.address]
         if self.connection_id is not None:

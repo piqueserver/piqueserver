@@ -211,7 +211,8 @@ def follow(connection, player = None):
             confirmation = send_unfollow_message(connection)
             connection.follow = None
             return confirmation
-    if player == "attack" and connection.protocol.follow_attack == True:
+    if player == "attack" and (connection.protocol.follow_attack or
+                               connection.protocol.follow_attack == "auto"):
         if connection.follow == "attack":
             return "You're already an attacker."
         else:
