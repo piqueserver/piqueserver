@@ -48,6 +48,7 @@ class ClientConnection(BaseConnection):
         
         connect_request = ConnectionRequest()
         connect_request.auth_val = self.auth_val
+        connect_request.client = True
         connect_request.version = crc32(open('./data/client.exe', 'rb').read())
         self.send_loader(connect_request, False, 255)
     
@@ -69,29 +70,27 @@ class ClientConnection(BaseConnection):
             self.connected = True
             print 'connected'
         elif hasattr(packet, 'data') and packet.id != MapData.id:
-            print 'yay'
             if packet.id == SizedData.id and self.map is not None:
                 print 'finished!'
-                open('testy.vxl', 'wb').write(str(self.map))
+                # open('testy.vxl', 'wb').write(str(self.map))
                 self.map = None
             data = packet.data
             contained = load_server_packet(data)
-            if data.dataLeft():
-                raw_input('not completely parsed')
-            print contained, vars(contained)
-            newdata = ByteWriter()
-            contained.write(newdata)
-            if contained.id != serverloaders.PlayerData.id:
-                if str(data) != str(newdata):
-                    print hexify(data)
-                    print hexify(newdata)
-                    raw_input('incorrect save func')
+            print contained
+            # if data.dataLeft():
+                # raw_input('not completely parsed')
+            # print contained
+            # newdata = ByteWriter()
+            # contained.write(newdata)
+            # if contained.id != serverloaders.PlayerData.id:
+                # if str(data) != str(newdata):
+                    # print hexify(data)
+                    # print hexify(newdata)
+                    # raw_input('incorrect save func')
         elif packet.id == MapData.id:
             data = packet.data
             if packet.num == 0:
                 byte = data.readByte(True)
-                if byte != 15:
-                    raw_input()
             self.map.write(data.read())
         elif packet.id == Ack.id:
             pass

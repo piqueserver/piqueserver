@@ -858,8 +858,9 @@ class ServerProtocol(DatagramProtocol):
                 continue
             if sequence:
                 loader.sequence2 = player.get_orientation_sequence()
-            if player.saved_loaders is not None and save:
-                player.saved_loaders.append(data)
+            if player.saved_loaders is not None:
+                if save:
+                    player.saved_loaders.append(data)
             else:
                 player.send_loader(loader, not sequence)
     

@@ -30,6 +30,7 @@ def timer():
     return int(time.time() * 1000)
 
 class Timer(object):
+    offset = None
     def __init__(self, offset = 0):
         self.set_current(offset)
     
@@ -37,6 +38,10 @@ class Timer(object):
         return int((self.offset + timer() - self.current) & 0xFFFF)
     
     def set_current(self, value):
+        # if self.offset is not None:
+            # diff = value - self.offset
+            # if diff != 0:
+                # print diff
         self.offset = value
         self.current = timer()
 
@@ -123,6 +128,7 @@ class BaseConnection(object):
                 self.other_timer = Timer(in_packet.timer)
             else:
                 self.other_timer.set_current(in_packet.timer)
+        # print in_packet.timer,
         for loader in in_packet.items:
             if self.disconnected:
                 return
