@@ -27,7 +27,7 @@ def rollmap(connection, filename = None, first_arg = None, second_arg = None):
 
 @admin
 def rollback(connection, first_arg = None, second_arg = None):
-    return rollmap(connection, first_arg, second_arg)
+    return rollmap(connection, first_arg = first_arg, second_arg = second_arg)
 
 @admin
 def rollbackcancel(connection):
