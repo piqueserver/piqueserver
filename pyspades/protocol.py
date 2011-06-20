@@ -109,7 +109,10 @@ class BaseConnection(object):
     def data_received(self, data):
         reader = ByteReader(data)
         in_packet.read(data)
-        if self.connection_id is not None
+        if not self.send_id and self.connection_id is not None:
+            if in_packet.connection_id != self.connection_id:
+                # invalid packet
+                return
         for loader in in_packet.items:
             if self.disconnected:
                 return
