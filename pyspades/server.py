@@ -168,9 +168,7 @@ class ServerConnection(BaseConnection):
                 saved_loaders.append(player_data.generate())
             return
         else:
-            if loader.id == Ack.id:
-                return
-            elif loader.id == Packet10.id:
+            if loader.id == Packet10.id:
                 return
             elif loader.id == Disconnect.id:
                 self.disconnect()

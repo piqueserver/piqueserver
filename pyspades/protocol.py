@@ -26,24 +26,8 @@ from twisted.internet.task import LoopingCall
 
 import time
 
-def timer():
-    return int(time.time() * 1000)
-
-class Timer(object):
-    offset = None
-    latency = None
-    def __init__(self, offset = 0):
-        self.set_current(offset)
-    
-    def get_value(self):
-        return int((self.offset + timer() - self.current) & 0xFFFF)
-    
-    def set_current(self, value):
-        self.offset = value
-        self.current = timer()
-    
-    def set_latency(self, value):
-        pass
+def get_timer():
+    return int(time.time() * 1000) & 0xFFFF
 
 class PacketHandler(object):
     other_sequence = None
@@ -95,9 +79,6 @@ class BaseConnection(object):
     in_packet = None
     out_packet = None
     
-    timer = None
-    other_timer = None
-    
     packet_handlers = None
     packet_deferreds = None
     
@@ -115,7 +96,10 @@ class BaseConnection(object):
     def __init__(self):
         self.packet_handler1 = PacketHandler(self)
         self.packet_handler2 = PacketHandler(self)
-        self.timer = Timer(0)
+        self.packet_handlers = {
+            0 : self.packet_handler1,
+            0xFF : self.packet_handler2
+        }
         self.packets = {}
         self.packet_deferreds = {}
         ping_loop = LoopingCall(self.ping)
@@ -125,18 +109,13 @@ class BaseConnection(object):
     def data_received(self, data):
         reader = ByteReader(data)
         in_packet.read(data)
-        if in_packet.timer is not None:
-            if self.other_timer is None:
-                self.other_timer = Timer(in_packet.timer)
-            else:
-                self.other_timer.set_current(in_packet.timer)
-        # print in_packet.timer,
+        if self.connection_id is not None
         for loader in in_packet.items:
             if self.disconnected:
                 return
             if loader.ack:
-                self.get_packet_handler(loader.byte).loader_received(loader)
-            else:
+                self.packet_handlers[loader.byte].loader_received(loader)
+            elif loader.id != Ack.id:
                 self.loader_received(loader)
             if self.connection_id is not None:
                 if loader.ack and loader.id:
@@ -180,13 +159,12 @@ class BaseConnection(object):
     
     def resend(self, key, loader, resend_interval):
         defer, _ = self.packet_deferreds.pop(key)
-        timer = self.timer.get_value()
         out_packet.unique = self.unique
         if self.send_id:
             out_packet.connection_id = self.connection_id
         else:
             out_packet.connection_id = 0
-        out_packet.timer = timer
+        out_packet.timer = get_timer()
         out_packet.data = loader
         self.send_data(str(out_packet.generate()))
         call = reactor.callLater(resend_interval, self.resend, key, loader, 
@@ -198,8 +176,7 @@ class BaseConnection(object):
             return
         if resend_interval is None:
             resend_interval = self.resend_interval
-        sequence = self.get_packet_handler(byte).get_sequence(ack)
-        timer = self.timer.get_value()
+        sequence = self.packet_handlers[byte].get_sequence(ack)
         loader.byte = byte
         loader.sequence = sequence
         loader.ack = ack
@@ -209,7 +186,7 @@ class BaseConnection(object):
             out_packet.connection_id = self.connection_id
         else:
             out_packet.connection_id = 0
-        out_packet.timer = timer
+        out_packet.timer = get_timer()
         out_packet.data = loader
         self.send_data(str(out_packet.generate()))
         if ack:
@@ -219,14 +196,6 @@ class BaseConnection(object):
                 resend_interval)
             self.packet_deferreds[key] = (defer, call)
             return defer
-    
-    def get_packet_handler(self, byte):
-        if byte == 0:
-            return self.packet_handler1
-        elif byte == 0xFF:
-            return self.packet_handler2
-        else:
-            raise NotImplementedError('invalid byte')
             
     def ping(self, timeout = None):
         if self.ping_call is not None:
@@ -243,7 +212,6 @@ class BaseConnection(object):
         if self.ping_call is not None:
             self.ping_call.cancel()
             self.latency = reactor.seconds() - self.ping_time
-            self.other_timer.set_latency(self.latency)
             self.ping_call = None
     
     def timed_out(self):

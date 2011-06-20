@@ -138,7 +138,7 @@ cdef class ByteReader:
         return self.size
     
     def __str__(self):
-        return self.pos[:self.size]
+        return self.data[:self.size]
 
 cdef class ByteWriter:
     cdef void * stream
