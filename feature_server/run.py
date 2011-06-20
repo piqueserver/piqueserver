@@ -498,6 +498,8 @@ class FeatureProtocol(ServerProtocol):
         return 'You initiated a votekick. Say /cancel to stop it at any time.'
     
     def votekick(self, connection, value):
+        if connection is self.votekick_player:
+            return "The votekick victim can't vote."
         if self.votes is None or connection in self.votes:
             return
         if value:
