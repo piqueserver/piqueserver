@@ -365,7 +365,7 @@ class FeatureProtocol(ServerProtocol):
         self.votekick_percentage = config.get('votekick_percentage', 25)
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
-        self.max_followers = config.get('max_followers', 3)
+        self.max_followers = config.get('max_followers', 0)
         self.follow_attack = config.get('follow_attack', False)
         logfile = config.get('logfile', None)
         self.debug_log = config.get('debug_log', False)
