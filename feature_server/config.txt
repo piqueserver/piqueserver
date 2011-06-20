@@ -69,7 +69,8 @@
         "airstrike",
         "rollback",
         "trusted",
-        "autohelp"
+        "autohelp",
+        "protect"
     ],
     
     "welcomes" : {
