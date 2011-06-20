@@ -392,6 +392,8 @@ def god(connection, value = None):
 @admin
 def ip(connection, value = None):
     if value is None:
+        if connection not in connection.protocol.players:
+            raise ValueError()
         player = connection
     else:
         player = get_player(connection.protocol, value)
