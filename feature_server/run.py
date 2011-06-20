@@ -49,7 +49,8 @@ if sys.version_info < (2, 7):
         print '(optional: install psyco for optimizations)'
 
 import pyspades.debug
-from pyspades.server import ServerProtocol, ServerConnection, position_data
+from pyspades.server import (ServerProtocol, ServerConnection, position_data,
+    grenade_packet)
 from map import Map
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
