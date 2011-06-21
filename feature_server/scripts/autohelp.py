@@ -13,6 +13,6 @@ def apply_script(protocol, connection, config):
             if deuce_howto_match(self, value):
                 self.send_chat("TO CHANGE YOUR NAME: Start Menu-> "
                     "All Programs-> Ace of Spades-> Configuration")
-                self.protocol.irc_say("Sent help to %s" % self.name)
-            connection.on_chat(self, value, global_message)
+                self.protocol.irc_say("* Sent help to %s" % self.name)
+            return connection.on_chat(self, value, global_message)
     return protocol, AutoHelpConnection

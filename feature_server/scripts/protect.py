@@ -20,12 +20,12 @@ def apply_script(protocol, connection, config):
         def on_block_build(self, x, y, z):
             if not self.god and self.protocol.is_protected(x, y):
                 return False
-            connection.on_block_build(self, x, y, z)
+            return connection.on_block_build(self, x, y, z)
         
         def on_block_destroy(self, x, y, z, mode):
             if not self.god and self.protocol.is_protected(x, y):
                 return False
-            connection.on_block_destroy(self, x, y, z, mode)
+            return connection.on_block_destroy(self, x, y, z, mode)
     
     class ProtectProtocol(protocol):
         protected = None
