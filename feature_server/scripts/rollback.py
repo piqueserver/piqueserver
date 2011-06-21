@@ -38,7 +38,7 @@ for func in (rollmap, rollback, rollbackcancel):
 
 def apply_script(protocol, connection, config):
     rollback_on_game_end = config.get('rollback_on_game_end', False)
-    rollback_map = Map.loaded_map.data
+    rollback_map = Map(config['map']).data
     
     class RollbackConnection(connection):
         def on_color_set(self, (r, g, b)):

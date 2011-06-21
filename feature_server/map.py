@@ -18,7 +18,6 @@ class Map(object):
     info = None
     
     def __init__(self, name, load_dir = './maps'):
-        Map.loaded_map = self
         self.load_information(name, load_dir)
         if not self.generate_map(name):
             self.load_vxl(name, load_dir)
