@@ -54,6 +54,7 @@ chat_message = serverloaders.ChatMessage()
 map_data = MapData()
 
 class ServerConnection(BaseConnection):
+    master = False
     protocol = None
     send_id = False
     address = None
@@ -100,6 +101,7 @@ class ServerConnection(BaseConnection):
                 if loader.client:
                     self.connection_id = self.protocol.connection_ids.pop()
                 else:
+                    self.master = True
                     self.connection_id = 0
                 self.unique = random.randint(0, 3)
                 connection_response = ConnectionResponse()
@@ -107,10 +109,12 @@ class ServerConnection(BaseConnection):
                 connection_response.unique = self.unique
                 connection_response.connection_id = self.connection_id
                 
-                self.send_loader(connection_response, True, 0xFF).addCallback(
-                    self.send_map)
-                
-                if not loader.client:
+                if loader.client:
+                    self.send_loader(connection_response, True, 0xFF
+                        ).addCallback(self.send_map)
+                else:
+                    self.send_loader(connection_response, True, 0xFF
+                        ).addCallback(self.disconnect)
                     return
                 
                 self.map_data = ByteReader(self.protocol.map.generate())
@@ -505,7 +509,7 @@ class ServerConnection(BaseConnection):
         debug_csv_line((self.player_id,"dc"))
         BaseConnection.disconnect(self)
         del self.protocol.connections[self.address]
-        if self.connection_id is not None:
+        if self.connection_id is not None and not self.master:
             self.protocol.connection_ids.put_back(self.connection_id)
         if self.player_id is not None:
             self.protocol.player_ids.put_back(self.player_id)
