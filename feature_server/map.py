@@ -31,6 +31,7 @@ class Map(object):
         self.author = getattr(info, 'author', '(unknown)')
         self.version = getattr(info, 'version', '1.0')
         self.description = getattr(info, 'description', '')
+        self.extensions = getattr(info, 'extensions', {})
         self.script = getattr(info, 'apply_script', None)
         
     def apply_script(self, protocol, connection, config):

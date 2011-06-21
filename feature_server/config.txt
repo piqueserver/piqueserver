@@ -70,7 +70,8 @@
         "rollback",
         "trusted",
         "autohelp",
-        "protect"
+        "protect",
+	"map_extensions"
     ],
     
     "welcomes" : {
