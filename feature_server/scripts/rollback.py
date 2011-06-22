@@ -113,7 +113,7 @@ def apply_script(protocol, connection, config):
                         self.rollback_total_rows * 100.0)
                     if progress < 100:
                         self.send_chat('Rollback progress %s%%' % progress)
-                    else
+                    else:
                         self.send_chat('Rollback doing color pass...')
             except (StopIteration):
                 self.end_rollback('Time taken: %.2fs' % 
