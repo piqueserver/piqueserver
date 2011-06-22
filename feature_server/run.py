@@ -360,6 +360,7 @@ class FeatureProtocol(ServerProtocol):
         if self.tips is not None and self.tip_frequency > 0:
             reactor.callLater(self.tip_frequency * 60, self.send_tip)
         self.max_players = config.get('max_players', 20)
+        self.max_connections_per_ip = config.get('max_connections_per_ip', 0)
         passwords = config.get('passwords', {})
         self.admin_passwords = passwords.get('admin', [])
         self.server_prefix = encode(config.get('server_prefix', '[*]'))

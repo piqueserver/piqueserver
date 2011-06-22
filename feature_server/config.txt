@@ -20,6 +20,7 @@
         "No griefing, no bad words, etc."
     ],
     "max_players" : 32,
+    "max_connections_per_ip" : 0,
     "join_part_messages" : true,
     "cap_limit" : 10,
     "map" : "pyspades",

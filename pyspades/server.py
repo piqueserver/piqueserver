@@ -92,11 +92,20 @@ class ServerConnection(BaseConnection):
         if self.connection_id is None:
             if loader.id == ConnectionRequest.id:
                 if loader.client:
-                    max_players = min(32, self.protocol.max_players)
-                    if (loader.version != self.protocol.version
-                    or len(self.protocol.connections) > max_players):
+                    if loader.version != self.protocol.version:
                         self.disconnect()
                         return
+                    max_players = min(32, self.protocol.max_players)
+                    if len(self.protocol.connections) > max_players:
+                        self.disconnect()
+                        return
+                    if self.protocol.max_connections_per_ip:
+                        shared = [conn for conn in
+                            self.protocol.connections.values()
+                            if conn.address[0] == self.address[0]]
+                        if len(shared) > self.protocol.max_connections_per_ip:
+                            self.disconnect()
+                            return
                 self.auth_val = loader.auth_val
                 if loader.client:
                     self.connection_id = self.protocol.connection_ids.pop()
