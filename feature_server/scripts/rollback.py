@@ -53,7 +53,7 @@ def apply_script(protocol, connection, config):
         # rollback
         
         def start_rollback(self, connection, filename,
-                           start_x, start_y, end_x, end_y, z_offset):
+                           start_x, start_y, end_x, end_y):
             if self.rollback_in_progress:
                 return 'Rollback in progress.'
             map = rollback_map if filename is None else Map(filename).data
@@ -69,7 +69,7 @@ def apply_script(protocol, connection, config):
                     'to perform a rollback')
             self.send_chat(message, irc = True)
             packet_generator = self.create_rollback_generator(connection,
-                self.map, map, start_x, start_y, end_x, end_y, z_offset)
+                self.map, map, start_x, start_y, end_x, end_y)
             self.rollbacking_player = connection
             self.rollback_in_progress = True
             self.rollback_start_time = time.time()
