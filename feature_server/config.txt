@@ -8,7 +8,9 @@
     "help" : [
         "/FOLLOW    Choose a teammate as squad leader, who will act as your spawnpoint",
         "/STREAK    Shows how many kills in a row you got without dying",
-        "/AIRSTRIKE Air support!  Try it out just like that for more details"
+        "/AIRSTRIKE Air support!  Try it out just like that for more details",
+        "/INTEL     Tells you who's got the enemy intel",
+        "/PING      Shows your ping"
     ],
     "tips" : [
         "Here you can deploy airstrikes, form squads and more!  Type /help for info."
