@@ -321,7 +321,7 @@ class FeatureProtocol(ServerProtocol):
     debug_log = None
     
     # votekick
-    votekick_time = 60 # 1 minute
+    votekick_time = 120 # 2 minutes
     votekick_interval = 3 * 60 # 3 minutes
     votekick_percentage = 25.0
     votekick_max_percentage = 40.0 # too many no-votes?
@@ -476,6 +476,8 @@ class FeatureProtocol(ServerProtocol):
     def start_votekick(self, connection, player):
         if self.votes is not None:
             return 'Votekick in progress.'
+        elif connection is player:
+            return "You can't votekick yourself."
         elif player.admin:
             return 'Cannot votekick an administrator.'
         last_votekick = connection.last_votekick

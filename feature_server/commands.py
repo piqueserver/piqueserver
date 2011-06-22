@@ -117,7 +117,11 @@ def heal(connection, player = None):
 def votekick(connection, value):
     if connection not in connection.protocol.players:
         raise KeyError()
-    player = get_player(connection.protocol, value)
+    player = None
+    try:
+        player = get_player(connection.protocol, '#' + value)
+    except InvalidPlayer:
+        player = get_player(connection.protocol, value)
     return connection.protocol.start_votekick(connection, player)
 
 @name('y')
