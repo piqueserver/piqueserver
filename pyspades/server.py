@@ -430,6 +430,7 @@ class ServerConnection(BaseConnection):
             position_data.y = contained.y
             position_data.z = contained.z
             self.protocol.send_contained(position_data, sender = self)
+        self.on_update_position()
     
     def refill(self):
         self.hp = 100
@@ -665,6 +666,9 @@ class ServerConnection(BaseConnection):
         pass
     
     def on_hack_attempt(self):
+        pass
+
+    def on_update_position(self):
         pass
 
 class Vertex3(object):
