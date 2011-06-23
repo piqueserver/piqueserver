@@ -19,11 +19,17 @@
 pyspades - default/featured server
 """
 
-IOCP = True
-PROFILE = False
-
 import sys
 import os
+import json
+
+try:
+    config = json.load(open('config.txt', 'rb'))
+except IOError, e:
+    raise SystemExit('no config.txt file found')
+
+profile = config.get('profile', False)
+iocp = config.get('iocp', True)
 
 frozen = hasattr(sys, 'frozen')
 
@@ -36,7 +42,7 @@ else:
     from pyspades.common import crc32
     CLIENT_VERSION = crc32(open('../data/client.exe', 'rb').read())
 
-if IOCP and sys.platform == 'win32':
+if iocp and sys.platform == 'win32':
     # install IOCP
     try:
         from twisted.internet import iocpreactor 
@@ -559,11 +565,6 @@ class FeatureProtocol(ServerProtocol):
 PORT = 32887
 
 try:
-    config = json.load(open('config.txt', 'rb'))
-except IOError, e:
-    raise SystemExit('no config.txt file found')
-
-try:
     map = Map(config['map'])
 except KeyError:
     raise SystemExit('no map specified!')
@@ -597,7 +598,7 @@ reactor.listenUDP(PORT, protocol_class(config, map),
     config.get('network_interface', ''))
 print 'Started server on port %s...' % PORT
 
-if PROFILE:
+if profile:
     import cProfile
     cProfile.run('reactor.run()', 'profile.dat')
 else:

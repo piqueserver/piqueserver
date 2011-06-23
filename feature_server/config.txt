@@ -65,6 +65,8 @@
         "channel" : "#pyspades.bots",
         "commandprefix" : "."
     },
+    "iocp" : true,
+    "profile" : false,
 
     "scripts" : [
         "welcome",
