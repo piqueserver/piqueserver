@@ -9,7 +9,11 @@ names = [
     'pyspades.compression',
     'pyspades.load',
     'pyspades.compressedvxl',
-    'pyspades.bytes'
+    'pyspades.bytes',
+    'pyspades.packet',
+    'pyspades.loaders',
+    'pyspades.serverloaders',
+    'pyspades.clientloaders'
 ]
 
 for name in names:

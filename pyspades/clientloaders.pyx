@@ -16,82 +16,93 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from pyspades.common import *
-from pyspades.loaders import Loader
-from pyspades.tools import get_server_ip, make_server_number
+from pyspades.loaders cimport Loader
+from pyspades.bytes cimport ByteReader, ByteWriter
 
-class _InformationCommon(Loader):
-    __slots__ = ('x', 'y', 'z')
+cdef class _InformationCommon(Loader):
+    cdef public:
+        float x, y, z
 
-    def read(self, reader):
+    cpdef read(self, ByteReader reader):
         reader.skipBytes(1)
         self.x = reader.readFloat(False) # x
         self.y = reader.readFloat(False) # y
         self.z = reader.readFloat(False) # z
     
-    def write(self, reader):
+    cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
         reader.writeFloat(self.x, False)
         reader.writeFloat(self.y, False)
         reader.writeFloat(self.z, False)
 
-class PositionData(_InformationCommon):
-    pass
+cdef class PositionData(_InformationCommon):
+    id = 0
 
-class OrientationData(_InformationCommon):
-    pass
+cdef class OrientationData(_InformationCommon):
+    id = 1
 
-class MovementData(Loader):
-    __slots__ = ('up', 'down', 'left', 'right')
+cdef class MovementData(Loader):
+    id = 2
+    cdef public:
+        bint up, down, left, right
     
-    def read(self, reader):
-        firstByte = reader.readByte(True)
+    cpdef read(self, ByteReader reader):
+        cdef int firstByte = reader.readByte(True)
         self.up = (firstByte >> 4) & 1 # going forward?
         self.down = (firstByte >> 5) & 1 # going back?
         self.left = (firstByte >> 6) & 1 # going left?
         self.right = (firstByte >> 7) # going right?
     
-    def write(self, reader):
-        up = int(self.up)
-        down = int(self.down)
-        left = int(self.left)
-        right = int(self.right)
+    cpdef write(self, ByteWriter reader):
+        cdef int up = self.up
+        cdef int down = self.down
+        cdef int left = self.left
+        cdef int right = self.right
+        cdef int byte
         byte = self.id | (up << 4) | (down << 5) | (left << 6) | (right << 7)
         reader.writeByte(byte, True)
 
-class AnimationData(Loader):
-    __slots__ = ('fire', 'jump', 'crouch', 'aim')
+cdef class AnimationData(Loader):
+    id = 3
 
-    def read(self, reader):
-        firstByte = reader.readByte(True)
+    cdef public:
+        bint fire, jump, crouch, aim
+
+    cpdef read(self, ByteReader reader):
+        cdef int firstByte = reader.readByte(True)
         self.fire = (firstByte >> 4) & 1
         self.jump = (firstByte >> 5) & 1
         self.crouch = (firstByte >> 6) & 1
         self.aim = (firstByte >> 7)
     
-    def write(self, reader):
-        fire = int(self.fire)
-        jump = int(self.jump)
-        crouch = int(self.crouch)
-        aim = int(self.aim)
+    cpdef write(self, ByteWriter reader):
+        cdef int fire = self.fire
+        cdef int jump = self.jump
+        cdef int crouch = self.crouch
+        cdef int aim = self.aim
+        cdef int byte
         byte = self.id | (fire << 4) | (jump << 5) | (crouch << 6) | (aim << 7)
         reader.writeByte(byte, True)
 
-class HitPacket(Loader):
-    __slots__ = ('player_id', 'value')
+cdef class HitPacket(Loader):
+    id = 4
     
-    def read(self, reader):
-        firstByte = reader.readByte(True)
-        byte = reader.readByte(True)
+    cdef public:
+        int player_id, value
+    
+    cpdef read(self, ByteReader reader):
+        cdef int firstByte = reader.readByte(True)
+        cdef int byte = reader.readByte(True)
         if firstByte & 0x10:
             self.value = byte
-            self.player_id = None
+            self.player_id = -1
         else:
             self.value = firstByte >> 5
             self.player_id = byte
     
-    def write(self, reader):
-        byte = self.id
-        if self.player_id is None:
+    cpdef write(self, ByteWriter reader):
+        cdef int byte = self.id
+        if self.player_id == -1:
             byte |= 0x10
             reader.writeByte(byte, True)
             reader.writeByte(self.value, True)
@@ -100,96 +111,118 @@ class HitPacket(Loader):
             reader.writeByte(byte, True)
             reader.writeByte(self.player_id, True)
 
-class GrenadePacket(Loader):
-    __slots__ = ('value',)
+cdef class GrenadePacket(Loader):
+    id = 5
 
-    def read(self, reader):
+    cdef public:
+        float value
+
+    cpdef read(self, ByteReader reader):
         reader.skipBytes(1)
         self.value = reader.readFloat(False)
     
-    def write(self, reader):
+    cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
         reader.writeFloat(self.value, False)
 
-class SetWeapon(Loader):
-    __slots__ = ('value',)
+cdef class SetWeapon(Loader):
+    id = 6
+    cdef public:
+        int value
 
-    def read(self, reader):
-        firstByte = reader.readByte(True)
+    cpdef read(self, ByteReader reader):
+        cdef int firstByte = reader.readByte(True)
         self.value = firstByte >> 4 # tool
         # 0 -> spade, 1 -> dagger, 2 -> block, 3 -> gun
     
-    def write(self, reader):
-        byte = self.id
+    cpdef write(self, ByteWriter reader):
+        cdef int byte = self.id
         byte |= self.value << 4
         reader.writeByte(byte, True)
 
-class SetColor(Loader):
-    __slots__ = ('value',)
+cdef class SetColor(Loader):
+    id = 7
     
-    def read(self, reader):
-        firstInt = reader.readInt(True, False)
+    cdef public:
+        unsigned int value
+    
+    cpdef read(self, ByteReader reader):
+        cdef unsigned int firstInt = reader.readInt(True, False)
         self.value = firstInt >> 4
     
-    def write(self, reader):
-        value = self.id
+    cpdef write(self, ByteWriter reader):
+        cdef unsigned int value = self.id
         value |= self.value << 4
         reader.writeInt(value, True, False)
 
-class JoinTeam(Loader):
-    __slots__ = ('name', 'team')
+cdef class JoinTeam(Loader):
+    id = 8
     
-    def read(self, reader):
+    cdef public:
+        object name
+        int team
+    
+    cpdef read(self, ByteReader reader):
         # respawn?
-        firstByte = reader.readByte(True)
+        cdef int firstByte = reader.readByte(True)
         self.team = firstByte >> 4 # 0 for b, 1 for g
         if reader.dataLeft():
             self.name = reader.readString()
     
-    def write(self, reader):
-        byte = self.id
+    cpdef write(self, ByteWriter reader):
+        cdef int byte = self.id
         byte |= self.team << 4
         reader.writeByte(byte, True)
         if self.name is not None:
             reader.writeString(self.name)
 
-class BlockAction(Loader):
-    __slots__ = ('x', 'y', 'z', 'value')
+cdef class BlockAction(Loader):
+    id = 11
+    
+    cdef public:
+        int x, y, z, value
 
-    def read(self, reader):
-        firstInt = reader.readInt(True, False)
+    cpdef read(self, ByteReader reader):
+        cdef unsigned int firstInt = reader.readInt(True, False)
         self.x = (firstInt >> 6) & 0x1FF # x
         self.y = (firstInt >> 15) & 0x1FF # y
         self.z = (firstInt >> 24) & 0x3F # z
         # 0 -> build, 1 -> destroy, 2 -> spade destroy, 3 -> grenade destroy
         self.value = (firstInt >> 4) & 3
     
-    def write(self, reader):
+    cpdef write(self, ByteWriter reader):
+        cdef unsigned int value
         value = (self.id | (self.x << 6) | (self.y << 15) | (self.z << 24) |
             (self.value << 4))
         reader.writeInt(value, True, False)
 
-class KillAction(Loader):
-    __slots__ = ('player_id',)
+cdef class KillAction(Loader):
+    id = 13
     
-    def read(self, reader):
+    cdef public:
+        int player_id
+    
+    cpdef read(self, ByteReader reader):
         reader.skipBytes(1)
         self.player_id = reader.readByte(True)
     
-    def write(self, reader):
+    cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
 
-class ChatMessage(Loader):
-    __slots__ = ('global_message', 'value')
+cdef class ChatMessage(Loader):
+    id = 14
+    cdef public:
+        bint global_message
+        object value
     
-    def read(self, reader):
-        firstByte = reader.readByte(True)
+    cpdef read(self, ByteReader reader):
+        cdef int firstByte = reader.readByte(True)
         self.global_message = (firstByte & 0xF0) != 32
         self.value = reader.readString()
     
-    def write(self, reader):
-        byte = self.id
+    cpdef write(self, ByteWriter reader):
+        cdef int byte = self.id
         if self.global_message:
             byte |= 16
         else:

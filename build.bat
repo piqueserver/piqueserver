@@ -1,1 +1,1 @@
-python build.py build_ext -f --inplace
+python build.py build_ext --inplace

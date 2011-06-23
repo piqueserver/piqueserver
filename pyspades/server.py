@@ -150,7 +150,7 @@ class ServerConnection(BaseConnection):
                 green_base = green.base
                
                 self.player_id = self.protocol.player_ids.pop()
-                player_data.player_left = None
+                player_data.player_left = -1
                 player_data.player_id = self.player_id
                 player_data.max_score = self.protocol.max_score
                 player_data.blue_score = blue.score
@@ -165,7 +165,7 @@ class ServerConnection(BaseConnection):
                 player_data.green_base_z = green_base.z
                 
                 if blue_flag.player is None:
-                    player_data.blue_flag_player = None
+                    player_data.blue_flag_player = -1
                     player_data.blue_flag_x = blue_flag.x
                     player_data.blue_flag_y = blue_flag.y
                     player_data.blue_flag_z = blue_flag.z
@@ -173,7 +173,7 @@ class ServerConnection(BaseConnection):
                     player_data.blue_flag_player = blue_flag.player.player_id
                 
                 if green_flag.player is None:
-                    player_data.green_flag_player = None
+                    player_data.green_flag_player = -1
                     player_data.green_flag_x = green_flag.x
                     player_data.green_flag_y = green_flag.y
                     player_data.green_flag_z = green_flag.z
@@ -274,7 +274,7 @@ class ServerConnection(BaseConnection):
                         animation_data.player_id = self.player_id
                         self.protocol.send_contained(animation_data, sender = self)
                     elif contained.id == clientloaders.HitPacket.id:
-                        if contained.player_id is not None:
+                        if contained.player_id != -1:
                             player, = self.protocol.players[contained.player_id]
                             hit_amount = HIT_VALUES[contained.value]
                             if self.on_hit(hit_amount, player) == False:

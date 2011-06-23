@@ -48,11 +48,6 @@ class NoDataLeft(Exception):
     pass
     
 cdef class ByteReader:
-    cdef char * data
-    cdef char * pos
-    cdef char * end
-    cdef int start, size
-    cdef object input
     def __init__(self, input, int start = 0, int size = -1):
         self.input = input
         self.data = input
@@ -71,7 +66,7 @@ cdef class ByteReader:
         self.pos += size
         return data
     
-    def read(self, int bytes = -1):
+    cpdef read(self, int bytes = -1):
         cdef int left = self.dataLeft()
         if bytes == -1 or bytes > left:
             bytes = left
@@ -79,37 +74,38 @@ cdef class ByteReader:
         self.pos += bytes
         return ret
     
-    def readByte(self, bint unsigned = False):
+    cpdef int readByte(self, bint unsigned = False):
         cdef char * pos = self.check_available(1)
         if unsigned:
             return read_ubyte(pos)
         else:
             return read_byte(pos)
     
-    def readShort(self, bint unsigned = False, bint big_endian = True):
+    cpdef int readShort(self, bint unsigned = False, bint big_endian = True):
         cdef char * pos = self.check_available(2)
         if unsigned:
             return read_ushort(pos, big_endian)
         else:
             return read_short(pos, big_endian)
 
-    def readInt(self, bint unsigned = False, bint big_endian = True):
+    cpdef long long readInt(self, bint unsigned = False, 
+                            bint big_endian = True):
         cdef char * pos = self.check_available(4)
         if unsigned:
             return read_uint(pos, big_endian)
         else:
             return read_int(pos, big_endian)
 
-    def readFloat(self, bint big_endian = True):
+    cpdef float readFloat(self, bint big_endian = True):
         cdef char * pos = self.check_available(4)
         return read_float(pos, big_endian)
     
-    def readString(self):
+    cpdef readString(self):
         value = self.pos
         self.pos += len(value) + 1
         return value
         
-    def readReader(self, int size = -1):
+    cpdef ByteReader readReader(self, int size = -1):
         cdef int left = self.dataLeft()
         if size == -1 or size > left:
             size = left
@@ -131,7 +127,7 @@ cdef class ByteReader:
     cpdef skipBytes(self, int bytes):
         self._skip(bytes)
         
-    def rewind(self, value):
+    cpdef rewind(self, int value):
         self._skip(-value)
     
     def __len__(self):
@@ -141,39 +137,45 @@ cdef class ByteReader:
         return self.data[:self.size]
 
 cdef class ByteWriter:
-    cdef void * stream
-    
     def __init__(self):
         self.stream = create_stream()
-        
-    def write(self, data):
+    
+    cdef void writeSize(self, char * data, int size):
+        write(self.stream, data, size)
+    
+    cpdef write(self, data):
         write(self.stream, data, len(data))
     
-    def writeByte(self, value, bint unsigned = False):
+    cpdef writeByte(self, int value, bint unsigned = False):
         if unsigned:
             write_ubyte(self.stream, value)
         else:
             write_byte(self.stream, value)
 
-    def writeShort(self, value, bint unsigned = False, bint big_endian = True):
+    cpdef writeShort(self, int value, bint unsigned = False, 
+                     bint big_endian = True):
         if unsigned:
             write_ushort(self.stream, value, big_endian)
         else:
             write_short(self.stream, value, big_endian)
 
-    def writeInt(self, value, bint unsigned = False, bint big_endian = True):
+    cpdef writeInt(self, long long value, bint unsigned = False, 
+                   bint big_endian = True):
         if unsigned:
             write_uint(self.stream, value, big_endian)
         else:
             write_int(self.stream, value, big_endian)
 
-    def writeFloat(self, value, bint big_endian = True):
+    cpdef writeFloat(self, float value, bint big_endian = True):
         write_float(self.stream, value, big_endian)
     
-    def writeString(self, value):
+    cpdef writeStringSize(self, char * value, int size):
+        write_string(self.stream, value, size)
+    
+    cpdef writeString(self, value):
         write_string(self.stream, value, len(value))
     
-    def rewind(self, int bytes):
+    cpdef rewind(self, int bytes):
         rewind_stream(self.stream, bytes)
     
     def __str__(self):

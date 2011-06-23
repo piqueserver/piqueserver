@@ -162,9 +162,12 @@ class BaseConnection(object):
     
     def resend(self, key, loader, resend_interval):
         defer, _ = self.packet_deferreds.pop(key)
-        out_packet.unique = self.unique
+        out_packet.unique = self.unique or 0
         if self.send_id:
-            out_packet.connection_id = self.connection_id
+            connection_id = self.connection_id
+            if connection_id is None:
+                connection_id = 0xFFF
+            out_packet.connection_id = connection_id
         else:
             out_packet.connection_id = 0
         out_packet.timer = get_timer()
@@ -184,9 +187,12 @@ class BaseConnection(object):
         loader.sequence = sequence
         loader.ack = ack
         loader = generate_loader_data(loader)
-        out_packet.unique = self.unique
+        out_packet.unique = self.unique or 0
         if self.send_id:
-            out_packet.connection_id = self.connection_id
+            connection_id = self.connection_id
+            if connection_id is None:
+                connection_id = 0xFFF
+            out_packet.connection_id = connection_id
         else:
             out_packet.connection_id = 0
         out_packet.timer = get_timer()

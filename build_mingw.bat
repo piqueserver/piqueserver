@@ -1,1 +1,1 @@
-python build.py build_ext -f --inplace -c mingw32
+python build.py build_ext --inplace -c mingw32
