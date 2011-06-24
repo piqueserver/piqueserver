@@ -249,11 +249,8 @@ class FeatureConnection(ServerConnection):
         else:
             message = '%s banned for %s minutes%s' % (self.name, duration,
                 reason)
-            self.protocol.temp_bans.add(self.address[0])
-            reactor.callLater(duration, self.protocol.temp_bans.discard, 
-                self.address[0])
         self.protocol.send_chat(message, irc = True)
-        self.protocol.add_ban(self.address[0], temporary = duration is not None)
+        self.protocol.add_ban(self.address[0], reason, duration)
 
     def get_attackers(self):
         """Return 1/4th of followable teammates
@@ -322,7 +319,6 @@ class FeatureProtocol(ServerProtocol):
     version = CLIENT_VERSION
     admin_passwords = None
     bans = None
-    temp_bans = None
     irc_relay = None
     balanced_teams = None
     timestamps = None
@@ -348,10 +344,9 @@ class FeatureProtocol(ServerProtocol):
         self.map = map.data
         self.map_info = map
         try:
-            self.bans = set(json.load(open('bans.txt', 'rb')))
+            self.bans = json.load(open('bans.txt', 'rb'))
         except IOError:
-            self.bans = set([])
-        self.temp_bans = set([])
+            self.bans = []
         self.config = config
         self.name = config.get('name', 
             'pyspades server %s' % random.randrange(0, 2000))
@@ -377,6 +372,7 @@ class FeatureProtocol(ServerProtocol):
         self.balanced_teams = config.get('balanced_teams', None)
         self.rules = self.format_lines(config.get('rules', None))
         self.login_retries = config.get('login_retries', 1)
+        self.default_ban_time = config.get('default_ban_time', 24*60)
         self.votekick_ban_duration = config.get('votekick_ban_duration', 15)
         self.votekick_percentage = config.get('votekick_percentage', 25)
         if config.get('user_blocks_only', False):
@@ -448,28 +444,49 @@ class FeatureProtocol(ServerProtocol):
         print 'Master connection lost, reconnecting...'
         ServerProtocol.master_disconnected(self, *arg, **kw)
     
-    def add_ban(self, ip, temporary = False):
+    def add_ban(self, ip, reason, duration):
+        """Ban an ip(if it hasn't already been banned) with an optional reason and
+            duration in minutes. If duration is None, ban is permanent."""
         for connection in self.connections.values():
-            if connection.address[0] == ip:
+            if connection.address[0] == ip and (len([ban for ban in self.bans
+                                                     if ban[1]==ip])<=0):
+                if duration:
+                    self.bans.append((connection.name, ip, reason,
+                                      reactor.seconds()+duration * 60))
+                else:
+                    self.bans.append((connection.name, ip, reason,
+                                      None))
                 connection.kick(silent = True)
-        if not temporary:
-            self.bans.add(ip)
-            self.save_bans()
+                self.save_bans()
     
     def remove_ban(self, ip):
-        self.bans.remove(ip)
+        print(ip)
+        results = [self.bans.remove(n) for n in self.bans if n[1]==ip]
+        print(results)
         self.save_bans()
+
+    def undo_last_ban(self):
+        result = self.bans.pop()
+        self.save_bans()
+        return result
     
     def save_bans(self):
-        json.dump(list(self.bans), open('bans.txt', 'wb'))
+        json.dump(self.bans, open('bans.txt', 'wb'))
     
     def datagramReceived(self, data, address):
         # simple pyspades query
         if data == 'HELLO':
             self.transport.write('HI', address)
             return
-        if address[0] in self.bans or address[0] in self.temp_bans:
-            return
+        for ban in self.bans:
+            ip = ban[1]
+            timestamp = ban[3]
+            if address[0] == ip:
+                if reactor.seconds()>=timestamp:
+                    self.remove_ban(ip)
+                    self.save_bans()
+                else:
+                    return
         ServerProtocol.datagramReceived(self, data, address)
         
     def irc_say(self, msg):
@@ -541,7 +558,7 @@ class FeatureProtocol(ServerProtocol):
             irc = True)
         if enough:
             if self.votekick_ban_duration:
-                victim.ban(duration = self.votekick_ban_duration * 60)
+                victim.ban("Votekick", self.votekick_ban_duration)
             else:
                 victim.kick(silent = True)
         elif not self.voting_player.admin: # admins are powerful, yeah

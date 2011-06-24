@@ -55,6 +55,7 @@
     "balanced_teams" : 1,
     "login_retries" : 3,
     "votekick_ban_duration" : 10,
+    "default_ban_duration" : 1440,
     "irc" : {
         "enabled" : false,
         "nickname" : "pyspades",

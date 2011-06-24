@@ -79,10 +79,15 @@ def ban(connection, value, *arg):
     duration = None
     if len(arg):
         try:
-            duration = int(arg[0]) * 60
+            duration = int(arg[0])
             arg = arg[1:]
         except (IndexError, ValueError):
             pass
+    if duration is None:
+        if len(arg)>0 and arg[0] == "perma":
+            arg = arg[1:]
+        else:
+            duration = connection.protocol.default_ban_time
     reason = join_arguments(arg)
     player = get_player(connection.protocol, value)
     player.ban(reason, duration)
@@ -94,6 +99,16 @@ def unban(connection, ip):
         return 'IP unbanned.'
     except KeyError:
         return 'IP not found in ban list.'
+
+@name('undoban')
+@admin
+def undo_ban(connection, *arg):
+    if len(connection.protocol.bans)>0:
+        result = connection.protocol.bans.pop()
+        connection.protocol.save_bans()
+        return ('Ban for %s undone.' % result[0])
+    else:
+        return 'No bans to undo.'
 
 @admin
 def say(connection, *arg):
@@ -451,6 +466,7 @@ command_list = [
     ip,
     ban,
     unban,
+    undo_ban,
     mute,
     unmute,
     say,
