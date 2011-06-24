@@ -85,6 +85,7 @@ class ServerConnection(BaseConnection):
     debug_timers = None
     timer_sum = 0
     timer_count = 0
+    last_timer = last_seconds = None
     
     def __init__(self, protocol, address):
         BaseConnection.__init__(self)
