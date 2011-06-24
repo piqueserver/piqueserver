@@ -242,13 +242,18 @@ class FeatureConnection(ServerConnection):
             self.protocol.send_chat(message, irc = True)
         self.disconnect()
     
-    def ban(self, reason = None):
-        if reason is not None:
-            message = '%s banned: %s' % (self.name, reason)
+    def ban(self, reason = None, duration = None):
+        reason = ': ' + reason if reason is not None else ''
+        if duration is None:
+            message = '%s banned%s' % (self.name, reason)
         else:
-            message = '%s banned' % self.name
+            message = '%s banned for %s minutes%s' % (self.name, duration,
+                reason)
+            self.protocol.temp_bans.add(self.address[0])
+            reactor.callLater(duration, self.protocol.temp_bans.discard, 
+                self.address[0])
         self.protocol.send_chat(message, irc = True)
-        self.protocol.add_ban(self.address[0])
+        self.protocol.add_ban(self.address[0], temporary = duration is not None)
 
     def get_attackers(self):
         """Return 1/4th of followable teammates
@@ -536,10 +541,7 @@ class FeatureProtocol(ServerProtocol):
             irc = True)
         if enough:
             if self.votekick_ban_duration:
-                self.add_ban(victim.address[0], temporary = True)
-                self.temp_bans.add(victim.address[0])
-                reactor.callLater(self.votekick_ban_duration * 60,
-                    self.temp_bans.discard, victim.address[0])
+                victim.ban(duration = self.votekick_ban_duration * 60)
             else:
                 victim.kick(silent = True)
         elif not self.voting_player.admin: # admins are powerful, yeah

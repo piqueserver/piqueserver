@@ -76,9 +76,16 @@ def kick(connection, value, *arg):
 
 @admin
 def ban(connection, value, *arg):
+    duration = None
+    if len(arg):
+        try:
+            duration = int(arg[0])
+            arg = arg[1:]
+        except (IndexError, ValueError):
+            pass
     reason = join_arguments(arg)
     player = get_player(connection.protocol, value)
-    player.ban(reason)
+    player.ban(reason, duration)
 
 @admin
 def unban(connection, ip):
