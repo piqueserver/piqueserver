@@ -83,16 +83,14 @@ class ServerConnection(BaseConnection):
     fire = jump = aim = crouch = None
     
     debug_timers = None
-    timers = None
-    last_timer = None
-    last_seconds = None
+    timer_sum = 0
+    timer_count = 0
     
     def __init__(self, protocol, address):
         BaseConnection.__init__(self)
         self.protocol = protocol
         self.address = address
         self.respawn_time = protocol.respawn_time
-        self.timers = []
         self.debug_timers = []
     
     def loader_received(self, loader):
@@ -602,16 +600,17 @@ class ServerConnection(BaseConnection):
         if self.last_timer is not None:
             seconds_diff = (seconds - self.last_seconds)
             if seconds_diff != 0:
-                timers.append(float(value - self.last_timer) / seconds_diff)
+                self.timer_sum += float(value - self.last_timer) / seconds_diff
+                self.timer_count += 1
         self.last_timer = value
         self.last_seconds = seconds
-        if len(timers) <= TIMER_WINDOW_ENTRIES:
+        if self.timer_count < TIMER_WINDOW_ENTRIES:
             return
-        timers.pop(0)
-        self.debug_timers.pop(0)
-        diff = sum(timers) / float(TIMER_WINDOW_ENTRIES)
+        diff = self.timer_sum / float(timer_count)
+        self.timer_sum = self.timer_count = 0
+        self.debug_timers = []
         if diff > MAX_TIMER_SPEED:
-            print 'SPEEDHACK -> Diff:', diff, value, self.timers, self.debug_timers
+            print 'SPEEDHACK -> Diff:', diff, self.debug_timers
             self.on_hack_attempt('Speedhack detected')
 
     # events/hooks
