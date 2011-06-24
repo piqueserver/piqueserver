@@ -594,7 +594,6 @@ class ServerConnection(BaseConnection):
             self.send_contained(chat_message)
     
     def timer_received(self, value):
-        timers = self.timers
         seconds = reactor.seconds()
         self.debug_timers.append((value, seconds))
         if self.last_timer is not None:
