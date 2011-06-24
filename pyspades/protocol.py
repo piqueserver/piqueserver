@@ -117,7 +117,8 @@ class BaseConnection(object):
         if timer != -1:
             timer += self.timer_offset
             if self.timer is not None:
-                if timer - self.timer < 0:
+                if (timer - self.timer < 0 and
+                in_packet.timer in xrange(2048)):
                     self.timer_offset += 0xFFFF
                     timer += 0xFFFF
             self.timer = timer
