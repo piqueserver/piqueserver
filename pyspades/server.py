@@ -82,17 +82,14 @@ class ServerConnection(BaseConnection):
     position = orientation = None
     fire = jump = aim = crouch = None
     
-    debug_timers = None
-    timer_sum = 0
-    timer_count = 0
-    last_timer = last_seconds = None
+    timers = None
     
     def __init__(self, protocol, address):
         BaseConnection.__init__(self)
         self.protocol = protocol
         self.address = address
         self.respawn_time = protocol.respawn_time
-        self.debug_timers = []
+        self.timers = []
     
     def loader_received(self, loader):
         if self.connection_id is None:
@@ -595,22 +592,17 @@ class ServerConnection(BaseConnection):
             self.send_contained(chat_message)
     
     def timer_received(self, value):
+        timers = self.timers
         seconds = reactor.seconds()
-        self.debug_timers.append((value, seconds))
-        if self.last_timer is not None:
-            seconds_diff = (seconds - self.last_seconds)
-            if seconds_diff != 0:
-                self.timer_sum += float(value - self.last_timer) / seconds_diff
-                self.timer_count += 1
-        self.last_timer = value
-        self.last_seconds = seconds
-        if self.timer_count < TIMER_WINDOW_ENTRIES:
+        timers.append((value, seconds))
+        if len(timers) <= TIMER_WINDOW_ENTRIES:
             return
-        diff = self.timer_sum / float(self.timer_count)
-        self.timer_sum = self.timer_count = 0
-        self.debug_timers = []
+        timers.pop(0)
+        start_timer, start_seconds = timers[0]
+        end_timer, end_seconds = timers[-1]
+        diff = (end_timer - start_timer) / (end_seconds - start_seconds)
         if diff > MAX_TIMER_SPEED:
-            print 'SPEEDHACK -> Diff:', diff, self.debug_timers
+            print 'SPEEDHACK -> Diff:', diff, timers
             self.on_hack_attempt('Speedhack detected')
 
     # events/hooks
