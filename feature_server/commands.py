@@ -76,9 +76,16 @@ def kick(connection, value, *arg):
 
 @admin
 def ban(connection, value, *arg):
+    duration = None
+    if len(arg):
+        try:
+            duration = int(arg[0]) * 60
+            arg = arg[1:]
+        except (IndexError, ValueError):
+            pass
     reason = join_arguments(arg)
     player = get_player(connection.protocol, value)
-    player.ban(reason)
+    player.ban(reason, duration)
 
 @admin
 def unban(connection, ip):
@@ -129,12 +136,6 @@ def vote_yes(connection):
     if connection not in connection.protocol.players:
         raise KeyError()
     connection.protocol.votekick(connection, True)
-
-@name('n')
-def vote_no(connection):
-    if connection not in connection.protocol.players:
-        raise KeyError()
-    connection.protocol.votekick(connection, False)
 
 @name('cancel')
 def cancel_vote(connection):
@@ -445,7 +446,6 @@ command_list = [
     kick,
     votekick,
     vote_yes,
-    vote_no,
     cancel_vote,
     intel,
     ip,
