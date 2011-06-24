@@ -83,13 +83,15 @@ class ServerConnection(BaseConnection):
     fire = jump = aim = crouch = None
     
     timers = None
+    last_timer = None
+    last_seconds = None
     
     def __init__(self, protocol, address):
         BaseConnection.__init__(self)
         self.protocol = protocol
         self.address = address
         self.respawn_time = protocol.respawn_time
-        self.timers = ([], [])
+        self.timers = []
     
     def loader_received(self, loader):
         if self.connection_id is None:
@@ -592,18 +594,17 @@ class ServerConnection(BaseConnection):
             self.send_contained(chat_message)
     
     def timer_received(self, value):
-        values, seconds = self.timers
-        values.append(value)
-        seconds.append(reactor.seconds())
-        if len(values) <= TIMER_WINDOW_ENTRIES:
+        timers = self.timers
+        seconds = reactor.seconds()
+        if self.last_timer is not None:
+            timers.append(
+                float(value - self.last_timer) / (seconds - self.last_seconds))
+        self.last_timer = value
+        self.last_seconds = seconds
+        if len(timers) <= TIMER_WINDOW_ENTRIES:
             return
-        seconds.pop(0)
-        values.pop(0)
-        values_sum = sum(values) - values[0] * len(values)
-        seconds_sum = sum(seconds) - seconds[0] * len(seconds)
-        if seconds_sum == 0:
-            return
-        diff = float(values_sum) / seconds_sum
+        timers.pop(0)
+        diff = sum(timers) / float(TIMER_WINDOW_ENTRIES)
         if diff > MAX_TIMER_SPEED:
             print 'SPEEDHACK -> Diff:', diff, value, self.timers
             self.on_hack_attempt('Speedhack detected')
