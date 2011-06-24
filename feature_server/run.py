@@ -294,6 +294,7 @@ class FeatureConnection(ServerConnection):
             current_time += 2
     
     def on_hack_attempt(self, reason):
+        print 'Hack attempt detected from %s: %s' % (self.name, reason)
         self.kick(reason)
     
     # position methods
