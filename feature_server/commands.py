@@ -79,7 +79,7 @@ def ban(connection, value, *arg):
     duration = None
     if len(arg):
         try:
-            duration = int(arg[0])
+            duration = int(arg[0]) * 60
             arg = arg[1:]
         except (IndexError, ValueError):
             pass
