@@ -119,7 +119,7 @@ class FeatureConnection(ServerConnection):
             self.protocol.irc_say('* %s disconnected' % self.name)
             if self.protocol.votekick_player is self:
                 self.protocol.votekick_call.cancel()
-                self.protocol.end_votekick(False, 'Player left the game')
+                self.protocol.end_votekick(True, 'Player banned')
         ServerConnection.disconnect(self)
     
     def on_spawn(self, pos, name):
