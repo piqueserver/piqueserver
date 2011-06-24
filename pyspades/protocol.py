@@ -25,6 +25,7 @@ from pyspades.loaders import *
 from twisted.internet.task import LoopingCall
 
 import time
+import math
 
 def get_timer():
     return int(time.time() * 1000) & 0xFFFF
@@ -93,6 +94,9 @@ class BaseConnection(object):
     ping_defer = None
     timeout = 10
     
+    timer = None
+    timer_offset = 0
+    
     def __init__(self):
         self.packet_handler1 = PacketHandler(self)
         self.packet_handler2 = PacketHandler(self)
@@ -109,6 +113,15 @@ class BaseConnection(object):
     def data_received(self, data):
         reader = ByteReader(data)
         in_packet.read(data)
+        timer = in_packet.timer
+        if timer != -1:
+            timer += self.timer_offset
+            if self.timer is not None:
+                if timer - self.timer < 0:
+                    self.timer_offset += 0xFFFF
+                    timer += 0xFFFF
+            self.timer = timer
+            self.timer_received(timer)
         if not self.send_id and self.connection_id is not None:
             if in_packet.connection_id != self.connection_id:
                 # invalid packet
@@ -237,3 +250,7 @@ class BaseConnection(object):
         contained.write(data)
         loader.data = data
         return self.send_loader(loader, sequence is None)
+    
+    # events
+    def timer_received(self, value):
+        pass

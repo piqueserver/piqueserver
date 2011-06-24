@@ -36,6 +36,8 @@ import math
 import shlex
 import textwrap
 
+SLIDING_WINDOW_ENTRIES = 10
+
 player_data = serverloaders.PlayerData()
 create_player = serverloaders.CreatePlayer()
 position_data = serverloaders.PositionData()
@@ -82,11 +84,14 @@ class ServerConnection(BaseConnection):
     position = orientation = None
     fire = jump = aim = crouch = None
     
+    timers = None
+    
     def __init__(self, protocol, address):
         BaseConnection.__init__(self)
         self.protocol = protocol
         self.address = address
         self.respawn_time = protocol.respawn_time
+        self.timers = ([], [])
     
     def loader_received(self, loader):
         if self.connection_id is None:
@@ -284,7 +289,7 @@ class ServerConnection(BaseConnection):
                             self.hit(contained.value)
                     elif contained.id == clientloaders.GrenadePacket.id:
                         if not self.grenades:
-                            self.on_hack_attempt()
+                            self.on_hack_attempt('Grenade hack detected')
                             return
                         self.grenades -= 1
                         if self.on_grenade(contained.value) == False:
@@ -350,7 +355,7 @@ class ServerConnection(BaseConnection):
                     z = contained.z
                     if value == BUILD_BLOCK:
                         if not self.blocks:
-                            self.on_hack_attempt()
+                            self.on_hack_attempt('Block hack detected')
                             return
                         self.blocks -= 1
                         if self.on_block_build(x, y, z) == False:
@@ -388,48 +393,12 @@ class ServerConnection(BaseConnection):
         self.orientation_sequence = (sequence + 1) & 0xFFFF
         return sequence
 
-    def disable_speed_limit(self):
-        self.speed_limit_grace = 5
-
     def update_position(self, contained):
-        """Regulates the maximum movement speed to combat cheating.
-        A grace period variable is used to accomodate server
-        manipulations of position.
-        """
-
-        curtime = reactor.seconds()
-        delta_time = curtime - self.movement_timestamp
-        self.movement_timestamp = curtime
-        xdiff = (self.position.x - contained.x)
-        ydiff = (self.position.y - contained.y)
-        if delta_time == 0:
-            xydiff = 0
-            zdiff = 0
-        else:
-            xydiff = math.sqrt(xdiff * xdiff + ydiff * ydiff) / delta_time
-            zdiff = (self.position.z-contained.z) / delta_time
-        
-        position_data.player_id = self.player_id
-        
-        if self.speed_limit_grace < 1 and (xydiff > MAX_WALK_SPEED or
-           zdiff < MAX_FALL_SPEED or zdiff > MAX_CLIMB_SPEED):
-            
-            debug_csv_line((self.player_id,xydiff,zdiff,delta_time))
-            
-            # They went too fast, throw their old pos back at them.
-            position_data.x = self.position.x
-            position_data.y = self.position.y
-            position_data.z = self.position.z
-            self.protocol.send_contained(position_data)
-        else:
-            if xdiff != 0 or ydiff != 0 or zdiff != 0:
-                # As soon as they start moving we start dropping the grace period.
-                self.speed_limit_grace -= 1
-            self.position.set(contained.x, contained.y, contained.z)
-            position_data.x = contained.x
-            position_data.y = contained.y
-            position_data.z = contained.z
-            self.protocol.send_contained(position_data, sender = self)
+        self.position.set(contained.x, contained.y, contained.z)
+        position_data.x = contained.x
+        position_data.y = contained.y
+        position_data.z = contained.z
+        self.protocol.send_contained(position_data, sender = self)
         self.on_update_position()
     
     def refill(self):
@@ -454,7 +423,6 @@ class ServerConnection(BaseConnection):
                 self.respawn_time, self.spawn)
     
     def spawn(self, pos = None, name = None):
-        self.disable_speed_limit()
         self.spawn_call = None
         create_player.player_id = self.player_id
         self.orientation = Vertex3(0, 0, 0)
@@ -624,6 +592,21 @@ class ServerConnection(BaseConnection):
                 line)
             self.send_contained(chat_message)
     
+    def timer_received(self, value):
+        values, seconds = self.timers
+        values.append(value)
+        seconds.append(reactor.seconds())
+        if len(values) > SLIDING_WINDOW_ENTRIES:
+            seconds.pop(0)
+            values.pop(0)
+        values_sum = sum(values) - values[0] * len(values)
+        seconds_sum = sum(seconds) - seconds[0] * len(seconds)
+        if seconds_sum == 0:
+            return
+        diff = float(values_sum) / seconds_sum
+        if diff > 1600:
+            self.on_hack_attempt('Speedhack detected')
+
     # events/hooks
     
     def on_join(self):
@@ -665,7 +648,7 @@ class ServerConnection(BaseConnection):
     def on_color_set(self, color):
         pass
     
-    def on_hack_attempt(self):
+    def on_hack_attempt(self, reason):
         pass
 
     def on_update_position(self):

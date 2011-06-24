@@ -288,8 +288,8 @@ class FeatureConnection(ServerConnection):
             reactor.callLater(current_time, self.send_chat, line)
             current_time += 2
     
-    def on_hack_attempt(self):
-        self.kick('Hack attempt detected')
+    def on_hack_attempt(self, reason):
+        self.kick(reason)
     
     # position methods
     
@@ -298,7 +298,6 @@ class FeatureConnection(ServerConnection):
         return position.x, position.y, position.z
     
     def set_location(self, (x, y, z)):
-        self.disable_speed_limit()
         position_data.x = x
         position_data.y = y
         position_data.z = z
