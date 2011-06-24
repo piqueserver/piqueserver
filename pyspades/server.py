@@ -36,8 +36,6 @@ import math
 import shlex
 import textwrap
 
-SLIDING_WINDOW_ENTRIES = 10
-
 player_data = serverloaders.PlayerData()
 create_player = serverloaders.CreatePlayer()
 position_data = serverloaders.PositionData()
@@ -596,7 +594,7 @@ class ServerConnection(BaseConnection):
         values, seconds = self.timers
         values.append(value)
         seconds.append(reactor.seconds())
-        if len(values) > SLIDING_WINDOW_ENTRIES:
+        if len(values) > TIMER_WINDOW_ENTRIES:
             seconds.pop(0)
             values.pop(0)
         values_sum = sum(values) - values[0] * len(values)
@@ -604,7 +602,7 @@ class ServerConnection(BaseConnection):
         if seconds_sum == 0:
             return
         diff = float(values_sum) / seconds_sum
-        if diff > 1600:
+        if diff > MAX_TIMER_SPEED:
             self.on_hack_attempt('Speedhack detected')
 
     # events/hooks
