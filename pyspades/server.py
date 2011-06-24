@@ -35,6 +35,7 @@ import random
 import math
 import shlex
 import textwrap
+import collections
 
 player_data = serverloaders.PlayerData()
 create_player = serverloaders.CreatePlayer()
@@ -89,7 +90,7 @@ class ServerConnection(BaseConnection):
         self.protocol = protocol
         self.address = address
         self.respawn_time = protocol.respawn_time
-        self.timers = []
+        self.timers = collections.deque()
     
     def loader_received(self, loader):
         if self.connection_id is None:
@@ -597,7 +598,7 @@ class ServerConnection(BaseConnection):
         timers.append((value, seconds))
         if len(timers) <= TIMER_WINDOW_ENTRIES:
             return
-        timers.pop(0)
+        timers.popleft()
         start_timer, start_seconds = timers[0]
         end_timer, end_seconds = timers[-1]
         diff = (end_timer - start_timer) / (end_seconds - start_seconds)
