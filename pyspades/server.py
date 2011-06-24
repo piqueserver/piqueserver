@@ -595,9 +595,10 @@ class ServerConnection(BaseConnection):
         values, seconds = self.timers
         values.append(value)
         seconds.append(reactor.seconds())
-        if len(values) > TIMER_WINDOW_ENTRIES:
-            seconds.pop(0)
-            values.pop(0)
+        if len(values) <= TIMER_WINDOW_ENTRIES:
+            return
+        seconds.pop(0)
+        values.pop(0)
         values_sum = sum(values) - values[0] * len(values)
         seconds_sum = sum(seconds) - seconds[0] * len(seconds)
         if seconds_sum == 0:
