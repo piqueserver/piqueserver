@@ -606,7 +606,7 @@ class ServerConnection(BaseConnection):
         self.last_seconds = seconds
         if self.timer_count < TIMER_WINDOW_ENTRIES:
             return
-        diff = self.timer_sum / float(timer_count)
+        diff = self.timer_sum / float(self.timer_count)
         self.timer_sum = self.timer_count = 0
         self.debug_timers = []
         if diff > MAX_TIMER_SPEED:
