@@ -130,12 +130,6 @@ def vote_yes(connection):
         raise KeyError()
     connection.protocol.votekick(connection, True)
 
-@name('n')
-def vote_no(connection):
-    if connection not in connection.protocol.players:
-        raise KeyError()
-    connection.protocol.votekick(connection, False)
-
 @name('cancel')
 def cancel_vote(connection):
     return connection.protocol.cancel_votekick(connection)
@@ -445,7 +439,6 @@ command_list = [
     kick,
     votekick,
     vote_yes,
-    vote_no,
     cancel_vote,
     intel,
     ip,

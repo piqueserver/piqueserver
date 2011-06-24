@@ -330,7 +330,6 @@ class FeatureProtocol(ServerProtocol):
     votekick_time = 120 # 2 minutes
     votekick_interval = 3 * 60 # 3 minutes
     votekick_percentage = 25.0
-    votekick_max_percentage = 40.0 # too many no-votes?
     votes_left = None
     votekick_player = None
     voting_player = None
@@ -373,7 +372,7 @@ class FeatureProtocol(ServerProtocol):
         self.balanced_teams = config.get('balanced_teams', None)
         self.rules = self.format_lines(config.get('rules', None))
         self.login_retries = config.get('login_retries', 1)
-        self.votekick_ban_duration = config.get('votekick_ban_duration', 5)
+        self.votekick_ban_duration = config.get('votekick_ban_duration', 15)
         self.votekick_percentage = config.get('votekick_percentage', 25)
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
@@ -499,7 +498,7 @@ class FeatureProtocol(ServerProtocol):
         self.votekick_call = reactor.callLater(self.votekick_time,
             self.end_votekick, False, 'Votekick timed out')
         self.send_chat('%s initiated a VOTEKICK against player %s. '
-            'Say /y to agree and /n to decline.' % (connection.name,
+            'Say /y to agree.' % (connection.name,
             player.name), sender = connection)
         self.irc_say(
             '* %s initiated a votekick against player %s.' % (connection.name,
@@ -508,24 +507,16 @@ class FeatureProtocol(ServerProtocol):
         self.voting_player = connection
         return 'You initiated a votekick. Say /cancel to stop it at any time.'
     
-    def votekick(self, connection, value):
+    def votekick(self, connection):
         if connection is self.votekick_player:
             return "The votekick victim can't vote."
         if self.votes is None or connection in self.votes:
             return
-        if value:
-            self.votes_left -= 1
-        else:
-            self.votes_left += 1
-        max = int((len(self.players) / 100.0) * self.votekick_max_percentage)
-        if self.votes_left >= max:
-            self.votekick_call.cancel()
-            self.end_votekick(False, 'Too many negative votes')
-            return
-        self.votes[connection] = value
+        self.votes_left -= 1
+        self.votes[connection] = True
         if self.votes_left > 0:
-            self.send_chat('%s voted %s. %s more players required.' % (
-                connection.name, ['NO', 'YES'][int(value)], self.votes_left))
+            self.send_chat('%s voted YES. %s more players required.' % (
+                connection.name, self.votes_left))
         else:
             self.votekick_call.cancel()
             self.end_votekick(True, 'Player kicked')
