@@ -120,6 +120,7 @@ def apply_script(protocol, connection, config):
             except (StopIteration):
                 self.end_rollback('Time taken: %.2fs' % 
                     float(time.time() - self.rollback_start_time))
+                del packet_generator
                 return
             reactor.callLater(self.rollback_time_between_cycles,
                 self.rollback_cycle, packet_generator)
@@ -189,6 +190,7 @@ def apply_script(protocol, connection, config):
                 self.send_contained(block_action, save = True)
                 packets_sent += 1
                 yield packets_sent
+            del surface
         
         def on_game_end(self, player):
             if rollback_on_game_end:
