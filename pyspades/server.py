@@ -815,7 +815,7 @@ class ServerProtocol(DatagramProtocol):
     def update_master(self):
         if self.master_connection is None:
             return
-        self.master_connection.set_count(len(self.players))
+        self.master_connection.set_count(len(self.connections))
     
     def datagramReceived(self, data, address):
         if not data:
