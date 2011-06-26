@@ -455,8 +455,11 @@ def intel(connection):
         raise KeyError()
     flag = connection.team.other.flag
     if flag.player is not None:
-        return "%s has the other team's intel" % flag.player.name
-    return "Nobody currently has the other team's intel"
+        if flag.player is connection:
+            return "You have the enemy intel, return to base!"
+        else:
+            return "%s has the enemy intel!" % flag.player.name
+    return "Nobody in your team has the enemy intel."
     
 command_list = [
     help,
