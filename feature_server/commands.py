@@ -446,8 +446,8 @@ def ping(connection, value = None):
         player = get_player(connection.protocol, value)
     ping = int(player.latency * 1000) or 0
     if value is None:
-        return ('Your ping is %s ms. Lower ping is better, with best values '
-            'around 100-200' % (player.name, ping))
+        return ('Your ping is %s ms. Lower ping is better, with ideal values '
+            'around 50-150' % ping)
     return "%s's ping is %s ms" % (player.name, ping)
 
 def intel(connection):
@@ -516,8 +516,9 @@ def handle_command(connection, command, parameters):
         command_func = commands[command]
     except KeyError:
         return # 'Invalid command'
+    return command_func(connection, *parameters)
     try:
-        return command_func(connection, *parameters)
+        pass
     except KeyError:
         return # 'Invalid command'
     except TypeError:
