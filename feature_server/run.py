@@ -247,7 +247,19 @@ class FeatureConnection(ServerConnection):
         if duration is None:
             message = '%s banned%s' % (self.name, reason)
         else:
-            message = '%s banned for %s minutes%s' % (self.name, duration,
+            total = duration
+            days = duration / 1440
+            total -= days * 1440
+            hours = total / 60
+            minutes = total - hours * 60
+            days_s = '%s day' % days if days > 0 else None
+            hours_s = '%s hour' % hours if hours > 0 else None
+            minutes_s = '%s minute' % minutes if minutes > 0 else None
+            if days > 1: days_s += 's'
+            if hours > 1: hours_s += 's'
+            if minutes > 1: minutes_s += 's'
+            time = ', '.join([s for s in days_s, hours_s, minutes_s if s])
+            message = '%s banned for %s%s' % (self.name, time,
                 reason)
         self.protocol.send_chat(message, irc = True)
         self.protocol.add_ban(self.address[0], reason, duration)
@@ -558,7 +570,7 @@ class FeatureProtocol(ServerProtocol):
             irc = True)
         if enough:
             if self.votekick_ban_duration:
-                victim.ban("Votekick", self.votekick_ban_duration)
+                victim.ban("Votekicked", self.votekick_ban_duration)
             else:
                 victim.kick(silent = True)
         elif not self.voting_player.admin: # admins are powerful, yeah
