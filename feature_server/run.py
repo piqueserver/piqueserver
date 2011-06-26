@@ -208,6 +208,15 @@ class FeatureConnection(ServerConnection):
         return False
     
     def on_team_join(self, team):
+        if self.protocol.teamswitch_interval and self.team is not None:
+            teamswitch_interval = self.protocol.teamswitch_interval
+            if teamswitch_interval == 'never':
+                self.send_chat('Switching teams is not allowed')
+                return False
+            if (self.last_switch is not None and 
+                reactor.seconds() - self.last_switch < teamswitch_interval * 60):
+                self.send_chat('You must wait before switching teams again')
+                return False
         if team.locked:
             self.send_chat('Team is locked.')
             return False
@@ -221,6 +230,7 @@ class FeatureConnection(ServerConnection):
             self.drop_followers()
             self.follow = None
             self.respawn_time = self.protocol.respawn_time
+        self.last_switch = reactor.seconds()
     
     def on_chat(self, value, global_message):
         message = '<%s> %s' % (self.name, value)
@@ -370,6 +380,7 @@ class FeatureProtocol(ServerProtocol):
         self.master = config.get('master', True)
         self.friendly_fire = config.get('friendly_fire', True)
         self.friendly_fire_time = config.get('grief_friendly_fire_time', 2.0)
+        self.teamswitch_interval = config.get('teamswitch_interval', 0)
         self.motd = self.format_lines(config.get('motd', None))
         self.help = self.format_lines(config.get('help', None))
         self.tips = self.format_lines(config.get('tips', None))
