@@ -92,6 +92,7 @@ def apply_script(protocol, connection, config):
         
         def rollback_cycle(self, packet_generator):
             if not self.rollback_in_progress:
+                del packet_generator
                 return
             try:
                 sent_unique = sent_total = rows = 0
