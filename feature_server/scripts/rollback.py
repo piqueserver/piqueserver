@@ -59,7 +59,9 @@ def apply_script(protocol, connection, config):
             map = rollback_map if filename is None else Map(filename).data
             message = ('%s commenced a rollback...' %
                 (connection.name if connection is not None else 'Map'))
-            if connection is None or connection not in self.players:
+            if connection not in self.players:
+                connection = None
+            if connection is None:
                 for player in self.players.values():
                     connection = player
                     if player.admin:
@@ -137,28 +139,31 @@ def apply_script(protocol, connection, config):
                 for y in xrange(start_y, end_y):
                     block_action.y = y
                     for z in xrange(64):
-                        block_action.z = z
-                        block_action.value = None
+                        action = None
                         old_solid = old.get_solid(x, y, z)
                         new_solid = new.get_solid(x, y, z)
                         if old_solid and not new_solid:
-                            block_action.value = DESTROY_BLOCK
+                            action = DESTROY_BLOCK
                             old.remove_point_unsafe(x, y, z)
                         elif new_solid:
                             new_color = new.get_color(x, y, z)
                             new_is_surface = (new_color != 0)
+                            #new_is_surface = new.is_surface(x, y, z)
                             if not old_solid and new_is_surface:
                                 surface[(x, y, z)] = new_color
                             elif not old_solid and not new_is_surface:
-                                block_action.value = BUILD_BLOCK
+                                action = BUILD_BLOCK
                                 old.set_point_unsafe_int(x, y, z, 0)
                             elif old_solid and new_is_surface:
                                 old_color = old.get_color(x, y, z)
-                                if old_color != new_color:
+                                #old_is_surface = old.is_surface(x, y, z)
+                                if old_color != new_color:# or not old_is_surface:
                                     surface[(x, y, z)] = new_color
-                                    block_action.value = DESTROY_BLOCK
+                                    action = DESTROY_BLOCK
                                     old.remove_point_unsafe(x, y, z)
-                        if block_action.value is not None:
+                        if action is not None:
+                            block_action.z = z
+                            block_action.value = action
                             self.send_contained(block_action, save = True)
                             yield 1
                 yield 0
@@ -166,6 +171,9 @@ def apply_script(protocol, connection, config):
             block_action.value = BUILD_BLOCK
             for pos, color in sorted(surface.iteritems(),
                 key = operator.itemgetter(1)):
+                x, y, z = pos
+                #if not old.has_neighbors(x, y, z) and new.has_neighbors(x, y, z):
+                    #continue
                 packets_sent = 0
                 if color != last_color:
                     set_color.value = color & 0xFFFFFF
@@ -174,7 +182,6 @@ def apply_script(protocol, connection, config):
                     packets_sent += 1
                     last_color = color
                 connection.send_contained(set_color)
-                x, y, z = pos
                 old.set_point_unsafe_int(x, y, z, color)
                 block_action.x = x
                 block_action.y = y
