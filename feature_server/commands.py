@@ -136,7 +136,8 @@ def heal(connection, player = None):
     player.refill()
     connection.protocol.send_chat(message, irc = True)
 
-def votekick(connection, value):
+def votekick(connection, value, *arg):
+    reason = join_arguments(arg)
     if connection not in connection.protocol.players:
         raise KeyError()
     player = None
@@ -144,7 +145,7 @@ def votekick(connection, value):
         player = get_player(connection.protocol, '#' + value)
     except InvalidPlayer:
         player = get_player(connection.protocol, value)
-    return connection.protocol.start_votekick(connection, player)
+    return connection.protocol.start_votekick(connection, player, reason)
 
 @name('y')
 def vote_yes(connection):

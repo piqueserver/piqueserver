@@ -33,6 +33,9 @@
     "grief_friendly_fire_time" : 2,
     "teamswitch_interval" : 0,
     "votekick_percentage" : 25,
+    "votekick_ban_duration" : 15,
+    "votekick_public_votes" : true,
+    "default_ban_duration" : 1440,
     "network_interface" : "",
     "passwords" : {
         "admin" : ["replaceme"],
@@ -55,8 +58,6 @@
     "debug_log" : false,
     "balanced_teams" : 1,
     "login_retries" : 3,
-    "votekick_ban_duration" : 10,
-    "default_ban_duration" : 1440,
     "irc" : {
         "enabled" : false,
         "nickname" : "pyspades",
