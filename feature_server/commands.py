@@ -444,8 +444,11 @@ def ping(connection, value = None):
         player = connection
     else:
         player = get_player(connection.protocol, value)
-    return '%s has a ping of %s' % (player.name, 
-        int(player.latency * 1000) or 0)
+    ping = int(player.latency * 1000) or 0
+    if value is None:
+        return 'Your ping is %s ms. Lower ping is better, with best values '
+            'around 100-200' % (player.name, ping)
+    return "%s's ping is %s ms" % (player.name, ping)
 
 def intel(connection):
     if connection not in connection.protocol.players:
