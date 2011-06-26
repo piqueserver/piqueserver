@@ -53,7 +53,7 @@ block_action = serverloaders.BlockAction()
 kill_action = serverloaders.KillAction()
 chat_message = serverloaders.ChatMessage()
 map_data = MapData()
-
+        
 class ServerConnection(BaseConnection):
     master = False
     protocol = None
@@ -484,7 +484,7 @@ class ServerConnection(BaseConnection):
     def disconnect(self):
         if self.disconnected:
             return
-        debug_csv_line((self.player_id,"dc"))
+        print_top_100()
         BaseConnection.disconnect(self)
         del self.protocol.connections[self.address]
         if self.connection_id is not None and not self.master:
