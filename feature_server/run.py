@@ -90,6 +90,7 @@ def writelines(fp, lines):
 class FeatureConnection(ServerConnection):
     admin = False
     last_votekick = None
+    last_switch = None
     mute = False
     login_retries = None
     god = False

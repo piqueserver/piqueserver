@@ -74,22 +74,23 @@ def apply_script(protocol, connection, config):
             if not self.god:
                 if self.kills < score_req:
                     return ('You need a total score of %s (kills or intel) to '
-                            'unlock airstrikes!' % score_req)
+                        'unlock airstrikes!' % score_req)
                 elif not self.airstrike:
                     kills_left = streak_req - (self.streak % streak_req)
-                    return ('Every %s consecutive kills (without dying) you get an '
-                            'airstrike. %s kills to go!' % (streak_req, kills_left))
+                    return ('Every %s consecutive kills (without dying) you '
+                        'get an airstrike. %s kills to go!' %
+                        (streak_req, kills_left))
             try:
                 x, y = coordinates(value)
             except (ValueError):
-                return ("Bad coordinates: should be like 'A4', 'G5'. Look them up "
-                        "in the map.")
-            if (hasattr(self.team, 'last_airstrike') and 
-                reactor.seconds() - self.team.last_airstrike < interval):
-                remain = interval - (reactor.seconds() - self.team.last_airstrike)
-                return ('You must wait %s seconds before your team can launch '
-                        'another airstrike.' % int(remain))
-            self.team.last_airstrike = reactor.seconds()
+                return ("Bad coordinates: should be like 'A4', 'G5'. Look "
+                    "them up in the map.")
+            last_airstrike = self.protocol.last_airstrike[self.team.id]
+            if (last_airstrike and reactor.seconds() - last_airstrike < interval):
+                remain = interval - (reactor.seconds() - last_airstrike)
+                return ('%s seconds before your team can launch '
+                    'another airstrike.' % int(remain))
+            self.protocol.last_airstrike[self.team.id] = reactor.seconds()
             
             self.airstrike = False
             self.protocol.send_chat('Ally %s called in an airstrike on '
@@ -106,7 +107,6 @@ def apply_script(protocol, connection, config):
             start_x = max(0, min(512, start_x + [-64, 64][self.team.id]))
             range_x = [61, -61][self.team.id]
             increment_x = [5, -5][self.team.id]
-            del self.team.last_airstrike
             for round in xrange(12):
                 x = start_x + random.randrange(64)
                 y = start_y + random.randrange(64)
@@ -116,7 +116,7 @@ def apply_script(protocol, connection, config):
                     time = round * 0.9 + i * 0.14
                     reactor.callLater(time, self.desync_grenade, x, y, z,
                         orientation_x, fuse)
-
+        
         def add_score(self, score):
             connection.add_score(self, score)
             score_req = self.protocol.airstrike_min_score_req
@@ -141,6 +141,7 @@ def apply_script(protocol, connection, config):
                 self.refill()
     
     class AirstrikeProtocol(protocol):
+        last_airstrike = [None, None]
         airstrike_min_score_req = 15
         airstrike_streak_req = 6
         airstrike_interval = 20
