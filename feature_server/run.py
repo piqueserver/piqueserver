@@ -561,7 +561,6 @@ class FeatureProtocol(ServerProtocol):
         connection.send_chat('Reason: %s' % reason)
         self.votekick_player = player
         self.voting_player = connection
-        return 'ass'
     
     def votekick(self, connection):
         if connection is self.votekick_player:

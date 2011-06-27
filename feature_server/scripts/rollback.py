@@ -196,6 +196,7 @@ def apply_script(protocol, connection, config):
                 self.send_contained(block_action, save = True)
                 packets_sent += 1
                 yield packets_sent
+            del old
             del surface
         
         def on_game_end(self, player):
