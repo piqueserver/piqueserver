@@ -151,7 +151,7 @@ def votekick(connection, value, *arg):
 def vote_yes(connection):
     if connection not in connection.protocol.players:
         raise KeyError()
-    connection.protocol.votekick(connection)
+    connection.protocol.votekicky(connection)
 
 @name('cancel')
 def cancel_vote(connection):

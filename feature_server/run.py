@@ -565,7 +565,7 @@ class FeatureProtocol(ServerProtocol):
         self.votekick_player = player
         self.voting_player = connection
     
-    def votekick(self, connection):
+    def votekicky(self, connection):
         if connection is self.votekick_player:
             return "The votekick victim can't vote."
         if self.votes is None or connection in self.votes:
@@ -574,7 +574,7 @@ class FeatureProtocol(ServerProtocol):
         self.votes[connection] = True
         if self.votekick_public_votes:
             self.send_chat('%s voted YES.' % (connection.name, self.votes_left))
-        if not self.votes_left:
+        if self.votes_left == 0:
             self.votekick_call.cancel()
             self.votekick_update_call.stop()
             self.end_votekick(True, 'Player kicked')
