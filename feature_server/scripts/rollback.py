@@ -140,6 +140,9 @@ def apply_script(protocol, connection, config):
                 block_action.x = x
                 for y in xrange(start_y, end_y):
                     block_action.y = y
+                    if self.protected:
+                        if self.is_protected(x, y):
+                            continue
                     for z in xrange(64):
                         action = None
                         old_solid = old.get_solid(x, y, z)
