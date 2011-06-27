@@ -608,7 +608,7 @@ class FeatureProtocol(ServerProtocol):
     
     def votekick_update(self):
         reason = self.votekick_reason if self.votekick_reason else 'none'
-        self.send_chat('%s votekicked %s. Reason: %s. Say /y to vote '
+        self.send_chat('%s is votekicking %s for reason: %s. Say /y to vote '
             '(%s needed)' % (self.voting_player.name,
             self.votekick_player.name, reason, self.votes_left))
     
