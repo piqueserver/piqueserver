@@ -1,9 +1,10 @@
-from map import Map
-from commands import add, admin
+from pyspades.load import VXLData
 from pyspades.common import coordinates
 from pyspades.serverloaders import BlockAction, SetColor
-from twisted.internet import reactor
 from pyspades.constants import *
+from twisted.internet import reactor
+from map import Map
+from commands import add, admin
 import time
 import operator
 
@@ -126,7 +127,7 @@ def apply_script(protocol, connection, config):
             reactor.callLater(self.rollback_time_between_cycles,
                 self.rollback_cycle, packet_generator)
         
-        def create_rollback_generator(self, connection, old, new,
+        def create_rollback_generator(self, connection, cur, new,
                                       start_x, start_y, end_x, end_y):
             surface = {}
             block_action = BlockAction()
@@ -135,7 +136,8 @@ def apply_script(protocol, connection, config):
             set_color.value = 0x000000
             set_color.player_id = connection.player_id
             self.send_contained(set_color, save = True)
-            
+            old = VXLData()
+            old.load_vxl(cur.generate())
             for x in xrange(start_x, end_x):
                 block_action.x = x
                 for y in xrange(start_y, end_y):
@@ -145,27 +147,26 @@ def apply_script(protocol, connection, config):
                             continue
                     for z in xrange(64):
                         action = None
-                        old_solid = old.get_solid(x, y, z)
+                        cur_solid = cur.get_solid(x, y, z)
                         new_solid = new.get_solid(x, y, z)
-                        if old_solid and not new_solid:
+                        if cur_solid and not new_solid:
                             action = DESTROY_BLOCK
-                            old.remove_point_unsafe(x, y, z)
+                            cur.remove_point_unsafe(x, y, z)
                         elif new_solid:
                             new_color = new.get_color(x, y, z)
                             new_is_surface = (new_color != 0)
-                            #new_is_surface = new.is_surface(x, y, z)
-                            if not old_solid and new_is_surface:
+                            if not cur_solid and new_is_surface:
                                 surface[(x, y, z)] = new_color
-                            elif not old_solid and not new_is_surface:
+                            elif not cur_solid and not new_is_surface:
                                 action = BUILD_BLOCK
-                                old.set_point_unsafe_int(x, y, z, 0)
-                            elif old_solid and new_is_surface:
+                                cur.set_point_unsafe_int(x, y, z, 0)
+                            elif cur_solid and new_is_surface:
                                 old_color = old.get_color(x, y, z)
-                                #old_is_surface = old.is_surface(x, y, z)
-                                if old_color != new_color:# or not old_is_surface:
+                                old_is_surface = old.is_surface(x, y, z)
+                                if old_color != new_color or not old_is_surface:
                                     surface[(x, y, z)] = new_color
                                     action = DESTROY_BLOCK
-                                    old.remove_point_unsafe(x, y, z)
+                                    cur.remove_point_unsafe(x, y, z)
                         if action is not None:
                             block_action.z = z
                             block_action.value = action
@@ -177,7 +178,8 @@ def apply_script(protocol, connection, config):
             for pos, color in sorted(surface.iteritems(),
                 key = operator.itemgetter(1)):
                 x, y, z = pos
-                #if not old.has_neighbors(x, y, z) and new.has_neighbors(x, y, z):
+                #if not cur.has_neighbors(x, y, z) and
+                    #new.has_neighbors(x, y, z):
                     #continue
                 packets_sent = 0
                 if color != last_color:
@@ -187,7 +189,7 @@ def apply_script(protocol, connection, config):
                     packets_sent += 1
                     last_color = color
                 connection.send_contained(set_color)
-                old.set_point_unsafe_int(x, y, z, color)
+                cur.set_point_unsafe_int(x, y, z, color)
                 block_action.x = x
                 block_action.y = y
                 block_action.z = z

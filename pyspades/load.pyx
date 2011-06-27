@@ -82,6 +82,9 @@ cdef class VXLData:
             c_data = NULL
         self.map = load_vxl(c_data)
     
+    def load_vxl(self, c_data = None):
+        self.map = load_vxl(c_data)
+    
     def get_point(self, int x, int y, int z):
         return (get_solid(x, y, z, self.map), get_color_tuple(get_color(
             x, y, z, self.map)))
