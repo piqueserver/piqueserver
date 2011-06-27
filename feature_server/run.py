@@ -527,7 +527,7 @@ class FeatureProtocol(ServerProtocol):
     
     # votekick
     
-    def start_votekick(self, connection, player, reason):
+    def start_votekicky(self, connection, player, reason = None):
         if self.votes is not None:
             return 'Votekick in progress.'
         elif connection is player:
@@ -561,6 +561,7 @@ class FeatureProtocol(ServerProtocol):
         connection.send_chat('Reason: %s' % reason)
         self.votekick_player = player
         self.voting_player = connection
+        return 'ass'
     
     def votekick(self, connection):
         if connection is self.votekick_player:
