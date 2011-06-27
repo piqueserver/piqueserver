@@ -120,7 +120,7 @@ class FeatureConnection(ServerConnection):
             self.protocol.irc_say('* %s disconnected' % self.name)
             if self.protocol.votekick_player is self:
                 self.protocol.votekick_call.cancel()
-                self.protocol.votekick_update_call.cancel()
+                self.protocol.votekick_update_call.stop()
                 self.protocol.end_votekick(True, 'Player left the game',
                     left = True)
         ServerConnection.disconnect(self)
@@ -360,6 +360,7 @@ class FeatureProtocol(ServerProtocol):
     votekick_player = None
     voting_player = None
     votes = None
+    votekick_update_call = None
     
     map_info = None
     spawns = None
@@ -546,7 +547,9 @@ class FeatureProtocol(ServerProtocol):
         self.votes = {connection : True}
         self.votekick_call = reactor.callLater(self.votekick_time,
             self.end_votekick, False, 'Votekick timed out')
-        self.votekick_update_call = reactor.callLater(30, self.votekick_update)
+        if self.votekick_update_call is None:
+            self.votekick_update_call = LoopingCall(self.votekick_update)
+        self.votekick_update_call.start(30.0, now = False)
         self.irc_say(
             '* %s initiated a votekick against player %s.%s' % (connection.name,
             player.name, ' Reason: %s' % reason if reason else ''))
@@ -573,7 +576,7 @@ class FeatureProtocol(ServerProtocol):
             self.send_chat('%s voted YES.' % (connection.name, self.votes_left))
         if not self.votes_left:
             self.votekick_call.cancel()
-            self.votekick_update_call.cancel()
+            self.votekick_update_call.stop()
             self.end_votekick(True, 'Player kicked')
     
     def cancel_votekick(self, connection):
@@ -582,7 +585,7 @@ class FeatureProtocol(ServerProtocol):
         if not connection.admin and connection is not self.voting_player:
             return 'You did not start the votekick.'
         self.votekick_call.cancel()
-        self.votekick_update_call.cancel()
+        self.votekick_update_call.stop()
         self.end_votekick(False, 'Cancelled by %s' % connection.name)
     
     def end_votekick(self, enough, result, left = False):
@@ -600,15 +603,14 @@ class FeatureProtocol(ServerProtocol):
                 victim.kick(silent = True)
         elif not self.voting_player.admin: # admins are powerful, yeah
             self.voting_player.last_votekick = reactor.seconds()
-        self.votes = self.votekick_call = self.votekick_update_call = None
+        self.votes = self.votekick_call = None
         self.voting_player = None
     
     def votekick_update(self):
         reason = self.votekick_reason if self.votekick_reason else 'none'
         self.send_chat('%s votekicked %s. Reason: %s. Say /y to vote '
-            '(%s needed)' % (self.voting_player, self.votekick_player,
-            reason, self.votes_left))
-        self.votekick_update_call = reactor.callLater(30, self.votekick_update)
+            '(%s needed)' % (self.voting_player.name,
+            self.votekick_player.name, reason, self.votes_left))
     
     def send_chat(self, value, global_message = True, sender = None,
                   team = None, irc = False):
