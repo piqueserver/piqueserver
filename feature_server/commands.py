@@ -151,7 +151,7 @@ def votekick(connection, value, *arg):
 def vote_yes(connection):
     if connection not in connection.protocol.players:
         raise KeyError()
-    connection.protocol.votekicky(connection)
+    return connection.protocol.votekick(connection)
 
 @name('cancel')
 def cancel_vote(connection):
@@ -516,8 +516,9 @@ def handle_command(connection, command, parameters):
         command_func = commands[command]
     except KeyError:
         return # 'Invalid command'
+    return command_func(connection, *parameters)
     try:
-        return command_func(connection, *parameters)
+        pass
     except KeyError:
         return # 'Invalid command'
     except TypeError:
