@@ -528,7 +528,7 @@ class FeatureProtocol(ServerProtocol):
     
     # votekick
     
-    def start_votekicky(self, connection, player, reason = None):
+    def start_votekick(self, connection, player, reason = None):
         if self.votes is not None:
             return 'Votekick in progress.'
         elif connection is player:

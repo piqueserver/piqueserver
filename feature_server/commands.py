@@ -145,7 +145,7 @@ def votekick(connection, value, *arg):
         player = get_player(connection.protocol, '#' + value)
     except InvalidPlayer:
         player = get_player(connection.protocol, value)
-    return connection.protocol.start_votekicky(connection, player, reason)
+    return connection.protocol.start_votekick(connection, player, reason)
 
 @name('y')
 def vote_yes(connection):

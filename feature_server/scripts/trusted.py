@@ -18,9 +18,9 @@ def apply_script(protocol, connection, config):
     class ProtectProtocol(protocol):
         trusted_passwords = passwords
         
-        def start_votekick(self, connection, player):
+        def start_votekick(self, connection, player, reason = None):
             if player.trusted:
                 return 'Cannot votekick a trusted player.'
-            return protocol.start_votekick(self, connection, player)
+            return protocol.start_votekick(self, connection, player, reason)
         
     return ProtectProtocol, ProtectConnection
