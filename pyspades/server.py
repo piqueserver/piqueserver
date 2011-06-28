@@ -348,9 +348,9 @@ class ServerConnection(BaseConnection):
                     y = contained.y
                     z = contained.z
                     if value == BUILD_BLOCK:
-                        if not self.blocks:
-                            self.on_hack_attempt('Block hack detected')
-                            return
+                        #if not self.blocks:
+                        #self.on_hack_attempt('Block hack detected')
+                        #return
                         self.blocks -= 1
                         if self.on_block_build(x, y, z) == False:
                             return
