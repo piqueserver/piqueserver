@@ -127,7 +127,7 @@ def apply_script(protocol, connection, config):
             """Attempts to find a dead player or one that isn't currently
             placing blocks"""
             best = None
-            for player in self.protocol.players:
+            for player in self.protocol.players.values():
                 if player is self:
                     continue
                 if best is None or player.hp <= 0 and best.hp > 0:
@@ -144,7 +144,7 @@ def apply_script(protocol, connection, config):
         
         def on_block_destroy(self, x, y, z, mode):
             if mode == DESTROY_BLOCK:
-                if self.building_button:
+                if self.building_button and self.button_platform is None:
                     self.button_platform = self.protocol.check_platform(
                         x, y, z)
                     if self.button_platform is None:
