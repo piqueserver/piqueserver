@@ -2,7 +2,7 @@ from pyspades.load import VXLData
 from pyspades.common import coordinates
 from pyspades.serverloaders import BlockAction, SetColor
 from pyspades.constants import *
-from twisted.internet import reactor
+from twisted.internet.task import LoopingCall
 from map import Map
 from commands import add, admin
 import time
@@ -30,15 +30,20 @@ for func in (rollmap, rollback, rollbackcancel):
 
 def apply_script(protocol, connection, config):
     rollback_on_game_end = config.get('rollback_on_game_end', False)
-    rollback_map = Map(config['map']).data
     
     class RollbackConnection(connection):
         def on_color_set(self, (r, g, b)):
             if (self.protocol.rollback_in_progress and
                 self.protocol.rollbacking_player is self):
                 return False
-            
+            return connection.on_color_set(self, (r, g, b))
+    
     class RollbackProtocol(protocol):
+        def __init__(self, config, map):
+            self.rollback_map = VXLData()
+            self.rollback_map.load_vxl(map.data.generate())
+            protocol.__init__(self, config, map)
+        
         rollback_in_progress = False
         rollback_max_rows = 10 # per 'cycle', intended to cap cpu usage
         rollback_max_packets = 180 # per 'cycle' cap for (unique packets * players)
@@ -57,7 +62,7 @@ def apply_script(protocol, connection, config):
                            start_x, start_y, end_x, end_y):
             if self.rollback_in_progress:
                 return 'Rollback in progress.'
-            map = rollback_map if filename is None else Map(filename).data
+            map = self.rollback_map if filename is None else Map(filename).data
             message = ('%s commenced a rollback...' %
                 (connection.name if connection is not None else 'Map'))
             if connection not in self.players:
@@ -71,7 +76,7 @@ def apply_script(protocol, connection, config):
                 return ('There must be at least one player in the server '
                     'to perform a rollback')
             self.send_chat(message, irc = True)
-            packet_generator = self.create_rollback_generator(connection,
+            self.packet_generator = self.create_rollback_generator(connection,
                 self.map, map, start_x, start_y, end_x, end_y)
             self.rollbacking_player = connection
             self.rollback_in_progress = True
@@ -79,7 +84,8 @@ def apply_script(protocol, connection, config):
             self.rollback_last_chat = self.rollback_start_time
             self.rollback_rows = 0
             self.rollback_total_rows = end_x - start_x
-            self.rollback_cycle(packet_generator)
+            self.cycle_call = LoopingCall(self.rollback_cycle)
+            self.cycle_call.start(self.rollback_time_between_cycles)
         
         def cancel_rollback(self, connection):
             if not self.rollback_in_progress:
@@ -88,12 +94,14 @@ def apply_script(protocol, connection, config):
         
         def end_rollback(self, result):
             self.rollback_in_progress = False
+            self.cycle_call.stop()
+            self.cycle_call = None
+            self.packet_generator = None
             self.update_entities()
             self.send_chat('Rollback ended. %s' % result, irc = True)
         
-        def rollback_cycle(self, packet_generator):
+        def rollback_cycle(self):
             if not self.rollback_in_progress:
-                del packet_generator
                 return
             try:
                 sent_unique = sent_total = rows = 0
@@ -104,8 +112,7 @@ def apply_script(protocol, connection, config):
                         break
                     if sent_total > self.rollback_max_packets:
                         break
-                    
-                    sent = packet_generator.next()
+                    sent = self.packet_generator.next()
                     sent_unique += sent
                     sent_total += sent * len(self.connections)
                     rows += (sent == 0)
@@ -122,10 +129,6 @@ def apply_script(protocol, connection, config):
             except (StopIteration):
                 self.end_rollback('Time taken: %.2fs' % 
                     float(time.time() - self.rollback_start_time))
-                del packet_generator
-                return
-            reactor.callLater(self.rollback_time_between_cycles,
-                self.rollback_cycle, packet_generator)
         
         def create_rollback_generator(self, connection, cur, new,
                                       start_x, start_y, end_x, end_y):
@@ -196,8 +199,6 @@ def apply_script(protocol, connection, config):
                 self.send_contained(block_action, save = True)
                 packets_sent += 1
                 yield packets_sent
-            del old
-            del surface
         
         def on_game_end(self, player):
             if rollback_on_game_end:
