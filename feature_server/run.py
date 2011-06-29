@@ -156,22 +156,21 @@ class FeatureConnection(ServerConnection):
         if not self.god:
             if not self.protocol.building:
                 return False
-            elif self.protocol.user_blocks is not None:
-                is_indestructable = self.protocol.is_indestructable
-                if mode == DESTROY_BLOCK:
-                    if is_indestructable(x, y, z):
-                        return False
-                elif mode == SPADE_DESTROY:
-                    if (is_indestructable(x, y, z) or
-                    is_indestructable(x, y, z + 1) or
-                    is_indestructable(x, y, z - 1)):
-                        return False
-                elif mode == GRENADE_DESTROY:
-                    for nade_x in xrange(x - 1, x + 2):
-                        for nade_y in xrange(y - 1, y + 2):
-                            for nade_z in xrange(z - 1, z + 2):
-                                if is_indestructable(nade_x, nade_y, nade_z):
-                                    return False
+            is_indestructable = self.protocol.is_indestructable
+            if mode == DESTROY_BLOCK:
+                if is_indestructable(x, y, z):
+                    return False
+            elif mode == SPADE_DESTROY:
+                if (is_indestructable(x, y, z) or
+                is_indestructable(x, y, z + 1) or
+                is_indestructable(x, y, z - 1)):
+                    return False
+            elif mode == GRENADE_DESTROY:
+                for nade_x in xrange(x - 1, x + 2):
+                    for nade_y in xrange(y - 1, y + 2):
+                        for nade_z in xrange(z - 1, z + 2):
+                            if is_indestructable(nade_x, nade_y, nade_z):
+                                return False
     
     def on_hit(self, hit_amount, player):
         if not self.protocol.killing:

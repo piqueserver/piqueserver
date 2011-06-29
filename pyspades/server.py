@@ -352,25 +352,32 @@ class ServerConnection(BaseConnection):
                         #self.on_hack_attempt('Block hack detected')
                         #return
                         self.blocks -= 1
-                        if self.on_block_build(x, y, z) == False:
+                        if self.on_block_build_attempt(x, y, z) == False:
                             return
                         elif not map.set_point(x, y, z, self.color + (255,)):
                             return
+                        self.on_block_build(x, y, z)
                     else:
                         if self.on_block_destroy(x, y, z, value) == False:
                             return
                         elif value == DESTROY_BLOCK:
                             self.blocks += 1
                             map.remove_point(x, y, z)
+                            self.on_block_removed(x, y, z)
                         elif value == SPADE_DESTROY:
                             map.remove_point(x, y, z)
                             map.remove_point(x, y, z + 1)
                             map.remove_point(x, y, z - 1)
+                            self.on_block_removed(x, y, z)
+                            self.on_block_removed(x, y, z + 1)
+                            self.on_block_removed(x, y, z - 1)
                         elif value == GRENADE_DESTROY:
                             for nade_x in xrange(x - 1, x + 2):
                                 for nade_y in xrange(y - 1, y + 2):
                                     for nade_z in xrange(z - 1, z + 2):
                                         map.remove_point(nade_x, nade_y, 
+                                            nade_z)
+                                        self.on_block_removed(nade_x, nade_y,
                                             nade_z)
                         self.last_block_destroy = reactor.seconds()
                     block_action.x = x
@@ -630,10 +637,16 @@ class ServerConnection(BaseConnection):
     def on_grenade(self, time_left):
         pass
     
+    def on_block_build_attempt(self, x, y, z):
+        pass
+    
     def on_block_build(self, x, y, z):
         pass
 
     def on_block_destroy(self, x, y, z, mode):
+        pass
+        
+    def on_block_removed(self, x, y, z):
         pass
     
     def on_refill(self):
