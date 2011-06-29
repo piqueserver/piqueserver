@@ -109,8 +109,11 @@ def apply_script(protocol, connection, config):
                 for y in xrange(self.y, self.y2):
                     block_action.y = y
                     self.protocol.send_contained(block_action, save = True)
-                    self.protocol.map.set_point(x, y, self.z, (255, 0, 0, 255),
-                        user = False)
+                    if block_action.value == BUILD_BLOCK:
+                        self.protocol.map.set_point(x, y, self.z, (255, 0, 0, 255),
+                            user = False)
+                    else:
+                        self.protocol.map.remove_point(x, y, self.z)
             if self.z < self.target_z:
                 self.z += 1
     
