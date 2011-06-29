@@ -144,6 +144,6 @@ def apply_script(protocol, connection, config):
         last_airstrike = [None, None]
         airstrike_min_score_req = 15
         airstrike_streak_req = 6
-        airstrike_interval = 20
+        airstrike_interval = 12
     
     return AirstrikeProtocol, AirstrikeConnection
