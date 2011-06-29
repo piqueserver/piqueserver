@@ -71,15 +71,14 @@ def apply_script(protocol, connection, config):
             interval = self.protocol.airstrike_interval
             if value is None and (self.god or self.airstrike):
                 return 'Airstrike support ready! Use with e.g. /airstrike A1'
-            if not self.god:
-                if self.kills < score_req:
-                    return ('You need a total score of %s (kills or intel) to '
-                        'unlock airstrikes!' % score_req)
-                elif not self.airstrike:
-                    kills_left = streak_req - (self.streak % streak_req)
-                    return ('Every %s consecutive kills (without dying) you '
-                        'get an airstrike. %s kills to go!' %
-                        (streak_req, kills_left))
+            if self.kills < score_req:
+                return ('You need a total score of %s (kills or intel) to '
+                    'unlock airstrikes!' % score_req)
+            elif not self.airstrike:
+                kills_left = streak_req - (self.streak % streak_req)
+                return ('Every %s consecutive kills (without dying) you '
+                    'get an airstrike. %s kills to go!' %
+                    (streak_req, kills_left))
             try:
                 x, y = coordinates(value)
             except (ValueError):
