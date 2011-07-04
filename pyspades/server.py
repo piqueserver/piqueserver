@@ -288,7 +288,6 @@ class ServerConnection(BaseConnection):
                         if contained.player_id != -1:
                             player, = self.protocol.players[contained.player_id]
                             hit_amount = HIT_VALUES[contained.value][self.weapon]
-                            print "%s hit %s by %s (body: %s, weap: %s)" % (self.name, player.name, hit_amount, contained.value, self.weapon)
                             if self.on_hit(hit_amount, player) == False:
                                 return
                             player.hit(hit_amount, self)
