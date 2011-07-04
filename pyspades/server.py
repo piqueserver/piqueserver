@@ -288,8 +288,11 @@ class ServerConnection(BaseConnection):
                         if contained.player_id != -1:
                             player, = self.protocol.players[contained.player_id]
                             hit_amount = HIT_VALUES[contained.value][self.weapon]
-                            if self.on_hit(hit_amount, player) == False:
+                            returned = self.on_hit(hit_amount, player)
+                            if returned == False:
                                 return
+                            elif returned is not None:
+                                hit_amount = returned
                             player.hit(hit_amount, self)
                         else:
                             self.hit(contained.value)
@@ -524,7 +527,7 @@ class ServerConnection(BaseConnection):
                     return
             elif not friendly_fire:
                 return
-        self.hp -= value
+        self.hp = min(100, self.hp - value)
         if self.hp <= 0:
             self.kill(by)
             return

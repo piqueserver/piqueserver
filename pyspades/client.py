@@ -100,8 +100,6 @@ class ClientConnection(BaseConnection):
                 #reactor.callLater(4.0, self.send_join, 1, 1)
                 # open('testy.vxl', 'wb').write(str(self.map))
                 self.map = None
-            if contained.id == serverloaders.HitPacket.id:
-                print 'i now have %s hp - val: %s' % (contained.hp, contained.value)
             # data = packet.data
             # if data.dataLeft():
                 # raw_input('not completely parsed')
