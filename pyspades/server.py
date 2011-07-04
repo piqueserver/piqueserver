@@ -607,6 +607,7 @@ class ServerConnection(BaseConnection):
             self.send_contained(chat_message)
     
     def timer_received(self, value):
+        return # anti speedhack disabled
         timers = self.timers
         seconds = reactor.seconds()
         timers.append((value, seconds))
@@ -617,9 +618,8 @@ class ServerConnection(BaseConnection):
         end_timer, end_seconds = timers[-1]
         diff = (end_timer - start_timer) / (end_seconds - start_seconds)
         if diff > MAX_TIMER_SPEED:
-            pass
-            #print 'SPEEDHACK -> Diff:', diff, timers
-            #self.on_hack_attempt('Speedhack detected')
+            print 'SPEEDHACK -> Diff:', diff, timers
+            self.on_hack_attempt('Speedhack detected')
 
     # events/hooks
     
