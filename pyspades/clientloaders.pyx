@@ -93,12 +93,12 @@ cdef class HitPacket(Loader):
     cpdef read(self, ByteReader reader):
         cdef int firstByte = reader.readByte(True)
         cdef int byte = reader.readByte(True)
-        self.value = firstByte >> 5
+        self.value = firstByte >> 4
         self.player_id = byte
     
     cpdef write(self, ByteWriter reader):
         cdef int byte = self.id
-        byte |= self.value << 5
+        byte |= self.value << 4
         reader.writeByte(byte, True)
         reader.writeByte(self.player_id, True)
 
@@ -200,20 +200,6 @@ cdef class BlockAction(Loader):
         value = (self.id | (self.x << 6) | (self.y << 15) | (self.z << 24) |
             (self.value << 4))
         reader.writeInt(value, True, False)
-
-cdef class KillAction(Loader):
-    id = 13
-    
-    cdef public:
-        int player_id
-    
-    cpdef read(self, ByteReader reader):
-        reader.skipBytes(1)
-        self.player_id = reader.readByte(True)
-    
-    cpdef write(self, ByteWriter reader):
-        reader.writeByte(self.id, True)
-        reader.writeByte(self.player_id, True)
 
 cdef class ChatMessage(Loader):
     id = 14

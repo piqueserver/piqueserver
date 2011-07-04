@@ -106,15 +106,16 @@ cdef class HitPacket(Loader):
     id = 4
     
     cdef public:
-        int hp
+        int value, hp
 
     cpdef read(self, ByteReader reader):
         cdef int firstByte = reader.readByte(True)
+        self.value = firstByte >> 4
         self.hp = reader.readByte(True)
     
     cpdef write(self, ByteWriter reader):
         cdef int byte = self.id
-        byte |= (1 << 5)
+        byte |= 1 << 4 # UNKNOWN
         reader.writeByte(byte, True)
         reader.writeByte(self.hp, True)
 
@@ -480,13 +481,15 @@ cdef class KillAction(Loader):
     
     cpdef read(self, ByteReader reader):
         cdef int firstShort = reader.readShort(True, False)
-        self.player1 = (firstShort >> 4) & 31
-        self.player2 = (firstShort >> 9) & 31
+        cdef int value = (firstShort >> 4) & 1
+        self.player2 = (firstShort >> 5) & 0x1F
+        self.player1 = (firstShort >> 10) & 0x1F
     
     cpdef write(self, ByteWriter reader):
         cdef int value = self.id
-        value |= self.player1 << 4
-        value |= self.player2 << 9
+        value |= 1 << 4 # UNKNOWN
+        value |= self.player2 << 5
+        value |= self.player1 << 10
         reader.writeShort(value, True, False)
 
 cdef class ChatMessage(Loader):

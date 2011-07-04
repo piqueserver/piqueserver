@@ -288,6 +288,7 @@ class ServerConnection(BaseConnection):
                         if contained.player_id != -1:
                             player, = self.protocol.players[contained.player_id]
                             hit_amount = HIT_VALUES[contained.value][self.weapon]
+                            print "%s hit %s by %s (body: %s, weap: %s)" % (self.name, player.name, hit_amount, contained.value, self.weapon)
                             if self.on_hit(hit_amount, player) == False:
                                 return
                             player.hit(hit_amount, self)
@@ -318,10 +319,6 @@ class ServerConnection(BaseConnection):
                         set_color.value = contained.value
                         self.protocol.send_contained(set_color, sender = self,
                             save = True)
-                    elif contained.id == clientloaders.KillAction.id:
-                        other_player, = self.protocol.players[
-                            contained.player_id]
-                        self.kill(other_player)
                 if contained.id == clientloaders.ChatMessage.id:
                     if not self.name:
                         return
@@ -543,7 +540,7 @@ class ServerConnection(BaseConnection):
         self.hp = None
         self.drop_flag()
         if by is None:
-            kill_action.player1 = 0 #self.player_id
+            kill_action.player1 = self.player_id
         else:
             kill_action.player1 = by.player_id
         kill_action.player2 = self.player_id
