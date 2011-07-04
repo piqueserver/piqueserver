@@ -153,7 +153,7 @@ def apply_script(protocol, connection, config):
                         self.building_button = False
                     elif self.button_platform.start_z - self.button_height < 4:
                         self.send_chat("Sorry, but you'll have to pick a lower"
-                            "height value."
+                            "height value.")
                         self.building_button = False
                     else:
                         self.send_chat('Platform selected! Now place a block '
