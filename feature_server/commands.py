@@ -384,6 +384,10 @@ def teleport(connection, player1, player2 = None):
     player.set_location(target.get_location())
     connection.protocol.send_chat(message, irc = True)
 
+@admin
+def tp(connection, player1, player2 = None):
+    teleport(connection, player1, player2)
+
 from pyspades.common import coordinates
 
 @admin
