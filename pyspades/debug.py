@@ -30,12 +30,6 @@ def write_packet(data):
     open('packets/%s.dat' % current_id, 'wb').write(str(data))
     current_id += 1
 
-if False: # use old ByteReader?
-    import bytereader_old
-    import pyspades.bytes
-    pyspades.bytes.ByteReader = bytereader_old.ByteReader
-    pyspades.bytes.ByteWriter = bytereader_old.ByteReader
-
 def open_debug_log():
     DebugLog.filehandle = open('debug.log','w')
 

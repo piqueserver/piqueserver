@@ -77,14 +77,9 @@ class ServerConnection(BaseConnection):
     last_refill = None
     last_block_destroy = None
     speedhack_detect = False
-    
-    speed_limit_grace = 5
-    movement_timestamp = 0.0
-    
     up = down = left = right = False
     position = orientation = None
     fire = jump = aim = crouch = None
-    
     timers = None
     
     def __init__(self, protocol, address):
@@ -596,15 +591,18 @@ class ServerConnection(BaseConnection):
     def send_data(self, data):
         self.protocol.transport.write(data, self.address)
     
-    def send_chat(self, value, global_message = True):
-        chat_message.global_message = global_message
-        # 32 is guaranteed to be out of range!
-        chat_message.player_id = 32
-        prefix = self.protocol.server_prefix
+    def send_chat(self, value, global_message = None):
+        if global_message is None:
+            chat_message.player_id = -1
+            prefix = ''
+        else:
+            chat_message.global_message = global_message
+            # 32 is guaranteed to be out of range!
+            chat_message.player_id = 32
+            prefix = self.protocol.server_prefix + ' '
         lines = textwrap.wrap(value, MAX_CHAT_SIZE - len(prefix) - 1)
         for line in lines:
-            chat_message.value = '%s %s' % (self.protocol.server_prefix, 
-                line)
+            chat_message.value = '%s %s' % (prefix, line)
             self.send_contained(chat_message)
     
     def timer_received(self, value):
@@ -899,7 +897,7 @@ class ServerProtocol(DatagramProtocol):
             else:
                 player.send_loader(loader, not sequence)
     
-    def send_chat(self, value, global_message = True, sender = None,
+    def send_chat(self, value, global_message = None, sender = None,
                   team = None):
         for player in self.players.values():
             if player is sender:

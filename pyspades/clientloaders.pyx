@@ -160,7 +160,7 @@ cdef class JoinTeam(Loader):
         cdef int team = (firstByte >> 4) & 1 # also works as selector bit
         cdef int weapon = (firstByte >> 5) & 1
         if reader.dataLeft():
-            self.name = reader.readString()
+            self.name = decode(reader.readString())
             self.team, self.weapon = team, weapon
         elif team == 0:
             self.team, self.weapon = weapon, -1
@@ -179,7 +179,7 @@ cdef class JoinTeam(Loader):
             byte |= self.weapon << 5
         reader.writeByte(byte, True)
         if self.name is not None:
-            reader.writeString(self.name)
+            reader.writeString(encode(self.name))
 
 cdef class BlockAction(Loader):
     id = 11
@@ -210,7 +210,7 @@ cdef class ChatMessage(Loader):
     cpdef read(self, ByteReader reader):
         cdef int firstByte = reader.readByte(True)
         self.global_message = (firstByte & 0xF0) != 32
-        self.value = reader.readString()
+        self.value = decode(reader.readString())
     
     cpdef write(self, ByteWriter reader):
         cdef int byte = self.id
@@ -219,4 +219,4 @@ cdef class ChatMessage(Loader):
         else:
             byte |= 32
         reader.writeByte(byte, True)
-        reader.writeString(self.value)
+        reader.writeString(encode(self.value))

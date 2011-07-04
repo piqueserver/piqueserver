@@ -106,16 +106,18 @@ cdef class HitPacket(Loader):
     id = 4
     
     cdef public:
-        int value, hp
+        int hp
+        bint sound
 
     cpdef read(self, ByteReader reader):
         cdef int firstByte = reader.readByte(True)
-        self.value = firstByte >> 4
+        self.sound = (firstByte & 0xF0) != 0
         self.hp = reader.readByte(True)
     
     cpdef write(self, ByteWriter reader):
         cdef int byte = self.id
-        byte |= 1 << 4 # UNKNOWN
+        if self.sound:
+            byte |= 0x10
         reader.writeByte(byte, True)
         reader.writeByte(self.hp, True)
 
@@ -156,6 +158,7 @@ cdef class SetWeapon(Loader):
 
 cdef class SetColor(Loader):
     id = 7
+
     cdef public:
         unsigned int value, player_id
 
@@ -178,37 +181,50 @@ cdef class ExistingPlayer(Loader):
         object name
     
     cpdef read(self, ByteReader reader):
-        cdef unsigned int firstInt = reader.readInt(True, False)
-        self.player_id = (firstInt >> 4) & 0x1F
-        self.team = (firstInt >> 9) & 1 # team
-        self.weapon = (firstInt >> 10) & 1 # weapon
-        self.tool = (firstInt >> 11) & 0x7 # something?
-        self.kills = (firstInt >> 14) & 0x7FF # kills
-        reader.rewind(1)
         cdef unsigned char byte1, byte2, byte3
-        byte1 = reader.readByte(True)
-        byte2 = reader.readByte(True)
-        byte3 = reader.readByte(True)
-        self.color = byte1 | ((byte2 | (byte3 << 8)) << 8) # color
-        self.name = reader.readString()
+        cdef unsigned int firstInt
+        if reader.dataLeft() == 2:
+            byte1 = reader.readByte(True)
+            self.player_id = reader.readByte(True)
+            self.team = (byte1 >> 4) & 1
+            self.weapon = byte1 >> 5
+        else:
+            firstInt = reader.readInt(True, False)
+            self.player_id = (firstInt >> 4) & 0x1F
+            self.team = (firstInt >> 9) & 1 # team
+            self.weapon = (firstInt >> 10) & 1 # weapon
+            self.tool = (firstInt >> 11) & 0x7 # something?
+            self.kills = (firstInt >> 14) & 0x7FF # kills
+            reader.rewind(1)
+            byte1 = reader.readByte(True)
+            byte2 = reader.readByte(True)
+            byte3 = reader.readByte(True)
+            self.color = byte1 | ((byte2 | (byte3 << 8)) << 8)
+            self.name = decode(reader.readString())
     
     cpdef write(self, ByteWriter reader):
         cdef unsigned int value = self.id
-        value |= self.player_id << 4
-        value |= self.team << 9
-        value |= self.weapon << 10
-        value |= (self.tool or 0) << 11
-        value |= (self.kills & 0x7FF) << 14
         cdef unsigned char byte1, byte2, byte3
-        byte1 = self.color & 0xFF
-        byte2 = (self.color & 0xFF00) >> 8
-        byte3 = (self.color & 0xFF0000) >> 16
-        reader.writeInt(value, True, False)
-        reader.rewind(1)
-        reader.writeByte(byte1, True)
-        reader.writeByte(byte2, True)
-        reader.writeByte(byte3, True)
-        reader.writeString(self.name)
+        if self.name is None:
+            value |= self.team << 4
+            value |= self.weapon << 5
+            reader.writeByte(value, True)
+            reader.writeByte(self.player_id, True)
+        else:
+            value |= self.player_id << 4
+            value |= self.team << 9
+            value |= self.weapon << 10
+            value |= (self.tool or 0) << 11
+            value |= (self.kills & 0x7FF) << 14
+            byte1 = self.color & 0xFF
+            byte2 = (self.color & 0xFF00) >> 8
+            byte3 = (self.color & 0xFF0000) >> 16
+            reader.writeInt(value, True, False)
+            reader.rewind(1)
+            reader.writeByte(byte1, True)
+            reader.writeByte(byte2, True)
+            reader.writeByte(byte3, True)
+            reader.writeString(encode(self.name))
 
 cdef class IntelAction(Loader):
     id = 9
@@ -317,7 +333,7 @@ cdef class CreatePlayer(Loader):
         # new player + spawn player
         cdef unsigned int firstInt = reader.readInt(True, False)
         if reader.dataLeft():
-            self.name = reader.readString()
+            self.name = decode(reader.readString())
         self.player_id = (firstInt >> 4) & 31
         self.x = (firstInt >> 9) & 0x1FF
         self.y = (firstInt >> 18) & 0xFF
@@ -331,7 +347,7 @@ cdef class CreatePlayer(Loader):
         value |= self.weapon << 26
         reader.writeInt(value, True, False)
         if self.name is not None:
-            reader.writeString(self.name)
+            reader.writeString(encode(self.name))
 
 cdef class BlockAction(Loader):
     id = 11
@@ -396,6 +412,7 @@ cdef class PlayerData(Loader):
                 self.green_flag_player = reader.readByte(True)
                 reader.skipBytes(2)
             else:
+                self.green_flag_player = -1
                 byte = reader.readByte(True)
                 byte2 = reader.readByte(True)
                 byte3 = reader.readByte(True)
@@ -406,6 +423,7 @@ cdef class PlayerData(Loader):
                 self.blue_flag_player = reader.readByte(True)
                 reader.skipBytes(2)
             else:
+                self.blue_flag_player = -1
                 byte4 = reader.readByte(True)
                 byte5 = reader.readByte(True)
                 byte6 = reader.readByte(True)
@@ -477,17 +495,19 @@ cdef class KillAction(Loader):
     id = 13
     
     cdef public:
+        bint other_kill
         int player1, player2
     
     cpdef read(self, ByteReader reader):
         cdef int firstShort = reader.readShort(True, False)
-        cdef int value = (firstShort >> 4) & 1
+        self.other_kill = (firstShort >> 4) & 1
         self.player2 = (firstShort >> 5) & 0x1F
         self.player1 = (firstShort >> 10) & 0x1F
     
     cpdef write(self, ByteWriter reader):
         cdef int value = self.id
-        value |= 1 << 4 # UNKNOWN
+        if self.other_kill:
+            value |= 1 << 4
         value |= self.player2 << 5
         value |= self.player1 << 10
         reader.writeShort(value, True, False)
@@ -502,16 +522,22 @@ cdef class ChatMessage(Loader):
     
     cpdef read(self, ByteReader reader):
         cdef int firstByte = reader.readByte(True)
-        self.player_id = reader.readByte(True)
         self.global_message = (firstByte & 0xF0) != 32
-        self.value = reader.readString()
+        if firstByte & 0xF0:
+            self.player_id = reader.readByte(True)
+            self.global_message = (firstByte & 0xF0) != 32
+        else:
+            self.player_id = -1
+        self.value = decode(reader.readString())
     
     cpdef write(self, ByteWriter reader):
         cdef int byte = self.id
-        if self.global_message:
-            byte |= 16
-        else:
-            byte |= 32
+        if self.player_id != -1:
+            if self.global_message:
+                byte |= 16
+            else:
+                byte |= 32
         reader.writeByte(byte, True)
-        reader.writeByte(self.player_id, True)
-        reader.writeString(self.value)
+        if self.player_id != -1:
+            reader.writeByte(self.player_id, True)
+        reader.writeString(encode(self.value))
