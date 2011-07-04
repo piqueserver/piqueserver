@@ -151,6 +151,10 @@ def apply_script(protocol, connection, config):
                         self.send_chat('That is not a platform! Aborting '
                             'button placement.')
                         self.building_button = False
+                    elif self.button_platform.start_z - self.button_height < 4:
+                        self.send_chat("Sorry, but you'll have to pick a lower"
+                            "height value."
+                        self.building_button = False
                     else:
                         self.send_chat('Platform selected! Now place a block '
                             'for the button.')
@@ -223,8 +227,10 @@ def apply_script(protocol, connection, config):
         
         def start_button(self, height, type, speed):
             if height is None:
-                return 'Usage: /button <height> [platform_type] [speed]'
+                return 'Usage: /button <height> [elevator|once] [speed]'
             self.button_height = int(height)
+            if self.button_height < 0:
+                return 'Height is relative to the initial platform and must be positive!'
             if type is None:
                 type = 'elevator'
             type = type.lower()
