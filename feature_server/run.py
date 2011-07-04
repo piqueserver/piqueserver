@@ -422,6 +422,10 @@ class FeatureProtocol(ServerProtocol):
         if status.get('enabled', False):
             from statusserver import StatusServerFactory
             self.status_server = StatusServerFactory(self, status)
+        publish = config.get('publish_server', {})
+        if publish.get('enabled', False):
+            from publishserver import PublishServerFactory
+            self.publish_server = PublishServerFactory(self, publish)
                     
         if logfile is not None and logfile.strip():
             observer = log.FileLogObserver(open(logfile, 'a'))

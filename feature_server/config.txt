@@ -52,6 +52,10 @@
         "enabled" : false,
         "port" : 38826
     }, 
+    "publish_server" : {
+        "enabled" : false,
+        "port" : 38825
+    }, 
     "server_prefix" : "[*]",
     "user_blocks_only" : false,
     "logfile" : "log.txt",
