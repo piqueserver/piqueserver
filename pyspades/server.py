@@ -82,6 +82,8 @@ class ServerConnection(BaseConnection):
     fire = jump = aim = crouch = None
     timers = None
     
+    last_pos = None
+    
     def __init__(self, protocol, address):
         BaseConnection.__init__(self)
         self.protocol = protocol
@@ -196,11 +198,6 @@ class ServerConnection(BaseConnection):
         if self.player_id is not None:
             if loader.id in (SizedData.id, SizedSequenceData.id):
                 contained = load_client_packet(loader.data)
-                #if contained.id not in (clientloaders.OrientationData.id,
-                    #clientloaders.MovementData.id, clientloaders.AnimationData.id,
-                    #clientloaders.PositionData.id):
-                    #print contained
-                    #print '    ', hexify(loader.data)
                 if contained.id == clientloaders.JoinTeam.id:
                     if contained.name is None and contained.weapon != -1:
                         self.weapon = contained.weapon
