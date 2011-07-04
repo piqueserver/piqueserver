@@ -426,7 +426,12 @@ class FeatureProtocol(ServerProtocol):
         if publish.get('enabled', False):
             from publishserver import PublishServerFactory
             self.publish_server = PublishServerFactory(self, publish)
-                    
+        self.federated_bans = []
+        ban_subscribe = config.get('ban_subscribe', [])
+        for ip in ban_subscribe:
+            # figure out how to pull the data...
+            pass
+        
         if logfile is not None and logfile.strip():
             observer = log.FileLogObserver(open(logfile, 'a'))
             log.addObserver(observer.emit)
@@ -474,7 +479,7 @@ class FeatureProtocol(ServerProtocol):
     def master_disconnected(self, *arg, **kw):
         print 'Master connection lost, reconnecting...'
         ServerProtocol.master_disconnected(self, *arg, **kw)
-    
+
     def add_ban(self, ip, reason, duration):
         """Ban an ip(if it hasn't already been banned) with an optional reason and
             duration in minutes. If duration is None, ban is permanent."""
@@ -516,6 +521,14 @@ class FeatureProtocol(ServerProtocol):
                 if reactor.seconds()>=timestamp:
                     self.remove_ban(ip)
                     self.save_bans()
+                else:
+                    return
+        for ban in self.federated_bans:
+            ip = ban[1]
+            timestamp = ban[3]
+            if address[0] == ip:
+                if reactor.seconds()>=timestamp:
+                    pass
                 else:
                     return
         ServerProtocol.datagramReceived(self, data, address)
