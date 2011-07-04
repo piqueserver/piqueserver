@@ -594,7 +594,7 @@ class ServerConnection(BaseConnection):
     def send_chat(self, value, global_message = True):
         chat_message.global_message = global_message
         # 32 is guaranteed to be out of range!
-        #chat_message.player_id = 32
+        chat_message.player_id = 32
         prefix = self.protocol.server_prefix
         lines = textwrap.wrap(value, MAX_CHAT_SIZE - len(prefix) - 1)
         for line in lines:
