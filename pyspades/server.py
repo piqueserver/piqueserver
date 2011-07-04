@@ -76,7 +76,8 @@ class ServerConnection(BaseConnection):
     saved_loaders = None
     last_refill = None
     last_block_destroy = None
-
+    speedhack_detect = False
+    
     speed_limit_grace = 5
     movement_timestamp = 0.0
     
@@ -228,6 +229,7 @@ class ServerConnection(BaseConnection):
                     if old_team is None:
                         self.on_login(self.name)
                         self.spawn(name = self.name)
+                        self.speedhack_detect = True
                     else:
                         self.kill()
                     return
@@ -606,7 +608,8 @@ class ServerConnection(BaseConnection):
             self.send_contained(chat_message)
     
     def timer_received(self, value):
-        return # anti speedhack disabled
+        if not self.speedhack_detect:
+            return
         timers = self.timers
         seconds = reactor.seconds()
         timers.append((value, seconds))
