@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
+sys.path.append('..')
+
 from pyspades.client import ClientProtocol
 from twisted.internet import reactor
 from pyspades.tools import *
@@ -22,10 +25,8 @@ from pyspades.tools import *
 class TestProtocol(ClientProtocol):
     pass
 
-HOST = get_server_ip('aos://1796321603')
+HOST = get_server_ip('aos://16777343')
 PORT = 32887
-# HOST = '127.0.0.1'
-# PORT = 32887
 
 reactor.listenUDP(0, TestProtocol(HOST, PORT))
 reactor.run()

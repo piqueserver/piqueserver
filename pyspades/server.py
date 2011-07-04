@@ -53,7 +53,7 @@ block_action = serverloaders.BlockAction()
 kill_action = serverloaders.KillAction()
 chat_message = serverloaders.ChatMessage()
 map_data = MapData()
-        
+
 class ServerConnection(BaseConnection):
     master = False
     protocol = None
@@ -62,6 +62,7 @@ class ServerConnection(BaseConnection):
     player_id = None
     map_packets_sent = 0
     team = None
+    weapon = None
     name = None
     kills = 0
     orientation_sequence = 0
@@ -140,6 +141,7 @@ class ServerConnection(BaseConnection):
                     existing_player.name = player.name
                     existing_player.player_id = player.player_id
                     existing_player.tool = player.tool
+                    existing_player.weapon = player.weapon
                     existing_player.kills = player.kills
                     existing_player.team = player.team.id
                     existing_player.color = make_color(*player.color)
@@ -152,7 +154,7 @@ class ServerConnection(BaseConnection):
                 green_flag = green.flag
                 blue_base = blue.base
                 green_base = green.base
-               
+                
                 self.player_id = self.protocol.player_ids.pop()
                 player_data.player_left = -1
                 player_data.player_id = self.player_id
@@ -194,11 +196,20 @@ class ServerConnection(BaseConnection):
                 return
             elif loader.id == Ping.id:
                 return
-
+        
         if self.player_id is not None:
             if loader.id in (SizedData.id, SizedSequenceData.id):
                 contained = load_client_packet(loader.data)
+                #if contained.id not in (clientloaders.OrientationData.id,
+                    #clientloaders.MovementData.id, clientloaders.AnimationData.id,
+                    #clientloaders.PositionData.id):
+                    #print contained
+                    #print '    ', hexify(loader.data)
                 if contained.id == clientloaders.JoinTeam.id:
+                    if contained.name is None and contained.weapon != -1:
+                        self.weapon = contained.weapon
+                        self.kill()
+                        return
                     old_team = self.team
                     team = [self.protocol.blue_team, 
                         self.protocol.green_team][contained.team]
@@ -211,13 +222,14 @@ class ServerConnection(BaseConnection):
                         if name == 'Deuce':
                             name = name + str(self.player_id)
                         self.name = self.protocol.get_name(name)
+                        self.weapon = contained.weapon
                         self.protocol.players[self.name, self.player_id] = self
                         self.protocol.update_master()
                     if old_team is None:
                         self.on_login(self.name)
                         self.spawn(name = self.name)
                     else:
-                        self.respawn()
+                        self.kill()
                     return
                 if self.hp:
                     if contained.id == clientloaders.OrientationData.id:
@@ -275,7 +287,7 @@ class ServerConnection(BaseConnection):
                     elif contained.id == clientloaders.HitPacket.id:
                         if contained.player_id != -1:
                             player, = self.protocol.players[contained.player_id]
-                            hit_amount = HIT_VALUES[contained.value]
+                            hit_amount = HIT_VALUES[contained.value][self.weapon]
                             if self.on_hit(hit_amount, player) == False:
                                 return
                             player.hit(hit_amount, self)
@@ -435,7 +447,7 @@ class ServerConnection(BaseConnection):
         create_player.name = name
         create_player.x = position.x
         create_player.y = position.y - 128
-        create_player.z = position.z
+        create_player.weapon = self.weapon
         self.hp = 100
         self.tool = 3
         self.grenades = 2
@@ -521,7 +533,7 @@ class ServerConnection(BaseConnection):
             self.kill(by)
             return
         if by is not None:
-            hit_packet.value = HIT_CONSTANTS[value]
+            hit_packet.hp = self.hp
             self.send_contained(hit_packet)
     
     def kill(self, by = None):
@@ -531,7 +543,7 @@ class ServerConnection(BaseConnection):
         self.hp = None
         self.drop_flag()
         if by is None:
-            kill_action.player1 = self.player_id
+            kill_action.player1 = 0 #self.player_id
         else:
             kill_action.player1 = by.player_id
         kill_action.player2 = self.player_id
@@ -586,7 +598,7 @@ class ServerConnection(BaseConnection):
     def send_chat(self, value, global_message = True):
         chat_message.global_message = global_message
         # 32 is guaranteed to be out of range!
-        chat_message.player_id = 32
+        #chat_message.player_id = 32
         prefix = self.protocol.server_prefix
         lines = textwrap.wrap(value, MAX_CHAT_SIZE - len(prefix) - 1)
         for line in lines:
@@ -605,8 +617,9 @@ class ServerConnection(BaseConnection):
         end_timer, end_seconds = timers[-1]
         diff = (end_timer - start_timer) / (end_seconds - start_seconds)
         if diff > MAX_TIMER_SPEED:
-            print 'SPEEDHACK -> Diff:', diff, timers
-            self.on_hack_attempt('Speedhack detected')
+            pass
+            #print 'SPEEDHACK -> Diff:', diff, timers
+            #self.on_hack_attempt('Speedhack detected')
 
     # events/hooks
     

@@ -15,13 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-HIT_VALUES = {
-    2 : 100,
-    1 : 40,
-    3 : 25
+HIT_VALUES = { # packet value : [semi, smg]
+    2 : [100, 49],
+    1 : [49, 24],
+    3 : [33, 8]
 }
-
-HIT_CONSTANTS = dict([(v, k) for (k, v) in HIT_VALUES.iteritems()])
 
 BUILD_BLOCK, DESTROY_BLOCK, SPADE_DESTROY, GRENADE_DESTROY = xrange(4)
 MOVE_BLUE_FLAG, MOVE_GREEN_FLAG, MOVE_BLUE_BASE, MOVE_GREEN_BASE = xrange(4)

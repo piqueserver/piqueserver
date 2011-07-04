@@ -23,6 +23,7 @@ from pyspades.loaders import Ack
 from twisted.internet.defer import Deferred
 from pyspades.loaders import *
 from twisted.internet.task import LoopingCall
+from pyspades.common import hexify, stringify, binify
 
 import time
 import math

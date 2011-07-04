@@ -64,7 +64,7 @@ class MasterConnection(BaseConnection):
 
         connect_request = ConnectionRequest()
         connect_request.auth_val = self.auth_val
-        connect_request.version = 0xF000000 # increments for each version
+        connect_request.version = 0x1100000 # increments for each version
         connect_request.client = True
         self.send_loader(connect_request, False, 255)
     

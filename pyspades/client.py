@@ -45,38 +45,62 @@ class ClientConnection(BaseConnection):
         self.auth_val = random.randint(0, 0xFFFF)
         self.map = ByteWriter()
         self.connections = MultikeyDict()
+        self.spammy = {Ping : 0, MapData : 0, serverloaders.OrientationData : 0,
+            serverloaders.PositionData : 0, serverloaders.AnimationData : 0,
+            serverloaders.MovementData : 0}
         
         connect_request = ConnectionRequest()
         connect_request.auth_val = self.auth_val
         connect_request.client = True
-        connect_request.version = crc32(open('./data/client.exe', 'rb').read())
+        connect_request.version = crc32(open('../data/client.exe', 'rb').read())
         self.send_loader(connect_request, False, 255)
     
-    def send_join(self):
+    def send_join(self, team = -1, weapon = -1):
+        print 'joining team %s' % team
         loader = SizedData()
         data = ByteWriter()
         join = clientloaders.JoinTeam()
-        join.team = 1
         join.name = 'flotothelo'
+        join.team = team
+        join.weapon = weapon
         join.write(data)
         loader.data = data
-        self.send_loader(loader, byte = 255)
+        self.send_loader(loader, True)
     
     def loader_received(self, packet):
-        print 'got:', packet
+        is_contained = hasattr(packet, 'data') and packet.id != MapData.id
+        if is_contained:
+            data = packet.data
+            contained = load_server_packet(data)
+        spam_class = contained.__class__ if is_contained else packet.__class__
+        is_spammy = spam_class in self.spammy
+        if is_spammy:
+            self.spammy[spam_class] += 1
+        else:
+            message = None
+            spammed = [spam.__name__ + (' x%s' % recv if recv > 1 else '')
+                for spam, recv in self.spammy.items() if recv]
+            if len(spammed):
+                message = 'received ' + ', '.join(spammed)
+                print message
+                for spam in self.spammy:
+                    self.spammy[spam] = 0            
+            if is_contained:
+                print contained
+                print '    ', hexify(data)
         if packet.id == ConnectionResponse.id:
             self.connection_id = packet.connection_id
             self.unique = packet.unique
             self.connected = True
             print 'connected'
-        elif hasattr(packet, 'data') and packet.id != MapData.id:
+        elif is_contained:
             if packet.id == SizedData.id and self.map is not None:
                 print 'finished!'
+                reactor.callLater(1.0, self.send_join, team = 0, weapon = 0)
+                #reactor.callLater(4.0, self.send_join, 1, 1)
                 # open('testy.vxl', 'wb').write(str(self.map))
                 self.map = None
-            data = packet.data
-            contained = load_server_packet(data)
-            print contained
+            # data = packet.data
             # if data.dataLeft():
                 # raw_input('not completely parsed')
             # print contained
@@ -94,10 +118,10 @@ class ClientConnection(BaseConnection):
             self.map.write(data.read())
         elif packet.id == Ack.id:
             pass
+        elif packet.id == Ping.id:
+            pass
         elif packet.id == Packet10.id:
             print 'received packet10'
-        elif packet.id == Ping.id:
-            print 'received ping'
         else:
             print 'received:', packet
             raw_input('unknown packet')

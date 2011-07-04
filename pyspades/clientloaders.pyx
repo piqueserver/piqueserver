@@ -93,23 +93,14 @@ cdef class HitPacket(Loader):
     cpdef read(self, ByteReader reader):
         cdef int firstByte = reader.readByte(True)
         cdef int byte = reader.readByte(True)
-        if firstByte & 0x10:
-            self.value = byte
-            self.player_id = -1
-        else:
-            self.value = firstByte >> 5
-            self.player_id = byte
+        self.value = firstByte >> 5
+        self.player_id = byte
     
     cpdef write(self, ByteWriter reader):
         cdef int byte = self.id
-        if self.player_id == -1:
-            byte |= 0x10
-            reader.writeByte(byte, True)
-            reader.writeByte(self.value, True)
-        else:
-            byte |= self.value << 5
-            reader.writeByte(byte, True)
-            reader.writeByte(self.player_id, True)
+        byte |= self.value << 5
+        reader.writeByte(byte, True)
+        reader.writeByte(self.player_id, True)
 
 cdef class GrenadePacket(Loader):
     id = 5
@@ -161,17 +152,31 @@ cdef class JoinTeam(Loader):
     cdef public:
         object name
         int team
+        int weapon
     
     cpdef read(self, ByteReader reader):
         # respawn?
         cdef int firstByte = reader.readByte(True)
-        self.team = firstByte >> 4 # 0 for b, 1 for g
+        cdef int team = (firstByte >> 4) & 1 # also works as selector bit
+        cdef int weapon = (firstByte >> 5) & 1
         if reader.dataLeft():
             self.name = reader.readString()
+            self.team, self.weapon = team, weapon
+        elif team == 0:
+            self.team, self.weapon = weapon, -1
+        else:
+            self.team, self.weapon = -1, weapon
     
     cpdef write(self, ByteWriter reader):
         cdef int byte = self.id
-        byte |= self.team << 4
+        if self.name is not None:
+            byte |= self.team << 4
+            byte |= self.weapon << 5
+        elif self.team != -1:
+            byte |= self.team << 5
+        else:
+            byte |= 1 << 4
+            byte |= self.weapon << 5
         reader.writeByte(byte, True)
         if self.name is not None:
             reader.writeString(self.name)
