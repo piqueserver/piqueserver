@@ -19,6 +19,7 @@ def apply_script(protocol, connection, config):
                 self.kill()
                 return
             hit_packet.value = HIT_CONSTANTS[value]
+            hit_packet.sound = True
             self.send_contained(hit_packet)
 
     return protocol, MapExtensionConnection

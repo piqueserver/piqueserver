@@ -13,7 +13,8 @@ names = [
     'pyspades.packet',
     'pyspades.loaders',
     'pyspades.serverloaders',
-    'pyspades.clientloaders'
+    'pyspades.clientloaders',
+    'experimental.world'
 ]
 
 for name in names:
@@ -21,6 +22,6 @@ for name in names:
         language = 'c++'))
 
 setup(
-    name = 'pyspade extensions',
+    name = 'pyspades extensions',
     ext_modules = cythonize(ext_modules)
 )
