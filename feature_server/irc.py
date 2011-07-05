@@ -112,9 +112,11 @@ class IRCBot(irc.IRCClient):
             self.voices.remove(user)
     
     def send(self, msg):
+        msg = msg.encode('cp1252')
         self.msg(self.factory.channel, msg)
     
     def me(self, msg):
+        msg = msg.encode('cp1252')
         self.describe(self.factory.channel, msg)
 
 class IRCClientFactory(protocol.ClientFactory):
