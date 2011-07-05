@@ -141,6 +141,7 @@ def apply_script(protocol, connection, config):
                 self.platform_blocks.add((x, y, z))
             if self.building_button:
                 self.place_button(x, y, z)
+            connection.on_block_build(self, x, y, z)
         
         def on_block_destroy(self, x, y, z, mode):
             if mode == DESTROY_BLOCK:
