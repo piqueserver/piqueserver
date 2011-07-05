@@ -147,6 +147,9 @@ class FeatureConnection(ServerConnection):
     def on_block_build(self, x, y, z):
         if self.god:
             self.refill()
+            if self.protocol.god_blocks is None:
+                self.protocol.god_blocks = set()
+            self.protocol.god_blocks.add((x, y, z))
         elif not self.protocol.building:
             return False
         elif self.protocol.user_blocks is not None:
@@ -171,6 +174,12 @@ class FeatureConnection(ServerConnection):
                         for nade_z in xrange(z - 1, z + 2):
                             if is_indestructable(nade_x, nade_y, nade_z):
                                 return False
+    
+    def on_block_removed(self, x, y, z):
+        if self.protocol.user_blocks is not None:
+            self.protocol.user_blocks.discard((x, y, z))
+        if self.protocol.god_blocks is not None:
+            self.protocol.god_blocks.discard((x, y, z))
     
     def on_hit(self, hit_amount, player):
         if not self.protocol.killing:
@@ -364,6 +373,7 @@ class FeatureProtocol(ServerProtocol):
     map_info = None
     spawns = None
     user_blocks = None
+    god_blocks = None
     
     def __init__(self, config, map):
         self.map = map.data
@@ -422,10 +432,6 @@ class FeatureProtocol(ServerProtocol):
         if status.get('enabled', False):
             from statusserver import StatusServerFactory
             self.status_server = StatusServerFactory(self, status)
-        publish = config.get('publish_server', {})
-        if publish.get('enabled', False):
-            from publishserver import PublishServerFactory
-            self.publish_server = PublishServerFactory(self, publish)
                     
         if logfile is not None and logfile.strip():
             observer = log.FileLogObserver(open(logfile, 'a'))
@@ -449,6 +455,9 @@ class FeatureProtocol(ServerProtocol):
     def is_indestructable(self, x, y, z):
         if self.user_blocks is not None:
             if (x, y, z) not in self.user_blocks:
+                return True
+        if self.god_blocks is not None:
+            if (x, y, z) in self.god_blocks:
                 return True
         return False
     
