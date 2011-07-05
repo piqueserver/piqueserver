@@ -202,6 +202,92 @@ class Heightmap:
         result.putdata(converted)
         result.save("result.bmp")
 
+def level_area(vxl, x, y, width, length, height, color):
+    for cx in xrange(x, x+width):
+        for cy in xrange(y, y+length):
+            for cz in xrange(2, 63):
+                if height <= cz:
+                    vxl.set_point_unsafe(cx, cy, cz, color)
+                else:
+                    vxl.remove_point_unsafe(cx, cy, cz)
+
+def build_cube(vxl, x, y, width, length, height_start, height_end, color):
+    for cx in xrange(x, x+width):
+        for cy in xrange(y, y+length):
+            for cz in xrange(2, 63):
+                if height_start <= cz and height_end >= cz:
+                    vxl.set_point_unsafe(cx, cy, cz, color)
+
+def build_rect(vxl, x, y, width, length, height_start, height_end,
+                     color):
+    for cx in xrange(x, x+width):
+        for cy in [y, y+length-1]:
+            for cz in xrange(2, 63):
+                if height_start <= cz and height_end >= cz:
+                    vxl.set_point_unsafe(cx, cy, cz, color)
+    for cy in xrange(y, y+length):
+        for cx in [x, x+width-1]:
+            for cz in xrange(2, 63):
+                if height_start <= cz and height_end >= cz:
+                    vxl.set_point_unsafe(cx, cy, cz, color)
+
+def remove_cube(vxl, x, y, width, length, height_start, height_end):
+    for cx in xrange(x, x+width):
+        for cy in xrange(y, y+length):
+            for cz in xrange(2, 63):
+                if height_start <= cz and height_end >= cz:
+                    vxl.remove_point_unsafe(cx, cy, cz)
+
+def find_avg_of_area(vxl, x, y, width, length):
+    total = 0
+    for cx in xrange(x, x+width):
+        for cy in xrange(y, y+length):
+            total += vxl.get_z(cx,cy)
+    return int(total/(width*length))
+
+def paint_top(vxl, x, y, width, length, color):
+    for cx in xrange(x, x+width):
+        for cy in xrange(y, y+length):
+            vh = vxl.get_z(cx,cy)
+            vxl.set_point_unsafe(cx, cy, vh, color)
+
+def paint_bottom(vxl, x, y, width, length, color):
+    for cx in xrange(x, x+width):
+        for cy in xrange(y, y+length):
+            vh = vxl.get_height(cx,cy)
+            vxl.set_point_unsafe(cx, cy, vh, color)
+
+def paint_volume(vxl, x, y, width, length, height_start, height_end, color):
+    for cx in xrange(x, x+width):
+        for cy in xrange(y, y+length):
+            for cz in xrange(2, 63):
+                if (height_start <= cz and height_end >= cz and
+                    vxl.get_solid( cx, cy, cz ) ):
+                    vxl.set_point_unsafe(cx, cy, cz, color)
+
+#TODO paint_road - paint a line of 3x3 areas, smoothing steep slopes as we go
+
+class Building:
+    def __init__(self, width, length, floors, colors):
+        self.width = width
+        self.length = length
+        self.floors = floors
+        self.height = sum(floors) + len(floors) + 1
+        self.colors = colors # infill, floor, wall
+    def create(self, vxl, x, y):
+        baseh = find_avg_of_area(vxl, x, y, self.width, self.length)
+        level_area(vxl, x, y, self.width, self.length, baseh, self.colors[0])
+        build_rect(vxl, x+1, y+1, self.width-2, self.length-2,
+                   baseh-self.height, baseh, self.colors[2])
+        curh = baseh
+        for f in self.floors:
+            build_cube(vxl, x+1, y+1, self.width-2, self.length-2,
+                       curh, curh, self.colors[1])
+            curh-=(f+1)
+        build_cube(vxl, x+1, y+1, self.width-2, self.length-2,
+                   curh, curh, self.colors[1])
+        
+
 def algorithm_1(hmap):
     """Large mountain peaks, rough foothills, lakes"""
     hmap.seed(0.2,0.68)
@@ -229,6 +315,8 @@ def algorithm_3(hmap):
     hmap.smoothing()
     hmap.smoothing()
 
+
+
 def generator_random():
 
     print("""Please wait, running "random" map generator.""")
@@ -242,4 +330,14 @@ def generator_random():
     hmap.blend_heightmaps(hmap2,hmap3)
     hmap.offset_z(-0.05)
 
-    return hmap.writeVXL()
+    vxl = hmap.writeVXL()
+    #avgh = find_avg_of_area(vxl, 16, 250, 64, 64)
+    #level_area(vxl, 16, 250, 64, 64, avgh, (127,127,127,255))
+    #build_cube(vxl, 16, 250, 64, 64, avgh, avgh, (127,127,127,255))
+    #remove_cube(vxl, 18, 252, 60, 60, avgh, 61)
+    #paint_volume(vxl, 65, 250, 64, 64, 0, 999, (0,0,0,255))
+    bldg = Building(32, 32,
+                    [5,3,3,3,3,3,3],
+                    [(80,35,0,255),(40,40,40,255),(127,127,127,255)])
+    bldg.create(vxl, 60, 250)
+    return vxl
