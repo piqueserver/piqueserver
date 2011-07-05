@@ -362,8 +362,8 @@ class ServerConnection(BaseConnection):
                     z = contained.z
                     if value == BUILD_BLOCK:
                         #if not self.blocks:
-                        #self.on_hack_attempt('Block hack detected')
-                        #return
+                            #self.on_hack_attempt('Block hack detected')
+                            #return
                         self.blocks -= 1
                         if self.on_block_build_attempt(x, y, z) == False:
                             return
@@ -371,8 +371,11 @@ class ServerConnection(BaseConnection):
                             return
                         self.on_block_build(x, y, z)
                     else:
-                        if self.on_block_destroy(x, y, z, value) == False:
+                        returned = self.on_block_destroy(x, y, z, value)
+                        if returned == False:
                             return
+                        elif returned is not None:
+                            value = returned
                         elif value == DESTROY_BLOCK:
                             self.blocks += 1
                             map.remove_point(x, y, z)

@@ -151,7 +151,7 @@ def apply_script(protocol, connection, config):
                         self.send_chat('That is not a platform! Aborting '
                             'button placement.')
                         self.building_button = False
-                    elif self.button_platform.start_z - self.button_height < 4:
+                    elif self.button_platform.start_z - self.button_height < 1:
                         self.send_chat("Sorry, but you'll have to pick a lower"
                             "height value.")
                         self.building_button = False
@@ -159,11 +159,14 @@ def apply_script(protocol, connection, config):
                         self.send_chat('Platform selected! Now place a block '
                             'for the button.')
                     return False
-                if self.protocol.buttons:
-                    if not self.god and (x, y, z) in self.protocol.buttons:
+                if self.protocol.buttons 
+                    if (x, y, z) in self.protocol.buttons:
                         self.protocol.buttons[(x, y, z)].action(
                             self.find_aux_connection())
                         return False
+            if self.protocol.buttons and mode == SPADE_DESTROY and self.god:
+                if (x, y, z) in self.protocol.buttons:
+                    return DESTROY_BLOCK
             if self.protocol.check_platform(x, y, z):
                 return False
             return connection.on_block_destroy(self, x, y, z, mode)

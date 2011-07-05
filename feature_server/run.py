@@ -442,7 +442,6 @@ class FeatureProtocol(ServerProtocol):
             # figure out how to pull the data...
             pass
         
->>>>>>> other
         if logfile is not None and logfile.strip():
             observer = log.FileLogObserver(open(logfile, 'a'))
             log.addObserver(observer.emit)
