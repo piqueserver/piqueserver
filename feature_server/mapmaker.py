@@ -265,6 +265,36 @@ def paint_volume(vxl, x, y, width, length, height_start, height_end, color):
                     vxl.get_solid( cx, cy, cz ) ):
                     vxl.set_point_unsafe(cx, cy, cz, color)
 
+def staircase(vxl, x, y, xdir, length, height_start, height_end, color):
+    """this is kind of lame. I should have a proper "directional" behavior."""
+    curheight = height_start + 1
+    cx = x
+    while curheight>=height_end:
+        for cy in xrange(y, y+length):
+            for cz in xrange(int(max(0, height_end-4)),
+                             int(min(63, height_start))):
+                if (curheight == cz or curheight == cz + 1):
+                    vxl.set_point_unsafe(cx, cy, cz, color)
+                elif (curheight > cz):
+                    vxl.remove_point_unsafe(cx, cy, cz)
+        curheight-=1
+        cx+=xdir
+
+def windows(vxl, x, y, width, length, height):
+    """again, kind of lame. It just punches them out in an exact rectangle."""
+    flip = False
+    for cx in xrange(x+1, x+width-2):
+        if flip:
+            for cy in [y, y+length-1]:
+                vxl.remove_point_unsafe(cx, cy, height)
+        flip = not flip
+    for cy in xrange(y+1, y+length-2):
+        if flip:
+            for cx in [x, x+width-1]:
+                vxl.remove_point_unsafe(cx, cy, height)
+        flip = not flip
+    
+
 #TODO paint_road - paint a line of 3x3 areas, smoothing steep slopes as we go
 
 class Building:
@@ -275,7 +305,8 @@ class Building:
         self.height = sum(floors) + len(floors) + 1
         self.colors = colors # infill, floor, wall
     def create(self, vxl, x, y):
-        baseh = find_avg_of_area(vxl, x, y, self.width, self.length)
+        baseh = find_avg_of_area(vxl, x, y, self.width, self.length) - 1
+        baseh = int(max(baseh, self.height)) # force full height always
         level_area(vxl, x, y, self.width, self.length, baseh, self.colors[0])
         build_rect(vxl, x+1, y+1, self.width-2, self.length-2,
                    baseh-self.height, baseh, self.colors[2])
@@ -286,7 +317,20 @@ class Building:
             curh-=(f+1)
         build_cube(vxl, x+1, y+1, self.width-2, self.length-2,
                    curh, curh, self.colors[1])
-        
+        curh = baseh
+        flipx = 1
+        for f in self.floors:
+            # something to improve: more orientations for staircases
+            if flipx == 1:
+                staircase(vxl, x+3, y+5, flipx, 3, curh, curh-f, self.colors[1])
+            else:
+                staircase(vxl, x+self.width-6, y+5, flipx, 3, curh, curh-f,
+                          self.colors[1])
+            flipx = -flipx
+
+            windows(vxl, x+1, y+1, self.width-2, self.length-2, curh - 2)
+            
+            curh-=(f+1)
 
 def algorithm_1(hmap):
     """Large mountain peaks, rough foothills, lakes"""
@@ -336,7 +380,7 @@ def generator_random():
     #build_cube(vxl, 16, 250, 64, 64, avgh, avgh, (127,127,127,255))
     #remove_cube(vxl, 18, 252, 60, 60, avgh, 61)
     #paint_volume(vxl, 65, 250, 64, 64, 0, 999, (0,0,0,255))
-    bldg = Building(32, 32,
+    bldg = Building(33, 33,
                     [5,3,3,3,3,3,3],
                     [(80,35,0,255),(40,40,40,255),(127,127,127,255)])
     bldg.create(vxl, 60, 250)
