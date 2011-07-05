@@ -1,27 +1,24 @@
-cdef class World
-
-cdef class Object:
-    cdef:
-        double x, y, z
-        World world
+class Object(object):
+    x = y = z = None
+    world = None
     
-    def __init__(self, World world):
+    def __init__(self, world):
         self.world = world
     
-    cdef void update(self):
+    def update(self):
         pass
 
-cdef class Grenade(Object):
-    cdef void update(self):
+class Grenade(Object):
+    def update(self):
         pass
 
-cdef class Character(Object):
-    cdef void update(self):
+class Character(Object):
+    def update(self):
         pass
 
-cdef class World:
-    cdef public:
-        list objects
+class World(object):
+    objects = None
+    map = None
     
     def __init__(self):
         self.objects = []
@@ -30,5 +27,5 @@ cdef class World:
         pass
         
     def create_object(self, klass):
-        cdef Object new_object = klass(self)
+        new_object = klass(self)
         self.objects.append(new_object)

@@ -120,7 +120,6 @@ class FeatureConnection(ServerConnection):
             self.protocol.irc_say('* %s disconnected' % self.name)
             if self.protocol.votekick_player is self:
                 self.protocol.votekick_call.cancel()
-                self.protocol.votekick_update_call.stop()
                 self.protocol.end_votekick(True, 'Player left the game',
                     left = True)
         ServerConnection.disconnect(self)
@@ -605,7 +604,6 @@ class FeatureProtocol(ServerProtocol):
             self.send_chat('%s voted YES.' % connection.name)
         if self.votes_left == 0:
             self.votekick_call.cancel()
-            self.votekick_update_call.stop()
             self.end_votekick(True, 'Player kicked')
     
     def cancel_votekick(self, connection):
@@ -614,7 +612,6 @@ class FeatureProtocol(ServerProtocol):
         if not connection.admin and connection is not self.voting_player:
             return 'You did not start the votekick.'
         self.votekick_call.cancel()
-        self.votekick_update_call.stop()
         self.end_votekick(False, 'Cancelled by %s' % connection.name)
     
     def end_votekick(self, enough, result, left = False):
@@ -634,6 +631,7 @@ class FeatureProtocol(ServerProtocol):
             self.voting_player.last_votekick = reactor.seconds()
         self.votes = self.votekick_call = None
         self.voting_player = None
+        self.votekick_update_call.stop()
     
     def votekick_update(self):
         reason = self.votekick_reason if self.votekick_reason else 'none'
