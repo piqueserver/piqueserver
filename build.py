@@ -13,8 +13,7 @@ names = [
     'pyspades.packet',
     'pyspades.loaders',
     'pyspades.serverloaders',
-    'pyspades.clientloaders',
-    'experimental.world'
+    'pyspades.clientloaders'
 ]
 
 for name in names:
