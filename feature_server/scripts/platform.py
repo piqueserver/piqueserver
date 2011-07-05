@@ -79,7 +79,7 @@ def apply_script(protocol, connection, config):
         
         def elevator(self, user, target_z, speed):
             if speed is None:
-                speed = 0.5
+                speed = 0.75
             if self.start(user, target_z, speed) == False:
                 return
             self.mode = 'elevator'
@@ -159,14 +159,11 @@ def apply_script(protocol, connection, config):
                         self.send_chat('Platform selected! Now place a block '
                             'for the button.')
                     return False
-                if self.protocol.buttons 
+                if self.protocol.buttons:
                     if (x, y, z) in self.protocol.buttons:
                         self.protocol.buttons[(x, y, z)].action(
                             self.find_aux_connection())
                         return False
-            if self.protocol.buttons and mode == SPADE_DESTROY and self.god:
-                if (x, y, z) in self.protocol.buttons:
-                    return DESTROY_BLOCK
             if self.protocol.check_platform(x, y, z):
                 return False
             return connection.on_block_destroy(self, x, y, z, mode)

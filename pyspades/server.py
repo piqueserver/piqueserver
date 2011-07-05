@@ -371,8 +371,7 @@ class ServerConnection(BaseConnection):
                             return
                         self.on_block_build(x, y, z)
                     else:
-                        returned = self.on_block_destroy(x, y, z, value)
-                        if returned == False:
+                        if self.on_block_destroy(x, y, z, value) == False:
                             return
                         elif returned is not None:
                             value = returned
