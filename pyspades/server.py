@@ -701,11 +701,6 @@ class Flag(Vertex3):
     player = None
     team = None
 
-spawn_positions = []
-for x in xrange(128):
-    for y in xrange(128, 384):
-        spawn_positions.append((x, y))
-
 class Team(object):
     score = None
     flag = None

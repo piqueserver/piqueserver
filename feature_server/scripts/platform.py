@@ -79,7 +79,7 @@ def apply_script(protocol, connection, config):
         
         def elevator(self, user, target_z, speed):
             if speed is None:
-                speed = 0.5
+                speed = 0.75
             if self.start(user, target_z, speed) == False:
                 return
             self.mode = 'elevator'
@@ -141,6 +141,7 @@ def apply_script(protocol, connection, config):
                 self.platform_blocks.add((x, y, z))
             if self.building_button:
                 self.place_button(x, y, z)
+            connection.on_block_build(self, x, y, z)
         
         def on_block_destroy(self, x, y, z, mode):
             if mode == DESTROY_BLOCK:
@@ -151,7 +152,7 @@ def apply_script(protocol, connection, config):
                         self.send_chat('That is not a platform! Aborting '
                             'button placement.')
                         self.building_button = False
-                    elif self.button_platform.start_z - self.button_height < 4:
+                    elif self.button_platform.start_z - self.button_height < 1:
                         self.send_chat("Sorry, but you'll have to pick a lower"
                             "height value.")
                         self.building_button = False
@@ -160,7 +161,7 @@ def apply_script(protocol, connection, config):
                             'for the button.')
                     return False
                 if self.protocol.buttons:
-                    if not self.god and (x, y, z) in self.protocol.buttons:
+                    if (x, y, z) in self.protocol.buttons:
                         self.protocol.buttons[(x, y, z)].action(
                             self.find_aux_connection())
                         return False

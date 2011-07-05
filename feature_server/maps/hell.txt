@@ -3,4 +3,4 @@ version = '2.0'
 author = 'Sasquatch'
 description = ('Quite literally, Hell. Just as treacherous, but now with added '
                'bridges for more mobility.')
-extensions = { 'water_damage' : True }
+extensions = { 'water_damage' : 25 }
