@@ -81,7 +81,6 @@ class ServerConnection(BaseConnection):
     position = orientation = None
     fire = jump = aim = crouch = None
     timers = None
-    last_ground_z = None
     
     def __init__(self, protocol, address):
         BaseConnection.__init__(self)
