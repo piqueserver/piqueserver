@@ -373,8 +373,6 @@ class ServerConnection(BaseConnection):
                     else:
                         if self.on_block_destroy(x, y, z, value) == False:
                             return
-                        elif returned is not None:
-                            value = returned
                         elif value == DESTROY_BLOCK:
                             self.blocks += 1
                             map.remove_point(x, y, z)
