@@ -185,6 +185,7 @@ def login(connection, password):
     passwords = connection.protocol.admin_passwords
     if password in passwords:
         connection.admin = True
+        connection.speedhack_detect = False
         message = '%s logged in as admin' % connection.name
         connection.protocol.send_chat(message, irc = True)
         return None
@@ -492,6 +493,7 @@ command_list = [
     toggle_kill,
     toggle_teamkill,
     teleport,
+    tp,
     goto,
     god,
     follow,
