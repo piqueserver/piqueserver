@@ -8,7 +8,7 @@ from pyspades.constants import *
 @admin
 def platform(connection):
     if connection.building_button:
-        return
+        return "You're in button mode! Type /button to exit it."
     if not connection.building_platform:
         return connection.start_platform()
     else:
@@ -17,7 +17,7 @@ def platform(connection):
 @admin
 def button(connection, value = None, type = None, speed = None):
     if connection.building_platform:
-        return
+        return "You're in platform mode! Type /platform to exit it."
     if not connection.building_button:
         return connection.start_button(value, type, speed)
     else:
@@ -71,15 +71,13 @@ def apply_script(protocol, connection, config):
             self.cycle_call.start(self.speed, now = False)
         
         def once(self, user, target_z, speed):
-            if speed is None:
-                speed = 0.25
+            speed = speed or 0.25
             if self.start(user, target_z, speed) == False:
                 return
             self.mode = 'once'
         
         def elevator(self, user, target_z, speed):
-            if speed is None:
-                speed = 0.75
+            speed = speed or 0.75
             if self.start(user, target_z, speed) == False:
                 return
             self.mode = 'elevator'
@@ -124,17 +122,11 @@ def apply_script(protocol, connection, config):
         platform_blocks = None
         
         def find_aux_connection(self):
-            """Attempts to find a dead player or one that isn't currently
-            placing blocks"""
-            best = None
+            """Attempts to find a dead player"""
             for player in self.protocol.players.values():
-                if player is self:
-                    continue
-                if best is None or player.hp <= 0 and best.hp > 0:
-                    best = player
-            if best is None:
-                best = self
-            return best
+                if player.hp <= 0:
+                    return player
+            return self
         
         def on_block_build(self, x, y, z):
             if self.building_platform:
