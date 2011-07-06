@@ -37,10 +37,10 @@ window.set_handlers(keyboard)
 def on_draw():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
-    glTranslatef(0, 400, 0)
+    glTranslatef(0, window.height, 0)
     position = character.position
-    x = position.x
-    y = position.z
+    x = ((position.x) / 512.0) * window.width
+    y = ((-position.z) / 64.0) * window.height
     
     glBegin(GL_QUADS)
     
