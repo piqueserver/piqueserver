@@ -36,6 +36,7 @@ class PacketHandler(object):
     sequence = 0
     pending = None
     callback = None
+
     def __init__(self, connection):
         self.pending = {}
         self.connection = connection

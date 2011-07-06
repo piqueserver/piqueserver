@@ -1,11 +1,20 @@
+from pyspades.common import *
+from pyspades.load import VXLData
 import world
-import pyglet
+from twisted.internet import reactor
+from twisted.internet.task import LoopingCall
 
-new_world = world.World()
-nade = new_world.create_object(world.Grenade)
+new_world = world.World(VXLData(open('../data/sinc0.vxl')))
+nade = new_world.create_object(world.Character,
+    Vertex3(20.0, 20.0, 5.0), Vertex3())
 
-def update(dt):
-    print 'update -> %s' % (1 / dt)
+def update():
+    dt = 1 / 60.0
+    new_world.update(dt)
+    for instance in new_world.objects:
+        position = instance.position
+        print position.x, position.y, position.z
 
-pyglet.clock.schedule_interval(update, 1 / 60.0)
-pyglet.app.run()
+caller = LoopingCall(update)
+caller.start(1 / 60.0, now = False)
+reactor.run()

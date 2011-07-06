@@ -454,7 +454,7 @@ class ServerConnection(BaseConnection):
         self.grenades = 2
         self.blocks = 50
         self.protocol.send_contained(create_player, save = True)
-        self.on_spawn(pos, name)
+        self.on_spawn(pos)
     
     def capture_flag(self):
         other_team = self.team.other
@@ -636,7 +636,7 @@ class ServerConnection(BaseConnection):
     def on_login(self, name):
         pass
     
-    def on_spawn(self, pos, name):
+    def on_spawn(self, pos):
         pass
     
     def on_chat(self, value, global_message):
@@ -680,21 +680,6 @@ class ServerConnection(BaseConnection):
 
     def on_update_position(self):
         pass
-
-class Vertex3(object):
-    def __init__(self, *arg, **kw):
-        self.set(*arg, **kw)
-    
-    def get(self):
-        return self.x, self.y, self.z
-    
-    def set(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
-    
-    def set_vector(self, vector):
-        self.set(vector.x, vector.y, vector.z)
 
 class Flag(Vertex3):
     player = None

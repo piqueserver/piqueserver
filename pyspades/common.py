@@ -74,8 +74,25 @@ def crc32(data):
 
 def encode(value):
     if value is not None:
-        return value.encode('cp437')
+        return value.encode('cp437', 'replace')
 
 def decode(value):
     if value is not None:
-        return value.decode('cp437')
+        return value.decode('cp437', 'replace')
+
+class Vertex3(object):
+    x = y = z = 0.0
+    def __init__(self, *arg):
+        if arg:
+            self.set(*arg)
+    
+    def get(self):
+        return self.x, self.y, self.z
+    
+    def set(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+    
+    def set_vector(self, vector):
+        self.set(vector.x, vector.y, vector.z)

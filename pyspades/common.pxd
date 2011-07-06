@@ -15,6 +15,17 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+cdef extern from "Python.h":
+    object PyString_FromStringAndSize(char*,Py_ssize_t)
+    char* PyString_AS_STRING(object)
+
+cdef inline object allocate_memory(int size, char ** i):
+    if size < 0: 
+        size = 0
+    cdef object ob = PyString_FromStringAndSize(NULL, size)
+    i[0] = PyString_AS_STRING(ob)
+    return ob
+
 cdef inline int check_default_int(int value, int default) except -1:
     if value != default:
         raw_input('check_default() failed')

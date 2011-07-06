@@ -101,7 +101,7 @@ class IRCBot(irc.IRCClient):
             else:
                 max_len = MAX_IRC_CHAT_SIZE - len(self.protocol.server_prefix) - 1
                 message = ("<%s> %s" % (prefixed_username, msg))[:max_len]
-                print message
+                print message.encode('ascii', 'replace')
                 self.factory.server.send_chat(encode(message))
     
     @channel
@@ -112,11 +112,11 @@ class IRCBot(irc.IRCClient):
             self.voices.remove(user)
     
     def send(self, msg):
-        msg = msg.encode('cp1252')
+        msg = msg.encode('cp1252', 'replace')
         self.msg(self.factory.channel, msg)
     
     def me(self, msg):
-        msg = msg.encode('cp1252')
+        msg = msg.encode('cp1252', 'replace')
         self.describe(self.factory.channel, msg)
 
 class IRCClientFactory(protocol.ClientFactory):

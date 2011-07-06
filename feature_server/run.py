@@ -88,6 +88,7 @@ def writelines(fp, lines):
         fp.write(line + "\r\n")
 
 class FeatureConnection(ServerConnection):
+    printable_name = None
     admin = False
     last_votekick = None
     last_switch = None
@@ -104,19 +105,22 @@ class FeatureConnection(ServerConnection):
             self.send_lines(self.protocol.motd)
     
     def on_login(self, name):
+        self.printable_name = name.encode('ascii', 'replace')
         if self.protocol.follow_attack == 'auto':
             self.follow = "attack"
         if self.protocol.join_part_messages:
-            self.protocol.send_chat('%s entered the game!' % name)
-        print '%s (%s) entered the game!' % (name, self.address[0])
-        self.protocol.irc_say('* %s entered the game' % name)
+            self.protocol.send_chat(
+                '%s entered the game!' % self.name)
+        print '%s (%s) entered the game!' % (self.printable_name, 
+            self.address[0])
+        self.protocol.irc_say('* %s entered the game' % self.name)
     
     def disconnect(self):
         self.drop_followers()
         if self.name is not None:
             if self.protocol.join_part_messages:
                 self.protocol.send_chat('%s left the game' % self.name)
-            print self.name, 'disconnected!'
+            print self.printable_name, 'disconnected!'
             self.protocol.irc_say('* %s disconnected' % self.name)
             if self.protocol.votekick_player is self:
                 self.protocol.votekick_call.cancel()
@@ -124,7 +128,7 @@ class FeatureConnection(ServerConnection):
                     left = True)
         ServerConnection.disconnect(self)
     
-    def on_spawn(self, pos, name):
+    def on_spawn(self, pos):
         if self.follow is not None:
             if self.follow == "attack":
                 attackers = self.get_attackers()
@@ -141,7 +145,7 @@ class FeatureConnection(ServerConnection):
         if result is not None:
             log_message += ' -> %s' % result
             self.send_chat(result)
-        print log_message
+        print log_message.encode('ascii', 'replace')
     
     def on_block_build(self, x, y, z):
         if self.god:
@@ -248,7 +252,7 @@ class FeatureConnection(ServerConnection):
             message = '(MUTED) %s' % message
         elif global_message:
             self.protocol.irc_say('<%s> %s' % (self.name, value))
-        print message
+        print message.encode('ascii', 'replace')
         if self.mute:
             self.send_chat('(Chat not sent - you are muted)')
             return False
@@ -323,7 +327,8 @@ class FeatureConnection(ServerConnection):
             current_time += 2
     
     def on_hack_attempt(self, reason):
-        print 'Hack attempt detected from %s: %s' % (self.name, reason)
+        print 'Hack attempt detected from %s: %s' % (self.printable_name, 
+            reason)
         self.kick(reason)
     
     # position methods

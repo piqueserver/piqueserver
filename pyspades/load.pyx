@@ -15,39 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-cdef extern from "Python.h":
-    object PyString_FromStringAndSize(char*,Py_ssize_t)
-    char* PyString_AS_STRING(object)
-    int Py_REFCNT(object v)
-
-cdef extern from "stdlib.h":
-    void free(void* ptr)
-    void* malloc(size_t size)
-    void* realloc(void* ptr, size_t size)
-    void *memcpy(void *str1, void *str2, size_t n)
-
-cdef inline object allocate_memory(int size, char ** i):
-    if size < 0: 
-        size = 0
-    cdef object ob = PyString_FromStringAndSize(NULL, size)
-    i[0] = PyString_AS_STRING(ob)
-    return ob
-
-cdef extern from "load_c.cpp":
-    enum:
-        MAP_X
-        MAP_Y
-        MAP_Z
-        DEFAULT_COLOR
-    struct MapData:
-        pass
-    MapData * load_vxl(unsigned char * v)
-    void delete_vxl(MapData * map)
-    object save_vxl(MapData * map)
-    int check_node(int x, int y, int z, MapData * map, int destroy)
-    bint get_solid(int x, int y, int z, MapData * map)
-    int get_color(int x, int y, int z, MapData * map)
-    void set_point(int x, int y, int z, MapData * map, bint solid, int color)
+from pyspades.common cimport allocate_memory
 
 cdef inline tuple get_color_tuple(color):
     cdef int r, g, b, a
@@ -71,8 +39,6 @@ cdef inline int get_z(int x, int y, MapData * map, int start = 0):
     return 0
 
 cdef class VXLData:
-    cdef MapData * map
-        
     def __init__(self, fp = None):
         cdef unsigned char * c_data
         if fp is not None:

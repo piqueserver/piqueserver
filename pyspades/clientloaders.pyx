@@ -157,15 +157,18 @@ cdef class JoinTeam(Loader):
     cpdef read(self, ByteReader reader):
         # respawn?
         cdef int firstByte = reader.readByte(True)
-        cdef int team = (firstByte >> 4) & 1 # also works as selector bit
-        cdef int weapon = (firstByte >> 5) & 1
+        cdef int selector = (firstByte >> 4) & 1
+        cdef int value = (firstByte >> 5)
         if reader.dataLeft():
             self.name = decode(reader.readString())
-            self.team, self.weapon = team, weapon
-        elif team == 0:
-            self.team, self.weapon = weapon, -1
+            self.team = selector
+            self.weapon = value
+        elif selector == 0:
+            self.team = value
+            self.weapon = -1
         else:
-            self.team, self.weapon = -1, weapon
+            self.team = -1
+            self.weapon = value
     
     cpdef write(self, ByteWriter reader):
         cdef int byte = self.id
