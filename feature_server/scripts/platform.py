@@ -28,19 +28,19 @@ add(button)
 
 def apply_script(protocol, connection, config):
     class Button:
-        platform = None
-        callback = None
-        args = None
+        callbacks = None
         
         def __init__(self, platform, callback, *args):
-            self.platform = platform
-            self.callback = callback
-            self.args = args
+            self.callbacks = []
+            self.add_action(platform, callback, *args)
+        
+        def add_action(self, platform, callback, *args):
+            self.callbacks.append((platform, callback, args))
         
         def action(self, user):
-            ret = self.callback(user, *self.args)
-            if ret:
-                user.send_chat(ret)
+            for platform, callback, args in self.callbacks:
+                if callback(user, *args) == False:
+                    return
     
     class Platform:
         protocol = None
@@ -80,16 +80,19 @@ def apply_script(protocol, connection, config):
         def start(self, user, target_z, mode, speed, force = False):
             if not force:
                 if self.disabled:
-                    return 'This platform is currently disabled.'
+                    user.send_chat('This platform is currently disabled.')
+                    return False
                 elif self.busy:
                     return
-            self.busy = True
             self.disabled = False
             self.user = user
             self.mode = mode
             self.last_z = self.z
             self.target_z = target_z
             self.speed = speed
+            if self.z == self.target_z:
+                return
+            self.busy = True
             self.cycle_call.start(self.speed, now = False)
         
         def cycle(self):
@@ -160,6 +163,15 @@ def apply_script(protocol, connection, config):
                         self.send_chat('Platform selected! Now place a block '
                             'for the button.')
                     return False
+                elif (self.building_button and self.protocol.buttons and
+                    (x, y, z) in self.protocol.buttons):
+                    p = self.button_platform
+                    b = self.protocol.buttons[(x, y, z)]
+                    b.add_action(p, p.start, p.start_z - self.button_height,
+                        self.button_type, self.button_speed)
+                    self.building_button = False
+                    self.send_chat('Added action to button.')
+                    return False
                 if self.editing_platform:
                     if platform is None:
                         self.send_chat('That is not a platform! Aborting '
@@ -169,7 +181,8 @@ def apply_script(protocol, connection, config):
                         if target_z < 1:
                             self.send_chat("Sorry, but you'll have to pick a "
                                 "lower height value.")
-                        platform.start(self, target_z, 'once', 0.25, force = True)
+                        platform.start(self, target_z, 'once', 0.25,
+                            force = True)
                     elif self.editing_mode == 'freeze':
                         platform.frozen = not platform.frozen
                         self.send_chat('Platform ' + ['unfrozen!', 'frozen!']
@@ -181,6 +194,13 @@ def apply_script(protocol, connection, config):
                     elif self.editing_mode == 'destroy':
                         platform.destroy(self)
                         self.protocol.platforms.remove(platform)
+                        if self.protocol.buttons:
+                            for b in self.protocol.buttons:
+                                new_callbacks = []
+                                for c in b.callbacks:
+                                    if c[0] != platform:
+                                        new_callbacks.append(c)
+                                c.callbacks = new_callbacks
                     elif self.editing_mode == 'vanish':
                         platform.destroy(self, platform.start_z)
                     self.editing_platform = False
