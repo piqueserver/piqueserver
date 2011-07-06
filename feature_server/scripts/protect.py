@@ -8,10 +8,12 @@ def protect(connection, value = None):
         connection.protocol.send_chat('All areas unprotected.', irc = True)
     else:
         if connection.protocol.protected is None:
-            connection.protocol.protected = []
-        connection.protocol.protected.append(coordinates(value))
-        connection.protocol.send_chat('The area at %s is now protected.' %
-            value.upper(), irc = True)
+            connection.protocol.protected = set()
+        pos = coordinates(value)
+        connection.protocol.protected.symmetric_difference_update([pos])
+        connection.protocol.send_chat('The area at %s is now %sprotected.' %
+            (value.upper(), 'un' if pos not in connection.protocol.protected
+            else ''), irc = True)
 
 add(protect)
 

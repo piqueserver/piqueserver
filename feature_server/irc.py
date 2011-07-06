@@ -37,6 +37,7 @@ def channel(func):
 class IRCBot(irc.IRCClient):
     ops = None
     voices = None
+    colors = True
     
     def _get_nickname(self):
         return self.factory.nickname
@@ -168,16 +169,29 @@ class IRCRelay(object):
     def me(self, msg):
         self.factory.bot.describe(msg)
 
+def colors(connection):
+    if connection in connection.protocol.players:
+        raise KeyError()
+    connection.colors = not connection.colors
+    if connection.colors:
+        return '12c04o09l08o06r13s 05ON!'
+    else:
+        return 'colors off'
+
 def who(connection):
     if connection in connection.protocol.players:
         raise KeyError()
-    names = [conn.name for conn in connection.protocol.players.values()]
+    if connection.colors:
+        names = [('03' if conn.team.id else '02') + conn.name for conn in
+            connection.protocol.players.values()]
+    else:
+        names = [conn.name for conn in connection.protocol.players.values()]
     count = len(names)
     msg = "has %s player%s connected" % ("no" if not count else count,
         "" if count == 1 else "s")
     if count:
         names.sort()
-        msg += ": %s" % (', '.join(names))
+        msg += ": %s" % ((', ' if connection.colors else ', ').join(names))
     connection.me(msg)
 
 def score(connection):
@@ -187,5 +201,5 @@ def score(connection):
         connection.protocol.blue_team.score,
         connection.protocol.green_team.score))
 
-for func in (who, score):
+for func in (who, score, colors):
     add(func)
