@@ -21,7 +21,7 @@ for name in names:
     ext_modules.append(Extension(name, ['./%s.pyx' % name.replace('.', '/')],
         language = 'c++'))
 
-if False:
+if True:
     extra_link_args = []
     opengl_libraries = []
     if sys.platform == 'win32':

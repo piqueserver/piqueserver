@@ -290,3 +290,4 @@ class World(object):
     def create_object(self, klass, *arg, **kw):
         new_object = klass(self, *arg, **kw)
         self.objects.append(new_object)
+        return new_object
