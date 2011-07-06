@@ -64,6 +64,19 @@ def apply_script(protocol, connection, config):
             return (x >= self.x and x < self.x2 and y >= self.y and y < self.y2
                 and z <= self.start_z and z >= self.z)
         
+        def destroy(self, connection, start_z = None):
+            start_z = start_z or self.z
+            block_action.value = DESTROY_BLOCK
+            block_action.player_id = connection.player_id
+            for x in xrange(self.x, self.x2):
+                block_action.x = x
+                for y in xrange(self.y, self.y2):
+                    block_action.y = y
+                    for z in xrange(start_z, self.start_z + 1):
+                        block_action.z = z
+                        self.protocol.send_contained(block_action, save = True)
+                        self.protocol.map.remove_point(x, y, self.z)
+        
         def start(self, user, target_z, mode, speed, force = False):
             if not force:
                 if self.disabled:
@@ -165,6 +178,11 @@ def apply_script(protocol, connection, config):
                         platform.disabled = not platform.disabled
                         self.send_chat('Platform ' + ['enabled!', 'disabled!']
                             [platform.disabled])
+                    elif self.editing_mode == 'destroy':
+                        platform.destroy(self)
+                        self.protocol.platforms.remove(platform)
+                    elif self.editing_mode == 'vanish':
+                        platform.destroy(self, platform.start_z)
                     self.editing_platform = False
                     return False
                 if self.protocol.buttons:
@@ -186,7 +204,7 @@ def apply_script(protocol, connection, config):
         def start_platform(self, *args):
             if len(args) > 0:
                 self.editing_mode = args[0]
-                modes = ['height', 'freeze', 'disable']
+                modes = ['height', 'freeze', 'disable', 'destroy', 'vanish']
                 if self.editing_mode not in modes:
                     return ('Valid platform editing modes: ' + ', '.join(modes))
                 if self.editing_mode == 'height':
