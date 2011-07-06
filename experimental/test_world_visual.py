@@ -50,6 +50,11 @@ def on_draw():
     glVertex2f(x, y + 10)
     glEnd()
 
+@window.event
+def on_key_press(symbol, modifiers):
+    if symbol == key.SPACE:
+        print 'yay'
+
 def update(dt):
     new_world.update(dt)
     print 'framerate:', 1 / dt
