@@ -143,14 +143,16 @@ class FeatureConnection(ServerConnection):
             self.send_chat(result)
         print log_message
     
+    def on_block_build_attempt(self, x, y, z):
+        if not self.god and not self.protocol.building:
+            return False
+    
     def on_block_build(self, x, y, z):
         if self.god:
             self.refill()
             if self.protocol.god_blocks is None:
                 self.protocol.god_blocks = set()
             self.protocol.god_blocks.add((x, y, z))
-        elif not self.protocol.building:
-            return False
         elif self.protocol.user_blocks is not None:
             self.protocol.user_blocks.add((x, y, z))
     
