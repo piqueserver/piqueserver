@@ -33,6 +33,9 @@ class Heightmap:
     def set_repeat(self, x, y, val):
         """This allows the algorithm to tile at the edges."""
         self.hmap[(x%self.width)+(y%self.height)*self.width] = val
+    def mult_repeat(self, x, y, mult):
+        idx = (x%self.width)+(y%self.height)*self.width
+        self.hmap[idx] *= mult
     def seed(self, jitter, midpoint):
         halfjitter = jitter * 0.5
         for idx in xrange(len(self.hmap)):
@@ -201,6 +204,46 @@ class Heightmap:
             converted.append((val,val,val))
         result.putdata(converted)
         result.save("result.bmp")
+    def river(self,startx,starty,length):
+        posx = startx
+        posy = starty
+        recorded = {}
+        for n in xrange(length):
+            recorded[(posx,posy)] = True
+            curheight = self.get_repeat(posx,posy)
+            candidates = []
+            for mx in xrange(-20,21):
+                for my in xrange(-20,21):
+                    if not recorded.has_key((posx+mx, posy+my)):
+                        candidates.append((mx,my,
+                                           self.get_repeat(posx+mx,posy+my)))                    
+
+            # sort by manhattan distance then (slightly) by lowest height
+            candidates.sort(key=lambda cd: -cd[2]*0.1 + (
+                abs(cd[0]-posx)+abs(cd[1]-posy)))
+            
+            chosen = list(random.choice(candidates))
+            
+            # limit step size to 1
+            if abs(chosen[0])>1:
+                chosen[0] = int(math.copysign(1,chosen[0]))
+            if abs(chosen[1])>1:
+                chosen[1] = int(math.copysign(1,chosen[1]))
+            posx += chosen[0]
+            posy += chosen[1]
+        for r in recorded:
+            posx = r[0]
+            posy = r[1]
+            self.set_repeat(posx,posy,0)
+            self.mult_repeat(posx-1,posy,0.2)
+            self.mult_repeat(posx+1,posy,0.2)
+            self.mult_repeat(posx,posy+1,0.2)
+            self.mult_repeat(posx,posy-1,0.2)
+            self.mult_repeat(posx-1,posy-1,0.5)
+            self.mult_repeat(posx+1,posy+1,0.5)
+            self.mult_repeat(posx-1,posy+1,0.5)
+            self.mult_repeat(posx+1,posy-1,0.5)
+
 
 def level_area(vxl, x, y, width, length, height, color):
     for cx in xrange(x, x+width):
@@ -373,6 +416,8 @@ def generator_random():
     algorithm_1(hmap3)
     hmap.blend_heightmaps(hmap2,hmap3)
     hmap.offset_z(-0.05)
+    hmap.river(random.randint(0,127),random.randint(0,127),256)
+    hmap.river(random.randint(0,127),random.randint(0,127),256)
 
     vxl = hmap.writeVXL()
     #avgh = find_avg_of_area(vxl, 16, 250, 64, 64)
@@ -384,4 +429,5 @@ def generator_random():
                     [5,3,3,3,3,3,3],
                     [(80,35,0,255),(40,40,40,255),(127,127,127,255)])
     bldg.create(vxl, 60, 250)
+    bldg.create(vxl, 512-60, 250)
     return vxl
