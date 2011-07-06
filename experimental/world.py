@@ -87,8 +87,11 @@ class Character(Object):
             aim_orientation.y -= orientation.y * v3
         if self.left or self.right:
             xypow = math.sqrt(orientation.y**2 + orientation.x**2)
-            orienty_over_xypow = -orientation.y / xypow
-            orientx_over_xypow = orientation.x / xypow
+            try:
+                orienty_over_xypow = -orientation.y / xypow
+                orientx_over_xypow = orientation.x / xypow
+            except ZeroDivisionError:
+                orienty_over_xypow = orientx_over_xypow = 0
             if self.left:
                 aim_orientation.x -= orienty_over_xypow * v3
                 aim_orientation.y -= orientx_over_xypow * v3
