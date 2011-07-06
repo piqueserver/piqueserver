@@ -6,22 +6,22 @@ from twisted.internet.task import LoopingCall
 from pyspades.constants import *
 
 @admin
-def platform(connection):
+def platform(connection, *args):
     if connection.building_button:
         return "You're in button mode! Type /button to exit it."
-    if not connection.building_platform:
-        return connection.start_platform()
-    else:
+    if connection.building_platform or connection.editing_platform:
         return connection.end_platform()
+    else:
+        return connection.start_platform(*args)
 
 @admin
 def button(connection, value = None, type = None, speed = None):
-    if connection.building_platform:
+    if connection.building_platform or connection.editing_platform:
         return "You're in platform mode! Type /platform to exit it."
-    if not connection.building_button:
-        return connection.start_button(value, type, speed)
-    else:
+    if connection.building_button:
         return connection.cancel_button()
+    else:
+        return connection.start_button(value, type, speed)
 
 add(platform)
 add(button)
@@ -38,12 +38,16 @@ def apply_script(protocol, connection, config):
             self.args = args
         
         def action(self, user):
-            self.callback(user, *self.args)
+            ret = self.callback(user, *self.args)
+            if ret:
+                user.send_chat(ret)
     
     class Platform:
         protocol = None
         cycle_call = None
         busy = False
+        disabled = False
+        frozen = False
         mode = None
         
         def __init__(self, protocol, min_x, min_y, max_x, max_y, start_z):
@@ -60,29 +64,24 @@ def apply_script(protocol, connection, config):
             return (x >= self.x and x < self.x2 and y >= self.y and y < self.y2
                 and z <= self.start_z and z >= self.z)
         
-        def start(self, user, target_z, speed):
-            if self.busy:
-                return False
+        def start(self, user, target_z, mode, speed, force = False):
+            if not force:
+                if self.disabled:
+                    return 'This platform is currently disabled.'
+                elif self.busy:
+                    return
             self.busy = True
+            self.disabled = False
             self.user = user
+            self.mode = mode
             self.last_z = self.z
             self.target_z = target_z
             self.speed = speed
             self.cycle_call.start(self.speed, now = False)
         
-        def once(self, user, target_z, speed):
-            speed = speed or 0.25
-            if self.start(user, target_z, speed) == False:
-                return
-            self.mode = 'once'
-        
-        def elevator(self, user, target_z, speed):
-            speed = speed or 0.75
-            if self.start(user, target_z, speed) == False:
-                return
-            self.mode = 'elevator'
-        
         def cycle(self):
+            if self.frozen:
+                return
             if self.z == self.target_z:
                 self.busy = False
                 self.cycle_call.stop()
@@ -118,15 +117,11 @@ def apply_script(protocol, connection, config):
     class PlatformConnection(connection):
         building_platform = False
         building_button = False
+        editing_platform = False
+        editing_mode = None
+        editing_args = None
         button_platform = None
         platform_blocks = None
-        
-        def find_aux_connection(self):
-            """Attempts to find a dead player"""
-            for player in self.protocol.players.values():
-                if player.hp <= 0:
-                    return player
-            return self
         
         def on_block_build(self, x, y, z):
             if self.building_platform:
@@ -136,28 +131,47 @@ def apply_script(protocol, connection, config):
             connection.on_block_build(self, x, y, z)
         
         def on_block_destroy(self, x, y, z, mode):
+            platform = self.protocol.check_platform(x, y, z)
             if mode == DESTROY_BLOCK:
                 if self.building_button and self.button_platform is None:
-                    self.button_platform = self.protocol.check_platform(
-                        x, y, z)
-                    if self.button_platform is None:
+                    if platform is None:
                         self.send_chat('That is not a platform! Aborting '
                             'button placement.')
                         self.building_button = False
-                    elif self.button_platform.start_z - self.button_height < 1:
+                    elif platform.start_z - self.button_height < 1:
                         self.send_chat("Sorry, but you'll have to pick a lower"
                             "height value.")
                         self.building_button = False
                     else:
+                        self.button_platform = platform
                         self.send_chat('Platform selected! Now place a block '
                             'for the button.')
                     return False
+                if self.editing_platform:
+                    if platform is None:
+                        self.send_chat('That is not a platform! Aborting '
+                            'platform edit.')
+                    elif self.editing_mode == 'height':
+                        target_z = platform.start_z - self.editing_args[0]
+                        if target_z < 1:
+                            self.send_chat("Sorry, but you'll have to pick a "
+                                "lower height value.")
+                        platform.start(self, target_z, 'once', 0.25, force = True)
+                    elif self.editing_mode == 'freeze':
+                        platform.frozen = not platform.frozen
+                        self.send_chat('Platform ' + ['unfrozen!', 'frozen!']
+                            [platform.frozen])
+                    elif self.editing_mode == 'disable':
+                        platform.disabled = not platform.disabled
+                        self.send_chat('Platform ' + ['enabled!', 'disabled!']
+                            [platform.disabled])
+                    self.editing_platform = False
+                    return False
                 if self.protocol.buttons:
                     if (x, y, z) in self.protocol.buttons:
-                        self.protocol.buttons[(x, y, z)].action(
-                            self.find_aux_connection())
+                        self.protocol.buttons[(x, y, z)].action(self)
                         return False
-            if self.protocol.check_platform(x, y, z):
+            if platform:
                 return False
             return connection.on_block_destroy(self, x, y, z, mode)
         
@@ -169,13 +183,30 @@ def apply_script(protocol, connection, config):
                 del self.protocol.buttons[pos]
             connection.on_block_removed(self, x, y, z)
         
-        def start_platform(self):
+        def start_platform(self, *args):
+            if len(args) > 0:
+                self.editing_mode = args[0]
+                modes = ['height', 'freeze', 'disable']
+                if self.editing_mode not in modes:
+                    return ('Valid platform editing modes: ' + ', '.join(modes))
+                if self.editing_mode == 'height':
+                    try:
+                        self.editing_args = [int(args[1])]
+                        if self.editing_args[0] < 0:
+                            raise ValueError()
+                    except (IndexError, ValueError):
+                        return 'Usage: /platform height <height>'
+                self.editing_platform = True
+                return 'Select the platform to modify.'
             self.building_platform = True
             self.platform_blocks = set()
             return ('Platform construction started. Build a rectangle of the '
                 'desired size.')
         
         def end_platform(self):
+            if self.editing_platform:
+                self.editing_platform = False
+                return 'Platform editing cancelled.'
             self.building_platform = False
             if len(self.platform_blocks):
                 min_x, min_y, max_x, max_y = None, None, None, None
@@ -210,7 +241,8 @@ def apply_script(protocol, connection, config):
                         block_action.z = z
                         self.protocol.send_contained(block_action)
                     return bad
-                p = Platform(self.protocol, min_x, min_y, max_x, max_y, start_z)
+                p = Platform(self.protocol,
+                    min_x, min_y, max_x, max_y, start_z)
                 if self.protocol.platforms is None:
                     self.protocol.platforms = []
                 self.protocol.platforms.append(p)
@@ -223,15 +255,19 @@ def apply_script(protocol, connection, config):
                 return 'Usage: /button <height> [elevator|once] [speed]'
             self.button_height = int(height)
             if self.button_height < 0:
-                return 'Height is relative to the initial platform and must be positive!'
+                return ('Height is relative to the initial platform and must '
+                    'be positive!')
             if type is None:
                 type = 'elevator'
             type = type.lower()
             types = ['once', 'elevator']
             if type not in types:
-                return ('Allowed platform types: %s' % ', '.join(types))
+                return ('Allowed platform types: ' + ', '.join(types))
             self.button_type = type
-            self.button_speed = float(speed) if speed is not None else None
+            if speed:
+                self.button_speed = float(speed)
+            else:
+                self.button_speed = {'once' : 0.25, 'elevator' : 0.75}[type]
             if self.protocol.platforms is None:
                 return ('There are no platforms created yet! Use /platform to '
                     'build one')
@@ -249,9 +285,8 @@ def apply_script(protocol, connection, config):
             if p is None:
                 self.send_chat('Bad button. No platform selected.')
                 return
-            callbacks = {'once' : p.once, 'elevator' : p.elevator}
-            b = Button(p, callbacks[self.button_type],
-                p.start_z - self.button_height, self.button_speed)
+            b = Button(p, p.start, p.start_z - self.button_height,
+                self.button_type, self.button_speed)
             if self.protocol.buttons is None:
                 self.protocol.buttons = {}
             self.protocol.buttons[(x, y, z)] = b
