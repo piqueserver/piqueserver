@@ -30,9 +30,8 @@ def apply_script(protocol, connection, config):
     class Button:
         callbacks = None
         
-        def __init__(self, platform, callback, *args):
+        def __init__(self):
             self.callbacks = []
-            self.add_action(platform, callback, *args)
         
         def add_action(self, platform, callback, *args):
             self.callbacks.append((platform, callback, args))
@@ -323,7 +322,8 @@ def apply_script(protocol, connection, config):
             if p is None:
                 self.send_chat('Bad button. No platform selected.')
                 return
-            b = Button(p, p.start, p.start_z - self.button_height,
+            b = Button()
+            b.add_action(p, p.start, p.start_z - self.button_height,
                 self.button_type, self.button_speed)
             if self.protocol.buttons is None:
                 self.protocol.buttons = {}

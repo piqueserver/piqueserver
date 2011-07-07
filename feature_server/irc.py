@@ -102,7 +102,7 @@ class IRCBot(irc.IRCClient):
             else:
                 max_len = MAX_IRC_CHAT_SIZE - len(self.protocol.server_prefix) - 1
                 message = ("<%s> %s" % (prefixed_username, msg))[:max_len]
-                print message.encode('ascii', 'replace')
+                print message
                 self.factory.server.send_chat(encode(message))
     
     @channel
@@ -113,11 +113,11 @@ class IRCBot(irc.IRCClient):
             self.voices.remove(user)
     
     def send(self, msg):
-        msg = msg.encode('cp1252', 'replace')
+        msg = msg.encode('cp1252')
         self.msg(self.factory.channel, msg)
     
     def me(self, msg):
-        msg = msg.encode('cp1252', 'replace')
+        msg = msg.encode('cp1252')
         self.describe(self.factory.channel, msg)
 
 class IRCClientFactory(protocol.ClientFactory):
@@ -174,7 +174,7 @@ def colors(connection):
         raise KeyError()
     connection.colors = not connection.colors
     if connection.colors:
-        return '12c04o09l08o06r13s 05ON!'
+        return '\x0312c\x0304o\x0309l\x0308o\x0306r\x0313s \x0f\x16ON!'
     else:
         return 'colors off'
 
@@ -182,7 +182,7 @@ def who(connection):
     if connection in connection.protocol.players:
         raise KeyError()
     if connection.colors:
-        names = [('03' if conn.team.id else '02') + conn.name for conn in
+        names = [('\x0303' if conn.team.id else '\x0302') + conn.name for conn in
             connection.protocol.players.values()]
     else:
         names = [conn.name for conn in connection.protocol.players.values()]
@@ -191,7 +191,7 @@ def who(connection):
         "" if count == 1 else "s")
     if count:
         names.sort()
-        msg += ": %s" % ((', ' if connection.colors else ', ').join(names))
+        msg += ": %s" % (('\x0f, ' if connection.colors else ', ').join(names))
     connection.me(msg)
 
 def score(connection):
