@@ -119,6 +119,8 @@ class ServerConnection(BaseConnection):
                 connection_response.unique = self.unique
                 connection_response.connection_id = self.connection_id
                 
+                self.on_connect()
+                
                 if loader.client:
                     self.send_loader(connection_response, True, 0xFF
                         ).addCallback(self.send_map)
@@ -631,6 +633,9 @@ class ServerConnection(BaseConnection):
             self.on_hack_attempt('Speedhack detected')
 
     # events/hooks
+    
+    def on_connect(self):
+        pass
     
     def on_join(self):
         pass

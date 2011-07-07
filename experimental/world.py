@@ -164,6 +164,7 @@ class Character(Object):
             if self.crouch or orientation.z >= 0.5:
                 aim_orientation.x = 0
             else:
+                print 'testie'
                 v20 = 0.3499999940395355
                 v39 = position.y - 0.449999988079071
                 v33 = v43 + v26
@@ -182,8 +183,10 @@ class Character(Object):
                     if v20 < -2.359999895095825:
                         break
                 if v9 >= -2.359999895095825:
+                    print 'nay:', v9
                     aim_orientation.x = 0.0
                 else:
+                    print 'yay'
                     v1 = 1
                     position.x = v43
         else:
@@ -234,6 +237,7 @@ class Character(Object):
                         if v22 < -2.359999895095825:
                             break
                     if v13 < -2.359999895095825:
+                        print 'yay'
                         position.y = v45
                         label34 = True
             if not label34:

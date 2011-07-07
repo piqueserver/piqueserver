@@ -100,6 +100,10 @@ class FeatureConnection(ServerConnection):
     streak = 0
     best_streak = 0
     
+    def on_connect(self):
+        if self.master:
+            print '(master client connected)'
+    
     def on_join(self):
         if self.protocol.motd is not None:
             self.send_lines(self.protocol.motd)
