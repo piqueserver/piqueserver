@@ -44,8 +44,8 @@ def draw_quad(x1, y1, x2, y2, color = (255, 255, 255)):
 scale = 64.0
 
 def get_position(x_orig, y_orig, z_orig):
-    x = ((x_orig) / scale) * window.width
-    y = ((-z_orig) / scale) * window.height
+    x = ((x_orig) / scale) * 600
+    y = ((-z_orig) / scale) * 600
     return x, y
 
 def draw_block(x, y, z, color):
@@ -61,7 +61,7 @@ def on_draw():
     glLoadIdentity()
     glTranslatef(0, window.height, 0)
     position = character.position
-    map_y = int(position.y)
+    map_y = int(position.y + 0.5)
     if map_y not in block_cache:
         block_cache[map_y] = block_list = []
         for x in xrange(512):
@@ -71,14 +71,17 @@ def on_draw():
                     continue
                 r, g, b, a = get_color_tuple(color)
                 block_list.append((x, z, (r, g, b)))
-    x, y = get_position(position.x, position.y, position.z)
-    draw_quad(x - 2, y - 12, x + 2, y + 5)
+    x, y = get_position(position.x, position.y, character.guess_z)
+    add_height = 0
+    if not character.crouching:
+        add_height = (0.9 / scale) * 600
+    draw_quad(x - 2, y - 12, x + 2, y + 5 + add_height)
     for x, z, color in block_cache[map_y]:
         draw_block(x, map_y, z, color)
 
 def on_key_press(symbol, modifiers):
     if symbol == key.SPACE:
-        character.set_animation(False, True, False, False)
+        character.set_animation(jump = True)
 
 window.push_handlers(
     on_key_press = on_key_press)
@@ -89,6 +92,9 @@ def update(dt):
         keyboard[key.LEFT],
         keyboard[key.UP],
         keyboard[key.DOWN]
+    )
+    character.set_animation(
+        crouch = keyboard[key.Z]
     )
     position = character.position
     new_world.update(dt)

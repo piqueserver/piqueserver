@@ -41,7 +41,7 @@ class Character(Object):
     null = False
     null2 = False
     last_time = 0.0
-    guess_z = None
+    guess_z = 0.0
     
     def initialize(self, position, orientation):
         self.position = Vertex3()
@@ -50,11 +50,20 @@ class Character(Object):
         self.position.set_vector(position)
         self.orientation.set_vector(orientation)
     
-    def set_animation(self, fire, jump, crouch, aim):
-        self.fire = fire
-        self.jump = jump
-        self.crouch = crouch
-        self.aim = aim
+    def set_animation(self, fire = None, jump = None, crouch = None, aim = None):
+        if fire is not None:
+            self.fire = fire
+        if jump is not None:
+            self.jump = jump
+        if crouch is not None:
+            if crouch != self.crouch:
+                if crouch:
+                    self.position.z += 0.8999999761581421
+                else:
+                    self.position.z -= 0.8999999761581421
+            self.crouch = crouch
+        if aim is not None:
+            self.aim = aim
     
     def set_walk(self, up, down, left, right):
         self.up = up
@@ -73,7 +82,7 @@ class Character(Object):
         if v2:
             v4 = dt * 0.1000000014901161
             v3 = v4
-        elif not self.crouch:
+        elif self.crouch:
             v3 = dt * 0.300000011920929
         elif self.aim:
             v3 = dt * 0.5
@@ -125,7 +134,7 @@ class Character(Object):
         v43 = aim_orientation.x * v4 + position.x
         v45 = aim_orientation.y * v4 + position.y
         v3 = 0.449999988079071
-        if not self.crouch:
+        if self.crouch:
             v47 = 0.449999988079071
             v5 = 0.8999999761581421
         else:
@@ -152,7 +161,7 @@ class Character(Object):
                 if v19 < -1.360000014305115:
                     break
         if v19 >= -1.360000014305115:
-            if not self.crouch or orientation.z >= 0.5:
+            if self.crouch or orientation.z >= 0.5:
                 aim_orientation.x = 0
             else:
                 v20 = 0.3499999940395355
@@ -200,7 +209,7 @@ class Character(Object):
                     break
         label34 = False
         if v21 >= -1.360000014305115:
-            if not self.crouch or orientation.z >= 0.5:
+            if self.crouch or orientation.z >= 0.5:
                 if v1:
                     label34 = True
             else:
