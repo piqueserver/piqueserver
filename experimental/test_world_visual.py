@@ -73,9 +73,9 @@ def on_draw():
                 block_list.append((x, z, (r, g, b)))
     x, y = get_position(position.x, position.y, character.guess_z)
     add_height = 0
-    if not character.crouching:
+    if not character.crouch:
         add_height = (0.9 / scale) * 600
-    draw_quad(x - 2, y - 12, x + 2, y + 5 + add_height)
+    draw_quad(x - 2, y - 12 - add_height, x + 2, y + 5)
     for x, z, color in block_cache[map_y]:
         draw_block(x, map_y, z, color)
 
