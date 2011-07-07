@@ -478,23 +478,25 @@ class ServerConnection(BaseConnection):
             self.protocol.send_contained(intel_action, save = True)
     
     def drop_flag(self):
-        flag = self.team.other.flag
-        player = flag.player
-        if player is not self:
-            return
-        position = self.position
-        x = int(position.x)
-        y = int(position.y)
-        z = max(0, int(position.z))
-        z = self.protocol.map.get_z(x, y, z)
-        flag.set(x, y, z)
-        flag.player = None
-        intel_action.action_type = 2
-        intel_action.player_id = self.player_id
-        intel_action.x = flag.x
-        intel_action.y = flag.y
-        intel_action.z = flag.z
-        self.protocol.send_contained(intel_action, save = True)
+        protocol = self.protocol
+        for flag in (protocol.blue_team.flag, protocol.green_team.flag):
+            player = flag.player
+            if player is not self:
+                continue
+            position = self.position
+            x = int(position.x)
+            y = int(position.y)
+            z = max(0, int(position.z))
+            z = self.protocol.map.get_z(x, y, z)
+            flag.set(x, y, z)
+            flag.player = None
+            intel_action.action_type = 2
+            intel_action.player_id = self.player_id
+            intel_action.x = flag.x
+            intel_action.y = flag.y
+            intel_action.z = flag.z
+            self.protocol.send_contained(intel_action, save = True)
+            break
     
     def disconnect(self):
         if self.disconnected:
