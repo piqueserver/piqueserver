@@ -211,17 +211,8 @@ class FeatureConnection(ServerConnection):
         killer.best_streak = max(killer.streak, killer.best_streak)
     
     def on_grenade(self, time_left):
-        if not self.protocol.killing:
-            return False
         if self.god:
             self.refill()
-        grenade_packet.player_id = self.player_id
-        grenade_packet.value = time_left
-        for player in self.protocol.connections.values():
-            if player is self or player.player_id is None or player.god:
-                continue
-            player.send_contained(grenade_packet)
-        return False
     
     def on_team_join(self, team):
         if self.protocol.teamswitch_interval and self.team is not None:
