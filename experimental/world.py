@@ -87,11 +87,8 @@ class Character(Object):
             aim_orientation.y -= orientation.y * v3
         if self.left or self.right:
             xypow = math.sqrt(orientation.y**2 + orientation.x**2)
-            try:
-                orienty_over_xypow = -orientation.y / xypow
-                orientx_over_xypow = orientation.x / xypow
-            except ZeroDivisionError:
-                orienty_over_xypow = orientx_over_xypow = 0
+            orienty_over_xypow = -orientation.y / xypow
+            orientx_over_xypow = orientation.x / xypow
             if self.left:
                 aim_orientation.x -= orienty_over_xypow * v3
                 aim_orientation.y -= orientx_over_xypow * v3
@@ -124,9 +121,9 @@ class Character(Object):
         map = self.world.map
         position = self.position
         v1 = 0
-        v4 = dt * 32
+        v4 = dt * 32.0
         v43 = aim_orientation.x * v4 + position.x
-        v45 = v4 * aim_orientation.y * v4 + position.y
+        v45 = aim_orientation.y * v4 + position.y
         v3 = 0.449999988079071
         if not self.crouch:
             v47 = 0.449999988079071
@@ -195,7 +192,7 @@ class Character(Object):
                 v24 = v21 + v29
                 if isvoxelsolid(map, v34, v40, v24):
                     break
-                v12 = position.x + 449999988079071
+                v12 = position.x + 0.449999988079071
                 if isvoxelsolid(map, v12, v40, v24):
                     break
                 v21 -= 0.8999999761581421
@@ -211,7 +208,7 @@ class Character(Object):
                     label34 = True
                 else:
                     v22 = 0.3499999940395355
-                    v34 = position.x - 0.449999988079071
+                    v35 = position.x - 0.449999988079071
                     v41 = v45 + v27
                     v13 = 0.3499999940395355
                     while 1:
@@ -277,7 +274,7 @@ class Character(Object):
             self.guess_z += (v28 + 0.25) * 4.0
     
     def on_fall(self, damage):
-        pass
+        print 'on fall, damage:', damage
 
 class World(object):
     def __init__(self, map):
@@ -288,7 +285,6 @@ class World(object):
         for instance in self.objects:
             instance.update(dt)
             position = instance.position
-            # print position.x, position.y, position.z
         
     def create_object(self, klass, *arg, **kw):
         new_object = klass(self, *arg, **kw)

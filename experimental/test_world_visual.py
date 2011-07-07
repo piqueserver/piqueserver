@@ -1,11 +1,10 @@
 from pyspades.common import *
-from pyspades.load import VXLData
+from pyspades.load import VXLData, get_color_tuple
 import world
 import pyglet
 from pyglet.window import key
 import math
 from pyglet.gl import *
-from render import Renderer
 
 fp = None
 for name in ('../data/sinc0.vxl', './data/sinc0.vxl'):
@@ -42,6 +41,20 @@ def draw_quad(x1, y1, x2, y2, color = (255, 255, 255)):
     glVertex2f(x1, y2)
     glEnd()
 
+scale = 64.0
+
+def get_position(x_orig, y_orig, z_orig):
+    x = ((x_orig) / scale) * window.width
+    y = ((-z_orig) / scale) * window.height
+    return x, y
+
+def draw_block(x, y, z, color):
+    x1, y1 = get_position(x, y, z)
+    x2, y2 = get_position(x + 1, y + 1, z + 1)
+    draw_quad(x1, y1, x2, y2, color)
+
+block_cache = {}
+
 @window.event
 def on_draw():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -49,16 +62,19 @@ def on_draw():
     glTranslatef(0, window.height, 0)
     position = character.position
     map_y = int(position.y)
-    x = ((position.x) / 32.0) * window.width
-    y = ((-position.z) / 64.0) * window.height
-    draw_quad(x - 5, y - 5, x + 5, y + 5)
-    for x in xrange(512):
-        for z in xrange(64):
-            r, g, b, a = map.get_color(x, map_y, z)
-            if color == 0:
-                continue
-            
-            draw_quad()
+    if map_y not in block_cache:
+        block_cache[map_y] = block_list = []
+        for x in xrange(512):
+            for z in xrange(64):
+                color = map.get_color(x, map_y, z)
+                if color == 0:
+                    continue
+                r, g, b, a = get_color_tuple(color)
+                block_list.append((x, z, (r, g, b)))
+    x, y = get_position(position.x, position.y, position.z)
+    draw_quad(x - 2, y - 12, x + 2, y + 5)
+    for x, z, color in block_cache[map_y]:
+        draw_block(x, map_y, z, color)
 
 def on_key_press(symbol, modifiers):
     if symbol == key.SPACE:
@@ -69,13 +85,13 @@ window.push_handlers(
 
 def update(dt):
     character.set_walk(
-        keyboard[key.UP],
-        keyboard[key.DOWN],
+        keyboard[key.RIGHT],
         keyboard[key.LEFT],
-        keyboard[key.RIGHT]
+        keyboard[key.UP],
+        keyboard[key.DOWN]
     )
+    position = character.position
     new_world.update(dt)
-    # print 'framerate:', 1 / dt
 
 # setup :)
 

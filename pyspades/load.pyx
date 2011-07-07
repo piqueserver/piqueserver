@@ -17,7 +17,7 @@
 
 from pyspades.common cimport allocate_memory
 
-cdef inline tuple get_color_tuple(color):
+cpdef tuple get_color_tuple(int color):
     cdef int r, g, b, a
     b = color & 0xFF
     g = (color & 0xFF00) >> 8
