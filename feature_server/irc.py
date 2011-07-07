@@ -164,9 +164,13 @@ class IRCRelay(object):
             self.factory)
     
     def send(self, msg):
+        if self.factory.bot is None:
+            return
         self.factory.bot.send(msg)
     
     def me(self, msg):
+        if self.factory.bot is None:
+            return
         self.factory.bot.describe(msg)
 
 def colors(connection):
