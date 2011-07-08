@@ -120,6 +120,7 @@ class FeatureConnection(ServerConnection):
         self.protocol.irc_say('* %s entered the game' % self.name)
     
     def disconnect(self):
+        ServerConnection.disconnect(self)
         self.drop_followers()
         if self.name is not None:
             if self.protocol.join_part_messages:
@@ -130,7 +131,6 @@ class FeatureConnection(ServerConnection):
                 self.protocol.votekick_call.cancel()
                 self.protocol.end_votekick(True, 'Player left the game',
                     left = True)
-        ServerConnection.disconnect(self)
     
     def on_spawn(self, pos):
         if self.follow is not None:

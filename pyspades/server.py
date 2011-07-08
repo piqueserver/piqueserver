@@ -134,6 +134,8 @@ class ServerConnection(BaseConnection):
                 
                 self.send_loader(connection_response, True, 0xFF
                     ).addCallback(self._connection_ack)
+            else:
+                self.disconnect()
             return
         else:
             if loader.id == Packet10.id:
