@@ -1,5 +1,4 @@
 from pyspades.common import *
-from pyspades.common import *
 import math
 import time
 
@@ -22,6 +21,7 @@ def isvoxelsolid2(map, x, y, z):
     return map.get_solid(x, y, z)
 
 class Object(object):
+    name = 'object'
     def __init__(self, world, *arg, **kw):
         self.world = world
         self.initialize(*arg, **kw)
@@ -36,6 +36,7 @@ class Object(object):
         self.world.delete_object(self)
 
 class Grenade(Object):
+    name = 'grenade'
     def initialize(self, time_left, player_position, character):
         self.character = character
         self.position = Vertex3()
@@ -52,14 +53,118 @@ class Grenade(Object):
         self.character.grenades.remove(self)
         self.delete()
     
+    def collides(self, player_position):
+        position = self.position
+        player_x = int(player_position.x - 0.5)
+        player_y = int(player_position.y - 0.5)
+        player_z = int(player_position.z - 0.5)
+        nade_x = int(position.x - 0.5)
+        nade_y = int(position.y - 0.5)
+        nade_z = int(position.z - 0.5)
+        v19 = 0
+        if nade_x >= player_x:
+            if nade_x == player_x:
+                v33 = 0.0
+                v36 = 0.0
+            else:
+                v39 = 1
+                v19 = nade_x - player_x
+                v36 = player_x + 1 - player_position.x
+                v33 = (position.x - player_position.x) * 1024.0
+        else:
+            v39 = -1
+            v19 = player_x - nade_x
+            v36 = player_position.x - player_x
+            v33 = (player_position.x - position.x) * 1024.0
+        if nade_y >= player_y:
+            if nade_y == player_y:
+                v34 = 0.0
+                v37 = 0.0
+            else:
+                v19 += nade_y - player_y
+                v40 = 1
+                v37 = player_y + 1 - player_position.y
+                v34 = (position.y - player_position.y) * 1024.0
+        else:
+            v19 += player_y - nade_y
+            v40 = -1
+            v37 = player_position.y - player_y
+            v34 = (player_position.y - position.y) * 1024.0
+        if nade_z >= player_z:
+            if nade_z == player_z:
+                v35 = 0.0
+                v38 = 0.0
+            else:
+                v19 += nade_z - player_z
+                v41 = 1
+                v38 = player_z + 1 - player_position.z
+                v35 = (position.z - player_position.z) * 1024.0
+        else:
+            v19 += player_z - nade_z
+            v41 = -1
+            v38 = player_position.z - player_z
+            v35 = (player_position.z - position.z) * 1024.0
+        v42 = v35 * v36 - v38 * v33
+        v42_int = int(v42)
+        v33_int = int(v33)
+        v43 = v35 * v37 - v38 * v34
+        v43_int = int(v43)
+        v34_int = int(v34)
+        v44 = v37 * v33 - v34 * v36
+        v44_int = int(v44)
+        v35_int = int(v35)
+        if v19 <= 32:
+            if not v19:
+                return True
+        else:
+            v19 = 32
+        v14 = v44_int
+        v15 = v43_int
+        v12 = v42_int
+        map = self.world.map
+        while 1:
+            if (v12 | v15) < 0 or player_z == nade_z:
+                if v14 < 0 or player_x == nade_x:
+                    player_y += v40
+                    v15 += v35_int
+                    v14 += v33_int
+                    v44_int = v14
+                else:
+                    player_x += v39
+                    v12 += v35_int
+                    v14 -= v34_int
+                    v44_int = v14
+            else:
+                player_z += v41
+                v12 -= v33_int
+                v15 -= v34_int
+            if isvoxelsolid2(map, player_x, player_y, player_z):
+                break
+            v19 -= 1
+            if v19 == 1:
+                return True
+        return False
+    
     def update(self, dt):
         map = self.world.map
         position = self.position
         acceleration = self.acceleration
         if self.explode_time < time.time():
             # hurt players here
-            self.character.grenades.remove(self)
-            self.delete()
+            for item in self.world.objects:
+                if item.name != 'character':
+                    continue
+                player_position = item.position
+                diff_x = player_position.x - position.x
+                diff_y = player_position.y - position.y
+                diff_z = player_position.z - position.z
+                if (math.fabs(diff_x) < 16 and
+                    math.fabs(diff_y) < 16 and
+                    math.fabs(diff_z) < 16 and
+                    self.collides(player_position)):
+                    damage = 4096.0 / (diff_x**2 + diff_y**2 + diff_z**2)
+                    print 'grenade damage:', damage
+            self.destroy()
             return
         acceleration.z += dt
         new_dt = dt * 32.0
@@ -95,6 +200,7 @@ class Grenade(Object):
         acceleration.z *= 0.3600000143051147
         
 class Character(Object):
+    name = 'character'
     fire = jump = crouch = aim = False
     up = down = left = right = False
     
