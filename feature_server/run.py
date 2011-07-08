@@ -491,8 +491,9 @@ class FeatureProtocol(ServerProtocol):
         ServerProtocol.got_master_connection(self, *arg, **kw)
     
     def master_disconnected(self, *arg, **kw):
-        print 'Master connection lost, reconnecting...'
+        print 'Master connection lost, reconnecting in 20 seconds...'
         ServerProtocol.master_disconnected(self, *arg, **kw)
+        reactor.callLater(20, self.set_master)
 
     def add_ban(self, ip, reason, duration):
         """Ban an ip(if it hasn't already been banned) with an optional reason and

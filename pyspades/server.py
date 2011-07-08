@@ -842,7 +842,6 @@ class ServerProtocol(DatagramProtocol):
     
     def master_disconnected(self):
         self.master_connection = None
-        self.set_master()
     
     def update_master(self):
         if self.master_connection is None:
