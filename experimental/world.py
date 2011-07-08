@@ -12,6 +12,14 @@ def isvoxelsolid(map, x, y, z):
         z = 62
     return map.get_solid(x, y, z)
 
+def isvoxelsolid2(map, x, y, z):
+    x = int(x) % 512
+    y = int(y) % 512
+    z = int(z)
+    if z == 63:
+        z = 62
+    return map.get_solid(x, y, z)
+
 class Object(object):
     def __init__(self, world, *arg, **kw):
         self.world = world
@@ -22,22 +30,73 @@ class Object(object):
     
     def update(self, dt):
         pass
+    
+    def delete(self):
+        self.world.delete_object(self)
 
 class Grenade(Object):
-    def update(self, dt):
-        pass
-    
-    def initialize(self, position, orientation):
+    def initialize(self, time_left, player_position, character):
+        self.character = character
         self.position = Vertex3()
-        self.orientation = Vertex3()
-        self.position.set_vector(position)
-        self.orientation.set_vector(orientation)
-
+        self.acceleration = acceleration = Vertex3()
+        self.position.set_vector(player_position)
+        orientation = character.orientation
+        player_acceleration = character.acceleration
+        acceleration.x = orientation.x + player_acceleration.x
+        acceleration.y = orientation.y + player_acceleration.y
+        acceleration.z = orientation.z + player_acceleration.z
+        self.explode_time = time.time() + time_left
+    
+    def destroy(self):
+        self.character.grenades.remove(self)
+        self.delete()
+    
+    def update(self, dt):
+        map = self.world.map
+        position = self.position
+        acceleration = self.acceleration
+        # if self.explode_time < time.time():
+            ## hurt players here
+            # self.character.grenades.remove(self)
+            # self.delete()
+            # return
+        acceleration.z += dt
+        new_dt = dt * 32.0
+        old_x = position.x
+        old_y = position.y
+        old_z = position.z
+        position.x += acceleration.x * new_dt
+        position.y += acceleration.y * new_dt
+        position.z += acceleration.z * new_dt
+        if not isvoxelsolid2(map, position.x, position.y, position.z):
+            return
+        collided = False
+        if int(old_z) != int(position.z):
+            if ((int(position.x) == int(old_x) and int(position.y) == int(old_y))
+            or not isvoxelsolid2(map, position.x, position.y, old_z)):
+                acceleration.z = -acceleration.z
+                collided = True
+        if not collided and int(old_x) != int(position.x):
+            if ((int(old_y) == int(position.y) and int(old_z) == int(position.z))
+            or not isvoxelsolid2(map, old_x, position.y, position.z)):
+                acceleration.x = -acceleration.x
+                collided = True
+        if not collided and int(old_y) != int(position.y):
+            if ((int(old_x) == int(position.x) and int(old_z) == int(position.z))
+            or not isvoxelsolid2(map, position.x, old_y, position.z)):
+                acceleration.y = -acceleration.y
+                collided = True
+        position.x = old_x
+        position.y = old_y
+        position.z = old_z
+        acceleration.x *= 0.3600000143051147
+        acceleration.y *= 0.3600000143051147
+        acceleration.z *= 0.3600000143051147
+        
 class Character(Object):
     fire = jump = crouch = aim = False
     up = down = left = right = False
     
-    acceleration = 0.0
     null = False
     null2 = False
     last_time = 0.0
@@ -46,9 +105,10 @@ class Character(Object):
     def initialize(self, position, orientation):
         self.position = Vertex3()
         self.orientation = Vertex3()
-        self.aim_orientation = Vertex3()
+        self.acceleration = Vertex3()
         self.position.set_vector(position)
         self.orientation.set_vector(orientation)
+        self.grenades = []
     
     def set_animation(self, fire = None, jump = None, crouch = None, aim = None):
         if fire is not None:
@@ -70,13 +130,19 @@ class Character(Object):
         self.down = down
         self.left = left
         self.right = right
+    
+    def throw_grenade(self, time_left):
+        position = Vertex3(self.position.x, self.position.y, self.guess_z)
+        item = self.world.create_object(Grenade, time_left, position, 
+            self)
+        self.grenades.append(item)
         
     def update(self, dt):
         orientation = self.orientation
-        aim_orientation = self.aim_orientation
+        acceleration = self.acceleration
         if self.jump:
             self.jump = False
-            self.acceleration = -0.3600000143051147
+            acceleration.z = -0.3600000143051147
         v2 = self.null
         v3 = dt
         if v2:
@@ -89,50 +155,50 @@ class Character(Object):
         if (self.up or self.down) and (self.left or self.right):
             v3 *= 0.7071067690849304
         if self.up:
-            aim_orientation.x += orientation.x * v3
-            aim_orientation.y += orientation.y * v3
+            acceleration.x += orientation.x * v3
+            acceleration.y += orientation.y * v3
         elif self.down:
-            aim_orientation.x -= orientation.x * v3
-            aim_orientation.y -= orientation.y * v3
+            acceleration.x -= orientation.x * v3
+            acceleration.y -= orientation.y * v3
         if self.left or self.right:
             xypow = math.sqrt(orientation.y**2 + orientation.x**2)
             orienty_over_xypow = -orientation.y / xypow
             orientx_over_xypow = orientation.x / xypow
             if self.left:
-                aim_orientation.x -= orienty_over_xypow * v3
-                aim_orientation.y -= orientx_over_xypow * v3
+                acceleration.x -= orienty_over_xypow * v3
+                acceleration.y -= orientx_over_xypow * v3
             else:
-                aim_orientation.x += orienty_over_xypow * v3
-                aim_orientation.y += orientx_over_xypow * v3
+                acceleration.x += orienty_over_xypow * v3
+                acceleration.y += orientx_over_xypow * v3
         v13 = dt + 1.0
-        v9 = self.acceleration + dt
-        self.acceleration = v9 / v13
+        v9 = acceleration.z + dt
+        acceleration.z = v9 / v13
         if not self.null2:
             if not self.null:
                 v13 = dt * 4.0 + 1.0
         else:
             v13 = dt * 6.0 + 1.0
-        aim_orientation.x /= v13
-        aim_orientation.y /= v13
-        acceleration = self.acceleration
+        acceleration.x /= v13
+        acceleration.y /= v13
+        old_acceleration = acceleration.z
         self.calculate_position(dt)
-        if 0.0 != self.acceleration or acceleration <= 0.239999994635582:
+        if 0.0 != acceleration.z or old_acceleration <= 0.239999994635582:
             pass
         else:
-            aim_orientation.x *= 0.5
-            aim_orientation.y *= 0.5
-            if acceleration > 0.4799999892711639:
-                self.on_fall(-27 - acceleration**3 * -256.0)
+            acceleration.x *= 0.5
+            acceleration.y *= 0.5
+            if old_acceleration > 0.4799999892711639:
+                self.on_fall(-27 - old_acceleration**3 * -256.0)
     
     def calculate_position(self, dt):
         orientation = self.orientation
-        aim_orientation = self.aim_orientation
+        acceleration = self.acceleration
         map = self.world.map
         position = self.position
         v1 = 0
         v4 = dt * 32.0
-        v43 = aim_orientation.x * v4 + position.x
-        v45 = aim_orientation.y * v4 + position.y
+        v43 = acceleration.x * v4 + position.x
+        v45 = acceleration.y * v4 + position.y
         v3 = 0.449999988079071
         if self.crouch:
             v47 = 0.449999988079071
@@ -142,7 +208,7 @@ class Character(Object):
             v5 = 1.350000023841858
         v31 = v5
         v29 = position.z + v47
-        if aim_orientation.x < 0.0:
+        if acceleration.x < 0.0:
             v3 = -0.449999988079071
         v26 = v3
         v19 = v5
@@ -162,9 +228,8 @@ class Character(Object):
                     break
         if v19 >= -1.360000014305115:
             if self.crouch or orientation.z >= 0.5:
-                aim_orientation.x = 0
+                acceleration.x = 0
             else:
-                print 'testie'
                 v20 = 0.3499999940395355
                 v39 = position.y - 0.449999988079071
                 v33 = v43 + v26
@@ -183,15 +248,13 @@ class Character(Object):
                     if v20 < -2.359999895095825:
                         break
                 if v9 >= -2.359999895095825:
-                    print 'nay 1:', v9
-                    aim_orientation.x = 0.0
+                    acceleration.x = 0.0
                 else:
-                    print 'yay 1', v9
                     v1 = 1
                     position.x = v43
         else:
             position.x = v43
-        if aim_orientation.y >= 0.0:
+        if acceleration.y >= 0.0:
             v11 = 0.449999988079071
         else:
             v11 = -0.449999988079071
@@ -237,25 +300,24 @@ class Character(Object):
                         if v22 < -2.359999895095825:
                             break
                     if v13 < -2.359999895095825:
-                        print 'yay 2', v13
                         position.y = v45
                         label34 = True
             if not label34:
-                aim_orientation.y = 0.0
+                acceleration.y = 0.0
         else:
             position.y = v45
             if v1:
                 label34 = True
         if label34:
-            aim_orientation.x *= 0.5
-            aim_orientation.y *= 0.5
+            acceleration.x *= 0.5
+            acceleration.y *= 0.5
             self.last_time = time.time()
             v30 = v29 - 1.0
             v31 = -1.350000023841858
         else:
-            if self.acceleration < 0.0:
+            if acceleration.z < 0.0:
                 v31 = -v31
-            v30 = self.acceleration * dt * 32.0 + v29
+            v30 = acceleration.z * dt * 32.0 + v29
         self.null = 1
         v46 = v30 + v31
         v42 = position.y - 0.449999988079071
@@ -274,10 +336,10 @@ class Character(Object):
                 elif isvoxelsolid(map, v37, v44, v46):
                     flag = True
         if flag:
-            if self.acceleration >= 0.0:
+            if acceleration.z >= 0.0:
                 self.null2 = position.z > 61.0
                 self.null = 0
-            self.acceleration = 0
+            acceleration.z = 0
         else:
             position.z = v30 - v47
         v16 = self.last_time
@@ -295,9 +357,12 @@ class World(object):
         self.map = map
     
     def update(self, dt):
-        for instance in self.objects:
+        for instance in self.objects[:]:
             instance.update(dt)
             position = instance.position
+    
+    def delete_object(self, item):
+        self.objects.remove(item)
         
     def create_object(self, klass, *arg, **kw):
         new_object = klass(self, *arg, **kw)
