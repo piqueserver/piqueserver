@@ -37,6 +37,9 @@ import shlex
 import textwrap
 import collections
 
+ORIENTATION_DISTANCE = 128.0
+ORIENTATION_DISTANCE_SQUARED = 128.0 ** 2
+
 player_data = serverloaders.PlayerData()
 create_player = serverloaders.CreatePlayer()
 position_data = serverloaders.PositionData()
@@ -880,8 +883,14 @@ class ServerProtocol(DatagramProtocol):
     
     def send_contained(self, contained, sequence = False, sender = None,
                        team = None, save = False):
+        
         if sequence:
             loader = sized_sequence
+            check_distance = sender is not None and sender.position is not None
+            if check_distance:
+                position = sender.position
+                x = position.x
+                y = position.y
         else:
             loader = sized_data
         data = ByteWriter()
@@ -893,6 +902,11 @@ class ServerProtocol(DatagramProtocol):
             if team is not None and player.team is not team:
                 continue
             if sequence:
+                if check_distance and player.position is not None:
+                    position = player.position
+                    distance_squared = (position.x - x)**2 + (position.y - y)**2
+                    if distance_squared > ORIENTATION_DISTANCE_SQUARED:
+                        continue
                 loader.sequence2 = player.get_orientation_sequence()
             if player.saved_loaders is not None:
                 if save:
