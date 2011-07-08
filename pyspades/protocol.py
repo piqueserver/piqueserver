@@ -178,10 +178,10 @@ class BaseConnection(object):
             return
     
     def resend(self, key, data, count = 1):
+        defer, _ = self.packet_deferreds.pop(key)
         if count >= MAX_SEND_RETRIES:
             self.disconnect()
             return
-        defer, _ = self.packet_deferreds.pop(key)
         out_packet.unique = self.unique or 0
         if self.is_client:
             connection_id = self.connection_id

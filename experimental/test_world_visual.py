@@ -91,14 +91,9 @@ def on_key_press(symbol, modifiers):
     if symbol == key.SPACE:
         character.set_animation(jump = True)
     elif symbol == key.F:
-        character.throw_grenade(2)
+        character.throw_grenade(3)
     elif symbol == key.X:
         new_world.update(1 / (60.0 * 2))
-    elif symbol == key.V:
-        for item in character.grenades:
-            item.destroy()
-        print 'deleted grenades'
-        print ''
 
 window.push_handlers(
     on_key_press = on_key_press)

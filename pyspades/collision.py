@@ -17,8 +17,10 @@
 
 import math
 
-def vector_collision(player_vector, vector):
-    return distance_3d_vector(player_vector, vector) < 3
+def vector_collision(vec1, vec2, distance = 2):
+    return (math.fabs(vec1.x - vec2.x) < distance and
+            math.fabs(vec1.y - vec2.y) < distance and
+            math.fabs(vec1.z - vec2.z) < distance)
 
 def distance_3d_vector(vector1, vector2):
     xd = vector1.x - vector2.x

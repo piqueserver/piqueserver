@@ -1,4 +1,5 @@
 from pyspades.common import *
+from pyspades.common import *
 import math
 import time
 
@@ -55,11 +56,11 @@ class Grenade(Object):
         map = self.world.map
         position = self.position
         acceleration = self.acceleration
-        # if self.explode_time < time.time():
-            ## hurt players here
-            # self.character.grenades.remove(self)
-            # self.delete()
-            # return
+        if self.explode_time < time.time():
+            # hurt players here
+            self.character.grenades.remove(self)
+            self.delete()
+            return
         acceleration.z += dt
         new_dt = dt * 32.0
         old_x = position.x
