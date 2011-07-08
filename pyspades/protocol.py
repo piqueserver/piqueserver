@@ -190,7 +190,7 @@ class BaseConnection(object):
         out_packet.data = loader
         self.send_data(str(out_packet.generate()))
         call = reactor.callLater(resend_interval, self.resend, key, loader, 
-            resend_interval)
+            resend_interval * 2)
         self.packet_deferreds[key] = (defer, call)
 
     def send_loader(self, loader, ack = False, byte = 0, resend_interval = None):
@@ -223,6 +223,8 @@ class BaseConnection(object):
             return defer
             
     def ping(self, timeout = None):
+        if self.connection_id is None:
+            return
         if self.ping_call is not None:
             return self.ping_defer
         if timeout is None:

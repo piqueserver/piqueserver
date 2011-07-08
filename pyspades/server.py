@@ -108,83 +108,26 @@ class ServerConnection(BaseConnection):
                             self.disconnect()
                             return
                 self.auth_val = loader.auth_val
+                self.saved_loaders = []
                 if loader.client:
                     self.connection_id = self.protocol.connection_ids.pop()
                 else:
                     self.master = True
-                    self.connection_id = 0
+                    self.connection_id = 1
+                    self.send_id = True
                 self.unique = random.randint(0, 3)
                 connection_response = ConnectionResponse()
                 connection_response.auth_val = loader.auth_val
                 connection_response.unique = self.unique
-                connection_response.connection_id = self.connection_id
+                if self.master:
+                    connection_response.connection_id = 0
+                else:
+                    connection_response.connection_id = self.connection_id
                 
                 self.on_connect()
                 
-                if loader.client:
-                    self.send_loader(connection_response, True, 0xFF
-                        ).addCallback(self.send_map)
-                else:
-                    self.send_loader(connection_response, True, 0xFF
-                        ).addCallback(self.disconnect)
-                    return
-                
-                self.map_data = ByteReader(self.protocol.map.generate())
-                    
-                # send players
-                self.saved_loaders = saved_loaders = []
-                for player in self.protocol.players.values():
-                    if player.name is None:
-                        continue
-                    existing_player.name = player.name
-                    existing_player.player_id = player.player_id
-                    existing_player.tool = player.tool or 3
-                    existing_player.weapon = player.weapon
-                    existing_player.kills = player.kills
-                    existing_player.team = player.team.id
-                    existing_player.color = make_color(*player.color)
-                    saved_loaders.append(existing_player.generate())
-            
-                # send initial data
-                blue = self.protocol.blue_team
-                green = self.protocol.green_team
-                blue_flag = blue.flag
-                green_flag = green.flag
-                blue_base = blue.base
-                green_base = green.base
-                
-                self.player_id = self.protocol.player_ids.pop()
-                player_data.player_left = -1
-                player_data.player_id = self.player_id
-                player_data.max_score = self.protocol.max_score
-                player_data.blue_score = blue.score
-                player_data.green_score = green.score
-                
-                player_data.blue_base_x = blue_base.x
-                player_data.blue_base_y = blue_base.y
-                player_data.blue_base_z = blue_base.z
-                
-                player_data.green_base_x = green_base.x
-                player_data.green_base_y = green_base.y
-                player_data.green_base_z = green_base.z
-                
-                if blue_flag.player is None:
-                    player_data.blue_flag_player = -1
-                    player_data.blue_flag_x = blue_flag.x
-                    player_data.blue_flag_y = blue_flag.y
-                    player_data.blue_flag_z = blue_flag.z
-                else:
-                    player_data.blue_flag_player = blue_flag.player.player_id
-                
-                if green_flag.player is None:
-                    player_data.green_flag_player = -1
-                    player_data.green_flag_x = green_flag.x
-                    player_data.green_flag_y = green_flag.y
-                    player_data.green_flag_z = green_flag.z
-                else:
-                    player_data.green_flag_player = green_flag.player.player_id
-                
-                saved_loaders.append(player_data.generate())
+                self.send_loader(connection_response, True, 0xFF
+                    ).addCallback(self._connection_ack)
             return
         else:
             if loader.id == Packet10.id:
@@ -566,7 +509,70 @@ class ServerConnection(BaseConnection):
     def add_score(self, score):
         self.kills += score
     
-    def send_map(self, ack = None):
+    def _connection_ack(self, ack):
+        if self.master:
+            # this shouldn't happen, but let's make sure
+            self.disconnect()
+            return
+        # send players
+        saved_loaders = self.saved_loaders
+        for player in self.protocol.players.values():
+            if player.name is None:
+                continue
+            existing_player.name = player.name
+            existing_player.player_id = player.player_id
+            existing_player.tool = player.tool or 3
+            existing_player.weapon = player.weapon
+            existing_player.kills = player.kills
+            existing_player.team = player.team.id
+            existing_player.color = make_color(*player.color)
+            saved_loaders.append(existing_player.generate())
+    
+        # send initial data
+        blue = self.protocol.blue_team
+        green = self.protocol.green_team
+        blue_flag = blue.flag
+        green_flag = green.flag
+        blue_base = blue.base
+        green_base = green.base
+        
+        self.player_id = self.protocol.player_ids.pop()
+        player_data.player_left = -1
+        player_data.player_id = self.player_id
+        player_data.max_score = self.protocol.max_score
+        player_data.blue_score = blue.score
+        player_data.green_score = green.score
+        
+        player_data.blue_base_x = blue_base.x
+        player_data.blue_base_y = blue_base.y
+        player_data.blue_base_z = blue_base.z
+        
+        player_data.green_base_x = green_base.x
+        player_data.green_base_y = green_base.y
+        player_data.green_base_z = green_base.z
+        
+        if blue_flag.player is None:
+            player_data.blue_flag_player = -1
+            player_data.blue_flag_x = blue_flag.x
+            player_data.blue_flag_y = blue_flag.y
+            player_data.blue_flag_z = blue_flag.z
+        else:
+            player_data.blue_flag_player = blue_flag.player.player_id
+        
+        if green_flag.player is None:
+            player_data.green_flag_player = -1
+            player_data.green_flag_x = green_flag.x
+            player_data.green_flag_y = green_flag.y
+            player_data.green_flag_z = green_flag.z
+        else:
+            player_data.green_flag_player = green_flag.player.player_id
+        
+        saved_loaders.append(player_data.generate())
+        
+        self.map_data = ByteReader(self.protocol.map.generate())
+        self.send_map()
+    
+    def send_map(self):
         if self.map_data is None:
             return
         if not self.map_data.dataLeft():
