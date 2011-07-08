@@ -174,7 +174,7 @@ class Character(Object):
                     if isvoxelsolid(map, v33, v39, v23):
                         v9 = v20
                         break
-                    v10 = position.y + 449999988079071
+                    v10 = position.y + 0.449999988079071
                     if isvoxelsolid(map, v33, v10, v23):
                         v9 = v20
                         break
@@ -183,10 +183,10 @@ class Character(Object):
                     if v20 < -2.359999895095825:
                         break
                 if v9 >= -2.359999895095825:
-                    print 'nay:', v9
+                    print 'nay 1:', v9
                     aim_orientation.x = 0.0
                 else:
-                    print 'yay'
+                    print 'yay 1', v9
                     v1 = 1
                     position.x = v43
         else:
@@ -237,7 +237,7 @@ class Character(Object):
                         if v22 < -2.359999895095825:
                             break
                     if v13 < -2.359999895095825:
-                        print 'yay'
+                        print 'yay 2', v13
                         position.y = v45
                         label34 = True
             if not label34:
