@@ -60,7 +60,7 @@
     "user_blocks_only" : false,
     "logfile" : "log.txt",
     "debug_log" : false,
-    "balanced_teams" : 1,
+    "balanced_teams" : 0,
     "login_retries" : 3,
     "irc" : {
         "enabled" : false,
