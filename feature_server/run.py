@@ -100,7 +100,7 @@ class FeatureConnection(ServerConnection):
     streak = 0
     best_streak = 0
     
-    def on_connect(self):
+    def on_connect(self, loader):
         if self.master:
             print '(master client connected)'
     

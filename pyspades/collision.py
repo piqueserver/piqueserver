@@ -17,7 +17,7 @@
 
 import math
 
-def vector_collision(vec1, vec2, distance = 2):
+def vector_collision(vec1, vec2, distance = 3):
     return (math.fabs(vec1.x - vec2.x) < distance and
             math.fabs(vec1.y - vec2.y) < distance and
             math.fabs(vec1.z - vec2.z) < distance)

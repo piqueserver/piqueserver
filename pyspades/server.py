@@ -112,25 +112,15 @@ class ServerConnection(BaseConnection):
                             return
                 self.auth_val = loader.auth_val
                 self.saved_loaders = []
-                if loader.client:
-                    self.connection_id = self.protocol.connection_ids.pop()
-                else:
-                    self.master = True
-                    self.connection_id = 1
-                    # set is_client to True so it sends the connection id.
-                    # not sure whether this is actually needed, but it seems
-                    # to be what vanilla does
-                    self.is_client = True
+                self.master = not loader.client
+                self.connection_id = self.protocol.connection_ids.pop()
                 self.unique = random.randint(0, 3)
                 connection_response = ConnectionResponse()
                 connection_response.auth_val = loader.auth_val
                 connection_response.unique = self.unique
-                if self.master:
-                    connection_response.connection_id = 0
-                else:
-                    connection_response.connection_id = self.connection_id
+                connection_response.connection_id = self.connection_id
                 
-                self.on_connect()
+                self.on_connect(loader)
                 
                 self.send_loader(connection_response, True, 0xFF
                     ).addCallback(self._connection_ack)
@@ -648,7 +638,7 @@ class ServerConnection(BaseConnection):
 
     # events/hooks
     
-    def on_connect(self):
+    def on_connect(self, loader):
         pass
     
     def on_join(self):
