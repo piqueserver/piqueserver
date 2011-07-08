@@ -31,6 +31,8 @@ import math
 def get_timer():
     return int(time.time() * 1000) & 0xFFFF
 
+MAX_SEND_RETRIES = 5
+
 class PacketHandler(object):
     other_sequence = None
     sequence = 0
@@ -76,7 +78,7 @@ sized_data = SizedData()
 
 class BaseConnection(object):
     unique = None
-    send_id = True
+    is_client = True
     connection_id = None
     
     in_packet = None
@@ -125,7 +127,7 @@ class BaseConnection(object):
                     timer += 0xFFFF
             self.timer = timer
             self.timer_received(timer)
-        if not self.send_id and self.connection_id is not None:
+        if not self.is_client and self.connection_id is not None:
             if in_packet.connection_id != self.connection_id:
                 # invalid packet
                 return
@@ -167,7 +169,6 @@ class BaseConnection(object):
 
     def ack_received(self, loader):
         sequence = loader.sequence2
-        timer = loader.timer
         byte = loader.byte
         try:
             defer, call = self.packet_deferreds.pop((sequence, byte))
@@ -176,10 +177,13 @@ class BaseConnection(object):
         except KeyError:
             return
     
-    def resend(self, key, loader, resend_interval):
+    def resend(self, key, data, count = 1):
+        if count >= MAX_SEND_RETRIES:
+            self.disconnect()
+            return
         defer, _ = self.packet_deferreds.pop(key)
         out_packet.unique = self.unique or 0
-        if self.send_id:
+        if self.is_client:
             connection_id = self.connection_id
             if connection_id is None:
                 connection_id = 0xFFF
@@ -187,24 +191,22 @@ class BaseConnection(object):
         else:
             out_packet.connection_id = 0
         out_packet.timer = get_timer()
-        out_packet.data = loader
+        out_packet.data = data
         self.send_data(str(out_packet.generate()))
-        call = reactor.callLater(resend_interval, self.resend, key, loader, 
-            resend_interval * 2)
+        call = reactor.callLater(self.resend_interval * 2 ** count,
+            self.resend, key, data, count + 1)
         self.packet_deferreds[key] = (defer, call)
 
-    def send_loader(self, loader, ack = False, byte = 0, resend_interval = None):
+    def send_loader(self, loader, ack = False, byte = 0):
         if self.disconnected:
             return
-        if resend_interval is None:
-            resend_interval = self.resend_interval
         sequence = self.packet_handlers[byte].get_sequence(ack)
         loader.byte = byte
         loader.sequence = sequence
         loader.ack = ack
-        loader = generate_loader_data(loader)
+        data = generate_loader_data(loader)
         out_packet.unique = self.unique or 0
-        if self.send_id:
+        if self.is_client:
             connection_id = self.connection_id
             if connection_id is None:
                 connection_id = 0xFFF
@@ -212,13 +214,13 @@ class BaseConnection(object):
         else:
             out_packet.connection_id = 0
         out_packet.timer = get_timer()
-        out_packet.data = loader
+        out_packet.data = data
         self.send_data(str(out_packet.generate()))
         if ack:
             defer = Deferred()
             key = (sequence, byte)
-            call = reactor.callLater(resend_interval, self.resend, key, loader, 
-                resend_interval)
+            call = reactor.callLater(self.resend_interval, self.resend, key, 
+                data)
             self.packet_deferreds[key] = (defer, call)
             return defer
             
@@ -239,7 +241,7 @@ class BaseConnection(object):
         if self.ping_call is not None:
             self.ping_call.cancel()
             self.latency = reactor.seconds() - self.ping_time
-            self.ping_call = None
+            self.ping_call = self.ping_defer = None
     
     def timed_out(self):
         self.ping_call = None

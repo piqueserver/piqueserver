@@ -57,7 +57,7 @@ map_data = MapData()
 class ServerConnection(BaseConnection):
     master = False
     protocol = None
-    send_id = False
+    is_client = False
     address = None
     player_id = None
     map_packets_sent = 0
@@ -114,7 +114,10 @@ class ServerConnection(BaseConnection):
                 else:
                     self.master = True
                     self.connection_id = 1
-                    self.send_id = True
+                    # set is_client to True so it sends the connection id.
+                    # not sure whether this is actually needed, but it seems
+                    # to be what vanilla does
+                    self.is_client = True
                 self.unique = random.randint(0, 3)
                 connection_response = ConnectionResponse()
                 connection_response.auth_val = loader.auth_val
