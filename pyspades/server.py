@@ -371,8 +371,8 @@ class ServerConnection(BaseConnection):
             self.world_object = self.protocol.world.create_object(
                 world.Character, position, None, self.on_fall)
         create_player.name = name
-        create_player.x = position.x
-        create_player.y = position.y - 128
+        create_player.x = x
+        create_player.y = y - 128
         create_player.weapon = self.weapon
         self.hp = 100
         self.tool = 3
@@ -574,6 +574,8 @@ class ServerConnection(BaseConnection):
         x = int(position.x)
         y = int(position.y)
         z = int(position.z)
+        if x < 0 or x > 512 or y < 0 or y > 512 or z < 0 or z > 63:
+            return
         if self.on_block_destroy(x, y, z, GRENADE_DESTROY) == False:
             return
         map = self.protocol.map
