@@ -77,11 +77,11 @@
 
     "scripts" : [
         "welcome",
-        "airstrike",
         "rollback",
         "trusted",
         "autohelp",
         "protect",
+
 	"map_extensions"
     ],
     

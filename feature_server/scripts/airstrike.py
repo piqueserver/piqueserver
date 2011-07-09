@@ -51,7 +51,8 @@ def apply_script(protocol, connection, config):
             for player in self.team.get_players():
                 if player is self:
                     continue
-                distance = distance_3d_vector(self.position, player.position)
+                distance = distance_3d_vector(self.world_object.position, 
+                    player.world_object.position)
                 if best is None or player.hp <= 0 and best.hp > 0:
                     best, best_distance = player, distance
                     continue

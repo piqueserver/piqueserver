@@ -291,7 +291,7 @@ class FeatureConnection(ServerConnection):
         initial = filter(lambda player: player.hp and player.followable,
                          self.team.get_players())
         attackers = sorted(initial,
-                            key=lambda player: player.position.x)
+                            key=lambda player: player.world_object.position.x)
         if len(attackers) < 1:
             return None
         if self.team.id is 1:
@@ -331,7 +331,7 @@ class FeatureConnection(ServerConnection):
     # position methods
     
     def get_location(self):
-        position = self.position
+        position = self.world_object.position
         return position.x, position.y, position.z
     
     def set_location(self, (x, y, z)):

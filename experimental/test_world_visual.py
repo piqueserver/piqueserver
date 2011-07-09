@@ -1,6 +1,6 @@
 from pyspades.common import *
 from pyspades.load import VXLData, get_color_tuple
-import world
+from pyspades import world
 import pyglet
 from pyglet.window import key
 import math
@@ -81,7 +81,9 @@ def on_draw():
     if not character.crouch:
         add_height = (0.9 / scale) * 600
     draw_quad(x - 2, y - 12 - add_height, x + 2, y + 5)
-    for item in character.grenades:
+    for item in world.objects:
+        if item.name != 'grenade':
+            continue
         position = item.position
         x, y = get_position(position.x, position.y, position.z)
         pad = 2

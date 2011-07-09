@@ -37,7 +37,8 @@ class Object(object):
 
 class Grenade(Object):
     name = 'grenade'
-    def initialize(self, time_left, player_position, character):
+    def initialize(self, time_left, player_position, character, callback = None):
+        self.callback = callback
         self.character = character
         self.position = Vertex3()
         self.acceleration = acceleration = Vertex3()
@@ -47,11 +48,7 @@ class Grenade(Object):
         acceleration.x = orientation.x + player_acceleration.x
         acceleration.y = orientation.y + player_acceleration.y
         acceleration.z = orientation.z + player_acceleration.z
-        self.explode_time = time.time() + time_left
-    
-    def destroy(self):
-        self.character.grenades.remove(self)
-        self.delete()
+        self.time_left = time_left
     
     def collides(self, player_position):
         position = self.position
@@ -145,26 +142,27 @@ class Grenade(Object):
                 return True
         return False
     
+    def get_damage(self, player_position):
+        position = self.position
+        diff_x = player_position.x - position.x
+        diff_y = player_position.y - position.y
+        diff_z = player_position.z - position.z
+        if (math.fabs(diff_x) < 16 and
+            math.fabs(diff_y) < 16 and
+            math.fabs(diff_z) < 16 and
+            self.collides(player_position)):
+            return 4096.0 / (diff_x**2 + diff_y**2 + diff_z**2)
+    
     def update(self, dt):
         map = self.world.map
         position = self.position
         acceleration = self.acceleration
-        if self.explode_time < time.time():
+        self.time_left -= dt
+        if self.time_left <= 0:
             # hurt players here
-            for item in self.world.objects:
-                if item.name != 'character':
-                    continue
-                player_position = item.position
-                diff_x = player_position.x - position.x
-                diff_y = player_position.y - position.y
-                diff_z = player_position.z - position.z
-                if (math.fabs(diff_x) < 16 and
-                    math.fabs(diff_y) < 16 and
-                    math.fabs(diff_z) < 16 and
-                    self.collides(player_position)):
-                    damage = 4096.0 / (diff_x**2 + diff_y**2 + diff_z**2)
-                    print 'grenade damage:', damage
-            self.destroy()
+            if self.callback is not None:
+                self.callback(self)
+            self.delete()
             return
         acceleration.z += dt
         new_dt = dt * 32.0
@@ -209,13 +207,15 @@ class Character(Object):
     last_time = 0.0
     guess_z = 0.0
     
-    def initialize(self, position, orientation):
+    def initialize(self, position, orientation, fall_callback = None):
+        self.fall_callback = fall_callback
         self.position = Vertex3()
         self.orientation = Vertex3()
         self.acceleration = Vertex3()
-        self.position.set_vector(position)
-        self.orientation.set_vector(orientation)
-        self.grenades = []
+        if position is not None:
+            self.position.set_vector(position)
+        if orientation is not None:
+            self.orientation.set_vector(orientation)
     
     def set_animation(self, fire = None, jump = None, crouch = None, aim = None):
         if fire is not None:
@@ -238,11 +238,16 @@ class Character(Object):
         self.left = left
         self.right = right
     
-    def throw_grenade(self, time_left):
+    def set_position(self, x, y, z):
+        self.position.set(x, y, z)
+        
+    def set_orientation(self, x, y, z):
+        self.orientation.set(x, y, z)
+    
+    def throw_grenade(self, time_left, callback = None):
         position = Vertex3(self.position.x, self.position.y, self.guess_z)
         item = self.world.create_object(Grenade, time_left, position, 
-            self)
-        self.grenades.append(item)
+            self, callback)
         
     def update(self, dt):
         orientation = self.orientation
@@ -295,7 +300,8 @@ class Character(Object):
             acceleration.x *= 0.5
             acceleration.y *= 0.5
             if old_acceleration > 0.4799999892711639:
-                self.on_fall(-27 - old_acceleration**3 * -256.0)
+                if self.fall_callback is not None:
+                    self.fall_callback(-27 - old_acceleration**3 * -256.0)
     
     def calculate_position(self, dt):
         orientation = self.orientation
@@ -454,9 +460,6 @@ class Character(Object):
         self.guess_z = position.z
         if v28 > -0.25:
             self.guess_z += (v28 + 0.25) * 4.0
-    
-    def on_fall(self, damage):
-        print 'on fall, damage:', damage
 
 class World(object):
     def __init__(self, map):

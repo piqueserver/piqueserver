@@ -17,6 +17,7 @@
 
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
+from twisted.internet.task import LoopingCall
 from pyspades.protocol import (BaseConnection, sized_sequence, 
     sized_data, in_packet, out_packet)
 from pyspades.bytes import ByteReader, ByteWriter
@@ -29,6 +30,7 @@ from pyspades.multidict import MultikeyDict
 from pyspades.idpool import IDPool
 from pyspades.master import get_master_connection
 from pyspades.collision import vector_collision
+from pyspades import world
 from pyspades.debug import *
 
 import random
@@ -80,10 +82,8 @@ class ServerConnection(BaseConnection):
     last_refill = None
     last_block_destroy = None
     speedhack_detect = False
-    up = down = left = right = False
-    position = orientation = None
-    fire = jump = aim = crouch = None
     timers = None
+    world_object = None
     
     def __init__(self, protocol, address):
         BaseConnection.__init__(self)
@@ -167,11 +167,10 @@ class ServerConnection(BaseConnection):
                         self.kill()
                     return
                 if self.hp:
+                    world_object = self.world_object
                     if contained.id == clientloaders.OrientationData.id:
-                        if not self.hp:
-                            return
-                        self.orientation.set(contained.x, contained.y, 
-                            contained.z)
+                        world_object.set_orientation(contained.x,
+                            contained.y, contained.z)
                         orientation_data.x = contained.x
                         orientation_data.y = contained.y
                         orientation_data.z = contained.z
@@ -179,9 +178,8 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(orientation_data, 
                             True, sender = self)
                     elif contained.id == clientloaders.PositionData.id:
-                        if not self.hp:
-                            return
-                        self.position.set(contained.x, contained.y, contained.z)
+                        world_object.set_position(contained.x, contained.y,
+                            contained.z)
                         position_data.player_id = self.player_id
                         position_data.x = contained.x
                         position_data.y = contained.y
@@ -190,7 +188,7 @@ class ServerConnection(BaseConnection):
                             sender = self)
                         self.on_update_position()
                         other_flag = self.team.other.flag
-                        if vector_collision(self.position, self.team.base):
+                        if vector_collision(world_object.position, self.team.base):
                             if other_flag.player is self:
                                 self.capture_flag()
                             last_refill = self.last_refill
@@ -201,31 +199,28 @@ class ServerConnection(BaseConnection):
                                 if self.on_refill() != False:
                                     self.refill()
                         if other_flag.player is None and vector_collision(
-                        self.position, other_flag):
+                        world_object.position, other_flag):
                             self.take_flag()
                     elif contained.id == clientloaders.MovementData.id:
-                        self.up = contained.up
-                        self.down = contained.down
-                        self.left = contained.left
-                        self.right = contained.right
-                        movement_data.up = self.up
-                        movement_data.down = self.down
-                        movement_data.left = self.left
-                        movement_data.right = self.right
+                        world_object.set_walk(contained.up, contained.down,
+                            contained.left, contained.right)
+                        movement_data.up = contained.up
+                        movement_data.down = contained.down
+                        movement_data.left = contained.left
+                        movement_data.right = contained.right
                         movement_data.player_id = self.player_id
                         self.protocol.send_contained(movement_data, 
                             sender = self)
                     elif contained.id == clientloaders.AnimationData.id:
-                        self.fire = contained.fire
-                        self.jump = contained.jump
-                        self.crouch = contained.crouch
-                        self.aim = contained.aim
-                        animation_data.fire = self.fire
-                        animation_data.jump = self.jump
-                        animation_data.crouch = self.crouch
-                        animation_data.aim = self.aim
+                        world_object.set_animation(contained.fire,
+                            contained.jump, contained.crouch, contained.aim)
+                        animation_data.fire = contained.fire
+                        animation_data.jump = contained.jump
+                        animation_data.crouch = contained.crouch
+                        animation_data.aim = contained.aim
                         animation_data.player_id = self.player_id
-                        self.protocol.send_contained(animation_data, sender = self)
+                        self.protocol.send_contained(animation_data, 
+                            sender = self)
                     elif contained.id == clientloaders.HitPacket.id:
                         if contained.player_id != -1:
                             player, = self.protocol.players[contained.player_id]
@@ -247,6 +242,8 @@ class ServerConnection(BaseConnection):
                             return
                         grenade_packet.player_id = self.player_id
                         grenade_packet.value = contained.value
+                        world_object.throw_grenade(contained.value,
+                            self.grenade_exploded)
                         self.protocol.send_contained(grenade_packet, 
                             sender = self)
                     elif contained.id == clientloaders.SetWeapon.id:
@@ -325,14 +322,6 @@ class ServerConnection(BaseConnection):
                             self.on_block_removed(x, y, z)
                             self.on_block_removed(x, y, z + 1)
                             self.on_block_removed(x, y, z - 1)
-                        elif value == GRENADE_DESTROY:
-                            for nade_x in xrange(x - 1, x + 2):
-                                for nade_y in xrange(y - 1, y + 2):
-                                    for nade_z in xrange(z - 1, z + 2):
-                                        map.remove_point(nade_x, nade_y, 
-                                            nade_z)
-                                        self.on_block_removed(nade_x, nade_y,
-                                            nade_z)
                         self.last_block_destroy = reactor.seconds()
                     block_action.x = x
                     block_action.y = y
@@ -347,17 +336,6 @@ class ServerConnection(BaseConnection):
         sequence = self.orientation_sequence
         self.orientation_sequence = (sequence + 1) & 0xFFFF
         return sequence
-    
-    def get_ground_z(self):
-        if self.crouch:
-            return int(self.position.z + 2)
-        else:
-            return int(self.position.z + 3)
-    
-    def on_ground(self):
-        position = self.position
-        return self.protocol.map.get_solid(int(position.x), int(position.y), 
-            self.get_ground_z())
     
     def refill(self):
         self.hp = 100
@@ -383,11 +361,15 @@ class ServerConnection(BaseConnection):
     def spawn(self, pos = None, name = None):
         self.spawn_call = None
         create_player.player_id = self.player_id
-        self.orientation = Vertex3(0, 0, 0)
         if pos is None:
             pos = self.team.get_random_location(True)
         x, y, z = pos
-        self.position = position = Vertex3(x, y, z)
+        if self.world_object is not None:
+            self.world_object.set_position(x, y, z)
+        else:
+            position = Vertex3(x, y, z)
+            self.world_object = self.protocol.world.create_object(
+                world.Character, position, None, self.on_fall)
         create_player.name = name
         create_player.x = position.x
         create_player.y = position.y - 128
@@ -421,12 +403,14 @@ class ServerConnection(BaseConnection):
             self.protocol.send_contained(intel_action, save = True)
     
     def drop_flag(self):
+        if self.world_object is None:
+            return
         protocol = self.protocol
         for flag in (protocol.blue_team.flag, protocol.green_team.flag):
             player = flag.player
             if player is not self:
                 continue
-            position = self.position
+            position = self.world_object.position
             x = int(position.x)
             y = int(position.y)
             z = max(0, int(position.z))
@@ -461,6 +445,8 @@ class ServerConnection(BaseConnection):
         if self.spawn_call is not None:
             self.spawn_call.cancel()
             self.spawn_call = None
+        if self.world_object is not None:
+            self.world_object.delete()
     
     def hit(self, value, by = None):
         if self.hp is None:
@@ -474,34 +460,34 @@ class ServerConnection(BaseConnection):
                     return
             elif not friendly_fire:
                 return
-        self.hp = min(100, self.hp - value)
-        if self.hp <= 0:
-            self.kill(by)
-            return
-        if by is not None:
-            hit_packet.hp = self.hp
-            hit_packet.sound = True
-            self.send_contained(hit_packet)
+        self.set_hp(self.hp - value)
     
-    def kill(self, by = None):
+    def set_hp(self, value, hit_by = None, sound = True):
+        self.hp = max(0, min(100, value))
+        if self.hp == 0:
+            self.kill(hit_by, sound)
+            return
+        hit_packet.hp = self.hp
+        hit_packet.sound = sound
+        self.send_contained(hit_packet)
+    
+    def kill(self, by = None, sound = True):
         if self.hp is None:
             return
         self.on_kill(by)
-        self.hp = None
         self.drop_flag()
-        kill_action.other_kill = True
+        self.hp = None
+        self.world_object.delete()
+        self.world_object = None
+        kill_action.other_kill = sound
         if by is None:
             kill_action.player1 = self.player_id
         else:
             kill_action.player1 = by.player_id
         kill_action.player2 = self.player_id
-        if by is self:
-            sender = self
-        else:
-            if by is not None:
-                by.add_score(1)
-            sender = None
-        self.protocol.send_contained(kill_action, sender = sender, save = True)
+        if by is not None and by is not self:
+            by.add_score(1)
+        self.protocol.send_contained(kill_action, save = True)
         self.respawn()
 
     def add_score(self, score):
@@ -569,6 +555,45 @@ class ServerConnection(BaseConnection):
         
         self.map_data = ByteReader(self.protocol.map.generate())
         self.send_map()
+        
+    def grenade_exploded(self, grenade):
+        for player_list in (self.team.other.get_players(), (self,)):
+            for player in player_list:
+                if not player.hp:
+                    continue
+                damage = grenade.get_damage(player.world_object.position)
+                if damage is None:
+                    continue
+                returned = self.on_hit(damage, player)
+                if returned == False:
+                    continue
+                elif returned is not None:
+                    damage = returned
+                player.set_hp(self.hp - damage, self, False)
+        position = grenade.position
+        x = int(position.x)
+        y = int(position.y)
+        z = int(position.z)
+        if self.on_block_destroy(x, y, z, GRENADE_DESTROY) == False:
+            return
+        map = self.protocol.map
+        for nade_x in xrange(x - 1, x + 2):
+            for nade_y in xrange(y - 1, y + 2):
+                for nade_z in xrange(z - 1, z + 2):
+                    map.remove_point(nade_x, nade_y, 
+                        nade_z)
+                    self.on_block_removed(nade_x, nade_y,
+                        nade_z)
+        block_action.x = x
+        block_action.y = y
+        block_action.z = z
+        block_action.value = GRENADE_DESTROY
+        block_action.player_id = self.player_id
+        self.protocol.send_contained(block_action, save = True)
+        self.protocol.update_entities()
+    
+    def on_fall(self, damage):
+        self.set_hp(self.hp - damage, sound = False)
     
     def send_map(self):
         if self.map_data is None:
@@ -783,6 +808,16 @@ class ServerProtocol(DatagramProtocol):
         self.green_team = Team(1, 'Green', self)
         self.blue_team.other = self.green_team
         self.green_team.other = self.blue_team
+        self.world = world.World(self.map)
+        self.update_loop = LoopingCall(self.update_world)
+        self.last_update = reactor.seconds()
+        self.update_loop.start(UPDATE_FREQUENCY)
+    
+    def update_world(self):
+        current_time = reactor.seconds()
+        dt = current_time - self.last_update
+        self.last_update = current_time
+        self.world.update(dt)
     
     def reset_game(self, player):
         blue_team = self.blue_team
@@ -877,9 +912,10 @@ class ServerProtocol(DatagramProtocol):
         
         if sequence:
             loader = sized_sequence
-            check_distance = sender is not None and sender.position is not None
+            check_distance = (sender is not None and 
+                              sender.world_object is not None)
             if check_distance:
-                position = sender.position
+                position = sender.world_object.position
                 x = position.x
                 y = position.y
         else:
@@ -893,8 +929,8 @@ class ServerProtocol(DatagramProtocol):
             if team is not None and player.team is not team:
                 continue
             if sequence:
-                if check_distance and player.position is not None:
-                    position = player.position
+                if check_distance and player.world_object is not None:
+                    position = player.world_object.position
                     distance_squared = (position.x - x)**2 + (position.y - y)**2
                     if distance_squared > ORIENTATION_DISTANCE_SQUARED:
                         continue

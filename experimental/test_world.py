@@ -1,6 +1,6 @@
 from pyspades.common import *
 from pyspades.load import VXLData
-import world
+from pyspades import world
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 
