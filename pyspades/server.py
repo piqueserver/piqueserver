@@ -365,7 +365,7 @@ class ServerConnection(BaseConnection):
             pos = self.team.get_random_location(True)
         x, y, z = pos
         if self.world_object is not None:
-            self.world_object.set_position(x, y, z)
+            self.world_object.set_position(x, y, z, True)
         else:
             position = Vertex3(x, y, z)
             self.world_object = self.protocol.world.create_object(
