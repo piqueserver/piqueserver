@@ -567,7 +567,7 @@ class ServerConnection(BaseConnection):
                     continue
                 elif returned is not None:
                     damage = returned
-                player.set_hp(self.hp - damage, self, False)
+                player.set_hp(player.hp - damage, self, False)
         position = grenade.position
         x = int(position.x)
         y = int(position.y)
