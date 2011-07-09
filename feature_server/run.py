@@ -266,7 +266,7 @@ class FeatureConnection(ServerConnection):
     def ban(self, reason = None, duration = None):
         reason = ': ' + reason if reason is not None else ''
         if duration is None:
-            message = '%s banned%s' % (self.name, reason)
+            message = '%s permabanned%s' % (self.name, reason)
         else:
             total = duration
             days = duration / 1440
@@ -530,21 +530,25 @@ class FeatureProtocol(ServerProtocol):
             self.transport.write('HI', address)
             return
         for ban in self.bans:
+            username = ban[0]
             ip = ban[1]
             timestamp = ban[3]
             if address[0] == ip:
-                if reactor.seconds()>=timestamp:
+                if timestamp is not None and reactor.seconds()>=timestamp:
                     self.remove_ban(ip)
                     self.save_bans()
                 else:
+                    print('banned user %s (%s) attempted to join' % (username, ip))
                     return
         for ban in self.federated_bans:
+            username = ban[0]
             ip = ban[1]
             timestamp = ban[3]
             if address[0] == ip:
-                if reactor.seconds()>=timestamp:
+                if timestamp is not None and reactor.seconds()>=timestamp:
                     pass
                 else:
+                    print('federated banned user %s (%s) attempted to join' % (username, ip))
                     return
         ServerProtocol.datagramReceived(self, data, address)
         
