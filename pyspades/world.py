@@ -292,8 +292,11 @@ class Character(Object):
             acceleration.y -= orientation.y * v3
         if self.left or self.right:
             xypow = math.sqrt(orientation.y**2 + orientation.x**2)
-            orienty_over_xypow = -orientation.y / xypow
-            orientx_over_xypow = orientation.x / xypow
+            if xypow == 0:
+                orienty_over_xypow = orientx_over_xypow = 0
+            else:
+                orienty_over_xypow = -orientation.y / xypow
+                orientx_over_xypow = orientation.x / xypow
             if self.left:
                 acceleration.x -= orienty_over_xypow * v3
                 acceleration.y -= orientx_over_xypow * v3

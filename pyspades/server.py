@@ -460,7 +460,7 @@ class ServerConnection(BaseConnection):
                     return
             elif not friendly_fire:
                 return
-        self.set_hp(self.hp - value)
+        self.set_hp(self.hp - value, by)
     
     def set_hp(self, value, hit_by = None, sound = True):
         self.hp = max(0, min(100, value))
