@@ -312,7 +312,7 @@ class FeatureConnection(ServerConnection):
             player.send_chat('You are no longer following %s.' % self.name)
     
     def get_follow_location(self, follow):
-        x, y, z = (follow.position.get() if follow.hp else
+        x, y, z = (follow.world_object.position.get() if follow.hp else
             self.team.get_random_location())
         z -= 2
         return x, y, z
