@@ -228,6 +228,8 @@ class Character(Object):
     last_time = 0.0
     guess_z = 0.0
     
+    dead = False
+    
     def initialize(self, position, orientation, fall_callback = None):
         self.fall_callback = fall_callback
         self.position = Vertex3()

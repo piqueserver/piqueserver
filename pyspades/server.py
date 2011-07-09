@@ -370,6 +370,7 @@ class ServerConnection(BaseConnection):
             position = Vertex3(x, y, z)
             self.world_object = self.protocol.world.create_object(
                 world.Character, position, None, self.on_fall)
+        self.world_object.dead = False
         create_player.name = name
         create_player.x = x
         create_player.y = y - 128
@@ -484,6 +485,7 @@ class ServerConnection(BaseConnection):
         if by is not None and by is not self:
             by.add_score(1)
         self.protocol.send_contained(kill_action, save = True)
+        self.world_object.dead = True
         self.respawn()
 
     def add_score(self, score):
@@ -591,6 +593,8 @@ class ServerConnection(BaseConnection):
         self.protocol.update_entities()
     
     def on_fall(self, damage):
+        if not self.hp:
+            return
         self.set_hp(self.hp - damage, sound = False)
     
     def send_map(self):
