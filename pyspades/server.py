@@ -403,8 +403,6 @@ class ServerConnection(BaseConnection):
             self.protocol.send_contained(intel_action, save = True)
     
     def drop_flag(self):
-        if self.world_object is None:
-            return
         protocol = self.protocol
         for flag in (protocol.blue_team.flag, protocol.green_team.flag):
             player = flag.player
@@ -477,8 +475,6 @@ class ServerConnection(BaseConnection):
         self.on_kill(by)
         self.drop_flag()
         self.hp = None
-        self.world_object.delete()
-        self.world_object = None
         kill_action.other_kill = sound
         if by is None:
             kill_action.player1 = self.player_id

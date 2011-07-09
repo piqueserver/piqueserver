@@ -169,7 +169,10 @@ class Grenade(Object):
             math.fabs(diff_y) < 16 and
             math.fabs(diff_z) < 16 and
             self.collides(player_position)):
-            return 4096.0 / (diff_x**2 + diff_y**2 + diff_z**2)
+            try:
+                return 4096.0 / (diff_x**2 + diff_y**2 + diff_z**2)
+            except ZeroDivisionError:
+                return 100.0
     
     def update(self, dt):
         map = self.world.map
