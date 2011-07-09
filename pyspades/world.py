@@ -275,6 +275,8 @@ class Character(Object):
             self, callback)
         
     def update(self, dt):
+        if self.dead:
+            return
         orientation = self.orientation
         acceleration = self.acceleration
         if self.jump:
