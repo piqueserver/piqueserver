@@ -21,12 +21,14 @@ import time
 
 def isvoxelsolid(map, x, y, z):
     if x < 0.0 or x > 512.0 or y < 0.0 or y > 512.0:
-        return 1
+        return True
     x = int(x)
     y = int(y)
     z = int(z)
     if z == 63:
         z = 62
+    elif z >= 64:
+        return True
     return map.get_solid(x, y, z)
 
 def isvoxelsolid2(map, x, y, z):
@@ -35,6 +37,8 @@ def isvoxelsolid2(map, x, y, z):
     z = int(z)
     if z == 63:
         z = 62
+    elif z >= 64:
+        return True
     return map.get_solid(x, y, z)
 
 class Object(object):

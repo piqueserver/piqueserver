@@ -24,7 +24,8 @@ import math
 from pyglet.gl import *
 
 fp = None
-for name in ('../data/sinc0.vxl', './data/sinc0.vxl'):
+for name in ('../feature_server/maps/pyspades.vxl', 
+             './feature_server/maps/pyspades.vxl'):
     try:
         fp = open(name, 'rb')
     except IOError:
@@ -36,9 +37,13 @@ if fp is None:
 map = VXLData(fp)
 fp.close()
 
+def on_fall(damage):
+    print 'on fall:', damage
+
 new_world = world.World(map)
 character = new_world.create_object(world.Character,
-    Vertex3(20.0, 20.0, 5.0), Vertex3(0.999992012978, 0.0, -0.00399998947978))
+    Vertex3(20.0, 20.0, 5.0), Vertex3(0.999992012978, 0.0, -0.00399998947978),
+    on_fall)
 
 config = Config(sample_buffers=1, samples=4, 
                 depth_size=16, double_buffer=True)
@@ -110,7 +115,7 @@ def on_key_press(symbol, modifiers):
     if symbol == key.SPACE:
         character.set_animation(jump = True)
     elif symbol == key.F:
-        character.throw_grenade(0)
+        character.throw_grenade(3)
     elif symbol == key.X:
         new_world.update(1 / (60.0 * 2))
 
