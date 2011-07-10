@@ -104,12 +104,13 @@ class FeatureConnection(ServerConnection):
         if self.master:
             print '(master client connected)'
         protocol = self.protocol
+        client_ip = self.address[0]
         for ban in protocol.bans:
             username = ban[0]
             ip = ban[1]
             timestamp = ban[3]
-            if address[0] == ip:
-                if timestamp is not None and reactor.seconds()>=timestamp:
+            if client_ip == ip:
+                if timestamp is not None and reactor.seconds() >= timestamp:
                     protocol.remove_ban(ip)
                     protocol.save_bans()
                 else:
@@ -121,8 +122,8 @@ class FeatureConnection(ServerConnection):
             username = ban[0]
             ip = ban[1]
             timestamp = ban[3]
-            if address[0] == ip:
-                if timestamp is not None and reactor.seconds()>=timestamp:
+            if client_ip == ip:
+                if timestamp is not None and reactor.seconds() >= timestamp:
                     pass
                 else:
                     print 'federated banned user %s (%s) attempted to join' % (
