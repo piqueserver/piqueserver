@@ -103,6 +103,32 @@ class FeatureConnection(ServerConnection):
     def on_connect(self, loader):
         if self.master:
             print '(master client connected)'
+        protocol = self.protocol
+        for ban in protocol.bans:
+            username = ban[0]
+            ip = ban[1]
+            timestamp = ban[3]
+            if address[0] == ip:
+                if timestamp is not None and reactor.seconds()>=timestamp:
+                    protocol.remove_ban(ip)
+                    protocol.save_bans()
+                else:
+                    print 'banned user %s (%s) attempted to join' % (username, 
+                        ip)
+                    self.disconnect()
+                    return False
+        for ban in protocol.federated_bans:
+            username = ban[0]
+            ip = ban[1]
+            timestamp = ban[3]
+            if address[0] == ip:
+                if timestamp is not None and reactor.seconds()>=timestamp:
+                    pass
+                else:
+                    print 'federated banned user %s (%s) attempted to join' % (
+                        username, ip)
+                    self.disconnect()
+                    return False
     
     def on_join(self):
         if self.protocol.motd is not None:
@@ -529,27 +555,6 @@ class FeatureProtocol(ServerProtocol):
         if data == 'HELLO':
             self.transport.write('HI', address)
             return
-        for ban in self.bans:
-            username = ban[0]
-            ip = ban[1]
-            timestamp = ban[3]
-            if address[0] == ip:
-                if timestamp is not None and reactor.seconds()>=timestamp:
-                    self.remove_ban(ip)
-                    self.save_bans()
-                else:
-                    print('banned user %s (%s) attempted to join' % (username, ip))
-                    return
-        for ban in self.federated_bans:
-            username = ban[0]
-            ip = ban[1]
-            timestamp = ban[3]
-            if address[0] == ip:
-                if timestamp is not None and reactor.seconds()>=timestamp:
-                    pass
-                else:
-                    print('federated banned user %s (%s) attempted to join' % (username, ip))
-                    return
         ServerProtocol.datagramReceived(self, data, address)
         
     def irc_say(self, msg):

@@ -110,18 +110,18 @@ class ServerConnection(BaseConnection):
                         if len(shared) > self.protocol.max_connections_per_ip:
                             self.disconnect()
                             return
+                self.master = not loader.client
+                if self.on_connect(loader) == False:
+                    return
                 self.auth_val = loader.auth_val
                 self.saved_loaders = []
-                self.master = not loader.client
                 self.connection_id = self.protocol.connection_ids.pop()
                 self.unique = random.randint(0, 3)
                 connection_response = ConnectionResponse()
                 connection_response.auth_val = loader.auth_val
                 connection_response.unique = self.unique
                 connection_response.connection_id = self.connection_id
-                
-                self.on_connect(loader)
-                
+
                 self.send_loader(connection_response, True, 0xFF
                     ).addCallback(self._connection_ack)
             else:
@@ -234,6 +234,7 @@ class ServerConnection(BaseConnection):
                         else:
                             self.hit(contained.value)
                     elif contained.id == clientloaders.GrenadePacket.id:
+                        print 'got grenade'
                         if not self.grenades:
                             self.on_hack_attempt('Grenade hack detected')
                             return
