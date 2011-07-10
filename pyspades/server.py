@@ -814,12 +814,10 @@ class ServerProtocol(DatagramProtocol):
         self.update_loop.start(UPDATE_FREQUENCY)
     
     def update_world(self):
-        print 'update_world()',
         current_time = reactor.seconds()
         dt = current_time - self.last_update
         self.last_update = current_time
         self.world.update(dt)
-        print 'done'
     
     def reset_game(self, player):
         blue_team = self.blue_team

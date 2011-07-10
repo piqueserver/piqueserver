@@ -110,7 +110,7 @@ def on_key_press(symbol, modifiers):
     if symbol == key.SPACE:
         character.set_animation(jump = True)
     elif symbol == key.F:
-        character.throw_grenade(3)
+        character.throw_grenade(0)
     elif symbol == key.X:
         new_world.update(1 / (60.0 * 2))
 

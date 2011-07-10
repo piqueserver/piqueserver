@@ -90,7 +90,6 @@ class Grenade(Object):
             v19 = player_x - nade_x
             v36 = player_position.x - player_x
             v33 = (player_position.x - position.x) * 1024.0
-        v40 = 0
         if nade_y >= player_y:
             if nade_y == player_y:
                 v34 = 0.0
@@ -155,9 +154,9 @@ class Grenade(Object):
                 v15 -= v34_int
             if isvoxelsolid2(map, player_x, player_y, player_z):
                 break
-            v19 -= 1
             if v19 == 1:
                 return True
+            v19 -= 1
         return False
     
     def get_damage(self, player_position):
