@@ -260,6 +260,44 @@ class ServerConnection(BaseConnection):
                         set_color.value = contained.value
                         self.protocol.send_contained(set_color, sender = self,
                             save = True)
+                    elif contained.id == clientloaders.BlockAction.id:
+                        value = contained.value
+                        map = self.protocol.map
+                        x = contained.x
+                        y = contained.y
+                        z = contained.z
+                        if value == BUILD_BLOCK:
+                            # if not self.blocks:
+                                # self.on_hack_attempt('Block hack detected')
+                                # return
+                            self.blocks -= 1
+                            if self.on_block_build_attempt(x, y, z) == False:
+                                return
+                            elif not map.set_point(x, y, z, self.color + (255,)):
+                                return
+                            self.on_block_build(x, y, z)
+                        else:
+                            if self.on_block_destroy(x, y, z, value) == False:
+                                return
+                            elif value == DESTROY_BLOCK:
+                                self.blocks += 1
+                                map.remove_point(x, y, z)
+                                self.on_block_removed(x, y, z)
+                            elif value == SPADE_DESTROY:
+                                map.remove_point(x, y, z)
+                                map.remove_point(x, y, z + 1)
+                                map.remove_point(x, y, z - 1)
+                                self.on_block_removed(x, y, z)
+                                self.on_block_removed(x, y, z + 1)
+                                self.on_block_removed(x, y, z - 1)
+                            self.last_block_destroy = reactor.seconds()
+                        block_action.x = x
+                        block_action.y = y
+                        block_action.z = z
+                        block_action.value = contained.value
+                        block_action.player_id = self.player_id
+                        self.protocol.send_contained(block_action, save = True)
+                        self.protocol.update_entities()
                 if contained.id == clientloaders.ChatMessage.id:
                     if not self.name:
                         return
@@ -290,46 +328,6 @@ class ServerConnection(BaseConnection):
                             team = self.team
                         self.protocol.send_contained(chat_message, 
                             sender = self, team = team)
-                elif contained.id == clientloaders.BlockAction.id:
-                    value = contained.value
-                    if not self.hp and value != GRENADE_DESTROY:
-                        return
-                    map = self.protocol.map
-                    x = contained.x
-                    y = contained.y
-                    z = contained.z
-                    if value == BUILD_BLOCK:
-                        # if not self.blocks:
-                            # self.on_hack_attempt('Block hack detected')
-                            # return
-                        self.blocks -= 1
-                        if self.on_block_build_attempt(x, y, z) == False:
-                            return
-                        elif not map.set_point(x, y, z, self.color + (255,)):
-                            return
-                        self.on_block_build(x, y, z)
-                    else:
-                        if self.on_block_destroy(x, y, z, value) == False:
-                            return
-                        elif value == DESTROY_BLOCK:
-                            self.blocks += 1
-                            map.remove_point(x, y, z)
-                            self.on_block_removed(x, y, z)
-                        elif value == SPADE_DESTROY:
-                            map.remove_point(x, y, z)
-                            map.remove_point(x, y, z + 1)
-                            map.remove_point(x, y, z - 1)
-                            self.on_block_removed(x, y, z)
-                            self.on_block_removed(x, y, z + 1)
-                            self.on_block_removed(x, y, z - 1)
-                        self.last_block_destroy = reactor.seconds()
-                    block_action.x = x
-                    block_action.y = y
-                    block_action.z = z
-                    block_action.value = contained.value
-                    block_action.player_id = self.player_id
-                    self.protocol.send_contained(block_action, save = True)
-                    self.protocol.update_entities()
             return
     
     def get_orientation_sequence(self):
@@ -595,7 +593,7 @@ class ServerConnection(BaseConnection):
     def on_fall(self, damage):
         if not self.hp:
             return
-        #self.set_hp(self.hp - damage, sound = False)
+        self.set_hp(self.hp - damage, sound = False)
     
     def send_map(self):
         if self.map_data is None:
@@ -813,13 +811,15 @@ class ServerProtocol(DatagramProtocol):
         self.world = world.World(self.map)
         self.update_loop = LoopingCall(self.update_world)
         self.last_update = reactor.seconds()
-        # self.update_loop.start(UPDATE_FREQUENCY)
+        self.update_loop.start(UPDATE_FREQUENCY)
     
     def update_world(self):
+        print 'update_world()',
         current_time = reactor.seconds()
         dt = current_time - self.last_update
         self.last_update = current_time
         self.world.update(dt)
+        print 'done'
     
     def reset_game(self, player):
         blue_team = self.blue_team
