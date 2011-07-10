@@ -813,7 +813,7 @@ class ServerProtocol(DatagramProtocol):
         self.world = world.World(self.map)
         self.update_loop = LoopingCall(self.update_world)
         self.last_update = reactor.seconds()
-        self.update_loop.start(UPDATE_FREQUENCY)
+        # self.update_loop.start(UPDATE_FREQUENCY)
     
     def update_world(self):
         current_time = reactor.seconds()

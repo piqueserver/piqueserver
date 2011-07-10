@@ -98,7 +98,7 @@ def on_draw():
     if not character.crouch:
         add_height = (0.9 / scale) * 600
     draw_quad(x - 2, y - 12 - add_height, x + 2, y + 5)
-    for item in world.objects:
+    for item in new_world.objects:
         if item.name != 'grenade':
             continue
         position = item.position
