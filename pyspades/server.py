@@ -178,7 +178,6 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(orientation_data, 
                             True, sender = self)
                     elif contained.id == clientloaders.PositionData.id:
-                        print 'got:', contained.x, contained.y, contained.z
                         world_object.set_position(contained.x, contained.y,
                             contained.z)
                         position_data.player_id = self.player_id
