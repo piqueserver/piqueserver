@@ -595,7 +595,7 @@ class ServerConnection(BaseConnection):
     def on_fall(self, damage):
         if not self.hp:
             return
-        self.set_hp(self.hp - damage, sound = False)
+        #self.set_hp(self.hp - damage, sound = False)
     
     def send_map(self):
         if self.map_data is None:
