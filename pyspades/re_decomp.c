@@ -667,7 +667,7 @@ unsigned int __cdecl compress_1(struct_code_tables *output_table, struct_in_data
   intptr_t v15; // ecx@10
   int v16; // eax@12
   intptr_t v17; // eax@13
-  int k; // ecx@14
+  intptr_t k; // ecx@14
   int v19; // eax@16
   int v20; // eax@19
   unsigned __int8 v21; // al@23
@@ -815,7 +815,7 @@ LABEL_48:
           if ( !(_WORD)v36 )
             break;
         }
-        v32 = (intptr_t)output_table2 + 16 * v47;
+        v32 = (intptr_t)(output_table2 + 16 * v47);
         *(_BYTE *)v32 = v13;
         *(_WORD *)(output_table2 + 2 + 16 * v47) = 3;
         *(_WORD *)(output_table2 + 4 + 16 * v47) = 0;
@@ -830,7 +830,7 @@ LABEL_48:
       else
       {
         v33 = v47++;
-        v32 = (intptr_t)output_table2 + 16 * v33;
+        v32 = (intptr_t)(output_table2 + 16 * v33);
         *(_BYTE *)v32 = v13;
         *(_BYTE *)(v32 + 1) = 3;
         *(_DWORD *)(v32 + 2) = 3;
@@ -876,15 +876,15 @@ LABEL_60:
         v7 <<= 8;
       }
     }
-    v15 = output_table2 + 16 * v47;
-    for ( j = (intptr_t)output_table2 + 16 * v47; ; v15 = j )
+    v15 = (intptr_t)(output_table2 + 16 * v47);
+    for ( j = (intptr_t)(output_table2 + 16 * v47); ; v15 = j )
     {
-      *(_DWORD *)&v48 = 0;
+      v48 = 0;
       v51 = 0;
       v16 = *(_WORD *)(v14 + 8);
       if ( (_WORD)v16 )
       {
-        for ( k = v14 + 16 * v16; ; k += 16 * v20 )
+        for ( k = (intptr_t)(v14 + 16 * v16); ; k += 16 * v20 )
         {
           while ( (unsigned __int8)v13 < *(_BYTE *)k )
           {
@@ -934,7 +934,7 @@ LABEL_60:
         v21 = *(_BYTE *)(k + 1);
         v22 = *(_WORD *)(k + 2);
         v51 = v21;
-        *(_DWORD *)&v48 += v22 - v21;
+        v48 += v22 - v21;
         v7 = v53;
         *(_WORD *)(k + 2) = v22 + 2;
         output_table2 = (intptr_t)output_table;
@@ -1030,7 +1030,7 @@ LABEL_72:
         goto LABEL_6;
       }
       v13 = v63;
-      v14 = output_table2 + 16 * *(_WORD *)(v14 + 14);
+      v14 = (intptr_t)(output_table2 + 16 * *(_WORD *)(v14 + 14));
       if ( v14 == output_table2 )
         goto LABEL_48;
     }
