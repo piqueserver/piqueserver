@@ -79,7 +79,10 @@ class Grenade(Object):
         nade_x = int(position.x - 0.5)
         nade_y = int(position.y - 0.5)
         nade_z = int(position.z - 0.5)
+        if player_x == nade_x and player_y == nade_y and player_z == nade_z:
+            return True
         v19 = 0
+        v39 = 0
         if nade_x >= player_x:
             if nade_x == player_x:
                 v33 = 0.0
@@ -94,6 +97,7 @@ class Grenade(Object):
             v19 = player_x - nade_x
             v36 = player_position.x - player_x
             v33 = (player_position.x - position.x) * 1024.0
+        v40 = 0
         if nade_y >= player_y:
             if nade_y == player_y:
                 v34 = 0.0
@@ -132,7 +136,7 @@ class Grenade(Object):
         v44_int = int(v44)
         v35_int = int(v35)
         if v19 <= 32:
-            if not v19:
+            if v19 == 0:
                 return True
         else:
             v19 = 32
@@ -276,6 +280,7 @@ class Character(Object):
         position = Vertex3(self.position.x, self.position.y, self.guess_z)
         item = self.world.create_object(Grenade, time_left, position, 
             self, callback)
+        return item
         
     def update(self, dt):
         if self.dead:
@@ -502,7 +507,6 @@ class World(object):
     def update(self, dt):
         for instance in self.objects[:]:
             instance.update(dt)
-            position = instance.position
     
     def delete_object(self, item):
         self.objects.remove(item)
