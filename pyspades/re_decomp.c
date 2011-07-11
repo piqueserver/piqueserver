@@ -646,3 +646,411 @@ LABEL_84:
     return 0;
   }
 }
+
+struct struct_in_data
+{
+  _DWORD block_size;
+  char *data;
+};
+
+unsigned int __cdecl compress_1(struct_code_tables *output_table, struct_in_data *in_data, unsigned int block_count, unsigned int total_size, char *out_data, int total_block_size)
+{
+  char *out_data3; // eax@1
+  unsigned int v7; // ebx@1
+  intptr_t output_table2; // ebp@1
+  unsigned int v9; // edi@1
+  intptr_t v10; // ecx@4
+  char *v11; // esi@4
+  char *v12; // eax@8
+  char v13; // dl@9
+  int v14; // esi@9
+  int v15; // ecx@10
+  int v16; // eax@12
+  int v17; // eax@13
+  int k; // ecx@14
+  int v19; // eax@16
+  int v20; // eax@19
+  unsigned __int8 v21; // al@23
+  int v22; // ebp@23
+  unsigned int v23; // eax@24
+  unsigned __int16 v24; // cx@24
+  unsigned int v25; // eax@25
+  int v26; // ecx@31
+  int v27; // eax@42
+  int v28; // ecx@43
+  int v29; // eax@45
+  int v30; // eax@45
+  int v31; // eax@48
+  int v32; // eax@49
+  signed int v33; // eax@49
+  int i; // ecx@50
+  unsigned __int16 v35; // si@50
+  int v36; // eax@52
+  int v37; // eax@55
+  unsigned __int8 v38; // al@59
+  int v39; // esi@59
+  unsigned int v40; // eax@60
+  unsigned __int16 v41; // cx@66
+  int v42; // eax@68
+  __int16 v43; // cx@69
+  unsigned __int16 v44; // ax@71
+  char *v45; // esi@78
+  signed int v47; // [sp+Ch] [bp-30h]@4
+  unsigned __int16 v48; // [sp+10h] [bp-2Ch]@12
+  unsigned __int16 v49; // [sp+10h] [bp-2Ch]@48
+  int j; // [sp+14h] [bp-28h]@10
+  unsigned __int16 v51; // [sp+18h] [bp-24h]@12
+  unsigned __int16 v52; // [sp+18h] [bp-24h]@48
+  unsigned int v53; // [sp+1Ch] [bp-20h]@1
+  int v54; // [sp+20h] [bp-1Ch]@1
+  char *v55; // [sp+24h] [bp-18h]@4
+  unsigned int v56; // [sp+28h] [bp-14h]@1
+  char *v57; // [sp+2Ch] [bp-10h]@1
+  int *v58; // [sp+30h] [bp-Ch]@6
+  char *v59; // [sp+34h] [bp-8h]@4
+  char *out_data2; // [sp+38h] [bp-4h]@1
+  intptr_t v61; // [sp+44h] [bp+8h]@4
+  unsigned int v62; // [sp+48h] [bp+Ch]@4
+  char v63; // [sp+54h] [bp+18h]@9
+
+  out_data3 = out_data;
+  output_table2 = (intptr_t)output_table;
+  v7 = 0;
+  v9 = -1;
+  out_data2 = out_data;
+  v57 = &out_data[total_block_size];
+  v53 = 0;
+  v54 = 0;
+  v56 = 0;
+  if ( output_table && block_count > 0 && total_size > 0 )
+  {
+    v11 = in_data->data;
+    v59 = &v11[in_data->block_size];
+    v62 = block_count - 1;
+    v55 = v11;
+    v10 = (intptr_t)&in_data[1].block_size;
+    v47 = 1;
+    output_table->dwordA = 1;
+    v61 = (intptr_t)&in_data[1].block_size;
+    *(_DWORD *)&output_table->byte_value = 0;
+    output_table->skip_entries1 = 0;
+    output_table->skip_entries2 = 0;
+    *(_DWORD *)&output_table->code_no = 257;
+    output_table->next_index = 0;
+LABEL_6:
+    v58 = &v54;
+    if ( v55 >= v59 )
+    {
+      if ( !v62 )
+      {
+        if ( !v7 )
+          return out_data3 - out_data2;
+        v45 = v57;
+        while ( out_data3 < v45 )
+        {
+          *out_data3 = v7 >> 24;
+          v7 <<= 8;
+          ++out_data3;
+          if ( !v7 )
+            return out_data3 - out_data2;
+        }
+        return 0;
+      }
+      v12 = (char *)(*(_DWORD *)(v10 + 4) + *(_DWORD *)v10);
+      --v62;
+      v55 = *(char **)(v10 + 4);
+      v59 = v12;
+      v61 = v10 + 8;
+    }
+    v13 = *v55;
+    v14 = output_table2 + 16 * (unsigned __int16)v54;
+    v63 = *v55++;
+    if ( v14 == output_table2 )
+    {
+LABEL_48:
+      v31 = *(_WORD *)(output_table2 + 8);
+      *(_DWORD *)&v49 = (unsigned __int8)v13;
+      v52 = 1;
+      if ( (_WORD)v31 )
+      {
+        v35 = v49;
+        for ( i = output_table2 + 16 * v31; ; i += 16 * v36 )
+        {
+          while ( (unsigned __int8)v13 >= *(_BYTE *)i )
+          {
+            if ( (unsigned __int8)v13 <= *(_BYTE *)i )
+            {
+              v38 = *(_BYTE *)(i + 1);
+              v52 = v38 + 1;
+              *(_DWORD *)&v49 += *(_WORD *)(i + 2) - v38;
+              v7 = v53;
+              v39 = *(_WORD *)(i + 2) + 3;
+              *(_BYTE *)(i + 1) = v38 + 3;
+              *(_WORD *)(i + 2) = v39;
+              v32 = i;
+              goto LABEL_60;
+            }
+            v37 = *(_WORD *)(i + 6);
+            v35 += *(_WORD *)(i + 2);
+            v49 = v35;
+            if ( !(_WORD)v37 )
+            {
+              v32 = output_table2 + 16 * v47;
+              *(_BYTE *)v32 = v13;
+              *(_WORD *)(output_table2 + 2 + 16 * v47) = 3;
+              *(_WORD *)(output_table2 + 4 + 16 * v47) = 0;
+              *(_WORD *)(output_table2 + 6 + 16 * v47) = 0;
+              *(_WORD *)(output_table2 + 8 + 16 * v47) = 0;
+              *(_WORD *)(output_table2 + 10 + 16 * v47) = 0;
+              *(_WORD *)(output_table2 + 12 + 16 * v47) = 0;
+              *(_WORD *)(output_table2 + 14 + 16 * v47) = 0;
+              *(_BYTE *)(output_table2 + 1 + 16 * v47++) = 3;
+              *(_WORD *)(i + 6) = (v32 - i) >> 4;
+              goto LABEL_60;
+            }
+            i += 16 * v37;
+          }
+          v36 = *(_WORD *)(i + 4);
+          *(_WORD *)(i + 2) += 3;
+          if ( !(_WORD)v36 )
+            break;
+        }
+        v32 = output_table2 + 16 * v47;
+        *(_BYTE *)v32 = v13;
+        *(_WORD *)(output_table2 + 2 + 16 * v47) = 3;
+        *(_WORD *)(output_table2 + 4 + 16 * v47) = 0;
+        *(_WORD *)(output_table2 + 6 + 16 * v47) = 0;
+        *(_WORD *)(output_table2 + 8 + 16 * v47) = 0;
+        *(_WORD *)(output_table2 + 10 + 16 * v47) = 0;
+        *(_WORD *)(output_table2 + 12 + 16 * v47) = 0;
+        *(_WORD *)(output_table2 + 14 + 16 * v47) = 0;
+        *(_BYTE *)(output_table2 + 1 + 16 * v47++) = 3;
+        *(_WORD *)(i + 4) = (v32 - i) >> 4;
+      }
+      else
+      {
+        v33 = v47++;
+        v32 = output_table2 + 16 * v33;
+        *(_BYTE *)v32 = v13;
+        *(_BYTE *)(v32 + 1) = 3;
+        *(_DWORD *)(v32 + 2) = 3;
+        *(_DWORD *)(v32 + 6) = 0;
+        *(_DWORD *)(v32 + 10) = 0;
+        *(_WORD *)(v32 + 14) = 0;
+        *(_WORD *)(output_table2 + 8) = (v32 - output_table2) >> 4;
+      }
+LABEL_60:
+      *(_WORD *)v58 = (v32 - output_table2) >> 4;
+      v40 = v9 / *(_WORD *)(output_table2 + 12);
+      v7 += v40 * (v49 + *(_WORD *)(output_table2 + 10));
+      v9 = v40 * v52;
+      while ( 1 )
+      {
+        v53 = v7;
+        if ( (v7 ^ (v9 + v7)) >= 0x1000000 )
+        {
+          if ( v9 >= 0x10000 )
+          {
+            v41 = *(_WORD *)(output_table2 + 12) + 3;
+            *(_WORD *)(output_table2 + 12) = v41;
+            if ( v52 > 0xFAu || v41 > 0xFF00u )
+            {
+              v42 = *(_WORD *)(output_table2 + 8);
+              if ( (_WORD)v42 )
+                v43 = do_codeentry_stuff((struct_code_tables *)(output_table2 + 16 * v42));
+              else
+                v43 = 0;
+              v44 = *(_WORD *)(output_table2 + 10) - (*(_WORD *)(output_table2 + 10) >> 1);
+              *(_WORD *)(output_table2 + 10) = v44;
+              *(_WORD *)(output_table2 + 12) = v43 + v44 + 256;
+            }
+            goto LABEL_72;
+          }
+          v9 = -v7 & 0xFFFF;
+        }
+        if ( out_data >= v57 )
+          return 0;
+        *out_data = v7 >> 24;
+        v9 <<= 8;
+        ++out_data;
+        v7 <<= 8;
+      }
+    }
+    v15 = output_table2 + 16 * v47;
+    for ( j = output_table2 + 16 * v47; ; v15 = j )
+    {
+      *(_DWORD *)&v48 = 0;
+      v51 = 0;
+      v16 = *(_WORD *)(v14 + 8);
+      if ( (_WORD)v16 )
+      {
+        for ( k = v14 + 16 * v16; ; k += 16 * v20 )
+        {
+          while ( (unsigned __int8)v13 < *(_BYTE *)k )
+          {
+            v19 = *(_WORD *)(k + 4);
+            *(_WORD *)(k + 2) += 2;
+            if ( !(_WORD)v19 )
+            {
+              v17 = j;
+              ++v47;
+              j += 16;
+              *(_BYTE *)v17 = v63;
+              *(_WORD *)(v17 + 2) = 2;
+              *(_WORD *)(v17 + 4) = 0;
+              *(_WORD *)(v17 + 6) = 0;
+              *(_WORD *)(v17 + 8) = 0;
+              *(_WORD *)(v17 + 10) = 0;
+              *(_WORD *)(v17 + 12) = 0;
+              *(_WORD *)(v17 + 14) = 0;
+              *(_BYTE *)(v17 + 1) = 2;
+              *(_WORD *)(k + 4) = (v17 - k) >> 4;
+              goto LABEL_24;
+            }
+            k += 16 * v19;
+          }
+          if ( (unsigned __int8)v13 <= *(_BYTE *)k )
+            break;
+          v48 += *(_WORD *)(k + 2);
+          v20 = *(_WORD *)(k + 6);
+          if ( !(_WORD)v20 )
+          {
+            v17 = j;
+            ++v47;
+            j += 16;
+            *(_BYTE *)v17 = v63;
+            *(_WORD *)(v17 + 2) = 2;
+            *(_WORD *)(v17 + 4) = 0;
+            *(_WORD *)(v17 + 6) = 0;
+            *(_WORD *)(v17 + 8) = 0;
+            *(_WORD *)(v17 + 10) = 0;
+            *(_WORD *)(v17 + 12) = 0;
+            *(_WORD *)(v17 + 14) = 0;
+            *(_BYTE *)(v17 + 1) = 2;
+            *(_WORD *)(k + 6) = (v17 - k) >> 4;
+            goto LABEL_24;
+          }
+        }
+        v21 = *(_BYTE *)(k + 1);
+        v22 = *(_WORD *)(k + 2);
+        v51 = v21;
+        *(_DWORD *)&v48 += v22 - v21;
+        v7 = v53;
+        *(_WORD *)(k + 2) = v22 + 2;
+        output_table2 = (intptr_t)output_table;
+        *(_BYTE *)(k + 1) = v21 + 2;
+        v17 = k;
+      }
+      else
+      {
+        ++v47;
+        j += 16;
+        v17 = v15;
+        *(_BYTE *)v15 = v13;
+        *(_BYTE *)(v15 + 1) = 2;
+        *(_DWORD *)(v15 + 2) = 2;
+        *(_DWORD *)(v15 + 6) = 0;
+        *(_DWORD *)(v15 + 10) = 0;
+        *(_WORD *)(v15 + 14) = 0;
+        *(_WORD *)(v14 + 8) = (v15 - v14) >> 4;
+      }
+LABEL_24:
+      *(_WORD *)v58 = (v17 - output_table2) >> 4;
+      v24 = v51;
+      v58 = (int *)(v17 + 14);
+      v23 = *(_WORD *)(v14 + 12);
+      if ( v51 )
+      {
+        v25 = v9 / v23;
+        v7 += v25 * (v48 + *(_WORD *)(v14 + 10));
+        v9 = v25 * v51;
+        while ( 1 )
+        {
+          v53 = v7;
+          if ( (v7 ^ (v9 + v7)) >= 0x1000000 )
+          {
+            if ( v9 >= 0x10000 )
+              goto LABEL_40;
+            v9 = -v7 & 0xFFFF;
+          }
+          if ( out_data >= v57 )
+            return 0;
+          *out_data = v7 >> 24;
+          v9 <<= 8;
+          ++out_data;
+          v7 <<= 8;
+        }
+      }
+      v26 = *(_WORD *)(v14 + 10);
+      if ( (_WORD)v26 )
+      {
+        if ( (_WORD)v26 < (_WORD)v23 )
+          break;
+      }
+LABEL_39:
+      v24 = v51;
+      *(_WORD *)(v14 + 10) += 5;
+      *(_WORD *)(v14 + 12) += 5;
+LABEL_40:
+      *(_WORD *)(v14 + 12) += 2;
+      if ( v24 > 0xFBu || *(_WORD *)(v14 + 12) > 0xFF00u )
+      {
+        v27 = *(_WORD *)(v14 + 8);
+        if ( (_WORD)v27 )
+          v28 = (unsigned __int16)do_codeentry_stuff((struct_code_tables *)(v14 + 16 * v27));
+        else
+          v28 = 0;
+        v29 = *(_WORD *)(v14 + 10);
+        v29 = (_WORD)(v29 - (*(_WORD *)(v14 + 10) >> 1));
+        *(_WORD *)(v14 + 10) = v29;
+        v30 = v28 + v29;
+        v24 = v51;
+        *(_WORD *)(v14 + 12) = v30;
+      }
+      if ( v24 )
+      {
+LABEL_72:
+        if ( v56 < 2 )
+          ++v56;
+        else
+          v54 = *(_WORD *)(output_table2 + 14 + 16 * (unsigned __int16)v54);
+        if ( (unsigned int)v47 >= 0xFFE )
+        {
+          v47 = 1;
+          *(_DWORD *)output_table2 = 0;
+          *(_DWORD *)(output_table2 + 4) = 0;
+          *(_WORD *)(output_table2 + 14) = 0;
+          *(_DWORD *)(output_table2 + 10) = 0x1010001u;
+          *(_WORD *)(output_table2 + 8) = 0;
+          v54 = 0;
+          v56 = 0;
+        }
+        out_data3 = out_data;
+        v10 = v61;
+        goto LABEL_6;
+      }
+      v13 = v63;
+      v14 = output_table2 + 16 * *(_WORD *)(v14 + 14);
+      if ( v14 == output_table2 )
+        goto LABEL_48;
+    }
+    v9 = v9 / v23 * v26;
+    while ( 1 )
+    {
+      if ( (v7 ^ (v9 + v7)) >= 0x1000000 )
+      {
+        if ( v9 >= 0x10000 )
+          goto LABEL_39;
+        v9 = -v7 & 0xFFFF;
+      }
+      if ( out_data >= v57 )
+        return 0;
+      *out_data = v7 >> 24;
+      v9 <<= 8;
+      v7 <<= 8;
+      ++out_data;
+      v53 = v7;
+    }
+  }
+  return 0;
+}
