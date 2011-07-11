@@ -112,6 +112,7 @@ class Grenade(Object):
             v40 = -1
             v37 = player_position.y - player_y
             v34 = (player_position.y - position.y) * 1024.0
+        v41 = 0
         if nade_z >= player_z:
             if nade_z == player_z:
                 v35 = 0.0
