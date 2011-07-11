@@ -234,7 +234,6 @@ class ServerConnection(BaseConnection):
                         else:
                             self.hit(contained.value)
                     elif contained.id == clientloaders.GrenadePacket.id:
-                        print 'got grenade'
                         if not self.grenades:
                             self.on_hack_attempt('Grenade hack detected')
                             return
