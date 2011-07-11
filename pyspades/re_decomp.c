@@ -663,10 +663,10 @@ unsigned int __cdecl compress_1(struct_code_tables *output_table, struct_in_data
   char *v11; // esi@4
   char *v12; // eax@8
   char v13; // dl@9
-  int v14; // esi@9
-  int v15; // ecx@10
+  intptr_t v14; // esi@9
+  intptr_t v15; // ecx@10
   int v16; // eax@12
-  int v17; // eax@13
+  intptr_t v17; // eax@13
   int k; // ecx@14
   int v19; // eax@16
   int v20; // eax@19
@@ -681,9 +681,9 @@ unsigned int __cdecl compress_1(struct_code_tables *output_table, struct_in_data
   int v29; // eax@45
   int v30; // eax@45
   int v31; // eax@48
-  int v32; // eax@49
+  intptr_t v32; // eax@49
   signed int v33; // eax@49
-  int i; // ecx@50
+  intptr_t i; // ecx@50
   unsigned __int16 v35; // si@50
   int v36; // eax@52
   int v37; // eax@55
@@ -698,7 +698,7 @@ unsigned int __cdecl compress_1(struct_code_tables *output_table, struct_in_data
   signed int v47; // [sp+Ch] [bp-30h]@4
   unsigned __int16 v48; // [sp+10h] [bp-2Ch]@12
   unsigned __int16 v49; // [sp+10h] [bp-2Ch]@48
-  int j; // [sp+14h] [bp-28h]@10
+  intptr_t j; // [sp+14h] [bp-28h]@10
   unsigned __int16 v51; // [sp+18h] [bp-24h]@12
   unsigned __int16 v52; // [sp+18h] [bp-24h]@48
   unsigned int v53; // [sp+1Ch] [bp-20h]@1
@@ -774,7 +774,7 @@ LABEL_48:
       if ( (_WORD)v31 )
       {
         v35 = v49;
-        for ( i = output_table2 + 16 * v31; ; i += 16 * v36 )
+        for ( i = (intptr_t)output_table2 + 16 * v31; ; i += 16 * v36 )
         {
           while ( (unsigned __int8)v13 >= *(_BYTE *)i )
           {
@@ -795,7 +795,7 @@ LABEL_48:
             v49 = v35;
             if ( !(_WORD)v37 )
             {
-              v32 = output_table2 + 16 * v47;
+              v32 = (intptr_t)output_table2 + 16 * v47;
               *(_BYTE *)v32 = v13;
               *(_WORD *)(output_table2 + 2 + 16 * v47) = 3;
               *(_WORD *)(output_table2 + 4 + 16 * v47) = 0;
@@ -815,7 +815,7 @@ LABEL_48:
           if ( !(_WORD)v36 )
             break;
         }
-        v32 = output_table2 + 16 * v47;
+        v32 = (intptr_t)output_table2 + 16 * v47;
         *(_BYTE *)v32 = v13;
         *(_WORD *)(output_table2 + 2 + 16 * v47) = 3;
         *(_WORD *)(output_table2 + 4 + 16 * v47) = 0;
@@ -830,7 +830,7 @@ LABEL_48:
       else
       {
         v33 = v47++;
-        v32 = output_table2 + 16 * v33;
+        v32 = (intptr_t)output_table2 + 16 * v33;
         *(_BYTE *)v32 = v13;
         *(_BYTE *)(v32 + 1) = 3;
         *(_DWORD *)(v32 + 2) = 3;
@@ -877,7 +877,7 @@ LABEL_60:
       }
     }
     v15 = output_table2 + 16 * v47;
-    for ( j = output_table2 + 16 * v47; ; v15 = j )
+    for ( j = (intptr_t)output_table2 + 16 * v47; ; v15 = j )
     {
       *(_DWORD *)&v48 = 0;
       v51 = 0;
