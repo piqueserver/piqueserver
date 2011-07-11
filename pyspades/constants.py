@@ -15,6 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+SEMI_WEAPON = 0
+SMG_WEAPON = 1
+
 HIT_VALUES = { # packet value : [semi, smg]
     2 : [100, 49],
     1 : [49, 24],

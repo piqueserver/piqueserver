@@ -141,13 +141,17 @@ class ServerConnection(BaseConnection):
                 contained = load_client_packet(loader.data)
                 if contained.id == clientloaders.JoinTeam.id:
                     if contained.name is None and contained.weapon != -1:
+                        if not self.name:
+                            return
+                        if self.on_weapon_set(contained.weapon) == False:
+                            return
                         self.weapon = contained.weapon
                         self.kill()
                         return
                     old_team = self.team
                     team = [self.protocol.blue_team, 
                         self.protocol.green_team][contained.team]
-                    if self.on_team_join(team) == False:
+                    if old_team is not None and self.on_team_join(team) == False:
                         return
                     self.team = team
                     if self.name is None and contained.name is not None:
@@ -186,7 +190,7 @@ class ServerConnection(BaseConnection):
                         position_data.z = contained.z
                         self.protocol.send_contained(position_data, 
                             sender = self)
-                        self.on_update_position()
+                        self.on_position_update()
                         other_flag = self.team.other.flag
                         if vector_collision(world_object.position, self.team.base):
                             if other_flag.player is self:
@@ -714,7 +718,10 @@ class ServerConnection(BaseConnection):
     def on_hack_attempt(self, reason):
         pass
 
-    def on_update_position(self):
+    def on_position_update(self):
+        pass
+    
+    def on_weapon_set(self, value):
         pass
 
 class Flag(Vertex3):
