@@ -72,7 +72,6 @@ class Grenade(Object):
         self.time_left = time_left
     
     def collides(self, player_position):
-        print 'check for collision'
         position = self.position
         player_x = int(player_position.x - 0.5)
         player_y = int(player_position.y - 0.5)
@@ -173,7 +172,6 @@ class Grenade(Object):
             math.fabs(diff_y) < 16 and
             math.fabs(diff_z) < 16 and
             self.collides(player_position)):
-            print 'collides! :D'
             try:
                 return 4096.0 / (diff_x**2 + diff_y**2 + diff_z**2)
             except ZeroDivisionError:
