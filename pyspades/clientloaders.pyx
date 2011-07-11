@@ -116,7 +116,7 @@ cdef class GrenadePacket(Loader):
         reader.writeByte(self.id, True)
         reader.writeFloat(self.value, False)
 
-cdef class SetWeapon(Loader):
+cdef class SetTool(Loader):
     id = 6
     cdef public:
         int value

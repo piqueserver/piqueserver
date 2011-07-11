@@ -138,7 +138,7 @@ cdef class GrenadePacket(Loader):
         reader.writeByte(self.player_id, True)
         reader.writeFloat(self.value, False)
 
-cdef class SetWeapon(Loader):
+cdef class SetTool(Loader):
     id = 6
     
     cdef public:
@@ -191,10 +191,10 @@ cdef class ExistingPlayer(Loader):
         else:
             firstInt = reader.readInt(True, False)
             self.player_id = (firstInt >> 4) & 0x1F
-            self.team = (firstInt >> 9) & 1 # team
-            self.weapon = (firstInt >> 10) & 1 # weapon
-            self.tool = (firstInt >> 11) & 0x7 # something?
-            self.kills = (firstInt >> 14) & 0x7FF # kills
+            self.team = (firstInt >> 9) & 1
+            self.weapon = (firstInt >> 10) & 1
+            self.tool = (firstInt >> 11) & 0x7
+            self.kills = (firstInt >> 14) & 0x7FF
             reader.rewind(1)
             byte1 = reader.readByte(True)
             byte2 = reader.readByte(True)

@@ -50,7 +50,7 @@ movement_data = serverloaders.MovementData()
 animation_data = serverloaders.AnimationData()
 hit_packet = serverloaders.HitPacket()
 grenade_packet = serverloaders.GrenadePacket()
-set_weapon = serverloaders.SetWeapon()
+set_tool = serverloaders.SetTool()
 set_color = serverloaders.SetColor()
 existing_player = serverloaders.ExistingPlayer()
 intel_action = serverloaders.IntelAction()
@@ -246,11 +246,11 @@ class ServerConnection(BaseConnection):
                             self.grenade_exploded)
                         self.protocol.send_contained(grenade_packet, 
                             sender = self)
-                    elif contained.id == clientloaders.SetWeapon.id:
+                    elif contained.id == clientloaders.SetTool.id:
                         self.tool = contained.value
-                        set_weapon.player_id = self.player_id
-                        set_weapon.value = contained.value
-                        self.protocol.send_contained(set_weapon, sender = self)
+                        set_tool.player_id = self.player_id
+                        set_tool.value = contained.value
+                        self.protocol.send_contained(set_tool, sender = self)
                     elif contained.id == clientloaders.SetColor.id:
                         color = get_color(contained.value)
                         if self.on_color_set(color) == False:
