@@ -696,8 +696,8 @@ unsigned int __cdecl compress_1(struct_code_tables *output_table, struct_in_data
   unsigned __int16 v44; // ax@71
   char *v45; // esi@78
   signed int v47; // [sp+Ch] [bp-30h]@4
-  unsigned __int16 v48; // [sp+10h] [bp-2Ch]@12
-  unsigned __int16 v49; // [sp+10h] [bp-2Ch]@48
+  unsigned int v48; // [sp+10h] [bp-2Ch]@12
+  unsigned int v49; // [sp+10h] [bp-2Ch]@48
   intptr_t j; // [sp+14h] [bp-28h]@10
   unsigned __int16 v51; // [sp+18h] [bp-24h]@12
   unsigned __int16 v52; // [sp+18h] [bp-24h]@48
@@ -728,10 +728,10 @@ unsigned int __cdecl compress_1(struct_code_tables *output_table, struct_in_data
     v59 = &v11[in_data->block_size];
     v62 = block_count - 1;
     v55 = v11;
-    v10 = (intptr_t)&in_data[1].block_size;
+    v10 = (intptr_t)(&in_data[1].block_size);
     v47 = 1;
     output_table->dwordA = 1;
-    v61 = (intptr_t)&in_data[1].block_size;
+    v61 = (intptr_t)(&in_data[1].block_size);
     *(_DWORD *)&output_table->byte_value = 0;
     output_table->skip_entries1 = 0;
     output_table->skip_entries2 = 0;
@@ -763,7 +763,7 @@ LABEL_6:
       v61 = v10 + 8;
     }
     v13 = *v55;
-    v14 = output_table2 + 16 * (unsigned __int16)v54;
+    v14 = (intptr_t)(output_table2 + 16 * (unsigned __int16)v54);
     v63 = *v55++;
     if ( v14 == output_table2 )
     {
@@ -774,7 +774,7 @@ LABEL_48:
       if ( (_WORD)v31 )
       {
         v35 = v49;
-        for ( i = (intptr_t)output_table2 + 16 * v31; ; i += 16 * v36 )
+        for ( i = (intptr_t)(output_table2 + 16 * v31); ; i += 16 * v36 )
         {
           while ( (unsigned __int8)v13 >= *(_BYTE *)i )
           {
@@ -795,7 +795,7 @@ LABEL_48:
             v49 = v35;
             if ( !(_WORD)v37 )
             {
-              v32 = (intptr_t)output_table2 + 16 * v47;
+              v32 = (intptr_t)(output_table2 + 16 * v47);
               *(_BYTE *)v32 = v13;
               *(_WORD *)(output_table2 + 2 + 16 * v47) = 3;
               *(_WORD *)(output_table2 + 4 + 16 * v47) = 0;
