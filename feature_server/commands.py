@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-import inspect
+from pyspades.constants import *
 
 class InvalidPlayer(Exception):
     pass
@@ -67,6 +67,10 @@ def join_arguments(arg, default = None):
     if not arg:
         return default
     return ' '.join(arg)
+
+def test(connection):
+    connection.set_options(team = connection.team.other, 
+        weapon = int(not connection.weapon))
 
 @admin
 def kick(connection, value, *arg):
@@ -500,7 +504,8 @@ command_list = [
     no_follow,
     streak,
     reset_game,
-    ping
+    ping,
+    test
 ]
 
 commands = {}

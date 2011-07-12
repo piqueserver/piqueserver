@@ -186,7 +186,7 @@ cdef class ExistingPlayer(Loader):
         if reader.dataLeft() == 2:
             byte1 = reader.readByte(True)
             self.player_id = reader.readByte(True)
-            self.team = (byte1 >> 4) & 1
+            self.team = (byte1 >> 4) & 1 # ignored at the client
             self.weapon = byte1 >> 5
         else:
             firstInt = reader.readInt(True, False)

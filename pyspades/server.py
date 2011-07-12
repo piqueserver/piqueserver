@@ -141,9 +141,11 @@ class ServerConnection(BaseConnection):
                 contained = load_client_packet(loader.data)
                 if contained.id == clientloaders.JoinTeam.id:
                     if contained.name is None and contained.weapon != -1:
-                        if not self.name:
+                        if self.name is None:
                             return
                         if self.on_weapon_set(contained.weapon) == False:
+                            if self.weapon != contained.weapon:
+                                self.set_weapon(local = True)
                             return
                         self.weapon = contained.weapon
                         self.kill()
@@ -160,7 +162,8 @@ class ServerConnection(BaseConnection):
                         if name == 'Deuce':
                             name = name + str(self.player_id)
                         self.name = self.protocol.get_name(name)
-                        self.weapon = contained.weapon
+                        if self.weapon is None:
+                            self.weapon = contained.weapon
                         self.protocol.players[self.name, self.player_id] = self
                         self.protocol.update_master()
                     if old_team is None:
@@ -471,6 +474,19 @@ class ServerConnection(BaseConnection):
         hit_packet.hp = self.hp
         hit_packet.sound = sound
         self.send_contained(hit_packet)
+    
+    def set_weapon(self, weapon = None, local = False):
+        if weapon is None:
+            weapon = self.weapon
+        self.weapon = weapon
+        existing_player.name = None
+        existing_player.player_id = self.player_id
+        existing_player.team = self.team.id
+        existing_player.weapon = weapon
+        if local:
+            self.send_contained(existing_player)
+        else:
+            self.protocol.send_contained(existing_player, save = True)
     
     def kill(self, by = None, sound = True):
         if self.hp is None:
