@@ -68,10 +68,6 @@ def join_arguments(arg, default = None):
         return default
     return ' '.join(arg)
 
-def test(connection):
-    connection.set_options(team = connection.team.other, 
-        weapon = int(not connection.weapon))
-
 @admin
 def kick(connection, value, *arg):
     reason = join_arguments(arg)
@@ -504,8 +500,7 @@ command_list = [
     no_follow,
     streak,
     reset_game,
-    ping,
-    test
+    ping
 ]
 
 commands = {}
