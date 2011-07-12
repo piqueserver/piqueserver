@@ -167,7 +167,6 @@ class ServerConnection(BaseConnection):
                         if self.weapon is None:
                             self.weapon = contained.weapon
                         self.protocol.players[self.name, self.player_id] = self
-                        self.protocol.update_master()
                     if old_team is None:
                         self.on_login(self.name)
                         self.spawn(name = self.name)
@@ -453,13 +452,14 @@ class ServerConnection(BaseConnection):
             self.protocol.connection_ids.put_back(self.connection_id)
         if self.player_id is not None:
             self.protocol.player_ids.put_back(self.player_id)
+            self.player_id = None
+            self.protocol.update_master()
         if self.name is not None:
             self.drop_flag()
             player_data.player_left = self.player_id
             self.protocol.send_contained(player_data, sender = self,
                 save = True)
             del self.protocol.players[self]
-            self.protocol.update_master()
         if self.spawn_call is not None:
             self.spawn_call.cancel()
             self.spawn_call = None
@@ -552,6 +552,8 @@ class ServerConnection(BaseConnection):
         green_base = green.base
         
         self.player_id = self.protocol.player_ids.pop()
+        self.protocol.update_master()
+
         player_data.player_left = -1
         player_data.player_id = self.player_id
         player_data.max_score = self.protocol.max_score
@@ -907,7 +909,11 @@ class ServerProtocol(DatagramProtocol):
     def update_master(self):
         if self.master_connection is None:
             return
-        self.master_connection.set_count(len(self.players))
+        count = 0
+        for connection in self.connections.values():
+            if connection.player_id is not None:
+                count += 1
+        self.master_connection.set_count(count)
     
     def datagramReceived(self, data, address):
         if not data:
