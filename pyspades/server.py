@@ -153,10 +153,11 @@ class ServerConnection(BaseConnection):
                     old_team = self.team
                     team = [self.protocol.blue_team, 
                         self.protocol.green_team][contained.team]
-                    if old_team is not None and self.on_team_join(team) == False:
-                        return
-                    if self.team is None or old_team is not None:
-                        self.team = team
+                    if self.on_team_join(team) == False:
+                        if old_team is not None:
+                            return
+                        team = team.other
+                    self.team = team
                     if self.name is None and contained.name is not None:
                         name = contained.name
                          # vanilla AoS behaviour

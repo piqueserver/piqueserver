@@ -246,23 +246,24 @@ class FeatureConnection(ServerConnection):
             self.refill()
     
     def on_team_join(self, team):
-        if self.protocol.teamswitch_interval and self.team is not None:
-            teamswitch_interval = self.protocol.teamswitch_interval
-            if teamswitch_interval == 'never':
-                self.send_chat('Switching teams is not allowed')
-                return False
-            if (self.last_switch is not None and 
-                reactor.seconds() - self.last_switch < teamswitch_interval * 60):
-                self.send_chat('You must wait before switching teams again')
-                return False
+        if self.team is not None:
+            if self.protocol.teamswitch_interval:
+                teamswitch_interval = self.protocol.teamswitch_interval
+                if teamswitch_interval == 'never':
+                    self.send_chat('Switching teams is not allowed')
+                    return False
+                if (self.last_switch is not None and 
+                    reactor.seconds() - self.last_switch < teamswitch_interval * 60):
+                    self.send_chat('You must wait before switching teams again')
+                    return False
         if team.locked:
-            self.send_chat('Team is locked.')
+            self.send_chat('Team is locked')
             return False
         balanced_teams = self.protocol.balanced_teams
         if balanced_teams:
             other_team = team.other
             if other_team.count() < team.count() + 1 - balanced_teams:
-                self.send_chat('Team is full. Please join the other team')
+                self.send_chat('Team is full')
                 return False
         if self.team is not team:
             self.drop_followers()
