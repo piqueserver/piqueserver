@@ -48,10 +48,8 @@ character = new_world.create_object(world.Character,
     Vertex3(20.0, 20.0, 5.0), Vertex3(0.999992012978, 0.0, -0.00399998947978),
     on_fall)
 
-config = Config(sample_buffers=1, samples=4, 
-                depth_size=16, double_buffer=True)
 window = pyglet.window.Window(width = 600, height = 600,
-    resizable=True, config=config)
+    resizable=True)
 
 keyboard = key.KeyStateHandler()
 window.set_handlers(keyboard)
