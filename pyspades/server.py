@@ -480,13 +480,14 @@ class ServerConnection(BaseConnection):
                 return
         self.set_hp(self.hp - value, by)
     
-    def set_hp(self, value, hit_by = None, sound = True):
+    def set_hp(self, value, hit_by = None, not_fall = True):
+        value = int(value)
         self.hp = max(0, min(100, value))
-        if self.hp == 0:
-            self.kill(hit_by, sound)
+        if self.hp <= 0:
+            self.kill(hit_by, not_fall)
             return
         hit_packet.hp = self.hp
-        hit_packet.sound = sound
+        hit_packet.not_fall = not_fall
         self.send_contained(hit_packet)
     
     def set_weapon(self, weapon = None, local = False):
@@ -502,18 +503,18 @@ class ServerConnection(BaseConnection):
         else:
             self.protocol.send_contained(existing_player, save = True)
     
-    def kill(self, by = None, sound = True):
+    def kill(self, by = None, not_fall = True):
         if self.hp is None:
             return
         self.on_kill(by)
         self.drop_flag()
         self.hp = None
-        kill_action.other_kill = sound
+        kill_action.not_fall = not_fall
         if by is None:
-            kill_action.player1 = self.player_id
+            kill_action.player1 = kill_action.player2 = self.player_id
         else:
             kill_action.player1 = by.player_id
-        kill_action.player2 = self.player_id
+            kill_action.player2 = self.player_id
         if by is not None and by is not self:
             by.add_score(1)
         self.protocol.send_contained(kill_action, save = True)
@@ -599,7 +600,7 @@ class ServerConnection(BaseConnection):
                     continue
                 elif returned is not None:
                     damage = returned
-                player.set_hp(player.hp - damage, self, False)
+                player.set_hp(player.hp - damage, self)
         position = grenade.position
         x = int(position.x)
         y = int(position.y)
@@ -627,7 +628,7 @@ class ServerConnection(BaseConnection):
     def on_fall(self, damage):
         if not self.hp:
             return
-        self.set_hp(self.hp - damage, sound = False)
+        self.set_hp(self.hp - damage, not_fall = False)
     
     def send_map(self):
         if self.map_data is None:

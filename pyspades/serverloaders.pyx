@@ -107,16 +107,16 @@ cdef class HitPacket(Loader):
     
     cdef public:
         int hp
-        bint sound
+        bint not_fall
 
     cpdef read(self, ByteReader reader):
         cdef int firstByte = reader.readByte(True)
-        self.sound = (firstByte & 0xF0) != 0
+        self.not_fall = (firstByte & 0xF0) != 0
         self.hp = reader.readByte(True)
     
     cpdef write(self, ByteWriter reader):
         cdef int byte = self.id
-        if self.sound:
+        if self.not_fall:
             byte |= 0x10
         reader.writeByte(byte, True)
         reader.writeByte(self.hp, True)
@@ -495,18 +495,18 @@ cdef class KillAction(Loader):
     id = 13
     
     cdef public:
-        bint other_kill
+        bint not_fall
         int player1, player2
     
     cpdef read(self, ByteReader reader):
         cdef int firstShort = reader.readShort(True, False)
-        self.other_kill = (firstShort >> 4) & 1
+        self.not_fall = (firstShort >> 4) & 1
         self.player2 = (firstShort >> 5) & 0x1F
         self.player1 = (firstShort >> 10) & 0x1F
     
     cpdef write(self, ByteWriter reader):
         cdef int value = self.id
-        if self.other_kill:
+        if self.not_fall:
             value |= 1 << 4
         value |= self.player2 << 5
         value |= self.player1 << 10
