@@ -142,8 +142,8 @@ class FeatureConnection(ServerConnection):
         if self.protocol.join_part_messages:
             self.protocol.send_chat(
                 '%s entered the game!' % self.name)
-        print '%s (%s) entered the game!' % (self.printable_name, 
-            self.address[0])
+        print '%s (IP %s, ID %s) entered the game!' % (self.printable_name, 
+            self.address[0], self.player_id)
         self.protocol.irc_say('* %s entered the game' % self.name)
     
     def disconnect(self):
