@@ -180,7 +180,7 @@ class BaseConnection(object):
     def resend(self, key, data, count = 1):
         defer, _ = self.packet_deferreds.pop(key)
         if count >= MAX_SEND_RETRIES:
-            self.disconnect()
+            self.timed_out()
             return
         out_packet.unique = self.unique or 0
         if self.is_client:
@@ -244,7 +244,8 @@ class BaseConnection(object):
             self.ping_call = self.ping_defer = None
     
     def timed_out(self):
-        self.ping_call = None
+        if self.ping_call is not None:
+            self.ping_call = None
         self.disconnect()
     
     def send_contained(self, contained, sequence = None):

@@ -337,6 +337,18 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(chat_message, 
                             sender = self, team = team)
             return
+
+    def get_location(self):
+        position = self.world_object.position
+        return position.x, position.y, position.z
+    
+    def set_location(self, (x, y, z)):
+        position_data.x = x
+        position_data.y = y
+        position_data.z = z
+        position_data.player_id = self.player_id
+        self.protocol.send_contained(position_data)
+        self.world_object.set_position(x, y, z)
     
     def get_orientation_sequence(self):
         sequence = self.orientation_sequence

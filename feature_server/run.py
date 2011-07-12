@@ -355,18 +355,10 @@ class FeatureConnection(ServerConnection):
             reason)
         self.kick(reason)
     
-    # position methods
-    
-    def get_location(self):
-        position = self.world_object.position
-        return position.x, position.y, position.z
-    
-    def set_location(self, (x, y, z)):
-        position_data.x = x
-        position_data.y = y
-        position_data.z = z
-        position_data.player_id = self.player_id
-        self.protocol.send_contained(position_data)
+    def timed_out(self):
+        if self.name is not None:
+            print '%s timed out' % self.printable_name
+        ServerConnection.timed_out(self)
 
 def encode_lines(value):
     if value is not None:
