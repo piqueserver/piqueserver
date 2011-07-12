@@ -155,7 +155,7 @@ class ServerConnection(BaseConnection):
                         self.protocol.green_team][contained.team]
                     if old_team is not None and self.on_team_join(team) == False:
                         return
-                    if self.team is None:
+                    if old_team is None and self.team is None:
                         self.team = team
                     if self.name is None and contained.name is not None:
                         name = contained.name
