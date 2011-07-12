@@ -168,6 +168,8 @@ class FeatureConnection(ServerConnection):
                     self.set_location(self.get_follow_location(attacker))
             else:
                 self.set_location(self.get_follow_location(self.follow))
+        if self.protocol.game_mode == 'tdm':
+            self.send_chat(self.protocol.get_kill_count())
     
     def on_command(self, command, parameters):
         log_message = '<%s> /%s %s' % (self.name, command, 
@@ -240,6 +242,8 @@ class FeatureConnection(ServerConnection):
             return
         killer.streak += 1
         killer.best_streak = max(killer.streak, killer.best_streak)
+        self.team.kills += 1
+        self.protocol.check_end_game(killer)
     
     def on_grenade(self, time_left):
         if self.god:
@@ -408,6 +412,7 @@ class FeatureProtocol(ServerProtocol):
             'pyspades server %s' % random.randrange(0, 2000))
         
         self.max_score = config.get('cap_limit', None)
+        self.kill_limit = config.get('kill_limit', 100)
         self.join_part_messages = config.get('join_part_messages', False)
         self.respawn_time = config.get('respawn_time', 5)
         self.follow_respawn_time = config.get('follow_respawn_time', self.respawn_time)
@@ -437,6 +442,7 @@ class FeatureProtocol(ServerProtocol):
             self.user_blocks = set()
         self.max_followers = config.get('max_followers', 0)
         self.follow_attack = config.get('follow_attack', False)
+        self.game_mode = config.get('game_mode', 'ctf')
         logfile = config.get('logfile', None)
         self.debug_log = config.get('debug_log', False)
         if self.debug_log:
@@ -650,6 +656,23 @@ class FeatureProtocol(ServerProtocol):
         if irc:
             self.irc_say('* %s' % value)
         ServerProtocol.send_chat(self, value, global_message, sender, team)
+
+    def get_kill_count(self):
+        return ("Green: %s left. Blue: %s left. Playing to %s kills." %
+                (self.kill_limit - self.green_team.kills,
+                 self.kill_limit - self.blue_team.kills,
+                 self.kill_limit))
+
+    def check_end_game(self, player):
+        if self.game_mode=='tdm':
+            if self.green_team.kills>=self.kill_limit:
+                self.send_chat("Green Team Wins, %s - %s" %
+                               (self.green_team.kills, self.blue_team.kills))
+                self.reset_game(player)
+            elif self.blue_team.kills>=self.kill_limit:
+                self.send_chat("Blue Team Wins, %s - %s" %
+                               (self.blue_team.kills, self.green_team.kills))
+                self.reset_game(player)
 
 PORT = 32887
 

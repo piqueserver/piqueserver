@@ -9,6 +9,7 @@
         "No griefing, no bad words, etc."
     ],
     "max_players" : 32,
+    "game_mode" : "ctf",
     "cap_limit" : 10,
     "map" : "pyspades",
     "respawn_time" : 5,

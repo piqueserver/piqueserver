@@ -768,6 +768,7 @@ class Team(object):
     map = None
     name = None
     spawns = None
+    kills = None
     
     def __init__(self, id, name, protocol):
         self.id = id
@@ -797,6 +798,7 @@ class Team(object):
     
     def initialize(self):
         self.score = 0
+        self.kills = 0
         self.set_flag()
         self.set_base()
     
