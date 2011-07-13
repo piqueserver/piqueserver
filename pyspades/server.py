@@ -452,7 +452,6 @@ class ServerConnection(BaseConnection):
             self.protocol.connection_ids.put_back(self.connection_id)
         if self.player_id is not None:
             self.protocol.player_ids.put_back(self.player_id)
-            self.player_id = None
             self.protocol.update_master()
         if self.name is not None:
             self.drop_flag()
