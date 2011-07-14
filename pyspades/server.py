@@ -407,6 +407,7 @@ class ServerConnection(BaseConnection):
         if player is not self:
             return
         self.add_score(10) # 10 points for intel
+        self.on_flag_capture()
         if (self.protocol.max_score not in (0, None) and 
         self.team.score + 1 >= self.protocol.max_score):
             self.protocol.reset_game(self)
@@ -745,6 +746,9 @@ class ServerConnection(BaseConnection):
         pass
     
     def on_color_set(self, color):
+        pass
+    
+    def on_flag_capture(self):
         pass
     
     def on_hack_attempt(self, reason):

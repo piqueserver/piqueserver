@@ -6,9 +6,7 @@ from commands import add, admin, name, get_player
 
 @admin
 def relink(connection):
-    for player in connection.protocol.players.values():
-        if player.link is not None:
-            player.drop_link()
+    connection.protocol.drop_all_links()
 
 @name('nolink')
 @admin
@@ -101,6 +99,9 @@ def apply_script(protocol, connection, config):
                 self.link.drop_link()
                 self.link = None
         
+        def on_flag_capture(self):
+            self.protocol.drop_all_links()
+        
         def disconnect(self):
             connection.disconnect(self)
             if self.link is not None:
@@ -114,5 +115,10 @@ def apply_script(protocol, connection, config):
     class RunningManProtocol(protocol):
         link_distance = 40.0
         link_warning_distance = link_distance * 0.65
+        
+        def drop_all_links(self):
+            for player in self.players.values():
+                if player.link is not None:
+                    player.drop_link()
     
     return RunningManProtocol, RunningManConnection
