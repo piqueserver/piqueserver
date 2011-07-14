@@ -70,6 +70,7 @@ def apply_script(protocol, connection, config):
                         self.send_chat(message % self.link.name)
                         self.link.send_chat(message % self.name)
                         self.last_warning = reactor.seconds()
+                        self.link.last_warning = reactor.seconds()
             connection.on_position_update(self)
         
         def get_new_link(self):
@@ -78,7 +79,7 @@ def apply_script(protocol, connection, config):
             if len(available) > 0:
                 self.link = choice(available)
                 self.link.link = self
-                message = ("You've been linked to %s.  Stay close to your"
+                message = ("You've been linked to %s.  Stay close to your "
                     "partner or die!")
                 self.send_chat(message % self.link.name)
                 self.link.send_chat(message % self.name)
@@ -89,8 +90,9 @@ def apply_script(protocol, connection, config):
             if self.link is None:
                 self.get_new_link()
             if self.link is not None and self.link.hp > 0:
-                pos = self.link.world_object.position.get()
-                self.set_location(pos)
+                x, y, z = self.link.world_object.position.get()
+                z -= 2
+                self.set_location((x, y, z))
             connection.on_spawn(self, pos)
         
         def on_team_join(self, team):
