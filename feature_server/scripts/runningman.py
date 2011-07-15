@@ -101,7 +101,8 @@ def apply_script(protocol, connection, config):
             self.link.send_chat(message % self.name)
         
         def on_spawn(self, pos):
-            if self.link is None or self.link_deaths > 2:
+            if (self.link is None or
+                self.link_deaths >= self.protocol.link_death_max):
                 self.get_new_link()
             if self.link is not None and self.link.hp > 0:
                 x, y, z = self.link.world_object.position.get()
