@@ -7,36 +7,30 @@ from commands import add, admin, name, get_player
 @admin
 def relink(connection):
     connection.protocol.drop_all_links()
-    connection.protocol.send_chat('Everyone unlinked.', irc = True)
+    connection.protocol.send_chat('All players unlinked.', irc = True)
 
 @name('nolink')
 @admin
 def no_link(connection, value = None):
     if value is not None:
         connection = get_player(connection.protocol, value)
-    if connection.link is not None:
-        connection.link.drop_link()
-    connection.link = None
+    connection.drop_link()
     connection.linkable = not connection.linkable
     if connection.linkable:
         connection.protocol.send_chat("%s's collar hums back to life." %
             connection.name, irc = True)
     else:
-        connection.protocol.send_chat("%s is free as a bird." %
+        connection.protocol.send_chat('%s is free as a bird.' %
             connection.name, irc = True)
 
 @name('linkdistance')
 @admin
-def link_distance(connection, value = None):
-    if value is not None:
-        value = float(value)
-        connection.protocol.link_distance = value
-        connection.protocol.link_warning_distance = value * 0.65
-        connection.protocol.send_chat('Link distance changed to %s' % value,
-            irc = True)
-        return
-    connection.send_chat('Link distance is currently %s' %
-        connection.protocol.link_distance, irc = True)
+def link_distance(connection, value):
+    value = float(value)
+    connection.protocol.link_distance = value
+    connection.protocol.link_warning_distance = value * 0.65
+    connection.protocol.send_chat('Link distance changed to %s' % value,
+        irc = True)
 
 for func in (relink, no_link, link_distance):
     add(func)
@@ -89,9 +83,9 @@ def apply_script(protocol, connection, config):
                 self.can_be_linked_to(player)]
             if len(available) == 0:
                 return
-            if self.link is not None:
-                self.link.drop_link(force_message = True)
+            self.drop_link(force_message = True)
             self.link = choice(available)
+            self.link.drop_link(force_message = True)
             self.link.link = self
             self.link_deaths = 0
             self.link.link_deaths = 0
@@ -111,21 +105,22 @@ def apply_script(protocol, connection, config):
             connection.on_spawn(self, pos)
         
         def on_team_join(self, team):
-            if self.team is not team and self.link is not None:
-                self.link.drop_link()
-                self.link = None
+            if self.team is not team:
+                self.drop_link()
         
         def on_flag_capture(self):
             self.protocol.drop_all_links()
         
         def disconnect(self):
             connection.disconnect(self)
-            if self.link is not None:
-                self.link.drop_link()
+            self.drop_link()
         
         def drop_link(self, force_message = False):
-            if self.hp > 0 or force_message:
-                self.send_chat("You're free to roam around... for now.")
+            if self.link is None:
+                return
+            if self.link.hp > 0 or force_message:
+                self.link.send_chat("You're free to roam around... for now.")
+            self.link.link = None
             self.link = None
     
     class RunningManProtocol(protocol):
@@ -135,7 +130,7 @@ def apply_script(protocol, connection, config):
         
         def drop_all_links(self):
             for player in self.players.values():
-                if player.link is not None:
-                    player.drop_link()
+                player.drop_link()
+                player.send_chat("You're free to roam around... for now.")
     
     return RunningManProtocol, RunningManConnection
