@@ -7,6 +7,7 @@ from commands import add, admin, name, get_player
 @admin
 def relink(connection):
     connection.protocol.drop_all_links()
+    connection.protocol.send_chat('Everyone unlinked.', irc = True)
 
 @name('nolink')
 @admin
@@ -19,10 +20,10 @@ def no_link(connection, value = None):
     connection.linkable = not connection.linkable
     if connection.linkable:
         connection.protocol.send_chat("%s's collar hums back to life." %
-            connection.name)
+            connection.name, irc = True)
     else:
         connection.protocol.send_chat("%s is free as a bird." %
-            connection.name)
+            connection.name, irc = True)
 
 @name('linkdistance')
 @admin
@@ -31,10 +32,11 @@ def link_distance(connection, value = None):
         value = float(value)
         connection.protocol.link_distance = value
         connection.protocol.link_warning_distance = value * 0.65
-        connection.protocol.send_chat('Link distance changed to %s' % value)
+        connection.protocol.send_chat('Link distance changed to %s' % value,
+            irc = True)
         return
     connection.send_chat('Link distance is currently %s' %
-        connection.protocol.link_distance)
+        connection.protocol.link_distance, irc = True)
 
 for func in (relink, no_link, link_distance):
     add(func)
