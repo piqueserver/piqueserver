@@ -80,6 +80,8 @@ def apply_script(protocol, connection, config):
             if len(available) > 0:
                 self.link = choice(available)
                 self.link.link = self
+                self.link_deaths = 0
+                self.link.link_deaths = 0
                 message = ("You've been linked to %s. Stay close to your "
                     "partner or die!")
                 self.send_chat(message % self.link.name)
