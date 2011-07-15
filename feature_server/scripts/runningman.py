@@ -76,9 +76,17 @@ def apply_script(protocol, connection, config):
                         self.link.last_warning = reactor.seconds()
             connection.on_position_update(self)
         
+        def can_be_linked_to(self, player):
+            if self is player or self.link is player:
+                return False
+            if (player.link is not None and
+                player.link_deaths < self.protocol.link_death_max):
+                return False
+            return True
+        
         def get_new_link(self):
-            available = [p for p in self.team.get_players() if
-                (p is not self and p.link is None and self.link is not p)]
+            available = [player for player in self.team.get_players() if 
+                self.can_be_linked_to(player)]
             if len(available) == 0:
                 return
             if self.link is not None:
@@ -122,6 +130,7 @@ def apply_script(protocol, connection, config):
     class RunningManProtocol(protocol):
         link_distance = 40.0
         link_warning_distance = link_distance * 0.65
+        link_death_max = 2
         
         def drop_all_links(self):
             for player in self.players.values():
