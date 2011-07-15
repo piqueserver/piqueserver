@@ -79,18 +79,21 @@ def apply_script(protocol, connection, config):
         def get_new_link(self):
             available = [p for p in self.team.get_players() if
                 (p is not self and p.link is None and self.link is not p)]
-            if len(available) > 0:
-                self.link = choice(available)
-                self.link.link = self
-                self.link_deaths = 0
-                self.link.link_deaths = 0
-                message = ("You've been linked to %s. Stay close to your "
-                    "partner or die!")
-                self.send_chat(message % self.link.name)
-                self.link.send_chat(message % self.name)
+            if len(available) == 0:
+                return
+            if self.link is not None:
+                self.link.drop_link(force_message = True)
+            self.link = choice(available)
+            self.link.link = self
+            self.link_deaths = 0
+            self.link.link_deaths = 0
+            message = ("You've been linked to %s. Stay close to your "
+                "partner or die!")
+            self.send_chat(message % self.link.name)
+            self.link.send_chat(message % self.name)
         
         def on_spawn(self, pos):
-            if self.link is None:
+            if self.link is None or self.link_deaths > 2:
                 self.get_new_link()
             if self.link is not None and self.link.hp > 0:
                 x, y, z = self.link.world_object.position.get()
@@ -111,8 +114,8 @@ def apply_script(protocol, connection, config):
             if self.link is not None:
                 self.link.drop_link()
         
-        def drop_link(self):
-            if self.hp > 0:
+        def drop_link(self, force_message = False):
+            if self.hp > 0 or force_message:
                 self.send_chat("You're free to roam around... for now.")
             self.link = None
     
