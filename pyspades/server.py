@@ -387,7 +387,7 @@ class ServerConnection(BaseConnection):
         else:
             position = Vertex3(x, y, z)
             self.world_object = self.protocol.world.create_object(
-                world.Character, position, None, self.on_fall)
+                world.Character, position, None, self._on_fall)
         self.world_object.dead = False
         create_player.name = name
         create_player.x = x
@@ -627,9 +627,14 @@ class ServerConnection(BaseConnection):
         self.protocol.send_contained(block_action, save = True)
         self.protocol.update_entities()
     
-    def on_fall(self, damage):
+    def _on_fall(self, damage):
         if not self.hp:
             return
+        returned = self.on_fall(damage)
+        if returned == False:
+            return
+        elif returned is not None:
+            damage = returned
         self.set_hp(self.hp - damage, not_fall = False)
     
     def send_map(self):
@@ -758,6 +763,9 @@ class ServerConnection(BaseConnection):
         pass
     
     def on_weapon_set(self, value):
+        pass
+    
+    def on_fall(self, damage):
         pass
 
 class Flag(Vertex3):

@@ -245,6 +245,10 @@ class FeatureConnection(ServerConnection):
         self.team.kills += 1
         self.protocol.check_end_game(killer)
     
+    def on_fall(self, damage):
+        if not self.protocol.fall_damage:
+            return False
+    
     def on_grenade(self, time_left):
         if self.god:
             self.refill()
@@ -415,10 +419,12 @@ class FeatureProtocol(ServerProtocol):
         self.kill_limit = config.get('kill_limit', 100)
         self.join_part_messages = config.get('join_part_messages', False)
         self.respawn_time = config.get('respawn_time', 5)
-        self.follow_respawn_time = config.get('follow_respawn_time', self.respawn_time)
+        self.follow_respawn_time = config.get('follow_respawn_time', 
+            self.respawn_time)
         self.master = config.get('master', True)
         self.friendly_fire = config.get('friendly_fire', True)
         self.friendly_fire_time = config.get('grief_friendly_fire_time', 2.0)
+        self.fall_damage = config.get('fall_damage', True)
         self.teamswitch_interval = config.get('teamswitch_interval', 0)
         self.motd = self.format_lines(config.get('motd', None))
         self.help = self.format_lines(config.get('help', None))
@@ -482,7 +488,6 @@ class FeatureProtocol(ServerProtocol):
         for password in self.admin_passwords:
             if password == 'replaceme':
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
-                break
         ServerProtocol.__init__(self)
         # locked teams
         self.blue_team.locked = False
