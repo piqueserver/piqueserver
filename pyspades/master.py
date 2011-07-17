@@ -93,6 +93,7 @@ class MasterConnection(BaseConnection):
         if callback is not None:
             callback()
         self.disconnect_callback = None
+        self.protocol.transport.stopListening()
     
     def send_data(self, data):
         self.protocol.transport.write(data)
@@ -104,10 +105,11 @@ def get_external_ip():
 
 class MasterProtocol(DatagramProtocol):
     connection_class = MasterConnection
-    def __init__(self, name, max, defer = None):
+    def __init__(self, name, max, defer = None, retry_interval = None):
         self.name = name
         self.max = max
         self.defer = defer
+        self.retry_interval = retry_interval or 20
         
     def startProtocol(self):
         reactor.resolve(HOST).addCallback(self.hostResolved)
@@ -115,7 +117,7 @@ class MasterProtocol(DatagramProtocol):
     def hostResolved(self, ip):
         self.transport.connect(ip, PORT)
         self.connection = self.connection_class(self, self.name, 
-            self.max, self.defer)
+            self.max, self.defer, self.retry_interval)
         
     def set_count(self, value):
         self.connection.set_count(value)
@@ -123,8 +125,8 @@ class MasterProtocol(DatagramProtocol):
     def datagramReceived(self, data, address):
         self.connection.data_received(data)
 
-def get_master_connection(name, max, interface = ''):
+def get_master_connection(name, max, interface = '', retry_interval = None):
     defer = Deferred()
-    reactor.listenUDP(0, MasterProtocol(name, max, defer), 
+    reactor.listenUDP(0, MasterProtocol(name, max, defer, retry_interval), 
         interface = interface)
     return defer

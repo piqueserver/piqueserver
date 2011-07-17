@@ -28,6 +28,6 @@ cdef inline object allocate_memory(int size, char ** i):
 
 cdef inline int check_default_int(int value, int default) except -1:
     if value != default:
-        raw_input('check_default() failed')
-        raise NotImplementedError('was %s, should be %s' % (value, default))
+        raise NotImplementedError(
+            'check_default() failed:was %s, should be %s' % (value, default))
     return 0

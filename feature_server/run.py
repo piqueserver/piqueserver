@@ -715,6 +715,17 @@ reactor.listenUDP(PORT, protocol_class(config, map),
     config.get('network_interface', ''))
 print 'Started server on port %s...' % PORT
 
+if False: # debug memory?
+    import cherrypy
+    import dowser
+
+    cherrypy.tree.mount(dowser.Root())
+    cherrypy.config.update({
+        'environment': 'embedded',
+        'server.socket_port': 8080
+    })
+    cherrypy.engine.start()
+
 if profile:
     import cProfile
     cProfile.run('reactor.run()', 'profile.dat')

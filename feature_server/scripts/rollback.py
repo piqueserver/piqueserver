@@ -105,7 +105,7 @@ def apply_script(protocol, connection, config):
                 return
             try:
                 sent_unique = sent_total = rows = 0
-                while (True):
+                while 1:
                     if rows > self.rollback_max_rows:
                         break
                     if sent_unique > self.rollback_max_unique_packets:
