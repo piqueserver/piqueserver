@@ -49,9 +49,11 @@ class AddServer(Loader):
             reader.writeByte(self.count, True)
 
 add_server = AddServer()
+connect_request = ConnectionRequest()
 
 class MasterConnection(BaseConnection):
     disconnect_callback = None
+    connected = False
     def __init__(self, protocol, name, max, defer):
         BaseConnection.__init__(self)
 
@@ -61,12 +63,16 @@ class MasterConnection(BaseConnection):
         self.max = max
         self.defer = defer
         self.auth_val = random.randint(0, 0xFFFF)
-
-        connect_request = ConnectionRequest()
+        self.send_request()
+    
+    def send_request(self):
+        if self.connected:
+            return
         connect_request.auth_val = self.auth_val
         connect_request.version = 0x11000000 # increments for each version
         connect_request.client = True
         self.send_loader(connect_request, False, 255)
+        reactor.callLater(5, self.send_request)
     
     def loader_received(self, loader):
         if loader.id == ConnectionResponse.id:
@@ -105,11 +111,10 @@ def get_external_ip():
 
 class MasterProtocol(DatagramProtocol):
     connection_class = MasterConnection
-    def __init__(self, name, max, defer = None, retry_interval = None):
+    def __init__(self, name, max, defer = None):
         self.name = name
         self.max = max
         self.defer = defer
-        self.retry_interval = retry_interval or 20
         
     def startProtocol(self):
         reactor.resolve(HOST).addCallback(self.hostResolved)
@@ -117,7 +122,7 @@ class MasterProtocol(DatagramProtocol):
     def hostResolved(self, ip):
         self.transport.connect(ip, PORT)
         self.connection = self.connection_class(self, self.name, 
-            self.max, self.defer, self.retry_interval)
+            self.max, self.defer)
         
     def set_count(self, value):
         self.connection.set_count(value)
@@ -125,8 +130,8 @@ class MasterProtocol(DatagramProtocol):
     def datagramReceived(self, data, address):
         self.connection.data_received(data)
 
-def get_master_connection(name, max, interface = '', retry_interval = None):
+def get_master_connection(name, max, interface = ''):
     defer = Deferred()
-    reactor.listenUDP(0, MasterProtocol(name, max, defer, retry_interval), 
+    reactor.listenUDP(0, MasterProtocol(name, max, defer), 
         interface = interface)
     return defer
