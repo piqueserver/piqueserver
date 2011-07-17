@@ -33,7 +33,7 @@
     "master" : true,
     "friendly_fire" : false,
     "grief_friendly_fire_time" : 2,
-    "fall_damage" : false,
+    "fall_damage" : true,
     "teamswitch_interval" : 0,
     "votekick_percentage" : 25,
     "votekick_ban_duration" : 15,
