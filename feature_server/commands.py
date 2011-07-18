@@ -464,6 +464,7 @@ def reset_game(connection):
         irc = True)
 
 from map import Map
+from pyspades.load import VXLData
 
 @name('changemap')
 @admin
@@ -473,10 +474,14 @@ def change_map(connection, value):
         return 'Rollback in progress.'
     protocol.map_info = Map(value)
     protocol.map = protocol.map_info.data
+    protocol.world.map = protocol.map
     protocol.send_chat("The server is changing maps to '%s'!" % value)
     protocol.irc_say("* %s changed map to '%s'" % (connection.name, value))
     for conn in protocol.connections.values():
         conn.disconnect()
+    if protocol.rollback_map is not None:
+        protocol.rollback_map = VXLData()
+        protocol.rollback_map.load_vxl(protocol.map.generate())
     protocol.blue_team.initialize()
     protocol.green_team.initialize()
 
@@ -564,8 +569,9 @@ def handle_command(connection, command, parameters):
         command_func = commands[command]
     except KeyError:
         return # 'Invalid command'
+    return command_func(connection, *parameters)
     try:
-        return command_func(connection, *parameters)
+        pass
     except KeyError:
         return # 'Invalid command'
     except TypeError:
