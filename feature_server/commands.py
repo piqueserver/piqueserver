@@ -390,18 +390,38 @@ def teleport(connection, player1, player2 = None):
 def tp(connection, player1, player2 = None):
     teleport(connection, player1, player2)
 
-from pyspades.common import coordinates
+from pyspades.common import coordinates, to_coordinates
 
+@name('goto')
 @admin
-def goto(connection, value):
+def go_to(connection, value):
     if connection not in connection.protocol.players:
         raise KeyError()
+    move(connection, connection.name, value)
+
+@admin
+def move(connection, player, value):
+    player = get_player(connection.protocol, player)
     x, y = coordinates(value)
     x += 32
     y += 32
     connection.set_location((x, y, connection.protocol.map.get_height(x, y) - 2))
-    message = '%s teleported to location %s' % (connection.name, value.upper())
+    if connection is player:
+        message = '%s teleported to location %s' % (player.name, value.upper())
+    else:
+        message = ('%s teleported %s to location %s' %
+            (connection.name, player.name, value.upper()))
     connection.protocol.send_chat(message, irc = True)
+
+@admin
+def where(connection, value = None):
+    if value is not None:
+        connection = get_player(connection.protocol, value)
+    elif connection not in connection.protocol.players:
+        raise ValueError()
+    x, y, z = connection.get_location()
+    return '%s is in %s (%s, %s, %s)' % (connection.name,
+        to_coordinates(x, y), int(x), int(y), int(z))
 
 @admin
 def god(connection, value = None):
@@ -426,7 +446,7 @@ def ip(connection, value = None):
         player = get_player(connection.protocol, value)
     return 'The IP of %s is %s' % (player.name, player.address[0])
 
-@name ('resetgame')
+@name('resetgame')
 @admin
 def reset_game(connection):
     resetting_player = connection
@@ -442,6 +462,23 @@ def reset_game(connection):
     connection.protocol.on_game_end(resetting_player)
     connection.protocol.send_chat('Game has been reset by %s' % connection.name,
         irc = True)
+
+from map import Map
+
+@name('changemap')
+@admin
+def change_map(connection, value):
+    protocol = connection.protocol
+    if protocol.rollback_in_progress:
+        return 'Rollback in progress.'
+    protocol.map_info = Map(value)
+    protocol.map = protocol.map_info.data
+    protocol.send_chat("The server is changing maps to '%s'!" % value)
+    protocol.irc_say("* %s changed map to '%s'" % (connection.name, value))
+    for conn in protocol.connections.values():
+        conn.disconnect()
+    protocol.blue_team.initialize()
+    protocol.green_team.initialize()
 
 def ping(connection, value = None):
     if value is None:
@@ -495,13 +532,16 @@ command_list = [
     toggle_teamkill,
     teleport,
     tp,
-    goto,
+    go_to,
+    move,
+    where,
     god,
     follow,
     no_follow,
     streak,
     score,
     reset_game,
+    change_map,
     ping
 ]
 

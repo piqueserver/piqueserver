@@ -52,6 +52,9 @@ def coordinates(data):
         raise ValueError()
     return x, y
 
+def to_coordinates(x, y):
+    return '%s%s' % (chr(ord('a') + int(x) / 64).upper(), int(y) / 64)
+
 def compare_reader(reader, value, name):
     if reader.read(len(value)) != value:
         print '%s is wrong' % name
