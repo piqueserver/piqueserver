@@ -156,17 +156,19 @@ def apply_script(protocol, connection, config):
                             action = DESTROY_BLOCK
                             cur.remove_point_unsafe(x, y, z)
                         elif new_solid:
-                            new_color = new.get_color(x, y, z)
-                            new_is_surface = (new_color != 0)
+                            new_is_surface = new.is_surface(x, y, z)
+                            if new_is_surface:
+                                new_color = new.get_color(x, y, z)
                             if not cur_solid and new_is_surface:
                                 surface[(x, y, z)] = new_color
                             elif not cur_solid and not new_is_surface:
                                 action = BUILD_BLOCK
                                 cur.set_point_unsafe_int(x, y, z, 0)
                             elif cur_solid and new_is_surface:
-                                old_color = old.get_color(x, y, z)
                                 old_is_surface = old.is_surface(x, y, z)
-                                if old_color != new_color or not old_is_surface:
+                                if old_is_surface:
+                                    old_color = old.get_color(x, y, z)
+                                if not old_is_surface or old_color != new_color:
                                     surface[(x, y, z)] = new_color
                                     action = DESTROY_BLOCK
                                     cur.remove_point_unsafe(x, y, z)
