@@ -45,7 +45,11 @@ int inline get_solid(int x, int y, int z, MapData * map)
 
 int inline get_color(int x, int y, int z, MapData * map)
 {
-    return map->colors[get_pos(x, y, z)];
+    std::map<int, int>::const_iterator iter = map->colors.find(
+        get_pos(x, y, z));
+    if (iter == map->colors.end())
+        return 0;
+    return iter->second;
 }
 
 void inline set_point(int x, int y, int z, MapData * map, bool solid, int color)
@@ -188,7 +192,7 @@ int check_node(int x, int y, int z, MapData * map, int destroy)
              iter != marked.end(); ++iter)
         {
             map->geometry[iter->first] = 0;
-            map->colors[iter->first] = 0;
+            map->colors.erase(iter->first);
         }
     }
     
