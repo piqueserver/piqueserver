@@ -405,7 +405,7 @@ def move(connection, player, value):
     x, y = coordinates(value)
     x += 32
     y += 32
-    connection.set_location((x, y, connection.protocol.map.get_height(x, y) - 2))
+    player.set_location((x, y, connection.protocol.map.get_height(x, y) - 2))
     if connection is player:
         message = '%s teleported to location %s' % (player.name, value.upper())
     else:
