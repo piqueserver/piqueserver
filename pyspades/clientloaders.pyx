@@ -160,7 +160,7 @@ cdef class JoinTeam(Loader):
         cdef int selector = (firstByte >> 4) & 1
         cdef int value = (firstByte >> 5)
         if reader.dataLeft():
-            self.name = decode(reader.readString())
+            self.name = decode(reader.readString()[:15])
             self.team = selector
             self.weapon = value
         elif selector == 0:
