@@ -74,6 +74,9 @@ import random
 import time
 import commands
 
+CHAT_WINDOW_SIZE = 5
+CHAT_FREQUENCY = 1.0 / CHAT_WINDOW_SIZE
+
 class ConsoleInput(LineReceiver):
     delimiter = '\n'
     protocol = None
@@ -99,6 +102,9 @@ class FeatureConnection(ServerConnection):
     followable = True
     streak = 0
     best_streak = 0
+    last_chat = None
+    chat_time = 0
+    chat_count = 0
     
     def on_connect(self, loader):
         if self.master:
@@ -280,6 +286,20 @@ class FeatureConnection(ServerConnection):
         self.last_switch = reactor.seconds()
     
     def on_chat(self, value, global_message):
+        if not self.mute:
+            current_time = reactor.seconds()
+            if self.last_chat is None:
+                self.last_chat = current_time
+            self.chat_time += current_time - self.last_chat
+            if self.chat_count > CHAT_WINDOW_SIZE:
+                if self.chat_time / CHAT_WINDOW_SIZE > CHAT_FREQUENCY:
+                    self.mute = True
+                    self.protocol.send_chat(
+                        '%s has been muted for excessive spam' % (self.name), 
+                        irc = True)
+                self.chat_time = self.chat_count = 0
+            self.chat_count += 1
+            self.last_chat = current_time
         message = '<%s> %s' % (self.name, value)
         if self.mute:
             message = '(MUTED) %s' % message
