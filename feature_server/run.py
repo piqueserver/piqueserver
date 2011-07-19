@@ -587,7 +587,12 @@ class FeatureProtocol(ServerProtocol):
         if data == 'HELLO':
             self.transport.write('HI', address)
             return
+        current_time = reactor.seconds()
         ServerProtocol.datagramReceived(self, data, address)
+        dt = reactor.seconds() - current_time
+        if dt > 1.0:
+            print '(warning: processing %r from %s took %s)' % (
+                data, address[0], dt)
         
     def irc_say(self, msg):
         if self.irc_relay:
@@ -705,6 +710,8 @@ class FeatureProtocol(ServerProtocol):
                 self.send_chat("Blue Team Wins, %s - %s" %
                                (self.blue_team.kills, self.green_team.kills))
                 self.reset_game(player)
+    
+    # log high CPU usage
     
     def update_world(self):
         last_time = self.last_time
