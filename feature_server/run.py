@@ -75,7 +75,7 @@ import time
 import commands
 
 CHAT_WINDOW_SIZE = 5
-CHAT_FREQUENCY = 1.0 / CHAT_WINDOW_SIZE
+CHAT_PER_SECOND = 1.5
 
 class ConsoleInput(LineReceiver):
     delimiter = '\n'
@@ -290,16 +290,18 @@ class FeatureConnection(ServerConnection):
             current_time = reactor.seconds()
             if self.last_chat is None:
                 self.last_chat = current_time
-            self.chat_time += current_time - self.last_chat
-            if self.chat_count > CHAT_WINDOW_SIZE:
-                if self.chat_time / CHAT_WINDOW_SIZE > CHAT_FREQUENCY:
-                    self.mute = True
-                    self.protocol.send_chat(
-                        '%s has been muted for excessive spam' % (self.name), 
-                        irc = True)
-                self.chat_time = self.chat_count = 0
-            self.chat_count += 1
-            self.last_chat = current_time
+            else:
+                self.chat_time += current_time - self.last_chat
+                if self.chat_count > CHAT_WINDOW_SIZE:
+                    if self.chat_count / self.chat_time > CHAT_PER_SECOND:
+                        self.mute = True
+                        self.protocol.send_chat(
+                            '%s has been muted for excessive spam' % (self.name), 
+                            irc = True)
+                    self.chat_time = self.chat_count = 0
+                else:
+                    self.chat_count += 1
+                self.last_chat = current_time
         message = '<%s> %s' % (self.name, value)
         if self.mute:
             message = '(MUTED) %s' % message
