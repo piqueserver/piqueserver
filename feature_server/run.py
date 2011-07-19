@@ -703,6 +703,14 @@ class FeatureProtocol(ServerProtocol):
                 self.send_chat("Blue Team Wins, %s - %s" %
                                (self.blue_team.kills, self.green_team.kills))
                 self.reset_game(player)
+    
+    def update_world(self):
+        current_time = reactor.seconds()
+        ServerProtocol.update_world(self)
+        time_taken = reactor.seconds() - current_time
+        if time_taken > 3:
+            print 'World update iteration took %s, objects: %s' % (time_taken,
+                self.world.objects)
 
 PORT = 32887
 
