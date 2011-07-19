@@ -215,20 +215,20 @@ inline int is_surface(MapData * map, int x, int y, int z)
    return 0;
 }
 
-inline void write_color(char * out, int color)
+inline void write_color(char ** out, int color)
 {
    // assume color is ARGB native, but endianness is unknown
    if (color == 0)
        color = DEFAULT_COLOR;
    // file format endianness is ARGB little endian, i.e. B,G,R,A
-   *out = (char)(color >> 0);
-   out += 1;
-   *out = (char) (color >> 8);
-   out += 1;
-   *out = (char) (color >> 16);
-   out += 1;
-   *out = (char) (color >> 24);
-   out += 1;
+   **out = (char)(color >> 0);
+   *out += 1;
+   **out = (char) (color >> 8);
+   *out += 1;
+   **out = (char) (color >> 16);
+   *out += 1;
+   **out = (char) (color >> 24);
+   *out += 1;
 }
 
 char * out_global = 0;
@@ -322,15 +322,13 @@ PyObject * save_vxl(MapData * map)
 
             for (z=0; z < top_colors_len; ++z)
             {
-               write_color(out, map->colors[get_pos(i, j, 
+               write_color(&out, map->colors[get_pos(i, j, 
                    top_colors_start + z)]);
-               out += 4;
             }
             for (z=0; z < bottom_colors_len; ++z)
             {
-               write_color(out, map->colors[get_pos(i, j, 
+               write_color(&out, map->colors[get_pos(i, j, 
                    bottom_colors_start + z)]);
-               out += 4;
             }
          }  
       }

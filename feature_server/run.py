@@ -427,6 +427,8 @@ class FeatureProtocol(ServerProtocol):
     user_blocks = None
     god_blocks = None
     
+    last_time = None
+    
     def __init__(self, config, map):
         self.map = map.data
         self.map_info = map
@@ -705,10 +707,16 @@ class FeatureProtocol(ServerProtocol):
                 self.reset_game(player)
     
     def update_world(self):
+        last_time = self.last_time
         current_time = reactor.seconds()
+        if last_time is not None:
+            dt = current_time - last_time
+            if dt > 1.0:
+                print '(warning: high CPU usage detected - %s)' % dt
+        self.last_time = current_time
         ServerProtocol.update_world(self)
         time_taken = reactor.seconds() - current_time
-        if time_taken > 3:
+        if time_taken > 1.0:
             print 'World update iteration took %s, objects: %s' % (time_taken,
                 self.world.objects)
 
