@@ -12,16 +12,8 @@ def apply_script(protocol, connection, config):
             connection.on_position_update(self)
     
         def environment_hit(self, value):
-            if value<0 and self.hp >= 100: # do nothing at max health
+            if value < 0 and self.hp >= 100: # do nothing at max health
                 return
-            self.hp -= value
-            if self.hp <= 0:
-                self.kill()
-                return
-            if self.hp > 100: # limit health gains
-                self.hp = 100
-            hit_packet.hp = self.hp
-            hit_packet.sound = True
-            self.send_contained(hit_packet)
+            self.set_hp(self.hp - value)
 
     return protocol, MapExtensionConnection
