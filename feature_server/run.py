@@ -68,6 +68,7 @@ from twisted.internet.stdio import StandardIO
 from twisted.protocols.basic import LineReceiver
 from pyspades.common import encode, decode
 from pyspades.constants import *
+from pyspades.master import MAX_SERVER_NAME_SIZE
 
 import json
 import random
@@ -436,7 +437,9 @@ class FeatureProtocol(ServerProtocol):
         self.config = config
         self.name = config.get('name', 
             'pyspades server %s' % random.randrange(0, 2000))
-        
+        if len(self.name) > MAX_SERVER_NAME_SIZE:
+            print '(server name too long; it will be truncated to "%s")' % (
+                self.name[:MAX_SERVER_NAME_SIZE])
         self.max_score = config.get('cap_limit', None)
         self.kill_limit = config.get('kill_limit', 100)
         self.join_part_messages = config.get('join_part_messages', False)

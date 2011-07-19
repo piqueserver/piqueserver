@@ -26,6 +26,8 @@ from twisted.internet.defer import Deferred
 
 import random
 
+MAX_SERVER_NAME_SIZE = 31
+
 HOST = 'ace-spades.com'
 PORT = 32886
 
