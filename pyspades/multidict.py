@@ -30,10 +30,8 @@ class DictItem(object):
         return repr(self.value)
 
 class MultikeyDict(dict):
-    items = None
     def __init__(self, *arg, **kw):
         dict.__init__(self, *arg, **kw)
-        self.items = {}
         self.value_set = set()
     
     def __getitem__(self, key):
