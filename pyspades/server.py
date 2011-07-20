@@ -231,7 +231,7 @@ class ServerConnection(BaseConnection):
                             sender = self)
                     elif contained.id == clientloaders.HitPacket.id:
                         if contained.player_id != -1:
-                            player, = self.protocol.players[contained.player_id]
+                            player = self.protocol.players[contained.player_id]
                             hit_amount = HIT_VALUES[contained.value][self.weapon]
                             returned = self.on_hit(hit_amount, player)
                             if returned == False:

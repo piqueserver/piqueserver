@@ -40,10 +40,10 @@ def get_player(protocol, value):
     try:
         if value.startswith('#'):
             value = int(value[1:])
-            return protocol.players[value][0]
+            return protocol.players[value]
         players = protocol.players
         try:
-            return players[value][0]
+            return players[value]
         except KeyError:
             value = value.lower()
             for player in players.values():
