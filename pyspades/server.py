@@ -601,7 +601,7 @@ class ServerConnection(BaseConnection):
                 if not player.hp:
                     continue
                 damage = grenade.get_damage(player.world_object.position)
-                if damage is None:
+                if damage == 0:
                     continue
                 returned = self.on_hit(damage, player)
                 if returned == False:

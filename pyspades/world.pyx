@@ -212,6 +212,7 @@ cdef class Grenade(Object):
             if value == 0.0:
                 return 100.0
             return 4096.0 / value
+        return 0
     
     cdef void update(self, double dt):
         cdef VXLData map = self.world.map
