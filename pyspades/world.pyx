@@ -15,74 +15,100 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from pyspades.common import *
+# from pyspades.common import *
 import math
 import time
+from pyspades.load cimport VXLData
+from pyspades.common cimport Vertex3
 
-def isvoxelsolid(map, x, y, z):
+cdef extern from "math.h":
+    double fabs(double x)
+
+from libc.math cimport sqrt
+
+cdef inline bint isvoxelsolid(VXLData map, double x, double y, double z):
     if x < 0.0 or x > 512.0 or y < 0.0 or y > 512.0:
         return True
-    x = int(x)
-    y = int(y)
-    z = int(z)
-    if z == 63:
-        z = 62
-    elif z >= 64:
+    cdef int x_int = <int>x
+    cdef int y_int = <int>y
+    cdef int z_int = <int>z
+    if z_int == 63:
+        z_int = 62
+    elif z_int >= 64:
         return True
-    return map.get_solid(x, y, z)
+    return map.get_solid(x_int, y_int, z_int)
 
-def isvoxelsolid2(map, x, y, z):
-    x = int(x) % 512
-    y = int(y) % 512
-    z = int(z)
-    if z == 63:
-        z = 62
-    elif z >= 64:
+cdef inline bint isvoxelsolid2(VXLData map, double x, double y, double z):
+    cdef int x_int = <int>x % 512
+    cdef int y_int = <int>y % 512
+    cdef int z_int = <int>z
+    if z_int == 63:
+        z_int = 62
+    elif z_int >= 64:
         return True
-    return map.get_solid(x, y, z)
+    return map.get_solid(x_int, y_int, z_int)
 
-class Object(object):
-    name = 'object'
+cdef class Object
+cdef class World
+cdef class Grenade
+cdef class Character
+
+cdef class Object:
+    cdef public: 
+        object name
+        World world
     def __init__(self, world, *arg, **kw):
         self.world = world
         self.initialize(*arg, **kw)
+        if self.name is None:
+            self.name = 'object'
     
     def initialize(self, *arg, **kw):
         pass
     
-    def update(self, dt):
+    cdef void update(self, double dt):
         pass
     
     def delete(self):
         self.world.delete_object(self)
 
-class Grenade(Object):
-    name = 'grenade'
-    def initialize(self, time_left, player_position, character, callback = None):
+cdef class Grenade(Object):
+    cdef public:
+        Vertex3 position
+        Vertex3 acceleration
+        double time_left
+        object callback
+
+    def initialize(self, double time_left, Vertex3 player_position, 
+                   Character character, callback = None):
+        self.name = 'grenade'
         self.callback = callback
-        self.character = character
         self.position = Vertex3()
+        cdef Vertex3 acceleration
         self.acceleration = acceleration = Vertex3()
         self.position.set_vector(player_position)
-        orientation = character.orientation
-        player_acceleration = character.acceleration
+        cdef Vertex3 orientation = character.orientation
+        cdef Vertex3 player_acceleration = character.acceleration
         acceleration.x = orientation.x + player_acceleration.x
         acceleration.y = orientation.y + player_acceleration.y
         acceleration.z = orientation.z + player_acceleration.z
         self.time_left = time_left
     
-    def collides(self, player_position):
-        position = self.position
-        player_x = int(player_position.x - 0.5)
-        player_y = int(player_position.y - 0.5)
-        player_z = int(player_position.z - 0.5)
-        nade_x = int(position.x - 0.5)
-        nade_y = int(position.y - 0.5)
-        nade_z = int(position.z - 0.5)
+    cpdef bint collides(self, Vertex3 player_position):
+        cdef Vertex3 position = self.position
+        cdef int player_x, player_y, player_z
+        cdef int nade_x, nade_y, nade_z
+        player_x = <int>(player_position.x - 0.5)
+        player_y = <int>(player_position.y - 0.5)
+        player_z = <int>(player_position.z - 0.5)
+        nade_x = <int>(position.x - 0.5)
+        nade_y = <int>(position.y - 0.5)
+        nade_z = <int>(position.z - 0.5)
         if player_x == nade_x and player_y == nade_y and player_z == nade_z:
             return True
-        v19 = 0
-        v39 = 0
+        cdef int v19 = 0
+        cdef int v39
+        cdef double v33, v36
         if nade_x >= player_x:
             if nade_x == player_x:
                 v33 = 0.0
@@ -97,7 +123,8 @@ class Grenade(Object):
             v19 = player_x - nade_x
             v36 = player_position.x - player_x
             v33 = (player_position.x - position.x) * 1024.0
-        v40 = 0
+        cdef int v40
+        cdef double v34, v37
         if nade_y >= player_y:
             if nade_y == player_y:
                 v34 = 0.0
@@ -112,7 +139,8 @@ class Grenade(Object):
             v40 = -1
             v37 = player_position.y - player_y
             v34 = (player_position.y - position.y) * 1024.0
-        v41 = 0
+        cdef int v41
+        cdef double v35, v38
         if nade_z >= player_z:
             if nade_z == player_z:
                 v35 = 0.0
@@ -127,24 +155,25 @@ class Grenade(Object):
             v41 = -1
             v38 = player_position.z - player_z
             v35 = (player_position.z - position.z) * 1024.0
-        v42 = v35 * v36 - v38 * v33
-        v42_int = int(v42)
-        v33_int = int(v33)
-        v43 = v35 * v37 - v38 * v34
-        v43_int = int(v43)
-        v34_int = int(v34)
-        v44 = v37 * v33 - v34 * v36
-        v44_int = int(v44)
-        v35_int = int(v35)
+        
+        cdef double v42 = v35 * v36 - v38 * v33
+        cdef int v42_int = <int>v42
+        cdef int v33_int = <int>v33
+        cdef double v43 = v35 * v37 - v38 * v34
+        cdef int v43_int = <int>v43
+        cdef int v34_int = <int>v34
+        cdef double v44 = v37 * v33 - v34 * v36
+        cdef int v44_int = <int>v44
+        cdef int v35_int = <int>v35
         if v19 <= 32:
             if v19 == 0:
                 return True
         else:
             v19 = 32
-        v14 = v44_int
-        v15 = v43_int
-        v12 = v42_int
-        map = self.world.map
+        cdef int v14 = v44_int
+        cdef int v15 = v43_int
+        cdef int v12 = v42_int
+        cdef VXLData map = self.world.map
         while 1:
             if (v12 | v15) < 0 or player_z == nade_z:
                 if v14 < 0 or player_x == nade_x:
@@ -168,24 +197,25 @@ class Grenade(Object):
             v19 -= 1
         return False
     
-    def get_damage(self, player_position):
-        position = self.position
+    cpdef double get_damage(self, Vertex3 player_position):
+        cdef Vertex3 position = self.position
+        cdef double diff_x, diff_y, diff_z
         diff_x = player_position.x - position.x
         diff_y = player_position.y - position.y
         diff_z = player_position.z - position.z
-        if (math.fabs(diff_x) < 16 and
-            math.fabs(diff_y) < 16 and
-            math.fabs(diff_z) < 16 and
+        if (fabs(diff_x) < 16 and
+            fabs(diff_y) < 16 and
+            fabs(diff_z) < 16 and
             self.collides(player_position)):
             try:
                 return 4096.0 / (diff_x**2 + diff_y**2 + diff_z**2)
             except ZeroDivisionError:
                 return 100.0
     
-    def update(self, dt):
-        map = self.world.map
-        position = self.position
-        acceleration = self.acceleration
+    cdef void update(self, double dt):
+        cdef VXLData map = self.world.map
+        cdef Vertex3 position = self.position
+        cdef Vertex3 acceleration = self.acceleration
         self.time_left -= dt
         if self.time_left <= 0:
             # hurt players here
@@ -194,7 +224,8 @@ class Grenade(Object):
             self.delete()
             return
         acceleration.z += dt
-        new_dt = dt * 32.0
+        cdef double new_dt = dt * 32.0
+        cdef double old_x, old_y, old_z
         old_x = position.x
         old_y = position.y
         old_z = position.z
@@ -203,19 +234,19 @@ class Grenade(Object):
         position.z += acceleration.z * new_dt
         if not isvoxelsolid2(map, position.x, position.y, position.z):
             return
-        collided = False
-        if int(old_z) != int(position.z):
-            if ((int(position.x) == int(old_x) and int(position.y) == int(old_y))
+        cdef bint collided = False
+        if <int>old_z != <int>position.z:
+            if ((<int>position.x == <int>old_x and <int>position.y == <int>old_y)
             or not isvoxelsolid2(map, position.x, position.y, old_z)):
                 acceleration.z = -acceleration.z
                 collided = True
-        if not collided and int(old_x) != int(position.x):
-            if ((int(old_y) == int(position.y) and int(old_z) == int(position.z))
+        if not collided and <int>old_x != <int>position.x:
+            if ((<int>old_y == <int>position.y and <int>old_z == <int>position.z)
             or not isvoxelsolid2(map, old_x, position.y, position.z)):
                 acceleration.x = -acceleration.x
                 collided = True
-        if not collided and int(old_y) != int(position.y):
-            if ((int(old_x) == int(position.x) and int(old_z) == int(position.z))
+        if not collided and <int>old_y != <int>position.y:
+            if ((<int>old_x == <int>position.x and <int>old_z == <int>position.z)
             or not isvoxelsolid2(map, position.x, old_y, position.z)):
                 acceleration.y = -acceleration.y
                 collided = True
@@ -226,19 +257,26 @@ class Grenade(Object):
         acceleration.y *= 0.3600000143051147
         acceleration.z *= 0.3600000143051147
         
-class Character(Object):
-    name = 'character'
-    fire = jump = crouch = aim = False
-    up = down = left = right = False
+cdef class Character(Object):
+    cdef public:
+        Vertex3 position, orientation, acceleration
+        bint fire, jump, crouch, aim
+        bint up, down, left, right
+        bint null, null2
+        double last_time
+        double guess_z
+        bint dead
+        object fall_callback
     
-    null = False
-    null2 = False
-    last_time = 0.0
-    guess_z = 0.0
-    
-    dead = False
-    
-    def initialize(self, position, orientation, fall_callback = None):
+    def initialize(self, Vertex3 position, Vertex3 orientation, 
+                   fall_callback = None):
+        self.name = 'character'
+        self.fire = self.jump = self.crouch = self.aim = False
+        self.up = self.up = self.up = self.up = False
+        self.null = self.null2
+        self.last_time = 0.0
+        self.guess_z = 0.0
+        self.dead = False
         self.fall_callback = fall_callback
         self.position = Vertex3()
         self.orientation = Vertex3()
@@ -263,7 +301,7 @@ class Character(Object):
         if aim is not None:
             self.aim = aim
     
-    def set_walk(self, up, down, left, right):
+    def set_walk(self, bint up, bint down, bint left, bint right):
         self.up = up
         self.down = down
         self.left = left
@@ -283,16 +321,17 @@ class Character(Object):
             self, callback)
         return item
         
-    def update(self, dt):
+    cdef void update(self, double dt):
         if self.dead:
             return
-        orientation = self.orientation
-        acceleration = self.acceleration
+        cdef Vertex3 orientation = self.orientation
+        cdef Vertex3 acceleration = self.acceleration
         if self.jump:
             self.jump = False
             acceleration.z = -0.3600000143051147
-        v2 = self.null
-        v3 = dt
+        cdef int v2 = self.null
+        cdef double v3 = dt
+        cdef double v4
         if v2:
             v4 = dt * 0.1000000014901161
             v3 = v4
@@ -308,8 +347,11 @@ class Character(Object):
         elif self.down:
             acceleration.x -= orientation.x * v3
             acceleration.y -= orientation.y * v3
+        
+        cdef double xypow, orienty_over_xypow, orientx_over_xypow
+        
         if self.left or self.right:
-            xypow = math.sqrt(orientation.y**2 + orientation.x**2)
+            xypow = sqrt(orientation.y**2 + orientation.x**2)
             if xypow == 0:
                 orienty_over_xypow = orientx_over_xypow = 0
             else:
@@ -321,8 +363,8 @@ class Character(Object):
             else:
                 acceleration.x += orienty_over_xypow * v3
                 acceleration.y += orientx_over_xypow * v3
-        v13 = dt + 1.0
-        v9 = acceleration.z + dt
+        cdef double v13 = dt + 1.0
+        cdef double v9 = acceleration.z + dt
         acceleration.z = v9 / v13
         if not self.null2:
             if not self.null:
@@ -331,7 +373,7 @@ class Character(Object):
             v13 = dt * 6.0 + 1.0
         acceleration.x /= v13
         acceleration.y /= v13
-        old_acceleration = acceleration.z
+        cdef double old_acceleration = acceleration.z
         self.calculate_position(dt)
         if 0.0 != acceleration.z or old_acceleration <= 0.239999994635582:
             pass
@@ -342,28 +384,31 @@ class Character(Object):
                 if self.fall_callback is not None:
                     self.fall_callback(-27 - old_acceleration**3 * -256.0)
     
-    def calculate_position(self, dt):
-        orientation = self.orientation
-        acceleration = self.acceleration
-        map = self.world.map
-        position = self.position
-        v1 = 0
-        v4 = dt * 32.0
-        v43 = acceleration.x * v4 + position.x
-        v45 = acceleration.y * v4 + position.y
-        v3 = 0.449999988079071
+    cdef void calculate_position(self, double dt):
+        cdef Vertex3 orientation = self.orientation
+        cdef Vertex3 acceleration = self.acceleration
+        cdef VXLData map = self.world.map
+        cdef Vertex3 position = self.position
+        cdef int v1 = 0
+        cdef double v4 = dt * 32.0
+        cdef double v43 = acceleration.x * v4 + position.x
+        cdef double v45 = acceleration.y * v4 + position.y
+        cdef double v3 = 0.449999988079071
+        cdef double v47
+        cdef double v5
         if self.crouch:
             v47 = 0.449999988079071
             v5 = 0.8999999761581421
         else:
             v47 = 0.8999999761581421
             v5 = 1.350000023841858
-        v31 = v5
-        v29 = position.z + v47
+        cdef double v31 = v5
+        cdef double v29 = position.z + v47
         if acceleration.x < 0.0:
             v3 = -0.449999988079071
-        v26 = v3
-        v19 = v5
+        cdef double v26 = v3
+        cdef double v19 = v5
+        cdef double v38, v32, v6, v7, v8
         if v31 >= -1.360000014305115:
             v38 = position.y - 0.449999988079071
             v32 = v43 + v26
@@ -378,6 +423,7 @@ class Character(Object):
                 v19 -= 0.8999999761581421
                 if v19 < -1.360000014305115:
                     break
+        cdef double v20, v39, v33, v9, v23, v10, 
         if v19 >= -1.360000014305115:
             if self.crouch or orientation.z >= 0.5:
                 acceleration.x = 0
@@ -406,12 +452,14 @@ class Character(Object):
                     position.x = v43
         else:
             position.x = v43
+        cdef double v11
         if acceleration.y >= 0.0:
             v11 = 0.449999988079071
         else:
             v11 = -0.449999988079071
-        v27 = v11
-        v21 = v5
+        cdef double v27 = v11
+        cdef double v21 = v5
+        cdef double v34, v40, v24, v12
         if (v31 >= -1.360000014305115):
             v34 = position.x - 0.449999988079071
             v40 = v45 + v27
@@ -425,7 +473,9 @@ class Character(Object):
                 v21 -= 0.8999999761581421
                 if v21 < -1.360000014305115:
                     break
-        label34 = False
+        cdef bint label34 = False
+        cdef double v22, v35, v41, v25, v14
+        cdef double v13
         if v21 >= -1.360000014305115:
             if self.crouch or orientation.z >= 0.5:
                 if v1:
@@ -460,6 +510,7 @@ class Character(Object):
             position.y = v45
             if v1:
                 label34 = True
+        cdef double v30
         if label34:
             acceleration.x *= 0.5
             acceleration.y *= 0.5
@@ -471,10 +522,11 @@ class Character(Object):
                 v31 = -v31
             v30 = acceleration.z * dt * 32.0 + v29
         self.null = 1
-        v46 = v30 + v31
-        v42 = position.y - 0.449999988079071
-        v36 = position.x - 0.449999988079071
-        flag = False
+        cdef double v46 = v30 + v31
+        cdef double v42 = position.y - 0.449999988079071
+        cdef double v36 = position.x - 0.449999988079071
+        cdef bint flag = False
+        cdef double v44, v37
         if isvoxelsolid(map, v36, v42, v46):
             flag = True
         else:
@@ -494,22 +546,27 @@ class Character(Object):
             acceleration.z = 0
         else:
             position.z = v30 - v47
-        v16 = self.last_time
-        v28 = self.last_time - time.time()
+        cdef double v16 = self.last_time
+        cdef double v28 = self.last_time - time.time()
         self.guess_z = position.z
         if v28 > -0.25:
             self.guess_z += (v28 + 0.25) * 4.0
 
-class World(object):
+cdef class World(object):
+    cdef public:
+        VXLData map
+        list objects
+
     def __init__(self, map):
         self.objects = []
         self.map = map
     
-    def update(self, dt):
+    def update(self, double dt):
+        cdef Object instance
         for instance in self.objects[:]:
             instance.update(dt)
     
-    def delete_object(self, item):
+    cpdef delete_object(self, Object item):
         self.objects.remove(item)
         
     def create_object(self, klass, *arg, **kw):

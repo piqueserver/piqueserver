@@ -14,7 +14,9 @@ names = [
     'pyspades.packet',
     'pyspades.loaders',
     'pyspades.serverloaders',
-    'pyspades.clientloaders'
+    'pyspades.clientloaders',
+    'pyspades.common',
+    'pyspades.world'
 ]
 
 for name in names:

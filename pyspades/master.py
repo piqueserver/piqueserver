@@ -56,6 +56,7 @@ connect_request = ConnectionRequest()
 class MasterConnection(BaseConnection):
     disconnect_callback = None
     connected = False
+    receive_count = 0
     def __init__(self, protocol, name, max, defer):
         BaseConnection.__init__(self)
 

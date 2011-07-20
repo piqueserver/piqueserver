@@ -83,19 +83,18 @@ def decode(value):
     if value is not None:
         return value.decode('cp437', 'replace')
 
-class Vertex3(object):
-    x = y = z = 0.0
+cdef class Vertex3:
     def __init__(self, *arg):
         if arg:
             self.set(*arg)
     
-    def get(self):
+    cpdef get(self):
         return self.x, self.y, self.z
     
-    def set(self, x, y, z):
+    cpdef set(self, double x, double y, double z):
         self.x = x
         self.y = y
         self.z = z
     
-    def set_vector(self, vector):
+    cpdef set_vector(self, Vertex3 vector):
         self.set(vector.x, vector.y, vector.z)

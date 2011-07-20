@@ -29,5 +29,13 @@ cdef inline object allocate_memory(int size, char ** i):
 cdef inline int check_default_int(int value, int default) except -1:
     if value != default:
         raise NotImplementedError(
-            'check_default() failed:was %s, should be %s' % (value, default))
+            'check_default() failed: was %s, should be %s' % (value, default))
     return 0
+
+cdef class Vertex3:
+    cdef public:
+        double x, y, z
+    
+    cpdef get(self)
+    cpdef set(self, double x, double y, double z)
+    cpdef set_vector(self, Vertex3 vector)
