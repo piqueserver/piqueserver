@@ -596,6 +596,9 @@ class ServerConnection(BaseConnection):
         z = position.z
         if x < 0 or x > 512 or y < 0 or y > 512 or z < 0 or z > 63:
             return
+        x = int(x)
+        y = int(y)
+        z = int(z)
         for player_list in (self.team.other.get_players(), (self,)):
             for player in player_list:
                 if not player.hp:
@@ -611,9 +614,6 @@ class ServerConnection(BaseConnection):
                 player.set_hp(player.hp - damage, self)
         if self.on_block_destroy(x, y, z, GRENADE_DESTROY) == False:
             return
-        x = int(x)
-        y = int(y)
-        z = int(z)
         map = self.protocol.map
         for nade_x in xrange(x - 1, x + 2):
             for nade_y in xrange(y - 1, y + 2):
