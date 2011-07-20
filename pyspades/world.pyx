@@ -39,8 +39,8 @@ cdef inline bint isvoxelsolid(VXLData map, double x, double y, double z):
     return map.get_solid(x_int, y_int, z_int)
 
 cdef inline bint isvoxelsolid2(VXLData map, double x, double y, double z):
-    cdef int x_int = <int>x % 512
-    cdef int y_int = <int>y % 512
+    cdef int x_int = (<int>x) % 512
+    cdef int y_int = (<int>y) % 512
     cdef int z_int = <int>z
     if z_int == 63:
         z_int = 62
@@ -207,10 +207,10 @@ cdef class Grenade(Object):
             fabs(diff_y) < 16 and
             fabs(diff_z) < 16 and
             self.collides(player_position)):
-            try:
-                return 4096.0 / (diff_x**2 + diff_y**2 + diff_z**2)
-            except ZeroDivisionError:
+            cdef double value = diff_x**2 + diff_y**2 + diff_z**2
+            if value == 0.0:
                 return 100.0
+            return 4096.0 / (value)
     
     cdef void update(self, double dt):
         cdef VXLData map = self.world.map
