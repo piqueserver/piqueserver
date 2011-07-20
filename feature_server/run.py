@@ -50,6 +50,13 @@ if iocp and sys.platform == 'win32':
     except ImportError:
         print '(dependencies missing for fast IOCP, using normal reactor)'
 
+if sys.platform == 'linux2':
+    try:
+        from twisted.internet import epollreactor
+        epollreactor.install()
+    except ImportError:
+        print '(dependencies missing for epoll, using normal reactor)'
+
 if sys.version_info < (2, 7):
     try:
         import psyco
