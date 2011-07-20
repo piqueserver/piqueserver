@@ -59,9 +59,6 @@ kill_action = serverloaders.KillAction()
 chat_message = serverloaders.ChatMessage()
 map_data = MapData()
 
-class master_test:
-    count = 0
-
 class ServerConnection(BaseConnection):
     master = False
     protocol = None
