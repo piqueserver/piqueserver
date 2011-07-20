@@ -203,14 +203,15 @@ cdef class Grenade(Object):
         diff_x = player_position.x - position.x
         diff_y = player_position.y - position.y
         diff_z = player_position.z - position.z
+        cdef double value
         if (fabs(diff_x) < 16 and
             fabs(diff_y) < 16 and
             fabs(diff_z) < 16 and
             self.collides(player_position)):
-            cdef double value = diff_x**2 + diff_y**2 + diff_z**2
+            value = diff_x**2 + diff_y**2 + diff_z**2
             if value == 0.0:
                 return 100.0
-            return 4096.0 / (value)
+            return 4096.0 / value
     
     cdef void update(self, double dt):
         cdef VXLData map = self.world.map
