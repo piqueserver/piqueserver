@@ -168,9 +168,9 @@ class ServerConnection(BaseConnection):
                             self.weapon = contained.weapon
                         self.protocol.players[self.name, self.player_id] = self
                     if old_team is None:
+                        self.speedhack_detect = True
                         self.on_login(self.name)
                         self.spawn(name = self.name)
-                        self.speedhack_detect = True
                     else:
                         self.kill()
                     return
