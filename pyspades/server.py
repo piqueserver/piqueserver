@@ -705,7 +705,8 @@ class ServerConnection(BaseConnection):
         diff = (end_timer - start_timer) / (end_seconds - start_seconds)
         if diff > MAX_TIMER_SPEED:
             print 'SPEEDHACK -> Diff:', diff, timers
-            self.on_hack_attempt('Speedhack detected')
+            self.on_hack_attempt('Speedhack detected '
+                '(or really awful connection)')
 
     # events/hooks
     
