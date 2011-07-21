@@ -167,7 +167,12 @@ cdef class VXLData:
         return data_python
     
     def generate(self):
-        return save_vxl(self.map)
+        start = time.time()
+        data = save_vxl(self.map)
+        dt = time.time() - start
+        if dt > 1.0:
+            print 'VXLData.generate() took %s' % (dt)
+        return data
     
     def __dealloc__(self):
         cdef MapData * map

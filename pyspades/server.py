@@ -168,9 +168,10 @@ class ServerConnection(BaseConnection):
                             self.weapon = contained.weapon
                         self.protocol.players[self.name, self.player_id] = self
                     if old_team is None:
+                        if self.protocol.speedhack_detect:
+                            self.speedhack_detect = True
                         self.on_login(self.name)
                         self.spawn(name = self.name)
-                        self.speedhack_detect = True
                     else:
                         self.kill()
                     return
@@ -231,7 +232,7 @@ class ServerConnection(BaseConnection):
                             sender = self)
                     elif contained.id == clientloaders.HitPacket.id:
                         if contained.player_id != -1:
-                            player, = self.protocol.players[contained.player_id]
+                            player = self.protocol.players[contained.player_id]
                             hit_amount = HIT_VALUES[contained.value][self.weapon]
                             returned = self.on_hit(hit_amount, player)
                             if returned == False:
@@ -590,12 +591,21 @@ class ServerConnection(BaseConnection):
         self.send_map()
         
     def grenade_exploded(self, grenade):
+        position = grenade.position
+        x = position.x
+        y = position.y
+        z = position.z
+        if x < 0 or x > 512 or y < 0 or y > 512 or z < 0 or z > 63:
+            return
+        x = int(x)
+        y = int(y)
+        z = int(z)
         for player_list in (self.team.other.get_players(), (self,)):
             for player in player_list:
                 if not player.hp:
                     continue
                 damage = grenade.get_damage(player.world_object.position)
-                if damage is None:
+                if damage == 0:
                     continue
                 returned = self.on_hit(damage, player)
                 if returned == False:
@@ -603,12 +613,6 @@ class ServerConnection(BaseConnection):
                 elif returned is not None:
                     damage = returned
                 player.set_hp(player.hp - damage, self)
-        position = grenade.position
-        x = int(position.x)
-        y = int(position.y)
-        z = int(position.z)
-        if x < 0 or x > 512 or y < 0 or y > 512 or z < 0 or z > 63:
-            return
         if self.on_block_destroy(x, y, z, GRENADE_DESTROY) == False:
             return
         map = self.protocol.map
@@ -836,7 +840,6 @@ class ServerProtocol(DatagramProtocol):
 
     name = 'pyspades server'
     max_players = 20
-
     connections = None
     connection_ids = None
     player_ids = None
@@ -846,11 +849,10 @@ class ServerProtocol(DatagramProtocol):
     friendly_fire = False
     friendly_fire_time = 2
     server_prefix = '[*]'
-    
     respawn_time = 5
     refill_interval = 20
-    
     master_connection = None
+    speedhack_detect = True
     
     def __init__(self):
         self.connections = {}

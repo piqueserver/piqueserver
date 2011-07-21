@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Oh-so-messy debugging stuff. Beware of the inferior code quality.
+"""
+
 isClient = None
 mapBytes = 0
 packets = 0

@@ -23,7 +23,8 @@ def got_servers(data, defer):
         ping = int(value[5:10].strip())
         identifier = value[11:]
         end_start = identifier.index('>')+1
-        ip = get_server_ip(int(identifier[15:end_start-2]))
+        
+        ip = get_server_ip(int(identifier[15:end_start-3]))
         name = identifier[end_start:-4]
         servers.append(ServerEntry(name, ip, ping, players, max))
     defer.callback(servers)

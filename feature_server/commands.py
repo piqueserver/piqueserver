@@ -40,10 +40,10 @@ def get_player(protocol, value):
     try:
         if value.startswith('#'):
             value = int(value[1:])
-            return protocol.players[value][0]
+            return protocol.players[value]
         players = protocol.players
         try:
-            return players[value][0]
+            return players[value]
         except KeyError:
             value = value.lower()
             for player in players.values():
@@ -370,7 +370,7 @@ def unmute(connection, value):
     connection.protocol.send_chat(message, irc = True)
 
 @admin
-def teleport(connection, player1, player2 = None):
+def teleport(connection, player1, player2 = None, silent = False):
     player1 = get_player(connection.protocol, player1)
     if player2 is not None:
         player, target = player1, get_player(connection.protocol, player2)
@@ -384,11 +384,19 @@ def teleport(connection, player1, player2 = None):
 
     # set location!
     player.set_location(target.get_location())
-    connection.protocol.send_chat(message, irc = True)
+    
+    if silent:
+        connection.protocol.irc_say(message)
+    else:
+        connection.protocol.send_chat(message, irc = True)
 
 @admin
 def tp(connection, player1, player2 = None):
     teleport(connection, player1, player2)
+
+@admin
+def tpsilent(connection, player1, player2 = None):
+    teleport(connection, player1, player2, True)
 
 from pyspades.common import coordinates, to_coordinates
 
@@ -537,6 +545,7 @@ command_list = [
     toggle_teamkill,
     teleport,
     tp,
+    tpsilent,
     go_to,
     move,
     where,
