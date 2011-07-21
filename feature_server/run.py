@@ -134,23 +134,12 @@ class FeatureConnection(ServerConnection):
                         ip)
                     self.disconnect()
                     return False
-        for ban in protocol.federated_bans:
-            username = ban[0]
-            ip = ban[1]
-            timestamp = ban[3]
-            if client_ip == ip:
-                if timestamp is not None and reactor.seconds() >= timestamp:
-                    pass
-                else:
-                    print 'federated banned user %s (%s) attempted to join' % (
-                        username, ip)
-                    self.disconnect()
-                    return False
-        global_bans = self.protocol.global_bans
-        if global_bans is not None:
-            reason = global_bans.get_ban(client_ip)
+        manager = self.protocol.ban_manager
+        if manager is not None:
+            reason = manager.get_ban(client_ip)
             if reason is not None:
-                print 'globally banned user (%s) attempted to join' % client_ip
+                print ('federated banned user (%s) attempted to join, '
+                    'banned for %r') % (client_ip, reason)
                 return False
     
     def on_join(self):
@@ -408,7 +397,8 @@ class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
     version = CLIENT_VERSION
     bans = None
-    global_bans = None
+    ban_publish = None
+    ban_subscribe = None
     irc_relay = None
     balanced_teams = None
     timestamps = None
@@ -476,9 +466,6 @@ class FeatureProtocol(ServerProtocol):
         self.votekick_percentage = config.get('votekick_percentage', 25)
         self.votekick_public_votes = config.get('votekick_public_votes', True)
         self.speedhack_detect = config.get('speedhack_detect', True)
-        if config.get('global_bans', True):
-            import globalban
-            self.global_bans = globalban.BanManager()
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
         self.max_followers = config.get('max_followers', 0)
@@ -500,15 +487,14 @@ class FeatureProtocol(ServerProtocol):
         if status.get('enabled', False):
             from statusserver import StatusServerFactory
             self.status_server = StatusServerFactory(self, status)
-        publish = config.get('publish_server', {})
+        publish = config.get('ban_publish', {})
         if publish.get('enabled', False):
-            from publishserver import PublishServerFactory
-            self.publish_server = PublishServerFactory(self, publish)
-        self.federated_bans = []
-        ban_subscribe = config.get('ban_subscribe', [])
-        for ip in ban_subscribe:
-            # figure out how to pull the data...
-            pass
+            from banpublish import PublishServer
+            self.ban_publish = PublishServer(self, publish)
+        ban_subscribe = config.get('ban_subscribe', {})
+        if ban_subscribe.get('enabled', True):
+            import bansubscribe
+            self.ban_manager = bansubscribe.BanManager(self, ban_subscribe)
         
         if logfile is not None and logfile.strip():
             observer = log.FileLogObserver(open(logfile, 'a'))
@@ -589,6 +575,8 @@ class FeatureProtocol(ServerProtocol):
     
     def save_bans(self):
         json.dump(self.bans, open('bans.txt', 'wb'))
+        if self.ban_publish is not None:
+            self.ban_publish.update()
     
     def datagramReceived(self, data, address):
         # simple pyspades query
