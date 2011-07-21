@@ -96,7 +96,6 @@ class BaseConnection(object):
     ping_interval = 5
     ping_call = None
     ping_defer = None
-    timeout = 10
     
     timer = None
     timer_offset = 0
@@ -178,6 +177,8 @@ class BaseConnection(object):
             return
     
     def resend(self, key, data, count = 1):
+        if self.disconnected:
+            return
         defer, _ = self.packet_deferreds.pop(key)
         if count >= MAX_SEND_RETRIES:
             self.timed_out()
@@ -224,28 +225,21 @@ class BaseConnection(object):
             self.packet_deferreds[key] = (defer, call)
             return defer
             
-    def ping(self, timeout = None):
+    def ping(self):
         if self.connection_id is None:
             return
-        if self.ping_call is not None:
+        if self.ping_defer is not None:
             return self.ping_defer
-        if timeout is None:
-            timeout = self.timeout
-        self.ping_call = reactor.callLater(timeout, self.timed_out)
         self.ping_time = reactor.seconds()
         self.ping_defer = self.send_loader(ping, True, 0xFF).addCallback(
             self.got_ping)
         return self.ping_defer
         
     def got_ping(self, ack):
-        if self.ping_call is not None:
-            self.ping_call.cancel()
-            self.latency = reactor.seconds() - self.ping_time
-            self.ping_call = self.ping_defer = None
+        self.latency = reactor.seconds() - self.ping_time
+        self.ping_defer = None
     
     def timed_out(self):
-        if self.ping_call is not None:
-            self.ping_call = None
         self.disconnect()
     
     def send_contained(self, contained, sequence = None):

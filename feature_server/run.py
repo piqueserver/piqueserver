@@ -172,6 +172,8 @@ class FeatureConnection(ServerConnection):
                 self.protocol.votekick_call.cancel()
                 self.protocol.end_votekick(True, 'Player left the game',
                     left = True)
+        else:
+            print '%s disconnected' % self.address[0]
     
     def on_spawn(self, pos):
         if self.follow is not None:
