@@ -50,13 +50,6 @@ if iocp and sys.platform == 'win32':
     except ImportError:
         print '(dependencies missing for fast IOCP, using normal reactor)'
 
-if sys.platform == 'linux2':
-    try:
-        from twisted.internet import epollreactor
-        epollreactor.install()
-    except ImportError:
-        print '(dependencies missing for epoll, using normal reactor)'
-
 if sys.version_info < (2, 7):
     try:
         import psyco
@@ -101,6 +94,8 @@ def writelines(fp, lines):
 class FeatureConnection(ServerConnection):
     printable_name = None
     admin = False
+    user_types = None
+    rights = None
     last_votekick = None
     last_switch = None
     mute = False
@@ -172,8 +167,6 @@ class FeatureConnection(ServerConnection):
                 self.protocol.votekick_call.cancel()
                 self.protocol.end_votekick(True, 'Player left the game',
                     left = True)
-        else:
-            print '%s disconnected' % self.address[0]
     
     def on_spawn(self, pos):
         if self.follow is not None:
@@ -399,7 +392,6 @@ def encode_lines(value):
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
     version = CLIENT_VERSION
-    admin_passwords = None
     bans = None
     irc_relay = None
     balanced_teams = None
@@ -423,8 +415,6 @@ class FeatureProtocol(ServerProtocol):
     spawns = None
     user_blocks = None
     god_blocks = None
-    
-    last_time = None
     
     def __init__(self, config, map):
         self.map = map.data
@@ -458,8 +448,7 @@ class FeatureProtocol(ServerProtocol):
             reactor.callLater(self.tip_frequency * 60, self.send_tip)
         self.max_players = config.get('max_players', 20)
         self.max_connections_per_ip = config.get('max_connections_per_ip', 0)
-        passwords = config.get('passwords', {})
-        self.admin_passwords = passwords.get('admin', [])
+        self.passwords = config.get('passwords', {})
         self.server_prefix = encode(config.get('server_prefix', '[*]'))
         self.balanced_teams = config.get('balanced_teams', None)
         self.rules = self.format_lines(config.get('rules', None))
@@ -468,7 +457,6 @@ class FeatureProtocol(ServerProtocol):
         self.votekick_ban_duration = config.get('votekick_ban_duration', 15)
         self.votekick_percentage = config.get('votekick_percentage', 25)
         self.votekick_public_votes = config.get('votekick_public_votes', True)
-        self.speedhack_detect = config.get('speedhack_detect', True)
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
         self.max_followers = config.get('max_followers', 0)
@@ -510,7 +498,7 @@ class FeatureProtocol(ServerProtocol):
             self.console = ConsoleInput(self)
             StandardIO(self.console)
         
-        for password in self.admin_passwords:
+        for password in self.passwords.get('admin', []):
             if password == 'replaceme':
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
         ServerProtocol.__init__(self)
@@ -585,12 +573,7 @@ class FeatureProtocol(ServerProtocol):
         if data == 'HELLO':
             self.transport.write('HI', address)
             return
-        current_time = reactor.seconds()
         ServerProtocol.datagramReceived(self, data, address)
-        dt = reactor.seconds() - current_time
-        if dt > 1.0:
-            print '(warning: processing %r from %s took %s)' % (
-                data, address[0], dt)
         
     def irc_say(self, msg):
         if self.irc_relay:
@@ -708,22 +691,6 @@ class FeatureProtocol(ServerProtocol):
                 self.send_chat("Blue Team Wins, %s - %s" %
                                (self.blue_team.kills, self.green_team.kills))
                 self.reset_game(player)
-    
-    # log high CPU usage
-    
-    def update_world(self):
-        last_time = self.last_time
-        current_time = reactor.seconds()
-        if last_time is not None:
-            dt = current_time - last_time
-            if dt > 1.0:
-                print '(warning: high CPU usage detected - %s)' % dt
-        self.last_time = current_time
-        ServerProtocol.update_world(self)
-        time_taken = reactor.seconds() - current_time
-        if time_taken > 1.0:
-            print 'World update iteration took %s, objects: %s' % (time_taken,
-                self.world.objects)
 
 PORT = 32887
 

@@ -23,8 +23,6 @@ class InvalidTeam(Exception):
 
 def admin(func):
     def new_func(connection, *arg, **kw):
-        if not connection.admin:
-            return 'No administrator rights!'
         return func(connection, *arg, **kw)
     new_func.func_name = func.func_name
     new_func.admin = True
@@ -183,13 +181,19 @@ def login(connection, password):
     """
     if connection not in connection.protocol.players:
         raise KeyError()
-    passwords = connection.protocol.admin_passwords
-    if password in passwords:
-        connection.admin = True
-        connection.speedhack_detect = False
-        message = '%s logged in as admin' % connection.name
-        connection.protocol.send_chat(message, irc = True)
-        return None
+    for user_type, passwords in connection.protocol.passwords.iteritems():
+        if password in passwords:
+            if connection.user_types is None:
+                connection.user_types = set()
+                connection.rights = set()
+            connection.user_types.update(user_type)
+            if user_type in rights:
+                connection.rights.update(rights[user_type])
+            connection.admin = (user_type == 'admin')
+            connection.speedhack_detect = False
+            message = '%s logged in as %s' % (connection.name, user_type)
+            connection.protocol.send_chat(message, irc = True)
+            return None
     if connection.login_retries is None:
         connection.login_retries = connection.protocol.login_retries - 1
     else:
@@ -564,6 +568,10 @@ commands = {}
 for command_func in command_list:
     commands[command_func.func_name] = command_func
 
+rights = {
+    'builder' : ['god', 'goto']
+}
+
 def add(func, name = None):
     """
     Function to add a command from scripts
@@ -579,6 +587,11 @@ def handle_command(connection, command, parameters):
     except KeyError:
         return # 'Invalid command'
     try:
+        if hasattr(command_func, 'admin'):
+            if (not connection.admin and 
+                (connection.rights is None or
+                command_func.func_name not in connection.rights)):
+                return 'No administrator rights!'
         return command_func(connection, *parameters)
     except KeyError:
         return # 'Invalid command'
