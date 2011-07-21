@@ -55,6 +55,20 @@ def coordinates(data):
 def to_coordinates(x, y):
     return '%s%s' % (chr(ord('a') + int(x) / 64).upper(), (int(y) / 64) + 1)
 
+def prettify_timespan(total):
+    days = total / 1440
+    total -= days * 1440
+    hours = total / 60
+    minutes = total - hours * 60
+    days_s = '%s day' % days if days > 0 else None
+    hours_s = '%s hour' % hours if hours > 0 else None
+    minutes_s = '%s minute' % minutes if minutes > 0 else None
+    if days > 1: days_s += 's'
+    if hours > 1: hours_s += 's'
+    if minutes > 1: minutes_s += 's'
+    text = ', '.join([s for s in days_s, hours_s, minutes_s if s])
+    return text
+    
 def compare_reader(reader, value, name):
     if reader.read(len(value)) != value:
         print '%s is wrong' % name
