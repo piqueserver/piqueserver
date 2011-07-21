@@ -146,6 +146,12 @@ class FeatureConnection(ServerConnection):
                         username, ip)
                     self.disconnect()
                     return False
+        global_bans = self.protocol.global_bans
+        if global_bans is not None:
+            reason = global_bans.get_ban(client_ip)
+            if reason is not None:
+                print 'globally banned user (%s) attempted to join' % client_ip
+                return False
     
     def on_join(self):
         if self.protocol.motd is not None:
@@ -402,6 +408,7 @@ class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
     version = CLIENT_VERSION
     bans = None
+    global_bans = None
     irc_relay = None
     balanced_teams = None
     timestamps = None
@@ -469,6 +476,9 @@ class FeatureProtocol(ServerProtocol):
         self.votekick_percentage = config.get('votekick_percentage', 25)
         self.votekick_public_votes = config.get('votekick_public_votes', True)
         self.speedhack_detect = config.get('speedhack_detect', True)
+        if config.get('global_bans', True):
+            import globalban
+            self.global_bans = globalban.BanManager()
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
         self.max_followers = config.get('max_followers', 0)
