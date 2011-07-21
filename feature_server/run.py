@@ -480,6 +480,7 @@ class FeatureProtocol(ServerProtocol):
         self.votekick_ban_duration = config.get('votekick_ban_duration', 15)
         self.votekick_percentage = config.get('votekick_percentage', 25)
         self.votekick_public_votes = config.get('votekick_public_votes', True)
+        self.speedhack_detect = config.get('speedhack_detect', True)
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
         self.max_followers = config.get('max_followers', 0)

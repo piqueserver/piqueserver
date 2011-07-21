@@ -168,7 +168,8 @@ class ServerConnection(BaseConnection):
                             self.weapon = contained.weapon
                         self.protocol.players[self.name, self.player_id] = self
                     if old_team is None:
-                        self.speedhack_detect = True
+                        if self.protocol.speedhack_detect:
+                            self.speedhack_detect = True
                         self.on_login(self.name)
                         self.spawn(name = self.name)
                     else:
@@ -839,7 +840,6 @@ class ServerProtocol(DatagramProtocol):
 
     name = 'pyspades server'
     max_players = 20
-
     connections = None
     connection_ids = None
     player_ids = None
@@ -849,11 +849,10 @@ class ServerProtocol(DatagramProtocol):
     friendly_fire = False
     friendly_fire_time = 2
     server_prefix = '[*]'
-    
     respawn_time = 5
     refill_interval = 20
-    
     master_connection = None
+    speedhack_detect = True
     
     def __init__(self):
         self.connections = {}
