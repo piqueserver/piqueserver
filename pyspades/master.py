@@ -16,13 +16,14 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from pyspades.loaders import Loader
-from pyspades.protocol import BaseConnection
+from pyspades.protocol import BaseConnection, in_packet
 from pyspades.tools import make_server_number, get_server_ip
 from twisted.internet.protocol import DatagramProtocol
 from pyspades.loaders import *
 from pyspades.common import *
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
+from pyspades.bytes import ByteReader
 
 import random
 
@@ -130,7 +131,8 @@ class MasterProtocol(DatagramProtocol):
         self.connection.set_count(value)
         
     def datagramReceived(self, data, address):
-        self.connection.data_received(data)
+        in_packet.read(data)
+        self.connection.packet_received(in_packet)
 
 def get_master_connection(name, max, interface = ''):
     defer = Deferred()

@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+CONNECTIONLESS = 0xFFF
+
 SEMI_WEAPON = 0
 SMG_WEAPON = 1
 

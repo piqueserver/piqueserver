@@ -21,7 +21,7 @@ Client implementation - WIP
 
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
-from pyspades.protocol import BaseConnection
+from pyspades.protocol import BaseConnection, in_packet
 from pyspades.bytes import ByteReader, ByteWriter
 from pyspades.packet import Packet, load_server_packet
 from pyspades.loaders import *
@@ -139,4 +139,5 @@ class ClientProtocol(DatagramProtocol):
         self.connection = self.connection_class(self)
     
     def datagramReceived(self, data, address):
-        self.connection.data_received(data)
+        in_packet.read(data)
+        self.connection.packet_received(in_packet)

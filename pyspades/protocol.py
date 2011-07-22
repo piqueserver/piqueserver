@@ -24,6 +24,7 @@ from twisted.internet.defer import Deferred
 from pyspades.loaders import *
 from twisted.internet.task import LoopingCall
 from pyspades.common import hexify, stringify, binify
+from pyspades.constants import CONNECTIONLESS
 
 import time
 import math
@@ -71,8 +72,8 @@ class PacketHandler(object):
 
 ack_packet = Ack()
 ping = Ping()
-in_packet = Packet()
 out_packet = Packet()
+in_packet = Packet()
 sized_sequence = SizedSequenceData()
 sized_data = SizedData()
 
@@ -113,24 +114,22 @@ class BaseConnection(object):
         ping_loop.start(self.ping_interval, False)
         self.ping_loop = ping_loop
     
-    def data_received(self, data):
-        reader = ByteReader(data)
-        in_packet.read(data)
-        timer = in_packet.timer
+    def packet_received(self, packet):
+        timer = packet.timer
         if timer != -1:
             timer += self.timer_offset
             if self.timer is not None:
                 if (timer - self.timer < 0 and
-                in_packet.timer in xrange(2048)):
+                packet.timer in xrange(2048)):
                     self.timer_offset += 0xFFFF
                     timer += 0xFFFF
             self.timer = timer
             self.timer_received(timer)
         if not self.is_client and self.connection_id is not None:
-            if in_packet.connection_id != self.connection_id:
+            if packet.connection_id != self.connection_id:
                 # invalid packet
                 return
-        for loader in in_packet.items:
+        for loader in packet.items:
             if self.disconnected:
                 return
             if loader.ack:
@@ -139,7 +138,7 @@ class BaseConnection(object):
                 self.loader_received(loader)
             if self.connection_id is not None:
                 if loader.ack and loader.id:
-                    ack_packet.timer = in_packet.timer
+                    ack_packet.timer = packet.timer
                     ack_packet.sequence2 = loader.sequence
                     self.send_loader(ack_packet, False, loader.byte)
                 elif loader.id == Ack.id:
@@ -187,7 +186,7 @@ class BaseConnection(object):
         if self.is_client:
             connection_id = self.connection_id
             if connection_id is None:
-                connection_id = 0xFFF
+                connection_id = CONNECTIONLESS
             out_packet.connection_id = connection_id
         else:
             out_packet.connection_id = 0
@@ -210,7 +209,7 @@ class BaseConnection(object):
         if self.is_client:
             connection_id = self.connection_id
             if connection_id is None:
-                connection_id = 0xFFF
+                connection_id = CONNECTIONLESS
             out_packet.connection_id = connection_id
         else:
             out_packet.connection_id = 0

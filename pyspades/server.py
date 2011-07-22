@@ -21,7 +21,7 @@ from twisted.internet.task import LoopingCall
 from pyspades.protocol import (BaseConnection, sized_sequence, 
     sized_data, in_packet, out_packet)
 from pyspades.bytes import ByteReader, ByteWriter
-from pyspades.packet import Packet, load_client_packet
+from pyspades.packet import load_client_packet
 from pyspades.loaders import *
 from pyspades.common import *
 from pyspades.constants import *
@@ -933,10 +933,13 @@ class ServerProtocol(DatagramProtocol):
     def datagramReceived(self, data, address):
         if not data:
             return
+        in_packet.read(data)
         if address not in self.connections:
+            if in_packet.connection_id != CONNECTIONLESS:
+                return
             self.connections[address] = self.connection_class(self, address)
         connection = self.connections[address]
-        connection.data_received(data)
+        connection.packet_received(in_packet)
     
     def update_entities(self):
         blue_team = self.blue_team
