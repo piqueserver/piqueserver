@@ -398,7 +398,7 @@ class FeatureProtocol(ServerProtocol):
     version = CLIENT_VERSION
     bans = None
     ban_publish = None
-    ban_subscribe = None
+    ban_manager = None
     irc_relay = None
     balanced_teams = None
     timestamps = None
