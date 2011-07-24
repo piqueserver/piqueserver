@@ -42,3 +42,13 @@ def get_server_ip(number):
     c = (number & 0xFF0000) >> 16
     d = (number & 0xFF000000) >> 24
     return '%s.%s.%s.%s' % (a, b, c, d)
+
+if __name__ == '__main__':
+    import sys
+    args = sys.argv[1:]
+    command = args[0]
+    if command == 'readpacket':
+        from pyspades.packet import Packet
+        new_packet = Packet()
+        new_packet.read(eval(' '.join(args[1:])))
+        print new_packet.items

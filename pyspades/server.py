@@ -897,8 +897,9 @@ class ServerProtocol(DatagramProtocol):
     def get_name(self, name):
         i = 0
         new_name = name
+        names = [p.name.lower() for p in self.players.values()]
         while 1:
-            if new_name.lower() in [p.name.lower() for p in self.players.values()]:
+            if new_name.lower() in names:
                 i += 1
                 new_name = name + str(i)
             else:

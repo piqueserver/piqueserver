@@ -29,5 +29,9 @@ HOST = '127.0.0.1'
 # HOST = get_server_ip('aos://16777343')
 PORT = 32887
 
-reactor.listenUDP(0, TestProtocol(HOST, PORT))
+def make_connection():
+    reactor.listenUDP(0, TestProtocol(HOST, PORT))
+    reactor.callLater(0.1, make_connection)
+
+reactor.callLater(1, make_connection)
 reactor.run()

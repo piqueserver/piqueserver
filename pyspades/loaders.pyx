@@ -70,7 +70,7 @@ cdef class Ack(PacketLoader):
 cdef class ConnectionRequest(PacketLoader):
     id = 2
     cdef public:
-        int value
+        int value, value2
         unsigned int auth_val, version
         bint client
 
@@ -109,9 +109,10 @@ cdef class ConnectionRequest(PacketLoader):
         check_default_int(dword_5, 2)
         self.auth_val = dword_6
         self.version = dword_7
+        self.value2 = word_1
     
     cpdef write(self, ByteWriter reader):
-        reader.writeShort(0)
+        reader.writeShort(self.value2)
         cdef int value
         if self.client:
             value = -1

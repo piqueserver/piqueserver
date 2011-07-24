@@ -39,6 +39,7 @@ class OtherClient(object):
 
 class ClientConnection(BaseConnection):
     protocol = None
+    displayed_id = False
     def __init__(self, protocol):
         BaseConnection.__init__(self)
         self.protocol = protocol
@@ -67,6 +68,12 @@ class ClientConnection(BaseConnection):
         loader.data = data
         self.send_loader(loader, True)
     
+    def packet_received(self, packet):
+        if not self.displayed_id:
+            print 'server id:', packet.connection_id
+            self.displayed_id = True
+        BaseConnection.packet_received(self, packet)
+    
     def loader_received(self, packet):
         is_contained = hasattr(packet, 'data') and packet.id != MapData.id
         if is_contained:
@@ -92,10 +99,9 @@ class ClientConnection(BaseConnection):
             self.connection_id = packet.connection_id
             self.unique = packet.unique
             self.connected = True
-            print 'connected'
+            print 'connected', self.connection_id, self.unique
         elif is_contained:
             if packet.id == SizedData.id and self.map is not None:
-                print 'finished!'
                 reactor.callLater(1.0, self.send_join, team = 0, weapon = 0)
                 #reactor.callLater(4.0, self.send_join, 1, 1)
                 # open('testy.vxl', 'wb').write(str(self.map))

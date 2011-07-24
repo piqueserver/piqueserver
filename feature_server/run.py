@@ -83,7 +83,7 @@ import time
 import commands
 
 CHAT_WINDOW_SIZE = 5
-CHAT_PER_SECOND = 1.5
+CHAT_PER_SECOND = 0.5
 
 class ConsoleInput(LineReceiver):
     delimiter = '\n'
@@ -140,6 +140,7 @@ class FeatureConnection(ServerConnection):
             if reason is not None:
                 print ('federated banned user (%s) attempted to join, '
                     'banned for %r') % (client_ip, reason)
+                self.disconnect()
                 return False
     
     def on_join(self):
