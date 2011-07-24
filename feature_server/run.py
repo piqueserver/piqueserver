@@ -549,24 +549,27 @@ class FeatureProtocol(ServerProtocol):
         reactor.callLater(20, self.set_master)
 
     def add_ban(self, ip, reason, duration):
-        """Ban an ip(if it hasn't already been banned) with an optional reason and
-            duration in minutes. If duration is None, ban is permanent."""
+        """
+        Ban an ip with an optional reason and
+        duration in minutes. If duration is None, ban is permanent.
+        """
+        banned = False
         for connection in self.connections.values():
-            if connection.address[0] == ip and (len([ban for ban in self.bans
-                                                     if ban[1]==ip])<=0):
-                if duration:
-                    self.bans.append((connection.name, ip, reason,
-                                      reactor.seconds()+duration * 60))
-                else:
-                    self.bans.append((connection.name, ip, reason,
-                                      None))
+            if connection.address[0] == ip:
+                if not banned:
+                    if duration:
+                        self.bans.append((connection.name, ip, reason,
+                                         reactor.seconds()+duration * 60))
+                    else:
+                        self.bans.append((connection.name, ip, reason,
+                                         None))
+                    self.save_bans()
+                    banned = True
                 connection.kick(silent = True)
-                self.save_bans()
     
     def remove_ban(self, ip):
-        print(ip)
-        results = [self.bans.remove(n) for n in self.bans if n[1]==ip]
-        print(results)
+        results = [self.bans.remove(n) for n in self.bans if n[1] == ip]
+        print 'Removing ban:', ip, results
         self.save_bans()
 
     def undo_last_ban(self):
