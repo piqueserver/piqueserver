@@ -13,8 +13,6 @@ def apply_script(protocol, connection, config):
         def grenade_exploded(self, grenade):
             if self.weapon == 0:
                 return connection.grenade_exploded(self, grenade)
-            if not self.god and not self.protocol.building:
-                return
             position = grenade.position
             x = int(position.x)
             y = int(position.y)
@@ -28,6 +26,8 @@ def apply_script(protocol, connection, config):
             color = self.block_color + (255,)
             while list:
                 x, y, z = list.pop(0)
+                if connection.on_block_build_attempt(self, x, y, z) == False:
+                    continue
                 block_action.x = x
                 block_action.y = y
                 block_action.z = z
