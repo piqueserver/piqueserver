@@ -238,7 +238,7 @@ PyObject * save_vxl(MapData * map)
    int i,j,k;
    if (out_global == 0)
    {
-       out_global = (char *)malloc(7 * 1024 * 1024); // allocate 6 mb
+       out_global = (char *)malloc(8 * 1024 * 1024); // allocate 8 mb
    }
    char * out = out_global;
 
