@@ -23,7 +23,7 @@ def apply_script(protocol, connection, config):
             try_add_node(map, x, y, z, list)
             block_action.value = BUILD_BLOCK
             block_action.player_id = self.player_id
-            color = self.block_color + (255,)
+            color = self.color + (255,)
             while list:
                 x, y, z = list.pop(0)
                 if connection.on_block_build_attempt(self, x, y, z) == False:
