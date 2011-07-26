@@ -3,7 +3,7 @@ from pyspades.constants import *
 
 def apply_script(protocol, connection, config):
     def try_add_node(map, x, y, z, list):
-        if x < 0 or x >= 512 or y < 0 or y >= 512 or z <= 0 or z >= 63:
+        if x < 0 or x >= 512 or y < 0 or y >= 512 or z < 0 or z >= 62:
             return
         if map.get_solid(x, y, z):
             return
