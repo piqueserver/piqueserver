@@ -13,13 +13,12 @@ def apply_script(protocol, connection, config):
         def grenade_exploded(self, grenade):
             if self.weapon == 0:
                 return connection.grenade_exploded(self, grenade)
+            if not self.god and not self.protocol.building:
+                return
             position = grenade.position
-            x = position.x
-            y = position.y
-            z = position.z
-            x = int(x)
-            y = int(y)
-            z = int(z)
+            x = int(position.x)
+            y = int(position.y)
+            z = int(position.z)
             blocks = 19
             map = self.protocol.map
             list = []
@@ -34,15 +33,15 @@ def apply_script(protocol, connection, config):
                 block_action.z = z
                 self.protocol.send_contained(block_action, save = True)
                 map.set_point(x, y, z, color, user = False)
+                blocks -= 1
+                if blocks == 0:
+                    break
                 try_add_node(map, x, y, z - 1, list)
                 try_add_node(map, x, y - 1, z, list)
                 try_add_node(map, x, y + 1, z, list)
                 try_add_node(map, x - 1, y, z, list)
                 try_add_node(map, x + 1, y, z, list)
                 try_add_node(map, x, y, z + 1, list)
-                blocks -= 1
-                if blocks == 0:
-                    break
             self.protocol.update_entities()
     
     return protocol, DirtGrenadeConnection
