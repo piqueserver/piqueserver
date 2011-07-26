@@ -148,7 +148,7 @@ def apply_script(protocol, connection, config):
                     if self.protected:
                         if self.is_protected(x, y):
                             continue
-                    for z in xrange(1, 64):
+                    for z in xrange(63):
                         action = None
                         cur_solid = cur.get_solid(x, y, z)
                         new_solid = new.get_solid(x, y, z)
