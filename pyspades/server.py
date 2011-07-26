@@ -261,9 +261,10 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(set_tool, sender = self)
                     elif contained.id == clientloaders.SetColor.id:
                         color = get_color(contained.value)
-                        if self.on_color_set(color) == False:
+                        if self.on_color_set_attempt(color) == False:
                             return
-                        self.color = color
+                        self.on_color_set(color)
+                        self.block_color = color
                         set_color.player_id = self.player_id
                         set_color.value = contained.value
                         self.protocol.send_contained(set_color, sender = self,
@@ -754,8 +755,11 @@ class ServerConnection(BaseConnection):
     def on_refill(self):
         pass
     
-    def on_color_set(self, color):
+    def on_color_set_attempt(self, color):
         pass
+    
+    def on_color_set(self, color):
+        self.block_color = color
     
     def on_flag_capture(self):
         pass

@@ -32,11 +32,11 @@ def apply_script(protocol, connection, config):
     rollback_on_game_end = config.get('rollback_on_game_end', False)
     
     class RollbackConnection(connection):
-        def on_color_set(self, (r, g, b)):
+        def on_color_set_attempt(self, (r, g, b)):
             if (self.protocol.rollback_in_progress and
                 self.protocol.rollbacking_player is self):
                 return False
-            return connection.on_color_set(self, (r, g, b))
+            return connection.on_color_set_attempt(self, (r, g, b))
     
     class RollbackProtocol(protocol):
         def __init__(self, config, map):
