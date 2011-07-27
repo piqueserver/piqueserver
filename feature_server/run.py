@@ -108,6 +108,7 @@ class FeatureConnection(ServerConnection):
     mute = False
     login_retries = None
     god = False
+    invisible = False
     building = True
     killing = True
     follow = None

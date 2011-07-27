@@ -81,6 +81,7 @@ class ServerConnection(BaseConnection):
     saved_loaders = None
     last_refill = None
     last_block_destroy = None
+    filter_visibility_data = False
     speedhack_detect = False
     timers = None
     world_object = None
@@ -180,6 +181,8 @@ class ServerConnection(BaseConnection):
                     if contained.id == clientloaders.OrientationData.id:
                         world_object.set_orientation(contained.x,
                             contained.y, contained.z)
+                        if self.filter_visibility_data:
+                            return
                         orientation_data.x = contained.x
                         orientation_data.y = contained.y
                         orientation_data.z = contained.z
@@ -189,12 +192,6 @@ class ServerConnection(BaseConnection):
                     elif contained.id == clientloaders.PositionData.id:
                         world_object.set_position(contained.x, contained.y,
                             contained.z)
-                        position_data.player_id = self.player_id
-                        position_data.x = contained.x
-                        position_data.y = contained.y
-                        position_data.z = contained.z
-                        self.protocol.send_contained(position_data, 
-                            sender = self)
                         self.on_position_update()
                         other_flag = self.team.other.flag
                         if vector_collision(world_object.position, self.team.base):
@@ -210,9 +207,19 @@ class ServerConnection(BaseConnection):
                         if other_flag.player is None and vector_collision(
                         world_object.position, other_flag):
                             self.take_flag()
+                        if self.filter_visibility_data:
+                            return
+                        position_data.player_id = self.player_id
+                        position_data.x = contained.x
+                        position_data.y = contained.y
+                        position_data.z = contained.z
+                        self.protocol.send_contained(position_data, 
+                            sender = self)
                     elif contained.id == clientloaders.MovementData.id:
                         world_object.set_walk(contained.up, contained.down,
                             contained.left, contained.right)
+                        if self.filter_visibility_data:
+                            return
                         movement_data.up = contained.up
                         movement_data.down = contained.down
                         movement_data.left = contained.left
@@ -223,6 +230,8 @@ class ServerConnection(BaseConnection):
                     elif contained.id == clientloaders.AnimationData.id:
                         world_object.set_animation(contained.fire,
                             contained.jump, contained.crouch, contained.aim)
+                        if self.filter_visibility_data:
+                            return
                         animation_data.fire = contained.fire
                         animation_data.jump = contained.jump
                         animation_data.crouch = contained.crouch
@@ -248,14 +257,18 @@ class ServerConnection(BaseConnection):
                         self.grenades -= 1
                         if self.on_grenade(contained.value) == False:
                             return
-                        grenade_packet.player_id = self.player_id
-                        grenade_packet.value = contained.value
                         world_object.throw_grenade(contained.value,
                             self.grenade_exploded)
+                        if self.filter_visibility_data:
+                            return
+                        grenade_packet.player_id = self.player_id
+                        grenade_packet.value = contained.value
                         self.protocol.send_contained(grenade_packet, 
                             sender = self)
                     elif contained.id == clientloaders.SetTool.id:
                         self.tool = contained.value
+                        if self.filter_visibility_data:
+                            return
                         set_tool.player_id = self.player_id
                         set_tool.value = contained.value
                         self.protocol.send_contained(set_tool, sender = self)
@@ -265,6 +278,8 @@ class ServerConnection(BaseConnection):
                             return
                         self.color = color
                         self.on_color_set(color)
+                        if self.filter_visibility_data:
+                            return
                         set_color.player_id = self.player_id
                         set_color.value = contained.value
                         self.protocol.send_contained(set_color, sender = self,
@@ -344,12 +359,15 @@ class ServerConnection(BaseConnection):
         return position.x, position.y, position.z
     
     def set_location(self, (x, y, z)):
+        self.world_object.set_position(x, y, z)
         position_data.x = x
         position_data.y = y
         position_data.z = z
         position_data.player_id = self.player_id
-        self.protocol.send_contained(position_data)
-        self.world_object.set_position(x, y, z)
+        if self.filter_visibility_data:
+            self.send_contained(position_data)
+        else:
+            self.protocol.send_contained(position_data)
     
     def get_orientation_sequence(self):
         sequence = self.orientation_sequence
@@ -379,7 +397,6 @@ class ServerConnection(BaseConnection):
     
     def spawn(self, pos = None, name = None):
         self.spawn_call = None
-        create_player.player_id = self.player_id
         if pos is None:
             pos = self.team.get_random_location(True)
         x, y, z = pos
@@ -390,16 +407,20 @@ class ServerConnection(BaseConnection):
             self.world_object = self.protocol.world.create_object(
                 world.Character, position, None, self._on_fall)
         self.world_object.dead = False
-        create_player.name = name
-        create_player.x = x
-        create_player.y = y - 128
-        create_player.weapon = self.weapon
         self.hp = 100
         self.tool = 3
         self.grenades = 2
         self.blocks = 50
-        self.protocol.send_contained(create_player, save = True)
         self.on_spawn(pos)
+        create_player.player_id = self.player_id
+        create_player.name = name
+        create_player.x = x
+        create_player.y = y - 128
+        create_player.weapon = self.weapon
+        if self.filter_visibility_data:
+            self.send_contained(create_player, save = True)
+        else:
+            self.protocol.send_contained(create_player, save = True)
     
     def capture_flag(self):
         other_team = self.team.other

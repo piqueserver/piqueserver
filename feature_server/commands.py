@@ -396,17 +396,15 @@ def teleport(connection, player1, player2 = None, silent = False):
     player1 = get_player(connection.protocol, player1)
     if player2 is not None:
         player, target = player1, get_player(connection.protocol, player2)
-        message = '%s teleported %s to %s' % (connection.name, player.name, 
-            target.name)
+        message = '%s ' + ('silently ' if silent else '') + 'teleported %s to %s'
+        message = message % (connection.name, player.name, target.name)
     else:
         if connection not in connection.protocol.players:
             raise ValueError()
         player, target = connection, player1
+        message = '%s ' + ('silently ' if silent else '') + 'teleported to %s'
         message = '%s teleported to %s' % (connection.name, target.name)
-
-    # set location!
     player.set_location(target.get_location())
-    
     if silent:
         connection.protocol.irc_say(message)
     else:
@@ -414,7 +412,7 @@ def teleport(connection, player1, player2 = None, silent = False):
 
 @admin
 def tp(connection, player1, player2 = None):
-    teleport(connection, player1, player2)
+    teleport(connection, player1, player2, connection.invisible)
 
 @admin
 def tpsilent(connection, player1, player2 = None):
@@ -465,6 +463,65 @@ def god(connection, value = None):
     else:
         message = '%s returned to being a mere human.' % connection.name
     connection.protocol.send_chat(message, irc = True)
+
+from pyspades.server import kill_action, create_player, position_data
+from pyspades.server import orientation_data, movement_data, animation_data
+from pyspades.server import set_tool, set_color
+
+@admin
+def invisible(connection, value = None):
+    if value is not None:
+        connection = get_player(connection.protocol, value)
+    elif connection not in connection.protocol.players:
+        raise ValueError()
+    connection.invisible = not connection.invisible
+    connection.filter_visibility_data = connection.invisible
+    connection.god = connection.invisible
+    if connection.invisible:
+        connection.send_chat("You're now invisible.")
+        connection.protocol.irc_say('* %s became invisible')
+        position_data.set((0, 0, 0), connection.player_id)
+        kill_action.not_fall = True
+        kill_action.player1 = kill_action.player2 = connection.player_id
+        connection.protocol.send_contained(position_data, sender = connection)
+        connection.protocol.send_contained(kill_action, sender = connection,
+            save = True)
+    else:
+        connection.send_chat("You return to visibility.")
+        connection.protocol.irc_say('* %s became visible')
+        pos = connection.team.get_random_location(True)
+        x, y, z = pos
+        create_player.player_id = connection.player_id
+        create_player.name = None
+        create_player.x = x
+        create_player.y = y - 128
+        create_player.weapon = connection.weapon
+        world_object = connection.world_object
+        position_data.set(world_object.position.get(), connection.player_id)
+        orientation_data.set(world_object.orientation.get(), connection.player_id)
+        movement_data.up = world_object.up
+        movement_data.down = world_object.down
+        movement_data.left = world_object.left
+        movement_data.right = world_object.right
+        movement_data.player_id = connection.player_id
+        animation_data.fire = world_object.fire
+        animation_data.jump = world_object.jump
+        animation_data.crouch = world_object.crouch
+        animation_data.aim = world_object.aim
+        animation_data.player_id = connection.player_id
+        set_tool.player_id = connection.player_id
+        set_tool.value = connection.tool
+        set_color.player_id = connection.player_id
+        set_color.value = make_color(*connection.color)
+        connection.protocol.send_contained(create_player, sender = connection,
+            save = True)
+        connection.protocol.send_contained(position_data, sender = connection)
+        connection.protocol.send_contained(orientation_data, sender = connection)
+        connection.protocol.send_contained(movement_data, sender = connection)
+        connection.protocol.send_contained(animation_data, sender = connection)
+        connection.protocol.send_contained(set_tool, sender = connection)
+        connection.protocol.send_contained(set_color, sender = connection,
+            save = True)
 
 @admin
 def ip(connection, value = None):
@@ -572,6 +629,7 @@ command_list = [
     move,
     where,
     god,
+    invisible,
     follow,
     no_follow,
     streak,
