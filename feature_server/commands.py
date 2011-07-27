@@ -232,7 +232,7 @@ def follow(connection, player = None):
     if player is None:
         if connection.follow is None:
             return ("You aren't following anybody. To follow, say "
-                    "/follow <nickname> or /follow attack")
+                "/follow <nickname>")
         else:
             connection.respawn_time = connection.protocol.respawn_time
             confirmation = send_unfollow_message(connection)
@@ -248,7 +248,7 @@ def follow(connection, player = None):
             connection.follow = "attack"
             connection.respawn_time = connection.protocol.follow_respawn_time
             return ("You are now an attacker and will spawn with players "
-                    "close to the enemy.")
+                "close to the enemy.")
     
     player = get_player(connection.protocol, player)
     if connection == player:
@@ -266,8 +266,8 @@ def follow(connection, player = None):
     connection.follow = player
     connection.respawn_time = connection.protocol.follow_respawn_time
     player.send_chat('%s is now following you.' % connection.name)
-    return ('Next time you die you will spawn where %s is. To stop, type /follow' %
-        player.name)
+    return ('Next time you die you will spawn where %s is. To stop, '
+        'type /follow' % player.name)
 
 @name('nofollow')
 def no_follow(connection):
