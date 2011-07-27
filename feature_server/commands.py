@@ -487,7 +487,7 @@ def god_build(connection, player = None):
         'no longer placing god blocks.')
     if connection is not player:
         connection.send_chat('%s is %s' % (player.name, message))
-    player.send_chat("You're %s" % (player.name, message))
+    player.send_chat("You're %s" % message)
     connection.protocol.irc_say('* %s is %s' % (player.name, message))
 
 from pyspades.server import kill_action, create_player, position_data
