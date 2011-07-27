@@ -245,8 +245,9 @@ class FeatureConnection(ServerConnection):
             self.send_chat("You can't kill anyone.")
             return False
         elif player.god:
-            self.send_chat("You can't hurt %s! That player is in *god mode*" %
-                player.name)
+            if not player.invisible:
+                self.send_chat("You can't hurt %s! That player is in "
+                    "*god mode*" % player.name)
             return False
         if self.god:
             self.protocol.send_chat('%s, killing in god mode is forbidden!' %
