@@ -108,6 +108,8 @@ class FeatureConnection(ServerConnection):
     mute = False
     login_retries = None
     god = False
+    building = True
+    killing = True
     follow = None
     followable = True
     streak = 0
@@ -195,7 +197,7 @@ class FeatureConnection(ServerConnection):
         print log_message.encode('ascii', 'replace')
     
     def on_block_build_attempt(self, x, y, z):
-        if not self.god and not self.protocol.building:
+        if not self.god and (not self.protocol.building or not self.building):
             return False
     
     def on_block_build(self, x, y, z):
@@ -209,7 +211,7 @@ class FeatureConnection(ServerConnection):
     
     def on_block_destroy(self, x, y, z, mode):
         if not self.god:
-            if not self.protocol.building:
+            if not self.protocol.building or not self.building:
                 return False
             is_indestructable = self.protocol.is_indestructable
             if mode == DESTROY_BLOCK:
@@ -237,6 +239,9 @@ class FeatureConnection(ServerConnection):
         if not self.protocol.killing:
             self.send_chat(
                 "You can't kill anyone right now! Damage is turned OFF")
+            return False
+        if not self.killing:
+            self.send_chat("You can't kill anyone.")
             return False
         elif player.god:
             self.send_chat("You can't hurt %s! That player is in *god mode*" %

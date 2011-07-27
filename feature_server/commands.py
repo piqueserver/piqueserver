@@ -331,7 +331,16 @@ def set_balance(connection, value):
 
 @name('togglebuild')
 @admin
-def toggle_build(connection):
+def toggle_build(connection, player = None):
+    if player is not None:
+        player = get_player(connection.protocol, player)
+        value = not player.building
+        player.building = value
+        msg = '%s can build again' if value else '%s is disabled from building'
+        connection.protocol.send_chat(msg % player.name)
+        connection.protocol.irc_say('* %s %s building for %s' % (connection.name,
+            ['enabled', 'disabled'][int(value)], player.name))
+        return
     value = not connection.protocol.building
     connection.protocol.building = value
     on_off = ['OFF', 'ON'][int(value)]
@@ -341,7 +350,16 @@ def toggle_build(connection):
     
 @name('togglekill')
 @admin
-def toggle_kill(connection):
+def toggle_kill(connection, player = None):
+    if player is not None:
+        player = get_player(connection.protocol, player)
+        value = not player.killing
+        player.killing = value
+        msg = '%s can kill again' if value else '%s is disabled from killing'
+        connection.protocol.send_chat(msg % player.name)
+        connection.protocol.irc_say('* %s %s killing for %s' % (connection.name,
+            ['enabled', 'disabled'][int(value)], player.name))
+        return
     value = not connection.protocol.killing
     connection.protocol.killing = value
     on_off = ['OFF', 'ON'][int(value)]
