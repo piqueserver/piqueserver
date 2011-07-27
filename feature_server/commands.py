@@ -339,7 +339,7 @@ def toggle_build(connection, player = None):
         msg = '%s can build again' if value else '%s is disabled from building'
         connection.protocol.send_chat(msg % player.name)
         connection.protocol.irc_say('* %s %s building for %s' % (connection.name,
-            ['enabled', 'disabled'][int(value)], player.name))
+            ['disabled', 'enabled'][int(value)], player.name))
         return
     value = not connection.protocol.building
     connection.protocol.building = value
@@ -358,7 +358,7 @@ def toggle_kill(connection, player = None):
         msg = '%s can kill again' if value else '%s is disabled from killing'
         connection.protocol.send_chat(msg % player.name)
         connection.protocol.irc_say('* %s %s killing for %s' % (connection.name,
-            ['enabled', 'disabled'][int(value)], player.name))
+            ['disabled', 'enabled'][int(value)], player.name))
         return
     value = not connection.protocol.killing
     connection.protocol.killing = value
