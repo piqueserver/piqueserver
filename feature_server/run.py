@@ -108,6 +108,7 @@ class FeatureConnection(ServerConnection):
     mute = False
     login_retries = None
     god = False
+    god_build = False
     invisible = False
     building = True
     killing = True
@@ -204,6 +205,7 @@ class FeatureConnection(ServerConnection):
     def on_block_build(self, x, y, z):
         if self.god:
             self.refill()
+        if self.god_build:
             if self.protocol.god_blocks is None:
                 self.protocol.god_blocks = set()
             self.protocol.god_blocks.add((x, y, z))
@@ -211,7 +213,7 @@ class FeatureConnection(ServerConnection):
             self.protocol.user_blocks.add((x, y, z))
     
     def on_block_destroy(self, x, y, z, mode):
-        if not self.god:
+        if not self.god_build:
             if not self.protocol.building or not self.building:
                 return False
             is_indestructable = self.protocol.is_indestructable
@@ -255,6 +257,7 @@ class FeatureConnection(ServerConnection):
             self.protocol.send_chat('%s returned to being a mere human.' %
                 self.name, irc = True)
             self.god = False
+            self.god_build = False
 
     def on_kill(self, killer):
         self.streak = 0

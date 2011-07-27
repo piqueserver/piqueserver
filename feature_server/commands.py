@@ -464,11 +464,31 @@ def god(connection, value = None):
     elif connection not in connection.protocol.players:
         raise ValueError()
     connection.god = not connection.god
+    connection.god_build = False
     if connection.god:
         message = '%s entered GOD MODE!' % connection.name
     else:
         message = '%s returned to being a mere human.' % connection.name
     connection.protocol.send_chat(message, irc = True)
+
+@name('godbuild')
+@admin
+def god_build(connection, player = None):
+    if player is not None:
+        player = get_player(connection.protocol, player)
+    elif connection not in connection.protocol.players:
+        raise ValueError()
+    else:
+        player = connection
+    if not player.god:
+        connection.send_chat('Placing god blocks is only allowed in god mode')
+    player.god_build = not player.god_build
+    message = ('now placing god blocks.' if player.god_build else
+        'no longer placing god blocks.')
+    if connection is not player:
+        connection.send_chat('%s is %s' % (player.name, message))
+    player.send_chat("You're %s" % (player.name, message))
+    connection.protocol.irc_say('* %s is %s' % (player.name, message))
 
 from pyspades.server import kill_action, create_player, position_data
 from pyspades.server import orientation_data, movement_data, animation_data
@@ -484,6 +504,7 @@ def invisible(connection, value = None):
     connection.invisible = not connection.invisible
     connection.filter_visibility_data = connection.invisible
     connection.god = connection.invisible
+    connection.god_build = False
     if connection.invisible:
         connection.send_chat("You're now invisible.")
         connection.protocol.irc_say('* %s became invisible' % connection.name)
@@ -636,6 +657,7 @@ command_list = [
     move,
     where,
     god,
+    god_build,
     invisible,
     follow,
     no_follow,
