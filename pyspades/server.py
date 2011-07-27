@@ -418,7 +418,7 @@ class ServerConnection(BaseConnection):
         create_player.y = y - 128
         create_player.weapon = self.weapon
         if self.filter_visibility_data:
-            self.send_contained(create_player, save = True)
+            self.send_contained(create_player)
         else:
             self.protocol.send_contained(create_player, save = True)
     
