@@ -204,11 +204,11 @@ class ServerConnection(BaseConnection):
                                 self.last_refill = reactor.seconds()
                                 if self.on_refill() != False:
                                     self.refill()
+                        if self.filter_visibility_data:
+                            return
                         if other_flag.player is None and vector_collision(
                         world_object.position, other_flag):
                             self.take_flag()
-                        if self.filter_visibility_data:
-                            return
                         position_data.player_id = self.player_id
                         position_data.x = contained.x
                         position_data.y = contained.y
