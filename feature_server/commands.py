@@ -412,11 +412,11 @@ def teleport(connection, player1, player2 = None, silent = False):
 
 @admin
 def tp(connection, player1, player2 = None):
-    teleport(connection, player1, player2, connection.invisible)
+    teleport(connection, player1, player2, silent = connection.invisible)
 
 @admin
 def tpsilent(connection, player1, player2 = None):
-    teleport(connection, player1, player2, True)
+    teleport(connection, player1, player2, silent = True)
 
 from pyspades.common import coordinates, to_coordinates
 
@@ -425,21 +425,27 @@ from pyspades.common import coordinates, to_coordinates
 def go_to(connection, value):
     if connection not in connection.protocol.players:
         raise KeyError()
-    move(connection, connection.name, value)
+    move(connection, connection.name, value, silent = connection.invisible)
 
 @admin
-def move(connection, player, value):
+def move(connection, player, value, silent = False):
     player = get_player(connection.protocol, player)
     x, y = coordinates(value)
     x += 32
     y += 32
     player.set_location((x, y, connection.protocol.map.get_height(x, y) - 2))
     if connection is player:
-        message = '%s teleported to location %s' % (player.name, value.upper())
+        message = ('%s ' + ('silently ' if silent else '') + 'teleported to '
+            'location %s')
+        message = message % (player.name, value.upper())
     else:
-        message = ('%s teleported %s to location %s' %
-            (connection.name, player.name, value.upper()))
-    connection.protocol.send_chat(message, irc = True)
+        message = ('%s ' + ('silently ' if silent else '') + 'teleported %s '
+            'to location %s')
+        message = message % (connection.name, player.name, value.upper())
+    if silent:
+        connection.protocol.irc_say('* ' + message)
+    else:
+        connection.protocol.send_chat(message, irc = True)    
 
 @admin
 def where(connection, value = None):
