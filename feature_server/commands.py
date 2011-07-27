@@ -403,10 +403,10 @@ def teleport(connection, player1, player2 = None, silent = False):
             raise ValueError()
         player, target = connection, player1
         message = '%s ' + ('silently ' if silent else '') + 'teleported to %s'
-        message = '%s teleported to %s' % (connection.name, target.name)
+        message = message % (connection.name, target.name)
     player.set_location(target.get_location())
     if silent:
-        connection.protocol.irc_say(message)
+        connection.protocol.irc_say('* ' + message)
     else:
         connection.protocol.send_chat(message, irc = True)
 
@@ -467,6 +467,7 @@ def god(connection, value = None):
 from pyspades.server import kill_action, create_player, position_data
 from pyspades.server import orientation_data, movement_data, animation_data
 from pyspades.server import set_tool, set_color
+from pyspades.common import make_color
 
 @admin
 def invisible(connection, value = None):
@@ -479,7 +480,7 @@ def invisible(connection, value = None):
     connection.god = connection.invisible
     if connection.invisible:
         connection.send_chat("You're now invisible.")
-        connection.protocol.irc_say('* %s became invisible')
+        connection.protocol.irc_say('* %s became invisible' % connection.name)
         position_data.set((0, 0, 0), connection.player_id)
         kill_action.not_fall = True
         kill_action.player1 = kill_action.player2 = connection.player_id
@@ -488,7 +489,7 @@ def invisible(connection, value = None):
             save = True)
     else:
         connection.send_chat("You return to visibility.")
-        connection.protocol.irc_say('* %s became visible')
+        connection.protocol.irc_say('* %s became visible' % connection.name)
         pos = connection.team.get_random_location(True)
         x, y, z = pos
         create_player.player_id = connection.player_id
