@@ -481,7 +481,7 @@ def god_build(connection, player = None):
     else:
         player = connection
     if not player.god:
-        connection.send_chat('Placing god blocks is only allowed in god mode')
+        return 'Placing god blocks is only allowed in god mode.'
     player.god_build = not player.god_build
     message = ('now placing god blocks.' if player.god_build else
         'no longer placing god blocks.')
@@ -546,10 +546,10 @@ def invisible(connection, value = None):
         connection.protocol.send_contained(position_data, sender = connection)
         connection.protocol.send_contained(orientation_data, sender = connection)
         connection.protocol.send_contained(movement_data, sender = connection)
-        connection.protocol.send_contained(animation_data, sender = connection)
         connection.protocol.send_contained(set_tool, sender = connection)
         connection.protocol.send_contained(set_color, sender = connection,
             save = True)
+        connection.protocol.send_contained(animation_data, sender = connection)
 
 @admin
 def ip(connection, value = None):
