@@ -1,3 +1,4 @@
+from pyspades.collision import distance_3d_vector
 from commands import add, admin, name, get_player
 from twisted.internet import reactor
 
