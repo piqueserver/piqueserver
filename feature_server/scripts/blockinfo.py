@@ -9,7 +9,8 @@ def grief_check(connection, player, time = None):
     if minutes < 0.0:
         raise ValueError()
     time = reactor.seconds() - minutes * 60.0
-    blocks = [b[1] for b in player.blocks_removed if b[0] >= time]
+    blocks_removed = player.blocks_removed or []
+    blocks = [b[1] for b in blocks_removed if b[0] >= time]
     message = '%s removed %s block%s in the last ' % (player.name,
         len(blocks) or 'no', '' if len(blocks) == 1 else 's')
     if minutes == 1.0:
@@ -23,7 +24,7 @@ def grief_check(connection, player, time = None):
             message += ' Some of them were placed by %s.' % (', '.join(names))
         else:
             message += ' All of them were map blocks.'
-        last = player.blocks_removed[-1]
+        last = blocks_removed[-1]
         message += ' Last one was destroyed %s seconds ago' % (
             int(reactor.seconds() - last[0]))
         whom = last[1]
