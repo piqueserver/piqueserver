@@ -43,13 +43,19 @@ add(grief_check)
 
 def apply_script(protocol, connection, config):
     class BlockInfoConnection(connection):
-        blocks_removed = []
+        blocks_removed = None
         
         def on_block_build(self, x, y, z):
+            if self.protocol.block_info is None:
+                self.protocol.block_info = {}
             self.protocol.block_info[(x, y, z)] = self.name
             connection.on_block_build(self, x, y, z)
         
         def on_block_removed(self, x, y, z):
+            if self.protocol.block_info is None:
+                self.protocol.block_info = {}
+            if self.blocks_removed is None:
+                self.blocks_removed = []
             pos = (x, y, z)
             info = (reactor.seconds(),
                 self.protocol.block_info.pop(pos, None))
@@ -57,6 +63,6 @@ def apply_script(protocol, connection, config):
             connection.on_block_removed(self, x, y, z)
     
     class BlockInfoProtocol(protocol):
-        block_info = {}
+        block_info = None
     
     return BlockInfoProtocol, BlockInfoConnection
