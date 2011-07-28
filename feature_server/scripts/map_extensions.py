@@ -1,4 +1,5 @@
 from pyspades.server import hit_packet
+import types
 
 def apply_script(protocol, connection, config):
     
@@ -7,8 +8,15 @@ def apply_script(protocol, connection, config):
             extensions = self.protocol.map_info.extensions
             if (extensions.has_key('water_damage') and
                 self.world_object.position.z>=61):
-                water_damage = extensions['water_damage']                
+                water_damage = extensions['water_damage']
                 self.environment_hit(water_damage)
+            if (extensions.has_key('boundary_damage')):
+                x = self.world_object.position.x
+                y = self.world_object.position.y
+                boundary_damage = extensions['boundary_damage']
+                if (x<=boundary_damage['left'] or x>=boundary_damage['right'] or
+                    y<=boundary_damage['top'] or y>=boundary_damage['bottom']):
+                    self.environment_hit(boundary_damage['damage'])                
             connection.on_position_update(self)
     
         def environment_hit(self, value):
