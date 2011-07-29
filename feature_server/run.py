@@ -199,7 +199,9 @@ class FeatureConnection(ServerConnection):
         print log_message.encode('ascii', 'replace')
     
     def on_block_build_attempt(self, x, y, z):
-        if not self.god and (not self.protocol.building or not self.building):
+        if not self.building:
+            return False
+        if not self.god and not self.protocol.building:
             return False
     
     def on_block_build(self, x, y, z):
@@ -213,8 +215,10 @@ class FeatureConnection(ServerConnection):
             self.protocol.user_blocks.add((x, y, z))
     
     def on_block_destroy(self, x, y, z, mode):
+        if not self.building:
+            return False
         if not self.god_build:
-            if not self.protocol.building or not self.building:
+            if not self.protocol.building:
                 return False
             is_indestructable = self.protocol.is_indestructable
             if mode == DESTROY_BLOCK:
