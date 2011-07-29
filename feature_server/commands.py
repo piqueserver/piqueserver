@@ -186,6 +186,8 @@ def login(connection, password):
             if connection.user_types is None:
                 connection.user_types = set()
                 connection.rights = set()
+            if user_type in connection.user_types:
+                return "You're already logged in as %s" % user_type
             connection.user_types.update(user_type)
             if user_type in rights:
                 connection.rights.update(rights[user_type])
