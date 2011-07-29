@@ -28,6 +28,7 @@ def apply_script(protocol, connection, config):
             self.invisible = True
             self.killing = False
             self.building = False
+            self.followable = False
             player_data.player_left = self.player_id
             for player in self.protocol.connections.values():
                 if player is self:
@@ -59,7 +60,8 @@ def apply_script(protocol, connection, config):
             for player in self.protocol.connections.values():
                 if player is not self and player.spectator:
                     player.send_contained(chat_message)
-            self.protocol.irc_say('(%s) %s' % (self.name, value))
+            message = '(%s) %s' % (self.name, value)
+            self.protocol.irc_say(message)
             print message.encode('ascii', 'replace')
             return False
         
