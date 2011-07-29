@@ -1,26 +1,17 @@
-import commands
-
-@commands.name('trustedlogin')
-def trusted_login(connection, password):
-    if password in connection.protocol.trusted_passwords:
-        connection.trusted = True
-        return 'Logged in as trusted user.'
-    return 'Invalid password.'
-
-commands.add(trusted_login)
-
 def apply_script(protocol, connection, config):
-    passwords = config.get('passwords', {}).get('trusted', [])
-    
-    class ProtectConnection(connection):
+    class TrustedConnection(connection):
         trusted = False
-    
-    class ProtectProtocol(protocol):
-        trusted_passwords = passwords
         
+        def on_user_login(self, user_type):
+            if user_type == 'trusted':
+                self.trusted = True
+                self.speedhack_detect = False
+            return connection.on_user_login(self, user_type)
+    
+    class TrustedProtocol(protocol):
         def start_votekick(self, connection, player, reason = None):
             if player.trusted:
-                return 'Cannot votekick a trusted player.'
+                return "%s is trusted and you can't votekick him." % player.name
             return protocol.start_votekick(self, connection, player, reason)
-        
-    return ProtectProtocol, ProtectConnection
+    
+    return TrustedProtocol, TrustedConnection
