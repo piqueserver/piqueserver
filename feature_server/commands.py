@@ -379,6 +379,8 @@ def toggle_teamkill(connection):
 @admin
 def mute(connection, value):
     player = get_player(connection.protocol, value)
+    if player.mute:
+        return '%s is already muted' % player.name
     player.mute = True
     message = '%s has been muted by %s' % (player.name, connection.name)
     connection.protocol.send_chat(message, irc = True)
@@ -386,6 +388,8 @@ def mute(connection, value):
 @admin
 def unmute(connection, value):
     player = get_player(connection.protocol, value)
+    if not player.mute:
+        return '%s is not muted' % player.name
     player.mute = False
     message = '%s has been unmuted by %s' % (player.name, connection.name)
     connection.protocol.send_chat(message, irc = True)
