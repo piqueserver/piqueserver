@@ -40,7 +40,7 @@ def grief_check(connection, player, time = None):
             message += ' All of them were map blocks.'
         last = blocks_removed[-1]
         message += ' Last one was destroyed %s ago' % (
-            prettify_timespan(reactor.seconds() - last[0], seconds = True))
+            prettify_timespan(reactor.seconds() - last[0], get_seconds = True))
         whom = last[1]
         if whom is None and len(names) > 0:
             message += ', and was part of the map'

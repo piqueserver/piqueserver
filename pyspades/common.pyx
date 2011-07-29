@@ -55,14 +55,16 @@ def coordinates(data):
 def to_coordinates(x, y):
     return '%s%s' % (chr(ord('a') + int(x) / 64).upper(), (int(y) / 64) + 1)
 
-def prettify_timespan(total, seconds = False):
+def prettify_timespan(total, get_seconds = False):
     total = int(total)
     days = total / (1440 * 60)
     total -= days * 1440 * 60
     hours = total / (60 * 60)
     total -= hours * 60 * 60
     minutes = total / 60
-    seconds = total - minutes * 60 if seconds else 0
+    seconds = total - minutes * 60 if get_seconds else 0
+    if days == hours == minutes == seconds == 0:
+        return 'less than a %s' % 'second' if get_seconds else 'minute'
     days_s = '%s day' % days if days > 0 else None
     hours_s = '%s hour' % hours if hours > 0 else None
     minutes_s = '%s minute' % minutes if minutes > 0 else None
