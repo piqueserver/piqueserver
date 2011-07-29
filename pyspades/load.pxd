@@ -6,7 +6,13 @@ cdef extern from "load_c.cpp":
         DEFAULT_COLOR
     struct MapData:
         pass
+    struct MapGenerator:
+        pass
+    MapGenerator * create_map_generator(MapData * original)
+    void delete_map_generator(MapGenerator * generator)
+    object get_generator_data(MapGenerator * generator, int columns)
     MapData * load_vxl(unsigned char * v)
+    MapData * copy_map(MapData * map)
     void delete_vxl(MapData * map)
     object save_vxl(MapData * map)
     int check_node(int x, int y, int z, MapData * map, int destroy)

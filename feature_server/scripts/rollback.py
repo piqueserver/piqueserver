@@ -40,8 +40,7 @@ def apply_script(protocol, connection, config):
     
     class RollbackProtocol(protocol):
         def __init__(self, config, map):
-            self.rollback_map = VXLData()
-            self.rollback_map.load_vxl(map.data.generate())
+            self.rollback_map = map.data.copy()
             protocol.__init__(self, config, map)
         
         rollback_in_progress = False
@@ -139,8 +138,7 @@ def apply_script(protocol, connection, config):
             set_color.value = 0x000000
             set_color.player_id = connection.player_id
             self.send_contained(set_color, save = True)
-            old = VXLData()
-            old.load_vxl(cur.generate())
+            old = cur.copy()
             for x in xrange(start_x, end_x):
                 block_action.x = x
                 for y in xrange(start_y, end_y):

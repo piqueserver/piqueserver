@@ -38,6 +38,27 @@ cdef inline int get_z(int x, int y, MapData * map, int start = 0):
             return z
     return 0
 
+cdef class Generator:
+    cdef MapGenerator * generator
+    cdef public:
+        bint done
+    
+    def __init__(self, VXLData data):
+        self.done = False
+        self.generator = create_map_generator(data.map)
+    
+    def get_data(self, int columns = 2):
+        if self.done:
+            return None
+        value = get_generator_data(self.generator, columns)
+        if not value:
+            self.done = True
+            return None
+        return value
+    
+    def __dealloc__(self):
+        delete_map_generator(self.generator)
+
 cdef class VXLData:
     def __init__(self, fp = None):
         cdef unsigned char * c_data
@@ -54,6 +75,11 @@ cdef class VXLData:
     def get_point(self, int x, int y, int z):
         return (get_solid(x, y, z, self.map), get_color_tuple(get_color(
             x, y, z, self.map)))
+    
+    def copy(self):
+        cdef VXLData map = VXLData()
+        map.map = copy_map(self.map)
+        return map
     
     cpdef int get_solid(self, int x, int y, int z):
         if x < 0 or x >= 512 or y < 0 or y >= 512 or z < 0 or z >= 64:
@@ -173,6 +199,9 @@ cdef class VXLData:
         if dt > 1.0:
             print 'VXLData.generate() took %s' % (dt)
         return data
+    
+    def get_generator(self):
+        return Generator(self)
     
     def __dealloc__(self):
         cdef MapData * map

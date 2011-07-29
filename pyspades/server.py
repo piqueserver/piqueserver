@@ -608,7 +608,7 @@ class ServerConnection(BaseConnection):
         
         saved_loaders.append(player_data.generate())
         
-        self.map_data = ByteReader(self.protocol.map.generate())
+        self.map_generator = self.protocol.map.get_generator()
         self.send_map()
         
     def grenade_exploded(self, grenade):
@@ -663,10 +663,10 @@ class ServerConnection(BaseConnection):
         self.set_hp(self.hp - damage, not_fall = False)
     
     def send_map(self):
-        if self.map_data is None:
+        if self.map_generator is None:
             return
-        if not self.map_data.dataLeft():
-            self.map_data = None
+        if self.map_generator.done:
+            self.map_generator = None
             # get the saved loaders
             for data in self.saved_loaders:
                 sized_data.data = data
@@ -676,8 +676,10 @@ class ServerConnection(BaseConnection):
             return
         for _ in xrange(4):
             sequence = self.packet_handler1.sequence + 1
-            data_size = min(5120, self.map_data.dataLeft())
-            new_data = ByteReader('\x0F' + self.map_data.read(data_size))
+            data = self.map_generator.get_data(660)
+            if data is None:
+                break
+            new_data = ByteReader('\x0F' + data)
             new_data_size = len(new_data)
             nums = int(math.ceil(new_data_size / 1024.0))
             for i in xrange(nums):

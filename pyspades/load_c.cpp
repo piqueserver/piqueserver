@@ -233,13 +233,18 @@ inline void write_color(char ** out, int color)
 
 char * out_global = 0;
 
-PyObject * save_vxl(MapData * map)
+void create_temp()
 {
-   int i,j,k;
    if (out_global == 0)
    {
        out_global = (char *)malloc(8 * 1024 * 1024); // allocate 8 mb
    }
+}
+
+PyObject * save_vxl(MapData * map)
+{
+   int i,j,k;
+   create_temp();
    char * out = out_global;
 
    for (j=0; j < MAP_Y; ++j) {
@@ -333,5 +338,142 @@ PyObject * save_vxl(MapData * map)
          }  
       }
    }
+   return PyString_FromStringAndSize((char *)out_global, out - out_global);
+}
+
+inline MapData * copy_map(MapData * map)
+{
+    return new MapData(*map);
+}
+
+struct MapGenerator
+{
+    MapData * map;
+    int x, y;
+};
+
+MapGenerator * create_map_generator(MapData * original)
+{
+    MapGenerator * generator = new MapGenerator;
+    generator->map = copy_map(original);
+    generator->x = 0;
+    generator->y = 0;
+    return generator;
+}
+
+void delete_map_generator(MapGenerator * generator)
+{
+    delete_vxl(generator->map);
+    delete generator;
+}
+
+PyObject * get_generator_data(MapGenerator * generator, int columns)
+{
+   int i, j, k;
+   create_temp();
+   char * out = out_global;
+   int column = 0;
+   MapData * map = generator->map;
+
+   for (j=generator->y; j < MAP_Y; ++j) {
+      for (i=generator->x; i < MAP_X; ++i) {
+         if (column == columns)
+         {
+             goto done;
+         }
+         int written_colors = 0;
+         int previous_bottom_colors = 0;
+         int current_bottom_colors = 0;
+         int middle_start = 0;
+
+         k = 0;
+         while (k < MAP_Z) {
+            int z;
+
+            int air_start;
+            int top_colors_start;
+            int top_colors_end; // exclusive
+            int bottom_colors_start;
+            int bottom_colors_end; // exclusive
+            int top_colors_len;
+            int bottom_colors_len;
+            int colors;
+            // find the air region
+            air_start = k;
+            while (k < MAP_Z && !map->geometry[get_pos(i, j, k)])
+               ++k;
+            // find the top region
+            top_colors_start = k;
+            while (k < MAP_Z && is_surface(map, i, j, k))
+               ++k;
+            top_colors_end = k;
+
+            // now skip past the solid voxels
+            while (k < MAP_Z && map->geometry[get_pos(i, j, k)] && 
+                   !is_surface(map, i,j,k))
+               ++k;
+
+            // at the end of the solid voxels, we have colored voxels.
+            // in the "normal" case they're bottom colors; but it's
+            // possible to have air-color-solid-color-solid-color-air,
+            // which we encode as air-color-solid-0, 0-color-solid-air
+          
+            // so figure out if we have any bottom colors at this point
+            bottom_colors_start = k;
+
+            z = k;
+            while (z < MAP_Z && is_surface(map, i,j, z))
+               ++z;
+
+            if (z == MAP_Z)
+               ; // in this case, the bottom colors of this span are empty, because we'l emit as top colors
+            else {
+               // otherwise, these are real bottom colors so we can write them
+               while (is_surface(map, i,j,k))  
+                  ++k;
+            }
+            bottom_colors_end = k;
+
+            // now we're ready to write a span
+            top_colors_len    = top_colors_end    - top_colors_start;
+            bottom_colors_len = bottom_colors_end - bottom_colors_start;
+
+            colors = top_colors_len + bottom_colors_len;
+
+            if (k == MAP_Z)
+            {
+               *out = 0;
+               out += 1;
+            }
+            else
+            {
+               *out = colors + 1;
+               out += 1;
+            }
+            *out = top_colors_start;
+            out += 1;
+            *out = top_colors_end - 1;
+            out += 1;
+            *out = air_start;
+            out += 1;
+
+            for (z=0; z < top_colors_len; ++z)
+            {
+               write_color(&out, map->colors[get_pos(i, j, 
+                   top_colors_start + z)]);
+            }
+            for (z=0; z < bottom_colors_len; ++z)
+            {
+               write_color(&out, map->colors[get_pos(i, j, 
+                   bottom_colors_start + z)]);
+            }
+         }
+         column++;
+      }
+   generator->x = 0;
+   }
+done:
+   generator->x = i;
+   generator->y = j;
    return PyString_FromStringAndSize((char *)out_global, out - out_global);
 }

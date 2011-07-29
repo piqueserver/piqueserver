@@ -595,8 +595,7 @@ def change_map(connection, value):
     for conn in protocol.connections.values():
         conn.disconnect()
     if protocol.rollback_map is not None:
-        protocol.rollback_map = VXLData()
-        protocol.rollback_map.load_vxl(protocol.map.generate())
+        protocol.rollback_map = protocol.map.copy()
     protocol.blue_team.initialize()
     protocol.green_team.initialize()
 
