@@ -57,7 +57,7 @@ def apply_script(protocol, connection, config):
             chat_message.value = value
             chat_message.player_id = self.player_id
             for player in self.protocol.connections.values():
-                if player.spectator:
+                if player is not self and player.spectator:
                     player.send_contained(chat_message)
             self.protocol.irc_say('(%s) %s' % (self.name, value))
             print message.encode('ascii', 'replace')
