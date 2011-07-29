@@ -91,7 +91,8 @@
         "trusted",
         "autohelp",
         "protect",
-        "map_extensions"
+        "map_extensions",
+        "airstrike"
     ],
     
     "welcomes" : {
