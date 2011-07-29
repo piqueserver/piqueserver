@@ -463,7 +463,10 @@ def god(connection, value = None):
     elif connection not in connection.protocol.players:
         raise ValueError()
     connection.god = not connection.god
-    connection.god_build = False
+    if connection.protocol.set_god_build:
+        connection.god_build = connection.god
+    else:
+        connection.god_build = False
     if connection.god:
         message = '%s entered GOD MODE!' % connection.name
     else:

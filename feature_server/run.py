@@ -492,6 +492,7 @@ class FeatureProtocol(ServerProtocol):
         self.max_followers = config.get('max_followers', 0)
         self.follow_attack = config.get('follow_attack', False)
         self.game_mode = config.get('game_mode', 'ctf')
+        self.set_god_build = config.get('set_god_build', False)
         logfile = config.get('logfile', None)
         self.debug_log = config.get('debug_log', False)
         if self.debug_log:
