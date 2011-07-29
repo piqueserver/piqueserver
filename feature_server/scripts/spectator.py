@@ -56,6 +56,10 @@ def apply_script(protocol, connection, config):
                     self.send_contained(create_player)
                     self.send_contained(position_data)
                     self.send_contained(kill_action)
+                    position_data.player_id = self.player_id
+                    kill_action.player1 = kill_action.player2 = self.player_id
+                    player.send_contained(position_data)
+                    player.send_contained(kill_action)
             return connection.on_user_login(self, user_type)
         
         def on_chat(self, value, global_message):
