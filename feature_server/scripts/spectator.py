@@ -35,6 +35,7 @@ def apply_script(protocol, connection, config):
             self.invisible = True
             self.killing = False
             self.building = False
+            self.drop_flag()
             self.drop_followers()
             self.followable = False
             self.follow = None
