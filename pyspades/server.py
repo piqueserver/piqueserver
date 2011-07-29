@@ -411,7 +411,6 @@ class ServerConnection(BaseConnection):
         self.tool = 3
         self.grenades = 2
         self.blocks = 50
-        self.on_spawn(pos)
         create_player.player_id = self.player_id
         create_player.name = name
         create_player.x = x
@@ -421,6 +420,7 @@ class ServerConnection(BaseConnection):
             self.send_contained(create_player)
         else:
             self.protocol.send_contained(create_player, save = True)
+        self.on_spawn(pos)
     
     def capture_flag(self):
         other_team = self.team.other
