@@ -396,6 +396,12 @@ class FeatureConnection(ServerConnection):
             reason)
         self.kick(reason)
     
+    def on_user_login(self, user_type):
+        self.admin = (user_type == 'admin')
+        self.speedhack_detect = False
+        message = '%s logged in as %s' % (self.name, user_type)
+        self.protocol.send_chat(message, irc = True)
+    
     def timed_out(self):
         if self.name is not None:
             print '%s timed out' % self.printable_name

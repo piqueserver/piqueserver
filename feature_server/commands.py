@@ -191,10 +191,7 @@ def login(connection, password):
             connection.user_types.update(user_type)
             if user_type in rights:
                 connection.rights.update(rights[user_type])
-            connection.admin = (user_type == 'admin')
-            connection.speedhack_detect = False
-            message = '%s logged in as %s' % (connection.name, user_type)
-            connection.protocol.send_chat(message, irc = True)
+            connection.on_user_login(user_type)
             return None
     if connection.login_retries is None:
         connection.login_retries = connection.protocol.login_retries - 1
