@@ -598,6 +598,8 @@ def change_map(connection, value):
         conn.disconnect()
     if protocol.rollback_map is not None:
         protocol.rollback_map = protocol.map.copy()
+    if protocol.block_info is not None:
+        protocol.block_info = None
     protocol.blue_team.initialize()
     protocol.green_team.initialize()
 
