@@ -35,7 +35,10 @@ def apply_script(protocol, connection, config):
             self.invisible = True
             self.killing = False
             self.building = False
+            self.drop_followers()
             self.followable = False
+            self.follow = None
+            self.respawn_time = self.protocol.respawn_time
             player_data.player_left = self.player_id
             for player in self.protocol.connections.values():
                 if player is self:
