@@ -19,6 +19,13 @@ def apply_script(protocol, connection, config):
     class SpectatorConnection(connection):
         spectator = False
         
+        def on_join(self):
+            for player in self.protocol.connections.values():
+                if player.spectator:
+                    player_data.player_left = player.player_id
+                    self.send_contained(player_data)
+            connection.on_join(self)
+        
         def on_user_login(self, user_type):
             if user_type != 'spectator':
                 return connection.on_user_login(self, user_type)
