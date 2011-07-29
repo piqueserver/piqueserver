@@ -1,4 +1,5 @@
 from pyspades.collision import distance_3d_vector
+from pyspades.common import prettify_timespan
 from commands import add, admin, name, get_player
 from twisted.internet import reactor
 
@@ -38,8 +39,8 @@ def grief_check(connection, player, time = None):
         else:
             message += ' All of them were map blocks.'
         last = blocks_removed[-1]
-        message += ' Last one was destroyed %s seconds ago' % (
-            int(reactor.seconds() - last[0]))
+        message += ' Last one was destroyed %s ago' % (
+            prettify_timespan(reactor.seconds() - last[0], seconds = True))
         whom = last[1]
         if whom is None and len(names) > 0:
             message += ', and was part of the map'
