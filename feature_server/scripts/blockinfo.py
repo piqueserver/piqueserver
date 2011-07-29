@@ -53,8 +53,10 @@ def grief_check(connection, player, time = None):
     if connection.protocol.votekick_player is player:
         dist = distance_3d_vector(player.world_object.position,
             connection.protocol.voting_player.world_object.position)
-        message += ' %s is %d tiles away from the votekick starter.' % (
-            player_name, int(dist))
+        name = ('\x0303' if connection.protocol.voting_player.team.id
+            else '\x0302') + connection.protocol.voting_player.name + '\x0f'
+        message += (' %s is %d tiles away from %s, who started the votekick.' %
+            (player_name, int(dist), name))
     return message
 
 add(grief_check)
