@@ -6,6 +6,9 @@ def apply_script(protocol, connection, config):
             if user_type == 'trusted':
                 self.trusted = True
                 self.speedhack_detect = False
+                self.protocol.irc_say('%s logged in as %s' %
+                    (self.name, user_type))
+                return 'Logged in as trusted user'
             return connection.on_user_login(self, user_type)
     
     class TrustedProtocol(protocol):
