@@ -381,7 +381,7 @@ class FeatureConnection(ServerConnection):
     
     def get_follow_location(self, follow):
         x, y, z = (follow.world_object.position.get() if follow.hp else
-            self.team.get_random_location())
+            self.team.get_random_location(True))
         z -= 2
         return x, y, z
     
