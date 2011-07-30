@@ -510,7 +510,7 @@ from pyspades.common import make_color
 def invisible(connection, player = None):
     if player is not None:
         player = get_player(connection.protocol, player)
-    elif connection in player.protocol.players:
+    elif connection in connection.protocol.players:
         player = connection
     else:
         raise ValueError()
@@ -520,7 +520,7 @@ def invisible(connection, player = None):
     player.god_build = False
     if player.invisible:
         player.send_chat("You're now invisible.")
-        player.protocol.irc_say('* %s became invisible' % player.name)
+        connection.protocol.irc_say('* %s became invisible' % player.name)
         position_data.set((0, 0, 0), player.player_id)
         kill_action.not_fall = True
         kill_action.player1 = kill_action.player2 = player.player_id
@@ -529,8 +529,8 @@ def invisible(connection, player = None):
             save = True)
     else:
         player.send_chat("You return to visibility.")
-        player.protocol.irc_say('* %s became visible' % player.name)
-        pos = player.team.get_random_location(True)
+        connection.protocol.irc_say('* %s became visible' % player.name)
+        pos = player.team.get_random_location()
         x, y, z = pos
         create_player.player_id = player.player_id
         create_player.name = None
@@ -563,7 +563,7 @@ def invisible(connection, player = None):
         player.protocol.send_contained(set_color, sender = player,
             save = True)
         player.protocol.send_contained(animation_data, sender = player)
-    if connection is player or connection not in player.protocol.players:
+    if connection is player or connection not in connection.protocol.players:
         return
     if player.invisible:
         return '%s is now invisible' % player.name
