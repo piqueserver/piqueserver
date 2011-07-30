@@ -34,6 +34,7 @@
     "friendly_fire" : false,
     "grief_friendly_fire_time" : 2,
     "fall_damage" : true,
+    "set_god_build" : false,
     "teamswitch_interval" : 0,
     "votekick_percentage" : 25,
     "votekick_ban_duration" : 15,
@@ -91,7 +92,8 @@
         "trusted",
         "autohelp",
         "protect",
-        "map_extensions"
+        "map_extensions",
+        "airstrike"
     ],
     
     "welcomes" : {

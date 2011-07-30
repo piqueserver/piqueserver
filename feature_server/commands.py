@@ -186,13 +186,12 @@ def login(connection, password):
             if connection.user_types is None:
                 connection.user_types = set()
                 connection.rights = set()
+            if user_type in connection.user_types:
+                return "You're already logged in as %s" % user_type
             connection.user_types.update(user_type)
             if user_type in rights:
                 connection.rights.update(rights[user_type])
-            connection.admin = (user_type == 'admin')
-            connection.speedhack_detect = False
-            message = '%s logged in as %s' % (connection.name, user_type)
-            connection.protocol.send_chat(message, irc = True)
+            connection.on_user_login(user_type)
             return None
     if connection.login_retries is None:
         connection.login_retries = connection.protocol.login_retries - 1
@@ -380,6 +379,8 @@ def toggle_teamkill(connection):
 @admin
 def mute(connection, value):
     player = get_player(connection.protocol, value)
+    if player.mute:
+        return '%s is already muted' % player.name
     player.mute = True
     message = '%s has been muted by %s' % (player.name, connection.name)
     connection.protocol.send_chat(message, irc = True)
@@ -387,6 +388,8 @@ def mute(connection, value):
 @admin
 def unmute(connection, value):
     player = get_player(connection.protocol, value)
+    if not player.mute:
+        return '%s is not muted' % player.name
     player.mute = False
     message = '%s has been unmuted by %s' % (player.name, connection.name)
     connection.protocol.send_chat(message, irc = True)
@@ -464,7 +467,10 @@ def god(connection, value = None):
     elif connection not in connection.protocol.players:
         raise ValueError()
     connection.god = not connection.god
-    connection.god_build = False
+    if connection.protocol.set_god_build:
+        connection.god_build = connection.god
+    else:
+        connection.god_build = False
     if connection.god:
         message = '%s entered GOD MODE!' % connection.name
     else:
@@ -595,8 +601,9 @@ def change_map(connection, value):
     for conn in protocol.connections.values():
         conn.disconnect()
     if protocol.rollback_map is not None:
-        protocol.rollback_map = VXLData()
-        protocol.rollback_map.load_vxl(protocol.map.generate())
+        protocol.rollback_map = protocol.map.copy()
+    if protocol.block_info is not None:
+        protocol.block_info = None
     protocol.blue_team.initialize()
     protocol.green_team.initialize()
 

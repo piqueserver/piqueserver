@@ -199,7 +199,9 @@ class FeatureConnection(ServerConnection):
         print log_message.encode('ascii', 'replace')
     
     def on_block_build_attempt(self, x, y, z):
-        if not self.god and (not self.protocol.building or not self.building):
+        if not self.building:
+            return False
+        if not self.god and not self.protocol.building:
             return False
     
     def on_block_build(self, x, y, z):
@@ -213,8 +215,10 @@ class FeatureConnection(ServerConnection):
             self.protocol.user_blocks.add((x, y, z))
     
     def on_block_destroy(self, x, y, z, mode):
+        if not self.building:
+            return False
         if not self.god_build:
-            if not self.protocol.building or not self.building:
+            if not self.protocol.building:
                 return False
             is_indestructable = self.protocol.is_indestructable
             if mode == DESTROY_BLOCK:
@@ -345,7 +349,7 @@ class FeatureConnection(ServerConnection):
             message = '%s permabanned%s' % (self.name, reason)
         else:
             message = '%s banned for %s%s' % (self.name,
-                prettify_timespan(duration), reason)
+                prettify_timespan(duration * 60), reason)
         self.protocol.send_chat(message, irc = True)
         self.protocol.add_ban(self.address[0], reason, duration)
 
@@ -391,6 +395,12 @@ class FeatureConnection(ServerConnection):
         print 'Hack attempt detected from %s: %s' % (self.printable_name, 
             reason)
         self.kick(reason)
+    
+    def on_user_login(self, user_type):
+        self.admin = (user_type == 'admin')
+        self.speedhack_detect = False
+        message = '%s logged in as %s' % (self.name, user_type)
+        self.protocol.send_chat(message, irc = True)
     
     def timed_out(self):
         if self.name is not None:
@@ -482,6 +492,7 @@ class FeatureProtocol(ServerProtocol):
         self.max_followers = config.get('max_followers', 0)
         self.follow_attack = config.get('follow_attack', False)
         self.game_mode = config.get('game_mode', 'ctf')
+        self.set_god_build = config.get('set_god_build', False)
         logfile = config.get('logfile', None)
         self.debug_log = config.get('debug_log', False)
         if self.debug_log:

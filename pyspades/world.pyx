@@ -57,6 +57,7 @@ cdef class Object:
     cdef public: 
         object name
         World world
+
     def __init__(self, world, *arg, **kw):
         self.world = world
         self.initialize(*arg, **kw)
@@ -79,19 +80,16 @@ cdef class Grenade(Object):
         double time_left
         object callback
 
-    def initialize(self, double time_left, Vertex3 player_position, 
-                   Character character, callback = None):
+    def initialize(self, double time_left, Vertex3 position, 
+                   Vertex3 orientation, Vertex3 acceleration, callback = None):
         self.name = 'grenade'
         self.callback = callback
         self.position = Vertex3()
-        cdef Vertex3 acceleration
-        self.acceleration = acceleration = Vertex3()
-        self.position.set_vector(player_position)
-        cdef Vertex3 orientation = character.orientation
-        cdef Vertex3 player_acceleration = character.acceleration
-        acceleration.x = orientation.x + player_acceleration.x
-        acceleration.y = orientation.y + player_acceleration.y
-        acceleration.z = orientation.z + player_acceleration.z
+        self.acceleration = Vertex3()
+        self.position.set_vector(position)
+        self.acceleration.x = orientation.x + acceleration.x
+        self.acceleration.y = orientation.y + acceleration.y
+        self.acceleration.z = orientation.z + acceleration.z
         self.time_left = time_left
     
     cpdef bint collides(self, Vertex3 player_position):
@@ -320,7 +318,7 @@ cdef class Character(Object):
     def throw_grenade(self, time_left, callback = None):
         position = Vertex3(self.position.x, self.position.y, self.guess_z)
         item = self.world.create_object(Grenade, time_left, position, 
-            self, callback)
+            self.orientation, self.acceleration, callback)
         return item
         
     cdef void update(self, double dt):
