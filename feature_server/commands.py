@@ -510,14 +510,14 @@ def fly(connection, player = None):
     else:
         player = connection
     player.fly = not player.fly
-    message = 'now flying.' if player.fly else 'no longer flying.'
+    message = 'now flying' if player.fly else 'no longer flying'
     connection.protocol.irc_say('* %s is %s' % (player.name, message))
     if connection is player:
-        return "You're %s" % message
+        return "You're %s." % message
     else:
-        player.send_chat("You're %s" % message)
+        player.send_chat("You're %s." % message)
         if connection in connection.protocol.players:
-            return '%s is %s' % (player.name, message)
+            return '%s is %s.' % (player.name, message)
 
 from pyspades.server import kill_action, create_player, position_data
 from pyspades.server import orientation_data, movement_data, animation_data
