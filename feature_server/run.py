@@ -266,7 +266,7 @@ class FeatureConnection(ServerConnection):
             return
         killer.streak += 1
         killer.best_streak = max(killer.streak, killer.best_streak)
-        self.team.kills += 1
+        killer.team.kills += 1
         self.protocol.check_end_game(killer)
     
     def on_fall(self, damage):
@@ -705,10 +705,27 @@ class FeatureProtocol(ServerProtocol):
         ServerProtocol.send_chat(self, value, global_message, sender, team)
 
     def get_kill_count(self):
-        return ("Green: %s left. Blue: %s left. Playing to %s kills." %
-                (self.kill_limit - self.green_team.kills,
-                 self.kill_limit - self.blue_team.kills,
-                 self.kill_limit))
+        green_kills = self.green_team.kills
+        blue_kills = self.blue_team.kills
+        diff = green_kills - blue_kills
+        if green_kills>blue_kills:
+            return ("Green leads %s-%s (+%s, %s left). Playing to %s kills." %
+                    (green_kills, blue_kills,
+                    diff,
+                    self.kill_limit - green_kills,
+                    self.kill_limit))
+        elif green_kills<blue_kills:
+            return ("Blue leads %s-%s (+%s, %s left). Playing to %s kills." %
+                    (blue_kills, green_kills,
+                    -diff,
+                    self.kill_limit - blue_kills,
+                    self.kill_limit))
+        else:
+            return ("%s-%s, %s left. Playing to %s kills." %
+                    (green_kills,
+                     blue_kills,
+                    self.kill_limit - green_kills,
+                    self.kill_limit))
 
     def check_end_game(self, player):
         if self.game_mode=='tdm':
