@@ -7,7 +7,7 @@ import commands
 def god(connection, value = None):
     if value is None and connection.spectator:
         return "You're spectating"
-    else:
+    elif value is not None:
         value = get_player(connection.protocol, value)
         if value.spectator:
             return '%s is a spectator.' % value.name
@@ -17,7 +17,7 @@ def god(connection, value = None):
 def invisible(connection, player = None):
     if player is None and connection.spectator:
         return "You're spectating"
-    else:
+    elif player is not None:
         player = get_player(connection.protocol, player)
         if player.spectator:
             return '%s is a spectator.' % player.name
