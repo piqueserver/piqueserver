@@ -44,9 +44,15 @@ def get_player(protocol, value):
             return players[value]
         except KeyError:
             value = value.lower()
+            ret = None
             for player in players.values():
-                if player.name.lower().count(value):
+                name = player.name.lower()
+                if name == value:
                     return player
+                if name.count(value):
+                    ret = player
+            if ret is not None:
+                return ret
     except (KeyError, IndexError, ValueError):
         pass
     raise InvalidPlayer()
