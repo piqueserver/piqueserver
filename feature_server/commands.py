@@ -191,8 +191,7 @@ def login(connection, password):
             connection.user_types.update(user_type)
             if user_type in rights:
                 connection.rights.update(rights[user_type])
-            connection.on_user_login(user_type)
-            return None
+            return connection.on_user_login(user_type)
     if connection.login_retries is None:
         connection.login_retries = connection.protocol.login_retries - 1
     else:
