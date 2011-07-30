@@ -1,6 +1,51 @@
 from pyspades.server import player_data, chat_message
 from pyspades.server import create_player, position_data, kill_action
-from commands import add, rights
+from commands import add, rights, admin, name, get_player
+import commands
+
+@admin
+def god(connection, value = None):
+    if value is None and connection.spectator:
+        return "You're spectating"
+    else:
+        value = get_player(connection.protocol, value)
+        if value.spectator:
+            return '%s is a spectator.' % value.name
+    return commands.god(connection, value)
+
+@admin
+def invisible(connection, player = None):
+    if player is None and connection.spectator:
+        return "You're spectating"
+    else:
+        player = get_player(connection.protocol, player)
+        if player.spectator:
+            return '%s is a spectator.' % player.name
+    return commands.invisible(connection, player)
+
+@name('togglekill')
+@admin
+def toggle_kill(connection, player = None):
+    if player is not None:
+        player_ = get_player(connection.protocol, player)
+        if player_.spectator:
+            return '%s is a spectator.' % connection.name
+    return commands.toggle_kill(connection, player)
+
+@name('togglebuild')
+@admin
+def toggle_build(connection, player = None):
+    if player is not None:
+        player_ = get_player(connection.protocol, player)
+        if player_.spectator:
+            return '%s is a spectator.' % connection.name
+    return commands.toggle_build(connection, player)
+
+@name('nofollow')
+def no_follow(connection):
+    if connection.spectator:
+        return "You're spectating."
+    return commands.no_follow(connection)
 
 def spectators(connection):
     names = [p.name for p in connection.protocol.players.values()
@@ -11,7 +56,8 @@ def spectators(connection):
     else:
         return 'There are no spectators.'
 
-add(spectators)
+for func in (god, invisible, toggle_build, toggle_kill, no_follow, spectators):
+    add(func)
 
 rights['spectator'] = ['tp', 'goto']
 

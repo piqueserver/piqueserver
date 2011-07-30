@@ -397,7 +397,7 @@ class FeatureConnection(ServerConnection):
         self.kick(reason)
     
     def on_user_login(self, user_type):
-        self.admin = (user_type == 'admin')
+        self.admin = self.admin or (user_type == 'admin')
         self.speedhack_detect = False
         message = '%s logged in as %s' % (self.name, user_type)
         self.protocol.send_chat(message, irc = True)
