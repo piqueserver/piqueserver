@@ -217,7 +217,7 @@ class FeatureConnection(ServerConnection):
     def on_block_destroy(self, x, y, z, mode):
         if not self.building:
             return False
-        if not self.god_build:
+        if not self.god:
             if not self.protocol.building:
                 return False
             is_indestructable = self.protocol.is_indestructable
