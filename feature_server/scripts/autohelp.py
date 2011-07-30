@@ -2,12 +2,11 @@ from twisted.internet import reactor
 import re
 
 deuce_name_pattern = re.compile("Deuce\d?\d?$")
-chat_pattern = re.compile(".*how.*(change|choo?se|make|pick).*(name|nick)",
+chat_pattern = re.compile(".*how.*(set|change|choo?se|make|pick).*(name|nick)",
     re.IGNORECASE)
 
 def deuce_howto_match(player, msg):
-    return (not deuce_name_pattern.match(player.name) is None and
-        not chat_pattern.match(msg) is None)
+    return chat_pattern.match(msg) is not None
 
 def apply_script(protocol, connection, config):
     def send_help(connection):
