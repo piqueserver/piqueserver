@@ -257,8 +257,9 @@ class ServerConnection(BaseConnection):
                         self.grenades -= 1
                         if self.on_grenade(contained.value) == False:
                             return
-                        world_object.throw_grenade(contained.value,
+                        grenade = world_object.throw_grenade(contained.value,
                             self.grenade_exploded)
+                        self.on_grenade_thrown(grenade)
                         if self.filter_visibility_data:
                             return
                         grenade_packet.player_id = self.player_id
@@ -761,6 +762,9 @@ class ServerConnection(BaseConnection):
         pass
     
     def on_grenade(self, time_left):
+        pass
+    
+    def on_grenade_thrown(self, grenade):
         pass
     
     def on_block_build_attempt(self, x, y, z):
