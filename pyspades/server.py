@@ -83,6 +83,7 @@ class ServerConnection(BaseConnection):
     last_block_destroy = None
     filter_visibility_data = False
     speedhack_detect = False
+    fly = False
     timers = None
     world_object = None
     
@@ -230,13 +231,18 @@ class ServerConnection(BaseConnection):
                     elif contained.id == clientloaders.AnimationData.id:
                         world_object.set_animation(contained.fire,
                             contained.jump, contained.crouch, contained.aim)
-                        if self.filter_visibility_data:
-                            return
                         animation_data.fire = contained.fire
                         animation_data.jump = contained.jump
                         animation_data.crouch = contained.crouch
                         animation_data.aim = contained.aim
                         animation_data.player_id = self.player_id
+                        if (self.fly and animation_data.crouch and
+                            world_object.acceleration.z != 0.0):
+                            world_object.jump = True
+                            animation_data.jump = True
+                            self.send_contained(animation_data)
+                        if self.filter_visibility_data:
+                            return
                         self.protocol.send_contained(animation_data, 
                             sender = self)
                     elif contained.id == clientloaders.HitPacket.id:
