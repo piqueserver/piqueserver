@@ -1,3 +1,15 @@
+from commands import add, admin, get_player
+
+@admin
+def trust(connection, player):
+    player = get_player(connection.protocol, player)
+    player.trusted = True
+    player.speedhack_detect = False
+    player.send_chat("You're now a trusted user")
+    return '%s is now trusted' % player.name
+
+add(trust)
+
 def apply_script(protocol, connection, config):
     class TrustedConnection(connection):
         trusted = False
