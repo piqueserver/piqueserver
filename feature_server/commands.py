@@ -507,60 +507,68 @@ from pyspades.server import set_tool, set_color
 from pyspades.common import make_color
 
 @admin
-def invisible(connection, value = None):
-    if value is not None:
-        connection = get_player(connection.protocol, value)
-    elif connection not in connection.protocol.players:
+def invisible(connection, player = None):
+    if player is not None:
+        player = get_player(connection.protocol, player)
+    elif connection in player.protocol.players:
+        player = connection
+    else:
         raise ValueError()
-    connection.invisible = not connection.invisible
-    connection.filter_visibility_data = connection.invisible
-    connection.god = connection.invisible
-    connection.god_build = False
-    if connection.invisible:
-        connection.send_chat("You're now invisible.")
-        connection.protocol.irc_say('* %s became invisible' % connection.name)
-        position_data.set((0, 0, 0), connection.player_id)
+    player.invisible = not player.invisible
+    player.filter_visibility_data = player.invisible
+    player.god = player.invisible
+    player.god_build = False
+    if player.invisible:
+        player.send_chat("You're now invisible.")
+        player.protocol.irc_say('* %s became invisible' % player.name)
+        position_data.set((0, 0, 0), player.player_id)
         kill_action.not_fall = True
-        kill_action.player1 = kill_action.player2 = connection.player_id
-        connection.protocol.send_contained(position_data, sender = connection)
-        connection.protocol.send_contained(kill_action, sender = connection,
+        kill_action.player1 = kill_action.player2 = player.player_id
+        player.protocol.send_contained(position_data, sender = player)
+        player.protocol.send_contained(kill_action, sender = player,
             save = True)
     else:
-        connection.send_chat("You return to visibility.")
-        connection.protocol.irc_say('* %s became visible' % connection.name)
-        pos = connection.team.get_random_location(True)
+        player.send_chat("You return to visibility.")
+        player.protocol.irc_say('* %s became visible' % player.name)
+        pos = player.team.get_random_location(True)
         x, y, z = pos
-        create_player.player_id = connection.player_id
+        create_player.player_id = player.player_id
         create_player.name = None
         create_player.x = x
         create_player.y = y - 128
-        create_player.weapon = connection.weapon
-        world_object = connection.world_object
-        position_data.set(world_object.position.get(), connection.player_id)
-        orientation_data.set(world_object.orientation.get(), connection.player_id)
+        create_player.weapon = player.weapon
+        world_object = player.world_object
+        position_data.set(world_object.position.get(), player.player_id)
+        orientation_data.set(world_object.orientation.get(), player.player_id)
         movement_data.up = world_object.up
         movement_data.down = world_object.down
         movement_data.left = world_object.left
         movement_data.right = world_object.right
-        movement_data.player_id = connection.player_id
+        movement_data.player_id = player.player_id
         animation_data.fire = world_object.fire
         animation_data.jump = world_object.jump
         animation_data.crouch = world_object.crouch
         animation_data.aim = world_object.aim
-        animation_data.player_id = connection.player_id
-        set_tool.player_id = connection.player_id
-        set_tool.value = connection.tool
-        set_color.player_id = connection.player_id
-        set_color.value = make_color(*connection.color)
-        connection.protocol.send_contained(create_player, sender = connection,
+        animation_data.player_id = player.player_id
+        set_tool.player_id = player.player_id
+        set_tool.value = player.tool
+        set_color.player_id = player.player_id
+        set_color.value = make_color(*player.color)
+        player.protocol.send_contained(create_player, sender = player,
             save = True)
-        connection.protocol.send_contained(position_data, sender = connection)
-        connection.protocol.send_contained(orientation_data, sender = connection)
-        connection.protocol.send_contained(movement_data, sender = connection)
-        connection.protocol.send_contained(set_tool, sender = connection)
-        connection.protocol.send_contained(set_color, sender = connection,
+        player.protocol.send_contained(position_data, sender = player)
+        player.protocol.send_contained(orientation_data, sender = player)
+        player.protocol.send_contained(movement_data, sender = player)
+        player.protocol.send_contained(set_tool, sender = player)
+        player.protocol.send_contained(set_color, sender = player,
             save = True)
-        connection.protocol.send_contained(animation_data, sender = connection)
+        player.protocol.send_contained(animation_data, sender = player)
+    if connection is player or connection not in player.protocol.players:
+        return
+    if player.invisible:
+        return '%s is now invisible' % player.name
+    else:
+        return '%s is now visible' % player.name
 
 @admin
 def ip(connection, value = None):
