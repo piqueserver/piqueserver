@@ -20,6 +20,8 @@ CONNECTIONLESS = 0xFFF
 SEMI_WEAPON = 0
 SMG_WEAPON = 1
 
+SPADE_TOOL, DAGGER_TOOL, BLOCK_TOOL, WEAPON_TOOL, GRENADE_TOOL = xrange(5)
+
 HIT_VALUES = { # packet value : [semi, smg]
     2 : [100, 49],
     1 : [49, 24],

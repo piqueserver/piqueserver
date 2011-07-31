@@ -13,7 +13,8 @@
         "/PING      Shows your ping (how good your connection to the server is)"
     ],
     "tips" : [
-        "Here you can deploy airstrikes, form squads and more!  Type /help for info."
+        "Here you can deploy airstrikes, form squads and more!  Type /help for info.",
+        "The dagger does melee damage!  Use it wisely."
     ],
     "tip_frequency" : 5,
     "rules" : [
@@ -93,7 +94,8 @@
         "autohelp",
         "protect",
         "map_extensions",
-        "airstrike"
+        "airstrike",
+        "melee"
     ],
     
     "welcomes" : {

@@ -906,6 +906,7 @@ class ServerProtocol(DatagramProtocol):
     
     def update_world(self):
         self.world.update(UPDATE_FREQUENCY)
+        self.on_world_update()
     
     def reset_game(self, player):
         blue_team = self.blue_team
@@ -1049,4 +1050,7 @@ class ServerProtocol(DatagramProtocol):
     # events
     
     def on_game_end(self, player):
+        pass
+    
+    def on_world_update(self):
         pass

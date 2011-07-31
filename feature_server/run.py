@@ -55,7 +55,7 @@ if sys.platform == 'linux2':
         from twisted.internet import epollreactor
         epollreactor.install()
     except ImportError:
-            print '(dependencies missing for epoll, using normal reactor)'
+        print '(dependencies missing for epoll, using normal reactor)'
 
 if sys.version_info < (2, 7):
     try:
