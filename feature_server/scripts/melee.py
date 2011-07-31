@@ -1,5 +1,5 @@
 from pyspades.collision import vector_collision
-from pyspades.constants import DAGGER_TOOL
+from pyspades.constants import PICKAXE_TOOL
 from twisted.internet.task import LoopingCall
 import random
 
