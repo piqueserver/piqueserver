@@ -33,6 +33,13 @@ def apply_script(protocol, connection, config):
                     if vector_collision(player1.world_object.position, 
                                         player2.world_object.position,
                                         MELEE_DISTANCE):
-                        other_player.hit(100, attack_player)
+                        hit_amount = 100
+                        returned = attack_player.on_hit(hit_amount, 
+                            other_player)
+                        if returned == False:
+                            continue
+                        elif returned is not None:
+                            hit_amount = returned
+                        other_player.hit(hit_amount, attack_player)
                         checked.add(other_player)
     return MeleeProtocol, connection
