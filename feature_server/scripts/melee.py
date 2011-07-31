@@ -1,12 +1,20 @@
 from pyspades.collision import vector_collision
 from pyspades.constants import DAGGER_TOOL
+from twisted.internet.task import LoopingCall
 import random
 
 MELEE_DISTANCE = 2.0
+UPDATE_FPS = 10
 
 def apply_script(protocol, connection, config):
+    melee_damage = config.get('melee_damage', 20)
     class MeleeProtocol(protocol):
-        def on_world_update(self):
+        def __init__(self, *arg, **kw):
+            protocol.__init__(self, *arg, **kw)
+            self.melee_update = LoopingCall(self.update_melee)
+            self.melee_update.start(1.0 / UPDATE_FPS)
+            
+        def update_melee(self):
             checked = set()
             for player1 in self.players.values():
                 if player1 in checked or not player1.hp:
@@ -33,7 +41,7 @@ def apply_script(protocol, connection, config):
                     if vector_collision(player1.world_object.position, 
                                         player2.world_object.position,
                                         MELEE_DISTANCE):
-                        hit_amount = 100
+                        hit_amount = melee_damage
                         returned = attack_player.on_hit(hit_amount, 
                             other_player)
                         if returned == False:
