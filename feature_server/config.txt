@@ -14,7 +14,7 @@
     ],
     "tips" : [
         "Here you can deploy airstrikes, form squads and more!  Type /help for info.",
-        "The dagger does melee damage!  Use it wisely."
+        "The pickaxe does melee damage!  Use it wisely."
     ],
     "tip_frequency" : 5,
     "rules" : [
