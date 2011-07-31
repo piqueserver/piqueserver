@@ -8,38 +8,38 @@ def god(connection, value = None):
     if value is None and connection.spectator:
         return "You're spectating"
     elif value is not None:
-        value = get_player(connection.protocol, value)
-        if value.spectator:
-            return '%s is a spectator.' % value.name
+        player = get_player(connection.protocol, value)
+        if player.spectator:
+            return '%s is a spectator.' % player.name
     return commands.god(connection, value)
 
 @admin
-def invisible(connection, player = None):
-    if player is None and connection.spectator:
+def invisible(connection, value = None):
+    if value is None and connection.spectator:
         return "You're spectating"
-    elif player is not None:
-        player = get_player(connection.protocol, player)
+    elif value is not None:
+        player = get_player(connection.protocol, value)
         if player.spectator:
             return '%s is a spectator.' % player.name
-    return commands.invisible(connection, player)
+    return commands.invisible(connection, value)
 
 @name('togglekill')
 @admin
-def toggle_kill(connection, player = None):
-    if player is not None:
-        player_ = get_player(connection.protocol, player)
-        if player_.spectator:
-            return '%s is a spectator.' % connection.name
-    return commands.toggle_kill(connection, player)
+def toggle_kill(connection, value = None):
+    if value is not None:
+        player = get_player(connection.protocol, value)
+        if player.spectator:
+            return '%s is a spectator.' % player.name
+    return commands.toggle_kill(connection, value)
 
 @name('togglebuild')
 @admin
-def toggle_build(connection, player = None):
-    if player is not None:
-        player_ = get_player(connection.protocol, player)
-        if player_.spectator:
-            return '%s is a spectator.' % connection.name
-    return commands.toggle_build(connection, player)
+def toggle_build(connection, value = None):
+    if value is not None:
+        player = get_player(connection.protocol, value)
+        if player.spectator:
+            return '%s is a spectator.' % player.name
+    return commands.toggle_build(connection, value)
 
 @name('nofollow')
 def no_follow(connection):
@@ -56,7 +56,18 @@ def spectators(connection):
     else:
         return 'There are no spectators.'
 
-for func in (god, invisible, toggle_build, toggle_kill, no_follow, spectators):
+@admin
+def spectator(connection, player):
+    player = get_player(connection.protocol, player)
+        if p.spectator]
+    if len(names):
+        return '%s %s spectating.' % (', '.join(names), 'is' if len(names) == 1
+            else 'are')
+    else:
+        return 'There are no spectators.'
+
+for func in (god, invisible, toggle_build, toggle_kill, no_follow,
+    spectators, spectator):
     add(func)
 
 rights['spectator'] = ['tp', 'goto']
