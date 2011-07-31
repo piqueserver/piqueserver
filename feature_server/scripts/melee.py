@@ -1,5 +1,6 @@
 from pyspades.collision import vector_collision
 from pyspades.constants import DAGGER_TOOL
+import random
 
 MELEE_DISTANCE = 2.0
 
@@ -14,10 +15,17 @@ def apply_script(protocol, connection, config):
                 for player2 in self.players.values():
                     if player2 in checked or not player2.hp:
                         continue
-                    if player1.tool == DAGGER_TOOL and player1.world_object.fire:
+                    fire_1 = (player1.tool == DAGGER_TOOL and 
+                        player1.world_object.fire)
+                    fire_2 = (player2.tool == DAGGER_TOOL and 
+                        player2.world_object.fire)
+                    if fire_1 and fire_2:
+                        fire_1 = bool(random.randrange(2))
+                        fire_2 = not fire_1
+                    if fire1:
                         attack_player = player1
                         other_player = player2
-                    elif player2.tool == DAGGER_TOOL and player2.world_object.fire:
+                    elif fire2:
                         attack_player = player2
                         other_player = player1
                     else:
