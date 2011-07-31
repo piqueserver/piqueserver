@@ -22,10 +22,10 @@ def apply_script(protocol, connection, config):
                     if fire_1 and fire_2:
                         fire_1 = bool(random.randrange(2))
                         fire_2 = not fire_1
-                    if fire1:
+                    if fire_1:
                         attack_player = player1
                         other_player = player2
-                    elif fire2:
+                    elif fire_2:
                         attack_player = player2
                         other_player = player1
                     else:
