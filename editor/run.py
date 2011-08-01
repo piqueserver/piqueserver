@@ -56,6 +56,7 @@ class EditWidget(QtGui.QWidget):
     old_x = old_y = None
     image = None
     brush_size = 2.0
+    settings = None
     def __init__(self, parent):
         super(EditWidget, self).__init__(parent)
         self.map = self.parent().map
@@ -63,6 +64,13 @@ class EditWidget(QtGui.QWidget):
         self.update_scale()
         self.set_color(Qt.black)
         self.eraser = Qt.transparent
+        self.setFocusPolicy(Qt.StrongFocus)
+    
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Q:
+        else:
+            return
+        self.settings.update_values()
     
     def update_scale(self):
         value = 512 * self.scale
@@ -153,23 +161,24 @@ class ScrollArea(QtGui.QScrollArea):
 class Settings(QtGui.QWidget):
     def __init__(self, editor, *arg, **kw):
         self.editor = editor
+        editor.settings = self
         super(Settings, self).__init__(*arg, **kw)
         layout = QtGui.QVBoxLayout(self)
         
         self.z_value = LabeledSpinBox('Current Z')
         self.z_value.spinbox.setRange(0, 63)
-        self.z_value.spinbox.setValue(editor.z)
         self.z_value.spinbox.valueChanged.connect(self.set_z)
         layout.addWidget(self.z_value)
 
         self.brush_size = LabeledSpinBox('Brush size')
-        self.brush_size.spinbox.setValue(editor.brush_size)
         self.brush_size.spinbox.valueChanged.connect(self.set_brush_size)
         layout.addWidget(self.brush_size)
 
         self.color_button = QtGui.QPushButton('Set color')
         self.color_button.clicked.connect(self.set_color)
         layout.addWidget(self.color_button)
+        
+        self.update_values()
     
     def set_brush_size(self):
         self.editor.brush_size = self.brush_size.spinbox.value()
@@ -178,8 +187,12 @@ class Settings(QtGui.QWidget):
         self.editor.set_z(self.z_value.spinbox.value())
     
     def set_color(self):
-        foo = QtGui.QColorDialog.getColor()
-        self.editor.set_color(foo)
+        color = QtGui.QColorDialog.getColor()
+        self.editor.set_color(color)
+    
+    def update_values(self):
+        self.z_value.spinbox.setValue(editor.z)
+        self.brush_size.spinbox.setValue(editor.brush_size)
 
 class MapEditor(QtGui.QMainWindow):
     def __init__(self, *arg, **kw):
