@@ -139,7 +139,7 @@ class EditWidget(QtGui.QWidget):
         self.repaint()
     
     def save_overview(self):
-        map.set_overview(self.overview, self.z)
+        self.map.set_overview(self.overview, self.z)
     
     def map_updated(self):
         self.image = None
