@@ -234,7 +234,7 @@ class MapEditor(QtGui.QMainWindow):
     def save_selected(self):
         name = QtGui.QFileDialog.getSaveFileName(self,
             'Select map file', filter = '*.vxl')[0]
-        self.editor.save_overview()
+        self.edit_widget.save_overview()
         open(name, 'wb').write(self.map.generate())
 
 def main():
