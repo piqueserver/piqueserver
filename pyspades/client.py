@@ -40,6 +40,7 @@ class OtherClient(object):
 class ClientConnection(BaseConnection):
     protocol = None
     displayed_id = False
+    
     def __init__(self, protocol):
         BaseConnection.__init__(self)
         self.protocol = protocol
@@ -53,8 +54,11 @@ class ClientConnection(BaseConnection):
         connect_request = ConnectionRequest()
         connect_request.auth_val = self.auth_val
         connect_request.client = True
-        connect_request.version = crc32(open('../data/client.exe', 'rb').read())
+        connect_request.version = self.get_version()
         self.send_loader(connect_request, False, 255)
+    
+    def get_version(self):
+        return crc32(open('../data/client.exe', 'rb').read())
     
     def send_join(self, team = -1, weapon = -1):
         print 'joining team %s' % team

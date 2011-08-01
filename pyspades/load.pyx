@@ -177,20 +177,43 @@ cdef class VXLData:
     def set_point_unsafe_int(self, int x, int y, int z, int color):
         set_point(x, y, z, self.map, 1, color)
     
-    def get_overview(self):
+    def get_overview(self, int z = -1):
         cdef unsigned int * data
         data_python = allocate_memory(sizeof(int[512][512]), <char**>&data)
-        cdef unsigned int i, x, y, z, r, g, b, color
+        cdef unsigned int i, x, y, r, g, b, a, color
+        i = 0
+        cdef int current_z
+        if z == -1:
+            a = 255
+        else:
+            current_z = z
+        for y in range(512):
+            for x in range(512):
+                if z == -1:
+                    current_z = get_z(x, y, self.map)
+                else:
+                    if get_solid(x, y, z, self.map):
+                        a = 255
+                    else:
+                        a = 0
+                color = get_color(x, y, current_z, self.map)
+                data[i] = (color & 0x00FFFFFF) | (a << 24)
+                i += 1
+        return data_python
+    
+    def set_overview(self, data_str, int z):
+        cdef unsigned int * data = <unsigned int*>(<char*>data_str)
+        cdef unsigned int x, y, r, g, b, a, color, i, new_color
         i = 0
         for y in range(512):
             for x in range(512):
-                color = get_color(x, y, get_z(x, y, self.map), self.map)
-                b = color & 0xFF
-                g = (color & 0xFF00) >> 8
-                r = (color & 0xFF0000) >> 16
-                data[i] = r | (g << 8) | (b << 16) | (255 << 24)
+                color = data[i]
+                a = (color & <unsigned int>0xFF000000) >> 24
+                if a == 0:
+                    set_point(x, y, z, self.map, 0, 0)
+                else:
+                    set_point(x, y, z, self.map, 1, color)
                 i += 1
-        return data_python
     
     def generate(self):
         start = time.time()
