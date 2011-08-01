@@ -51,20 +51,30 @@ class LabeledWidget(QtGui.QWidget):
         for item in (self.label, self.widget):
             self.layout.addWidget(item)
 
+class MapImage(QtGui.QImage):
+    def __init__(self, overview, *arg, **kw):
+        self.overview = overview
+        super(MapImage, self).__init__(overview, *arg, **kw)
+
 class EditWidget(QtGui.QWidget):
     scale = 1
     old_x = old_y = None
     image = None
     brush_size = 2.0
     settings = None
+    freeze_image = None
+    current_color = None
+    x = y = 0
     def __init__(self, parent):
         super(EditWidget, self).__init__(parent)
+        self.z_cache = {}
         self.map = self.parent().map
         self.set_z(63)
         self.update_scale()
         self.set_color(Qt.black)
         self.eraser = Qt.transparent
         self.setFocusPolicy(Qt.StrongFocus)
+        self.setMouseTracking(True)
     
     def keyPressEvent(self, event):
         key = event.key()
@@ -78,10 +88,20 @@ class EditWidget(QtGui.QWidget):
             self.brush_size += 1
         elif key == Qt.Key_Minus:
             self.brush_size -= 1
+        elif key == Qt.Key_Z:
+            color = QtGui.QColor(self.image.pixel(self.x, self.y))
+            self.set_color(color)
         else:
             return
         self.brush_size = max(1, self.brush_size)
         self.settings.update_values()
+    
+    def toggle_freeze(self):
+        if self.freeze_image is None:
+            self.freeze_image = self.image
+        else:
+            self.freeze_image = None
+            self.repaint()
     
     def update_scale(self):
         value = 512 * self.scale
@@ -89,9 +109,13 @@ class EditWidget(QtGui.QWidget):
         
     def paintEvent(self, paintEvent):
         painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
         painter.scale(self.scale, self.scale)
         painter.drawRect(0, 0, 511, 511)
         painter.drawImage(0, 0, self.image)
+        if self.freeze_image is not None and self.freeze_image is not self.image:
+            painter.setOpacity(0.3)
+            painter.drawImage(0, 0, self.freeze_image)
     
     def set_color(self, color):
         self.color = color
@@ -99,6 +123,7 @@ class EditWidget(QtGui.QWidget):
     def mousePressEvent(self, event):
         self.old_x = self.old_y = None
         button = event.button()
+        self.update_mouse_position(event)
         if button == Qt.LeftButton:
             self.current_color = self.color
         elif button == Qt.RightButton:
@@ -110,17 +135,27 @@ class EditWidget(QtGui.QWidget):
         self.draw_pencil(event)
     
     def mouseMoveEvent(self, event):
+        self.update_mouse_position(event)
         if self.current_color is not None:
             self.draw_pencil(event)
         else:
             super(EditWidget, self).mouseMoveEvent(event)
     
-    def draw_pencil(self, event):
+    def mouseReleaseEvent(self, event):
+        self.current_color = None
+    
+    def update_mouse_position(self, event):
         value = 512.0 * self.scale
         x = int(event.x() / value * 512.0)
         y = int(event.y() / value * 512.0)
         x = max(0, min(511, x))
         y = max(0, min(511, y))
+        self.x = x
+        self.y = y
+    
+    def draw_pencil(self, event):
+        x = self.x
+        y = self.y
         if x in xrange(512) and y in xrange(512):
             old_x = self.old_x or x
             old_y = self.old_y or y
@@ -149,23 +184,38 @@ class EditWidget(QtGui.QWidget):
         map = self.map
         image = self.image
         if image is not None:
-            map.set_overview(self.overview, self.z)
+            map.set_overview(image.overview, self.z)
         self.z = max(0, min(63, z))
-        self.overview = overview = map.get_overview(self.z)
-        self.image = image = QtGui.QImage(overview, 512, 512,
-            QtGui.QImage.Format_ARGB32)
+        try:
+            image = self.z_cache[self.z]
+        except KeyError:
+            overview = map.get_overview(self.z)
+            image = MapImage(overview, 512, 512,
+                QtGui.QImage.Format_ARGB32)
+            self.z_cache[self.z] = image
+        self.image = image
         self.repaint()
     
     def save_overview(self):
-        self.map.set_overview(self.overview, self.z)
+        self.map.set_overview(self.image.overview, self.z)
     
     def map_updated(self):
         self.image = None
+        self.z_cache = {}
+        self.freeze_image = None
         self.map = self.parent().parent().parent().map
         self.set_z(self.z)
 
 class ScrollArea(QtGui.QScrollArea):
     old_x = old_y = None
+    
+    def __init__(self, *arg, **kw):
+        super(ScrollArea, self).__init__(*arg, **kw)
+        self.setFocusPolicy(Qt.StrongFocus)
+    
+    def keyPressEvent(self, event):
+        self.widget().keyPressEvent(event)
+    
     def wheelEvent(self, wheelEvent):
         self.widget().wheelEvent(wheelEvent)
     
@@ -201,8 +251,13 @@ class Settings(QtGui.QWidget):
 
         self.brush_size = LabeledSpinBox('Brush size')
         self.brush_size.spinbox.valueChanged.connect(self.set_brush_size)
+        self.brush_size.spinbox.setRange(0, 999)
         layout.addWidget(self.brush_size)
-
+        
+        self.freeze_button = QtGui.QPushButton('Toggle freeze')
+        self.freeze_button.clicked.connect(self.freeze_image)
+        layout.addWidget(self.freeze_button)
+        
         self.color_button = QtGui.QPushButton('Set color')
         self.color_button.clicked.connect(self.set_color)
         layout.addWidget(self.color_button)
@@ -215,8 +270,14 @@ class Settings(QtGui.QWidget):
     def set_z(self):
         self.editor.set_z(self.z_value.spinbox.value())
     
+    def freeze_image(self):
+        self.editor.toggle_freeze()
+    
     def set_color(self):
-        color = QtGui.QColorDialog.getColor()
+        color = QtGui.QColorDialog.getColor(
+            Qt.white, self, 'Select a color',
+            QtGui.QColorDialog.ShowAlphaChannel
+        )
         self.editor.set_color(color)
     
     def update_values(self):
@@ -268,6 +329,8 @@ class MapEditor(QtGui.QMainWindow):
     def load_selected(self):
         name = QtGui.QFileDialog.getOpenFileName(self,
             'Select map file', filter = '*.vxl')[0]
+        if not name:
+            return
         self.map = VXLData(open(name, 'rb'))
         self.map_updated()
     
@@ -277,6 +340,8 @@ class MapEditor(QtGui.QMainWindow):
     def save_selected(self):
         name = QtGui.QFileDialog.getSaveFileName(self,
             'Select map file', filter = '*.vxl')[0]
+        if not name:
+            return
         self.edit_widget.save_overview()
         open(name, 'wb').write(self.map.generate())
 
