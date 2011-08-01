@@ -209,7 +209,7 @@ cdef class VXLData:
             for x in range(512):
                 color = data[i]
                 a = (color & <unsigned int>0xFF000000) >> 24
-                if a == 0:
+                if a != 255:
                     set_point(x, y, z, self.map, 0, 0)
                 else:
                     set_point(x, y, z, self.map, 1, color)
