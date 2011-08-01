@@ -170,7 +170,10 @@ class EditWidget(QtGui.QWidget):
             pen.setWidth(self.brush_size)
             pen.setCapStyle(Qt.RoundCap)
             painter.setPen(pen)
-            painter.drawLine(old_x, old_y, x, y)
+            if x == old_x and y == old_y:
+                painter.drawPoint(x, y)
+            else:
+                painter.drawLine(old_x, old_y, x, y)
             self.repaint()
         self.old_x = x
         self.old_y = y
@@ -234,6 +237,7 @@ class ScrollArea(QtGui.QScrollArea):
             horizontal_bar = self.horizontalScrollBar()
             vertical_bar.setValue(vertical_bar.value() + dy)
             horizontal_bar.setValue(horizontal_bar.value() + dx)
+            self.repaint()
         self.old_x = x
         self.old_y = y
 
