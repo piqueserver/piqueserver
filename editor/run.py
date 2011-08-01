@@ -67,9 +67,20 @@ class EditWidget(QtGui.QWidget):
         self.setFocusPolicy(Qt.StrongFocus)
     
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Q:
+        key = event.key()
+        if key == Qt.Key_Q:
+            self.set_z(self.z + 1)
+        elif key == Qt.Key_A:
+            self.set_z(self.z - 1)
+        elif key in xrange(Qt.Key_1, Qt.Key_9 + 1):
+            self.brush_size = key - Qt.Key_0
+        elif key == Qt.Key_Plus:
+            self.brush_size += 1
+        elif key == Qt.Key_Minus:
+            self.brush_size -= 1
         else:
             return
+        self.brush_size = max(1, self.brush_size)
         self.settings.update_values()
     
     def update_scale(self):
@@ -94,13 +105,15 @@ class EditWidget(QtGui.QWidget):
             self.current_color = self.eraser
         else:
             self.current_color = None
+            super(EditWidget, self).mousePressEvent(event)
             return
         self.draw_pencil(event)
     
     def mouseMoveEvent(self, event):
-        if self.current_color is None:
-            return
-        self.draw_pencil(event)
+        if self.current_color is not None:
+            self.draw_pencil(event)
+        else:
+            super(EditWidget, self).mouseMoveEvent(event)
     
     def draw_pencil(self, event):
         value = 512.0 * self.scale
@@ -109,13 +122,10 @@ class EditWidget(QtGui.QWidget):
         x = max(0, min(511, x))
         y = max(0, min(511, y))
         if x in xrange(512) and y in xrange(512):
-            old_x = self.old_x
-            old_y = self.old_y
+            old_x = self.old_x or x
+            old_y = self.old_y or y
             color = self.current_color
             map = self.map
-            if old_x is None and old_y is None:
-                old_x = x
-                old_y = y
             z = self.z
             image = self.image
             painter = QPainter(image)
@@ -155,8 +165,27 @@ class EditWidget(QtGui.QWidget):
         self.set_z(self.z)
 
 class ScrollArea(QtGui.QScrollArea):
+    old_x = old_y = None
     def wheelEvent(self, wheelEvent):
         self.widget().wheelEvent(wheelEvent)
+    
+    def mousePressEvent(self, event):
+        self.old_x = event.x()
+        self.old_y = event.y()
+    
+    def mouseMoveEvent(self, event):
+        button = event.buttons()
+        x = event.x()
+        y = event.y()
+        if button == Qt.MiddleButton:
+            dx = -(x - self.old_x)
+            dy = -(y - self.old_y)
+            vertical_bar = self.verticalScrollBar()
+            horizontal_bar = self.horizontalScrollBar()
+            vertical_bar.setValue(vertical_bar.value() + dy)
+            horizontal_bar.setValue(horizontal_bar.value() + dx)
+        self.old_x = x
+        self.old_y = y
 
 class Settings(QtGui.QWidget):
     def __init__(self, editor, *arg, **kw):
@@ -191,6 +220,7 @@ class Settings(QtGui.QWidget):
         self.editor.set_color(color)
     
     def update_values(self):
+        editor = self.editor
         self.z_value.spinbox.setValue(editor.z)
         self.brush_size.spinbox.setValue(editor.brush_size)
 
