@@ -102,7 +102,9 @@ class MasterConnection(BaseConnection):
         if callback is not None:
             callback()
         self.disconnect_callback = None
-        self.protocol.transport.stopListening()
+        transport = self.protocol.transport
+        if transport is not None:
+            transport.stopListening()
     
     def send_data(self, data):
         self.protocol.transport.write(data)
@@ -121,6 +123,9 @@ class MasterProtocol(DatagramProtocol):
         
     def startProtocol(self):
         reactor.resolve(HOST).addCallback(self.hostResolved)
+    
+    def stopProtocol(self):
+        self.connection.disconnect()
     
     def hostResolved(self, ip):
         self.transport.connect(ip, PORT)
