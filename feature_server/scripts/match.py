@@ -16,6 +16,8 @@ def apply_script(protocol, connection, config):
             return connection.on_flag_capture(self)
         
         def on_kill(self, killer):
+            if killer is None:
+                killer = self
             self.protocol.irc_say("%s was killed by %s!" %
                 (self.printable_name, killer.printable_name))
             return connection.on_kill(self, killer)
