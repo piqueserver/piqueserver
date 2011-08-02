@@ -392,6 +392,7 @@ class ServerConnection(BaseConnection):
         flag = self.team.other.flag
         if flag.player is not None:
             return
+        self.on_flag_take()
         flag.player = self
         intel_action.action_type = 1
         intel_action.player_id = self.player_id
@@ -457,6 +458,7 @@ class ServerConnection(BaseConnection):
             player = flag.player
             if player is not self:
                 continue
+            self.on_flag_drop()
             position = self.world_object.position
             x = int(position.x)
             y = int(position.y)
@@ -794,7 +796,13 @@ class ServerConnection(BaseConnection):
     def on_color_set(self, color):
         pass
     
+    def on_flag_take(self):
+        pass
+    
     def on_flag_capture(self):
+        pass
+    
+    def on_flag_drop(self):
         pass
     
     def on_hack_attempt(self, reason):
