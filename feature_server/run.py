@@ -445,6 +445,8 @@ class FeatureProtocol(ServerProtocol):
     
     last_time = None
     
+    interface = None
+    
     def __init__(self, config, map):
         self.map = map.data
         self.map_info = map
@@ -559,6 +561,17 @@ class FeatureProtocol(ServerProtocol):
         for line in value:
             lines.append(encode(line % format_dict))
         return lines
+    
+    def stopProtocol(self):
+        if reactor.running:
+            self.listen()
+    
+    def listen(self, interface = None):
+        if interface is None:
+            interface = self.interface
+        else:
+            self.interface = interface
+        reactor.listenUDP(PORT, self, interface)
         
     def got_master_connection(self, *arg, **kw):
         print 'Master connection established.'
@@ -797,20 +810,11 @@ for script in script_objects:
 
 protocol_class.connection_class = connection_class
 
-reactor.listenUDP(PORT, protocol_class(config, map), 
-    config.get('network_interface', ''))
+protocol_instance = protocol_class(config, map)
+interface = config.get('network_interface', '')
+
+protocol_instance.listen(interface)
 print 'Started server on port %s...' % PORT
-
-if False: # debug memory?
-    import cherrypy
-    import dowser
-
-    cherrypy.tree.mount(dowser.Root())
-    cherrypy.config.update({
-        'environment': 'embedded',
-        'server.socket_port': 8080
-    })
-    cherrypy.engine.start()
 
 if profile:
     import cProfile

@@ -28,14 +28,23 @@
 #include <sstream>
 #include "Python.h"
 #include <vector>
-#include <map>
 #include <bitset>
+
+#ifdef _MSC_VER
+#include <hash_map>
+#define map_type stdext::hash_map
+#else
+#include <tr1/unordered_map>
+#define map_type std::tr1::unordered_map
+#endif
+
 using namespace std;
 
 struct MapData
 {
     bitset<MAP_X * MAP_Y * MAP_Z> geometry;
-    std::map<int, int> colors;
+    map_type<int, int> colors;
+
 };
 
 int inline get_solid(int x, int y, int z, MapData * map)
@@ -45,7 +54,7 @@ int inline get_solid(int x, int y, int z, MapData * map)
 
 int inline get_color(int x, int y, int z, MapData * map)
 {
-    std::map<int, int>::const_iterator iter = map->colors.find(
+    map_type<int, int>::const_iterator iter = map->colors.find(
         get_pos(x, y, z));
     if (iter == map->colors.end())
         return 0;
@@ -151,7 +160,7 @@ int check_node(int x, int y, int z, MapData * map, int destroy)
 {
     vector<Position> nodes;
     
-    std::map<int, bool> marked;
+    map_type<int, bool> marked;
     Position new_pos;
     new_pos.x = x;
     new_pos.y = y;
@@ -188,7 +197,7 @@ int check_node(int x, int y, int z, MapData * map, int destroy)
     // destroy the node's path!
     
     if (destroy) {
-        for (std::map<int, bool>::const_iterator iter = marked.begin(); 
+        for (map_type<int, bool>::const_iterator iter = marked.begin(); 
              iter != marked.end(); ++iter)
         {
             map->geometry[iter->first] = 0;
@@ -249,11 +258,6 @@ PyObject * save_vxl(MapData * map)
 
    for (j=0; j < MAP_Y; ++j) {
       for (i=0; i < MAP_X; ++i) {
-         int written_colors = 0;
-         int previous_bottom_colors = 0;
-         int current_bottom_colors = 0;
-         int middle_start = 0;
-
          k = 0;
          while (k < MAP_Z) {
             int z;
@@ -381,11 +385,6 @@ PyObject * get_generator_data(MapGenerator * generator, int columns)
          {
              goto done;
          }
-         int written_colors = 0;
-         int previous_bottom_colors = 0;
-         int current_bottom_colors = 0;
-         int middle_start = 0;
-
          k = 0;
          while (k < MAP_Z) {
             int z;
