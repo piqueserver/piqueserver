@@ -403,9 +403,13 @@ def unmute(connection, value):
 def teleport(connection, player1, player2 = None, silent = False):
     player1 = get_player(connection.protocol, player1)
     if player2 is not None:
-        player, target = player1, get_player(connection.protocol, player2)
-        message = '%s ' + ('silently ' if silent else '') + 'teleported %s to %s'
-        message = message % (connection.name, player.name, target.name)
+        if connection.admin or 'teleport_other' in connection.rights:
+            player, target = player1, get_player(connection.protocol, player2)
+            message = ('%s ' + ('silently ' if silent else '') + 'teleported '
+                '%s to %s')
+            message = message % (connection.name, player.name, target.name)
+        else:
+            return 'No administrator rights!'
     else:
         if connection not in connection.protocol.players:
             raise ValueError()

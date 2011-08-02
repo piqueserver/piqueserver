@@ -47,6 +47,11 @@ def no_follow(connection):
         return "You're spectating."
     return commands.no_follow(connection)
 
+def pm(connection, value, *arg):
+    if connection.spectator:
+        return "You're spectating."
+    return commands.pm(connection, value, *arg)
+
 def spectators(connection):
     names = [p.name for p in connection.protocol.players.values()
         if p.spectator]
@@ -65,11 +70,11 @@ def spectator(connection, value):
     if connection is not player and connection in connection.protocol.players:
         return '%s is now a spectator.' % player.name
 
-for func in (god, invisible, toggle_build, toggle_kill, no_follow,
+for func in (god, invisible, toggle_build, toggle_kill, no_follow, pm,
     spectators, spectator):
     add(func)
 
-rights['spectator'] = ['tp', 'goto']
+rights['spectator'] = ['teleport', 'tp', 'goto']
 
 def apply_script(protocol, connection, config):
     class SpectatorConnection(connection):
@@ -80,6 +85,7 @@ def apply_script(protocol, connection, config):
             self.filter_visibility_data = True
             self.god = True
             self.invisible = True
+            self.fly = True
             self.killing = False
             self.building = False
             self.drop_flag()
