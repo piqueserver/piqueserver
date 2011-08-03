@@ -1,0 +1,4 @@
+name = 'ChokePoint'
+version = '1.0'
+author = 'KomradeTyler'
+description = 'Two islands with a long corridor island between the two'
