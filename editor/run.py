@@ -23,13 +23,16 @@ import sys
 sys.path.append('..')
 
 import math
+import subprocess
 from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 from PySide.QtGui import QPainter
+from PySide.QtGui import QMessageBox
 
 from pyspades.load import VXLData, get_color_tuple
 
-colors = {}
+WATER_COLOR = (64, 108, 129)
+WATER_PEN = QtGui.QColor(*WATER_COLOR)
 
 class LabeledSpinBox(QtGui.QWidget):
     def __init__(self, text, *arg, **kw):
@@ -65,7 +68,9 @@ class EditWidget(QtGui.QWidget):
     freeze_image = None
     current_color = None
     x = y = 0
+    color_sampling = False
     def __init__(self, parent):
+        self.main = parent
         super(EditWidget, self).__init__(parent)
         self.z_cache = {}
         self.map = self.parent().map
@@ -78,9 +83,13 @@ class EditWidget(QtGui.QWidget):
     
     def keyPressEvent(self, event):
         key = event.key()
-        if key == Qt.Key_Q:
+        modifiers = event.modifiers()
+        if not self.color_sampling and modifiers & Qt.ShiftModifier:
+            self.color_sampling = True
+            self.main.app.setOverrideCursor(QtGui.QCursor(Qt.CrossCursor))
+        if key == Qt.Key_A:
             self.set_z(self.z + 1)
-        elif key == Qt.Key_A:
+        elif key == Qt.Key_Q:
             self.set_z(self.z - 1)
         elif key in xrange(Qt.Key_1, Qt.Key_9 + 1):
             self.brush_size = key - Qt.Key_0
@@ -88,13 +97,20 @@ class EditWidget(QtGui.QWidget):
             self.brush_size += 1
         elif key == Qt.Key_Minus:
             self.brush_size -= 1
-        elif key == Qt.Key_Z:
-            color = QtGui.QColor(self.image.pixel(self.x, self.y))
-            self.set_color(color)
         else:
-            return
+            return super(EditWidget, self).keyPressEvent(event)
         self.brush_size = max(1, self.brush_size)
         self.settings.update_values()
+    
+    def set_brush_size(self, value):
+        self.brush_size = max(1, value)
+        self.settings.update_values()
+    
+    def keyReleaseEvent(self, event):
+        modifiers = event.modifiers()
+        if self.color_sampling and not modifiers & Qt.ShiftModifier:
+            self.color_sampling = False
+            self.main.app.restoreOverrideCursor()
     
     def toggle_freeze(self):
         if self.freeze_image is None:
@@ -120,11 +136,24 @@ class EditWidget(QtGui.QWidget):
     def set_color(self, color):
         self.color = color
     
+    def apply_default(self):
+        old_z = self.z
+        self.set_z(63)
+        self.image.fill(WATER_PEN.rgba())
+        if old_z != self.z:
+            self.set_z(old_z)
+        else:
+            self.repaint()
+    
     def mousePressEvent(self, event):
         self.old_x = self.old_y = None
         button = event.button()
         self.update_mouse_position(event)
         if button == Qt.LeftButton:
+            if self.color_sampling:
+                color = QtGui.QColor(self.image.pixel(self.x, self.y))
+                self.set_color(color)
+                return
             self.current_color = self.color
         elif button == Qt.RightButton:
             self.current_color = self.eraser
@@ -179,9 +208,12 @@ class EditWidget(QtGui.QWidget):
         self.old_y = y
     
     def wheelEvent(self, wheelEvent):
-        self.scale += (wheelEvent.delta() / 120.0) / 10.0
-        self.update_scale()
-        self.repaint()
+        if self.main.app.keyboardModifiers() & Qt.ControlModifier:
+            self.set_brush_size(self.brush_size + wheelEvent.delta() / 120.0)
+        else:
+            self.scale += (wheelEvent.delta() / 120.0) / 10.0
+            self.update_scale()
+            self.repaint()
     
     def set_z(self, z):
         map = self.map
@@ -198,6 +230,13 @@ class EditWidget(QtGui.QWidget):
             self.z_cache[self.z] = image
         self.image = image
         self.repaint()
+        if self.settings is not None:
+            self.settings.update_values()
+    
+    def set_image(self, image):
+        painter = QPainter(self.image)
+        painter.drawImage(0, 0, image)
+        self.repaint()
     
     def save_overview(self):
         self.map.set_overview(self.image.overview, self.z)
@@ -211,6 +250,7 @@ class EditWidget(QtGui.QWidget):
 
 class ScrollArea(QtGui.QScrollArea):
     old_x = old_y = None
+    settings = None
     
     def __init__(self, *arg, **kw):
         super(ScrollArea, self).__init__(*arg, **kw)
@@ -218,13 +258,16 @@ class ScrollArea(QtGui.QScrollArea):
     
     def keyPressEvent(self, event):
         self.widget().keyPressEvent(event)
+
+    def keyReleaseEvent(self, event):
+        self.widget().keyReleaseEvent(event)
     
     def wheelEvent(self, wheelEvent):
         self.widget().wheelEvent(wheelEvent)
     
     def mousePressEvent(self, event):
-        self.old_x = event.x()
-        self.old_y = event.y()
+        self.old_x = self.start_x = event.x()
+        self.old_y = self.start_y = event.y()
     
     def mouseMoveEvent(self, event):
         button = event.buttons()
@@ -241,12 +284,23 @@ class ScrollArea(QtGui.QScrollArea):
         self.old_x = x
         self.old_y = y
 
+TOOLS = {
+    # 'Selection' : None,
+    'Brush' : None
+}
+
 class Settings(QtGui.QWidget):
-    def __init__(self, editor, *arg, **kw):
-        self.editor = editor
-        editor.settings = self
+    def __init__(self, parent, *arg, **kw):
+        self.editor = parent.edit_widget
+        self.scroll_view = parent.scroll_view
+        for widget in (self.editor, self.scroll_view):
+            widget.settings = self
         super(Settings, self).__init__(*arg, **kw)
         layout = QtGui.QVBoxLayout(self)
+        
+        self.tool = LabeledWidget('Tool', QtGui.QListWidget())
+        self.tool.widget.addItems(TOOLS.keys())
+        layout.addWidget(self.tool)
         
         self.z_value = LabeledSpinBox('Current Z')
         self.z_value.spinbox.setRange(0, 63)
@@ -272,7 +326,7 @@ class Settings(QtGui.QWidget):
         self.editor.brush_size = self.brush_size.spinbox.value()
     
     def set_z(self):
-        self.editor.set_z(self.z_value.spinbox.value())
+        self.editor.set_z(63 - self.z_value.spinbox.value())
     
     def freeze_image(self):
         self.editor.toggle_freeze()
@@ -286,28 +340,57 @@ class Settings(QtGui.QWidget):
     
     def update_values(self):
         editor = self.editor
-        self.z_value.spinbox.setValue(editor.z)
+        self.z_value.spinbox.setValue(63 - editor.z)
         self.brush_size.spinbox.setValue(editor.brush_size)
+    
+    def keyPressEvent(self, event):
+        self.editor.keyPressEvent(event)
+
+    def keyReleaseEvent(self, event):
+        self.editor.keyReleaseEvent(event)
 
 class MapEditor(QtGui.QMainWindow):
-    def __init__(self, *arg, **kw):
+    filename = None
+    voxed_filename = None
+    def __init__(self, app, *arg, **kw):
         super(MapEditor, self).__init__(*arg, **kw)
-
+        
+        self.app = app
+        
         menu = self.menuBar()
         
-        self.file = menu.addMenu('&File')
+        self.file = menu.addMenu('File')
         
-        self.new_action = QtGui.QAction('&New', self,
+        self.new_action = QtGui.QAction('New', self,
             triggered = self.new_selected)
         self.file.addAction(self.new_action)
         
-        self.load_action = QtGui.QAction('&Load', self,
+        self.load_action = QtGui.QAction('Load', self,
             triggered = self.load_selected)
         self.file.addAction(self.load_action)
         
         self.save_action = QtGui.QAction('&Save', self, 
             shortcut=QtGui.QKeySequence.Save, triggered = self.save_selected)
         self.file.addAction(self.save_action)
+        
+        self.save_action = QtGui.QAction('Save As', 
+            self,triggered = self.save_as_selected)
+        self.file.addAction(self.save_action)
+
+        self.voxed_action = QtGui.QAction('Open VOXED', 
+            self, shortcut = Qt.Key_F5, triggered = self.open_voxed)
+        self.file.addAction(self.voxed_action)
+        
+        self.edit = menu.addMenu('&Edit')
+        
+        self.copy_action = QtGui.QAction('Copy', self,
+            shortcut = QtGui.QKeySequence.Copy, triggered = self.copy_selected)
+        self.edit.addAction(self.copy_action)
+
+        self.paste_action = QtGui.QAction('Paste', self,
+            shortcut = QtGui.QKeySequence.Paste, 
+            triggered = self.paste_selected)
+        self.edit.addAction(self.paste_action)
         
         self.map = VXLData()
         
@@ -316,25 +399,39 @@ class MapEditor(QtGui.QMainWindow):
         self.scroll_view.setWidget(self.edit_widget)
         self.setCentralWidget(self.scroll_view)
         self.scroll_view.setAlignment(Qt.AlignCenter)
+
+        self.edit_widget.apply_default()
         
         self.settings_dock = QtGui.QDockWidget(self)
-        self.settings_dock.setWidget(Settings(self.edit_widget))
+        self.settings_dock.setWidget(Settings(self))
         self.settings_dock.setWindowTitle('Settings')
         
         for item in (self.settings_dock,):
             self.addDockWidget(Qt.RightDockWidgetArea, item)
 
         self.setWindowTitle('pyspades map editor')
+        
+        self.clipboard = app.clipboard()
     
     def new_selected(self):
+        msgBox = QMessageBox()
+        msgBox.setText("Do you want to discard your changes?")
+        msgBox.setStandardButtons(QMessageBox.Discard | QMessageBox.Cancel)
+        msgBox.setDefaultButton(QMessageBox.Cancel)
+        ret = msgBox.exec_()
+        if ret == QMessageBox.Cancel:
+            return
         self.map = VXLData()
         self.map_updated()
+        self.edit_widget.apply_default()
+        self.filename = None
     
     def load_selected(self):
         name = QtGui.QFileDialog.getOpenFileName(self,
             'Select map file', filter = '*.vxl')[0]
         if not name:
             return
+        self.filename = name
         self.map = VXLData(open(name, 'rb'))
         self.map_updated()
     
@@ -342,17 +439,51 @@ class MapEditor(QtGui.QMainWindow):
         self.edit_widget.map_updated()
     
     def save_selected(self):
+        if self.filename is None:
+            return self.save_as_selected()
+        self.save(self.filename)
+    
+    def save_as_selected(self):
         name = QtGui.QFileDialog.getSaveFileName(self,
             'Select map file', filter = '*.vxl')[0]
         if not name:
             return
+        self.filename = name
+        self.save(name)
+    
+    def save(self, filename):
         self.edit_widget.save_overview()
-        open(name, 'wb').write(self.map.generate())
+        open(filename, 'wb').write(self.map.generate())
+        print 'Saved!'
+    
+    def open_voxed(self):
+        self.save_selected()
+        if self.filename is None:
+            return
+        if self.voxed_filename is None:
+            name = QtGui.QFileDialog.getOpenFileName(self,
+                'Select voxed.exe', filter = '*.exe')[0]
+            if not name:
+                return
+            self.voxed_filename = name
+        subprocess.call([self.voxed_filename, self.filename])
+    
+    def copy_selected(self):
+        self.clipboard.setImage(self.edit_widget.image)
+        print 'copied'
+
+    def paste_selected(self):
+        image = self.clipboard.image()
+        if not image:
+            return
+        print 'paste ->', image
+        self.edit_widget.set_image(image)
 
 def main():
     app = QtGui.QApplication(sys.argv)
-    editor = MapEditor()
+    editor = MapEditor(app)
     editor.show()
+    editor.showMaximized()
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
