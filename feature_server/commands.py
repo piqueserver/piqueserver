@@ -233,6 +233,8 @@ def follow(connection, player = None):
     # TODO  make "attack" case-insensitive
     #       move this feature into a script
 
+    if len(connection.get_followers()):
+        return "You're a squad leader! To follow someone else, first say /nofollow"
     if player is None:
         if connection.follow is None:
             return ("You aren't following anybody. To follow, say "
@@ -263,6 +265,8 @@ def follow(connection, player = None):
         return "You're already following %s" % player.name
     if not player.followable:
         return "%s doesn't want to be followed." % player.name
+    if player.follow is not None:
+        return '%s is already following %s' % (player.name, player.follow.name)
     if len(player.get_followers()) >= connection.protocol.max_followers:
         return '%s has too many followers!' % player.name
     if connection.follow is not None:
@@ -540,6 +544,7 @@ def invisible(connection, player = None):
     player.filter_visibility_data = player.invisible
     player.god = player.invisible
     player.god_build = False
+    player.killing = not player.invisible
     if player.invisible:
         player.send_chat("You're now invisible.")
         connection.protocol.irc_say('* %s became invisible' % player.name)

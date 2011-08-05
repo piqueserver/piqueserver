@@ -274,6 +274,8 @@ class FeatureConnection(ServerConnection):
         self.protocol.check_end_game(killer)
     
     def on_fall(self, damage):
+        if self.god:
+            return False
         if not self.protocol.fall_damage:
             return False
     
