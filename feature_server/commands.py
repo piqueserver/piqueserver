@@ -233,6 +233,8 @@ def follow(connection, player = None):
     # TODO  make "attack" case-insensitive
     #       move this feature into a script
 
+    if len(connection.get_followers()):
+        return "You're a squad leader! To follow someone else, first say /nofollow"
     if player is None:
         if connection.follow is None:
             return ("You aren't following anybody. To follow, say "
