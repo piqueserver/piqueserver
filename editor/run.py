@@ -215,6 +215,10 @@ class EditWidget(QtGui.QWidget):
             self.update_scale()
             self.repaint()
     
+    def clear(self):
+        self.image.fill(0)
+        self.repaint()
+    
     def set_z(self, z):
         map = self.map
         image = self.image
@@ -359,13 +363,13 @@ class MapEditor(QtGui.QMainWindow):
         
         menu = self.menuBar()
         
-        self.file = menu.addMenu('File')
+        self.file = menu.addMenu('&File')
         
-        self.new_action = QtGui.QAction('New', self,
+        self.new_action = QtGui.QAction('&New', self,
             triggered = self.new_selected)
         self.file.addAction(self.new_action)
         
-        self.load_action = QtGui.QAction('Load', self,
+        self.load_action = QtGui.QAction('&Load', self,
             triggered = self.load_selected)
         self.file.addAction(self.load_action)
         
@@ -373,24 +377,39 @@ class MapEditor(QtGui.QMainWindow):
             shortcut=QtGui.QKeySequence.Save, triggered = self.save_selected)
         self.file.addAction(self.save_action)
         
-        self.save_action = QtGui.QAction('Save As', 
-            self,triggered = self.save_as_selected)
-        self.file.addAction(self.save_action)
-
-        self.voxed_action = QtGui.QAction('Open VOXED', 
+        self.save_as_action = QtGui.QAction('Save As', self, 
+            shortcut = QtGui.QKeySequence('Ctrl+Shift+S'), 
+            triggered = self.save_as_selected)
+        self.file.addAction(self.save_as_action)
+        
+        self.file.addSeparator()
+        
+        self.voxed_action = QtGui.QAction('Open in VOXED', 
             self, shortcut = Qt.Key_F5, triggered = self.open_voxed)
         self.file.addAction(self.voxed_action)
         
+        self.file.addSeparator()
+        
+        self.quit_action = QtGui.QAction('&Exit', 
+            self, shortcut = QtGui.QKeySequence('Ctrl+Q'), 
+            triggered = self.quit)
+        self.file.addAction(self.quit_action)
+        
         self.edit = menu.addMenu('&Edit')
         
-        self.copy_action = QtGui.QAction('Copy', self,
+        self.copy_action = QtGui.QAction('&Copy', self,
             shortcut = QtGui.QKeySequence.Copy, triggered = self.copy_selected)
         self.edit.addAction(self.copy_action)
 
-        self.paste_action = QtGui.QAction('Paste', self,
+        self.paste_action = QtGui.QAction('&Paste', self,
             shortcut = QtGui.QKeySequence.Paste, 
             triggered = self.paste_selected)
         self.edit.addAction(self.paste_action)
+        
+        self.clear_action = QtGui.QAction('Cl&ear', self,
+            shortcut = QtGui.QKeySequence.Delete, 
+            triggered = self.clear_selected)
+        self.edit.addAction(self.clear_action)
         
         self.map = VXLData()
         
@@ -445,7 +464,7 @@ class MapEditor(QtGui.QMainWindow):
     
     def save_as_selected(self):
         name = QtGui.QFileDialog.getSaveFileName(self,
-            'Select map file', filter = '*.vxl')[0]
+            'Save map as...', filter = '*.vxl')[0]
         if not name:
             return
         self.filename = name
@@ -454,7 +473,6 @@ class MapEditor(QtGui.QMainWindow):
     def save(self, filename):
         self.edit_widget.save_overview()
         open(filename, 'wb').write(self.map.generate())
-        print 'Saved!'
     
     def open_voxed(self):
         self.save_selected()
@@ -470,14 +488,18 @@ class MapEditor(QtGui.QMainWindow):
     
     def copy_selected(self):
         self.clipboard.setImage(self.edit_widget.image)
-        print 'copied'
 
     def paste_selected(self):
         image = self.clipboard.image()
         if not image:
             return
-        print 'paste ->', image
         self.edit_widget.set_image(image)
+    
+    def clear_selected(self):
+        self.edit_widget.clear()
+    
+    def quit(self):
+        self.app.exit()
 
 def main():
     app = QtGui.QApplication(sys.argv)
