@@ -542,6 +542,7 @@ def invisible(connection, player = None):
     player.filter_visibility_data = player.invisible
     player.god = player.invisible
     player.god_build = False
+    player.killing = not player.invisible
     if player.invisible:
         player.send_chat("You're now invisible.")
         connection.protocol.irc_say('* %s became invisible' % player.name)
