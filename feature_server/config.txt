@@ -55,12 +55,12 @@
         }
     },
     "status_server" : {
-        "enabled" : false,
-        "port" : 38826
-    }, 
+        "enabled" : true,
+        "port" : 32886
+    },
     "ban_publish" : {
         "enabled" : false,
-        "port" : 38825
+        "port" : 32885
     },
     "ban_subscribe" : {
         "enabled" : true,

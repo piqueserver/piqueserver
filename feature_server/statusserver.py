@@ -21,6 +21,8 @@ from twisted.web.resource import Resource
 from string import Template
 import json
 
+STATUS_FILE = './web/status.html'
+
 class StatusResource(Resource):
     protocol = None
     
@@ -32,37 +34,48 @@ class StatusResource(Resource):
         return self
 
     def render_GET(self, request):
-        blues = []
-        greens = []
-    
-        for player in self.protocol.players.values():
-            if player.team is self.protocol.blue_team:
-                blues.append(player.name)
-            else:
-                greens.append(player.name)
-                                
-        dictionary = {
-            "serverName": self.protocol.name,
-            "serverVersion": self.protocol.version,
-            "map": {
-                "name": self.protocol.map_info.name,
-                "version": self.protocol.map_info.version
-            },
-            "players": {
-                "blue": blues,
-                "green": greens,
-                "maxPlayers": self.protocol.max_players,
-            },
-            "scores": {
-                "currentBlueScore": self.protocol.blue_team.score,
-                "currentGreenScore": self.protocol.green_team.score,
-            "maxScore": self.protocol.max_score}
-            }
+        path = request.path
+        protocol = self.protocol
+        if path == '/json':
+            blues = []
+            greens = []
+        
+            for player in protocol.players.values():
+                if player.team is protocol.blue_team:
+                    blues.append(player.name)
+                else:
+                    greens.append(player.name)
+                                    
+            dictionary = {
+                "serverName" : protocol.name,
+                "serverVersion": protocol.version,
+                "map" : {
+                    "name": protocol.map_info.name,
+                    "version": protocol.map_info.version
+                },
+                "players" : {
+                    "blue": blues,
+                    "green": greens,
+                    "maxPlayers": protocol.max_players,
+                },
+                "scores" : {
+                    "currentBlueScore": protocol.blue_team.score,
+                    "currentGreenScore": protocol.green_team.score,
+                "maxScore": protocol.max_score}
+                }
 
-        return json.dumps(dictionary)
+            return json.dumps(dictionary)
+        else:
+            data = open(STATUS_FILE).read()
+            data = data % {
+                'name' : protocol.name,
+                'players' : len(protocol.connections),
+                'max_players' : protocol.max_players
+            }
+            return str(data)
 
 class StatusServerFactory(object):
     def __init__(self, protocol, config):
         status_resource = StatusResource(protocol)
         site = server.Site(status_resource)
-        reactor.listenTCP(config.get('port', 38826), site)
+        reactor.listenTCP(config.get('port', 32886), site)
