@@ -263,6 +263,8 @@ def follow(connection, player = None):
         return "You're already following %s" % player.name
     if not player.followable:
         return "%s doesn't want to be followed." % player.name
+    if player.follow is not None:
+        return '%s is already following %s' % (player.name, player.follow.name)
     if len(player.get_followers()) >= connection.protocol.max_followers:
         return '%s has too many followers!' % player.name
     if connection.follow is not None:
