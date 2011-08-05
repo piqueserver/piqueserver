@@ -5,7 +5,8 @@ import commands
 
 @admin
 def god(connection, value = None):
-    if value is None and connection.spectator:
+    irc = connection in connection.protocol.players
+    if not irc and value is None and connection.spectator:
         return "You're spectating"
     elif value is not None:
         player = get_player(connection.protocol, value)
@@ -15,7 +16,8 @@ def god(connection, value = None):
 
 @admin
 def invisible(connection, value = None):
-    if value is None and connection.spectator:
+    irc = connection in connection.protocol.players
+    if not irc and value is None and connection.spectator:
         return "You're spectating"
     elif value is not None:
         player = get_player(connection.protocol, value)
@@ -43,12 +45,14 @@ def toggle_build(connection, value = None):
 
 @name('nofollow')
 def no_follow(connection):
-    if connection.spectator:
+    irc = connection in connection.protocol.players
+    if not irc and connection.spectator:
         return "You're spectating."
     return commands.no_follow(connection)
 
 def pm(connection, value, *arg):
-    if connection.spectator:
+    irc = connection in connection.protocol.players
+    if not irc and connection.spectator:
         return "You're spectating."
     return commands.pm(connection, value, *arg)
 
