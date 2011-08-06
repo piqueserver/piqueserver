@@ -425,7 +425,7 @@ def unmute(connection, value):
 def global_chat(connection):
     connection.protocol.global_chat = not connection.protocol.global_chat
     connection.protocol.send_chat('Global chat %s' % ('enabled' if
-        connection.protocol.global_chat else 'disabled'))
+        connection.protocol.global_chat else 'disabled'), irc = True)
 
 @admin
 def teleport(connection, player1, player2 = None, silent = False):
