@@ -650,9 +650,10 @@ def change_map(connection, value):
 
 @name('servername')
 @admin
-def server_name(connection, value):
+def server_name(connection, *arg):
+    name = join_arguments(arg)
     connection.protocol.master_connection.disconnect()
-    connection.protocol.name = value
+    connection.protocol.name = name
 
 def ping(connection, value = None):
     if value is None:
