@@ -664,13 +664,17 @@ def change_map(connection, value):
     protocol.blue_team.initialize()
     protocol.green_team.initialize()
     protocol.update_entities()
+    protocol.update_format()
 
 @name('servername')
 @admin
 def server_name(connection, *arg):
     name = join_arguments(arg)
-    connection.protocol.master_connection.disconnect()
-    connection.protocol.name = name
+    protocol = connection.protocol
+    protocol.config['name'] = name
+    protocol.update_format()
+    if protocol.master_connection is not None:
+        protocol.master_connection.disconnect()
 
 def ping(connection, value = None):
     if value is None:

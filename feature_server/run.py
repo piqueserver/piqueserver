@@ -457,8 +457,7 @@ class FeatureProtocol(ServerProtocol):
         except IOError:
             self.bans = []
         self.config = config
-        self.name = encode(self.format(config.get('name', 
-            'pyspades server %s' % random.randrange(0, 2000))))
+        self.update_format()
         if len(self.name) > MAX_SERVER_NAME_SIZE:
             print '(server name too long; it will be truncated to "%s")' % (
                 self.name[:MAX_SERVER_NAME_SIZE])
@@ -473,9 +472,6 @@ class FeatureProtocol(ServerProtocol):
         self.friendly_fire_time = config.get('grief_friendly_fire_time', 2.0)
         self.fall_damage = config.get('fall_damage', True)
         self.teamswitch_interval = config.get('teamswitch_interval', 0)
-        self.motd = self.format_lines(config.get('motd', None))
-        self.help = self.format_lines(config.get('help', None))
-        self.tips = self.format_lines(config.get('tips', None))
         self.tip_frequency = config.get('tip_frequency', 0)
         if self.tips is not None and self.tip_frequency > 0:
             reactor.callLater(self.tip_frequency * 60, self.send_tip)
@@ -484,7 +480,6 @@ class FeatureProtocol(ServerProtocol):
         self.passwords = config.get('passwords', {})
         self.server_prefix = encode(config.get('server_prefix', '[*]'))
         self.balanced_teams = config.get('balanced_teams', None)
-        self.rules = self.format_lines(config.get('rules', None))
         self.login_retries = config.get('login_retries', 1)
         self.default_ban_time = config.get('default_ban_time', 24*60)
         self.votekick_ban_duration = config.get('votekick_ban_duration', 15)
@@ -548,6 +543,18 @@ class FeatureProtocol(ServerProtocol):
             if (x, y, z) in self.god_blocks:
                 return True
         return False
+    
+    def update_format(self):
+        """
+        Called when the map (or other variables) have been updated
+        """
+        config = self.config
+        self.name = encode(self.format(config.get('name', 
+            'pyspades server %s' % random.randrange(0, 2000))))
+        self.motd = self.format_lines(config.get('motd', None))
+        self.help = self.format_lines(config.get('help', None))
+        self.tips = self.format_lines(config.get('tips', None))
+        self.rules = self.format_lines(config.get('rules', None))
     
     def format(self, value, extra = {}):
         map = self.map_info
