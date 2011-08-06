@@ -76,7 +76,8 @@ def kick(connection, value, *arg):
     player = get_player(connection.protocol, value)
     player.kick(reason)
 
-def get_ban_arguments(connection, *arg):
+@admin
+def ban(connection, value, *arg):
     duration = None
     if len(arg):
         try:
@@ -90,26 +91,15 @@ def get_ban_arguments(connection, *arg):
         else:
             duration = connection.protocol.default_ban_time
     reason = join_arguments(arg)
-    return duration, reason
-    
-@admin
-def ban(connection, value, *arg):
-    duration, reason = get_ban_arguments(connection, *arg)
     player = get_player(connection.protocol, value)
     player.ban(reason, duration)
 
 @admin
-def banip(connection, value, *arg):
-    duration, reason = get_ban_arguments(connection, *arg)
-    connection.protocol.add_ban(value, duration, reason)
-    return 'IP banned.'
-
-@admin
 def unban(connection, ip):
-    results = connection.protocol.remove_ban(ip)
-    if results:
+    try:
+        connection.protocol.remove_ban(ip)
         return 'IP unbanned.'
-    else:
+    except KeyError:
         return 'IP not found in ban list.'
 
 @name('undoban')
@@ -430,6 +420,13 @@ def unmute(connection, value):
     message = '%s has been unmuted by %s' % (player.name, connection.name)
     connection.protocol.send_chat(message, irc = True)
 
+@name('globalchat')
+@admin
+def global_chat(connection):
+    connection.protocol.global_chat = not connection.protocol.global_chat
+    connection.protocol.send_chat('Global chat %s' % ('enabled' if
+        connection.protocol.global_chat else 'disabled'))
+
 @admin
 def teleport(connection, player1, player2 = None, silent = False):
     player1 = get_player(connection.protocol, player1)
@@ -721,11 +718,11 @@ command_list = [
     intel,
     ip,
     ban,
-    banip,
     unban,
     undo_ban,
     mute,
     unmute,
+    global_chat,
     say,
     kill,
     heal,
