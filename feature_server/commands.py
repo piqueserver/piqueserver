@@ -648,6 +648,12 @@ def change_map(connection, value):
     protocol.green_team.initialize()
     protocol.update_entities()
 
+@name('servername')
+@admin
+def server_name(connection, value):
+    connection.protocol.master_connection.disconnect()
+    connection.protocol.name = value
+
 def ping(connection, value = None):
     if value is None:
         if connection not in connection.protocol.players:
@@ -714,6 +720,7 @@ command_list = [
     score,
     reset_game,
     change_map,
+    server_name,
     ping
 ]
 
