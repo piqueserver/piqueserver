@@ -248,7 +248,7 @@ class FeatureConnection(ServerConnection):
                 "You can't kill anyone right now! Damage is turned OFF")
             return False
         if not self.killing:
-            self.send_chat("You can't kill anyone.")
+            self.send_chat("%s. You can't kill anyone." % player.name)
             return False
         elif player.god:
             if not player.invisible:
