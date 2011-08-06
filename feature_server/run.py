@@ -457,8 +457,8 @@ class FeatureProtocol(ServerProtocol):
         except IOError:
             self.bans = []
         self.config = config
-        self.name = config.get('name', 
-            'pyspades server %s' % random.randrange(0, 2000))
+        self.name = encode(self.format(config.get('name', 
+            'pyspades server %s' % random.randrange(0, 2000))))
         if len(self.name) > MAX_SERVER_NAME_SIZE:
             print '(server name too long; it will be truncated to "%s")' % (
                 self.name[:MAX_SERVER_NAME_SIZE])
@@ -552,7 +552,6 @@ class FeatureProtocol(ServerProtocol):
     def format(self, value, extra = {}):
         map = self.map_info
         format_dict = {
-            'server_name' : self.name,
             'map_name' : map.name,
             'map_author' : map.author,
             'map_description' : map.description
@@ -564,8 +563,9 @@ class FeatureProtocol(ServerProtocol):
         if value is None:
             return
         lines = []
+        extra = {'server_name' : self.name}
         for line in value:
-            lines.append(encode(self.format(line)))
+            lines.append(encode(self.format(line, extra)))
         return lines
     
     def stopProtocol(self):
