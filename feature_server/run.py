@@ -523,6 +523,8 @@ class FeatureProtocol(ServerProtocol):
             log.msg('pyspades server started on %s' % time.strftime('%c'))
         log.startLogging(sys.stdout) # force twisted logging
         
+        self.start_time = reactor.seconds()
+        
         if sys.platform != 'win32':
             self.console = ConsoleInput(self)
             StandardIO(self.console)

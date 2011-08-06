@@ -55,7 +55,7 @@
         }
     },
     "status_server" : {
-        "enabled" : false,
+        "enabled" : true,
         "port" : 32886
     },
     "ban_publish" : {
