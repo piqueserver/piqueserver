@@ -289,6 +289,23 @@ def no_follow(connection):
     return 'Teammates will %s be able to follow you.' % (
         'now' if connection.followable else 'no longer')
 
+def squads(connection):
+    if connection not in connection.protocol.players:
+        raise KeyError()
+    squads = []
+    for player in connection.team.get_players():
+        if player.follow is not None:
+            squad = squads.get(player.follow.name, [])
+            squad.append(player.name)
+            squads[player.follow.name] = squad
+    if len(squads) == 0:
+        return 'There are currently no squads in your team.'
+    message = ''
+    for names, leader in squads.iteritems():
+        message += '%s follow%s %s. ' % (', '.join(names),
+            's' if len(names) == 1 else '', leader)
+    return message
+
 def streak(connection):
     if connection not in connection.protocol.players:
         raise KeyError()
@@ -650,9 +667,10 @@ def change_map(connection, value):
 
 @name('servername')
 @admin
-def server_name(connection, value):
+def server_name(connection, *arg):
+    name = join_arguments(arg)
     connection.protocol.master_connection.disconnect()
-    connection.protocol.name = value
+    connection.protocol.name = name
 
 def ping(connection, value = None):
     if value is None:
@@ -716,6 +734,7 @@ command_list = [
     invisible,
     follow,
     no_follow,
+    squads,
     streak,
     score,
     reset_game,
