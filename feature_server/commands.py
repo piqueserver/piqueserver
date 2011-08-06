@@ -646,6 +646,7 @@ def change_map(connection, value):
         protocol.block_info = None
     protocol.blue_team.initialize()
     protocol.green_team.initialize()
+    protocol.update_entities()
 
 def ping(connection, value = None):
     if value is None:
