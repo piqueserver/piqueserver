@@ -603,23 +603,21 @@ class FeatureProtocol(ServerProtocol):
         duration in minutes. If duration is None, ban is permanent.
         """
         banned = False
+        if duration:
+            self.bans.append((connection.name, ip, reason,
+                             reactor.seconds()+duration * 60))
+        else:
+            self.bans.append((connection.name, ip, reason,
+                             None))
+        self.save_bans()
         for connection in self.connections.values():
             if connection.address[0] == ip:
-                if not banned:
-                    if duration:
-                        self.bans.append((connection.name, ip, reason,
-                                         reactor.seconds()+duration * 60))
-                    else:
-                        self.bans.append((connection.name, ip, reason,
-                                         None))
-                    self.save_bans()
-                    banned = True
                 connection.kick(silent = True)
     
     def remove_ban(self, ip):
         results = [self.bans.remove(n) for n in self.bans if n[1] == ip]
-        print 'Removing ban:', ip, results
         self.save_bans()
+        return results
 
     def undo_last_ban(self):
         result = self.bans.pop()
