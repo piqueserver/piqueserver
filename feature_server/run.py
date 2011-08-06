@@ -549,9 +549,7 @@ class FeatureProtocol(ServerProtocol):
                 return True
         return False
     
-    def format_lines(self, value):
-        if value is None:
-            return
+    def format(self, value, extra = {}):
         map = self.map_info
         format_dict = {
             'server_name' : self.name,
@@ -559,9 +557,15 @@ class FeatureProtocol(ServerProtocol):
             'map_author' : map.author,
             'map_description' : map.description
         }
+        format_dict.update(extra)
+        return value % format_dict
+    
+    def format_lines(self, value):
+        if value is None:
+            return
         lines = []
         for line in value:
-            lines.append(encode(line % format_dict))
+            lines.append(encode(self.format(line)))
         return lines
     
     def stopProtocol(self):

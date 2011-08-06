@@ -177,7 +177,7 @@ cdef class VXLData:
     def set_point_unsafe_int(self, int x, int y, int z, int color):
         set_point(x, y, z, self.map, 1, color)
     
-    def get_overview(self, int z = -1):
+    def get_overview(self, int z = -1, bint rgba = False):
         cdef unsigned int * data
         data_python = allocate_memory(sizeof(int[512][512]), <char**>&data)
         cdef unsigned int i, x, y, r, g, b, a, color
@@ -197,7 +197,13 @@ cdef class VXLData:
                     else:
                         a = 0
                 color = get_color(x, y, current_z, self.map)
-                data[i] = (color & 0x00FFFFFF) | (a << 24)
+                if rgba:
+                    b = color & 0xFF
+                    g = (color & 0xFF00) >> 8
+                    r = (color & 0xFF0000) >> 16
+                    data[i] = r | (g << 8) | (b << 16) | (a << 24)
+                else:
+                    data[i] = (color & 0x00FFFFFF) | (a << 24)
                 i += 1
         return data_python
     
