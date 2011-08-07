@@ -35,6 +35,7 @@ sys.path.append('..')
 
 from twisted.internet import reactor
 from twisted.internet.protocol import DatagramProtocol
+from twisted.internet.defer import Deferred
 from twisted.internet.task import LoopingCall
 from pyspades.site import get_servers
 from pyspades.tools import make_server_number
@@ -50,16 +51,18 @@ from twisted.web.client import getPage
 
 SITE = 'http://ace-spades.com/forums/bb-login.php'
 
+from twisted.python import log
+
 def got_user(data):
     return data.count('Log in Failed') == 0
 
 def check_user(name, password):
-    return getPage(SITE, method='POST', 
+    defer = getPage(SITE, method='POST', 
         postdata = urllib.urlencode(
             {'user_login' : name, 'password' : password}
         ),
         headers = {'Content-Type' : 'application/x-www-form-urlencoded'}
-        ).addCallback(got_user)
+        ).addCallback(got_user, name).addErrback(log.err)
 
 from feature_server.statistics import (StatsFactory, StatsServer,
     DEFAULT_PORT)
