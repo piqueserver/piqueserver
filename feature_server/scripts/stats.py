@@ -49,13 +49,16 @@ def apply_script(protocol, connection, config):
         stats = None
         def __init__(self, *arg, **kw):
             protocol.__init__(self, *arg, **kw)
-            connect_statistics(host, port, server_name, password).addCallback(
+            connect_statistics(host, port, server_name, password,
                 self.statistics_connected)
         
         def statistics_connected(self, stats):
-            print 'Statistics server authenticated.'
-            self.tips.append('Highscores enabled! '
-                'Use /sitelogin <forum name> <forum pass> to login.')
+            if self.stats is not None:
+                print 'Statistics server authenticated.'
+                self.tips.append('Highscores enabled! '
+                    'Use /sitelogin <forum name> <forum pass> to login.')
+            else:
+                print 'Statistics reconnection successful.'
             self.stats = stats
     
     return StatisticsProtocol, StatisticsConnection

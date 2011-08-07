@@ -108,17 +108,10 @@ class StatsClient(StatsProtocol):
         self.send_object({'type' : 'auth', 'name' : self.factory.name, 
             'password' : self.factory.password})
     
-    def connectionLost(self, reason):
-        if self.factory.defer is not None:
-            self.factory.defer.errback(reason)
-            self.factory.defer = None
-    
     def object_received(self, obj):
         type = obj['type']
         if type == 'authed':
-            if self.factory.defer is not None:
-                self.factory.defer.callback(self)
-                self.factory.defer = None
+            self.factory.callback(self)
         elif type == 'login':
             defer = self.login_defers.pop(0)
             defer.callback(obj['result'])
@@ -141,15 +134,13 @@ class StatsClientFactory(ReconnectingClientFactory):
     protocol = StatsClient
     maxDelay = 20
     
-    def __init__(self, name, password, defer):
+    def __init__(self, name, password, callback):
         self.name = name
         self.password = hash_password(password)
-        self.defer = defer
+        self.callback = callback
 
-def connect_statistics(host, port, name, password):
-    defer = Deferred()
-    reactor.connectTCP(host, port, StatsClientFactory(name, password, defer))
-    return defer
+def connect_statistics(host, port, name, password, callback):
+    reactor.connectTCP(host, port, StatsClientFactory(name, password, callback))
 
 if __name__ == '__main__':
     class TestServer(StatsServer):
