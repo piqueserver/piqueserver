@@ -97,12 +97,14 @@ class SiteStatisticsFactory(StatsFactory):
             self.users = {}
     
     def get_user(self, name):
-        if name not in self.users:
-            self.users[name] = {
+        key = name.lower()
+        if key not in self.users:
+            self.users[key] = {
+                'name' : name,
                 'kills' : 0,
                 'deaths' : 0
             }
-        return self.users[name]
+        return self.users[key]
     
     def save(self):
         json.dump(self.users, open('users.txt', 'wb'))

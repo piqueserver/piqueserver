@@ -56,7 +56,7 @@ Top 10 highscore list:
 </tr>
 {% for player in protocol.get_highscores()[:10] %}
     <tr>
-    <td>{{player[0]}}</td>
+    <td>{{player[1]['name']}}</td>
     <td>{{player[1]['kills']}}</td>
     <td>{{player[1]['deaths']}}</td>
     <td>{{(player[1]['kills'] / (player[1]['deaths'] or 1))|round(2)}}</td>
