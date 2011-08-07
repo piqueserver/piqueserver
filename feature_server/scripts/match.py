@@ -60,7 +60,11 @@ def apply_script(protocol, connection, config):
             self.display_timer(True)
         
         def stop_timer(self):
-            
+            if self.timer_call is not None:
+                self.timer_call.cancel()
+                self.send_chat('Timer stopped.')
+            else:
+                return 'No timer in progress.'
         
         def display_timer(self, silent = False):
             time_left = self.timer_end - reactor.seconds()
