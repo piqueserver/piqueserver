@@ -285,8 +285,6 @@ class ServerConnection(BaseConnection):
                             return
                         self.color = color
                         self.on_color_set(color)
-                        if self.filter_visibility_data:
-                            return
                         set_color.player_id = self.player_id
                         set_color.value = contained.value
                         self.protocol.send_contained(set_color, sender = self,

@@ -135,6 +135,11 @@ def apply_script(protocol, connection, config):
             self.start_spectating()
             return connection.on_user_login(self, user_type)
         
+        def on_color_set_attempt(self, color):
+            if self.spectator:
+                return False
+            return connection.on_color_set_attempt(self, color)
+        
         def on_chat(self, value, global_message):
             if not self.spectator:
                 return connection.on_chat(self, value, global_message)
