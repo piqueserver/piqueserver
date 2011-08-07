@@ -59,7 +59,7 @@ Top 10 highscore list:
     <td>{{player[0]}}</td>
     <td>{{player[1]['kills']}}</td>
     <td>{{player[1]['deaths']}}</td>
-    <td>{{player[1]['kills'] / (player[1]['deaths'] or 1)}}</td>
+    <td>{{(player[1]['kills'] / (player[1]['deaths'] or 1))|round(2)}}</td>
     </tr>
 {% endfor %}
 </tbody>
