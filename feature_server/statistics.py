@@ -139,6 +139,7 @@ class StatsClient(StatsProtocol):
 
 class StatsClientFactory(ReconnectingClientFactory):
     protocol = StatsClient
+    maxDelay = 20
     
     def __init__(self, name, password, defer):
         self.name = name
