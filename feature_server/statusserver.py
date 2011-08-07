@@ -73,7 +73,9 @@ class StatusPage(CommonResource):
     def render_GET(self, request):
         protocol = self.protocol
         status = self.env.get_template('status.html')
-        return str(status.render(server = self.protocol, reactor = reactor))
+        return status.render(server = self.protocol, reactor = reactor).encode(
+            'utf-8')
+            
 
 class MapOverview(CommonResource):
     def render_GET(self, request):

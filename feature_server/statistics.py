@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from twisted.internet.protocol import Protocol, ReconnectingClientFactory, ServerFactory
+from twisted.internet.protocol import (Protocol, ReconnectingClientFactory, 
+    ServerFactory)
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred, succeed
 from twisted.protocols.basic import Int16StringReceiver
