@@ -53,11 +53,13 @@ SITE = 'http://ace-spades.com/forums/bb-login.php'
 
 from twisted.python import log
 
-def got_user(data):
-    return data.count('Log in Failed') == 0
+def got_user(data, name):
+    result = data.count('Log in Failed') == 0
+    print 'Auth for %s -> %s' % (name, result)
+    return result
 
 def check_user(name, password):
-    defer = getPage(SITE, method='POST', 
+    return getPage(SITE, method='POST', 
         postdata = urllib.urlencode(
             {'user_login' : name, 'password' : password}
         ),
