@@ -54,6 +54,8 @@ def apply_script(protocol, connection, config):
         
         def statistics_connected(self, stats):
             print 'Statistics server authenticated.'
+            self.tips.append('Highscores enabled! '
+                'Use /sitelogin <forum name> <forum pass> to login.')
             self.stats = stats
     
     return StatisticsProtocol, StatisticsConnection
