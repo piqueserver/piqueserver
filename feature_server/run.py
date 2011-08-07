@@ -190,10 +190,12 @@ class FeatureConnection(ServerConnection):
             self.send_chat(self.protocol.get_kill_count())
     
     def on_command(self, command, parameters):
+        result = commands.handle_command(self, command, parameters)
+        if result == False:
+            parameters = ['***'] * len(parameters)
         log_message = '<%s> /%s %s' % (self.name, command, 
             ' '.join(parameters))
-        result = commands.handle_command(self, command, parameters)
-        if result is not None:
+        if result:
             log_message += ' -> %s' % result
             self.send_chat(result)
         print log_message.encode('ascii', 'replace')

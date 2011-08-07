@@ -98,6 +98,13 @@
         "melee"
     ],
     
+    "statistics" : {
+        "host" : "localhost",
+        "server_name" : "stats server",
+        "port" : 32880,
+        "password" : "marmelade"
+    },
+    
     "welcomes" : {
         "mat^2" : "The very likeable mat^2 has entered!"
     },

@@ -6,7 +6,12 @@ import commands
 @commands.admin
 @commands.name('timer')
 def start_timer(connection, end):
-    connection.protocol.start_timer(int(end) * 60)
+    return connection.protocol.start_timer(int(end) * 60)
+
+@commands.admin
+@commands.name('stoptimer')
+def stop_timer(connection, end):
+    return connection.protocol.stop_timer()
 
 commands.add(start_timer)
 
@@ -38,6 +43,8 @@ def apply_script(protocol, connection, config):
             self.protocol.messages.append(value)
     
     class MatchProtocol(protocol):
+        timer_left = None
+        timer_call = None
         def __init__(self, *arg, **kw):
             protocol.__init__(self, *arg, **kw)
             self.messages = []
@@ -45,18 +52,24 @@ def apply_script(protocol, connection, config):
             self.send_message_loop.start(2)
             
         def start_timer(self, end):
+            if self.timer_end is not None:
+                return 'Timer is running already.'
             self.timer_end = reactor.seconds() + end
             self.send_chat('Timer started, ending in %s minutes' % (end / 60),
                 irc = True)
             self.display_timer(True)
         
+        def stop_timer(self):
+            
+        
         def display_timer(self, silent = False):
             time_left = self.timer_end - reactor.seconds()
-            minutes_left = int(time_left / 60.0)
+            minutes_left = time_left / 60.0
             next_call = 60
             if not silent:
                 if time_left <= 0:
                     self.send_chat('Timer ended!', irc = True)
+                    self.timer_end = None
                     return
                 elif minutes_left <= 1:
                     self.send_chat('%s seconds left' % int(time_left), 
@@ -65,7 +78,7 @@ def apply_script(protocol, connection, config):
                 else:
                     self.send_chat('%s minutes left' % int(minutes_left), 
                         irc = True)
-            reactor.callLater(next_call, self.display_timer)
+            self.timer_call = reactor.callLater(next_call, self.display_timer)
         
         def display_messages(self):
             if not self.messages:
