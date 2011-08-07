@@ -83,6 +83,7 @@ class SiteStatisticsProtocol(StatsServer):
         self.factory.save()
     
     def check_user(self, name, password):
+        print 'Checking auth for %s' % name
         return check_user(name, password)
 
 class SiteStatisticsFactory(StatsFactory):
