@@ -292,7 +292,7 @@ def no_follow(connection):
 def squads(connection):
     if connection not in connection.protocol.players:
         raise KeyError()
-    squads = []
+    squads = {}
     for player in connection.team.get_players():
         if player.follow is not None:
             squad = squads.get(player.follow.name, [])
