@@ -366,6 +366,9 @@ def tp(connection, player1, player2 = None):
 def tpsilent(connection, player1, player2 = None):
     teleport(connection, player1, player2, silent = True)
 
+def follow(connection):
+    return '/follow has been replaced with squad. See /squad for details.'
+
 def squad(connection, squadkey = None):
 
     if connection.protocol.squad_size <= 1:
@@ -721,6 +724,7 @@ command_list = [
     god,
     god_build,
     fly,
+    follow,
     invisible,
     streak,
     score,
