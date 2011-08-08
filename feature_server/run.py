@@ -112,8 +112,8 @@ class FeatureConnection(ServerConnection):
     invisible = False
     building = True
     killing = True
-    follow = None
-    followable = True
+    squad = 0
+    squad_pref = None
     streak = 0
     best_streak = 0
     last_chat = None
@@ -153,8 +153,6 @@ class FeatureConnection(ServerConnection):
     
     def on_login(self, name):
         self.printable_name = name.encode('ascii', 'replace')
-        if self.protocol.follow_attack == 'auto':
-            self.follow = "attack"
         if self.protocol.join_part_messages:
             self.protocol.send_chat(
                 '%s entered the game!' % self.name)
@@ -164,7 +162,6 @@ class FeatureConnection(ServerConnection):
     
     def disconnect(self):
         ServerConnection.disconnect(self)
-        self.drop_followers()
         if self.name is not None:
             if self.protocol.join_part_messages:
                 self.protocol.send_chat('%s left the game' % self.name)
@@ -178,14 +175,15 @@ class FeatureConnection(ServerConnection):
             print '%s disconnected' % self.address[0]
     
     def on_spawn(self, pos):
-        if self.follow is not None:
-            if self.follow == "attack":
-                attackers = self.get_attackers()
-                if attackers is not None:
-                    attacker = random.choice(attackers)
-                    self.set_location(self.get_follow_location(attacker))
+        if self.squad != 0:
+            if self.squad_pref is not None and self.squad_pref.hp:
+                self.set_location(self.get_follow_location(self.squad_pref))
             else:
-                self.set_location(self.get_follow_location(self.follow))
+                members = ([n for n in self.get_squad(self.team, self.squad)
+                            if n.hp and n is not self])
+                if len(members)>0:
+                    self.set_location(self.get_follow_location(
+                        random.choice(members)))
         if self.protocol.game_mode == 'tdm':
             self.send_chat(self.protocol.get_kill_count())
     
@@ -306,8 +304,8 @@ class FeatureConnection(ServerConnection):
                 self.send_chat('Team is full')
                 return False
         if self.team is not team:
-            self.drop_followers()
-            self.follow = None
+            self.squad = 0
+            self.squad_pref = None
             self.respawn_time = self.protocol.respawn_time
         self.last_switch = reactor.seconds()
     
@@ -360,35 +358,35 @@ class FeatureConnection(ServerConnection):
         self.protocol.send_chat(message, irc = True)
         self.protocol.add_ban(self.address[0], reason, duration)
 
-    def get_attackers(self):
-        """Return 1/4th of followable teammates
-            farthest from base(by x)"""
-        initial = filter(lambda player: player.hp and player.followable,
-                         self.team.get_players())
-        attackers = sorted(initial,
-                            key=lambda player: player.world_object.position.x)
-        if len(attackers) < 1:
-            return None
-        if self.team.id is 1:
-            attackers.reverse()
-        
-        stripqty = int(max(1, len(attackers) / 4 ))
-        attackers = attackers[-stripqty:]
-        return attackers
+    def get_squad(self, team, squadkey):
+        result = []
+        for player in self.protocol.players.values():
+            if player.team is team and player.squad is squadkey:
+                result.append(player)
+        return result
     
-    def get_followers(self):
-        return [player for player in self.protocol.players.values()
-            if player.follow is self]
-    
-    def drop_followers(self):
-        for player in self.get_followers():
-            player.follow = None
-            player.respawn_time = player.protocol.respawn_time
-            player.send_chat('You are no longer following %s.' % self.name)
+    def get_squads(self, team):
+        squad_dict = {}
+        for player in self.protocol.players.values():
+            if player.team is team:
+                if squad_dict.has_key(player.squad):
+                    squad_list = squad_dict[player.squad]
+                else:
+                    squad_list = []
+                    squad_dict[player.squad] = squad_list
+                squad_list.append(player)
+        return squad_dict
+
+    def print_squad(self, squadkey, squadlist):
+        if squadkey == 0:
+            result = 'Unassigned: '
+        else:
+            result = 'Squad %s: ' % (squadkey)
+        result+=', '.join([player.name for player in squadlist])
+        return result
     
     def get_follow_location(self, follow):
-        x, y, z = (follow.world_object.position.get() if follow.hp else
-            self.team.get_random_location(True))
+        x, y, z = (follow.world_object.position.get())
         z -= 2
         return x, y, z
     
@@ -471,8 +469,9 @@ class FeatureProtocol(ServerProtocol):
         self.kill_limit = config.get('kill_limit', 100)
         self.join_part_messages = config.get('join_part_messages', False)
         self.respawn_time = config.get('respawn_time', 5)
-        self.follow_respawn_time = config.get('follow_respawn_time', 
+        self.squad_respawn_time = config.get('squad_respawn_time', 
             self.respawn_time)
+        self.squad_size = config.get('squad_size', 0)
         self.master = config.get('master', True)
         self.friendly_fire = config.get('friendly_fire', True)
         self.friendly_fire_time = config.get('grief_friendly_fire_time', 2.0)
@@ -494,8 +493,6 @@ class FeatureProtocol(ServerProtocol):
         self.speedhack_detect = config.get('speedhack_detect', True)
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
-        self.max_followers = config.get('max_followers', 0)
-        self.follow_attack = config.get('follow_attack', False)
         self.game_mode = config.get('game_mode', 'ctf')
         self.set_god_build = config.get('set_god_build', False)
         logfile = config.get('logfile', None)

@@ -214,98 +214,6 @@ def pm(connection, value, *arg):
     player.send_chat('PM from %s: %s' % (connection.name, message))
     return 'PM sent to %s' % player.name
 
-def send_unfollow_message(connection):
-    if connection.follow == "attack":
-        return 'You are no longer an attacker.'
-    else:        
-        connection.follow.send_chat('%s is no longer following you.' %
-                                connection.name)
-        return 'You are no longer following %s.' % connection.follow.name
-
-def follow(connection, player = None):
-    """Follow a player; on your next spawn, you'll spawn at their position,
-        similar to the squad spawning feature of Battlefield."""
-    if connection not in connection.protocol.players:
-        raise KeyError()
-    if not connection.protocol.max_followers:
-        raise KeyError()
-    
-    # TODO  make "attack" case-insensitive
-    #       move this feature into a script
-
-    if len(connection.get_followers()):
-        return "You're a squad leader! To follow someone else, first say /nofollow"
-    if player is None:
-        if connection.follow is None:
-            return ("You aren't following anybody. To follow, say "
-                "/follow <nickname>")
-        else:
-            connection.respawn_time = connection.protocol.respawn_time
-            confirmation = send_unfollow_message(connection)
-            connection.follow = None
-            return confirmation
-    if player == "attack" and (connection.protocol.follow_attack or
-                               connection.protocol.follow_attack == "auto"):
-        if connection.follow == "attack":
-            return "You're already an attacker."
-        else:
-            if connection.follow is not None:
-                connection.send_chat(send_unfollow_message(connection))
-            connection.follow = "attack"
-            connection.respawn_time = connection.protocol.follow_respawn_time
-            return ("You are now an attacker and will spawn with players "
-                "close to the enemy.")
-    
-    player = get_player(connection.protocol, player)
-    if connection == player:
-        return "You can't follow yourself!"
-    if not connection.team == player.team:
-        return '%s is not on your team.' % player.name
-    if connection.follow == player:
-        return "You're already following %s" % player.name
-    if not player.followable:
-        return "%s doesn't want to be followed." % player.name
-    if player.follow is not None:
-        return '%s is already following %s' % (player.name, player.follow.name)
-    if len(player.get_followers()) >= connection.protocol.max_followers:
-        return '%s has too many followers!' % player.name
-    if connection.follow is not None:
-        connection.send_chat(send_unfollow_message(connection))
-    connection.follow = player
-    connection.respawn_time = connection.protocol.follow_respawn_time
-    player.send_chat('%s is now following you.' % connection.name)
-    return ('Next time you die you will spawn where %s is. To stop, '
-        'type /follow' % player.name)
-
-@name('nofollow')
-def no_follow(connection):
-    if connection not in connection.protocol.players:
-        raise KeyError()
-    if not connection.protocol.max_followers:
-        raise KeyError()
-    connection.followable = not connection.followable
-    if not connection.followable:
-        connection.drop_followers()
-    return 'Teammates will %s be able to follow you.' % (
-        'now' if connection.followable else 'no longer')
-
-def squads(connection):
-    if connection not in connection.protocol.players:
-        raise KeyError()
-    squads = {}
-    for player in connection.team.get_players():
-        if player.follow is not None:
-            squad = squads.get(player.follow.name, [])
-            squad.append(player.name)
-            squads[player.follow.name] = squad
-    if len(squads) == 0:
-        return 'There are currently no squads in your team.'
-    message = ''
-    for names, leader in squads.iteritems():
-        message += '%s follow%s %s. ' % (', '.join(names),
-            's' if len(names) == 1 else '', leader)
-    return message
-
 def streak(connection):
     if connection not in connection.protocol.players:
         raise KeyError()
@@ -333,9 +241,9 @@ def switch(connection, value = None):
         connection = get_player(connection.protocol, value)
     elif connection not in connection.protocol.players:
         raise ValueError()
-    connection.follow = None
-    connection.drop_followers()
     connection.respawn_time = connection.protocol.respawn_time
+    connection.squad = 0
+    connection.squad_pref = None
     connection.team = connection.team.other
     connection.kill()
     connection.protocol.send_chat('%s has switched teams' % connection.name,
@@ -457,6 +365,75 @@ def tp(connection, player1, player2 = None):
 @admin
 def tpsilent(connection, player1, player2 = None):
     teleport(connection, player1, player2, silent = True)
+
+def squad(connection, squadkey = None):
+
+    if connection.protocol.squad_size <= 1:
+        return 'Squads are disabled on this server.'
+
+    # squadlist
+
+    if squadkey is None:
+        allsquads = connection.get_squads(connection.team)
+        for squadkey in allsquads.keys():
+            connection.protocol.send_chat(connection.print_squad(
+            squadkey, allsquads[squadkey]))
+        connection.protocol.send_chat('To join squads: /squad <squad number> or /squad <player>. /squad 0 to spawn normally.')
+        return
+
+    # find key
+    
+    try:
+        squad_pref = None
+        squad = int(squadkey)
+    except ValueError:
+        try:
+            squad_pref = get_player(connection.protocol, squadkey)
+            squad = squad_pref.squad
+            if squad_pref.team is not connection.team:
+                return '%s is not on your team!' % (squad_pref.name)
+        except InvalidPlayer:
+            return 'Could not find a player or squad matching that name.'
+
+    # same-squad check, same-player check
+    
+    if connection.squad == squad:
+        if connection.squad_pref == squad_pref:
+            return 'Squad unchanged.'
+        elif squad_pref is connection and squad_pref is not None:
+            return "You can't follow yourself!"
+        else:
+            if squad != 0:
+                connection.squad_pref = squad_pref
+                return 'You are now following %s.' % squad_pref.name
+            else:
+                connection.squad_pref = None
+                return '%s is not in a squad and cannot be followed.' % squad_pref.name
+
+    # unique squad, so check for squad size first
+        
+    if squad != 0 and (connection.protocol.squad_size
+        <= len(connection.get_squad(connection.team, squad))):
+        return 'Squad %s is full. (limit %s)' % connection.protocol.squad_size
+    
+    # assign to unique squad
+    
+    connection.squad = squad
+    connection.squad_pref = squad_pref
+    if squad == 0:
+        connection.respawn_time = connection.protocol.respawn_time
+        if squad_pref is not None:
+            connection.squad_pref = None
+            connection.protocol.send_chat(
+                '%s is not in a squad and cannot be followed.' %
+                squad_pref.name)
+        return 'You are no longer assigned to a squad.'
+    else:
+        connection.respawn_time = connection.protocol.squad_respawn_time
+        if squad_pref is not None:
+            return 'You are now in squad %s, following %s.' % (squad, squad_pref.name)
+        else:
+            return 'You are now in squad %s.' % squad
 
 from pyspades.common import coordinates, to_coordinates
 
@@ -744,11 +721,9 @@ command_list = [
     god_build,
     fly,
     invisible,
-    follow,
-    no_follow,
-    squads,
     streak,
     score,
+    squad,
     reset_game,
     change_map,
     server_name,
