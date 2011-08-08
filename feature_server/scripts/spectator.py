@@ -93,7 +93,6 @@ def apply_script(protocol, connection, config):
             self.killing = False
             self.building = False
             self.drop_flag()
-            self.drop_followers()
             self.squad = 0
             self.squad_pref = None
             self.respawn_time = self.protocol.respawn_time
