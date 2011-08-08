@@ -268,7 +268,7 @@ class FeatureConnection(ServerConnection):
     def on_kill(self, killer):
         self.streak = 0
         self.airstrike = False
-        if killer is None:
+        if killer is None or self.team is killer.team:
             return
         killer.streak += 1
         killer.best_streak = max(killer.streak, killer.best_streak)
