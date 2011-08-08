@@ -376,9 +376,9 @@ def squad(connection, squadkey = None):
     if squadkey is None:
         allsquads = connection.get_squads(connection.team)
         for squadkey in allsquads.keys():
-            connection.protocol.send_chat(connection.print_squad(
+            connection.send_chat(connection.print_squad(
             squadkey, allsquads[squadkey]))
-        connection.protocol.send_chat('To join squads: /squad <squad number> or /squad <player>. /squad 0 to spawn normally.')
+        connection.send_chat('To join squads: /squad <squad number> or /squad <player>. /squad 0 to spawn normally.')
         return
 
     # find key
@@ -424,7 +424,7 @@ def squad(connection, squadkey = None):
         connection.respawn_time = connection.protocol.respawn_time
         if squad_pref is not None:
             connection.squad_pref = None
-            connection.protocol.send_chat(
+            connection.send_chat(
                 '%s is not in a squad and cannot be followed.' %
                 squad_pref.name)
         return 'You are no longer assigned to a squad.'
