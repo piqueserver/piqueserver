@@ -659,6 +659,7 @@ def server_name(connection, *arg):
     protocol.update_format()
     if protocol.master_connection is not None:
         protocol.master_connection.disconnect()
+    connection.protocol.irc_say("* Server name changed to '%s'" % name)
 
 def ping(connection, value = None):
     if value is None:
