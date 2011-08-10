@@ -734,7 +734,7 @@ def handle_command(connection, command, parameters):
                 (connection.rights is None or
                 command_func.func_name not in connection.rights)):
                 return 'No administrator rights!'
-    return command_func(connection, *parameters)
+        return command_func(connection, *parameters)
     except KeyError:
         return # 'Invalid command'
     except TypeError:
