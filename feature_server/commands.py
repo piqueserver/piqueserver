@@ -242,8 +242,7 @@ def switch(connection, value = None):
     elif connection not in connection.protocol.players:
         raise ValueError()
     connection.respawn_time = connection.protocol.respawn_time
-    connection.squad = 0
-    connection.squad_pref = None
+    connection.leave_squad()
     connection.team = connection.team.other
     connection.kill()
     connection.protocol.send_chat('%s has switched teams' % connection.name,
@@ -368,8 +367,23 @@ def tp(connection, player1, player2 = None):
 def tpsilent(connection, player1, player2 = None):
     teleport(connection, player1, player2, silent = True)
 
-def follow(connection):
-    return '/follow has been replaced with squad. See /squad for details.'
+def follow(connection, playerkey = None):
+    
+    if playerkey is None:
+        squad_pref = None
+        squad = connection.squad
+    else:
+        squad_pref = get_player(connection.protocol, playerkey)
+        squad = squad_pref.squad
+        if squad_pref.team is not connection.team:
+            return '%s is not on your team!' % (squad_pref.name)
+        if squad_pref is connection:
+            return "You can't follow yourself!"
+        if squad_pref.squad is None:
+            return ('%s is not in a squad and cannot be followed.' %
+                    squad_pref.name)
+
+    return connection.join_squad(squad, squad_pref)
 
 def squad(connection, squadkey = None):
 
@@ -383,62 +397,16 @@ def squad(connection, squadkey = None):
         for squadkey in allsquads.keys():
             connection.send_chat(connection.print_squad(
             squadkey, allsquads[squadkey]))
-        connection.send_chat('To join squads: /squad <squad number> or /squad <player>. /squad 0 to spawn normally.')
-        return
+        return ('To join squads: /squad <squad name>. /squad none to spawn normally.')
 
-    # find key
-    
-    try:
+    if squadkey.lower() == 'none':
+        squad = None
         squad_pref = None
-        squad = int(squadkey)
-    except ValueError:
-        try:
-            squad_pref = get_player(connection.protocol, squadkey)
-            squad = squad_pref.squad
-            if squad_pref.team is not connection.team:
-                return '%s is not on your team!' % (squad_pref.name)
-        except InvalidPlayer:
-            return 'Could not find a player or squad matching that name.'
-
-    # same-squad check, same-player check
-    
-    if connection.squad == squad:
-        if connection.squad_pref == squad_pref:
-            return 'Squad unchanged.'
-        elif squad_pref is connection and squad_pref is not None:
-            return "You can't follow yourself!"
-        else:
-            if squad != 0:
-                connection.squad_pref = squad_pref
-                return 'You are now following %s.' % squad_pref.name
-            else:
-                connection.squad_pref = None
-                return '%s is not in a squad and cannot be followed.' % squad_pref.name
-
-    # unique squad, so check for squad size first
-        
-    if squad != 0 and (connection.protocol.squad_size
-        <= len(connection.get_squad(connection.team, squad))):
-        return 'Squad %s is full. (limit %s)' % connection.protocol.squad_size
-    
-    # assign to unique squad
-    
-    connection.squad = squad
-    connection.squad_pref = squad_pref
-    if squad == 0:
-        connection.respawn_time = connection.protocol.respawn_time
-        if squad_pref is not None:
-            connection.squad_pref = None
-            connection.send_chat(
-                '%s is not in a squad and cannot be followed.' %
-                squad_pref.name)
-        return 'You are no longer assigned to a squad.'
     else:
-        connection.respawn_time = connection.protocol.squad_respawn_time
-        if squad_pref is not None:
-            return 'You are now in squad %s, following %s.' % (squad, squad_pref.name)
-        else:
-            return 'You are now in squad %s.' % squad
+        squad = squadkey
+        squad_pref = None
+
+    return connection.join_squad(squad, squad_pref)
 
 from pyspades.common import coordinates, to_coordinates
 
@@ -766,7 +734,7 @@ def handle_command(connection, command, parameters):
                 (connection.rights is None or
                 command_func.func_name not in connection.rights)):
                 return 'No administrator rights!'
-        return command_func(connection, *parameters)
+    return command_func(connection, *parameters)
     except KeyError:
         return # 'Invalid command'
     except TypeError:

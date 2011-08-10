@@ -112,7 +112,7 @@ class FeatureConnection(ServerConnection):
     invisible = False
     building = True
     killing = True
-    squad = 0
+    squad = None
     squad_pref = None
     streak = 0
     best_streak = 0
@@ -171,11 +171,12 @@ class FeatureConnection(ServerConnection):
                 self.protocol.votekick_call.cancel()
                 self.protocol.end_votekick(True, 'Player left the game',
                     left = True)
+            self.leave_squad()
         else:
             print '%s disconnected' % self.address[0]
     
     def on_spawn(self, pos):
-        if self.squad != 0:
+        if self.squad is not None:
             if self.squad_pref is not None and self.squad_pref.hp:
                 self.set_location(self.get_follow_location(self.squad_pref))
             else:
@@ -271,6 +272,8 @@ class FeatureConnection(ServerConnection):
         killer.streak += 1
         killer.best_streak = max(killer.streak, killer.best_streak)
         killer.team.kills += 1
+        self.squad_broadcast('Squadmate %s was killed by %s' %
+                             (self.name, killer.name))
         self.protocol.check_end_game(killer)
     
     def on_fall(self, damage):
@@ -304,7 +307,7 @@ class FeatureConnection(ServerConnection):
                 self.send_chat('Team is full')
                 return False
         if self.team is not team:
-            self.squad = 0
+            self.squad = None
             self.squad_pref = None
             self.respawn_time = self.protocol.respawn_time
         self.last_switch = reactor.seconds()
@@ -361,7 +364,7 @@ class FeatureConnection(ServerConnection):
     def get_squad(self, team, squadkey):
         result = []
         for player in self.protocol.players.values():
-            if player.team is team and player.squad is squadkey:
+            if player.team is team and player.squad == squadkey:
                 result.append(player)
         return result
     
@@ -378,13 +381,78 @@ class FeatureConnection(ServerConnection):
         return squad_dict
 
     def print_squad(self, squadkey, squadlist):
-        if squadkey == 0:
+        if squadkey == None:
             result = 'Unassigned: '
         else:
             result = 'Squad %s: ' % (squadkey)
         result+=', '.join([player.name for player in squadlist])
         return result
     
+    def join_squad(self, squad, squad_pref):
+        
+        # same-squad check
+        
+        if self.squad == squad and self.squad_pref is squad_pref:
+            return 'Squad unchanged.'
+
+        # unique squad, so check for squad size first
+        
+        if squad != None and (self.protocol.squad_size
+            <= len(self.get_squad(self.team, squad))):
+            return 'Squad %s is full. (limit %s)' % self.protocol.squad_size
+        
+        # assign to unique squad
+
+        newsquad = self.squad != squad
+        newpref = self.squad_pref != squad_pref
+
+        oldsquad = self.squad
+        oldpref = self.squad_pref
+        
+        if newsquad and self.squad is not None:
+            self.leave_squad()
+
+        self.squad = squad
+        self.squad_pref = squad_pref
+        
+        if newsquad and squad is not None:
+            self.squad_broadcast('%s joined your squad.' % self.name)
+        
+        if squad == None:
+            self.respawn_time = self.protocol.respawn_time
+            self.squad_pref = None
+            self.send_chat('You are no longer assigned to a squad.')
+        else:
+            self.respawn_time = self.protocol.squad_respawn_time
+            if newpref and newsquad:
+                if squad_pref is None:
+                    return ('You are now in squad %s.' % squad)
+                else:
+                    return ('You are now in squad %s, following %s.' %
+                               (squad, squad_pref.name))
+            elif newpref:
+                if squad_pref is None:
+                    return ('You are no longer following %s.' %
+                            oldpref.name)
+                else:
+                    return ('You are now following %s.' %
+                               squad_pref.name)
+            elif newsquad:
+                return 'You are now in squad %s.' % squad
+
+    def leave_squad(self):
+        if self.squad is not None:
+            self.squad_broadcast("%s left your squad." % self.name)
+        self.squad = None
+        self.squad_pref = None
+
+    def squad_broadcast(self, msg):
+        if self.squad is not None:
+            squad = self.get_squad(self.team, self.squad)
+            for player in squad:
+                if player is not self:
+                    player.send_chat(msg)
+
     def get_follow_location(self, follow):
         x, y, z = (follow.world_object.position.get())
         z -= 2
