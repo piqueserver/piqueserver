@@ -341,6 +341,7 @@ def teleport(connection, player1, player2 = None, silent = False):
     if player2 is not None:
         if connection.admin or 'teleport_other' in connection.rights:
             player, target = player1, get_player(connection.protocol, player2)
+            silent = silent or player.invisible
             message = ('%s ' + ('silently ' if silent else '') + 'teleported '
                 '%s to %s')
             message = message % (connection.name, player.name, target.name)
@@ -350,8 +351,9 @@ def teleport(connection, player1, player2 = None, silent = False):
         if connection not in connection.protocol.players:
             raise ValueError()
         player, target = connection, player1
+        silent = silent or player.invisible
         message = '%s ' + ('silently ' if silent else '') + 'teleported to %s'
-        message = message % (connection.name, target.name)
+        message = message % (player.name, target.name)
     player.set_location(target.get_location())
     if silent:
         connection.protocol.irc_say('* ' + message)
@@ -360,7 +362,7 @@ def teleport(connection, player1, player2 = None, silent = False):
 
 @admin
 def tp(connection, player1, player2 = None):
-    teleport(connection, player1, player2, silent = connection.invisible)
+    teleport(connection, player1, player2)
 
 @admin
 def tpsilent(connection, player1, player2 = None):
