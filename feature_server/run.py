@@ -445,6 +445,7 @@ class FeatureConnection(ServerConnection):
             self.squad_broadcast("%s left your squad." % self.name)
         self.squad = None
         self.squad_pref = None
+        self.respawn_time = self.protocol.respawn_time
 
     def squad_broadcast(self, msg):
         if self.squad is not None:

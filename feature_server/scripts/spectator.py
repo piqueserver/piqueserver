@@ -43,13 +43,6 @@ def toggle_build(connection, value = None):
             return '%s is a spectator.' % player.name
     return commands.toggle_build(connection, value)
 
-@name('nofollow')
-def no_follow(connection):
-    irc = connection not in connection.protocol.players
-    if not irc and connection.spectator:
-        return "You're spectating."
-    return commands.no_follow(connection)
-
 def pm(connection, value, *arg):
     irc = connection not in connection.protocol.players
     if not irc and connection.spectator:
@@ -93,8 +86,7 @@ def apply_script(protocol, connection, config):
             self.killing = False
             self.building = False
             self.drop_flag()
-            self.squad = 0
-            self.squad_pref = None
+            self.leave_squad()
             self.respawn_time = self.protocol.respawn_time
             player_data.player_left = self.player_id
             for player in self.protocol.connections.values():
@@ -152,5 +144,11 @@ def apply_script(protocol, connection, config):
             self.protocol.irc_say(message)
             print message.encode('ascii', 'replace')
             return False
+
+        def join_squad(self, squad, squad_pref):
+            if self.spectator:
+                return "You can't join a squad while spectating!"
+            else:
+                return connection.join_squad(squad, squad_pref)
         
     return protocol, SpectatorConnection
