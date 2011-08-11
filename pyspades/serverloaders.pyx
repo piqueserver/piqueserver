@@ -161,17 +161,27 @@ cdef class SetColor(Loader):
 
     cdef public:
         unsigned int value, player_id
+        bint fog
 
     cpdef read(self, ByteReader reader):
         cdef unsigned int firstInt = reader.readInt(True, False)
-        self.player_id = reader.readByte(True)
-        self.value = firstInt >> 4
+        if firstInt & 0x10:
+            self.player_id = -1
+            self.fog = True
+            self.value = firstInt >> 5
+        else:
+            self.fog = False
+            self.player_id = reader.readByte(True)
+            self.value = firstInt >> 5
     
     cpdef write(self, ByteWriter reader):
         cdef unsigned int value = self.id
-        value |= self.value << 4
+        if self.fog:
+            value |= 0x10
+        value |= self.value << 5
         reader.writeInt(value, True, False)
-        reader.writeByte(self.player_id, True)
+        if not self.fog:
+            reader.writeByte(self.player_id, True)
 
 cdef class ExistingPlayer(Loader):
     id = 8
@@ -192,9 +202,9 @@ cdef class ExistingPlayer(Loader):
             firstInt = reader.readInt(True, False)
             self.player_id = (firstInt >> 4) & 0x1F
             self.team = (firstInt >> 9) & 1
-            self.weapon = (firstInt >> 10) & 1
-            self.tool = (firstInt >> 11) & 0x7
-            self.kills = (firstInt >> 14) & 0x7FF
+            self.weapon = (firstInt >> 10) & 3
+            self.tool = (firstInt >> 12) & 0x7
+            self.kills = (firstInt >> 15) & 0x1FF
             reader.rewind(1)
             byte1 = reader.readByte(True)
             byte2 = reader.readByte(True)
@@ -214,8 +224,8 @@ cdef class ExistingPlayer(Loader):
             value |= self.player_id << 4
             value |= self.team << 9
             value |= self.weapon << 10
-            value |= (self.tool or 0) << 11
-            value |= (self.kills & 0x7FF) << 14
+            value |= (self.tool or 0) << 12
+            value |= (self.kills & 0x1FF) << 15
             byte1 = self.color & 0xFF
             byte2 = (self.color & 0xFF00) >> 8
             byte3 = (self.color & 0xFF0000) >> 16
@@ -391,6 +401,7 @@ cdef class PlayerData(Loader):
         int green_flag_x, green_flag_y, green_flag_z, green_flag_player
         int max_score, blue_score, green_score
         int player_id
+        int r, g, b
 
     cpdef read(self, ByteReader reader):
         cdef int firstByte = reader.readByte(True)
@@ -442,6 +453,10 @@ cdef class PlayerData(Loader):
             self.green_base_x = byte10 | ((byte11 & 1) << 8)
             self.green_base_y = (byte11 >> 1) | ((byte12 & 3) << 7)
             self.green_base_z = byte12 >> 2
+            self.r = reader.readByte(True)
+            self.g = reader.readByte(True)
+            self.b = reader.readByte(True)
+            reader.skipBytes(1)
         
     cpdef write(self, ByteWriter reader):
         cdef unsigned int value = self.id
@@ -490,6 +505,10 @@ cdef class PlayerData(Loader):
             reader.writeByte(a, True)
             reader.writeByte(b, True)
             reader.writeByte(c, True)
+            reader.writeByte(self.b, True)
+            reader.writeByte(self.g, True)
+            reader.writeByte(self.r, True)
+            reader.writeByte(0, True)
 
 cdef class KillAction(Loader):
     id = 13

@@ -136,14 +136,18 @@ cdef class SetColor(Loader):
     
     cdef public:
         unsigned int value
+        bint fog
     
     cpdef read(self, ByteReader reader):
         cdef unsigned int firstInt = reader.readInt(True, False)
-        self.value = firstInt >> 4
+        self.fog = firstInt & 0x10 != 0
+        self.value = firstInt >> 5
     
     cpdef write(self, ByteWriter reader):
         cdef unsigned int value = self.id
-        value |= self.value << 4
+        if self.fog:
+            value |= 0x10
+        value |= self.value << 5
         reader.writeInt(value, True, False)
 
 cdef class JoinTeam(Loader):

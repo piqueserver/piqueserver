@@ -17,15 +17,26 @@
 
 CONNECTIONLESS = 0xFFF
 
-SEMI_WEAPON = 0
-SMG_WEAPON = 1
+SEMI_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON = xrange(3)
 
 SPADE_TOOL, PICKAXE_TOOL, BLOCK_TOOL, WEAPON_TOOL, GRENADE_TOOL = xrange(5)
 
-HIT_VALUES = { # packet value : [semi, smg]
-    2 : [100, 49],
-    1 : [49, 24],
-    3 : [33, 8]
+HIT_VALUES = {
+    SEMI_WEAPON : {
+        1 : 49,
+        2 : 100,
+        3 : 33
+    },
+    SMG_WEAPON : {
+        1 : 24,
+        2 : 49,
+        3 : 8
+    },
+    SHOTGUN_WEAPON : {
+        1 : 19,
+        2 : 33,
+        3 : 14
+    }
 }
 
 BUILD_BLOCK, DESTROY_BLOCK, SPADE_DESTROY, GRENADE_DESTROY = xrange(4)

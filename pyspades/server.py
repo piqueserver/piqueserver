@@ -248,7 +248,8 @@ class ServerConnection(BaseConnection):
                     elif contained.id == clientloaders.HitPacket.id:
                         if contained.player_id != -1:
                             player = self.protocol.players[contained.player_id]
-                            hit_amount = HIT_VALUES[contained.value][self.weapon]
+                            hit_amount = HIT_VALUES[self.weapon][
+                                contained.value]
                             returned = self.on_hit(hit_amount, player)
                             if returned == False:
                                 return
@@ -281,12 +282,17 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(set_tool, sender = self)
                     elif contained.id == clientloaders.SetColor.id:
                         color = get_color(contained.value)
+                        if contained.fog:
+                            self.on_command('fog', 
+                                [str(item) for item in color])
+                            return
                         if self.on_color_set_attempt(color) == False:
                             return
                         self.color = color
                         self.on_color_set(color)
                         set_color.player_id = self.player_id
                         set_color.value = contained.value
+                        set_color.fog = False
                         self.protocol.send_contained(set_color, sender = self,
                             save = True)
                     elif contained.id == clientloaders.BlockAction.id:
@@ -613,6 +619,11 @@ class ServerConnection(BaseConnection):
         else:
             player_data.green_flag_player = green_flag.player.player_id
         
+        r, g, b = self.protocol.fog_color
+        player_data.r = r
+        player_data.g = g
+        player_data.b = b
+        
         saved_loaders.append(player_data.generate())
         
         self.map_generator = self.protocol.map.get_generator()
@@ -896,6 +907,7 @@ class ServerProtocol(DatagramProtocol):
     refill_interval = 20
     master_connection = None
     speedhack_detect = True
+    fog_color = (128, 232, 255)
     
     def __init__(self):
         self.connections = {}
@@ -1052,6 +1064,12 @@ class ServerProtocol(DatagramProtocol):
             if team is not None and player.team is not team:
                 continue
             player.send_chat(value, global_message)
+    
+    def set_fog_color(self, color):
+        self.fog_color = color
+        set_color.value = make_color(*color)
+        set_color.fog = True
+        self.send_contained(set_color, save = True)
 
     # events
     

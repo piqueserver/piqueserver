@@ -657,6 +657,13 @@ def intel(connection):
         else:
             return "%s has the enemy intel!" % flag.player.name
     return "Nobody in your team has the enemy intel."
+
+@admin
+def fog(connection, r, g, b):
+    r = int(r)
+    g = int(g)
+    b = int(b)
+    connection.protocol.set_fog_color((r, g, b))
     
 command_list = [
     help,
@@ -668,6 +675,7 @@ command_list = [
     cancel_vote,
     intel,
     ip,
+    fog,
     ban,
     unban,
     undo_ban,
