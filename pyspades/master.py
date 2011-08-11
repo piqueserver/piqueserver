@@ -72,7 +72,7 @@ class MasterConnection(BaseConnection):
         if self.connected:
             return
         connect_request.auth_val = self.auth_val
-        connect_request.version = 0x12000000 # increments for each version
+        connect_request.version = 0x15000000 # increments for each version
         connect_request.client = True
         self.send_loader(connect_request, False, 255)
         reactor.callLater(5, self.send_request)
