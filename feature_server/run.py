@@ -153,9 +153,6 @@ class FeatureConnection(ServerConnection):
     
     def on_login(self, name):
         self.printable_name = name.encode('ascii', 'replace')
-        if self.protocol.join_part_messages:
-            self.protocol.send_chat(
-                '%s entered the game!' % self.name)
         print '%s (IP %s, ID %s) entered the game!' % (self.printable_name, 
             self.address[0], self.player_id)
         self.protocol.irc_say('* %s entered the game' % self.name)
@@ -163,8 +160,6 @@ class FeatureConnection(ServerConnection):
     def disconnect(self):
         ServerConnection.disconnect(self)
         if self.name is not None:
-            if self.protocol.join_part_messages:
-                self.protocol.send_chat('%s left the game' % self.name)
             print self.printable_name, 'disconnected!'
             self.protocol.irc_say('* %s disconnected' % self.name)
             if self.protocol.votekick_player is self:
@@ -536,7 +531,6 @@ class FeatureProtocol(ServerProtocol):
                 self.name[:MAX_SERVER_NAME_SIZE])
         self.max_score = config.get('cap_limit', None)
         self.kill_limit = config.get('kill_limit', 100)
-        self.join_part_messages = config.get('join_part_messages', False)
         self.respawn_time = config.get('respawn_time', 5)
         self.squad_respawn_time = config.get('squad_respawn_time', 
             self.respawn_time)

@@ -22,7 +22,6 @@
     ],
     "max_players" : 32,
     "max_connections_per_ip" : 3,
-    "join_part_messages" : true,
     "game_mode" : "ctf",
     "kill_limit" : 100,
     "cap_limit" : 10,
