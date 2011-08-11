@@ -76,10 +76,10 @@ def rgb_distance((r1, g1, b1), (r2, g2, b2)):
                 (12.00, hsb_to_rgb(0.5527, 0.41, 0.95)),
                 (18.50, hsb_to_rgb(0.56,   0.28, 0.96)),
                 (19.00, hsb_to_rgb(0.15,   0.33, 0.87)),
-                (19.50, hsb_to_rgb(0.10,   0.49, 0.94)),
-                (19.75, hsb_to_rgb(0.1056, 0.69, 1.00)),
-                (20.50, hsb_to_rgb(0.0,    0.0,  0.0 )),
-                (21.00, hsb_to_rgb(0.0,    0.0,  0.0 ))
+                (19.25, hsb_to_rgb(0.10,   0.49, 0.94)),
+                (19.50, hsb_to_rgb(0.1056, 0.69, 1.00)),
+                (21.50, hsb_to_rgb(0.0,    0.0,  0.0 )),
+                (22.00, hsb_to_rgb(0.0,    0.0,  0.0 ))
             ]
             self.time_step = 24.00 / (self.day_duration /
                 self.day_update_frequency)
