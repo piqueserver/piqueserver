@@ -94,8 +94,7 @@
         "protect",
         "map_extensions",
         "airstrike",
-        "melee",
-        "disco"
+        "melee"
     ],
     
     "statistics" : {
