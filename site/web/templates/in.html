@@ -45,7 +45,7 @@ Certified servers:
 {% endfor %}
 </br>
 </br>
-Top 10 highscore list:
+Top 20 highscore list:
 <table>
 <tbody>
 <tr>
@@ -54,7 +54,7 @@ Top 10 highscore list:
 <td>deaths</td>
 <td>ratio</td>
 </tr>
-{% for player in protocol.get_highscores()[:10] %}
+{% for player in protocol.get_highscores()[:20] %}
     <tr>
     <td>{{player[1]['name']}}</td>
     <td>{{player[1]['kills']}}</td>
