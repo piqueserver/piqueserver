@@ -64,10 +64,11 @@ def spectator(connection, value):
     player.start_spectating()
     player.send_chat("You're now a spectator.")
     connection.protocol.irc_say('* %s is now a spectator' % player.name)
-    if connection is not player and connection not in connection.protocol.players:
+    if (connection is not player and
+        connection not in connection.protocol.players):
         return '%s is now a spectator.' % player.name
 
-for func in (god, invisible, toggle_build, toggle_kill, no_follow, pm,
+for func in (god, invisible, toggle_build, toggle_kill, pm,
     spectators, spectator):
     add(func)
 
