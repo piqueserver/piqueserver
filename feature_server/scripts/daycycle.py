@@ -66,12 +66,12 @@ def rgb_distance((r1, g1, b1), (r2, g2, b2)):
     return int(abs(r1 - r2) + abs(g1 - g2) + abs(b1 - b2))
 def apply_script(protocol, connection, config):    class DayCycleProtocol(protocol):        current_color = None
         current_time = 0.00
-        day_duration = 600.00        day_update_frequency = 0.1
-        time_multiplier = 1.0
+        day_duration = 24 * 60 * 60.00        day_update_frequency = 0.1
+        time_multiplier = 48
                 def __init__(self, *arg, **kw):            protocol.__init__(self, *arg, **kw)            self.day_loop = LoopingCall(self.update_day_color)
             self.day_colors = [
-                ( 0.00, (0.0,    0.0,  0.0 ), False),
-                ( 5.00, (0.05,   0.77, 0.0 ), False),
+                ( 0.00, (0.05,    0.05,  0.05 ), False),
+                ( 5.00, (0.05,   0.77, 0.05 ), False),
                 ( 6.00, (0.0694, 0.77, 0.78),  True),
                 ( 6.30, (0.0361, 0.25, 0.95), False),
                 ( 7.00, (0.56,   0.18, 0.94), False),
@@ -79,10 +79,10 @@ def rgb_distance((r1, g1, b1), (r2, g2, b2)):
                 (12.00, (0.5527, 0.41, 0.95), False),
                 (18.50, (0.56,   0.28, 0.96), False),
                 (19.00, (0.15,   0.33, 0.87), False),
-                (19.25, (0.10,   0.49, 0.94), False),
+                (19.25, (0.11,   0.49, 0.94), False),
                 (19.50, (0.1056, 0.69, 1.00), False),
-                (21.50, (0.0,    0.69, 0.0 ),  True),
-                (22.00, (0.0,    0.0,  0.0 ), False)
+                (21.50, (0.1,    0.69, 0.1 ),  True),
+                (22.00, (0.05,    0.05,  0.05 ), False)
             ]
             self.time_step = 24.00 / (self.day_duration /
                 self.day_update_frequency)
