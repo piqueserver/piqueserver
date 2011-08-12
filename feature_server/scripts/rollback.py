@@ -62,19 +62,9 @@ def apply_script(protocol, connection, config):
                     return error.message
             message = ('%s commenced a rollback...' %
                 (connection.name if connection is not None else 'Map'))
-            if connection not in self.players:
-                connection = None
-            if connection is None:
-                for player in self.players.values():
-                    connection = player
-                    if player.admin:
-                        break
-            if connection is None:
-                return ('There must be at least one player in the server '
-                    'to perform a rollback')
             self.send_chat(message, irc = True)
-            self.packet_generator = self.create_rollback_generator(connection,
-                self.map, map, start_x, start_y, end_x, end_y)
+            self.packet_generator = self.create_rollback_generator(self.map,
+                map, start_x, start_y, end_x, end_y)
             self.rollback_in_progress = True
             self.rollback_start_time = time.time()
             self.rollback_last_chat = self.rollback_start_time
@@ -126,7 +116,7 @@ def apply_script(protocol, connection, config):
                 self.end_rollback('Time taken: %.2fs' % 
                     float(time.time() - self.rollback_start_time))
         
-        def create_rollback_generator(self, connection, cur, new,
+        def create_rollback_generator(self, cur, new,
                                       start_x, start_y, end_x, end_y):
             surface = {}
             block_action = BlockAction()
@@ -182,8 +172,7 @@ def apply_script(protocol, connection, config):
                 packets_sent = 0
                 if color != last_color:
                     set_color.value = color & 0xFFFFFF
-                    self.send_contained(set_color, sender = connection,
-                        save = True)
+                    self.send_contained(set_color, save = True)
                     packets_sent += 1
                     last_color = color
                 cur.set_point_unsafe_int(x, y, z, color)
