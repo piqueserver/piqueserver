@@ -1,0 +1,113 @@
+{
+    "name" : "pyspades server",
+    "motd" : [
+        "Welcome to %(server_name)s! See /help for new commands.",
+        "Map is %(map_name)s by %(map_author)s.",
+        "(server powered by pyspades)"
+    ],
+    "help" : [
+        "/FOLLOW    Choose a teammate as squad leader, who will act as your spawnpoint",
+        "/STREAK    Shows how many kills in a row you got without dying",
+        "/AIRSTRIKE Air support!  Try it out just like that for more details",
+        "/INTEL     Tells you who's got the enemy intel",
+        "/PING      Shows your ping (how good your connection to the server is)"
+    ],
+    "tips" : [
+        "Here you can deploy airstrikes, form squads and more!  Type /help for info.",
+        "The pickaxe does melee damage!  Use it wisely."
+    ],
+    "tip_frequency" : 5,
+    "rules" : [
+        "No griefing, no bad words, etc."
+    ],
+    "max_players" : 32,
+    "max_connections_per_ip" : 3,
+    "game_mode" : "ctf",
+    "kill_limit" : 100,
+    "cap_limit" : 10,
+    "map" : "pyspades",
+    "respawn_time" : 5,
+    "squad_respawn_time" : 8,
+    "squad_size" : 4,
+    "master" : true,
+    "friendly_fire" : false,
+    "grief_friendly_fire_time" : 2,
+    "fall_damage" : true,
+    "set_god_build" : false,
+    "teamswitch_interval" : 0,
+    "votekick_percentage" : 25,
+    "votekick_ban_duration" : 15,
+    "votekick_public_votes" : true,
+    "default_ban_duration" : 1440,
+    "speedhack_detect" : true,
+    "network_interface" : "",
+    "passwords" : {
+        "admin" : ["replaceme"],
+        "trusted" : []
+    },
+    "ssh" : {
+        "enabled" : false,
+        "port" : 32887,
+        "users" : {
+            "user" : "pass"
+        }
+    },
+    "status_server" : {
+        "enabled" : false,
+        "port" : 32886
+    },
+    "ban_publish" : {
+        "enabled" : false,
+        "port" : 32885
+    },
+    "ban_subscribe" : {
+        "enabled" : true,
+        "urls" : [
+            ["http://aos.nateshoffner.com/blacklist.json", []]
+        ]
+    },
+    "server_prefix" : "[*]",
+    "user_blocks_only" : false,
+    "logfile" : "log.txt",
+    "debug_log" : false,
+    "balanced_teams" : 1,
+    "login_retries" : 3,
+    "irc" : {
+        "enabled" : false,
+        "nickname" : "pyspades",
+        "username" : "pyspades",
+        "realname" : "pyspades server bot",
+        "server" : "irc.quakenet.org",
+        "port" : 6667,
+        "channel" : "#pyspades.bots",
+        "commandprefix" : "."
+    },
+    "iocp" : true,
+    "profile" : false,
+
+    "scripts" : [
+        "welcome",
+        "rollback",
+        "trusted",
+        "autohelp",
+        "protect",
+        "map_extensions",
+        "airstrike",
+        "melee",
+	"squad",
+        "disco"
+    ],
+    
+    "statistics" : {
+        "host" : "localhost",
+        "server_name" : "stats server",
+        "port" : 32880,
+        "password" : "marmelade"
+    },
+    
+    "welcomes" : {
+        "mat^2" : "The very likeable mat^2 has entered!"
+    },
+    "rollback_on_game_end" : false,
+    "melee_damage" : 20
+}
