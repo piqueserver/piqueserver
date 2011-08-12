@@ -334,6 +334,7 @@ class FeatureConnection(ServerConnection):
     
     def ban(self, reason = None, duration = None):
         reason = ': ' + reason if reason is not None else ''
+        duration = duration or None
         if duration is None:
             message = '%s permabanned%s' % (self.name, reason)
         else:
