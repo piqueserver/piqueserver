@@ -188,9 +188,6 @@ def apply_script(protocol, connection, config):
             for pos, color in sorted(surface.iteritems(),
                 key = operator.itemgetter(1)):
                 x, y, z = pos
-                #if not cur.has_neighbors(x, y, z) and
-                    #new.has_neighbors(x, y, z):
-                    #continue
                 packets_sent = 0
                 if color != last_color:
                     set_color.value = color & 0xFFFFFF
@@ -198,7 +195,6 @@ def apply_script(protocol, connection, config):
                         save = True)
                     packets_sent += 1
                     last_color = color
-                connection.send_contained(set_color)
                 cur.set_point_unsafe_int(x, y, z, color)
                 block_action.x = x
                 block_action.y = y
