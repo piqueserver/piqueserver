@@ -307,10 +307,12 @@ cdef class Character(Object):
         self.left = left
         self.right = right
     
-    def set_position(self, x, y, z, reset_acceleration = False):
+    def set_position(self, x, y, z, reset = False):
         self.position.set(x, y, z)
-        if reset_acceleration:
+        if reset:
             self.acceleration.set(0.0, 0.0, 0.0)
+            self.fire = self.jump = self.crouch = self.aim = False
+            self.up = self.down = self.left = self.right = False
         
     def set_orientation(self, x, y, z):
         self.orientation.set(x, y, z)

@@ -47,9 +47,7 @@ cdef class PacketLoader(Loader):
 cdef class Packet0(PacketLoader):
     id = 0
     cpdef read(self, ByteReader reader):
-        print 'THE MAGICAL PACKET0 (please send this to mat^2):',
-        print repr(str(reader))
-        reader.read()
+        return
 
     cpdef write(self, ByteWriter reader):
         pass
