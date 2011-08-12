@@ -106,6 +106,7 @@ class FeatureConnection(ServerConnection):
     last_votekick = None
     last_switch = None
     mute = False
+    deaf = False
     login_retries = None
     god = False
     god_build = False

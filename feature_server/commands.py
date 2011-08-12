@@ -327,6 +327,21 @@ def unmute(connection, value):
     message = '%s has been unmuted by %s' % (player.name, connection.name)
     connection.protocol.send_chat(message, irc = True)
 
+def deaf(connection, value = None):
+    if value is not None:
+        if not connection.admin and 'deaf' not in connection.rights:
+            return 'No administrator rights!'
+        connection = get_player(connection.protocol, value)
+    message = '%s deaf.' % ('now' if not connection.deaf else 'no longer')
+    connection.protocol.irc_say('%s is %s' % (connection.name, message))
+    message = "You're " + message
+    if connection.deaf:
+        connection.deaf = False
+        connection.send_chat(message)
+    else:
+        connection.send_chat(message)
+        connection.deaf = True
+
 @name('globalchat')
 @admin
 def global_chat(connection):
@@ -681,6 +696,7 @@ command_list = [
     undo_ban,
     mute,
     unmute,
+    deaf,
     global_chat,
     say,
     kill,

@@ -722,6 +722,8 @@ class ServerConnection(BaseConnection):
         self.protocol.transport.write(data, self.address)
     
     def send_chat(self, value, global_message = None):
+        if self.deaf:
+            return
         if global_message is None:
             chat_message.player_id = -1
             prefix = ''
@@ -1069,6 +1071,8 @@ class ServerProtocol(DatagramProtocol):
                   team = None):
         for player in self.players.values():
             if player is sender:
+                continue
+            if player.deaf:
                 continue
             if team is not None and player.team is not team:
                 continue
