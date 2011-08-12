@@ -31,13 +31,6 @@ for func in (rollmap, rollback, rollbackcancel):
 def apply_script(protocol, connection, config):
     rollback_on_game_end = config.get('rollback_on_game_end', False)
     
-    class RollbackConnection(connection):
-        def on_color_set_attempt(self, (r, g, b)):
-            if (self.protocol.rollback_in_progress and
-                self.protocol.rollbacking_player is self):
-                return False
-            return connection.on_color_set_attempt(self, (r, g, b))
-    
     class RollbackProtocol(protocol):
         def __init__(self, config, map):
             self.rollback_map = map.data.copy()
@@ -49,7 +42,6 @@ def apply_script(protocol, connection, config):
         rollback_max_unique_packets = 12 # per 'cycle', each block op is at least 1
         rollback_time_between_cycles = 0.06
         rollback_time_between_progress_updates = 10.0
-        rollbacking_player = None
         rollback_start_time = None
         rollback_last_chat = None
         rollback_rows = None
@@ -83,7 +75,6 @@ def apply_script(protocol, connection, config):
             self.send_chat(message, irc = True)
             self.packet_generator = self.create_rollback_generator(connection,
                 self.map, map, start_x, start_y, end_x, end_y)
-            self.rollbacking_player = connection
             self.rollback_in_progress = True
             self.rollback_start_time = time.time()
             self.rollback_last_chat = self.rollback_start_time
@@ -207,4 +198,4 @@ def apply_script(protocol, connection, config):
             if rollback_on_game_end:
                 self.start_rollback(None, None, 0, 0, 512, 512)
         
-    return RollbackProtocol, RollbackConnection
+    return RollbackProtocol, connection
