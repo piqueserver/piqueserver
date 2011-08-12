@@ -33,7 +33,7 @@ def apply_script(protocol, connection, config):
 
     class RollbackConnection(connection):
         def on_block_destroy(self, x, y, z, value):
-            if self.rollback_in_progress:
+            if self.protocol.rollback_in_progress:
                 return False
             return connection.on_block_destroy(self, x, y, z, value)
 
