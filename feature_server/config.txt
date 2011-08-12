@@ -94,6 +94,7 @@
         "map_extensions",
         "airstrike",
         "melee",
+	"squad",
         "disco"
     ],
     

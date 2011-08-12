@@ -3,7 +3,7 @@ from pyspades.common import coordinates
 from pyspades.serverloaders import BlockAction, SetColor
 from pyspades.constants import *
 from twisted.internet.task import LoopingCall
-from map import Map
+from map import Map, MapNotFound
 from commands import add, admin
 import time
 import operator
@@ -31,13 +31,6 @@ for func in (rollmap, rollback, rollbackcancel):
 def apply_script(protocol, connection, config):
     rollback_on_game_end = config.get('rollback_on_game_end', False)
     
-    class RollbackConnection(connection):
-        def on_color_set_attempt(self, (r, g, b)):
-            if (self.protocol.rollback_in_progress and
-                self.protocol.rollbacking_player is self):
-                return False
-            return connection.on_color_set_attempt(self, (r, g, b))
-    
     class RollbackProtocol(protocol):
         def __init__(self, config, map):
             self.rollback_map = map.data.copy()
@@ -49,7 +42,6 @@ def apply_script(protocol, connection, config):
         rollback_max_unique_packets = 12 # per 'cycle', each block op is at least 1
         rollback_time_between_cycles = 0.06
         rollback_time_between_progress_updates = 10.0
-        rollbacking_player = None
         rollback_start_time = None
         rollback_last_chat = None
         rollback_rows = None
@@ -61,23 +53,18 @@ def apply_script(protocol, connection, config):
                            start_x, start_y, end_x, end_y):
             if self.rollback_in_progress:
                 return 'Rollback in progress.'
-            map = self.rollback_map if filename is None else Map(filename).data
+            if filename is None:
+                map = self.rollback_map
+            else:
+                try:
+                    map = Map(filename).data
+                except MapNotFound as error:
+                    return error.message
             message = ('%s commenced a rollback...' %
                 (connection.name if connection is not None else 'Map'))
-            if connection not in self.players:
-                connection = None
-            if connection is None:
-                for player in self.players.values():
-                    connection = player
-                    if player.admin:
-                        break
-            if connection is None:
-                return ('There must be at least one player in the server '
-                    'to perform a rollback')
             self.send_chat(message, irc = True)
-            self.packet_generator = self.create_rollback_generator(connection,
-                self.map, map, start_x, start_y, end_x, end_y)
-            self.rollbacking_player = connection
+            self.packet_generator = self.create_rollback_generator(self.map,
+                map, start_x, start_y, end_x, end_y)
             self.rollback_in_progress = True
             self.rollback_start_time = time.time()
             self.rollback_last_chat = self.rollback_start_time
@@ -129,15 +116,15 @@ def apply_script(protocol, connection, config):
                 self.end_rollback('Time taken: %.2fs' % 
                     float(time.time() - self.rollback_start_time))
         
-        def create_rollback_generator(self, connection, cur, new,
+        def create_rollback_generator(self, cur, new,
                                       start_x, start_y, end_x, end_y):
             surface = {}
             block_action = BlockAction()
-            block_action.player_id = connection.player_id
+            block_action.player_id = 32
             set_color = SetColor()
             set_color.fog = False
             set_color.value = 0x000000
-            set_color.player_id = connection.player_id
+            set_color.player_id = block_action.player_id
             self.send_contained(set_color, save = True)
             old = cur.copy()
             for x in xrange(start_x, end_x):
@@ -182,17 +169,12 @@ def apply_script(protocol, connection, config):
             for pos, color in sorted(surface.iteritems(),
                 key = operator.itemgetter(1)):
                 x, y, z = pos
-                #if not cur.has_neighbors(x, y, z) and
-                    #new.has_neighbors(x, y, z):
-                    #continue
                 packets_sent = 0
                 if color != last_color:
                     set_color.value = color & 0xFFFFFF
-                    self.send_contained(set_color, sender = connection,
-                        save = True)
+                    self.send_contained(set_color, save = True)
                     packets_sent += 1
                     last_color = color
-                connection.send_contained(set_color)
                 cur.set_point_unsafe_int(x, y, z, color)
                 block_action.x = x
                 block_action.y = y
@@ -205,4 +187,4 @@ def apply_script(protocol, connection, config):
             if rollback_on_game_end:
                 self.start_rollback(None, None, 0, 0, 512, 512)
         
-    return RollbackProtocol, RollbackConnection
+    return RollbackProtocol, connection

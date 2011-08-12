@@ -11,7 +11,7 @@ def apply_script(protocol, connection, config):
     
     class DirtGrenadeConnection(connection):
         def grenade_exploded(self, grenade):
-            if self.weapon == 0:
+            if self.weapon != 1:
                 return connection.grenade_exploded(self, grenade)
             position = grenade.position
             x = int(position.x)

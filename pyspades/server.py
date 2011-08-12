@@ -281,7 +281,10 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(grenade_packet, 
                             sender = self)
                     elif contained.id == clientloaders.SetTool.id:
+                        if self.on_tool_set_attempt(contained.value) == False:
+                            return
                         self.tool = contained.value
+                        self.on_tool_changed(self.tool)
                         if self.filter_visibility_data:
                             return
                         set_tool.player_id = self.player_id
@@ -731,6 +734,8 @@ class ServerConnection(BaseConnection):
         self.protocol.transport.write(data, self.address)
     
     def send_chat(self, value, global_message = None):
+        if self.deaf:
+            return
         if global_message is None:
             chat_message.player_id = -1
             prefix = ''
@@ -765,7 +770,7 @@ class ServerConnection(BaseConnection):
     
     def on_connect(self, loader):
         pass
-    
+
     def on_join(self):
         pass
     
@@ -788,6 +793,15 @@ class ServerConnection(BaseConnection):
         pass
     
     def on_team_join(self, team):
+        pass
+
+    def on_team_leave(self):
+        pass
+    
+    def on_tool_set_attempt(self, tool):
+        pass
+    
+    def on_tool_changed(self, tool):
         pass
     
     def on_grenade(self, time_left):
@@ -1072,6 +1086,8 @@ class ServerProtocol(DatagramProtocol):
                   team = None):
         for player in self.players.values():
             if player is sender:
+                continue
+            if player.deaf:
                 continue
             if team is not None and player.team is not team:
                 continue
