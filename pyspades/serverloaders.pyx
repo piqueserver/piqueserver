@@ -106,18 +106,20 @@ cdef class HitPacket(Loader):
     id = 4
     
     cdef public:
-        int hp
+        int hp, hit_indicator
         bint not_fall
 
     cpdef read(self, ByteReader reader):
         cdef int firstByte = reader.readByte(True)
-        self.not_fall = (firstByte & 0xF0) != 0
+        self.not_fall = (firstByte & 0x10) != 0
+        self.hit_indicator = firstByte >> 5
         self.hp = reader.readByte(True)
     
     cpdef write(self, ByteWriter reader):
         cdef int byte = self.id
         if self.not_fall:
             byte |= 0x10
+        byte |= self.hit_indicator << 5
         reader.writeByte(byte, True)
         reader.writeByte(self.hp, True)
 
@@ -277,16 +279,16 @@ cdef class IntelAction(Loader):
                 secondInt = reader.readInt(True, False)
                 firstShort = reader.readShort(True, False)
                 self.blue_flag_x = (firstInt >> 13) & 0x7F
-                self.blue_flag_y = (firstInt >> 20) & 0xFF + 128
+                self.blue_flag_y = ((firstInt >> 20) & 0xFF) + 128
                 
-                self.green_flag_x = secondInt & 0x7F + 384
-                self.green_flag_y = (secondInt >> 7) & 0xFF + 128
+                self.green_flag_x = (secondInt & 0x7F) + 384
+                self.green_flag_y = ((secondInt >> 7) & 0xFF) + 128
                 
                 self.blue_base_x = (secondInt >> 15) & 0x7F 
-                self.blue_base_y = (secondInt >> 22) & 0xFF + 128
+                self.blue_base_y = ((secondInt >> 22) & 0xFF) + 128
                 
-                self.green_base_x = firstShort & 0x7F + 384
-                self.green_base_y = (firstShort >> 7) & 0xFF + 128
+                self.green_base_x = (firstShort & 0x7F) + 384
+                self.green_base_y = ((firstShort >> 7) & 0xFF) + 128
             else: # normal got intel
                 self.game_end = False
                 self.x = (firstInt >> 13) & 0x1FF # x?
@@ -347,7 +349,7 @@ cdef class CreatePlayer(Loader):
         self.player_id = (firstInt >> 4) & 31
         self.x = (firstInt >> 9) & 0x1FF
         self.y = (firstInt >> 18) & 0xFF
-        self.weapon = (firstInt >> 26) & 0x1
+        self.weapon = (firstInt >> 26)
     
     cpdef write(self, ByteWriter reader):
         cdef unsigned int value = self.id
@@ -453,10 +455,9 @@ cdef class PlayerData(Loader):
             self.green_base_x = byte10 | ((byte11 & 1) << 8)
             self.green_base_y = (byte11 >> 1) | ((byte12 & 3) << 7)
             self.green_base_z = byte12 >> 2
-            self.r = reader.readByte(True)
-            self.g = reader.readByte(True)
             self.b = reader.readByte(True)
-            reader.skipBytes(1)
+            self.g = reader.readByte(True)
+            self.r = reader.readByte(True)
         
     cpdef write(self, ByteWriter reader):
         cdef unsigned int value = self.id
@@ -508,7 +509,6 @@ cdef class PlayerData(Loader):
             reader.writeByte(self.b, True)
             reader.writeByte(self.g, True)
             reader.writeByte(self.r, True)
-            reader.writeByte(0, True)
 
 cdef class KillAction(Loader):
     id = 13

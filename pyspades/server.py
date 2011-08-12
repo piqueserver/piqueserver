@@ -191,8 +191,15 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(orientation_data, 
                             True, sender = self)
                     elif contained.id == clientloaders.PositionData.id:
-                        world_object.set_position(contained.x, contained.y,
-                            contained.z)
+                        x, y, z = contained.x, contained.y, contained.z
+                        position = world_object.position
+                        if (self.speedhack_detect and (
+                        math.fabs(x - position.x) > RUBBERBAND_DISTANCE or
+                        math.fabs(y - position.y) > RUBBERBAND_DISTANCE)):
+                            # vanilla behaviour
+                            self.set_location()
+                            return
+                        world_object.set_position(x, y, z)
                         self.on_position_update()
                         other_flag = self.team.other.flag
                         if vector_collision(world_object.position, self.team.base):
@@ -211,9 +218,9 @@ class ServerConnection(BaseConnection):
                         world_object.position, other_flag):
                             self.take_flag()
                         position_data.player_id = self.player_id
-                        position_data.x = contained.x
-                        position_data.y = contained.y
-                        position_data.z = contained.z
+                        position_data.x = x
+                        position_data.y = y
+                        position_data.z = z
                         self.protocol.send_contained(position_data, 
                             sender = self)
                     elif contained.id == clientloaders.MovementData.id:
@@ -369,8 +376,13 @@ class ServerConnection(BaseConnection):
         position = self.world_object.position
         return position.x, position.y, position.z
     
-    def set_location(self, (x, y, z)):
-        self.world_object.set_position(x, y, z)
+    def set_location(self, location = None):
+        if location is None:
+            position = self.world_object.position
+            x, y, z = position.x, position.y, position.z
+        else:
+            x, y, z = location
+            self.world_object.set_position(x, y, z)
         position_data.x = x
         position_data.y = y
         position_data.z = z
