@@ -608,6 +608,18 @@ def server_name(connection, *arg):
         protocol.master_connection.disconnect()
     connection.protocol.irc_say("* Server name changed to '%s'" % name)
 
+@name('master')
+@admin
+def toggle_master(connection):
+    protocol = connection.protocol
+    protocol.master = not protocol.master
+    if protocol.master_connection is None:
+        protocol.set_master()
+    else:
+        protocol.master_connection.disconnect()
+    return 'Master broadcast toggled %s.' % ['off', 'on'][
+        int(protocol.master)]
+
 def ping(connection, value = None):
     if value is None:
         if connection not in connection.protocol.players:
@@ -681,6 +693,7 @@ command_list = [
     streak,
     score,
     reset_game,
+    toggle_master,
     change_map,
     server_name,
     ping
