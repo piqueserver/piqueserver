@@ -1,5 +1,6 @@
-from pyspades.server import player_data, chat_message
-from pyspades.server import create_player, position_data, kill_action
+from pyspades.server import player_data, chat_message, create_player
+from pyspades.server import position_data, kill_action, block_action
+from pyspades.constants import *
 from commands import add, rights, admin, name, get_player
 import commands
 
@@ -68,15 +69,38 @@ def spectator(connection, value):
         connection not in connection.protocol.players):
         return '%s is now a spectator.' % player.name
 
+@admin
+def height(connection, value):
+    irc = connection not in connection.protocol.players
+    if irc:
+        raise KeyError()
+    value = int(value)
+    if value <= 1 or value > 64:
+        raise ValueError()
+    value = 64 - value
+    block_action.player_id = connection.player_id
+    if connection.height_block is not None:
+        block_action.value = DESTROY_BLOCK
+        block_action.x, block_action.y, block_action.z = connection.height_block
+        connection.send_contained(block_action)
+    x, y, z = connection.get_location()
+    z = value
+    connection.height_block = (x, y, z)
+    block_action.value = BUILD_BLOCK
+    block_action.x, block_action.y, block_action.z = connection.height_block
+    connection.send_contained(block_action)
+    connection.set_location((x, y, z - 2))
+
 for func in (god, invisible, toggle_build, toggle_kill, pm,
-    spectators, spectator):
+    spectators, spectator, height):
     add(func)
 
-rights['spectator'] = ['teleport', 'tp', 'goto']
+rights['spectator'] = ['teleport', 'tp', 'goto', 'height']
 
 def apply_script(protocol, connection, config):
     class SpectatorConnection(connection):
         spectator = False
+        height_block = None
         
         def start_spectating(self):
             self.spectator = True
@@ -145,11 +169,10 @@ def apply_script(protocol, connection, config):
             self.protocol.irc_say(message)
             print message.encode('ascii', 'replace')
             return False
-
+        
         def join_squad(self, squad, squad_pref):
             if self.spectator:
-                return "You can't join a squad while spectating!"
-            else:
-                return connection.join_squad(self, squad, squad_pref)
-        
+                return "You're spectating."
+            return connection.join_squad(self, squad, squad_pref)
+    
     return protocol, SpectatorConnection
