@@ -3,7 +3,7 @@ from pyspades.common import coordinates
 from pyspades.serverloaders import BlockAction, SetColor
 from pyspades.constants import *
 from twisted.internet.task import LoopingCall
-from map import Map
+from map import Map, MapNotFound
 from commands import add, admin
 import time
 import operator
@@ -61,7 +61,13 @@ def apply_script(protocol, connection, config):
                            start_x, start_y, end_x, end_y):
             if self.rollback_in_progress:
                 return 'Rollback in progress.'
-            map = self.rollback_map if filename is None else Map(filename).data
+            if filename is None:
+                map = self.rollback_map
+            else:
+                try:
+                    map = Map(filename).data
+                except MapNotFound as error:
+                    return error.message
             message = ('%s commenced a rollback...' %
                 (connection.name if connection is not None else 'Map'))
             if connection not in self.players:
@@ -133,11 +139,11 @@ def apply_script(protocol, connection, config):
                                       start_x, start_y, end_x, end_y):
             surface = {}
             block_action = BlockAction()
-            block_action.player_id = connection.player_id
+            block_action.player_id = 32
             set_color = SetColor()
             set_color.fog = False
             set_color.value = 0x000000
-            set_color.player_id = connection.player_id
+            set_color.player_id = block_action.player_id
             self.send_contained(set_color, save = True)
             old = cur.copy()
             for x in xrange(start_x, end_x):
@@ -182,9 +188,6 @@ def apply_script(protocol, connection, config):
             for pos, color in sorted(surface.iteritems(),
                 key = operator.itemgetter(1)):
                 x, y, z = pos
-                #if not cur.has_neighbors(x, y, z) and
-                    #new.has_neighbors(x, y, z):
-                    #continue
                 packets_sent = 0
                 if color != last_color:
                     set_color.value = color & 0xFFFFFF
@@ -192,7 +195,6 @@ def apply_script(protocol, connection, config):
                         save = True)
                     packets_sent += 1
                     last_color = color
-                connection.send_contained(set_color)
                 cur.set_point_unsafe_int(x, y, z, color)
                 block_action.x = x
                 block_action.y = y
