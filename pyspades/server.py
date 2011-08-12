@@ -274,7 +274,10 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(grenade_packet, 
                             sender = self)
                     elif contained.id == clientloaders.SetTool.id:
+                        if self.on_tool_set_attempt(contained.value) == False:
+                            return
                         self.tool = contained.value
+                        self.on_tool_changed(self.tool)
                         if self.filter_visibility_data:
                             return
                         set_tool.player_id = self.player_id
@@ -776,6 +779,12 @@ class ServerConnection(BaseConnection):
         pass
     
     def on_team_join(self, team):
+        pass
+    
+    def on_tool_set_attempt(self, tool):
+        pass
+    
+    def on_tool_changed(self, tool):
         pass
     
     def on_grenade(self, time_left):
