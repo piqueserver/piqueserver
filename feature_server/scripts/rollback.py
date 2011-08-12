@@ -30,7 +30,13 @@ for func in (rollmap, rollback, rollbackcancel):
 
 def apply_script(protocol, connection, config):
     rollback_on_game_end = config.get('rollback_on_game_end', False)
-    
+
+    class RollbackConnection(connection):
+        def on_block_destroy(self, x, y, z, value):
+            if self.rollback_in_progress:
+                return False
+            return connection.on_block_destroy(self, x, y, z, value)
+
     class RollbackProtocol(protocol):
         def __init__(self, config, map):
             self.rollback_map = map.data.copy()
@@ -187,4 +193,4 @@ def apply_script(protocol, connection, config):
             if rollback_on_game_end:
                 self.start_rollback(None, None, 0, 0, 512, 512)
         
-    return RollbackProtocol, connection
+    return RollbackProtocol, RollbackConnection
