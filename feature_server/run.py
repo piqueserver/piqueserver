@@ -113,8 +113,6 @@ class FeatureConnection(ServerConnection):
     invisible = False
     building = True
     killing = True
-    squad = None
-    squad_pref = None
     streak = 0
     best_streak = 0
     last_chat = None
@@ -167,20 +165,11 @@ class FeatureConnection(ServerConnection):
                 self.protocol.votekick_call.cancel()
                 self.protocol.end_votekick(True, 'Player left the game',
                     left = True)
-            self.leave_squad()
+            self.on_team_leave()
         else:
             print '%s disconnected' % self.address[0]
     
     def on_spawn(self, pos):
-        if self.squad is not None:
-            if self.squad_pref is not None and self.squad_pref.hp:
-                self.set_location(self.get_follow_location(self.squad_pref))
-            else:
-                members = ([n for n in self.get_squad(self.team, self.squad)
-                            if n.hp and n is not self])
-                if len(members)>0:
-                    self.set_location(self.get_follow_location(
-                        random.choice(members)))
         if self.protocol.game_mode == 'tdm':
             self.send_chat(self.protocol.get_kill_count())
     
@@ -268,8 +257,6 @@ class FeatureConnection(ServerConnection):
         killer.streak += 1
         killer.best_streak = max(killer.streak, killer.best_streak)
         killer.team.kills += 1
-        self.squad_broadcast('Squadmate %s was killed by %s' %
-                             (self.name, killer.name))
         self.protocol.check_end_game(killer)
     
     def on_fall(self, damage):
@@ -303,9 +290,7 @@ class FeatureConnection(ServerConnection):
                 self.send_chat('Team is full')
                 return False
         if self.team is not team:
-            self.squad = None
-            self.squad_pref = None
-            self.respawn_time = self.protocol.respawn_time
+            self.on_team_leave()
         self.last_switch = reactor.seconds()
     
     def on_chat(self, value, global_message):
@@ -357,104 +342,6 @@ class FeatureConnection(ServerConnection):
         self.protocol.send_chat(message, irc = True)
         self.protocol.add_ban(self.address[0], reason, duration)
 
-    def get_squad(self, team, squadkey):
-        result = []
-        for player in self.protocol.players.values():
-            if player.team is team and player.squad == squadkey:
-                result.append(player)
-        return result
-    
-    def get_squads(self, team):
-        squad_dict = {}
-        for player in self.protocol.players.values():
-            if player.team is team:
-                if squad_dict.has_key(player.squad):
-                    squad_list = squad_dict[player.squad]
-                else:
-                    squad_list = []
-                    squad_dict[player.squad] = squad_list
-                squad_list.append(player)
-        return squad_dict
-
-    def print_squad(self, squadkey, squadlist):
-        if squadkey == None:
-            result = 'Unassigned: '
-        else:
-            result = 'Squad %s: ' % (squadkey)
-        result+=', '.join([player.name for player in squadlist])
-        return result
-    
-    def join_squad(self, squad, squad_pref):
-        
-        # same-squad check
-        
-        if self.squad == squad and self.squad_pref is squad_pref:
-            return 'Squad unchanged.'
-
-        # unique squad, so check for squad size first
-        
-        if squad != None and (self.protocol.squad_size
-            <= len(self.get_squad(self.team, squad))):
-            return 'Squad %s is full. (limit %s)' % self.protocol.squad_size
-        
-        # assign to unique squad
-
-        newsquad = self.squad != squad
-        newpref = self.squad_pref != squad_pref
-
-        oldsquad = self.squad
-        oldpref = self.squad_pref
-        
-        if newsquad and self.squad is not None:
-            self.leave_squad()
-
-        self.squad = squad
-        self.squad_pref = squad_pref
-        
-        if newsquad and squad is not None:
-            self.squad_broadcast('%s joined your squad.' % self.name)
-        
-        if squad == None:
-            self.respawn_time = self.protocol.respawn_time
-            self.squad_pref = None
-            self.send_chat('You are no longer assigned to a squad.')
-        else:
-            self.respawn_time = self.protocol.squad_respawn_time
-            if newpref and newsquad:
-                if squad_pref is None:
-                    return ('You are now in squad %s.' % squad)
-                else:
-                    return ('You are now in squad %s, following %s.' %
-                               (squad, squad_pref.name))
-            elif newpref:
-                if squad_pref is None:
-                    return ('You are no longer following %s.' %
-                            oldpref.name)
-                else:
-                    return ('You are now following %s.' %
-                               squad_pref.name)
-            elif newsquad:
-                return 'You are now in squad %s.' % squad
-
-    def leave_squad(self):
-        if self.squad is not None:
-            self.squad_broadcast("%s left your squad." % self.name)
-        self.squad = None
-        self.squad_pref = None
-        self.respawn_time = self.protocol.respawn_time
-
-    def squad_broadcast(self, msg):
-        if self.squad is not None:
-            squad = self.get_squad(self.team, self.squad)
-            for player in squad:
-                if player is not self:
-                    player.send_chat(msg)
-
-    def get_follow_location(self, follow):
-        x, y, z = (follow.world_object.position.get())
-        z -= 2
-        return x, y, z
-    
     def send_lines(self, lines):
         current_time = 0
         for line in lines:
@@ -533,9 +420,6 @@ class FeatureProtocol(ServerProtocol):
         self.max_score = config.get('cap_limit', None)
         self.kill_limit = config.get('kill_limit', 100)
         self.respawn_time = config.get('respawn_time', 5)
-        self.squad_respawn_time = config.get('squad_respawn_time', 
-            self.respawn_time)
-        self.squad_size = config.get('squad_size', 0)
         self.master = config.get('master', True)
         self.friendly_fire = config.get('friendly_fire', True)
         self.friendly_fire_time = config.get('grief_friendly_fire_time', 2.0)

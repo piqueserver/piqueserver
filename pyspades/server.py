@@ -758,7 +758,7 @@ class ServerConnection(BaseConnection):
     
     def on_connect(self, loader):
         pass
-    
+
     def on_join(self):
         pass
     
@@ -781,6 +781,9 @@ class ServerConnection(BaseConnection):
         pass
     
     def on_team_join(self, team):
+        pass
+
+    def on_team_leave(self):
         pass
     
     def on_tool_set_attempt(self, tool):

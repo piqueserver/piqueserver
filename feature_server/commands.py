@@ -242,7 +242,7 @@ def switch(connection, value = None):
     elif connection not in connection.protocol.players:
         raise ValueError()
     connection.respawn_time = connection.protocol.respawn_time
-    connection.leave_squad()
+    connection.on_team_leave()
     connection.team = connection.team.other
     connection.kill()
     connection.protocol.send_chat('%s has switched teams' % connection.name,
@@ -381,47 +381,6 @@ def tp(connection, player1, player2 = None):
 @admin
 def tpsilent(connection, player1, player2 = None):
     teleport(connection, player1, player2, silent = True)
-
-def follow(connection, playerkey = None):
-    
-    if playerkey is None:
-        squad_pref = None
-        squad = connection.squad
-    else:
-        squad_pref = get_player(connection.protocol, playerkey)
-        squad = squad_pref.squad
-        if squad_pref.team is not connection.team:
-            return '%s is not on your team!' % (squad_pref.name)
-        if squad_pref is connection:
-            return "You can't follow yourself!"
-        if squad_pref.squad is None:
-            return ('%s is not in a squad and cannot be followed.' %
-                    squad_pref.name)
-
-    return connection.join_squad(squad, squad_pref)
-
-def squad(connection, squadkey = None):
-
-    if connection.protocol.squad_size <= 1:
-        return 'Squads are disabled on this server.'
-
-    # squadlist
-
-    if squadkey is None:
-        allsquads = connection.get_squads(connection.team)
-        for squadkey in allsquads.keys():
-            connection.send_chat(connection.print_squad(
-            squadkey, allsquads[squadkey]))
-        return ('To join squads: /squad <squad name>. /squad none to spawn normally.')
-
-    if squadkey.lower() == 'none':
-        squad = None
-        squad_pref = None
-    else:
-        squad = squadkey
-        squad_pref = None
-
-    return connection.join_squad(squad, squad_pref)
 
 from pyspades.common import coordinates, to_coordinates
 
@@ -718,11 +677,9 @@ command_list = [
     god,
     god_build,
     fly,
-    follow,
     invisible,
     streak,
     score,
-    squad,
     reset_game,
     change_map,
     server_name,
@@ -752,20 +709,21 @@ def handle_command(connection, command, parameters):
         command_func = commands[command]
     except KeyError:
         return # 'Invalid command'
-    try:
+    #try:
+    if True:
         if hasattr(command_func, 'admin'):
             if (not connection.admin and 
                 (connection.rights is None or
                 command_func.func_name not in connection.rights)):
                 return 'No administrator rights!'
         return command_func(connection, *parameters)
-    except KeyError:
-        return # 'Invalid command'
-    except TypeError:
-        return 'Invalid number of arguments for %s' % command
-    except InvalidPlayer:
-        return 'No such player'
-    except InvalidTeam:
-        return 'Invalid team specifier'
-    except ValueError:
-        return 'Invalid parameters'
+    #except KeyError:
+    #    return # 'Invalid command'
+    #except TypeError:
+    #    return 'Invalid number of arguments for %s' % command
+    #except InvalidPlayer:
+    #    return 'No such player'
+    #except InvalidTeam:
+    #    return 'Invalid team specifier'
+    #except ValueError:
+    #    return 'Invalid parameters'
