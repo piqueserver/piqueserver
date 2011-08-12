@@ -59,6 +59,9 @@ def interpolate_rgb((r1, g1, b1), (r2, g2, b2), t):
         int(g1 + (g2 - g1) * t),
         int(b1 + (b2 - b1) * t))
 
+def interpolate_hsb((h1, s1, b1), (h2, s2, b2), t):
+    return (h1 + (h2 - h1) * t, s1 + (s2 - s1) * t, b1 + (b2 - b1) * t)
+
 def rgb_distance((r1, g1, b1), (r2, g2, b2)):
     return int(abs(r1 - r2) + abs(g1 - g2) + abs(b1 - b2))
 def apply_script(protocol, connection, config):    class DayCycleProtocol(protocol):        current_color = None
@@ -67,25 +70,24 @@ def rgb_distance((r1, g1, b1), (r2, g2, b2)):
         time_multiplier = 1.0
                 def __init__(self, *arg, **kw):            protocol.__init__(self, *arg, **kw)            self.day_loop = LoopingCall(self.update_day_color)
             self.day_colors = [
-                ( 0.00, hsb_to_rgb(0.0,    0.0,  0.0 )),
-                ( 5.00, hsb_to_rgb(0.0,    0.0,  0.0 )),
-                ( 6.00, hsb_to_rgb(0.0694, 0.77, 0.78)),
-                ( 6.30, hsb_to_rgb(0.0361, 0.25, 0.95)),
-                ( 7.00, hsb_to_rgb(0.56,   0.18, 0.94)),
-                (10.00, hsb_to_rgb(0.5527, 0.24, 0.94)),
-                (12.00, hsb_to_rgb(0.5527, 0.41, 0.95)),
-                (18.50, hsb_to_rgb(0.56,   0.28, 0.96)),
-                (19.00, hsb_to_rgb(0.15,   0.33, 0.87)),
-                (19.25, hsb_to_rgb(0.10,   0.49, 0.94)),
-                (19.50, hsb_to_rgb(0.1056, 0.69, 1.00)),
-                (21.50, hsb_to_rgb(0.0,    0.0,  0.0 )),
-                (22.00, hsb_to_rgb(0.0,    0.0,  0.0 ))
+                ( 0.00, (0.0,    0.0,  0.0 ), False),
+                ( 5.00, (0.05,   0.77, 0.0 ), False),
+                ( 6.00, (0.0694, 0.77, 0.78),  True),
+                ( 6.30, (0.0361, 0.25, 0.95), False),
+                ( 7.00, (0.56,   0.18, 0.94), False),
+                (10.00, (0.5527, 0.24, 0.94), False),
+                (12.00, (0.5527, 0.41, 0.95), False),
+                (18.50, (0.56,   0.28, 0.96), False),
+                (19.00, (0.15,   0.33, 0.87), False),
+                (19.25, (0.10,   0.49, 0.94), False),
+                (19.50, (0.1056, 0.69, 1.00), False),
+                (21.50, (0.0,    0.69, 0.0 ),  True),
+                (22.00, (0.0,    0.0,  0.0 ), False)
             ]
             self.time_step = 24.00 / (self.day_duration /
                 self.day_update_frequency)
             self.target_color_index = 0
-            self.start_time, self.start_color = self.day_colors[0]
-            self.target_time, self.target_color = self.day_colors[1]
+            self.next_color()
             self.day_loop.start(self.day_update_frequency)                def update_day_color(self):
             self.current_time += self.time_step * self.time_multiplier
             if self.current_time >= 24.00:
@@ -96,17 +98,25 @@ def rgb_distance((r1, g1, b1), (r2, g2, b2)):
                 self.target_time = self.target_time or 24.00
             t = ((self.current_time - self.start_time) /
                 (self.target_time - self.start_time))
-            new_color = interpolate_rgb(self.start_color, 
-                self.target_color, t)
+            if self.hsv_transition:
+                new_color = interpolate_hsb(self.start_color, 
+                    self.target_color, t)
+                new_color = hsb_to_rgb(*new_color)
+            else:
+                new_color = interpolate_rgb(self.start_color, 
+                    self.target_color, t)
             if (self.current_color is None or
                 rgb_distance(self.current_color, new_color) > 3):
                 self.current_color = new_color                self.set_fog_color(self.current_color)
         
         def next_color(self):
-            self.start_time, self.start_color = (
+            self.start_time, self.start_color, _ = (
                 self.day_colors[self.target_color_index])
             self.target_color_index = ((self.target_color_index + 1) %
                 len(self.day_colors))
-            self.target_time, self.target_color = (
+            self.target_time, self.target_color, self.hsv_transition = (
                 self.day_colors[self.target_color_index])
+            if not self.hsv_transition:
+                self.start_color = hsb_to_rgb(*self.start_color)
+                self.target_color = hsb_to_rgb(*self.target_color)
         return DayCycleProtocol, connection
