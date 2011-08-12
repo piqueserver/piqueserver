@@ -145,6 +145,9 @@ def apply_script(protocol, connection, config):
                                            self.name)
             self.squad = None
             self.squad_pref = None
+            for player in self.protocol.players.values():
+                if player.squad_pref is self:
+                    player.squad_pref = None
             self.respawn_time = self.protocol.respawn_time
 
         def squad_broadcast(self, msg):
