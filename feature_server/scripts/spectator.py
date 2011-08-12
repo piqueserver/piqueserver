@@ -150,6 +150,6 @@ def apply_script(protocol, connection, config):
             if self.spectator:
                 return "You can't join a squad while spectating!"
             else:
-                return connection.join_squad(squad, squad_pref)
+                return connection.join_squad(self, squad, squad_pref)
         
     return protocol, SpectatorConnection
