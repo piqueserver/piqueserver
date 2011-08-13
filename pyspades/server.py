@@ -151,6 +151,7 @@ class ServerConnection(BaseConnection):
                             return
                         self.weapon = contained.weapon
                         self.kill()
+                        self.set_weapon(self.weapon)
                         return
                     old_team = self.team
                     team = [self.protocol.blue_team, 

@@ -73,41 +73,37 @@ cdef class ConnectionRequest(PacketLoader):
         bint client
 
     cpdef read(self, ByteReader reader):
-        cdef int word_1 = reader.readShort(True) # usually 0, 1, 2, 3
-        cdef int v10 = reader.readByte()
-        cdef int v12 = reader.readByte()
-        cdef unsigned int v16 = reader.readInt(True)
-        cdef unsigned int v21 = reader.readInt(True)
-        cdef unsigned int v2 = reader.readInt(True)
-        cdef unsigned int dword_1 = reader.readInt(True)
-        cdef unsigned int dword_2 = reader.readInt(True)
-        cdef unsigned int dword_3 = reader.readInt(True)
-        cdef unsigned int dword_4 = reader.readInt(True)
-        cdef unsigned int dword_5 = reader.readInt(True)
+        cdef int outgoing_peer_id = reader.readShort(True)
+        cdef int incoming_session_id = reader.readByte() # incoming session id
+        cdef int outgoing_session_id = reader.readByte() # outgoing session id
+        cdef unsigned int mtu = reader.readInt(True)
+        cdef unsigned int window_size = reader.readInt(True)
+        cdef unsigned int channel_count = reader.readInt(True)
+        cdef unsigned int incoming_bandwidth = reader.readInt(True)
+        cdef unsigned int outgoing_bandwidth = reader.readInt(True)
+        cdef unsigned int throttle_interval = reader.readInt(True)
+        cdef unsigned int throttle_acceleration = reader.readInt(True)
+        cdef unsigned int throttle_deceleration = reader.readInt(True)
         # server responds with this in packet 3
-        cdef unsigned int dword_6 = reader.readInt(True, False)
+        cdef unsigned int connect_id = reader.readInt(True, False)
         # version, CRC32 of exe
-        cdef unsigned int dword_7 = reader.readInt(True, False)
+        cdef unsigned int data = reader.readInt(True, False)
 
-        if v10 == -1 and v12 == -1:
+        if incoming_session_id == -1 and outgoing_session_id == -1:
             self.client = True
-        elif v10 != v12:
-            raw_input('unknown v10 and v12: %s %s' % (v10, v12))
         else:
             self.client = False
-            self.value = v10
-        check_default_int(v16, 1400)
-        check_default_int(v21, 32768)
-        check_default_int(v2, 1)
-        if dword_1 not in (0, 0x80000):
-            raw_input('unknown dword_1: %s' % dword_1)
-        check_default_int(dword_2, 0)
-        check_default_int(dword_3, 5000)
-        check_default_int(dword_4, 2)
-        check_default_int(dword_5, 2)
-        self.auth_val = dword_6
-        self.version = dword_7
-        self.value2 = word_1
+            self.value = incoming_session_id
+        check_default_int(mtu, 1400)
+        check_default_int(window_size, 32768)
+        check_default_int(channel_count, 1)
+        check_default_int(outgoing_bandwidth, 0)
+        check_default_int(throttle_interval, 5000)
+        check_default_int(throttle_acceleration, 2)
+        check_default_int(throttle_deceleration, 2)
+        self.auth_val = connect_id
+        self.version = data
+        self.value2 = outgoing_peer_id
     
     cpdef write(self, ByteWriter reader):
         reader.writeShort(self.value2)
@@ -116,8 +112,8 @@ cdef class ConnectionRequest(PacketLoader):
             value = -1
         else:
             value = self.value or 0
-        for _ in xrange(2):
-            reader.writeByte(value)
+        reader.writeByte(value)
+        reader.writeByte(value)
         reader.writeInt(1400)
         reader.writeInt(32768)
         reader.writeInt(1)
@@ -136,34 +132,32 @@ cdef class ConnectionResponse(PacketLoader):
         unsigned int auth_val
 
     cpdef read(self, ByteReader reader):
-        cdef int word_1 = reader.readShort(True)
-        cdef int byte_1 = reader.readByte(True)
-        cdef int byte_2 = reader.readByte(True)
-        cdef unsigned int dword_1 = reader.readInt(True)
-        cdef unsigned int dword_2 = reader.readInt(True)
-        cdef unsigned int dword_3 = reader.readInt(True)
-        cdef unsigned int dword_4 = reader.readInt(True)
-        cdef unsigned int dword_5 = reader.readInt(True)
-        cdef unsigned int dword_6 = reader.readInt(True)
-        cdef unsigned int dword_7 = reader.readInt(True)
-        cdef unsigned int dword_8 = reader.readInt(True)
+        cdef int outgoing_peer_id = reader.readShort(True)
+        cdef int incoming_session_id = reader.readByte(True)
+        cdef int outgoing_session_id = reader.readByte(True)
+        cdef unsigned int mtu = reader.readInt(True)
+        cdef unsigned int window_size = reader.readInt(True)
+        cdef unsigned int channel_count = reader.readInt(True)
+        cdef unsigned int incoming_bandwidth = reader.readInt(True)
+        cdef unsigned int outgoing_bandwidth = reader.readInt(True)
+        cdef unsigned int throttle_interval = reader.readInt(True)
+        cdef unsigned int throttle_acceleration = reader.readInt(True)
+        cdef unsigned int throttle_deceleration = reader.readInt(True)
         # server sent this in 
-        cdef unsigned int dword_9 = reader.readInt(True, False)
+        cdef unsigned int connect_id = reader.readInt(True, False)
         
-        self.connection_id = word_1
-        if byte_1 != byte_2:
-            raise NotImplementedError('uniques not equal')
-        self.unique = byte_1
-        check_default_int(dword_1, 91750400)
-        check_default_int(dword_2, 32768)
-        check_default_int(dword_3, 1)
-        check_default_int(dword_4, 0)
-        check_default_int(dword_5, 0)
-        check_default_int(dword_6, 5000)
-        check_default_int(dword_7, 2)
-        check_default_int(dword_8, 2)
+        self.connection_id = outgoing_peer_id
+        self.unique = incoming_session_id
+        check_default_int(mtu, 91750400)
+        check_default_int(window_size, 32768)
+        check_default_int(channel_count, 1)
+        check_default_int(incoming_bandwidth, 0)
+        check_default_int(outgoing_bandwidth, 0)
+        check_default_int(throttle_interval, 5000)
+        check_default_int(throttle_acceleration, 2)
+        check_default_int(throttle_deceleration, 2)
         
-        self.auth_val = dword_9
+        self.auth_val = connect_id
     
     cpdef write(self, ByteWriter reader):
         reader.writeShort(self.connection_id, True)
@@ -214,8 +208,6 @@ cdef class Packet7(PacketLoader):
     id = 7
 
     cpdef read(self, ByteReader reader): # uses byte
-        print 'THE MAGICAL PACKET7 (please send this to mat^2):',
-        print repr(str(reader))
         reader.skipBytes(2)
         cdef int size = reader.readShort(True)
         new_data = reader.readReader(size)
