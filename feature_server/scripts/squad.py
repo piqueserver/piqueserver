@@ -31,10 +31,14 @@ def squad(self, squadkey = None):
 
     if squadkey is None:
         allsquads = self.get_squads(self.team)
+        result = []
         for squadkey in allsquads.keys():
-            self.send_chat(self.print_squad(
+            result.append(self.print_squad(
             squadkey, allsquads[squadkey]))
-        return ('To join squads: /squad <squad name>. /squad none to spawn normally.')
+        result.append(('To join squads: /squad <squad name>. ' +
+                       '/squad none to spawn normally.'))
+        self.send_lines(result)
+        return 
 
     if squadkey.lower() == 'none':
         squad = None
@@ -59,10 +63,19 @@ def apply_script(protocol, connection, config):
         squad_pref = None
         
         def get_squad(self, team, squadkey):
-            result = []
-            for player in self.protocol.players.values():
-                if player.team is team and player.squad == squadkey:
-                    result.append(player)
+            result = {'name' : squadkey, 'players' : []}
+            if squadkey is None:
+                for player in self.protocol.players.values():
+                    if (player.team is team and
+                        player.squad is None):
+                        result['players'].append(player)
+                        result['name'] = player.squad
+            else:
+                for player in self.protocol.players.values():
+                    if (player.team is team and player.squad and
+                        player.squad.lower() == squadkey.lower()):
+                        result['players'].append(player)
+                        result['name'] = player.squad
             return result
 
         def get_squads(self, team):
@@ -78,7 +91,7 @@ def apply_script(protocol, connection, config):
             return squad_dict
 
         def print_squad(self, squadkey, squadlist):
-            if squadkey == None:
+            if squadkey is None:
                 result = 'Unassigned: '
             else:
                 result = 'Squad %s: ' % (squadkey)
@@ -88,36 +101,42 @@ def apply_script(protocol, connection, config):
         def join_squad(self, squad, squad_pref):
             
             # same-squad check
+
+            if squad is None or self.squad is None:
+                newsquad = self.squad is not squad
+            else:
+                newsquad = self.squad.lower() != squad.lower()
+            newpref = self.squad_pref is not squad_pref
             
-            if self.squad == squad and self.squad_pref is squad_pref:
+            if not newsquad and not newpref:
                 return 'Squad unchanged.'
 
             # unique squad, so check for squad size first
+
+            existing = self.get_squad(self.team, squad)
+            squad = existing['name'] # fixes the case
             
-            if squad != None and (self.protocol.squad_size
-                <= len(self.get_squad(self.team, squad))):
+            if squad and (self.protocol.squad_size
+                <= len(existing['players'])):
                 return ('Squad %s is full. (limit %s)' %
-                        self.protocol.squad_size)
+                        (squadkey, self.protocol.squad_size))
             
             # assign to unique squad
-
-            newsquad = self.squad != squad
-            newpref = self.squad_pref != squad_pref
 
             oldsquad = self.squad
             oldpref = self.squad_pref
             
-            if newsquad and self.squad is not None:
+            if newsquad and self.squad:
                 self.leave_squad()
 
             self.squad = squad
             self.squad_pref = squad_pref
             
-            if newsquad and squad is not None:
+            if newsquad and squad:
                 self.squad_broadcast('%s joined your squad.' %
                                            self.name)
             
-            if squad == None:
+            if squad is None:
                 self.respawn_time = self.protocol.respawn_time
                 self.squad_pref = None
                 self.send_chat('You are no longer assigned to a squad.')
@@ -140,7 +159,7 @@ def apply_script(protocol, connection, config):
                     return 'You are now in squad %s.' % squad
 
         def leave_squad(self):
-            if self.squad is not None:
+            if self.squad:
                 self.squad_broadcast("%s left your squad." %
                                            self.name)
             self.squad = None
@@ -151,9 +170,9 @@ def apply_script(protocol, connection, config):
             self.respawn_time = self.protocol.respawn_time
 
         def squad_broadcast(self, msg):
-            if self.squad is not None:
+            if self.squad:
                 squad = self.get_squad(self.team, self.squad)
-                for player in squad:
+                for player in squad['players']:
                     if player is not self:
                         player.send_chat(msg)
                     
@@ -167,14 +186,15 @@ def apply_script(protocol, connection, config):
             return connection.on_team_leave(self)
 
         def on_spawn(self, pos):
-            if self.squad is not None:
+            if self.squad:
                 if (self.squad_pref is not None and self.squad_pref.hp and
                     self.squad_pref.team is self.team):
                     self.set_location(self.get_follow_location(
                         self.squad_pref))
                 else:
                     members = ([n for n in self.get_squad(self.team,
-                                self.squad) if n.hp and n is not self])
+                                self.squad)['players'] if n.hp and
+                                n is not self])
                     if len(members)>0:
                         self.set_location(self.get_follow_location(
                             random.choice(members)))
