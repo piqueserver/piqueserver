@@ -663,7 +663,7 @@ def weapon(connection, value):
         weapon = 'Shotgun'
     else:
         weapon = '(unknown)'
-    return '%s has a %s' % (player.name, weapon)
+    return '%s has a %s.' % (player.name, weapon)
     
 command_list = [
     help,
