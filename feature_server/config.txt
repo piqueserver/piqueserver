@@ -25,7 +25,7 @@
     "game_mode" : "ctf",
     "kill_limit" : 100,
     "cap_limit" : 10,
-    "map" : "pinpoint",
+    "map" : "pyspades",
     "respawn_time" : 5,
     "squad_respawn_time" : 8,
     "squad_size" : 4,
