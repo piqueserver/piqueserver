@@ -672,7 +672,9 @@ class ServerConnection(BaseConnection):
                     continue
                 elif returned is not None:
                     damage = returned
-                player.set_hp(player.hp - damage, self)
+                indicator = player.world_object.get_hit_direction(position)
+                player.set_hp(player.hp - damage, self,
+                    hit_indicator = indicator)
         if self.on_block_destroy(x, y, z, GRENADE_DESTROY) == False:
             return
         map = self.protocol.map
