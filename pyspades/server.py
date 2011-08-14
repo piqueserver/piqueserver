@@ -528,7 +528,8 @@ class ServerConnection(BaseConnection):
                 return
         self.set_hp(self.hp - value, by)
     
-    def set_hp(self, value, hit_by = None, not_fall = True):
+    def set_hp(self, value, hit_by = None, not_fall = True, 
+               hit_indicator = None):
         value = int(value)
         self.hp = max(0, min(100, value))
         if self.hp <= 0:
@@ -536,6 +537,13 @@ class ServerConnection(BaseConnection):
             return
         hit_packet.hp = self.hp
         hit_packet.not_fall = not_fall
+        if hit_indicator is None:
+            if hit_by is not None and hit_by is not self:
+                hit_indicator = self.world_object.get_hit_direction(
+                    hit_by.world_object.position)
+            else:
+                hit_indicator = 0
+        hit_packet.hit_indicator = hit_indicator
         self.send_contained(hit_packet)
     
     def set_weapon(self, weapon = None, local = False):

@@ -322,6 +322,74 @@ cdef class Character(Object):
         item = self.world.create_object(Grenade, time_left, position, 
             self.orientation, self.acceleration, callback)
         return item
+    
+    cpdef int get_hit_direction(self, Vertex3 position):
+        # 0 = aligned
+        # 1 = left
+        # 2 = right
+        # 3 = up
+        # 4 = down
+        cdef double x, y, z
+        x, y, z = position.get()
+        x -= self.position.x
+        y -= self.position.y
+        z -= self.position.z
+        cdef Vertex3 orientation = self.orientation
+        cdef double cz = (
+            orientation.z * z +
+            orientation.x * x +
+            orientation.y * y
+        )
+        cdef double r = 1.0 / cz
+        
+        cdef double xypow2 = orientation.y ** 2 + orientation.x ** 2
+        
+        cdef double orienty_over_vecxy = orientation.y / xypow2
+        cdef double orientx_over_vecxy = orientation.x / xypow2
+        
+        cdef double cx = (
+            orientx_over_vecxy * y +
+            orienty_over_vecxy * x #+
+            #always_null * z
+        )
+        
+        cdef double orientx_over_vecxy2 = orientx_over_vecxy * -orientation.z
+        cdef double orientvecxyz = orienty_over_vecxy * orientation.z
+        cdef double orient_vecxy_again = (
+            orientx_over_vecxy * orientation.x -
+            orienty_over_vecxy * orientation.y)
+        
+        cdef double x2 = cx * r
+        cdef double cy = (
+            orientx_over_vecxy2 * x +
+            orientvecxyz * y +
+            orient_vecxy_again * z
+        )
+        cdef double y2 = cy * r
+        if fabs(x2) < 0.25 and fabs(y2) < 0.25:
+            return 0
+        
+        if fabs(x2) >= fabs(y2):
+            if cz >= 0:
+                if x2 < 0:
+                    return 1
+                else:
+                    return 2
+            else:
+                if x2 < 0:
+                    return 2
+                else:
+                    return 1
+        if cz >= 0:
+            if y2 < 0:
+                return 3
+            else:
+                return 4
+        else:
+            if y2 < 0:
+                return 4
+            else:
+                return 3
         
     cdef void update(self, double dt):
         if self.dead:
