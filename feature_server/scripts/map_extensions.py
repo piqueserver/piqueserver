@@ -1,5 +1,4 @@
 from pyspades.server import hit_packet
-import types
 
 def apply_script(protocol, connection, config):
     class MapExtensionConnection(connection):

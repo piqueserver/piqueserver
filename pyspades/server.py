@@ -406,6 +406,8 @@ class ServerConnection(BaseConnection):
         self.send_contained(intel_action)
     
     def take_flag(self):
+        if not self.hp:
+            return
         flag = self.team.other.flag
         if flag.player is not None:
             return
