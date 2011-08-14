@@ -344,7 +344,7 @@ cdef class Character(Object):
         
         cdef double xypow2 = orientation.y ** 2 + orientation.x ** 2
         
-        cdef double orienty_over_vecxy = orientation.y / xypow2
+        cdef double orienty_over_vecxy = -orientation.y / xypow2
         cdef double orientx_over_vecxy = orientation.x / xypow2
         
         cdef double cx = (
