@@ -224,11 +224,18 @@ inline int is_surface(MapData * map, int x, int y, int z)
    return 0;
 }
 
+inline int get_write_color(MapData * map, int x, int y, int z)
+{
+    map_type<int, int>::const_iterator iter = map->colors.find(
+        get_pos(x, y, z));
+    if (iter == map->colors.end())
+        return DEFAULT_COLOR;
+    return iter->second;
+}
+
 inline void write_color(char ** out, int color)
 {
    // assume color is ARGB native, but endianness is unknown
-   if (color == 0)
-       color = DEFAULT_COLOR;
    // file format endianness is ARGB little endian, i.e. B,G,R,A
    **out = (char)(color >> 0);
    *out += 1;
@@ -331,13 +338,13 @@ PyObject * save_vxl(MapData * map)
 
             for (z=0; z < top_colors_len; ++z)
             {
-               write_color(&out, map->colors[get_pos(i, j, 
-                   top_colors_start + z)]);
+               write_color(&out, get_write_color(map, i, j, 
+                   top_colors_start + z));
             }
             for (z=0; z < bottom_colors_len; ++z)
             {
-               write_color(&out, map->colors[get_pos(i, j, 
-                   bottom_colors_start + z)]);
+               write_color(&out, get_write_color(map, i, j, 
+                   bottom_colors_start + z));
             }
          }  
       }
@@ -458,13 +465,13 @@ PyObject * get_generator_data(MapGenerator * generator, int columns)
 
             for (z=0; z < top_colors_len; ++z)
             {
-               write_color(&out, map->colors[get_pos(i, j, 
-                   top_colors_start + z)]);
+               write_color(&out, get_write_color(map, i, j, 
+                   top_colors_start + z));
             }
             for (z=0; z < bottom_colors_len; ++z)
             {
-               write_color(&out, map->colors[get_pos(i, j, 
-                   bottom_colors_start + z)]);
+               write_color(&out, get_write_color(map, i, j, 
+                   bottom_colors_start + z));
             }
          }
          column++;
