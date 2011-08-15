@@ -40,12 +40,18 @@ def apply_script(protocol, connection, config):
         game_mode = 'tc'
         green_tc_score = 0
         blue_tc_score = 0
+        green_tc_held = 0
+        blue_tc_held = 0
         current_line = 0
         territory_update_time = config.get('territory_update_time', 10) / 512.
-        score_limit = config.get('score_limit', 1000000)
+        score_limit = config.get('score_limit', 5000)
         tc_owner = array('i')
-        for n in xrange(512*512):
-            tc_owner.append(-1)
+        for y in xrange(512):
+            for x in xrange(512):
+                if x < 256:
+                    tc_owner.append(0)
+                else:
+                    tc_owner.append(1)
 
         def __init__(self, config, map):
             result = protocol.__init__(self, config, map)
@@ -58,11 +64,16 @@ def apply_script(protocol, connection, config):
             idx = self.current_line * 512
             for x in xrange(idx, idx+512):
                 if self.tc_owner[x] == 0:
-                    self.blue_tc_score += 1
+                    self.blue_tc_held += 1
                 elif self.tc_owner[x] == 1:
-                    self.green_tc_score += 1
+                    self.green_tc_held += 1
             self.current_line = (self.current_line + 1) % 512
             if self.current_line == 0:
+                balance = abs(self.blue_tc_held - self.green_tc_held)
+                if self.blue_tc_held>self.green_tc_held:
+                    self.blue_tc_score += balance
+                else:
+                    self.green_tc_score += balance
                 if not self.check_end_game():
                     self.send_chat(self.get_tc_score())
     
@@ -113,8 +124,12 @@ def apply_script(protocol, connection, config):
         def reset_ownership(self):
             self.current_line = 0
             self.tc_owner = array('i')
-            for n in xrange(512*512):
-                self.tc_owner.append(-1)
+            for y in xrange(512):
+                for x in xrange(512):
+                    if x < 256:
+                        self.tc_owner.append(0)
+                    else:
+                        self.tc_owner.append(1)
 
         def get_owner(self, x, y):
             owner = self.tc_owner[x + y * 512]
@@ -136,6 +151,8 @@ def apply_script(protocol, connection, config):
         def on_game_end(self, player):
             self.green_tc_score = 0
             self.blue_tc_score = 0
+            self.green_tc_held = 0
+            self.blue_tc_held = 0
             self.reset_ownership()
             return protocol.on_game_end(self, player)
 
