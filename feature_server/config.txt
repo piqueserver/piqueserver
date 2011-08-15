@@ -6,7 +6,7 @@
         "(server powered by pyspades)"
     ],
     "help" : [
-        "/FOLLOW    Choose a teammate as squad leader, who will act as your spawnpoint",
+        "/SQUAD    Creates or joins a squad, letting you spawn with friends",
         "/STREAK    Shows how many kills in a row you got without dying",
         "/AIRSTRIKE Air support!  Try it out just like that for more details",
         "/INTEL     Tells you who's got the enemy intel",
