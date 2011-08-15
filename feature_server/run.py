@@ -169,10 +169,6 @@ class FeatureConnection(ServerConnection):
         else:
             print '%s disconnected' % self.address[0]
     
-    def on_spawn(self, pos):
-        if self.protocol.game_mode == 'tdm':
-            self.send_chat(self.protocol.get_kill_count())
-    
     def on_command(self, command, parameters):
         result = commands.handle_command(self, command, parameters)
         if result == False:
@@ -257,7 +253,6 @@ class FeatureConnection(ServerConnection):
         killer.streak += 1
         killer.best_streak = max(killer.streak, killer.best_streak)
         killer.team.kills += 1
-        self.protocol.check_end_game(killer)
     
     def on_fall(self, damage):
         if self.god:
@@ -413,13 +408,15 @@ class FeatureProtocol(ServerProtocol):
             self.bans = json.load(open('bans.txt', 'rb'))
         except IOError:
             self.bans = []
+
+        self.game_mode = 'ctf'
+        
         self.config = config
         self.update_format()
         if len(self.name) > MAX_SERVER_NAME_SIZE:
             print '(server name too long; it will be truncated to "%s")' % (
                 self.name[:MAX_SERVER_NAME_SIZE])
         self.max_score = config.get('cap_limit', None)
-        self.kill_limit = config.get('kill_limit', 100)
         self.respawn_time = config.get('respawn_time', 5)
         self.master = config.get('master', True)
         self.friendly_fire = config.get('friendly_fire', True)
@@ -442,7 +439,6 @@ class FeatureProtocol(ServerProtocol):
         self.speedhack_detect = config.get('speedhack_detect', True)
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
-        self.game_mode = config.get('game_mode', 'ctf')
         self.set_god_build = config.get('set_god_build', False)
         logfile = config.get('logfile', None)
         self.debug_log = config.get('debug_log', False)
@@ -487,7 +483,7 @@ class FeatureProtocol(ServerProtocol):
         ServerProtocol.__init__(self)
         # locked teams
         self.blue_team.locked = False
-        self.green_team.locked = False
+        self.green_team.locked = False        
     
     def is_indestructable(self, x, y, z):
         if self.user_blocks is not None:
@@ -694,40 +690,6 @@ class FeatureProtocol(ServerProtocol):
         if irc:
             self.irc_say('* %s' % value)
         ServerProtocol.send_chat(self, value, global_message, sender, team)
-
-    def get_kill_count(self):
-        green_kills = self.green_team.kills
-        blue_kills = self.blue_team.kills
-        diff = green_kills - blue_kills
-        if green_kills>blue_kills:
-            return ("Green leads %s-%s (+%s, %s left). Playing to %s kills." %
-                    (green_kills, blue_kills,
-                    diff,
-                    self.kill_limit - green_kills,
-                    self.kill_limit))
-        elif green_kills<blue_kills:
-            return ("Blue leads %s-%s (+%s, %s left). Playing to %s kills." %
-                    (blue_kills, green_kills,
-                    -diff,
-                    self.kill_limit - blue_kills,
-                    self.kill_limit))
-        else:
-            return ("%s-%s, %s left. Playing to %s kills." %
-                    (green_kills,
-                     blue_kills,
-                    self.kill_limit - green_kills,
-                    self.kill_limit))
-
-    def check_end_game(self, player):
-        if self.game_mode=='tdm':
-            if self.green_team.kills>=self.kill_limit:
-                self.send_chat("Green Team Wins, %s - %s" %
-                               (self.green_team.kills, self.blue_team.kills))
-                self.reset_game(player)
-            elif self.blue_team.kills>=self.kill_limit:
-                self.send_chat("Blue Team Wins, %s - %s" %
-                               (self.blue_team.kills, self.green_team.kills))
-                self.reset_game(player)
 
     # log high CPU usage
     

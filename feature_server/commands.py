@@ -167,9 +167,6 @@ def rules(connection):
         return
     connection.send_lines(lines)
 
-def score(connection):
-    return connection.protocol.get_kill_count()
-
 def help(connection):
     """
     This help
@@ -691,7 +688,6 @@ command_list = [
     fly,
     invisible,
     streak,
-    score,
     reset_game,
     toggle_master,
     change_map,

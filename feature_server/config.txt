@@ -23,7 +23,6 @@
     "max_players" : 32,
     "max_connections_per_ip" : 3,
     "game_mode" : "ctf",
-    "kill_limit" : 100,
     "cap_limit" : 10,
     "map" : "pyspades",
     "respawn_time" : 5,
