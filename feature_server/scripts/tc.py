@@ -45,7 +45,7 @@ def apply_script(protocol, connection, config):
         blue_tc_held = 0
         current_line = 0
         territory_update_time = config.get('territory_update_time', 10) / 512.
-        score_limit = config.get('score_limit', 5)
+        score_limit = config.get('score_limit', 25000)
         tc_owner = array('i')
         for y in xrange(512):
             for x in xrange(512):
