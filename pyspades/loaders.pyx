@@ -107,7 +107,7 @@ cdef class ConnectionRequest(PacketLoader):
         self.outgoing_peer_id = outgoing_peer_id
     
     cpdef write(self, ByteWriter reader):
-        reader.writeShort(self.value2)
+        reader.writeShort(self.outgoing_peer_id)
         cdef int value
         if self.client:
             value = -1
