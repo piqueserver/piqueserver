@@ -33,8 +33,9 @@ def apply_script(protocol, connection, config):
             else:
                 self.protocol.set_owner(x, y, self.team)
                 gridlocale = 'ABCDEFGH'[x//64] + str((y//64)+1)
-                self.send_chat('You now control %s, %s in %s (+1)' %
-                               (x, y, gridlocale))    
+                self.send_chat('You now control %s, %s in %s (+1 per %s)' %
+                           (x, y, gridlocale,
+                            int(self.protocol.territory_update_time * 512)))    
             
     class TCProtocol(protocol):
 
