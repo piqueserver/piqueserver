@@ -90,7 +90,8 @@ def apply_script(protocol, connection, config):
                         self.score_limit))
         
         def check_end_game(self):
-            if self.green_tc_score>=self.score_limit:
+            if (self.green_tc_score>=self.score_limit and
+                self.green_tc_score>self.blue_tc_score):
                 self.send_chat("Green Team Wins, %s - %s" %
                                (self.green_tc_score, self.blue_tc_score))
                 player = self.get_a_player(self.green_team)
@@ -98,7 +99,8 @@ def apply_script(protocol, connection, config):
                     self.reset_game(player)
                     self.on_game_end(player)
                 return True
-            elif self.blue_tc_score>=self.score_limit:
+            elif (self.blue_tc_score>=self.score_limit and
+                  self.blue_tc_score>self.green_tc_score):
                 self.send_chat("Blue Team Wins, %s - %s" %
                                (self.blue_tc_score, self.green_tc_score))
                 player = self.get_a_player(self.blue_team)
