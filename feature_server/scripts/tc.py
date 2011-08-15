@@ -16,25 +16,37 @@ def apply_script(protocol, connection, config):
             return connection.on_spawn(self, pos)
 
         def explain_game_mode(self):
-            return ("Territory Control: Creating or destroying blocks CONTROLS the position and earns points.")
+            return ("Territory Control: Building on your side and destroying the other side CONTROLS the position, earning points.")
 
         def on_block_build(self, x, y, z):
-            self.do_control(x, y)
+            self.do_control(x, y, True)
             return connection.on_block_build(self, x, y, z)
 
         def on_block_removed(self, x, y, z):
             # FIXME: we don't have an easy way to get the collapsed blocks, so collapsing doesn't take control :(
-            self.do_control(x, y)
+            self.do_control(x, y, False)
             return connection.on_block_removed(self, x, y, z)
             
-        def do_control(self, x, y):
-            if self.protocol.get_owner(x, y) is self.team:
+        def do_control(self, x, y, added):
+            ownside = ((self.team is self.protocol.blue_team and x<256) or
+                       (self.team is self.protocol.green_team and x>=256))
+            oldowner = self.protocol.get_owner(x, y)
+            if (oldowner is self.team):
                 pass
             else:
-                self.protocol.set_owner(x, y, self.team)
                 gridlocale = 'ABCDEFGH'[x//64] + str((y//64)+1)
-                self.send_chat('You now control %s, %s in %s (+1)' %
-                               (x, y, gridlocale))    
+
+                if (ownside and added) or not ownside:
+                    self.protocol.set_owner(x, y, self.team)                        
+                    self.send_chat('You now control %s, %s in %s (+1 per %s)' %
+                           (x, y, gridlocale,
+                            int(self.protocol.territory_update_time * 512)))
+                elif oldowner is not None:
+                    self.protocol.set_owner(x, y, None)
+                    self.send_chat('You reclaimed %s, %s in %s (+1 per %s)' %
+                           (x, y, gridlocale,
+                            int(self.protocol.territory_update_time * 512)))
+                            
             
     class TCProtocol(protocol):
 
@@ -44,15 +56,12 @@ def apply_script(protocol, connection, config):
         green_tc_held = 0
         blue_tc_held = 0
         current_line = 0
-        territory_update_time = config.get('territory_update_time', 10) / 512.
-        score_limit = config.get('score_limit', 25000)
+        territory_update_time = config.get('territory_update_time', 30) / 512.
+        score_limit = config.get('score_limit', 10000)
         tc_owner = array('i')
         for y in xrange(512):
             for x in xrange(512):
-                if x < 256:
-                    tc_owner.append(0)
-                else:
-                    tc_owner.append(1)
+                tc_owner.append(-1)
 
         def __init__(self, config, map):
             result = protocol.__init__(self, config, map)
@@ -127,10 +136,7 @@ def apply_script(protocol, connection, config):
             self.tc_owner = array('i')
             for y in xrange(512):
                 for x in xrange(512):
-                    if x < 256:
-                        self.tc_owner.append(0)
-                    else:
-                        self.tc_owner.append(1)
+                    self.tc_owner.append(-1)
 
         def get_owner(self, x, y):
             owner = self.tc_owner[x + y * 512]

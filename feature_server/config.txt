@@ -95,6 +95,7 @@
         "melee",
         "squad",
         "disco",
+        "tc",
         "savemap"
     ],
     
