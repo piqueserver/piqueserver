@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from pyspades.constants import *
+
 class InvalidPlayer(Exception):
     pass
 
@@ -647,6 +649,18 @@ def fog(connection, r, g, b):
     g = int(g)
     b = int(b)
     connection.protocol.set_fog_color((r, g, b))
+
+def weapon(connection, value):
+    player = get_player(connection.protocol, value)
+    if player.weapon == SEMI_WEAPON:
+        weapon = 'Rifle'
+    elif player.weapon == SMG_WEAPON:
+        weapon = 'SMG'
+    elif player.weapon == SHOTGUN_WEAPON:
+        weapon = 'Shotgun'
+    else:
+        weapon = '(unknown)'
+    return '%s has a %s.' % (player.name, weapon)
     
 command_list = [
     help,
@@ -692,7 +706,8 @@ command_list = [
     toggle_master,
     change_map,
     server_name,
-    ping
+    ping,
+    weapon
 ]
 
 commands = {}

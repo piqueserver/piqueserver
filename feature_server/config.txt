@@ -94,8 +94,11 @@
         "airstrike",
         "melee",
         "squad",
-        "disco"
+        "disco",
+        "savemap"
     ],
+    
+    "load_saved_map" : false,
     
     "statistics" : {
         "host" : "localhost",
@@ -108,5 +111,6 @@
         "mat^2" : "The very likeable mat^2 has entered!"
     },
     "rollback_on_game_end" : false,
+    
     "melee_damage" : 20
 }

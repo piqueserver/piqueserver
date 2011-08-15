@@ -28,7 +28,6 @@ cpdef tuple get_color_tuple(int color):
 cdef inline int make_color(int r, int g, int b, a):
     return b | (g << 8) | (r << 16) | (<int>((a / 255.0) * 128) << 24)
 
-import random
 import time
 
 cdef inline int get_z(int x, int y, MapData * map, int start = 0):

@@ -118,7 +118,7 @@ class ServerConnection(BaseConnection):
                 self.auth_val = loader.auth_val
                 self.saved_loaders = []
                 self.connection_id = self.protocol.connection_ids.pop()
-                self.unique = random.randint(0, 3)
+                self.unique = loader.value & 3
                 connection_response = ConnectionResponse()
                 connection_response.auth_val = loader.auth_val
                 connection_response.unique = self.unique
@@ -151,6 +151,7 @@ class ServerConnection(BaseConnection):
                             return
                         self.weapon = contained.weapon
                         self.kill()
+                        self.set_weapon(self.weapon)
                         return
                     old_team = self.team
                     team = [self.protocol.blue_team, 
@@ -405,6 +406,8 @@ class ServerConnection(BaseConnection):
         self.send_contained(intel_action)
     
     def take_flag(self):
+        if not self.hp:
+            return
         flag = self.team.other.flag
         if flag.player is not None:
             return
@@ -527,7 +530,8 @@ class ServerConnection(BaseConnection):
                 return
         self.set_hp(self.hp - value, by)
     
-    def set_hp(self, value, hit_by = None, not_fall = True):
+    def set_hp(self, value, hit_by = None, not_fall = True, 
+               hit_indicator = None):
         value = int(value)
         self.hp = max(0, min(100, value))
         if self.hp <= 0:
@@ -535,6 +539,13 @@ class ServerConnection(BaseConnection):
             return
         hit_packet.hp = self.hp
         hit_packet.not_fall = not_fall
+        if hit_indicator is None:
+            if hit_by is not None and hit_by is not self:
+                hit_indicator = self.world_object.get_hit_direction(
+                    hit_by.world_object.position)
+            else:
+                hit_indicator = 0
+        hit_packet.hit_indicator = hit_indicator
         self.send_contained(hit_packet)
     
     def set_weapon(self, weapon = None, local = False):
@@ -663,7 +674,9 @@ class ServerConnection(BaseConnection):
                     continue
                 elif returned is not None:
                     damage = returned
-                player.set_hp(player.hp - damage, self)
+                indicator = player.world_object.get_hit_direction(position)
+                player.set_hp(player.hp - damage, self,
+                    hit_indicator = indicator)
         if self.on_block_destroy(x, y, z, GRENADE_DESTROY) == False:
             return
         map = self.protocol.map
