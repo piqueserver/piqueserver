@@ -118,7 +118,7 @@ class ServerConnection(BaseConnection):
                 self.auth_val = loader.auth_val
                 self.saved_loaders = []
                 self.connection_id = self.protocol.connection_ids.pop()
-                self.unique = (loader.value + 1) & 3
+                self.unique = loader.value & 3
                 connection_response = ConnectionResponse()
                 connection_response.auth_val = loader.auth_val
                 connection_response.unique = self.unique
