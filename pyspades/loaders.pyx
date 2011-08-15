@@ -68,14 +68,15 @@ cdef class Ack(PacketLoader):
 cdef class ConnectionRequest(PacketLoader):
     id = 2
     cdef public:
-        int value, value2
+        int value, outgoing_peer_id
         unsigned int auth_val, version
         bint client
 
     cpdef read(self, ByteReader reader):
-        cdef int outgoing_peer_id = reader.readShort(True)
+        cdef int outgoing_peer_id = reader.readShort(True) # usually 0, 1, 2, 3
         cdef int incoming_session_id = reader.readByte() # incoming session id
         cdef int outgoing_session_id = reader.readByte() # outgoing session id
+        # incoming/outgoing session IDs are always the same
         cdef unsigned int mtu = reader.readInt(True)
         cdef unsigned int window_size = reader.readInt(True)
         cdef unsigned int channel_count = reader.readInt(True)
@@ -103,7 +104,7 @@ cdef class ConnectionRequest(PacketLoader):
         check_default_int(throttle_deceleration, 2)
         self.auth_val = connect_id
         self.version = data
-        self.value2 = outgoing_peer_id
+        self.outgoing_peer_id = outgoing_peer_id
     
     cpdef write(self, ByteWriter reader):
         reader.writeShort(self.value2)
@@ -135,6 +136,7 @@ cdef class ConnectionResponse(PacketLoader):
         cdef int outgoing_peer_id = reader.readShort(True)
         cdef int incoming_session_id = reader.readByte(True)
         cdef int outgoing_session_id = reader.readByte(True)
+        # incoming/outgoing session IDs are always the same
         cdef unsigned int mtu = reader.readInt(True)
         cdef unsigned int window_size = reader.readInt(True)
         cdef unsigned int channel_count = reader.readInt(True)
