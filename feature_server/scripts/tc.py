@@ -23,6 +23,7 @@ def apply_script(protocol, connection, config):
             return connection.on_block_build(self, x, y, z)
 
         def on_block_removed(self, x, y, z):
+            # FIXME: we don't have an easy way to get the collapsed blocks, so collapsing doesn't take control :(
             self.do_control(x, y)
             return connection.on_block_removed(self, x, y, z)
             
@@ -44,7 +45,7 @@ def apply_script(protocol, connection, config):
         blue_tc_held = 0
         current_line = 0
         territory_update_time = config.get('territory_update_time', 10) / 512.
-        score_limit = config.get('score_limit', 5000)
+        score_limit = config.get('score_limit', 5)
         tc_owner = array('i')
         for y in xrange(512):
             for x in xrange(512):
@@ -157,9 +158,9 @@ def apply_script(protocol, connection, config):
             return protocol.on_game_end(self, player)
 
         def get_a_player(self, team):
-            if len(team.players)>0:
-                return list(team.players.values())[0]
-            else:
-                return None
+            for n in self.players.values():
+                if n.team is team:
+                    return n
+            return None
     
     return TCProtocol, TCConnection
