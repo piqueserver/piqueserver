@@ -593,6 +593,7 @@ def change_map(connection, value):
         protocol.block_info = None
     protocol.blue_team.initialize()
     protocol.green_team.initialize()
+    protocol.on_game_end(connection)
     protocol.update_entities()
     protocol.update_format()
 
