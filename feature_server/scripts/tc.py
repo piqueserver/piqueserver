@@ -23,29 +23,83 @@ def apply_script(protocol, connection, config):
             return connection.on_block_build(self, x, y, z)
 
         def on_block_removed(self, x, y, z):
+            # FIXME: we don't have an easy way to get the collapsed blocks, so collapsing doesn't take control :(
             self.do_control(x, y)
             return connection.on_block_removed(self, x, y, z)
+
+        def draw_cap_box(self, grid_x, grid_y, color):
+            pass # TODO: flesh out the drawing and make the box invincible
+            
+        def clear_cap_boxes(self):
+            pass # TODO: flesh out the drawing
             
         def do_control(self, x, y):
             if self.protocol.get_owner(x, y) is self.team:
                 pass
             else:
-                self.protocol.set_owner(x, y, self.team)
+                
+                grididx, old_green_held, old_blue_held = (
+                    self.protocol.set_owner(x, y, self.team)) 
                 gridlocale = 'ABCDEFGH'[x//64] + str((y//64)+1)
-                self.send_chat('You now control %s, %s in %s (+1)' %
-                               (x, y, gridlocale))    
+
+                nomans = (old_blue_held <
+                          self.protocol.min_blocks_to_capture and
+                          old_green_held <
+                          self.protocol.min_blocks_to_capture)
+
+                if self.team is self.protocol.green_team:
+                    my_owned = self.protocol.green_tc_held[grididx]
+                    other_owned = self.protocol.blue_tc_held[grididx]
+                    can_lose = (old_blue_held>=
+                        self.protocol.min_blocks_to_capture)
+                    can_cap = old_green_held<=old_blue_held or nomans
+                else:
+                    my_owned = self.protocol.blue_tc_held[grididx]
+                    other_owned = self.protocol.green_tc_held[grididx]
+                    can_lose = (old_green_held>=
+                        self.protocol.min_blocks_to_capture)
+                    can_cap = old_green_held>=old_blue_held or nomans
+
+                if (my_owned>other_owned and
+                    my_owned>=self.protocol.min_blocks_to_capture):
+                    if can_cap:                    
+                        if self.team is self.protocol.green_team:
+                            self.protocol.send_chat('GREEN has captured %s' %
+                                                    gridlocale)
+                            self.draw_cap_box(x//64,y//64,(0,255,0,255))
+                        else:
+                            self.protocol.send_chat('BLUE has captured %s' %
+                                                    gridlocale)
+                            self.draw_cap_box(x//64,y//64,(0,0,255,255))
+                    else:
+                        self.send_chat(
+                    'You own %s with %s blocks (Enemy: %s, %s min to cap)' %
+                           (gridlocale, my_owned, other_owned, 
+                            self.protocol.min_blocks_to_capture))
+                else:
+                    if (can_lose and
+                        other_owned<self.protocol.min_blocks_to_capture):
+                        self.protocol.send_chat('%s is NO-MANS-LAND!' %
+                                                gridlocale)                
+                    self.send_chat(
+                    'You now control %s blocks of %s (Enemy: %s, %s min to cap)' %
+                       (my_owned, gridlocale, other_owned, 
+                        self.protocol.min_blocks_to_capture))
             
     class TCProtocol(protocol):
 
         game_mode = 'tc'
         green_tc_score = 0
         blue_tc_score = 0
-        current_line = 0
-        territory_update_time = config.get('territory_update_time', 10) / 512.
-        score_limit = config.get('score_limit', 1000000)
+        green_tc_held = [0 for n in xrange(8*8)]
+        blue_tc_held = [0 for n in xrange(8*8)]
+        territory_update_time = config.get('territory_update_time', 30)
+        score_limit = config.get('score_limit', 100)
+        min_blocks_to_capture = config.get('min_blocks_to_capture', 10)
         tc_owner = array('i')
-        for n in xrange(512*512):
-            tc_owner.append(-1)
+        for y in xrange(512):
+            for x in xrange(512):
+                tc_owner.append(-1)
 
         def __init__(self, config, map):
             result = protocol.__init__(self, config, map)
@@ -55,16 +109,15 @@ def apply_script(protocol, connection, config):
             return result
 
         def update_tc_score(self):
-            idx = self.current_line * 512
-            for x in xrange(idx, idx+512):
-                if self.tc_owner[x] == 0:
+            for cell in xrange(len(self.blue_tc_held)):
+                if (self.blue_tc_held[cell]>self.green_tc_held[cell] and
+                    self.blue_tc_held[cell]>self.min_blocks_to_capture):
                     self.blue_tc_score += 1
-                elif self.tc_owner[x] == 1:
+                elif (self.blue_tc_held[cell]<self.green_tc_held[cell] and
+                    self.green_tc_held[cell]>self.min_blocks_to_capture):
                     self.green_tc_score += 1
-            self.current_line = (self.current_line + 1) % 512
-            if self.current_line == 0:
-                if not self.check_end_game():
-                    self.send_chat(self.get_tc_score())
+            if not self.check_end_game():
+                self.send_chat(self.get_tc_score())
     
         def get_tc_score(self):
             g_score = self.green_tc_score
@@ -111,10 +164,10 @@ def apply_script(protocol, connection, config):
             return False
 
         def reset_ownership(self):
-            self.current_line = 0
             self.tc_owner = array('i')
-            for n in xrange(512*512):
-                self.tc_owner.append(-1)
+            for y in xrange(512):
+                for x in xrange(512):
+                    self.tc_owner.append(-1)
 
         def get_owner(self, x, y):
             owner = self.tc_owner[x + y * 512]
@@ -126,23 +179,43 @@ def apply_script(protocol, connection, config):
                 return self.green_team
    
         def set_owner(self, x, y, team):
+            lastowner = self.tc_owner[x + y * 512]
+
+            gridx = x//64
+            gridy = y//64
+            grididx = gridx + gridy * 8
+
+            old_green_held = self.green_tc_held[grididx]
+            old_blue_held = self.blue_tc_held[grididx]
+            
+            if lastowner == 1:
+                self.green_tc_held[grididx]-=1
+            elif lastowner == 0:
+                self.blue_tc_held[grididx]-=1
+            
             if team is self.green_team:
                 self.tc_owner[x + y * 512] = 1
+                self.green_tc_held[grididx]+=1                
             elif team is self.blue_team:
                 self.tc_owner[x + y * 512] = 0
+                self.blue_tc_held[grididx]+=1
             else:
                 self.tc_owner[x + y * 512] = -1
+            return grididx, old_green_held, old_blue_held
 
         def on_game_end(self, player):
             self.green_tc_score = 0
             self.blue_tc_score = 0
+            green_tc_held = [0 for n in xrange(8*8)]
+            blue_tc_held = [0 for n in xrange(8*8)]
             self.reset_ownership()
+            player.clear_cap_boxes()
             return protocol.on_game_end(self, player)
 
         def get_a_player(self, team):
-            if len(team.players)>0:
-                return list(team.players.values())[0]
-            else:
-                return None
+            for n in self.players.values():
+                if n.team is team:
+                    return n
+            return None
     
     return TCProtocol, TCConnection
