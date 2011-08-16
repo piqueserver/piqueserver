@@ -16,7 +16,7 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from twisted.internet import reactor
-from twisted.web import static, server
+from twisted.web import server
 from twisted.web.resource import Resource
 from string import Template
 import Image

@@ -21,15 +21,13 @@ import os
 args = sys.argv[1:]
 
 if len(args) not in (1, 2):
-    raise SystemExit('usage: %s <output html path> [stats pass]' % sys.argv[0])
+    raise SystemExit('usage: %s <port> [stats pass]' % sys.argv[0])
 
-path = args[0]
+port = int(args[0])
 if len(args) == 2:
     stats_pass = args[1]
 else:
     stats_pass = None
-OUTPUT = os.path.join(path, 'index.html')
-PYSPADES_LIST_FILE = os.path.join(path, 'list')
 
 sys.path.append('..')
 
@@ -37,17 +35,18 @@ from twisted.internet import reactor
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet.defer import Deferred
 from twisted.internet.task import LoopingCall
+from twisted.web.client import getPage
+from twisted.web import static, server
+from twisted.web.resource import Resource
 from pyspades.site import get_servers
 from pyspades.tools import make_server_number
 import json
 import jinja2
+import urllib
 
 UPDATE_INTERVAL = 10
 PYSPADES_TIMEOUT = 2
 INPUT = 'in.html'
-
-import urllib
-from twisted.web.client import getPage
 
 SITE = 'http://ace-spades.com/forums/bb-login.php'
 
@@ -105,41 +104,35 @@ class SiteStatisticsFactory(StatsFactory):
                 'deaths' : 0
             }
         return self.users[key]
+
+    def get_highscores(self):
+        return sorted(self.users.iteritems(), 
+            key = lambda x: x[1]['kills'], reverse = True)
     
     def save(self):
         json.dump(self.users, open('users.txt', 'wb'))
 
 class QueryProtocol(DatagramProtocol):
     pyspades_set = None
-    statistics = None
+    saved_pyspades = None
     def startProtocol(self):
-        if stats_pass is not None:
-            self.statistics = SiteStatisticsFactory(stats_pass)
-            reactor.listenTCP(DEFAULT_PORT, self.statistics)
-        env = jinja2.Environment(loader = jinja2.PackageLoader('web'))
-        self.template = env.get_template(INPUT)
+        self.saved_pyspades = set()
+        self.pyspades_numbers = []
+        self.servers = []
         self.update()
     
-    def write_html(self, servers):
-        pyspades_set = self.pyspades_set or set()
-        pyspades_numbers = [str(make_server_number(item)) for item in
-            pyspades_set]
-        open(PYSPADES_LIST_FILE, 'wb').write('\n'.join(pyspades_numbers))
-        data = str(self.template.render(protocol = self, servers = servers,
-            has_pyspades = pyspades_set, 
-            make_server_number = make_server_number))
-        open(OUTPUT, 'wb').write(data)
+    def save(self, servers):
+        self.saved_pyspades = self.pyspades_set or set()
+        self.pyspades_numbers = [str(make_server_number(item)) for item in
+            self.saved_pyspades]
+        self.servers = servers
         self.pyspades_set = None
-    
-    def get_highscores(self):
-        return sorted(self.statistics.users.iteritems(), 
-            key = lambda x: x[1]['kills'], reverse = True)
     
     def got_servers(self, servers):
         self.pyspades_set = set()
         for server in servers:
             self.transport.write('HELLO', (server.ip, 32887))
-        reactor.callLater(PYSPADES_TIMEOUT, self.write_html, servers)
+        reactor.callLater(PYSPADES_TIMEOUT, self.save, servers)
     
     def update(self):
         get_servers().addCallback(self.got_servers)
@@ -149,7 +142,45 @@ class QueryProtocol(DatagramProtocol):
         if self.pyspades_set is None or data != 'HI':
             return
         self.pyspades_set.add(address[0])
+
+class MainResource(Resource):
+    def __init__(self, root):
+        self.query = QueryProtocol()
+        reactor.listenUDP(0, self.query)
+        if stats_pass is not None:
+            self.statistics = SiteStatisticsFactory(stats_pass)
+            reactor.listenTCP(DEFAULT_PORT, self.statistics)
+        env = jinja2.Environment(loader = jinja2.PackageLoader('web'),
+            autoescape = True)
+        self.template = env.get_template(INPUT)
+        Resource.__init__(self)
     
-reactor.listenUDP(0, QueryProtocol())
+    def render_GET(self, request):
+        query = self.query
+        data = str(self.template.render(
+            protocol = query, 
+            servers = query.servers,
+            has_pyspades = query.saved_pyspades, 
+            make_server_number = make_server_number,
+            statistics = self.statistics)
+        )
+        return data
+        
+class CommonResource(Resource):
+    def __init__(self, main):
+        self.main = main
+        Resource.__init__(self)
+
+class ListResource(CommonResource):
+    def render_GET(self, request):
+        return '\n'.join(self.main.query.pyspades_numbers)
+
+root = Resource()
+main = MainResource(root)
+root.putChild('', main)
+root.putChild('list', ListResource(main))
+root.putChild('style.css', static.File('style.css'))
+site = server.Site(root)
+reactor.listenTCP(port, site)
 
 reactor.run()

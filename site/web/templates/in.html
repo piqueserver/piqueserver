@@ -36,11 +36,11 @@
 {% endfor %}
 </tbody>
 </table>
-{{(has_pyspades|length * 100.0 / servers|length)|int}}% of servers are using pyspades.
+{{(has_pyspades|length * 100.0 / (servers|length or 1))|int}}% of servers are using pyspades.
 </br>
 </br>
 Certified servers:
-{% for server in protocol.statistics.connections %}
+{% for server in statistics.connections %}
     </br><a href="aos://{{make_server_number(server.transport.getPeer().host)}}">{{server.name}}</a>
 {% endfor %}
 </br>
@@ -54,7 +54,7 @@ Top 20 highscore list:
 <td>deaths</td>
 <td>ratio</td>
 </tr>
-{% for player in protocol.get_highscores()[:20] %}
+{% for player in statistics.get_highscores()[:20] %}
     <tr>
     <td>{{player[1]['name']}}</td>
     <td>{{player[1]['kills']}}</td>
