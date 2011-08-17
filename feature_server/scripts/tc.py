@@ -38,8 +38,17 @@ def apply_script(protocol, connection, config):
             ystart = grid_y * 64 + 2
             yend = ystart + 6
             oldcol = set_color.value
+
+            # assign different fake players to different teams:
+            
+            if color[1] == 255:
+                player_id = 32
+            else:
+                player_id = 33
+                
             set_color.value = make_color(*color)
-            set_color.player_id = 32
+            set_color.player_id = player_id
+            set_color.fog = False
             self.protocol.send_contained(set_color,
                                          save = True)
             if self.protocol.god_blocks is None:
@@ -51,7 +60,7 @@ def apply_script(protocol, connection, config):
                         block_action.x = x
                         block_action.y = y
                         block_action.z = 0
-                        block_action.player_id = 32
+                        block_action.player_id = player_id
                         self.protocol.send_contained(block_action,
                                                      save = True)
                         self.protocol.map.set_point(x, y, 0, color + (255,),
