@@ -188,10 +188,10 @@ def apply_script(protocol, connection, config):
             b_add = 0
             for cell in xrange(len(self.blue_tc_held)):
                 if (self.blue_tc_held[cell]>self.green_tc_held[cell] and
-                    self.blue_tc_held[cell]>self.min_blocks_to_capture):
+                    self.blue_tc_held[cell]>=self.min_blocks_to_capture):
                     b_add += 1
                 elif (self.blue_tc_held[cell]<self.green_tc_held[cell] and
-                    self.green_tc_held[cell]>self.min_blocks_to_capture):
+                    self.green_tc_held[cell]>=self.min_blocks_to_capture):
                     g_add += 1
             if g_add>b_add:
                 self.green_tc_score+=g_add-b_add
