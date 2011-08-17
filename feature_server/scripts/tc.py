@@ -33,19 +33,20 @@ def apply_script(protocol, connection, config):
 
         def draw_cap_box(self, grid_x, grid_y, color):
             block_action.value = BUILD_BLOCK
-            xstart = grid_x * 64 + 2
-            xend = xstart + 6
-            ystart = grid_y * 64 + 2
-            yend = ystart + 6
-            oldcol = set_color.value
 
             # assign different fake players to different teams:
             
             if color[1] == 255:
                 player_id = 32
+                xstart = grid_x * 64 + 57
             else:
                 player_id = 33
+                xstart = grid_x * 64 + 2
                 
+            xend = xstart + 6
+            ystart = grid_y * 64 + 2
+            yend = ystart + 6
+            
             set_color.value = make_color(*color)
             set_color.player_id = player_id
             set_color.fog = False
@@ -71,6 +72,7 @@ def apply_script(protocol, connection, config):
 
         def clear_cap_box(self, grid_x, grid_y):
             block_action.value = DESTROY_BLOCK
+            cell = grid_x + grid_y * 8
             xstart = grid_x * 64 + 2
             xend = xstart + 6
             ystart = grid_y * 64 + 2
@@ -79,6 +81,7 @@ def apply_script(protocol, connection, config):
                 for y in xrange(ystart, yend):
                     if (x == xstart or x == xend - 1 or
                         y == ystart or y == yend - 1):
+                        # left
                         block_action.x = x
                         block_action.y = y
                         block_action.z = 0
@@ -86,6 +89,15 @@ def apply_script(protocol, connection, config):
                         self.protocol.send_contained(block_action,
                                                      save = True)
                         self.protocol.map.remove_point(x, y, 0,
+                            user = False)
+                        # right
+                        block_action.x = x + 55
+                        block_action.y = y
+                        block_action.z = 0
+                        block_action.player_id = 32
+                        self.protocol.send_contained(block_action,
+                                                     save = True)
+                        self.protocol.map.remove_point(x + 55, y, 0,
                             user = False)
             
         def clear_cap_boxes(self):
