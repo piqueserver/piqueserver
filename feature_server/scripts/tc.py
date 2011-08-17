@@ -16,11 +16,13 @@ def apply_script(protocol, connection, config):
     class TCConnection(connection):
     
         def on_spawn(self, pos):
-            self.send_chat(self.explain_game_mode())
+            for n in self.explain_game_mode():
+                self.send_chat(n)
             return connection.on_spawn(self, pos)
 
         def explain_game_mode(self):
-            return ("Territory Control: Creating or destroying blocks CONTROLS the position and earns points.")
+            return ["Sector owners are shown on the map as squares of your team's color."
+                    "Territory Control: Build or break to capture sectors. Each sector is worth 1pt."]
 
         def on_block_build(self, x, y, z):
             self.do_control(x, y)
@@ -147,7 +149,7 @@ def apply_script(protocol, connection, config):
                             self.draw_cap_box(x//64,y//64,(0,0,255))
                     else:
                         self.send_chat(
-                    'You own %s with %s blocks (Enemy: %s, %s blocks to cap)' %
+                    'You own %s with %s blocks (Enemy: %s, %s blocks cap minimum)' %
                            (gridlocale, my_owned, other_owned, 
                             self.protocol.min_blocks_to_capture))
                 else:
@@ -157,7 +159,7 @@ def apply_script(protocol, connection, config):
                         self.protocol.send_chat('%s is NO-MANS-LAND!' %
                                                 gridlocale)                
                     self.send_chat(
-                    'You now control %s blocks of %s (Enemy: %s, %s blocks to cap)' %
+                    'You now control %s blocks of %s (Enemy: %s, %s blocks cap minimum)' %
                        (my_owned, gridlocale, other_owned, 
                         self.protocol.min_blocks_to_capture))
             
