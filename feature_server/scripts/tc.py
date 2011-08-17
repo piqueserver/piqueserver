@@ -126,10 +126,12 @@ def apply_script(protocol, connection, config):
                         if self.team is self.protocol.green_team:
                             self.protocol.send_chat('GREEN has captured %s' %
                                                     gridlocale)
+                            self.clear_cap_box(x//64,y//64)
                             self.draw_cap_box(x//64,y//64,(0,255,0))
                         else:
                             self.protocol.send_chat('BLUE has captured %s' %
                                                     gridlocale)
+                            self.clear_cap_box(x//64,y//64)
                             self.draw_cap_box(x//64,y//64,(0,0,255))
                     else:
                         self.send_chat(
