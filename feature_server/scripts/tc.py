@@ -39,7 +39,7 @@ def apply_script(protocol, connection, config):
             yend = ystart + 6
             oldcol = set_color.value
             set_color.value = make_color(*color)
-            set_color.player_id = self.player_id
+            set_color.player_id = 32
             self.protocol.send_contained(set_color,
                                          save = True)
             if self.protocol.god_blocks is None:
@@ -51,14 +51,12 @@ def apply_script(protocol, connection, config):
                         block_action.x = x
                         block_action.y = y
                         block_action.z = 0
-                        block_action.player_id = self.player_id
+                        block_action.player_id = 32
                         self.protocol.send_contained(block_action,
                                                      save = True)
                         self.protocol.map.set_point(x, y, 0, color + (255,),
                             user = False)
                         self.protocol.god_blocks.add((x, y, 0))
-            set_color.value = oldcol
-            set_color.player_id = self.player_id
             self.protocol.send_contained(set_color,
                                          save = True)
 
@@ -75,7 +73,7 @@ def apply_script(protocol, connection, config):
                         block_action.x = x
                         block_action.y = y
                         block_action.z = 0
-                        block_action.player_id = self.player_id
+                        block_action.player_id = 32
                         self.protocol.send_contained(block_action,
                                                      save = True)
                         self.protocol.map.remove_point(x, y, 0,
@@ -136,7 +134,7 @@ def apply_script(protocol, connection, config):
                         self.protocol.send_chat('%s is NO-MANS-LAND!' %
                                                 gridlocale)                
                     self.send_chat(
-                    'You now control %s blocks of %s (Enemy: %s, %s min to cap)' %
+                    'You now control %s blocks of %s (Enemy: %s, %s blocks to cap)' %
                        (my_owned, gridlocale, other_owned, 
                         self.protocol.min_blocks_to_capture))
             
