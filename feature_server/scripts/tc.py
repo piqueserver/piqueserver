@@ -184,13 +184,26 @@ def apply_script(protocol, connection, config):
             return result
 
         def update_tc_score(self):
+            g_add = 0
+            b_add = 0
             for cell in xrange(len(self.blue_tc_held)):
                 if (self.blue_tc_held[cell]>self.green_tc_held[cell] and
                     self.blue_tc_held[cell]>self.min_blocks_to_capture):
-                    self.blue_tc_score += 1
+                    b_add += 1
                 elif (self.blue_tc_held[cell]<self.green_tc_held[cell] and
                     self.green_tc_held[cell]>self.min_blocks_to_capture):
-                    self.green_tc_score += 1
+                    g_add += 1
+            if g_add>b_add:
+                self.green_tc_score+=g_add-b_add
+                self.send_chat('Green gains %s point(s) (%s sector(s) to %s)' %
+                               (g_add-b_add, g_add, b_add))
+            elif b_add>g_add:
+                self.blue_tc_score+=b_add-g_add
+                self.send_chat('Blue gains %s point(s) (%s sector(s) to %s)' %
+                               (b_add-g_add, b_add, g_add))
+            else:
+                self.send_chat('Both teams even at %s sectors' %
+                               g_add)
             if not self.check_end_game():
                 self.send_chat(self.get_tc_score())
     
