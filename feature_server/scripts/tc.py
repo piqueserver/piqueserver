@@ -206,8 +206,8 @@ def apply_script(protocol, connection, config):
         def on_game_end(self, player):
             self.green_tc_score = 0
             self.blue_tc_score = 0
-            green_tc_held = [0 for n in xrange(8*8)]
-            blue_tc_held = [0 for n in xrange(8*8)]
+            self.green_tc_held = [0 for n in xrange(8*8)]
+            self.blue_tc_held = [0 for n in xrange(8*8)]
             self.reset_ownership()
             player.clear_cap_boxes()
             return protocol.on_game_end(self, player)
