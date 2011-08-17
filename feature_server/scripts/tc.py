@@ -2,6 +2,10 @@ from commands import add
 from twisted.internet.task import LoopingCall
 from array import array
 
+from pyspades.server import block_action, set_color
+from pyspades.common import make_color
+from pyspades.constants import *
+
 def score(connection):
     return connection.protocol.get_tc_score()
 
@@ -28,10 +32,59 @@ def apply_script(protocol, connection, config):
             return connection.on_block_removed(self, x, y, z)
 
         def draw_cap_box(self, grid_x, grid_y, color):
-            pass # TODO: flesh out the drawing and make the box invincible
+            block_action.value = BUILD_BLOCK
+            xstart = grid_x * 64 + 2
+            xend = xstart + 6
+            ystart = grid_y * 64 + 2
+            yend = ystart + 6
+            oldcol = set_color.value
+            set_color.value = make_color(*color)
+            set_color.player_id = self.player_id
+            self.protocol.send_contained(set_color,
+                                         save = True)
+            if self.protocol.god_blocks is None:
+                self.protocol.god_blocks = set()
+            for x in xrange(xstart, xend):
+                for y in xrange(ystart, yend):
+                    if (x == xstart or x == xend - 1 or
+                        y == ystart or y == yend - 1):
+                        block_action.x = x
+                        block_action.y = y
+                        block_action.z = 0
+                        block_action.player_id = self.player_id
+                        self.protocol.send_contained(block_action,
+                                                     save = True)
+                        self.protocol.map.set_point(x, y, 0, color + (255,),
+                            user = False)
+                        self.protocol.god_blocks.add((x, y, 0))
+            set_color.value = oldcol
+            set_color.player_id = self.player_id
+            self.protocol.send_contained(set_color,
+                                         save = True)
+
+        def clear_cap_box(self, grid_x, grid_y):
+            block_action.value = DESTROY_BLOCK
+            xstart = grid_x * 64 + 2
+            xend = xstart + 6
+            ystart = grid_y * 64 + 2
+            yend = ystart + 6
+            for x in xrange(xstart, xend):
+                for y in xrange(ystart, yend):
+                    if (x == xstart or x == xend - 1 or
+                        y == ystart or y == yend - 1):
+                        block_action.x = x
+                        block_action.y = y
+                        block_action.z = 0
+                        block_action.player_id = self.player_id
+                        self.protocol.send_contained(block_action,
+                                                     save = True)
+                        self.protocol.map.remove_point(x, y, 0,
+                            user = False)
             
         def clear_cap_boxes(self):
-            pass # TODO: flesh out the drawing
+            for x in xrange(0, 8):
+                for y in xrange(0, 8):
+                    self.clear_cap_box(x, y)
             
         def do_control(self, x, y):
             if self.protocol.get_owner(x, y) is self.team:
@@ -66,11 +119,11 @@ def apply_script(protocol, connection, config):
                         if self.team is self.protocol.green_team:
                             self.protocol.send_chat('GREEN has captured %s' %
                                                     gridlocale)
-                            self.draw_cap_box(x//64,y//64,(0,255,0,255))
+                            self.draw_cap_box(x//64,y//64,(0,255,0))
                         else:
                             self.protocol.send_chat('BLUE has captured %s' %
                                                     gridlocale)
-                            self.draw_cap_box(x//64,y//64,(0,0,255,255))
+                            self.draw_cap_box(x//64,y//64,(0,0,255))
                     else:
                         self.send_chat(
                     'You own %s with %s blocks (Enemy: %s, %s min to cap)' %
@@ -79,6 +132,7 @@ def apply_script(protocol, connection, config):
                 else:
                     if (can_lose and
                         other_owned<self.protocol.min_blocks_to_capture):
+                        self.clear_cap_box(x//64,y//64)
                         self.protocol.send_chat('%s is NO-MANS-LAND!' %
                                                 gridlocale)                
                     self.send_chat(
