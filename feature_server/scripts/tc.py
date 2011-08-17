@@ -147,7 +147,7 @@ def apply_script(protocol, connection, config):
                             self.draw_cap_box(x//64,y//64,(0,0,255))
                     else:
                         self.send_chat(
-                    'You own %s with %s blocks (Enemy: %s, %s min to cap)' %
+                    'You own %s with %s blocks (Enemy: %s, %s blocks to cap)' %
                            (gridlocale, my_owned, other_owned, 
                             self.protocol.min_blocks_to_capture))
                 else:
