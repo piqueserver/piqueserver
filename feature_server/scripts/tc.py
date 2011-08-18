@@ -92,6 +92,8 @@ def apply_script(protocol, connection, config):
                     other_owned = self.protocol.blue_tc_held[grididx]
                     own_turf = x//64 >= 4
                     other_advantage = old_green_held<=old_blue_held
+                    was_under_min = (old_green_held <
+                                     self.protocol.min_blocks_to_capture)
                     other_was_min = (old_blue_held >=
                                  self.protocol.min_blocks_to_capture)
                 else:
