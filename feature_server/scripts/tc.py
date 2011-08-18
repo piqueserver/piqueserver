@@ -248,22 +248,17 @@ def apply_script(protocol, connection, config):
             b_score = self.blue_tc_score
             diff = g_score - b_score
             if g_score>b_score:
-                return ("Green leads %s-%s (+%s, %s left). Playing to %s points." %
+                return ("Green leads %s-%s. Playing to %s points." %
                         (g_score, b_score,
-                        diff,
-                        self.score_limit - g_score,
                         self.score_limit))
             elif g_score<b_score:
-                return ("Blue leads %s-%s (+%s, %s left). Playing to %s points." %
+                return ("Blue leads %s-%s. Playing to %s points." %
                         (b_score, g_score,
-                        -diff,
-                        self.score_limit - b_score,
                         self.score_limit))
             else:
-                return ("%s-%s, %s left. Playing to %s points." %
+                return ("%s-%s. Playing to %s points." %
                         (g_score,
                          b_score,
-                        self.score_limit - g_score,
                         self.score_limit))
         
         def check_end_game(self):
