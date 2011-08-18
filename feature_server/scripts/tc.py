@@ -1,19 +1,31 @@
 from commands import add
-from twisted.internet.task import LoopingCall
 from array import array
 
 from pyspades.server import block_action, set_color
 from pyspades.common import make_color
 from pyspades.constants import *
 
+from twisted.internet.task import LoopingCall
+from twisted.internet import reactor
+
 def score(connection):
-    return connection.protocol.get_tc_score()
+    connection.send_chat(connection.protocol.get_tc_score())
+    g_add, b_add = connection.protocol.compute_tc_score()
+    if connection.team is connection.protocol.green_team:
+        return ('You control %s sector(s), Blue controls %s sector(s).' %
+          (g_add, b_add))
+    else:
+        return ('You control %s sector(s), Green controls %s sector(s).' %
+          (b_add, g_add))
+    
 
 add(score)
 
 def apply_script(protocol, connection, config):
     
     class TCConnection(connection):
+
+        control_squelch = None       
     
         def on_spawn(self, pos):
             for n in self.explain_game_mode():
@@ -21,8 +33,8 @@ def apply_script(protocol, connection, config):
             return connection.on_spawn(self, pos)
 
         def explain_game_mode(self):
-            return ["Sector owners are shown on the map as squares of your team's color."
-                    "Territory Control: Build or break to capture sectors. Each sector is worth 1pt."]
+            return ["Sector owners are shown on the map as squares of your team's color.",
+                    "Build or break to capture sectors. Each sector is worth 1pt."]
 
         def on_block_build(self, x, y, z):
             self.do_control(x, y)
@@ -148,20 +160,38 @@ def apply_script(protocol, connection, config):
                             self.clear_cap_box(x//64,y//64)
                             self.draw_cap_box(x//64,y//64,(0,0,255))
                     else:
-                        self.send_chat(
-                    'You own %s with %s blocks (Enemy: %s, %s blocks cap minimum)' %
-                           (gridlocale, my_owned, other_owned, 
-                            self.protocol.min_blocks_to_capture))
+                        self.squelch_chat('owner', gridlocale, my_owned,
+                                          other_owned)
                 else:
                     if (can_lose and
                         other_owned<self.protocol.min_blocks_to_capture):
                         self.clear_cap_box(x//64,y//64)
                         self.protocol.send_chat('%s is NO-MANS-LAND!' %
-                                                gridlocale)                
+                                                gridlocale)
+                    self.squelch_chat('attacker', gridlocale, my_owned,
+                                      other_owned)
+                   
+        def squelch_chat(self, style, gridlocale, my_owned, other_owned):
+            """Only send a chat message if some time has passed or the player
+                changed to a new grid location since the last block action."""
+            if self.control_squelch is None or (
+                self.control_squelch['gridlocale'] != gridlocale or
+                self.control_squelch['time'] <= reactor.seconds()):
+                if style == 'owner':                
                     self.send_chat(
-                    'You now control %s blocks of %s (Enemy: %s, %s blocks cap minimum)' %
-                       (my_owned, gridlocale, other_owned, 
-                        self.protocol.min_blocks_to_capture))
+                    'You own %s with %s blocks (Enemy: %s)' %
+                   (gridlocale, my_owned, other_owned))
+                elif style == 'attacker':
+                    if my_owned > self.protocol.min_blocks_to_capture:
+                        self.send_chat(
+                        'You now control %s blocks of %s (Enemy: %s)' %
+                        (my_owned, gridlocale, other_owned))
+                    else:
+                        self.send_chat(
+                        'You now control %s blocks of %s (%s blocks to cap)' %
+                    (my_owned, gridlocale, self.protocol.min_blocks_to_capture))
+                self.control_squelch = { 'gridlocale' : gridlocale,
+                                     'time' : reactor.seconds() + 2}
             
     class TCProtocol(protocol):
 
@@ -185,7 +215,7 @@ def apply_script(protocol, connection, config):
             self.reset_ownership()
             return result
 
-        def update_tc_score(self):
+        def compute_tc_score(self):
             g_add = 0
             b_add = 0
             for cell in xrange(len(self.blue_tc_held)):
@@ -195,6 +225,10 @@ def apply_script(protocol, connection, config):
                 elif (self.blue_tc_held[cell]<self.green_tc_held[cell] and
                     self.green_tc_held[cell]>=self.min_blocks_to_capture):
                     g_add += 1
+            return g_add, b_add
+        
+        def update_tc_score(self):
+            g_add, b_add = self.compute_tc_score()
             if g_add>b_add:
                 self.green_tc_score+=g_add-b_add
                 self.send_chat('Green gains %s point(s) (%s sector(s) to %s)' %
