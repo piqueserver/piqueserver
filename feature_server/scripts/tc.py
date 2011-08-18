@@ -229,17 +229,25 @@ def apply_script(protocol, connection, config):
         
         def update_tc_score(self):
             g_add, b_add = self.compute_tc_score()
+            gpos = 4 + (g_add - b_add)
+            if gpos < 0:
+                gpos = 0
+            if gpos > 8:
+                gpos = 8
+            graphic = ["<","-","-","-","-","-","-","-",">"]
+            graphic[gpos] = unichr(06)
+            graphic = "".join(graphic)
             if g_add>b_add:
                 self.green_tc_score+=g_add-b_add
-                self.send_chat('Green gains %s point(s) (%s sector(s) to %s)' %
-                               (g_add-b_add, g_add, b_add))
+                self.send_chat('Green advantage (+%s)   B %s %s %s G ' %
+                               (g_add-b_add, b_add, graphic, g_add))
             elif b_add>g_add:
                 self.blue_tc_score+=b_add-g_add
-                self.send_chat('Blue gains %s point(s) (%s sector(s) to %s)' %
-                               (b_add-g_add, b_add, g_add))
+                self.send_chat('Blue advantage (+%s)   B %s %s %s G' %
+                               (b_add-g_add, b_add, graphic, g_add))
             else:
-                self.send_chat('Both teams even at %s sectors' %
-                               g_add)
+                self.send_chat('No advantage   B %s %s %s G' %
+                               (b_add, graphic, g_add))
             if not self.check_end_game():
                 self.send_chat(self.get_tc_score())
     
