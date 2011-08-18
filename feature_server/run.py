@@ -28,6 +28,10 @@ try:
 except IOError, e:
     raise SystemExit('no config.txt file found')
 
+if len(sys.argv) > 1:
+    json_parameter = ' '.join(sys.argv[1:])
+    config.update(eval(json_parameter))
+
 profile = config.get('profile', False)
 iocp = config.get('iocp', True)
 

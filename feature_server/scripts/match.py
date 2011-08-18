@@ -45,6 +45,7 @@ def apply_script(protocol, connection, config):
     class MatchProtocol(protocol):
         timer_left = None
         timer_call = None
+        timer_end = None
         def __init__(self, *arg, **kw):
             protocol.__init__(self, *arg, **kw)
             self.messages = []
@@ -63,6 +64,7 @@ def apply_script(protocol, connection, config):
             if self.timer_call is not None:
                 self.timer_call.cancel()
                 self.send_chat('Timer stopped.')
+                self.timer_call = None
             else:
                 return 'No timer in progress.'
         
