@@ -56,7 +56,8 @@ def apply_script(protocol, connection, config):
         # rollback
         
         def start_rollback(self, connection, filename,
-                           start_x, start_y, end_x, end_y):
+                           start_x, start_y, end_x, end_y,
+                           ignore_indestructable = True):
             if self.rollback_in_progress:
                 return 'Rollback in progress.'
             if filename is None:
@@ -70,7 +71,7 @@ def apply_script(protocol, connection, config):
                 (connection.name if connection is not None else 'Map'))
             self.send_chat(message, irc = True)
             self.packet_generator = self.create_rollback_generator(self.map,
-                map, start_x, start_y, end_x, end_y)
+                map, start_x, start_y, end_x, end_y, ignore_indestructable)
             self.rollback_in_progress = True
             self.rollback_start_time = time.time()
             self.rollback_last_chat = self.rollback_start_time
@@ -123,7 +124,8 @@ def apply_script(protocol, connection, config):
                     float(time.time() - self.rollback_start_time))
         
         def create_rollback_generator(self, cur, new,
-                                      start_x, start_y, end_x, end_y):
+                                      start_x, start_y, end_x, end_y,
+                                      ignore_indestructable):
             surface = {}
             block_action = BlockAction()
             block_action.player_id = 32
@@ -145,8 +147,12 @@ def apply_script(protocol, connection, config):
                         cur_solid = cur.get_solid(x, y, z)
                         new_solid = new.get_solid(x, y, z)
                         if cur_solid and not new_solid:
-                            action = DESTROY_BLOCK
-                            cur.remove_point_unsafe(x, y, z)
+                            if (not ignore_indestructable and
+                                self.is_indestructable(x, y, z)):
+                                continue
+                            else:
+                                action = DESTROY_BLOCK
+                                cur.remove_point_unsafe(x, y, z)
                         elif new_solid:
                             new_is_surface = new.is_surface(x, y, z)
                             if new_is_surface:
@@ -191,6 +197,6 @@ def apply_script(protocol, connection, config):
         
         def on_game_end(self, player):
             if rollback_on_game_end:
-                self.start_rollback(None, None, 0, 0, 512, 512)
+                self.start_rollback(None, None, 0, 0, 512, 512, False)
         
     return RollbackProtocol, RollbackConnection
