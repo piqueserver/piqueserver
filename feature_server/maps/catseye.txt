@@ -1,0 +1,4 @@
+name = "Cat's Eye"
+version = '1.0'
+author = 'Triplefox'
+description = 'Conquer the island. For TC mode.'
