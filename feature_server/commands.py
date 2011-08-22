@@ -606,7 +606,10 @@ def server_name(connection, *arg):
     protocol.update_format()
     if protocol.master_connection is not None:
         protocol.master_connection.disconnect()
-    connection.protocol.irc_say("* Server name changed to '%s'" % name)
+    message = "Server name changed to '%s'" % name
+    connection.protocol.irc_say("* " + message)
+    if connection in connection.protocol.players:
+        return message
 
 @name('master')
 @admin
