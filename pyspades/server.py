@@ -880,7 +880,6 @@ class Team(object):
         self.name = name
         self.map = protocol.map
         self.players = protocol.players
-        x_offset = id * 384
         self.initialize()
     
     def get_players(self):
@@ -899,6 +898,7 @@ class Team(object):
         self.score = 0
         self.kills = 0
         self.spawns = spawns = []
+        x_offset = self.id * 384
         for x in xrange(x_offset, 128 + x_offset):
             for y in xrange(128, 384):
                 z = self.map.get_z(x, y)
