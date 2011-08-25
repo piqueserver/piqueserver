@@ -898,14 +898,14 @@ class Team(object):
     def initialize(self):
         self.score = 0
         self.kills = 0
-        self.set_flag()
-        self.set_base()
         self.spawns = spawns = []
         for x in xrange(x_offset, 128 + x_offset):
             for y in xrange(128, 384):
                 z = self.map.get_z(x, y)
                 if z < 63:
                     spawns.append((x, y))
+        self.set_flag()
+        self.set_base()
     
     def set_flag(self):
         self.flag = Flag(*self.get_random_location(True))
