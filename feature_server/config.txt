@@ -27,6 +27,7 @@
     "respawn_time" : 5,
     "squad_respawn_time" : 8,
     "squad_size" : 4,
+	"auto_squad" : true,
     "master" : true,
     "friendly_fire" : false,
     "grief_friendly_fire_time" : 2,
