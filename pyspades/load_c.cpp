@@ -253,7 +253,7 @@ void create_temp()
 {
    if (out_global == 0)
    {
-       out_global = (char *)malloc(8 * 1024 * 1024); // allocate 8 mb
+       out_global = (char *)malloc(10 * 1024 * 1024); // allocate 8 mb
    }
 }
 
