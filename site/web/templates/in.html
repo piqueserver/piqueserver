@@ -45,7 +45,11 @@ Certified servers:
 {% endfor %}
 </br>
 </br>
-Top 20 highscore list:
+Use /sitelogin &lt;forum name&gt; &lt;forum password&gt; on certified servers
+to enable highscores
+</br>
+</br>
+Highscores:
 <table>
 <tbody>
 <tr>
@@ -54,7 +58,7 @@ Top 20 highscore list:
 <td>deaths</td>
 <td>ratio</td>
 </tr>
-{% for player in statistics.get_highscores()[:20] %}
+{% for player in statistics.get_highscores() %}
     <tr>
     <td>{{player[1]['name']}}</td>
     <td>{{player[1]['kills']}}</td>
