@@ -4,6 +4,12 @@ from commands import add, rights, admin, name, get_player
 import commands
 import random
 
+SQUAD_NAMES = set([
+    'Alpha','Bravo','Charlie','Delta','Epsilon','Foxtrot','Gamma',
+   'Golf','Hotel','India','Juliet','Kilo','Lima','Mike',
+   'November','Oscar','Papa','Quebec','Romero','Sierra','Tango',
+   'Uniform','Victor','Whiskey','X-ray','Yankee','Zulu'])
+
 def follow(self, playerkey = None):
     
     if playerkey is None:
@@ -57,10 +63,16 @@ def apply_script(protocol, connection, config):
     protocol.squad_respawn_time = config.get('squad_respawn_time', 
         protocol.respawn_time)
     protocol.squad_size = config.get('squad_size', 0)
+    protocol.auto_squad = config.get('auto_squad', True)
     
     class SquadConnection(connection):
         squad = None
         squad_pref = None
+
+        def on_login(self, name):
+            if self.protocol.auto_squad:
+                self.join_squad(self.find_auto_squad(),None)
+            return connection.on_login(self, name)
         
         def get_squad(self, team, squadkey):
             result = {'name' : squadkey, 'players' : []}
@@ -97,6 +109,21 @@ def apply_script(protocol, connection, config):
                 result = 'Squad %s: ' % (squadkey)
             result+=', '.join([player.name for player in squadlist])
             return result
+
+        def find_auto_squad(self):
+            squad_dict = self.get_squads(self.team)
+            available = set()
+            unused = []
+            for name in SQUAD_NAMES:
+                if squad_dict.has_key(name):
+                    if len(squad_dict[name]) < self.protocol.squad_size:
+                        available.add(name)
+                else:
+                    unused.append(name)
+            if len(available) > 0:
+                return available.pop()
+            else:
+                return random.choice(unused)
 
         def join_squad(self, squad, squad_pref):
             
@@ -187,14 +214,29 @@ def apply_script(protocol, connection, config):
 
         def on_spawn(self, pos):
             if self.squad:
+                members = ([n for n in self.get_squad(self.team,
+                            self.squad)['players'] if n.hp and
+                            n is not self])
+                membernames = [m.name for m in members]
+                memberstr = ""
+                for n in xrange(len(membernames)):
+                    if n==0:
+                        memberstr+="%s" % membernames[n]
+                    elif n==len(membernames)-1:
+                        memberstr+=" and %s" % membernames[n]
+                    else:
+                        memberstr+=", %s" % membernames[n]
+                if len(members)>0:
+                    self.send_chat('You are in squad %s with %s.' %
+                                   (self.squad, memberstr))
+                else:
+                    self.send_chat('You are in squad %s, all alone.' %
+                                   self.squad)
                 if (self.squad_pref is not None and self.squad_pref.hp and
                     self.squad_pref.team is self.team):
                     self.set_location(self.get_follow_location(
                         self.squad_pref))
                 else:
-                    members = ([n for n in self.get_squad(self.team,
-                                self.squad)['players'] if n.hp and
-                                n is not self])
                     if len(members)>0:
                         self.set_location(self.get_follow_location(
                             random.choice(members)))
