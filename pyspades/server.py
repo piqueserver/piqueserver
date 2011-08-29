@@ -870,7 +870,7 @@ class Team(object):
     score = None
     flag = None
     other = None
-    map = None
+    protocol = None
     name = None
     spawns = None
     kills = None
@@ -878,7 +878,7 @@ class Team(object):
     def __init__(self, id, name, protocol):
         self.id = id
         self.name = name
-        self.map = protocol.map
+        self.protocol = protocol
         self.players = protocol.players
         self.initialize()
     
@@ -899,9 +899,10 @@ class Team(object):
         self.kills = 0
         self.spawns = spawns = []
         x_offset = self.id * 384
+        map = self.protocol.map
         for x in xrange(x_offset, 128 + x_offset):
             for y in xrange(128, 384):
-                z = self.map.get_z(x, y)
+                z = map.get_z(x, y)
                 if z < 63:
                     spawns.append((x, y))
         self.set_flag()
@@ -918,11 +919,11 @@ class Team(object):
     def get_random_location(self, force_land = False):
         if force_land and len(self.spawns) > 0:
             x, y = random.choice(self.spawns)
-            return (x, y, self.map.get_z(x, y))
+            return (x, y, self.protocol.map.get_z(x, y))
         x_offset = self.id * 384
         x = self.id * 384 + random.randrange(128)
         y = 128 + random.randrange(256)
-        z = self.map.get_z(x, y)
+        z = self.protocol.map.get_z(x, y)
         return x, y, z
 
 class ServerProtocol(DatagramProtocol):
