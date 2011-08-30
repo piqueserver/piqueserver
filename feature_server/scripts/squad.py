@@ -214,19 +214,25 @@ def apply_script(protocol, connection, config):
 
         def on_spawn(self, pos):
             if self.squad:
-                members = ([n for n in self.get_squad(self.team,
-                            self.squad)['players'] if n.hp and
+                all_members = ([n for n in self.get_squad(self.team,
+                            self.squad)['players'] if 
                             n is not self])
-                membernames = [m.name for m in members]
+                live_members = [n for n in all_members if n.hp]
+                membernames = [m.name for m in all_members]
                 memberstr = ""
-                for n in xrange(len(membernames)):
-                    if n==0:
-                        memberstr+="%s" % membernames[n]
-                    elif n==len(membernames)-1:
-                        memberstr+=" and %s" % membernames[n]
+                for n in xrange(len(all_members)):
+                    name = membernames[n]
+                    if not all_members[n].hp:
+                        name += " (DEAD)"
                     else:
-                        memberstr+=", %s" % membernames[n]
-                if len(members)>0:
+                        name += " (%s hp)" % all_members[n].hp
+                    if n==0:
+                        memberstr+="%s" % name
+                    elif n==len(membernames)-1:
+                        memberstr+=" and %s" % name
+                    else:
+                        memberstr+=", %s" % name
+                if len(all_members)>0:
                     self.send_chat('You are in squad %s with %s.' %
                                    (self.squad, memberstr))
                 else:
@@ -237,9 +243,9 @@ def apply_script(protocol, connection, config):
                     self.set_location(self.get_follow_location(
                         self.squad_pref))
                 else:
-                    if len(members)>0:
+                    if len(live_members)>0:
                         self.set_location(self.get_follow_location(
-                            random.choice(members)))
+                            random.choice(live_members)))
             return connection.on_spawn(self, pos)
 
         def on_kill(self, killer):
