@@ -817,7 +817,7 @@ class ServerConnection(BaseConnection):
     def on_grenade(self, time_left):
         pass
     
-    def on_grenade_thrown(self, grenade):
+    def on_grenade_thrown(self, grenade):        
         pass
     
     def on_block_build_attempt(self, x, y, z):
@@ -983,6 +983,8 @@ class ServerProtocol(DatagramProtocol):
         intel_action.game_end = True
         self.send_contained(intel_action, save = True)
 
+        for player in self.players.values():
+            player.hp = 0
         for player in self.players.values():
             if player.name is not None:
                 player.spawn()
