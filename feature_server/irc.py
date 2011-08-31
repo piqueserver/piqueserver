@@ -25,6 +25,14 @@ import random
 import string
 
 MAX_IRC_CHAT_SIZE = MAX_CHAT_SIZE * 2
+PRINTABLE_CHARACTERS = ('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP'
+                        'QRSTUVWXYZ!"#$%&\\\'()*+,-./:;<=>?@[\\]^_`{|}~ \t')
+
+def is_printable(value):
+    return value in PRINTABLE_CHARACTERS
+
+def filter_printable(value):
+    return filter(is_printable, value)
 
 def channel(func):
     def new_func(self, user, channel, *arg, **kw):
@@ -112,12 +120,16 @@ class IRCBot(irc.IRCClient):
         if user in self.voices:
             self.voices.remove(user)
     
-    def send(self, msg):
+    def send(self, msg, filter = False):
         msg = msg.encode('cp1252', 'replace')
+        if filter:
+            msg = filter_printable(msg)
         self.msg(self.factory.channel, msg)
     
-    def me(self, msg):
+    def me(self, msg, filter = False):
         msg = msg.encode('cp1252', 'replace')
+        if filter:
+            msg = filter_printable(msg)
         self.describe(self.factory.channel, msg)
 
 class IRCClientFactory(protocol.ClientFactory):
@@ -163,15 +175,15 @@ class IRCRelay(object):
         reactor.connectTCP(config.get('server'), config.get('port', 6667),
             self.factory)
     
-    def send(self, msg):
+    def send(self, *arg, **kw):
         if self.factory.bot is None:
             return
-        self.factory.bot.send(msg)
+        self.factory.bot.send(*arg, **kw)
     
-    def me(self, msg):
+    def me(self, *arg, **kw):
         if self.factory.bot is None:
             return
-        self.factory.bot.describe(msg)
+        self.factory.bot.describe(*arg, **kw)
 
 def colors(connection):
     if connection in connection.protocol.players:

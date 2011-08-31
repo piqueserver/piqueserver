@@ -598,7 +598,7 @@ class FeatureProtocol(ServerProtocol):
     
     def irc_say(self, msg):
         if self.irc_relay:
-            self.irc_relay.send(msg)
+            self.irc_relay.send(msg, filter = True)
             
     def send_tip(self):
         line = self.tips[random.randrange(len(self.tips))]
