@@ -67,8 +67,8 @@ cdef class Object:
     def initialize(self, *arg, **kw):
         pass
     
-    cdef void update(self, double dt):
-        pass
+    cdef int update(self, double dt) except -1:
+        return 0
     
     def delete(self):
         self.world.delete_object(self)
@@ -212,7 +212,7 @@ cdef class Grenade(Object):
             return 4096.0 / value
         return 0
     
-    cdef void update(self, double dt):
+    cdef int update(self, double dt) except -1:
         cdef VXLData map = self.world.map
         cdef Vertex3 position = self.position
         cdef Vertex3 acceleration = self.acceleration
@@ -222,7 +222,7 @@ cdef class Grenade(Object):
             if self.callback is not None:
                 self.callback(self)
             self.delete()
-            return
+            return 0
         acceleration.z += dt
         cdef double new_dt = dt * 32.0
         cdef double old_x, old_y, old_z
@@ -233,7 +233,7 @@ cdef class Grenade(Object):
         position.y += acceleration.y * new_dt
         position.z += acceleration.z * new_dt
         if not isvoxelsolid2(map, position.x, position.y, position.z):
-            return
+            return 0
         cdef bint collided = False
         if <int>old_z != <int>position.z:
             if ((<int>position.x == <int>old_x and <int>position.y == <int>old_y)
@@ -256,6 +256,7 @@ cdef class Grenade(Object):
         acceleration.x *= 0.3600000143051147
         acceleration.y *= 0.3600000143051147
         acceleration.z *= 0.3600000143051147
+        return 0
         
 cdef class Character(Object):
     cdef public:
@@ -323,7 +324,7 @@ cdef class Character(Object):
             self.orientation, self.acceleration, callback)
         return item
     
-    cpdef int get_hit_direction(self, Vertex3 position):
+    def get_hit_direction(self, Vertex3 position):
         # 0 = aligned
         # 1 = left
         # 2 = right
@@ -340,12 +341,22 @@ cdef class Character(Object):
             orientation.x * x +
             orientation.y * y
         )
-        cdef double r = 1.0 / cz
+        
+        cdef double r
+        if cz == 0.0:
+            r = 0
+        else:
+            r = 1.0 / cz
         
         cdef double xypow2 = orientation.y ** 2 + orientation.x ** 2
         
-        cdef double orienty_over_vecxy = -orientation.y / xypow2
-        cdef double orientx_over_vecxy = orientation.x / xypow2
+        cdef double orientx_over_vecxy, orienty_over_vecxy
+        
+        if xypow2 == 0.0:
+            orienty_over_vecxy = orientx_over_vecxy = 0
+        else:
+            orienty_over_vecxy = -orientation.y / xypow2
+            orientx_over_vecxy = orientation.x / xypow2
         
         cdef double cx = (
             orientx_over_vecxy * y +
@@ -391,9 +402,9 @@ cdef class Character(Object):
             else:
                 return 3
         
-    cdef void update(self, double dt):
+    cdef int update(self, double dt) except -1:
         if self.dead:
-            return
+            return 0
         cdef Vertex3 orientation = self.orientation
         cdef Vertex3 acceleration = self.acceleration
         if self.jump:
@@ -453,8 +464,9 @@ cdef class Character(Object):
             if old_acceleration > 0.4799999892711639:
                 if self.fall_callback is not None:
                     self.fall_callback(-27 - old_acceleration**3 * -256.0)
+        return 0
     
-    cdef void calculate_position(self, double dt):
+    cdef int calculate_position(self, double dt) except -1:
         cdef Vertex3 orientation = self.orientation
         cdef Vertex3 acceleration = self.acceleration
         cdef VXLData map = self.world.map
@@ -621,6 +633,7 @@ cdef class Character(Object):
         self.guess_z = position.z
         if v28 > -0.25:
             self.guess_z += (v28 + 0.25) * 4.0
+        return 0
 
 cdef class World(object):
     cdef public:

@@ -963,16 +963,8 @@ class ServerProtocol(DatagramProtocol):
     def update_world(self):
         self.world.update(UPDATE_FREQUENCY)
         self.on_world_update()
-        if self.winning_player:
-            self._reset_game()
-
-    def reset_game(self, player):
-        self.winning_player = player
     
-    def _reset_game(self):
-        player = self.winning_player        
-        self.winning_player = None
-        
+    def reset_game(self, player):
         blue_team = self.blue_team
         green_team = self.green_team
         blue_team.initialize()
