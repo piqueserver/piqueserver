@@ -29,9 +29,10 @@ def apply_script(protocol, connection, config):
             packets = [new_position, orientation_data, grenade_packet, old_position]
             if self.aux is None:
                 self.aux = self.find_aux_connection()
-            self.protocol.world.create_object(Grenade, fuse, Vertex3(x, y, z),
-                Vertex3(orientation_x, 0, 0), self.aux.world_object.acceleration,
-                self.grenade_exploded)
+            airstrike = self.protocol.world.create_object(Grenade, fuse, 
+                Vertex3(x, y, z), Vertex3(orientation_x, 0, 0), 
+                self.aux.world_object.acceleration, self.grenade_exploded)
+            airstrike.name = 'airstrike'
             if self.aux is not self:
                 for packet in packets:
                     self.protocol.send_contained(packet, sender = self)

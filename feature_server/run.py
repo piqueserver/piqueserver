@@ -122,6 +122,7 @@ class FeatureConnection(ServerConnection):
     last_chat = None
     chat_time = 0
     chat_count = 0
+    current_grenade = None
     
     def on_connect(self, loader):
         if self.master:
@@ -257,9 +258,17 @@ class FeatureConnection(ServerConnection):
         self.airstrike = False
         if killer is None or self.team is killer.team:
             return
-        killer.streak += 1
-        killer.best_streak = max(killer.streak, killer.best_streak)
+        if self.current_grenade is None or self.current_grenade == 'grenade':
+            # doesn't give streak kills on airstrikes (or other types of
+            # explosions)
+            killer.streak += 1
+            killer.best_streak = max(killer.streak, killer.best_streak)
         killer.team.kills += 1
+    
+    def grenade_exploded(self, grenade):
+        self.current_grenade = grenade
+        ServerConnection.grenade_exploded(self, grenade)
+        self.current_grenade = None
     
     def on_fall(self, damage):
         if self.god:
