@@ -4,7 +4,8 @@ Mathias "Mat^2" Kaerlev - Most of the code
 "hompy" - Floating block detection, IRC client, general code, etc.
 "Triplefox" - Map generator code, network code, etc.
 "Sham" - Hosting and testing
+"Yourself" - Scripts
 "bildramer" - Floating block detection (A*) and misc. code
 "TheGrandmaster" - Tester, ideas and the official map
 "Tegu" - Logo, ideas, testing and the official map
-"Enari" - Testing and ideas
+"Enari" - Testing, misc. code and ideas
