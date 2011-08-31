@@ -165,7 +165,10 @@ class FeatureConnection(ServerConnection):
         if self.name is not None:
             print self.printable_name, 'disconnected!'
             self.protocol.irc_say('* %s disconnected' % self.name)
-            if self.protocol.votekick_player is self:
+            if self.protocol.voting_player is self:
+                self.protocol.votekick_call.cancel()
+                self.protocol.end_votekick(False, 'Voting player left the game')
+            elif self.protocol.votekick_player is self:
                 self.protocol.votekick_call.cancel()
                 self.protocol.end_votekick(True, 'Player left the game',
                     left = True)
