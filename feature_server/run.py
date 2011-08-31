@@ -340,7 +340,7 @@ class FeatureConnection(ServerConnection):
             message = '%s banned for %s%s' % (self.name,
                 prettify_timespan(duration * 60), reason)
         self.protocol.send_chat(message, irc = True)
-        self.protocol.add_ban(self.address[0], reason, duration)
+        self.protocol.add_ban(self.address[0], reason, duration, self.name)
 
     def send_lines(self, lines):
         current_time = 0
@@ -549,24 +549,22 @@ class FeatureProtocol(ServerProtocol):
         ServerProtocol.master_disconnected(self, *arg, **kw)
         reactor.callLater(20, self.set_master)
 
-    def add_ban(self, ip, reason, duration):
+    def add_ban(self, ip, reason, duration, name = None):
         """
         Ban an ip with an optional reason and
         duration in minutes. If duration is None, ban is permanent.
         """
-        banned = False
         for connection in self.connections.values():
             if connection.address[0] == ip:
-                if not banned:
-                    if duration:
-                        self.bans.append((connection.name, ip, reason,
-                                         reactor.seconds()+duration * 60))
-                    else:
-                        self.bans.append((connection.name, ip, reason,
-                                         None))
-                    self.save_bans()
-                    banned = True
+                name = connection.name
                 connection.kick(silent = True)
+                
+        if duration:
+            duration = reactor.seconds() + duration * 60
+        else:
+            duration = None
+        self.bans.append((name or '(unknown)', ip, reason, duration))
+        self.save_bans()
     
     def remove_ban(self, ip):
         results = [self.bans.remove(n) for n in self.bans if n[1] == ip]
