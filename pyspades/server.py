@@ -360,7 +360,8 @@ class ServerConnection(BaseConnection):
                         self.on_command(command, splitted)
                     else:
                         global_message = contained.global_message
-                        if self.on_chat(value, global_message) == False:
+                        value = self.on_chat(value, global_message)
+                        if value == False:
                             return
                         chat_message.global_message = global_message
                         chat_message.value = value

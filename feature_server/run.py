@@ -333,6 +333,7 @@ class FeatureConnection(ServerConnection):
         elif global_message and not self.protocol.global_chat:
             self.send_chat('(Chat not sent - global chat disabled)')
             return False
+        return value
     
     def kick(self, reason = None, silent = False):
         if not silent:
