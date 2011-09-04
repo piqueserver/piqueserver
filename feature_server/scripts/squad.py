@@ -146,7 +146,7 @@ def apply_script(protocol, connection, config):
             if squad and (self.protocol.squad_size
                 <= len(existing['players'])):
                 return ('Squad %s is full. (limit %s)' %
-                        (squadkey, self.protocol.squad_size))
+                        (squad, self.protocol.squad_size))
             
             # assign to unique squad
 

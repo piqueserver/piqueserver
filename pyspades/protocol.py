@@ -133,6 +133,9 @@ class BaseConnection(object):
             if self.disconnected:
                 return
             if loader.ack:
+                if loader.byte not in self.packet_handlers:
+                    self.disconnect()
+                    return
                 self.packet_handlers[loader.byte].loader_received(loader)
             elif loader.id != Ack.id:
                 self.loader_received(loader)

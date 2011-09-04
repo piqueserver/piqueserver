@@ -59,6 +59,12 @@ kill_action = serverloaders.KillAction()
 chat_message = serverloaders.ChatMessage()
 map_data = MapData()
 
+def check_nan(*values):
+    for value in values:
+        if math.isnan(value):
+            return True
+    return False
+
 class ServerConnection(BaseConnection):
     master = False
     protocol = None
@@ -181,18 +187,26 @@ class ServerConnection(BaseConnection):
                 if self.hp:
                     world_object = self.world_object
                     if contained.id == clientloaders.OrientationData.id:
-                        world_object.set_orientation(contained.x,
-                            contained.y, contained.z)
+                        x, y, z = contained.x, contained.y, contained.z
+                        if check_nan(x, y, z):
+                            self.on_hack_attempt(
+                                'Invalid orientation data received')
+                            return
+                        world_object.set_orientation(x, y, z)
                         if self.filter_visibility_data:
                             return
-                        orientation_data.x = contained.x
-                        orientation_data.y = contained.y
-                        orientation_data.z = contained.z
+                        orientation_data.x = x
+                        orientation_data.y = y
+                        orientation_data.z = z
                         orientation_data.player_id = self.player_id
                         self.protocol.send_contained(orientation_data, 
                             True, sender = self)
                     elif contained.id == clientloaders.PositionData.id:
                         x, y, z = contained.x, contained.y, contained.z
+                        if check_nan(x, y, z):
+                            self.on_hack_attempt(
+                                'Invalid position data received')
+                            return
                         position = world_object.position
                         if (self.speedhack_detect and (
                         math.fabs(x - position.x) > RUBBERBAND_DISTANCE or
@@ -360,9 +374,11 @@ class ServerConnection(BaseConnection):
                         self.on_command(command, splitted)
                     else:
                         global_message = contained.global_message
-                        value = self.on_chat(value, global_message)
-                        if value == False:
+                        result = self.on_chat(value, global_message)
+                        if result == False:
                             return
+                        elif result is not None:
+                            value = result
                         chat_message.global_message = global_message
                         chat_message.value = value
                         chat_message.player_id = self.player_id
