@@ -65,6 +65,23 @@ def check_nan(*values):
             return True
     return False
 
+class SlidingWindow(object):
+    def __init__(self, entries):
+        self.entries = entries
+        self.window = collections.deque()
+    
+    def add(self, value):
+        self.window.append(value)
+        if len(self.window) <= self.entries:
+            return
+        self.window.popleft()
+    
+    def check(self):
+        return len(self.window) == self.entries
+    
+    def get(self):
+        return self.window[0], self.window[-1]
+
 class ServerConnection(BaseConnection):
     master = False
     protocol = None
@@ -92,13 +109,16 @@ class ServerConnection(BaseConnection):
     fly = False
     timers = None
     world_object = None
+    last_block = None
+    exceeded = None
     
     def __init__(self, protocol, address):
         BaseConnection.__init__(self)
         self.protocol = protocol
         self.address = address
         self.respawn_time = protocol.respawn_time
-        self.timers = collections.deque()
+        self.timers = SlidingWindow(TIMER_WINDOW_ENTRIES)
+        self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
     
     def loader_received(self, loader):
         if self.connection_id is None:
@@ -210,7 +230,8 @@ class ServerConnection(BaseConnection):
                         position = world_object.position
                         if (self.speedhack_detect and (
                         math.fabs(x - position.x) > RUBBERBAND_DISTANCE or
-                        math.fabs(y - position.y) > RUBBERBAND_DISTANCE)):
+                        math.fabs(y - position.y) > RUBBERBAND_DISTANCE or
+                        math.fabs(z - position.z) > RUBBERBAND_DISTANCE)):
                             # vanilla behaviour
                             self.set_location()
                             return
@@ -251,8 +272,13 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(movement_data, 
                             sender = self)
                     elif contained.id == clientloaders.AnimationData.id:
-                        world_object.set_animation(contained.fire,
-                            contained.jump, contained.crouch, contained.aim)
+                        z_acceleration = world_object.acceleration.z
+                        jump = contained.jump
+                        if jump and not (z_acceleration >= 0 and 
+                                         z_acceleration < 0.017):
+                            jump = False
+                        world_object.set_animation(contained.fire, jump, 
+                            contained.crouch, contained.aim)
                         animation_data.fire = contained.fire
                         animation_data.jump = contained.jump
                         animation_data.crouch = contained.crouch
@@ -321,6 +347,22 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(set_color, sender = self,
                             save = True)
                     elif contained.id == clientloaders.BlockAction.id:
+                        if self.tool == WEAPON_TOOL:
+                            interval = WEAPON_INTERVAL[self.weapon]
+                        else:
+                            interval = TOOL_INTERVAL[self.tool]
+                        current_time = reactor.seconds()
+                        last_time = self.last_block
+                        self.last_block = current_time
+                        if (last_time is not None and
+                        current_time - last_time < interval):
+                            self.rapids.add(current_time)
+                            if self.rapids.check():
+                                start, end = self.rapids.get()
+                                if end - start < MAX_RAPID_SPEED:
+                                    print 'RAPID HACK:', self.rapids.window
+                                    self.on_hack_attempt('Rapid hack detected')
+                            return
                         value = contained.value
                         map = self.protocol.map
                         x = contained.x
@@ -328,7 +370,9 @@ class ServerConnection(BaseConnection):
                         z = contained.z
                         if value == BUILD_BLOCK:
                             self.blocks -= 1
-                            if self.on_block_build_attempt(x, y, z) == False:
+                            if self.blocks < -5:
+                                return
+                            elif self.on_block_build_attempt(x, y, z) == False:
                                 return
                             elif not map.set_point(x, y, z, self.color + (255,)):
                                 return
@@ -781,15 +825,13 @@ class ServerConnection(BaseConnection):
             return
         timers = self.timers
         seconds = reactor.seconds()
-        timers.append((value, seconds))
-        if len(timers) <= TIMER_WINDOW_ENTRIES:
+        timers.add((value, seconds))
+        if not timers.check():
             return
-        timers.popleft()
-        start_timer, start_seconds = timers[0]
-        end_timer, end_seconds = timers[-1]
+        (start_timer, start_seconds), (end_timer, end_seconds) = timers.get()
         diff = (end_timer - start_timer) / (end_seconds - start_seconds)
         if diff > MAX_TIMER_SPEED:
-            print 'SPEEDHACK -> Diff:', diff, timers
+            print 'SPEEDHACK -> Diff:', diff, timers.window
             self.on_hack_attempt('Speedhack detected '
                 '(or really awful connection)')
 
