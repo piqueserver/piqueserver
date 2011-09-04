@@ -457,7 +457,6 @@ class FeatureProtocol(ServerProtocol):
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
         self.set_god_build = config.get('set_god_build', False)
-        logfile = config.get('logfile', None)
         self.debug_log = config.get('debug_log', False)
         if self.debug_log:
             pyspades.debug.open_debug_log()
@@ -481,7 +480,7 @@ class FeatureProtocol(ServerProtocol):
         if ban_subscribe.get('enabled', True):
             import bansubscribe
             self.ban_manager = bansubscribe.BanManager(self, ban_subscribe)
-        
+        logfile = config.get('logfile', None)
         if logfile is not None and logfile.strip():
             observer = log.FileLogObserver(open(logfile, 'a'))
             log.addObserver(observer.emit)

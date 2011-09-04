@@ -78,8 +78,7 @@ def kick(connection, value, *arg):
     player = get_player(connection.protocol, value)
     player.kick(reason)
 
-@admin
-def ban(connection, value, *arg):
+def get_ban_arguments(connection, arg):
     duration = None
     if len(arg):
         try:
@@ -93,8 +92,19 @@ def ban(connection, value, *arg):
         else:
             duration = connection.protocol.default_ban_time
     reason = join_arguments(arg)
+    return duration, reason
+
+@admin
+def ban(connection, value, *arg):
+    duration, reason = get_ban_arguments(connection, arg)
     player = get_player(connection.protocol, value)
     player.ban(reason, duration)
+
+@admin
+def banip(connection, ip, *arg):
+    duration, reason = get_ban_arguments(connection, arg)
+    connection.protocol.add_ban(ip, reason, duration)
+    return 'IP banned.'
 
 @admin
 def unban(connection, ip):
@@ -680,6 +690,7 @@ command_list = [
     ip,
     fog,
     ban,
+    banip,
     unban,
     undo_ban,
     mute,

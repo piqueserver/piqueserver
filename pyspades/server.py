@@ -231,7 +231,7 @@ class ServerConnection(BaseConnection):
                         if (self.speedhack_detect and (
                         math.fabs(x - position.x) > RUBBERBAND_DISTANCE or
                         math.fabs(y - position.y) > RUBBERBAND_DISTANCE or
-                        math.fabs(z - position.z) > RUBBERBAND_DISTANCE)):
+                        math.fabs(z - position.z) > RUBBERBAND_DISTANCE_Z)):
                             # vanilla behaviour
                             self.set_location()
                             return
