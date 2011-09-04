@@ -486,8 +486,10 @@ class ServerConnection(BaseConnection):
     def spawn(self, pos = None, name = None):
         self.spawn_call = None
         if pos is None:
-            pos = self.team.get_random_location(True)
-        x, y, z = pos
+            x, y, z = self.team.get_random_location(True)
+            z -= 1
+        else:
+            x, y, z = pos
         if self.world_object is not None:
             self.world_object.set_position(x, y, z, True)
         else:
@@ -508,7 +510,7 @@ class ServerConnection(BaseConnection):
             self.send_contained(create_player)
         else:
             self.protocol.send_contained(create_player, save = True)
-        self.on_spawn(pos)
+        self.on_spawn((x, y, z))
     
     def capture_flag(self):
         other_team = self.team.other
