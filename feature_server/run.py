@@ -85,6 +85,7 @@ import json
 import random
 import time
 import commands
+from pyspades.ipaddr import IPAddress, IPNetwork
 
 CHAT_WINDOW_SIZE = 5
 CHAT_PER_SECOND = 0.5
@@ -133,7 +134,7 @@ class FeatureConnection(ServerConnection):
             username = ban[0]
             ip = ban[1]
             timestamp = ban[3]
-            if client_ip == ip:
+            if IPAddress(client_ip) in IPNetwork(ip):
                 if timestamp is not None and reactor.seconds() >= timestamp:
                     protocol.remove_ban(ip)
                     protocol.save_bans()
