@@ -100,11 +100,17 @@ def ban(connection, value, *arg):
     player = get_player(connection.protocol, value)
     player.ban(reason, duration)
 
+from pyspades.ipaddr import IPNetwork
+
 @admin
 def banip(connection, ip, *arg):
     duration, reason = get_ban_arguments(connection, arg)
-    connection.protocol.add_ban(ip, reason, duration)
-    return 'IP banned.'
+    try:
+        net = IPNetwork(ip)
+        connection.protocol.add_ban(ip, reason, duration)
+        return 'IP banned.'
+    except:
+        return 'Invalid IP address/network.'
 
 @admin
 def unban(connection, ip):
