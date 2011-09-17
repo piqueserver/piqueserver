@@ -368,6 +368,8 @@ class ServerConnection(BaseConnection):
                         x = contained.x
                         y = contained.y
                         z = contained.z
+                        if z >= 62:
+                            return
                         if value == BUILD_BLOCK:
                             self.blocks -= 1
                             if self.blocks < -5:
