@@ -111,7 +111,10 @@ def apply_script(protocol, connection, config):
             self.killing = False
             self.building = False
             self.drop_flag()
-            self.leave_squad()
+            try:
+                self.leave_squad()
+            except AttributeError:
+                pass
             self.respawn_time = self.protocol.respawn_time
             player_data.player_left = self.player_id
             for player in self.protocol.connections.values():
