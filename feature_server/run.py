@@ -75,6 +75,7 @@ from map import Map
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.python import log
+from twisted.python.logfile import DailyLogFile
 from twisted.internet.stdio import StandardIO
 from twisted.protocols.basic import LineReceiver
 from pyspades.common import encode, decode, prettify_timespan
@@ -484,8 +485,11 @@ class FeatureProtocol(ServerProtocol):
             self.ban_manager = bansubscribe.BanManager(self, ban_subscribe)
         logfile = config.get('logfile', None)
         if logfile is not None and logfile.strip():
-            observer = log.FileLogObserver(open(logfile, 'a'))
-            log.addObserver(observer.emit)
+            if config.get('rotate_daily', True):
+                logging_file = DailyLogFile(logfile, '.')
+            else:
+                logging_file = open(logfile, 'a')
+            log.addObserver(log.FileLogObserver(logging_file).emit)
             log.msg('pyspades server started on %s' % time.strftime('%c'))
         log.startLogging(sys.stdout) # force twisted logging
         

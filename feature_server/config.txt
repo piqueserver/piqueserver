@@ -68,6 +68,7 @@
     "server_prefix" : "[*]",
     "user_blocks_only" : false,
     "logfile" : "log.txt",
+    "rotate_daily" : true,
     "debug_log" : false,
     "balanced_teams" : 1,
     "login_retries" : 3,
