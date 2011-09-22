@@ -108,7 +108,13 @@ def banip(connection, ip, *arg):
     try:
         net = IPNetwork(ip)
         connection.protocol.add_ban(ip, reason, duration)
-        return 'IP banned.'
+        reason = ': ' + reason if reason is not None else ''
+        duration = duration or None
+        if duration is None:
+            return 'IP/network %s permabanned%s' % (ip, reason)
+        else:
+            return 'IP/network %s banned for %s%s' % (ip,
+                prettify_timespan(duration * 60), reason)
     except:
         return 'Invalid IP address/network.'
 
