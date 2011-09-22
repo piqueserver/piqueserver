@@ -16,6 +16,7 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from pyspades.constants import *
+from pyspades.common import prettify_timespan
 
 class InvalidPlayer(Exception):
     pass
