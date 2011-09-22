@@ -46,6 +46,6 @@ class PublishServer(object):
             ip = entry[1]
             reason = entry[2]
             timestamp = entry[3]
-            if timestamp is not None and reactor.seconds() < timestamp:
+            if timestamp is None or reactor.seconds() < timestamp:
                 bans.append({"ip" : ip, "reason" : reason})
         self.json_bans = json.dumps(bans)
