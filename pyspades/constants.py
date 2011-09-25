@@ -29,8 +29,8 @@ HIT_VALUES = {
     },
     SMG_WEAPON : {
         1 : 24,
-        2 : 49,
-        3 : 8
+        2 : 75,
+        3 : 16
     },
     SHOTGUN_WEAPON : {
         1 : 19,
