@@ -23,10 +23,10 @@ from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 from pyspades.protocol import BaseConnection, in_packet
 from pyspades.bytes import ByteReader, ByteWriter
-from pyspades.packet import Packet, load_server_packet
+from pyspades.packet import Packet, load_contained_packet
 from pyspades.loaders import *
 from pyspades.common import *
-from pyspades import clientloaders, serverloaders
+from pyspades import contained as loaders
 from pyspades.multidict import MultikeyDict
 
 import random
@@ -47,9 +47,9 @@ class ClientConnection(BaseConnection):
         self.auth_val = random.randint(0, 0xFFFF)
         self.map = ByteWriter()
         self.connections = MultikeyDict()
-        self.spammy = {Ping : 0, MapData : 0, serverloaders.OrientationData : 0,
-            serverloaders.PositionData : 0, serverloaders.AnimationData : 0,
-            serverloaders.MovementData : 0}
+        self.spammy = {Ping : 0, MapData : 0, loaders.OrientationData : 0,
+            loaders.PositionData : 0, loaders.AnimationData : 0,
+            loaders.MovementData : 0}
         
         connect_request = ConnectionRequest()
         connect_request.auth_val = self.auth_val
@@ -64,7 +64,7 @@ class ClientConnection(BaseConnection):
         print 'joining team %s' % team
         loader = SizedData()
         data = ByteWriter()
-        join = clientloaders.JoinTeam()
+        join = loaders.JoinTeam()
         join.name = 'flotothelo'
         join.team = team
         join.weapon = weapon
@@ -82,7 +82,7 @@ class ClientConnection(BaseConnection):
         is_contained = hasattr(packet, 'data') and packet.id != MapData.id
         if is_contained:
             data = packet.data
-            contained = load_server_packet(data)
+            contained = load_contained_packet(data)
         spam_class = contained.__class__ if is_contained else packet.__class__
         is_spammy = spam_class in self.spammy
         if is_spammy:
@@ -116,7 +116,7 @@ class ClientConnection(BaseConnection):
             # print contained
             # newdata = ByteWriter()
             # contained.write(newdata)
-            # if contained.id != serverloaders.PlayerData.id:
+            # if contained.id != loaders.PlayerData.id:
                 # if str(data) != str(newdata):
                     # print hexify(data)
                     # print hexify(newdata)

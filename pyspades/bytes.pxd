@@ -30,5 +30,6 @@ cdef class ByteWriter:
                    bint big_endian = ?)
     cpdef writeFloat(self, float value, bint big_endian = ?)
     cpdef writeStringSize(self, char * value, int size)
-    cpdef writeString(self, value)
+    cpdef writeString(self, value, int size = ?)
+    cpdef pad(self, int bytes)
     cpdef rewind(self, int bytes)

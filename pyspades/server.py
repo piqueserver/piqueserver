@@ -21,11 +21,11 @@ from twisted.internet.task import LoopingCall
 from pyspades.protocol import (BaseConnection, sized_sequence, 
     sized_data, in_packet, out_packet)
 from pyspades.bytes import ByteReader, ByteWriter
-from pyspades.packet import load_client_packet
+from pyspades.packet import load_contained_packet
 from pyspades.loaders import *
 from pyspades.common import *
 from pyspades.constants import *
-from pyspades import serverloaders, clientloaders
+from pyspades import contained as loaders
 from pyspades.multidict import MultikeyDict
 from pyspades.idpool import IDPool
 from pyspades.master import get_master_connection
@@ -38,26 +38,27 @@ import math
 import shlex
 import textwrap
 import collections
+import zlib
 
 ORIENTATION_DISTANCE = 128.0
 ORIENTATION_DISTANCE_SQUARED = 128.0 ** 2
 
-player_data = serverloaders.PlayerData()
-create_player = serverloaders.CreatePlayer()
-position_data = serverloaders.PositionData()
-orientation_data = serverloaders.OrientationData()
-movement_data = serverloaders.MovementData()
-animation_data = serverloaders.AnimationData()
-hit_packet = serverloaders.HitPacket()
-grenade_packet = serverloaders.GrenadePacket()
-set_tool = serverloaders.SetTool()
-set_color = serverloaders.SetColor()
-existing_player = serverloaders.ExistingPlayer()
-intel_action = serverloaders.IntelAction()
-block_action = serverloaders.BlockAction()
-kill_action = serverloaders.KillAction()
-chat_message = serverloaders.ChatMessage()
-map_data = MapData()
+player_data = loaders.PlayerData()
+create_player = loaders.CreatePlayer()
+position_data = loaders.PositionData()
+orientation_data = loaders.OrientationData()
+input_data = loaders.InputData()
+hit_packet = loaders.HitPacket()
+grenade_packet = loaders.GrenadePacket()
+set_tool = loaders.SetTool()
+set_color = loaders.SetColor()
+existing_player = loaders.ExistingPlayer()
+intel_action = loaders.IntelAction()
+block_action = loaders.BlockAction()
+kill_action = loaders.KillAction()
+chat_message = loaders.ChatMessage()
+map_data = loaders.MapChunk()
+map_start = loaders.MapStart()
 
 def check_nan(*values):
     for value in values:
@@ -166,8 +167,8 @@ class ServerConnection(BaseConnection):
         
         if self.player_id is not None:
             if loader.id in (SizedData.id, SizedSequenceData.id):
-                contained = load_client_packet(loader.data)
-                if contained.id == clientloaders.JoinTeam.id:
+                contained = load_contained_packet(loader.data)
+                if contained.id == loaders.JoinTeam.id:
                     if contained.name is None and contained.weapon != -1:
                         if self.name is None:
                             return
@@ -206,7 +207,7 @@ class ServerConnection(BaseConnection):
                     return
                 if self.hp:
                     world_object = self.world_object
-                    if contained.id == clientloaders.OrientationData.id:
+                    if contained.id == loaders.OrientationData.id:
                         x, y, z = contained.x, contained.y, contained.z
                         if check_nan(x, y, z):
                             self.on_hack_attempt(
@@ -221,7 +222,7 @@ class ServerConnection(BaseConnection):
                         orientation_data.player_id = self.player_id
                         self.protocol.send_contained(orientation_data, 
                             True, sender = self)
-                    elif contained.id == clientloaders.PositionData.id:
+                    elif contained.id == loaders.PositionData.id:
                         x, y, z = contained.x, contained.y, contained.z
                         if check_nan(x, y, z):
                             self.on_hack_attempt(
@@ -259,7 +260,7 @@ class ServerConnection(BaseConnection):
                         position_data.z = z
                         self.protocol.send_contained(position_data, 
                             sender = self)
-                    elif contained.id == clientloaders.MovementData.id:
+                    elif contained.id == loaders.MovementData.id:
                         world_object.set_walk(contained.up, contained.down,
                             contained.left, contained.right)
                         if self.filter_visibility_data:
@@ -271,7 +272,7 @@ class ServerConnection(BaseConnection):
                         movement_data.player_id = self.player_id
                         self.protocol.send_contained(movement_data, 
                             sender = self)
-                    elif contained.id == clientloaders.AnimationData.id:
+                    elif contained.id == loaders.AnimationData.id:
                         z_acceleration = world_object.acceleration.z
                         jump = contained.jump
                         if jump and not (z_acceleration >= 0 and 
@@ -293,7 +294,7 @@ class ServerConnection(BaseConnection):
                             return
                         self.protocol.send_contained(animation_data, 
                             sender = self)
-                    elif contained.id == clientloaders.HitPacket.id:
+                    elif contained.id == loaders.HitPacket.id:
                         if contained.player_id != -1:
                             player = self.protocol.players[contained.player_id]
                             hit_amount = HIT_VALUES[self.weapon][
@@ -306,7 +307,7 @@ class ServerConnection(BaseConnection):
                             player.hit(hit_amount, self)
                         else:
                             self.hit(contained.value)
-                    elif contained.id == clientloaders.GrenadePacket.id:
+                    elif contained.id == loaders.GrenadePacket.id:
                         if not self.grenades:
                             return
                         self.grenades -= 1
@@ -321,7 +322,7 @@ class ServerConnection(BaseConnection):
                         grenade_packet.value = contained.value
                         self.protocol.send_contained(grenade_packet, 
                             sender = self)
-                    elif contained.id == clientloaders.SetTool.id:
+                    elif contained.id == loaders.SetTool.id:
                         if self.on_tool_set_attempt(contained.value) == False:
                             return
                         self.tool = contained.value
@@ -331,7 +332,7 @@ class ServerConnection(BaseConnection):
                         set_tool.player_id = self.player_id
                         set_tool.value = contained.value
                         self.protocol.send_contained(set_tool, sender = self)
-                    elif contained.id == clientloaders.SetColor.id:
+                    elif contained.id == loaders.SetColor.id:
                         color = get_color(contained.value)
                         if contained.fog:
                             self.on_command('fog', 
@@ -346,7 +347,7 @@ class ServerConnection(BaseConnection):
                         set_color.fog = False
                         self.protocol.send_contained(set_color, sender = self,
                             save = True)
-                    elif contained.id == clientloaders.BlockAction.id:
+                    elif contained.id == loaders.BlockAction.id:
                         if self.tool == WEAPON_TOOL:
                             interval = WEAPON_INTERVAL[self.weapon]
                         else:
@@ -401,7 +402,7 @@ class ServerConnection(BaseConnection):
                         block_action.player_id = self.player_id
                         self.protocol.send_contained(block_action, save = True)
                         self.protocol.update_entities()
-                if contained.id == clientloaders.ChatMessage.id:
+                if contained.id == loaders.ChatMessage.id:
                     if not self.name:
                         return
                     value = contained.value
@@ -714,7 +715,10 @@ class ServerConnection(BaseConnection):
         
         saved_loaders.append(player_data.generate())
         
-        self.map_generator = self.protocol.map.get_generator()
+        self.map_data = ByteReader(
+            zlib.compress(self.protocol.map.generate()))
+        map_start.size = len(self.map_data)
+        self.send_contained(map_start)
         self.send_map()
         
     def grenade_exploded(self, grenade):
@@ -773,9 +777,7 @@ class ServerConnection(BaseConnection):
     def send_map(self):
         if self.map_generator is None:
             return
-        if self.map_generator.done:
-            self.map_generator = None
-            # get the saved loaders
+        if not self.map_data.dataLeft():
             for data in self.saved_loaders:
                 sized_data.data = data
                 self.send_loader(sized_data, True)
@@ -783,22 +785,10 @@ class ServerConnection(BaseConnection):
             self.on_join()
             return
         for _ in xrange(4):
-            sequence = self.packet_handler1.sequence + 1
-            data = self.map_generator.get_data(660)
-            if data is None:
+            if not self.map_data.dataLeft():
                 break
-            new_data = ByteReader('\x0F' + data)
-            new_data_size = len(new_data)
-            nums = int(math.ceil(new_data_size / 1024.0))
-            for i in xrange(nums):
-                map_data.data = new_data.readReader(1024)
-                map_data.sequence2 = sequence
-                map_data.num = i
-                map_data.total_num = nums
-                map_data.data_size = new_data_size
-                map_data.current_pos = i * 1024
-                self.send_loader(map_data, True).addCallback(self.got_map_ack)
-                self.map_packets_sent += 1
+            map_data.data = self.map_data.read(1024)
+            self.send_contained(map_data)
     
     def got_map_ack(self, ack):
         self.map_packets_sent -= 1
