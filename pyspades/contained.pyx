@@ -75,7 +75,7 @@ cdef class InputData(Loader):
         reader.writeInt(byte, True, False)
 
 cdef class HitPacket(Loader):
-    id = 3
+    id = 4
     
     cdef public:
         int player_id, value

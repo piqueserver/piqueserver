@@ -264,9 +264,7 @@ def switch(connection, value = None):
     elif connection not in connection.protocol.players:
         raise ValueError()
     connection.respawn_time = connection.protocol.respawn_time
-    connection.on_team_leave()
-    connection.team = connection.team.other
-    connection.kill()
+    connection.set_team(connection.team.other)
     connection.protocol.send_chat('%s has switched teams' % connection.name,
         irc = True)
 
@@ -594,31 +592,15 @@ def reset_game(connection):
         irc = True)
 
 from map import Map
-from pyspades.load import VXLData
 
-@name('changemap')
+@name('map')
 @admin
 def change_map(connection, value):
+    name = connection.name
     protocol = connection.protocol
-    if protocol.rollback_in_progress:
-        return 'Rollback in progress.'
-    protocol.map_info = Map(value)
-    protocol.map = protocol.map_info.data
-    protocol.world.map = protocol.map
-    protocol.send_chat("The server is changing maps to '%s'!" % value)
-    protocol.irc_say("* %s changed map to '%s'" % (connection.name, value))
-    for conn in protocol.connections.values():
-        conn.disconnect()
-    if protocol.rollback_map is not None:
-        protocol.rollback_map = protocol.map.copy()
-    if hasattr(protocol, 'block_info'):
-        # this is very ugly - we need a 'map updated' event
-        protocol.block_info = None
-    protocol.blue_team.initialize()
-    protocol.green_team.initialize()
-    protocol.on_game_end(connection)
-    protocol.update_entities()
-    protocol.update_format()
+    if not protocol.set_map_name(value):
+        return 'Map %s does not exist' % value
+    protocol.irc_say("* %s changed map to '%s'" % (name, value))
 
 @name('servername')
 @admin

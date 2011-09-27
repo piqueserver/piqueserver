@@ -23,18 +23,21 @@ SPADE_TOOL, BLOCK_TOOL, WEAPON_TOOL, GRENADE_TOOL = xrange(4)
 
 HIT_VALUES = {
     SEMI_WEAPON : {
-        1 : 49,
-        2 : 100,
+        0 : 49,
+        1 : 100,
+        2 : 33,
         3 : 33
     },
     SMG_WEAPON : {
-        1 : 24,
-        2 : 75,
+        0 : 24,
+        1 : 75,
+        2 : 16,
         3 : 16
     },
     SHOTGUN_WEAPON : {
-        1 : 19,
-        2 : 33,
+        0 : 19,
+        1 : 33,
+        2 : 14,
         3 : 14
     }
 }

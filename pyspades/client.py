@@ -23,7 +23,7 @@ from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 from pyspades.protocol import BaseConnection, in_packet
 from pyspades.bytes import ByteReader, ByteWriter
-from pyspades.packet import Packet, load_contained_packet
+from pyspades.packet import Packet, load_server_packet
 from pyspades.loaders import *
 from pyspades.common import *
 from pyspades import contained as loaders
@@ -82,7 +82,7 @@ class ClientConnection(BaseConnection):
         is_contained = hasattr(packet, 'data') and packet.id != MapData.id
         if is_contained:
             data = packet.data
-            contained = load_contained_packet(data)
+            contained = load_server_packet(data)
         spam_class = contained.__class__ if is_contained else packet.__class__
         is_spammy = spam_class in self.spammy
         if is_spammy:

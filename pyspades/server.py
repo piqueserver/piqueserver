@@ -21,7 +21,7 @@ from twisted.internet.task import LoopingCall
 from pyspades.protocol import (BaseConnection, sized_sequence, 
     sized_data, in_packet, out_packet)
 from pyspades.bytes import ByteReader, ByteWriter
-from pyspades.packet import load_contained_packet
+from pyspades.packet import load_client_packet
 from pyspades.loaders import *
 from pyspades.common import *
 from pyspades.constants import *
@@ -153,7 +153,6 @@ class ServerConnection(BaseConnection):
                 if self.on_connect(loader) == False:
                     return
                 self.auth_val = loader.auth_val
-                self.saved_loaders = []
                 self.connection_id = self.protocol.connection_ids.pop()
                 self.unique = loader.value & 3
                 connection_response = ConnectionResponse()
@@ -177,7 +176,7 @@ class ServerConnection(BaseConnection):
         
         if self.player_id is not None:
             if loader.id in (SizedData.id, SizedSequenceData.id):
-                contained = load_contained_packet(loader.data)
+                contained = load_client_packet(loader.data)
                 if contained.id == loaders.ExistingPlayer.id:
                     if self.name is not None:
                         return
@@ -555,20 +554,29 @@ class ServerConnection(BaseConnection):
         del self.protocol.connections[self.address]
         if self.connection_id is not None and not self.master:
             self.protocol.connection_ids.put_back(self.connection_id)
-        if self.player_id is not None:
-            self.protocol.player_ids.put_back(self.player_id)
-            self.protocol.update_master()
         if self.name is not None:
             self.drop_flag()
             player_left.player_id = self.player_id
             self.protocol.send_contained(player_left, sender = self,
                 save = True)
             del self.protocol.players[self]
+        if self.player_id is not None:
+            self.protocol.player_ids.put_back(self.player_id)
+            self.protocol.update_master()
+        self.reset()
+    
+    def reset(self):
         if self.spawn_call is not None:
             self.spawn_call.cancel()
             self.spawn_call = None
         if self.world_object is not None:
             self.world_object.delete()
+            self.world_object = None
+        if self.team is not None:
+            self.team = None
+            self.on_team_leave()
+        self.on_reset()
+        self.name = self.team = self.player_id = self.hp = None
     
     def hit(self, value, by = None):
         if self.hp is None:
@@ -608,7 +616,10 @@ class ServerConnection(BaseConnection):
         self.kill(type = CLASS_CHANGE_KILL)
     
     def set_team(self, team):
+        if team is self.team:
+            return
         self.drop_flag()
+        self.on_team_leave()
         self.team = team
         self.kill(type = TEAM_CHANGE_KILL)
     
@@ -633,13 +644,17 @@ class ServerConnection(BaseConnection):
     def add_score(self, score):
         self.kills += score
     
-    def _connection_ack(self, ack):
+    def _connection_ack(self, ack = None):
         if self.master:
             # this shouldn't happen, but let's make sure
             self.disconnect()
             return
         # send players
-        saved_loaders = self.saved_loaders
+        self._send_connection_data()
+        self.send_map(zlib.compress(self.protocol.map.generate()))
+    
+    def _send_connection_data(self):
+        saved_loaders = self.saved_loaders = []
         for player in self.protocol.players.values():
             if player.name is None:
                 continue
@@ -693,14 +708,9 @@ class ServerConnection(BaseConnection):
             ctf_data.team2_has_intel = False
         else:
             ctf_data.team2_carrier = green_flag.player.player_id
-            ctf_data.team1_has_intel = True
+            ctf_data.team2_has_intel = True
         
         saved_loaders.append(state_data.generate())
-        self.map_data = ByteReader(
-            zlib.compress(self.protocol.map.generate()))
-        map_start.size = len(self.map_data)
-        self.send_contained(map_start)
-        self.send_map()
         
     def grenade_exploded(self, grenade):
         position = grenade.position
@@ -755,10 +765,15 @@ class ServerConnection(BaseConnection):
             damage = returned
         self.set_hp(self.hp - damage, type = FALL_KILL)
     
-    def send_map(self):
-        if self.map_data is None:
+    def send_map(self, data = None):
+        if data is not None:
+            self.map_data = ByteReader(data)
+            map_start.size = len(data)
+            self.send_contained(map_start)
+        elif self.map_data is None:
             return
         if not self.map_data.dataLeft():
+            self.map_data = None
             for data in self.saved_loaders:
                 sized_data.data = data
                 self.send_loader(sized_data, True)
@@ -896,6 +911,9 @@ class ServerConnection(BaseConnection):
     
     def on_fall(self, damage):
         pass
+    
+    def on_reset(self):
+        pass
 
 class Entity(Vertex3):
     def __init__(self, id, protocol, *arg, **kw):
@@ -1016,6 +1034,26 @@ class ServerProtocol(DatagramProtocol):
     def update_world(self):
         self.world.update(UPDATE_FREQUENCY)
         self.on_world_update()
+    
+    def set_map(self, map):
+        self.map = map
+        self.world.map = map
+        self.on_map_change(map)
+        self.blue_team.initialize()
+        self.green_team.initialize()
+        self.on_game_end(None)
+        data = zlib.compress(map.generate())
+        self.players = MultikeyDict()
+        self.player_ids = IDPool()
+        for connection in self.connections.values():
+            if connection.player_id is None:
+                continue
+            if connection.map_data is not None:
+                connection.disconnect()
+                continue
+            connection.reset()
+            connection._send_connection_data()
+            connection.send_map(data)
     
     def reset_game(self, player):
         blue_team = self.blue_team
@@ -1161,4 +1199,7 @@ class ServerProtocol(DatagramProtocol):
         pass
     
     def on_world_update(self):
+        pass
+    
+    def on_map_change(self, map):
         pass

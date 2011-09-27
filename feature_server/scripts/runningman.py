@@ -115,8 +115,8 @@ def apply_script(protocol, connection, config):
         def on_flag_capture(self):
             self.protocol.drop_all_links()
         
-        def disconnect(self):
-            connection.disconnect(self)
+        def on_reset(self):
+            connection.on_reset(self)
             self.drop_link()
         
         def drop_link(self, force_message = False):
