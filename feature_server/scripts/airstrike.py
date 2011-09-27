@@ -14,60 +14,21 @@ commands.add(airstrike)
 
 def apply_script(protocol, connection, config):
     class AirstrikeConnection(connection):
-        aux = None
         airstrike = False
         def desync_grenade(self, x, y, z, orientation_x, fuse):
             """Gives the appearance of a grenade appearing from thin air by moving
             an auxiliary player to the target location and then back"""
-            new_position = PositionData()
-            new_position.set((x, y, z), self.player_id)
-            orientation_data.set((orientation_x, 0.0, 0.0), self.player_id)
             grenade_packet.value = fuse
             grenade_packet.player_id = self.player_id
-            old_position = PositionData()
-            old_position.set(self.get_location(), self.player_id)
-            packets = [new_position, orientation_data, grenade_packet, old_position]
-            if self.aux is None:
-                self.aux = self.find_aux_connection()
+            grenade_packet.position = (x, y, z)
+            grenade_packet.acceleration = (orientation_x, 0.0, 0.0)
+            position = Vertex3(x, y, z)
+            acceleration = Vertex3(orientation_x, 0.0, 0.0)
             airstrike = self.protocol.world.create_object(Grenade, fuse, 
-                Vertex3(x, y, z), Vertex3(orientation_x, 0, 0), 
-                self.aux.world_object.acceleration, self.grenade_exploded)
+                position, None, 
+                acceleration, self.grenade_exploded)
             airstrike.name = 'airstrike'
-            if self.aux is not self:
-                for packet in packets:
-                    self.protocol.send_contained(packet, sender = self)
-                old_position.set(self.aux.get_location(), self.aux.player_id)
-                for packet in packets:
-                    packet.player_id = self.aux.player_id
-                    if packet is orientation_data:
-                        self.send_contained(packet, 
-                            self.get_orientation_sequence())
-                    else:
-                        self.send_contained(packet)
-            else:
-                for packet in packets:
-                    self.protocol.send_contained(packet)
-        
-        def find_aux_connection(self):
-            """Attempts to find an allied player far away, preferrably dead,
-            so that we don't see it flipping out right in front of us"""
-            best = None
-            best_distance = 0.0
-            for player in self.team.get_players():
-                if player is self:
-                    continue
-                distance = distance_3d_vector(self.world_object.position, 
-                    player.world_object.position)
-                if best is None or player.hp <= 0 and best.hp > 0:
-                    best, best_distance = player, distance
-                    continue
-                if player.hp > 0 and best.hp <= 0:
-                    continue
-                if distance > best_distance:
-                    best, best_distance = player, distance
-            if best is None:
-                best = self
-            return best
+            self.protocol.send_contained(grenade_packet)
         
         # airstrike
         
@@ -107,7 +68,6 @@ def apply_script(protocol, connection, config):
         
         def do_airstrike(self, start_x, start_y):
             z = 1
-            self.aux = self.find_aux_connection()
             orientation_x = [1.0, -1.0][self.team.id]
             start_x = max(0, min(512, start_x + [-64, 64][self.team.id]))
             range_x = [61, -61][self.team.id]

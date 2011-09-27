@@ -186,9 +186,7 @@ def apply_script(protocol, connection, config):
             
             set_color.value = make_color(*color)
             set_color.player_id = id
-            set_color.fog = False
-            self.send_contained(set_color,
-                                         save = True)
+            self.send_contained(set_color, save = True)
             
             if self.god_blocks is None:
                 self.god_blocks = set()          
@@ -196,8 +194,7 @@ def apply_script(protocol, connection, config):
             for pt in shape:
                 x, y = pt
                 self.god_blocks.add((x, y, 0))
-                self.map.set_point(x, y, 0, color + (255,),
-                                   user = False)
+                self.map.set_point(x, y, 0, color + (255,), user = False)
                 block_action.x = x
                 block_action.y = y
                 block_action.z = 0

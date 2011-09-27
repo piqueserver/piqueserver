@@ -356,7 +356,7 @@ cdef class StateData(Loader):
     id = 12
     
     cdef public:
-        int player_id, mode
+        int player_id
         tuple fog_color
         Loader state
 
@@ -528,12 +528,12 @@ cdef class FogColor(Loader):
     
     cpdef read(self, ByteReader reader):
         reader.skipBytes(3)
-        self.color = reader.readInt(True, False)
+        self.color = reader.readInt(True, False) >> 5
     
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
         reader.pad(3)
-        reader.writeInt(self.color, True, False)
+        reader.writeInt(self.color << 5, True, False)
 
 cdef class WeaponReload(Loader):
     id = 23

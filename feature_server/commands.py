@@ -498,7 +498,7 @@ def fly(connection, player = None):
             return '%s is %s.' % (player.name, message)
 
 from pyspades.server import kill_action, create_player, position_data
-from pyspades.server import orientation_data, movement_data, animation_data
+from pyspades.server import orientation_data, input_data
 from pyspades.server import set_tool, set_color
 from pyspades.common import make_color
 
@@ -537,16 +537,16 @@ def invisible(connection, player = None):
         world_object = player.world_object
         position_data.set(world_object.position.get(), player.player_id)
         orientation_data.set(world_object.orientation.get(), player.player_id)
-        movement_data.up = world_object.up
-        movement_data.down = world_object.down
-        movement_data.left = world_object.left
-        movement_data.right = world_object.right
-        movement_data.player_id = player.player_id
-        animation_data.fire = world_object.fire
-        animation_data.jump = world_object.jump
-        animation_data.crouch = world_object.crouch
-        animation_data.aim = world_object.aim
-        animation_data.player_id = player.player_id
+        input_data.up = world_object.up
+        input_data.down = world_object.down
+        input_data.left = world_object.left
+        input_data.right = world_object.right
+        input_data.player_id = player.player_id
+        input_data.fire = world_object.fire
+        input_data.jump = world_object.jump
+        input_data.crouch = world_object.crouch
+        input_data.aim = world_object.aim
+        input_data.player_id = player.player_id
         set_tool.player_id = player.player_id
         set_tool.value = player.tool
         set_color.player_id = player.player_id
@@ -555,11 +555,10 @@ def invisible(connection, player = None):
             save = True)
         player.protocol.send_contained(position_data, sender = player)
         player.protocol.send_contained(orientation_data, sender = player)
-        player.protocol.send_contained(movement_data, sender = player)
         player.protocol.send_contained(set_tool, sender = player)
         player.protocol.send_contained(set_color, sender = player,
             save = True)
-        player.protocol.send_contained(animation_data, sender = player)
+        player.protocol.send_contained(input_data, sender = player)
     if connection is player or connection not in connection.protocol.players:
         return
     if player.invisible:

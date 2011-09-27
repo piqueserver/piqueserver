@@ -1,5 +1,3 @@
-from pyspades.server import player_data, chat_message
-from pyspades.server import create_player, position_data, kill_action
 from commands import add, rights, admin, name, get_player
 import commands
 import random

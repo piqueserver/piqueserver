@@ -43,22 +43,32 @@ import zlib
 ORIENTATION_DISTANCE = 128.0
 ORIENTATION_DISTANCE_SQUARED = 128.0 ** 2
 
-player_data = loaders.PlayerData()
 create_player = loaders.CreatePlayer()
 position_data = loaders.PositionData()
 orientation_data = loaders.OrientationData()
 input_data = loaders.InputData()
-hit_packet = loaders.HitPacket()
 grenade_packet = loaders.GrenadePacket()
 set_tool = loaders.SetTool()
 set_color = loaders.SetColor()
+fog_color = loaders.FogColor()
 existing_player = loaders.ExistingPlayer()
-intel_action = loaders.IntelAction()
+player_left = loaders.PlayerLeft()
 block_action = loaders.BlockAction()
 kill_action = loaders.KillAction()
 chat_message = loaders.ChatMessage()
 map_data = loaders.MapChunk()
 map_start = loaders.MapStart()
+state_data = loaders.StateData()
+ctf_data = loaders.CTFState()
+state_data.state = ctf_data
+intel_drop = loaders.IntelDrop()
+intel_pickup = loaders.IntelPickup()
+intel_capture = loaders.IntelCapture()
+restock = loaders.Restock()
+move_object = loaders.MoveObject()
+set_hp = loaders.SetHP()
+change_weapon = loaders.ChangeWeapon()
+change_team = loaders.ChangeTeam()
 
 def check_nan(*values):
     for value in values:
@@ -111,7 +121,7 @@ class ServerConnection(BaseConnection):
     timers = None
     world_object = None
     last_block = None
-    exceeded = None
+    map_data = None
     
     def __init__(self, protocol, address):
         BaseConnection.__init__(self)
@@ -168,42 +178,25 @@ class ServerConnection(BaseConnection):
         if self.player_id is not None:
             if loader.id in (SizedData.id, SizedSequenceData.id):
                 contained = load_contained_packet(loader.data)
-                if contained.id == loaders.JoinTeam.id:
-                    if contained.name is None and contained.weapon != -1:
-                        if self.name is None:
-                            return
-                        if self.on_weapon_set(contained.weapon) == False:
-                            if self.weapon != contained.weapon:
-                                self.set_weapon(local = True)
-                            return
-                        self.weapon = contained.weapon
-                        self.kill()
-                        self.set_weapon(self.weapon)
+                if contained.id == loaders.ExistingPlayer.id:
+                    if self.name is not None:
                         return
-                    old_team = self.team
                     team = [self.protocol.blue_team, 
                         self.protocol.green_team][contained.team]
                     if self.on_team_join(team) == False:
-                        if old_team is not None:
-                            return
                         team = team.other
                     self.team = team
-                    if self.name is None and contained.name is not None:
-                        name = contained.name
-                         # vanilla AoS behaviour
-                        if name == 'Deuce':
-                            name = name + str(self.player_id)
-                        self.name = self.protocol.get_name(name)
-                        if self.weapon is None:
-                            self.weapon = contained.weapon
-                        self.protocol.players[self.name, self.player_id] = self
-                    if old_team is None:
-                        if self.protocol.speedhack_detect:
-                            self.speedhack_detect = True
-                        self.on_login(self.name)
-                        self.spawn(name = self.name)
-                    else:
-                        self.kill()
+                    name = contained.name
+                     # vanilla AoS behaviour
+                    if name == 'Deuce':
+                        name = name + str(self.player_id)
+                    self.name = self.protocol.get_name(name)
+                    self.weapon = contained.weapon
+                    self.protocol.players[self.name, self.player_id] = self
+                    if self.protocol.speedhack_detect:
+                        self.speedhack_detect = True
+                    self.on_login(self.name)
+                    self.spawn(name = self.name)
                     return
                 if self.hp:
                     world_object = self.world_object
@@ -260,19 +253,10 @@ class ServerConnection(BaseConnection):
                         position_data.z = z
                         self.protocol.send_contained(position_data, 
                             sender = self)
-                    elif contained.id == loaders.MovementData.id:
+                    elif contained.id == loaders.InputData.id:
                         world_object.set_walk(contained.up, contained.down,
                             contained.left, contained.right)
-                        if self.filter_visibility_data:
-                            return
-                        movement_data.up = contained.up
-                        movement_data.down = contained.down
-                        movement_data.left = contained.left
-                        movement_data.right = contained.right
-                        movement_data.player_id = self.player_id
-                        self.protocol.send_contained(movement_data, 
-                            sender = self)
-                    elif contained.id == loaders.AnimationData.id:
+                        contained.player_id = self.player_id
                         z_acceleration = world_object.acceleration.z
                         jump = contained.jump
                         if jump and not (z_acceleration >= 0 and 
@@ -280,47 +264,44 @@ class ServerConnection(BaseConnection):
                             jump = False
                         world_object.set_animation(contained.fire, jump, 
                             contained.crouch, contained.aim)
-                        animation_data.fire = contained.fire
-                        animation_data.jump = contained.jump
-                        animation_data.crouch = contained.crouch
-                        animation_data.aim = contained.aim
-                        animation_data.player_id = self.player_id
-                        if (self.fly and animation_data.crouch and
+                        contained.jump = jump
+                        if (self.fly and contained.crouch and
                             world_object.acceleration.z != 0.0):
                             world_object.jump = True
-                            animation_data.jump = True
-                            self.send_contained(animation_data)
+                            contained.jump = True
+                            self.send_contained(contained)
                         if self.filter_visibility_data:
                             return
-                        self.protocol.send_contained(animation_data, 
+                        self.protocol.send_contained(contained, 
                             sender = self)
+                    elif contained.id == loaders.WeaponReload.id:
+                        contained.player_id = self.player_id
+                        self.protocol.send_contained(contained)
                     elif contained.id == loaders.HitPacket.id:
-                        if contained.player_id != -1:
-                            player = self.protocol.players[contained.player_id]
-                            hit_amount = HIT_VALUES[self.weapon][
-                                contained.value]
-                            returned = self.on_hit(hit_amount, player)
-                            if returned == False:
-                                return
-                            elif returned is not None:
-                                hit_amount = returned
-                            player.hit(hit_amount, self)
-                        else:
-                            self.hit(contained.value)
+                        player = self.protocol.players[contained.player_id]
+                        hit_amount = HIT_VALUES[self.weapon][
+                            contained.value]
+                        returned = self.on_hit(hit_amount, player)
+                        if returned == False:
+                            return
+                        elif returned is not None:
+                            hit_amount = returned
+                        player.hit(hit_amount, self)
                     elif contained.id == loaders.GrenadePacket.id:
                         if not self.grenades:
                             return
                         self.grenades -= 1
                         if self.on_grenade(contained.value) == False:
                             return
-                        grenade = world_object.throw_grenade(contained.value,
-                            self.grenade_exploded)
+                        grenade = self.protocol.world.create_object(
+                            world.Grenade, contained.value,
+                            Vertex3(*contained.position), None,
+                            Vertex3(*contained.velocity), self.grenade_exploded)
                         self.on_grenade_thrown(grenade)
                         if self.filter_visibility_data:
                             return
-                        grenade_packet.player_id = self.player_id
-                        grenade_packet.value = contained.value
-                        self.protocol.send_contained(grenade_packet, 
+                        contained.player_id = self.player_id
+                        self.protocol.send_contained(contained, 
                             sender = self)
                     elif contained.id == loaders.SetTool.id:
                         if self.on_tool_set_attempt(contained.value) == False:
@@ -334,18 +315,12 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(set_tool, sender = self)
                     elif contained.id == loaders.SetColor.id:
                         color = get_color(contained.value)
-                        if contained.fog:
-                            self.on_command('fog', 
-                                [str(item) for item in color])
-                            return
                         if self.on_color_set_attempt(color) == False:
                             return
                         self.color = color
                         self.on_color_set(color)
-                        set_color.player_id = self.player_id
-                        set_color.value = contained.value
-                        set_color.fog = False
-                        self.protocol.send_contained(set_color, sender = self,
+                        contained.player_id = self.player_id
+                        self.protocol.send_contained(contained, sender = self,
                             save = True)
                     elif contained.id == loaders.BlockAction.id:
                         if self.tool == WEAPON_TOOL:
@@ -402,39 +377,55 @@ class ServerConnection(BaseConnection):
                         block_action.player_id = self.player_id
                         self.protocol.send_contained(block_action, save = True)
                         self.protocol.update_entities()
-                if contained.id == loaders.ChatMessage.id:
-                    if not self.name:
-                        return
-                    value = contained.value
-                    if value.startswith('/'):
-                        value = encode(value[1:])
-                        try:
-                            splitted = shlex.split(value)
-                        except ValueError:
-                            # shlex failed. let's just split per space
-                            splitted = value.split(' ')
-                        if splitted:
-                            command = splitted.pop(0)
-                        else:
-                            command = ''
-                        splitted = [decode(value) for value in splitted]
-                        self.on_command(command, splitted)
-                    else:
-                        global_message = contained.global_message
-                        result = self.on_chat(value, global_message)
-                        if result == False:
+                if self.name:
+                    if contained.id == loaders.ChatMessage.id:
+                        if not self.name:
                             return
-                        elif result is not None:
-                            value = result
-                        chat_message.global_message = global_message
-                        chat_message.value = value
-                        chat_message.player_id = self.player_id
-                        if contained.global_message:
-                            team = None
+                        value = contained.value
+                        if value.startswith('/'):
+                            value = encode(value[1:])
+                            try:
+                                splitted = shlex.split(value)
+                            except ValueError:
+                                # shlex failed. let's just split per space
+                                splitted = value.split(' ')
+                            if splitted:
+                                command = splitted.pop(0)
+                            else:
+                                command = ''
+                            splitted = [decode(value) for value in splitted]
+                            self.on_command(command, splitted)
                         else:
-                            team = self.team
-                        self.protocol.send_contained(chat_message, 
-                            sender = self, team = team)
+                            global_message = contained.chat_type == CHAT_ALL
+                            result = self.on_chat(value, global_message)
+                            if result == False:
+                                return
+                            elif result is not None:
+                                value = result
+                            contained.chat_type = [CHAT_TEAM, CHAT_ALL][
+                                int(global_message)]
+                            contained.value = value
+                            contained.player_id = self.player_id
+                            if global_message:
+                                team = None
+                            else:
+                                team = self.team
+                            self.protocol.send_contained(contained, 
+                                sender = self, team = team)
+                    elif contained.id == loaders.FogColor.id:
+                        color = get_color(contained.color)
+                        self.on_command('fog', [str(item) for item in color])
+                    elif contained.id == loaders.ChangeWeapon.id:
+                        if self.on_weapon_set(contained.weapon) == False:
+                            return
+                        self.weapon = contained.weapon
+                        self.set_weapon(self.weapon)
+                    elif contained.id == loaders.ChangeTeam.id:
+                        team = [self.protocol.blue_team,
+                            self.protocol.green_team][contained.team]
+                        if self.on_team_join(team) == False:
+                            return
+                        self.set_team(team)
             return
 
     def get_location(self):
@@ -466,8 +457,7 @@ class ServerConnection(BaseConnection):
         self.hp = 100
         self.grenades = 2
         self.blocks = 50
-        intel_action.action_type = 4
-        self.send_contained(intel_action)
+        self.send_contained(restock)
     
     def take_flag(self):
         if not self.hp:
@@ -477,9 +467,8 @@ class ServerConnection(BaseConnection):
             return
         self.on_flag_take()
         flag.player = self
-        intel_action.action_type = 1
-        intel_action.player_id = self.player_id
-        self.protocol.send_contained(intel_action, save = True)
+        intel_pickup.player_id = self.player_id
+        self.protocol.send_contained(intel_pickup, save = True)
     
     def respawn(self):
         if self.spawn_call is None:
@@ -501,14 +490,16 @@ class ServerConnection(BaseConnection):
                 world.Character, position, None, self._on_fall)
         self.world_object.dead = False
         self.hp = 100
-        self.tool = 3
+        self.tool = WEAPON_TOOL
         self.grenades = 2
         self.blocks = 50
         create_player.player_id = self.player_id
-        create_player.name = name
+        create_player.name = name or ''
         create_player.x = x
-        create_player.y = y - 128
+        create_player.y = y
+        create_player.z = z
         create_player.weapon = self.weapon
+        create_player.team = self.team.id
         if self.filter_visibility_data:
             self.send_contained(create_player)
         else:
@@ -528,14 +519,12 @@ class ServerConnection(BaseConnection):
             self.protocol.reset_game(self)
             self.protocol.on_game_end(self)
         else:
-            intel_action.action_type = 3
-            intel_action.player_id = self.player_id
-            intel_action.game_end = False
+            intel_capture.player_id = self.player_id
+            intel_capture.winning = False
+            self.protocol.send_contained(intel_capture, save = True)
             self.team.score += 1
             flag = other_team.set_flag()
-            intel_action.x = flag.x
-            intel_action.y = flag.y
-            self.protocol.send_contained(intel_action, save = True)
+            flag.update()
     
     def drop_flag(self):
         protocol = self.protocol
@@ -551,12 +540,11 @@ class ServerConnection(BaseConnection):
             z = self.protocol.map.get_z(x, y, z)
             flag.set(x, y, z)
             flag.player = None
-            intel_action.action_type = 2
-            intel_action.player_id = self.player_id
-            intel_action.x = flag.x
-            intel_action.y = flag.y
-            intel_action.z = flag.z
-            self.protocol.send_contained(intel_action, save = True)
+            intel_drop.player_id = self.player_id
+            intel_drop.x = flag.x
+            intel_drop.y = flag.y
+            intel_drop.z = flag.z
+            self.protocol.send_contained(intel_drop, save = True)
             break
     
     def disconnect(self):
@@ -572,8 +560,8 @@ class ServerConnection(BaseConnection):
             self.protocol.update_master()
         if self.name is not None:
             self.drop_flag()
-            player_data.player_left = self.player_id
-            self.protocol.send_contained(player_data, sender = self,
+            player_left.player_id = self.player_id
+            self.protocol.send_contained(player_left, sender = self,
                 save = True)
             del self.protocol.players[self]
         if self.spawn_call is not None:
@@ -594,51 +582,48 @@ class ServerConnection(BaseConnection):
                     return
             elif not friendly_fire:
                 return
-        self.set_hp(self.hp - value, by)
+        self.set_hp(self.hp - value, by, type = WEAPON_KILL)
     
-    def set_hp(self, value, hit_by = None, not_fall = True, 
+    def set_hp(self, value, hit_by = None, type = WEAPON_KILL, 
                hit_indicator = None):
         value = int(value)
         self.hp = max(0, min(100, value))
         if self.hp <= 0:
-            self.kill(hit_by, not_fall)
+            self.kill(hit_by, type)
             return
-        hit_packet.hp = self.hp
-        hit_packet.not_fall = not_fall
+        set_hp.hp = self.hp
+        set_hp.not_fall = type != FALL_KILL
         if hit_indicator is None:
             if hit_by is not None and hit_by is not self:
                 hit_indicator = self.world_object.get_hit_direction(
                     hit_by.world_object.position)
             else:
                 hit_indicator = 0
-        hit_packet.hit_indicator = hit_indicator
-        self.send_contained(hit_packet)
+        set_hp.hit_indicator = hit_indicator
+        self.send_contained(set_hp)
     
-    def set_weapon(self, weapon = None, local = False):
-        if weapon is None:
-            weapon = self.weapon
+    def set_weapon(self, weapon):
         self.weapon = weapon
-        existing_player.name = None
-        existing_player.player_id = self.player_id
-        existing_player.team = self.team.id
-        existing_player.weapon = weapon
-        if local:
-            self.send_contained(existing_player)
-        else:
-            self.protocol.send_contained(existing_player, save = True)
+        self.protocol.send_contained(change_weapon, save = True)
+        self.kill(type = CLASS_CHANGE_KILL)
     
-    def kill(self, by = None, not_fall = True):
+    def set_team(self, team):
+        self.drop_flag()
+        self.team = team
+        self.kill(type = TEAM_CHANGE_KILL)
+    
+    def kill(self, by = None, type = WEAPON_KILL):
         if self.hp is None:
             return
         self.on_kill(by)
         self.drop_flag()
         self.hp = None
-        kill_action.not_fall = not_fall
+        kill_action.kill_type = type
         if by is None:
-            kill_action.player1 = kill_action.player2 = self.player_id
+            kill_action.killer_id = kill_action.player_id = self.player_id
         else:
-            kill_action.player1 = by.player_id
-            kill_action.player2 = self.player_id
+            kill_action.killer_id = by.player_id
+            kill_action.player_id = self.player_id
         if by is not None and by is not self:
             by.add_score(1)
         self.protocol.send_contained(kill_action, save = True)
@@ -649,6 +634,7 @@ class ServerConnection(BaseConnection):
         self.kills += score
     
     def _connection_ack(self, ack):
+        print 'got connection ack'
         if self.master:
             # this shouldn't happen, but let's make sure
             self.disconnect()
@@ -678,43 +664,39 @@ class ServerConnection(BaseConnection):
         self.player_id = self.protocol.player_ids.pop()
         self.protocol.update_master()
 
-        player_data.player_left = -1
-        player_data.player_id = self.player_id
-        player_data.max_score = self.protocol.max_score
-        player_data.blue_score = blue.score
-        player_data.green_score = green.score
+        state_data.player_id = self.player_id
+        state_data.fog_color = self.protocol.fog_color
+        ctf_data.cap_limit = self.protocol.max_score
+        ctf_data.team1_score = blue.score
+        ctf_data.team2_score = green.score
         
-        player_data.blue_base_x = blue_base.x
-        player_data.blue_base_y = blue_base.y
-        player_data.blue_base_z = blue_base.z
+        ctf_data.team1_base_x = blue_base.x
+        ctf_data.team1_base_y = blue_base.y
+        ctf_data.team1_base_z = blue_base.z
         
-        player_data.green_base_x = green_base.x
-        player_data.green_base_y = green_base.y
-        player_data.green_base_z = green_base.z
+        ctf_data.team2_base_x = green_base.x
+        ctf_data.team2_base_y = green_base.y
+        ctf_data.team2_base_z = green_base.z
         
         if blue_flag.player is None:
-            player_data.blue_flag_player = -1
-            player_data.blue_flag_x = blue_flag.x
-            player_data.blue_flag_y = blue_flag.y
-            player_data.blue_flag_z = blue_flag.z
+            ctf_data.team1_flag_x = blue_flag.x
+            ctf_data.team1_flag_y = blue_flag.y
+            ctf_data.team1_flag_z = blue_flag.z
+            ctf_data.team1_has_intel = False
         else:
-            player_data.blue_flag_player = blue_flag.player.player_id
+            ctf_data.team1_carrier = blue_flag.player.player_id
+            ctf_data.team1_has_intel = True
         
         if green_flag.player is None:
-            player_data.green_flag_player = -1
-            player_data.green_flag_x = green_flag.x
-            player_data.green_flag_y = green_flag.y
-            player_data.green_flag_z = green_flag.z
+            ctf_data.team2_flag_x = green_flag.x
+            ctf_data.team2_flag_y = green_flag.y
+            ctf_data.team2_flag_z = green_flag.z
+            ctf_data.team2_has_intel = False
         else:
-            player_data.green_flag_player = green_flag.player.player_id
+            ctf_data.team2_carrier = green_flag.player.player_id
+            ctf_data.team1_has_intel = True
         
-        r, g, b = self.protocol.fog_color
-        player_data.r = r
-        player_data.g = g
-        player_data.b = b
-        
-        saved_loaders.append(player_data.generate())
-        
+        saved_loaders.append(state_data.generate())
         self.map_data = ByteReader(
             zlib.compress(self.protocol.map.generate()))
         map_start.size = len(self.map_data)
@@ -745,7 +727,7 @@ class ServerConnection(BaseConnection):
                     damage = returned
                 indicator = player.world_object.get_hit_direction(position)
                 player.set_hp(player.hp - damage, self,
-                    hit_indicator = indicator)
+                    hit_indicator = indicator, type = GRENADE_KILL)
         if self.on_block_destroy(x, y, z, GRENADE_DESTROY) == False:
             return
         map = self.protocol.map
@@ -772,10 +754,10 @@ class ServerConnection(BaseConnection):
             return
         elif returned is not None:
             damage = returned
-        self.set_hp(self.hp - damage, not_fall = False)
+        self.set_hp(self.hp - damage, type = FALL_KILL)
     
     def send_map(self):
-        if self.map_generator is None:
+        if self.map_data is None:
             return
         if not self.map_data.dataLeft():
             for data in self.saved_loaders:
@@ -788,7 +770,8 @@ class ServerConnection(BaseConnection):
             if not self.map_data.dataLeft():
                 break
             map_data.data = self.map_data.read(1024)
-            self.send_contained(map_data)
+            self.send_contained(map_data).addCallback(self.got_map_ack)
+            self.map_packets_sent += 1
     
     def got_map_ack(self, ack):
         self.map_packets_sent -= 1
@@ -802,10 +785,10 @@ class ServerConnection(BaseConnection):
         if self.deaf:
             return
         if global_message is None:
-            chat_message.player_id = -1
+            chat_message.chat_type = CHAT_SYSTEM
             prefix = ''
         else:
-            chat_message.global_message = global_message
+            chat_message.chat_type = CHAT_TEAM
             # 34 is guaranteed to be out of range!
             chat_message.player_id = 34
             prefix = self.protocol.server_prefix + ' '
@@ -915,9 +898,25 @@ class ServerConnection(BaseConnection):
     def on_fall(self, damage):
         pass
 
-class Flag(Vertex3):
+class Entity(Vertex3):
+    def __init__(self, id, protocol, *arg, **kw):
+        Vertex3.__init__(self, *arg, **kw)
+        self.id = id
+        self.protocol = protocol
+    
+    def update(self):
+        move_object.object_type = self.id
+        move_object.x = self.x
+        move_object.y = self.y
+        move_object.z = self.z
+        self.protocol.send_contained(move_object, save = True)
+
+class Flag(Entity):
     player = None
     team = None
+
+class Base(Entity):
+    pass
 
 class Team(object):
     score = None
@@ -962,12 +961,14 @@ class Team(object):
         self.set_base()
     
     def set_flag(self):
-        self.flag = Flag(*self.get_random_location(True))
+        self.flag = Flag([BLUE_FLAG, GREEN_FLAG][self.id], self.protocol,
+            *self.get_random_location(True))
         self.flag.team = self
         return self.flag
 
-    def set_base(self):    
-        self.base = Vertex3(*self.get_random_location(True))
+    def set_base(self):
+        self.base = Base([BLUE_BASE, GREEN_BASE][self.id], self.protocol,
+            *self.get_random_location(True))
     
     def get_random_location(self, force_land = False):
         if force_land and len(self.spawns) > 0:
@@ -1024,19 +1025,12 @@ class ServerProtocol(DatagramProtocol):
         green_team.initialize()
         blue_team = self.blue_team
         green_team = self.green_team
-        intel_action.blue_flag_x = blue_team.flag.x
-        intel_action.blue_flag_y = blue_team.flag.y
-        intel_action.blue_base_x = blue_team.base.x
-        intel_action.blue_base_y = blue_team.base.y
-        intel_action.green_flag_x = green_team.flag.x
-        intel_action.green_flag_y = green_team.flag.y
-        intel_action.green_base_x = green_team.base.x
-        intel_action.green_base_y = green_team.base.y
-        intel_action.action_type = 3
-        intel_action.player_id = player.player_id
-        intel_action.game_end = True
-        self.send_contained(intel_action, save = True)
-
+        intel_capture.player_id = player.player_id
+        intel_capture.winning = True
+        self.send_contained(intel_capture, save = True)
+        for team in (blue_team, green_team):
+            for entity in (team.flag, team.base):
+                entity.update()
         for player in self.players.values():
             player.hp = 0
         for player in self.players.values():
@@ -1095,11 +1089,10 @@ class ServerProtocol(DatagramProtocol):
         blue_team = self.blue_team
         green_team = self.green_team
         map = self.map
-        intel_action.action_type = 0
-        for (move_type, entity) in ((MOVE_BLUE_FLAG, blue_team.flag),
-                                   (MOVE_GREEN_FLAG, green_team.flag),
-                                   (MOVE_BLUE_BASE, blue_team.base),
-                                   (MOVE_GREEN_BASE, green_team.base)):
+        for entity in (blue_team.flag, 
+                       green_team.flag, 
+                       blue_team.base, 
+                       green_team.base):
             moved = False
             if map.get_solid(entity.x, entity.y, entity.z - 1):
                 moved = True
@@ -1111,9 +1104,7 @@ class ServerProtocol(DatagramProtocol):
                     moved = True
                     entity.z += 1
             if moved:
-                intel_action.move_type = move_type
-                intel_action.z = entity.z
-                self.send_contained(intel_action)
+                entity.update()
     
     def send_contained(self, contained, sequence = False, sender = None,
                        team = None, save = False):
@@ -1162,9 +1153,8 @@ class ServerProtocol(DatagramProtocol):
     
     def set_fog_color(self, color):
         self.fog_color = color
-        set_color.value = make_color(*color)
-        set_color.fog = True
-        self.send_contained(set_color, save = True)
+        fog_color.color = make_color(*color)
+        self.send_contained(fog_color, save = True)
 
     # events
     

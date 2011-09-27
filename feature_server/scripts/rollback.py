@@ -130,7 +130,6 @@ def apply_script(protocol, connection, config):
             block_action = BlockAction()
             block_action.player_id = 32
             set_color = SetColor()
-            set_color.fog = False
             set_color.value = 0x000000
             set_color.player_id = block_action.player_id
             self.send_contained(set_color, save = True)
