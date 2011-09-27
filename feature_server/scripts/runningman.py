@@ -50,7 +50,7 @@ def apply_script(protocol, connection, config):
                     grenade_packet.value = 0.0
                     grenade_packet.player_id = self.player_id
                     grenade_packet.position = self.world_object.position.get()
-                    grenade_packet.acceleration = self.world_object.orientation.get()
+                    grenade_packet.velocity = self.world_object.orientation.get()
                     self.protocol.send_contained(grenade_packet)
                     self.kill()
                     grenade_packet.player_id = self.link.player_id

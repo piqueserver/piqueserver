@@ -69,7 +69,7 @@ cdef class InputData(Loader):
         reader.writeByte(self.player_id, True)
         reader.pad(2)
         cdef int byte
-        byte = (self.id | self.up | (self.down << 1) | (self.left << 2) | 
+        byte = (self.up | (self.down << 1) | (self.left << 2) | 
             (self.right << 3) | (self.fire << 4) | (self.jump << 5) |
             (self.crouch << 6) | (self.aim << 7))
         reader.writeInt(byte, True, False)
@@ -114,8 +114,8 @@ cdef class GrenadePacket(Loader):
     id = 5
 
     cdef public:
-        float value
         int player_id
+        float value
         tuple position, velocity
 
     cpdef read(self, ByteReader reader):
@@ -133,9 +133,9 @@ cdef class GrenadePacket(Loader):
         reader.pad(2)
         reader.writeFloat(self.value, False)
         for value in self.position:
-            reader.writeFloat(value)
+            reader.writeFloat(value, False)
         for value in self.velocity:
-            reader.writeFloat(value)
+            reader.writeFloat(value, False)
 
 cdef class SetTool(Loader):
     id = 6

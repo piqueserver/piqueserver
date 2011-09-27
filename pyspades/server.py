@@ -634,7 +634,6 @@ class ServerConnection(BaseConnection):
         self.kills += score
     
     def _connection_ack(self, ack):
-        print 'got connection ack'
         if self.master:
             # this shouldn't happen, but let's make sure
             self.disconnect()

@@ -21,15 +21,15 @@ def apply_script(protocol, connection, config):
             grenade_packet.value = fuse
             grenade_packet.player_id = self.player_id
             grenade_packet.position = (x, y, z)
-            grenade_packet.acceleration = (orientation_x, 0.0, 0.0)
+            grenade_packet.velocity = (orientation_x, 0.0, 0.5)
+            self.protocol.send_contained(grenade_packet)
             position = Vertex3(x, y, z)
-            acceleration = Vertex3(orientation_x, 0.0, 0.0)
+            velocity = Vertex3(orientation_x, 0.0, 0.5)
             airstrike = self.protocol.world.create_object(Grenade, fuse, 
                 position, None, 
-                acceleration, self.grenade_exploded)
+                velocity, self.grenade_exploded)
             airstrike.name = 'airstrike'
-            self.protocol.send_contained(grenade_packet)
-        
+            
         # airstrike
         
         def start_airstrike(self, value = None):
