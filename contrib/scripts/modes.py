@@ -184,10 +184,8 @@ def build(connection, structure = None):
         invalid_structure = False
         try:
             structure = int(structure)
-            if structure >= len(QUICKBUILD_STRUCTURES):
+            if structure >= len(QUICKBUILD_STRUCTURES) or structure < 0:
                 invalid_structure = True
-            else:
-                connection.quickbuild = structure
         except ValueError:
             invalid_structure = True
         if invalid_structure:
@@ -196,6 +194,7 @@ def build(connection, structure = None):
         cost = QUICKBUILD_COST[structure]
         if connection.quickbuild_points >= cost:
             connection.quickbuild_points -= cost
+            connection.quickbuild = structure
             connection.send_chat('The next block you place will build a ' +
                                  QUICKBUILD_DESCRIPTION[structure]+'.')
             connection.quickbuild_enabled = True
