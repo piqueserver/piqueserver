@@ -1,5 +1,5 @@
 from pyspades.collision import vector_collision
-from pyspades.constants import PICKAXE_TOOL
+from pyspades.constants import SPADE_TOOL
 from twisted.internet.task import LoopingCall
 import random
 
@@ -23,9 +23,9 @@ def apply_script(protocol, connection, config):
                 for player2 in self.players.values():
                     if player2 in checked or not player2.hp:
                         continue
-                    fire_1 = (player1.tool == PICKAXE_TOOL and 
+                    fire_1 = (player1.tool == SPADE_TOOL and 
                         player1.world_object.fire)
-                    fire_2 = (player2.tool == PICKAXE_TOOL and 
+                    fire_2 = (player2.tool == SPADE_TOOL and 
                         player2.world_object.fire)
                     if fire_1 and fire_2:
                         fire_1 = bool(random.randrange(2))

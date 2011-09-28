@@ -1,5 +1,3 @@
-from pyspades.server import hit_packet
-
 def apply_script(protocol, connection, config):
     class MapExtensionConnection(connection):
         def on_position_update(self):

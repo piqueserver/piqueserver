@@ -1,5 +1,5 @@
-from pyspades.server import player_data, chat_message, create_player
-from pyspades.server import position_data, kill_action, block_action
+from pyspades.server import (player_left, chat_message, create_player,
+    position_data, kill_action, block_action)
 from pyspades.constants import *
 from commands import add, rights, admin, name, get_player
 import commands
@@ -116,36 +116,38 @@ def apply_script(protocol, connection, config):
             except AttributeError:
                 pass
             self.respawn_time = self.protocol.respawn_time
-            player_data.player_left = self.player_id
+            player_left.player_id = self.player_id
             for player in self.protocol.connections.values():
                 if player is self:
                     continue
                 if not player.spectator:
-                    player.send_contained(player_data)
+                    player.send_contained(player_left)
                 else:
                     pos = player.team.get_random_location(True)
                     x, y, z = pos
                     create_player.player_id = player.player_id
                     create_player.name = player.name
                     create_player.x = x
-                    create_player.y = y - 128
+                    create_player.y = y
+                    create_player.z = z
+                    create_player.team = player.team.id
                     create_player.weapon = player.weapon
                     position_data.set((0, 0, 0), player.player_id)
-                    kill_action.not_fall = True
-                    kill_action.player1 = kill_action.player2 = player.player_id
+                    kill_action.kill_type = WEAPON_KILL
+                    kill_action.killer_id = kill_action.player_id = player.player_id
                     self.send_contained(create_player)
                     self.send_contained(position_data)
                     self.send_contained(kill_action)
                     position_data.player_id = self.player_id
-                    kill_action.player1 = kill_action.player2 = self.player_id
+                    kill_action.killer_id = kill_action.player_id = self.player_id
                     player.send_contained(position_data)
                     player.send_contained(kill_action)
         
         def on_join(self):
             for player in self.protocol.connections.values():
                 if player.spectator:
-                    player_data.player_left = player.player_id
-                    self.send_contained(player_data)
+                    player_left.player_id = player.player_id
+                    self.send_contained(player_left)
             connection.on_join(self)
         
         def on_user_login(self, user_type):
@@ -162,7 +164,8 @@ def apply_script(protocol, connection, config):
         def on_chat(self, value, global_message):
             if not self.spectator:
                 return connection.on_chat(self, value, global_message)
-            chat_message.global_message = global_message
+            chat_message.chat_type = [CHAT_TEAM, CHAT_ALL][
+                int(global_message)]
             chat_message.value = value
             chat_message.player_id = self.player_id
             for player in self.protocol.connections.values():

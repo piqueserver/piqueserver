@@ -19,28 +19,34 @@ CONNECTIONLESS = 0xFFF
 
 SEMI_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON = xrange(3)
 
-SPADE_TOOL, PICKAXE_TOOL, BLOCK_TOOL, WEAPON_TOOL, GRENADE_TOOL = xrange(5)
+SPADE_TOOL, BLOCK_TOOL, WEAPON_TOOL, GRENADE_TOOL = xrange(4)
 
 HIT_VALUES = {
     SEMI_WEAPON : {
-        1 : 49,
-        2 : 100,
+        0 : 49,
+        1 : 100,
+        2 : 33,
         3 : 33
     },
     SMG_WEAPON : {
-        1 : 24,
-        2 : 75,
+        0 : 24,
+        1 : 75,
+        2 : 16,
         3 : 16
     },
     SHOTGUN_WEAPON : {
-        1 : 19,
-        2 : 33,
+        0 : 19,
+        1 : 33,
+        2 : 14,
         3 : 14
     }
 }
 
 BUILD_BLOCK, DESTROY_BLOCK, SPADE_DESTROY, GRENADE_DESTROY = xrange(4)
-MOVE_BLUE_FLAG, MOVE_GREEN_FLAG, MOVE_BLUE_BASE, MOVE_GREEN_BASE = xrange(4)
+BLUE_FLAG, GREEN_FLAG, BLUE_BASE, GREEN_BASE = xrange(4)
+(CHAT_UNKNOWN, CHAT_ALL, CHAT_TEAM, CHAT_SYSTEM) = xrange(4)
+(WEAPON_KILL, GRENADE_KILL, FALL_KILL, TEAM_CHANGE_KILL, 
+    CLASS_CHANGE_KILL) = xrange(5)
 
 MAX_CHAT_SIZE = 90 # more like 95, but just to make sure
 
@@ -58,8 +64,7 @@ UPDATE_FREQUENCY = 1 / UPDATE_FPS
 MIN_BLOCK_INTERVAL = 0.1
 
 TOOL_INTERVAL = {
-    SPADE_TOOL : 0.5,
-    PICKAXE_TOOL : 0.2,
+    SPADE_TOOL : 0.2,
     BLOCK_TOOL : 0.2,
     GRENADE_TOOL : 1.0
 }

@@ -172,8 +172,15 @@ cdef class ByteWriter:
     cpdef writeStringSize(self, char * value, int size):
         write_string(self.stream, value, size)
     
-    cpdef writeString(self, value):
+    cpdef writeString(self, value, int size = -1):
         write_string(self.stream, value, len(value))
+        if size != -1:
+            self.pad(size - (len(value) + 1))
+    
+    cpdef pad(self, int bytes):
+        cdef int i
+        for i in range(bytes):
+            write_ubyte(self.stream, 0)
     
     cpdef rewind(self, int bytes):
         rewind_stream(self.stream, bytes)

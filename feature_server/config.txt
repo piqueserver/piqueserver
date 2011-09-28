@@ -62,7 +62,7 @@
     "ban_subscribe" : {
         "enabled" : true,
         "urls" : [
-            ["http://aos.nateshoffner.com/blacklist.json", []]
+            ["http://www.blacklist.spadille.net/subscribe.json", []]
         ]
     },
     "server_prefix" : "[*]",

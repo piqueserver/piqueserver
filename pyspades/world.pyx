@@ -87,9 +87,12 @@ cdef class Grenade(Object):
         self.position = Vertex3()
         self.acceleration = Vertex3()
         self.position.set_vector(position)
-        self.acceleration.x = orientation.x + acceleration.x
-        self.acceleration.y = orientation.y + acceleration.y
-        self.acceleration.z = orientation.z + acceleration.z
+        if orientation is None:
+            self.acceleration.set_vector(acceleration)
+        else:
+            self.acceleration.x = orientation.x + acceleration.x
+            self.acceleration.y = orientation.y + acceleration.y
+            self.acceleration.z = orientation.z + acceleration.z
         self.time_left = time_left
     
     cpdef bint collides(self, Vertex3 player_position):

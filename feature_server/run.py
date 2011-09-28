@@ -164,7 +164,6 @@ class FeatureConnection(ServerConnection):
         self.protocol.irc_say('* %s entered the game' % self.name)
     
     def disconnect(self):
-        ServerConnection.disconnect(self)
         if self.name is not None:
             print self.printable_name, 'disconnected!'
             self.protocol.irc_say('* %s disconnected' % self.name)
@@ -175,9 +174,9 @@ class FeatureConnection(ServerConnection):
                 self.protocol.votekick_call.cancel()
                 self.protocol.end_votekick(True, 'Player left the game',
                     left = True)
-            self.on_team_leave()
         else:
             print '%s disconnected' % self.address[0]
+        ServerConnection.disconnect(self)
     
     def on_command(self, command, parameters):
         result = commands.handle_command(self, command, parameters)
@@ -302,8 +301,6 @@ class FeatureConnection(ServerConnection):
             if other_team.count() < team.count() + 1 - balanced_teams:
                 self.send_chat('Team is full')
                 return False
-        if self.team is not team:
-            self.on_team_leave()
         self.last_switch = reactor.seconds()
     
     def on_chat(self, value, global_message):
@@ -505,7 +502,19 @@ class FeatureProtocol(ServerProtocol):
         ServerProtocol.__init__(self)
         # locked teams
         self.blue_team.locked = False
-        self.green_team.locked = False        
+        self.green_team.locked = False
+    
+    def set_map_name(self, name):
+        if self.rollback_in_progress:
+            return 'Rollback in progress.'
+        self.map_info = Map(name)
+        self.set_map(self.map_info.data)
+        if self.rollback_map is not None:
+            self.rollback_map = self.map.copy()
+        if hasattr(self, 'block_info'):
+            # this is very ugly - we need a 'map updated' event
+            self.block_info = None
+        self.update_format()
     
     def is_indestructable(self, x, y, z):
         if self.user_blocks is not None:

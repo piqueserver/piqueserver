@@ -13,8 +13,7 @@ names = [
     'pyspades.bytes',
     'pyspades.packet',
     'pyspades.loaders',
-    'pyspades.serverloaders',
-    'pyspades.clientloaders',
+    'pyspades.contained',
     'pyspades.common',
     'pyspades.world'
 ]

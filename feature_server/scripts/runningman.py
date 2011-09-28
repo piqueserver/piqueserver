@@ -49,9 +49,13 @@ def apply_script(protocol, connection, config):
                 if dist > self.protocol.link_distance:
                     grenade_packet.value = 0.0
                     grenade_packet.player_id = self.player_id
+                    grenade_packet.position = self.world_object.position.get()
+                    grenade_packet.velocity = self.world_object.orientation.get()
                     self.protocol.send_contained(grenade_packet)
                     self.kill()
                     grenade_packet.player_id = self.link.player_id
+                    grenade_packet.position = (
+                        self.link.world_object.position.get())
                     self.protocol.send_contained(grenade_packet)
                     self.link.kill()
                     message = ("You strayed too far from %s... don't go losing "
@@ -111,8 +115,8 @@ def apply_script(protocol, connection, config):
         def on_flag_capture(self):
             self.protocol.drop_all_links()
         
-        def disconnect(self):
-            connection.disconnect(self)
+        def on_reset(self):
+            connection.on_reset(self)
             self.drop_link()
         
         def drop_link(self, force_message = False):

@@ -18,7 +18,7 @@
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 from pyspades.bytes import ByteReader, ByteWriter
-from pyspades.packet import Packet, load_server_packet, generate_loader_data
+from pyspades.packet import Packet, generate_loader_data
 from pyspades.loaders import Ack
 from twisted.internet.defer import Deferred
 from pyspades.loaders import *
