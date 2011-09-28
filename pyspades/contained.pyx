@@ -407,14 +407,14 @@ cdef class ChatMessage(Loader):
         self.player_id = reader.readByte(True)
         reader.skipBytes(2)
         self.chat_type = reader.readInt(True, False)
-        self.value = reader.readString()
+        self.value = decode(reader.readString())
     
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
         reader.pad(2)
         reader.writeInt(self.chat_type, True, False)
-        reader.writeString(self.value)
+        reader.writeString(encode(self.value))
 
 cdef class MapStart(Loader):
     id = 15
