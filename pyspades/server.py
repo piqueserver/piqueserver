@@ -195,7 +195,7 @@ class ServerConnection(BaseConnection):
                     if self.protocol.speedhack_detect:
                         self.speedhack_detect = True
                     self.on_login(self.name)
-                    self.spawn(name = self.name)
+                    self.spawn()
                     return
                 if self.hp:
                     world_object = self.world_object
@@ -474,7 +474,7 @@ class ServerConnection(BaseConnection):
             self.spawn_call = reactor.callLater(
                 self.respawn_time, self.spawn)
     
-    def spawn(self, pos = None, name = None):
+    def spawn(self, pos = None):
         self.spawn_call = None
         if pos is None:
             x, y, z = self.team.get_random_location(True)
@@ -493,7 +493,7 @@ class ServerConnection(BaseConnection):
         self.grenades = 2
         self.blocks = 50
         create_player.player_id = self.player_id
-        create_player.name = name or ''
+        create_player.name = self.name
         create_player.x = x
         create_player.y = y
         create_player.z = z
@@ -563,9 +563,9 @@ class ServerConnection(BaseConnection):
         if self.player_id is not None:
             self.protocol.player_ids.put_back(self.player_id)
             self.protocol.update_master()
-        self.reset()
+        self.reset(True)
     
-    def reset(self):
+    def reset(self, disconnect = False):
         if self.spawn_call is not None:
             self.spawn_call.cancel()
             self.spawn_call = None
@@ -573,10 +573,10 @@ class ServerConnection(BaseConnection):
             self.world_object.delete()
             self.world_object = None
         if self.team is not None:
-            self.team = None
             self.on_team_leave()
         self.on_reset()
-        self.name = self.team = self.hp = None
+        if not disconnect:
+            self.name = self.team = self.hp = None
     
     def hit(self, value, by = None):
         if self.hp is None:
@@ -714,6 +714,8 @@ class ServerConnection(BaseConnection):
         saved_loaders.append(state_data.generate())
         
     def grenade_exploded(self, grenade):
+        if self.name is None:
+            return
         position = grenade.position
         x = position.x
         y = position.y
@@ -1047,7 +1049,6 @@ class ServerProtocol(DatagramProtocol):
         self.on_map_change(map)
         self.blue_team.initialize()
         self.green_team.initialize()
-        self.update_entities()
         self.on_game_end(None)
         data = zlib.compress(map.generate())
         self.players = MultikeyDict()
@@ -1060,6 +1061,7 @@ class ServerProtocol(DatagramProtocol):
             connection.reset()
             connection._send_connection_data()
             connection.send_map(data)
+        self.update_entities()
     
     def reset_game(self, player):
         blue_team = self.blue_team

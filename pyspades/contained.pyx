@@ -24,6 +24,14 @@ cdef class _InformationCommon(Loader):
         int player_id
         float x, y, z
 
+    def set(self, pos, player_id):
+        cdef float x, y, z
+        x, y, z = pos
+        self.x = x
+        self.y = y
+        self.z = z
+        self.player_id = player_id
+        
     cpdef read(self, ByteReader reader):
         self.player_id = reader.readByte(True)
         reader.skipBytes(2)

@@ -16,8 +16,9 @@ def apply_script(protocol, connection, config):
     class AirstrikeConnection(connection):
         airstrike = False
         def desync_grenade(self, x, y, z, orientation_x, fuse):
-            """Gives the appearance of a grenade appearing from thin air by moving
-            an auxiliary player to the target location and then back"""
+            """Gives the appearance of a grenade appearing from thin air"""
+            if self.name is None:
+                return
             grenade_packet.value = fuse
             grenade_packet.player_id = self.player_id
             grenade_packet.position = (x, y, z)
@@ -67,6 +68,8 @@ def apply_script(protocol, connection, config):
             reactor.callLater(2.5, self.do_airstrike, x, y)
         
         def do_airstrike(self, start_x, start_y):
+            if self.name is None:
+                return
             z = 1
             orientation_x = [1.0, -1.0][self.team.id]
             start_x = max(0, min(512, start_x + [-64, 64][self.team.id]))

@@ -507,7 +507,10 @@ class FeatureProtocol(ServerProtocol):
     def set_map_name(self, name):
         if self.rollback_in_progress:
             return 'Rollback in progress.'
-        self.map_info = Map(name)
+        try:
+            self.map_info = Map(name)
+        except Map.MapNotFound:
+            return False
         self.set_map(self.map_info.data)
         if self.rollback_map is not None:
             self.rollback_map = self.map.copy()
@@ -515,6 +518,7 @@ class FeatureProtocol(ServerProtocol):
             # this is very ugly - we need a 'map updated' event
             self.block_info = None
         self.update_format()
+        return True
     
     def is_indestructable(self, x, y, z):
         if self.user_blocks is not None:
