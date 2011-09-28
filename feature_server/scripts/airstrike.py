@@ -1,5 +1,4 @@
 from pyspades.server import orientation_data, grenade_packet
-from pyspades.serverloaders import PositionData
 from pyspades.common import coordinates, Vertex3
 from pyspades.collision import distance_3d_vector
 from pyspades.world import Grenade
