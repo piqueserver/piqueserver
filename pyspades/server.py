@@ -563,20 +563,18 @@ class ServerConnection(BaseConnection):
         if self.player_id is not None:
             self.protocol.player_ids.put_back(self.player_id)
             self.protocol.update_master()
-        self.reset(True)
+        self.reset()
     
-    def reset(self, disconnect = False):
+    def reset(self):
         if self.spawn_call is not None:
             self.spawn_call.cancel()
             self.spawn_call = None
         if self.world_object is not None:
             self.world_object.delete()
-            self.world_object = None
         if self.team is not None:
             self.on_team_leave()
         self.on_reset()
-        if not disconnect:
-            self.name = self.team = self.hp = None
+        self.name = self.team = self.hp = self.world_object = None
     
     def hit(self, value, by = None):
         if self.hp is None:
