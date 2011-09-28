@@ -206,7 +206,6 @@ class ServerConnection(BaseConnection):
                                 'Invalid orientation data received')
                             return
                         world_object.set_orientation(x, y, z)
-                        self.on_orientation_update()
                         if self.filter_visibility_data:
                             return
                         orientation_data.x = x
@@ -264,7 +263,6 @@ class ServerConnection(BaseConnection):
                             jump = False
                         world_object.set_animation(contained.fire, jump, 
                             contained.crouch, contained.aim)
-                        self.on_input_update()
                         contained.jump = jump
                         if (self.fly and contained.crouch and
                             world_object.acceleration.z != 0.0):
@@ -908,12 +906,6 @@ class ServerConnection(BaseConnection):
     def on_position_update(self):
         pass
     
-    def on_input_update(self):
-        pass
-    
-    def on_orientation_update(self):
-        pass
-    
     def on_weapon_set(self, value):
         pass
     
@@ -939,6 +931,11 @@ class Entity(Vertex3):
 class Flag(Entity):
     player = None
     team = None
+    
+    def update(self):
+        if self.player is not None:
+            return
+        Entity.update(self)
 
 class Base(Entity):
     pass
