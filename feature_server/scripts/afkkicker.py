@@ -1,19 +1,19 @@
 from twisted.internet.task import LoopingCall
 
-# Amount of time a person can be afk in seconds
-AFK_KICKER_RATE = 600
+# Time in seconds
+AFK_TIME_LIMIT = 600
 
 def apply_script(protocol, connection, config):
     class AfkKickerProtocol(protocol):
         def __init__(self, *arg, **kw):
             protocol.__init__(self, *arg, **kw)
-            self.afk_kicker_loop = LoopingCall(self.AfkKickerUpdate)
-            self.afk_kicker_loop.start(AFK_KICKER_RATE, False)
+            self.afk_kicker_loop = LoopingCall(self.afk_kicker_update)
+            self.afk_kicker_loop.start(AFK_TIME_LIMIT, False)
         
-        def AfkKickerUpdate(self):
+        def afk_kicker_update(self):
             k = []
             for player in self.players.values():
-                if player.afk == True:
+                if player.afk == True and player.admin == False:
                     k.append(player)
                 player.afk = True
             for player in k:
