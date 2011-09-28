@@ -761,8 +761,8 @@ for script in config.get('scripts', []):
         module = __import__('scripts.%s' % script, globals(), locals(), 
             [script])
         script_objects.append(module)
-    except ImportError:
-        pass # script not found
+    except ImportError, e:
+        print "(script '%s' not found: %r)" % (script, e)
 
 script_objects.append(map)
 

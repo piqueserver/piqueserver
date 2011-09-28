@@ -598,6 +598,7 @@ class ServerConnection(BaseConnection):
             self.kill(hit_by, type)
             return
         set_hp.hp = self.hp
+        print type, FALL_KILL
         set_hp.not_fall = type != FALL_KILL
         if hit_indicator is None:
             if hit_by is not None and hit_by is not self:
