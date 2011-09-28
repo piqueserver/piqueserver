@@ -576,7 +576,7 @@ class ServerConnection(BaseConnection):
             self.team = None
             self.on_team_leave()
         self.on_reset()
-        self.name = self.team = self.player_id = self.hp = None
+        self.name = self.team = self.hp = None
     
     def hit(self, value, by = None):
         if self.hp is None:
@@ -675,8 +675,9 @@ class ServerConnection(BaseConnection):
         blue_base = blue.base
         green_base = green.base
         
-        self.player_id = self.protocol.player_ids.pop()
-        self.protocol.update_master()
+        if self.player_id is None:
+            self.player_id = self.protocol.player_ids.pop()
+            self.protocol.update_master()
 
         state_data.player_id = self.player_id
         state_data.fog_color = self.protocol.fog_color
@@ -1046,10 +1047,10 @@ class ServerProtocol(DatagramProtocol):
         self.on_map_change(map)
         self.blue_team.initialize()
         self.green_team.initialize()
+        self.update_entities()
         self.on_game_end(None)
         data = zlib.compress(map.generate())
         self.players = MultikeyDict()
-        self.player_ids = IDPool()
         for connection in self.connections.values():
             if connection.player_id is None:
                 continue
