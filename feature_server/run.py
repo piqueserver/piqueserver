@@ -71,7 +71,7 @@ if sys.version_info < (2, 7):
 import pyspades.debug
 from pyspades.server import (ServerProtocol, ServerConnection, position_data,
     grenade_packet)
-from map import Map
+from map import Map, MapNotFound
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.python import log
@@ -509,7 +509,7 @@ class FeatureProtocol(ServerProtocol):
             return 'Rollback in progress.'
         try:
             self.map_info = Map(name)
-        except Map.MapNotFound:
+        except MapNotFound:
             return False
         self.set_map(self.map_info.data)
         if self.rollback_map is not None:
