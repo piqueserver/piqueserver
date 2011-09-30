@@ -23,7 +23,7 @@
     "max_players" : 32,
     "max_connections_per_ip" : 3,
     "cap_limit" : 10,
-    "maps" : ["pyspades", "bridgewars"],
+    "map" : "pyspades",
     "default_time_limit" : 20,
     "respawn_time" : 5,
     "squad_respawn_time" : 8,
