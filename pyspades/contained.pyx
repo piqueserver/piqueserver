@@ -511,9 +511,9 @@ cdef class IntelDrop(Loader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
         reader.pad(2)
-        reader.writeByte(self.x, True)
-        reader.writeByte(self.y, True)
-        reader.writeByte(self.z, True)
+        reader.writeInt(self.x, True, False)
+        reader.writeInt(self.y, True, False)
+        reader.writeInt(self.z, True, False)
 
 cdef class Restock(Loader):
     id = 21
