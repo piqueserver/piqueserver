@@ -30,6 +30,7 @@ class Map(object):
     author = None
     version = None
     description = None
+    time_limit = None
     
     data = None
     info = None
@@ -51,6 +52,7 @@ class Map(object):
         self.description = getattr(info, 'description', '')
         self.extensions = getattr(info, 'extensions', {})
         self.script = getattr(info, 'apply_script', None)
+        self.time_limit = getattr(info, 'time_limit', None)
         
     def apply_script(self, protocol, connection, config):
         if self.script is not None:

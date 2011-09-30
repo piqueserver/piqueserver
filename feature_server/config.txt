@@ -23,7 +23,8 @@
     "max_players" : 32,
     "max_connections_per_ip" : 3,
     "cap_limit" : 10,
-    "map" : "pyspades",
+    "maps" : ["pyspades", "bridgewars"],
+    "default_time_limit" : 20,
     "respawn_time" : 5,
     "squad_respawn_time" : 8,
     "squad_size" : 4,
@@ -96,7 +97,7 @@
         "melee",
         "squad",
         "disco",
-	"antijerk",
+        "antijerk",
         "savemap"
     ],
     
