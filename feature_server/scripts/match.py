@@ -1,6 +1,7 @@
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 
+import json
 import commands
 
 @commands.admin
@@ -13,7 +14,30 @@ def start_timer(connection, end):
 def stop_timer(connection, end):
     return connection.protocol.stop_timer()
 
+@commands.admin
+@commands.name('startrecord')
+def start_record(connection):
+    connection.protocol.start_record()
+    return 'Recording started.'
+
+@commands.admin
+@commands.name('stoprecord')
+def stop_record(connection):
+    connection.protocol.stop_record()
+    return 'Recording stopped.'
+
+@commands.admin
+@commands.name('saverecord')
+def save_record(connection, value):
+    if not connection.protocol.save_record(value):
+        return 'No record file available.'
+    return 'Record saved.'
+
 commands.add(start_timer)
+commands.add(stop_timer)
+commands.add(start_record)
+commands.add(stop_record)
+commands.add(save_record)
 
 def apply_script(protocol, connection, config):
     class MatchConnection(connection):
@@ -37,6 +61,7 @@ def apply_script(protocol, connection, config):
                 killer = self
             self.add_message("%s was killed by %s!" %
                 (self.printable_name, killer.printable_name))
+            self.protocol.add_kill(self, killer)
             return connection.on_kill(self, killer)
         
         def add_message(self, value):
@@ -50,7 +75,7 @@ def apply_script(protocol, connection, config):
             protocol.__init__(self, *arg, **kw)
             self.messages = []
             self.send_message_loop = LoopingCall(self.display_messages)
-            self.send_message_loop.start(2)
+            self.send_message_loop.start(3)
             
         def start_timer(self, end):
             if self.timer_end is not None:
@@ -91,5 +116,33 @@ def apply_script(protocol, connection, config):
                 return
             message = self.messages.pop(0)
             self.irc_say(message)
+        
+        # recording
+        
+        def add_kill(self, player, killing_player):
+            if self.record is None:
+                return
+            self.get_record(player.name)['deaths'] += 1
+            self.get_record(killing_player.name)['kills'] += 1
+        
+        def get_record(self, name):
+            try:
+                return self.record[name]
+            except KeyError:
+                record = {'deaths' : 0, 'kills' : 0}
+                self.record[name] = record
+                return record
+        
+        def start_record(self):
+            self.record = {}
+        
+        def stop_record(self):
+            self.record = None
+        
+        def save_record(self, value):
+            if self.record is None:
+                return False
+            json.dump(self.record, open(value, 'wb'))
+            return True
         
     return MatchProtocol, MatchConnection

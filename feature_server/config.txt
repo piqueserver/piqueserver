@@ -98,7 +98,8 @@
         "squad",
         "disco",
         "antijerk",
-        "savemap"
+        "savemap",
+        "match"
     ],
     
     "load_saved_map" : false,
