@@ -8,6 +8,7 @@ class BaseWeapon(object):
     id = None
     shoot_time = None
     next_shot = None
+    start = None
     
     def __init__(self, reload_callback):
         self.reload_callback = reload_callback
@@ -16,7 +17,7 @@ class BaseWeapon(object):
     def reset(self):
         self.shoot = False
         if self.reloading:
-            self.reload_callback.cancel()
+            self.reload_call.cancel()
             self.reloading = False
         self.current_ammo = self.ammo
         self.current_stock = self.stock
@@ -26,6 +27,7 @@ class BaseWeapon(object):
             return
         current_time = reactor.seconds()
         if value:
+            self.start = current_time
             if not self.current_ammo:
                 return
             elif self.reloading and not self.slow_reload:
@@ -67,20 +69,23 @@ class BaseWeapon(object):
             self.current_stock = new_stock
             self.reload_callback()
     
-    def get_ammo(self):
+    def get_ammo(self, no_max = False):
         if self.shoot:
             dt = reactor.seconds() - self.shoot_time
             ammo = self.current_ammo - max(0, int(math.ceil(dt / self.delay)))
         else:
             ammo = self.current_ammo
+        if no_max:
+            return ammo
         return max(0, ammo)
     
-    def is_empty(self):
-        return self.get_ammo() == 0
+    def is_empty(self, tolerance = 4):
+        ammo = self.get_ammo(True)
+        return ammo < -tolerance
 
 class Rifle(BaseWeapon):
     name = 'Rifle'
-    delay = 0.5
+    delay = 0.5 # set to 0.5
     ammo = 10
     stock = 50
     reload_time = 2.5
@@ -95,7 +100,7 @@ class Rifle(BaseWeapon):
 
 class SMG(BaseWeapon):
     name = 'SMG'
-    delay = 0.1
+    delay = 0.11 # set to 0.1, but due to AoS scheduling, it's usually 0.11
     ammo = 30
     stock = 120
     reload_time = 2.5
@@ -110,7 +115,7 @@ class SMG(BaseWeapon):
 
 class Shotgun(BaseWeapon):
     name = 'Shotgun'
-    delay = 1.0
+    delay = 1.0 # set to 1
     ammo = 6
     stock = 48
     reload_time = 0.5

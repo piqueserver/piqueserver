@@ -22,8 +22,18 @@ import imp
 
 import mapmaker
 
+DEFAULT_LOAD_DIR = './maps'
+
 class MapNotFound(IOError):
     pass
+
+def get_filename(name, load_dir = DEFAULT_LOAD_DIR):
+    return os.path.join(load_dir, '%s.vxl' % name)
+
+def check_rotation(maps, load_dir = DEFAULT_LOAD_DIR):
+    for map in maps:
+        if not os.path.isfile(get_filename(map, load_dir)):
+            raise MapNotFound('map %s does not exist' % map)
 
 class Map(object):
     name = None
@@ -35,7 +45,7 @@ class Map(object):
     data = None
     info = None
     
-    def __init__(self, name, load_dir = './maps'):
+    def __init__(self, name, load_dir = DEFAULT_LOAD_DIR):
         self.load_information(name, load_dir)
         if not self.generate_map(name):
             self.load_vxl(name, load_dir)
@@ -60,10 +70,8 @@ class Map(object):
         return protocol, connection
 
     def load_vxl(self, name, load_dir):
-        data_file = os.path.join(load_dir, '%s.vxl' % name)
-        if not os.path.isfile(data_file):
-            raise MapNotFound('map %s does not exist' % name)
-        self.data = VXLData(open(data_file, 'rb'))
+        check_rotation((name,))
+        self.data = VXLData(open(get_filename(name, load_dir), 'rb'))
 
     def generate_map(self, name):
         if name == 'random':

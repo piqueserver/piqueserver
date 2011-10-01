@@ -15,8 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+import math
 from pyspades.constants import *
 from pyspades.common import prettify_timespan
+from twisted.internet import reactor
 
 class InvalidPlayer(Exception):
     pass
@@ -592,15 +594,36 @@ def reset_game(connection):
         irc = True)
 
 from map import Map
+import itertools
 
 @name('map')
 @admin
 def change_map(connection, value):
     name = connection.name
     protocol = connection.protocol
-    if not protocol.set_map_name(value):
+    if not protocol.set_map_rotation((value,), True):
         return 'Map %s does not exist' % value
     protocol.irc_say("* %s changed map to '%s'" % (name, value))
+
+@admin
+def advance(connection):
+    connection.protocol.advance_rotation()
+
+@name('timelimit')
+@admin
+def set_time_limit(connection, value):
+    value = float(value)
+    protocol = connection.protocol
+    protocol.set_time_limit(value)
+    protocol.send_chat('Time limit set to %s' % value, irc = True)
+
+@name('time')
+def get_time_limit(connection):
+    advance_call = connection.protocol.advance_call
+    if advance_call is None:
+        return 'No time limit set.'
+    left = int(math.ceil((advance_call.getTime() - reactor.seconds()) / 60.0))
+    return 'There are %s minutes left.' % left
 
 @name('servername')
 @admin
@@ -718,6 +741,9 @@ command_list = [
     reset_game,
     toggle_master,
     change_map,
+    advance,
+    set_time_limit,
+    get_time_limit,
     server_name,
     ping,
     weapon

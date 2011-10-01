@@ -2,4 +2,3 @@ name = 'pyspades'
 version = '1.0'
 author = 'TheGrandmaster and Tegu'
 description = 'Official pyspades default map!'
-time_limit = 15

@@ -22,6 +22,9 @@ pyspades - default/featured server
 import sys
 import os
 import json
+import itertools
+import random
+import time
 
 try:
     config = json.load(open('config.txt', 'rb'))
@@ -71,7 +74,7 @@ if sys.version_info < (2, 7):
 import pyspades.debug
 from pyspades.server import (ServerProtocol, ServerConnection, position_data,
     grenade_packet)
-from map import Map, MapNotFound
+from map import Map, MapNotFound, check_rotation
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.python import log
@@ -82,9 +85,6 @@ from pyspades.common import encode, decode, prettify_timespan
 from pyspades.constants import *
 from pyspades.master import MAX_SERVER_NAME_SIZE
 
-import json
-import random
-import time
 import commands
 from pyspades.ipaddr import IPAddress, IPNetwork
 
@@ -398,6 +398,7 @@ class FeatureProtocol(ServerProtocol):
     global_chat = True
     remote_console = None
     debug_log = None
+    advance_call = None
     
     # votekick
     votekick_time = 120 # 2 minutes
@@ -418,9 +419,14 @@ class FeatureProtocol(ServerProtocol):
     
     interface = None
     
-    def __init__(self, config, map):
+    def __init__(self, config, map):        
         self.map = map.data
         self.map_info = map
+        self.map_rotator = itertools.cycle(config['maps'])
+        self.map_rotator.next()
+        self.default_time_limit = config.get('default_time_limit', 20.0)
+        self.set_time_limit(self.map_info.time_limit)
+        
         try:
             self.bans = json.load(open('bans.txt', 'rb'))
         except IOError:
@@ -482,7 +488,7 @@ class FeatureProtocol(ServerProtocol):
             self.ban_manager = bansubscribe.BanManager(self, ban_subscribe)
         logfile = config.get('logfile', None)
         if logfile is not None and logfile.strip():
-            if config.get('rotate_daily', True):
+            if config.get('rotate_daily', False):
                 logging_file = DailyLogFile(logfile, '.')
             else:
                 logging_file = open(logfile, 'a')
@@ -504,6 +510,29 @@ class FeatureProtocol(ServerProtocol):
         self.blue_team.locked = False
         self.green_team.locked = False
     
+    def set_time_limit(self, time_limit = None):
+        if self.advance_call is not None:
+            self.advance_call.cancel()
+            self.advance_call = None
+        if time_limit == False:
+            return
+        time_limit = (time_limit or self.default_time_limit) * 60.0
+        self.advance_call = reactor.callLater(time_limit, self._time_up)
+    
+    def _time_up(self):
+        self.advance_call = None
+        self.advance_rotation()
+    
+    def advance_rotation(self, now = False):
+        self.set_time_limit(False)
+        map = self.map_rotator.next()
+        self.on_advance(map)
+        if now:
+            self.set_map_name(map)
+        else:
+            self.send_chat('Time up! Next map: %s.' % map)
+            reactor.callLater(5, self.set_map_name, map)
+    
     def set_map_name(self, name):
         if self.rollback_in_progress:
             return 'Rollback in progress.'
@@ -512,6 +541,7 @@ class FeatureProtocol(ServerProtocol):
         except MapNotFound:
             return False
         self.set_map(self.map_info.data)
+        self.set_time_limit(self.map_info.time_limit)
         if self.rollback_map is not None:
             self.rollback_map = self.map.copy()
         if hasattr(self, 'block_info'):
@@ -520,6 +550,15 @@ class FeatureProtocol(ServerProtocol):
         self.update_format()
         return True
     
+    def set_map_rotation(self, maps, now = True):
+        try:
+            check_rotation(maps)
+        except MapNotFound:
+            return False
+        self.map_rotator = itertools.cycle(maps)
+        if now:
+            self.advance_rotation(True)
+        
     def is_indestructable(self, x, y, z):
         if self.user_blocks is not None:
             if (x, y, z) not in self.user_blocks:
@@ -739,15 +778,24 @@ class FeatureProtocol(ServerProtocol):
         if time_taken > 1.0:
             print 'World update iteration took %s, objects: %s' % (time_taken,
                 self.world.objects)
+    
+    # events
+    
+    def on_advance(self, map_name):
+        pass
 
 PORT = 32887
 
 try:
-    map = Map(config['map'])
+    maps = config['maps']
+    check_rotation(maps)
+    map = Map(maps[0])
 except KeyError:
-    raise SystemExit('no map specified!')
-except IOError:
-    raise SystemExit('map not found!')
+    print 'no maps specified!'
+    raise SystemExit()
+except IOError, e:
+    print e
+    raise SystemExit()
 
 # apply scripts
 
@@ -763,8 +811,6 @@ for script in config.get('scripts', []):
         script_objects.append(module)
     except ImportError, e:
         print "(script '%s' not found: %r)" % (script, e)
-
-script_objects.append(map)
 
 for script in script_objects:
     protocol_class, connection_class = script.apply_script(protocol_class,

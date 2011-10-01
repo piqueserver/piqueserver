@@ -1,5 +1,5 @@
 {
-    "name" : "pyspades server",
+    "name" : "pyspades server - %(map_name)s",
     "motd" : [
         "Welcome to %(server_name)s! See /help for new commands.",
         "Map is %(map_name)s by %(map_author)s.",
@@ -23,8 +23,8 @@
     "max_players" : 32,
     "max_connections_per_ip" : 3,
     "cap_limit" : 10,
-    "map" : "pyspades",
-    "default_time_limit" : 20,
+    "maps" : ["pyspades", "bridgewars", "anticbridge"],
+    "default_time_limit" : 15,
     "respawn_time" : 5,
     "squad_respawn_time" : 8,
     "squad_size" : 4,
