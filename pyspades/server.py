@@ -1068,7 +1068,6 @@ class ServerProtocol(DatagramProtocol):
         self.on_map_change(map)
         self.blue_team.initialize()
         self.green_team.initialize()
-        self.on_game_end(None)
         data = zlib.compress(map.generate())
         self.players = MultikeyDict()
         for connection in self.connections.values():

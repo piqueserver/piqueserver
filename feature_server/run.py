@@ -426,14 +426,12 @@ class FeatureProtocol(ServerProtocol):
         self.map_rotator.next()
         self.default_time_limit = config.get('default_time_limit', 20.0)
         self.set_time_limit(self.map_info.time_limit)
-        
+        self.advance_on_win = config.get('advance_on_win', False)
         try:
             self.bans = json.load(open('bans.txt', 'rb'))
         except IOError:
             self.bans = []
-
         self.game_mode = 'ctf'
-        
         self.config = config
         self.update_format()
         if len(self.name) > MAX_SERVER_NAME_SIZE:
@@ -521,16 +519,16 @@ class FeatureProtocol(ServerProtocol):
     
     def _time_up(self):
         self.advance_call = None
-        self.advance_rotation()
+        self.advance_rotation('Time up!')
     
-    def advance_rotation(self, now = False):
+    def advance_rotation(self, message = None):
         self.set_time_limit(False)
         map = self.map_rotator.next()
         self.on_advance(map)
-        if now:
+        if message is None:
             self.set_map_name(map)
         else:
-            self.send_chat('Time up! Next map: %s.' % map)
+            self.send_chat('%s Next map: %s.' % (message, map))
             reactor.callLater(5, self.set_map_name, map)
     
     def set_map_name(self, name):
@@ -557,7 +555,7 @@ class FeatureProtocol(ServerProtocol):
             return False
         self.map_rotator = itertools.cycle(maps)
         if now:
-            self.advance_rotation(True)
+            self.advance_rotation()
         return True
         
     def is_indestructable(self, x, y, z):
@@ -781,6 +779,10 @@ class FeatureProtocol(ServerProtocol):
                 self.world.objects)
     
     # events
+    
+    def on_game_end(self, player):
+        if self.advance_on_win:
+            self.advance_rotation('Game finished!')
     
     def on_advance(self, map_name):
         pass

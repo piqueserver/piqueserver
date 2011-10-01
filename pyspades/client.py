@@ -47,9 +47,9 @@ class ClientConnection(BaseConnection):
         self.auth_val = random.randint(0, 0xFFFF)
         self.map = ByteWriter()
         self.connections = MultikeyDict()
-        self.spammy = {Ping : 0, MapData : 0, loaders.OrientationData : 0,
-            loaders.PositionData : 0, loaders.AnimationData : 0,
-            loaders.MovementData : 0}
+        self.spammy = {Ping : 0, loaders.MapChunk : 0, 
+            loaders.OrientationData : 0,
+            loaders.PositionData : 0, loaders.InputData : 0}
         
         connect_request = ConnectionRequest()
         connect_request.auth_val = self.auth_val
@@ -105,15 +105,24 @@ class ClientConnection(BaseConnection):
             self.connected = True
             print 'connected', self.connection_id, self.unique
         elif is_contained:
-            if packet.id == SizedData.id and self.map is not None:
-                reactor.callLater(1.0, self.send_join, team = 0, weapon = 0)
+            if packet.id == SizedData.id:
+                pass
+                # reactor.callLater(1.0, self.send_join, team = 0, weapon = 0)
                 #reactor.callLater(4.0, self.send_join, 1, 1)
                 # open('testy.vxl', 'wb').write(str(self.map))
-                self.map = None
             # data = packet.data
             # if data.dataLeft():
                 # raw_input('not completely parsed')
-            # print contained
+            print contained.id, loaders.MapStart.id
+            if contained.id == loaders.MapStart.id:
+                self.map_size = contained.size
+                self.map = ByteWriter()
+            elif contained.id == loaders.MapChunk.id:
+                self.map.write(contained.data)
+                if len(self.map) == self.map_size:
+                    print 'done!'
+                    import code
+                    code.interact(local = locals())
             # newdata = ByteWriter()
             # contained.write(newdata)
             # if contained.id != loaders.PlayerData.id:
@@ -121,11 +130,6 @@ class ClientConnection(BaseConnection):
                     # print hexify(data)
                     # print hexify(newdata)
                     # raw_input('incorrect save func')
-        elif packet.id == MapData.id:
-            data = packet.data
-            if packet.num == 0:
-                byte = data.readByte(True)
-            self.map.write(data.read())
         elif packet.id == Ack.id:
             pass
         elif packet.id == Ping.id:

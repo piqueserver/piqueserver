@@ -197,5 +197,6 @@ def apply_script(protocol, connection, config):
         def on_game_end(self, player):
             if rollback_on_game_end:
                 self.start_rollback(None, None, 0, 0, 512, 512, False)
+            return protocol.on_game_end(self, player)
         
     return RollbackProtocol, RollbackConnection

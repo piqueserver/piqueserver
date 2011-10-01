@@ -25,6 +25,7 @@
     "cap_limit" : 10,
     "maps" : ["pyspades", "bridgewars", "anticbridge"],
     "default_time_limit" : 15,
+    "advance_on_win" : false,
     "respawn_time" : 5,
     "squad_respawn_time" : 8,
     "squad_size" : 4,

@@ -607,7 +607,7 @@ def change_map(connection, value):
 
 @admin
 def advance(connection):
-    connection.protocol.advance_rotation()
+    connection.protocol.advance_rotation('Map advance forced.')
 
 @name('timelimit')
 @admin

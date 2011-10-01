@@ -216,7 +216,7 @@ def apply_script(protocol, connection, config):
                 self.send_contained(block_action,
                                      save = True)
                 
-        def init_cap_boxes(self, player = None):
+        def init_cap_boxes(self):
             if self.god_blocks is None:
                 self.god_blocks = set()          
             
@@ -363,13 +363,16 @@ def apply_script(protocol, connection, config):
                 self.tc_owner[x + y * 512] = -1
             return grididx, old_green_held, old_blue_held
 
-        def on_game_end(self, player):
+        def reset_tc(self):
             self.green_tc_score = 0
             self.blue_tc_score = 0
             self.green_tc_held = [0 for n in xrange(8*8)]
             self.blue_tc_held = [0 for n in xrange(8*8)]
             self.reset_ownership()
-            self.init_cap_boxes(player)
+            self.init_cap_boxes()
+        
+        def on_game_end(self, player)
+            self.reset_tc()
             return protocol.on_game_end(self, player)
 
         def get_a_player(self, team):
