@@ -558,6 +558,7 @@ class FeatureProtocol(ServerProtocol):
         self.map_rotator = itertools.cycle(maps)
         if now:
             self.advance_rotation(True)
+        return True
         
     def is_indestructable(self, x, y, z):
         if self.user_blocks is not None:
