@@ -21,27 +21,6 @@ SEMI_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON = xrange(3)
 
 SPADE_TOOL, BLOCK_TOOL, WEAPON_TOOL, GRENADE_TOOL = xrange(4)
 
-HIT_VALUES = {
-    SEMI_WEAPON : {
-        0 : 49,
-        1 : 100,
-        2 : 33,
-        3 : 33
-    },
-    SMG_WEAPON : {
-        0 : 24,
-        1 : 75,
-        2 : 16,
-        3 : 16
-    },
-    SHOTGUN_WEAPON : {
-        0 : 19,
-        1 : 33,
-        2 : 14,
-        3 : 14
-    }
-}
-
 BUILD_BLOCK, DESTROY_BLOCK, SPADE_DESTROY, GRENADE_DESTROY = xrange(4)
 BLUE_FLAG, GREEN_FLAG, BLUE_BASE, GREEN_BASE = xrange(4)
 (CHAT_UNKNOWN, CHAT_ALL, CHAT_TEAM, CHAT_SYSTEM) = xrange(4)

@@ -32,6 +32,7 @@ from pyspades.master import get_master_connection
 from pyspades.collision import vector_collision
 from pyspades import world
 from pyspades.debug import *
+from pyspades.weapon import WEAPONS
 
 import random
 import math
@@ -69,6 +70,7 @@ move_object = loaders.MoveObject()
 set_hp = loaders.SetHP()
 change_weapon = loaders.ChangeWeapon()
 change_team = loaders.ChangeTeam()
+weapon_reload = loaders.WeaponReload()
 
 def check_nan(*values):
     for value in values:
@@ -102,6 +104,7 @@ class ServerConnection(BaseConnection):
     map_packets_sent = 0
     team = None
     weapon = None
+    weapon_object = None
     name = None
     kills = 0
     orientation_sequence = 0
@@ -190,7 +193,7 @@ class ServerConnection(BaseConnection):
                     if name == 'Deuce':
                         name = name + str(self.player_id)
                     self.name = self.protocol.get_name(name)
-                    self.weapon = contained.weapon
+                    self.set_weapon(contained.weapon, True)
                     self.protocol.players[self.name, self.player_id] = self
                     if self.protocol.speedhack_detect:
                         self.speedhack_detect = True
@@ -255,6 +258,8 @@ class ServerConnection(BaseConnection):
                     elif contained.id == loaders.InputData.id:
                         world_object.set_walk(contained.up, contained.down,
                             contained.left, contained.right)
+                        if self.tool == WEAPON_TOOL:
+                            self.weapon_object.set_shoot(contained.fire)
                         contained.player_id = self.player_id
                         z_acceleration = world_object.acceleration.z
                         jump = contained.jump
@@ -274,11 +279,12 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(contained, 
                             sender = self)
                     elif contained.id == loaders.WeaponReload.id:
-                        contained.player_id = self.player_id
-                        self.protocol.send_contained(contained)
+                        self.weapon_object.reload()
                     elif contained.id == loaders.HitPacket.id:
+                        if self.weapon_object.is_empty():
+                            return
                         player = self.protocol.players[contained.player_id]
-                        hit_amount = HIT_VALUES[self.weapon][
+                        hit_amount = self.weapon_object.damage[
                             contained.value]
                         returned = self.on_hit(hit_amount, player)
                         if returned == False:
@@ -306,6 +312,8 @@ class ServerConnection(BaseConnection):
                         if self.on_tool_set_attempt(contained.value) == False:
                             return
                         self.tool = contained.value
+                        if self.tool == WEAPON_TOOL:
+                            self.weapon_object.set_shoot(self.world_object.fire)
                         self.on_tool_changed(self.tool)
                         if self.filter_visibility_data:
                             return
@@ -322,7 +330,12 @@ class ServerConnection(BaseConnection):
                         self.protocol.send_contained(contained, sender = self,
                             save = True)
                     elif contained.id == loaders.BlockAction.id:
-                        if self.tool == WEAPON_TOOL:
+                        value = contained.value
+                        if value == BUILD_BLOCK:
+                            interval = TOOL_INTERVAL[BLOCK_TOOL]
+                        elif self.tool == WEAPON_TOOL:
+                            if self.weapon_object.is_empty():
+                                return
                             interval = WEAPON_INTERVAL[self.weapon]
                         else:
                             interval = TOOL_INTERVAL[self.tool]
@@ -338,7 +351,6 @@ class ServerConnection(BaseConnection):
                                     print 'RAPID HACK:', self.rapids.window
                                     self.on_hack_attempt('Rapid hack detected')
                             return
-                        value = contained.value
                         map = self.protocol.map
                         x = contained.x
                         y = contained.y
@@ -452,11 +464,13 @@ class ServerConnection(BaseConnection):
         self.orientation_sequence = (sequence + 1) & 0xFFFF
         return sequence
     
-    def refill(self):
+    def refill(self, local = False):
         self.hp = 100
         self.grenades = 2
         self.blocks = 50
-        self.send_contained(restock)
+        self.weapon_object.reset()
+        if not local:
+            self.send_contained(restock)
     
     def take_flag(self):
         if not self.hp:
@@ -488,10 +502,8 @@ class ServerConnection(BaseConnection):
             self.world_object = self.protocol.world.create_object(
                 world.Character, position, None, self._on_fall)
         self.world_object.dead = False
-        self.hp = 100
         self.tool = WEAPON_TOOL
-        self.grenades = 2
-        self.blocks = 50
+        self.refill(True)
         create_player.player_id = self.player_id
         create_player.name = self.name
         create_player.x = x
@@ -608,10 +620,14 @@ class ServerConnection(BaseConnection):
         set_hp.hit_indicator = hit_indicator
         self.send_contained(set_hp)
     
-    def set_weapon(self, weapon):
+    def set_weapon(self, weapon, local = False):
         self.weapon = weapon
-        self.protocol.send_contained(change_weapon, save = True)
-        self.kill(type = CLASS_CHANGE_KILL)
+        if self.weapon_object is not None:
+            self.weapon_object.reset()
+        self.weapon_object = WEAPONS[weapon](self._on_reload)
+        if not local:
+            self.protocol.send_contained(change_weapon, save = True)
+            self.kill(type = CLASS_CHANGE_KILL)
     
     def set_team(self, team):
         if team is self.team:
@@ -627,6 +643,7 @@ class ServerConnection(BaseConnection):
         self.on_kill(by)
         self.drop_flag()
         self.hp = None
+        self.weapon_object.reset()
         kill_action.kill_type = type
         if by is None:
             kill_action.killer_id = kill_action.player_id = self.player_id
@@ -765,6 +782,10 @@ class ServerConnection(BaseConnection):
         elif returned is not None:
             damage = returned
         self.set_hp(self.hp - damage, type = FALL_KILL)
+    
+    def _on_reload(self):
+        weapon_reload.player_id = self.player_id
+        self.protocol.send_contained(weapon_reload)
     
     def send_map(self, data = None):
         if data is not None:
