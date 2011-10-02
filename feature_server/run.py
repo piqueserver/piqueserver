@@ -572,8 +572,12 @@ class FeatureProtocol(ServerProtocol):
         Called when the map (or other variables) have been updated
         """
         config = self.config
+        old_name = self.name
         self.name = encode(self.format(config.get('name', 
             'pyspades server %s' % random.randrange(0, 2000))))
+        if (old_name is not None and self.master_connection is not None 
+        and old_name != self.name):
+            self.master_connection.disconnect()
         self.motd = self.format_lines(config.get('motd', None))
         self.help = self.format_lines(config.get('help', None))
         self.tips = self.format_lines(config.get('tips', None))

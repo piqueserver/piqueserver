@@ -632,8 +632,6 @@ def server_name(connection, *arg):
     protocol = connection.protocol
     protocol.config['name'] = name
     protocol.update_format()
-    if protocol.master_connection is not None:
-        protocol.master_connection.disconnect()
     message = "%s changed servername to to '%s'" % (connection.name, name)
     print message
     connection.protocol.irc_say("* " + message)
