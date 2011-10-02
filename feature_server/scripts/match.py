@@ -71,6 +71,7 @@ def apply_script(protocol, connection, config):
         timer_left = None
         timer_call = None
         timer_end = None
+        record = None
         def __init__(self, *arg, **kw):
             protocol.__init__(self, *arg, **kw)
             self.messages = []
