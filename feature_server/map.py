@@ -23,6 +23,7 @@ import imp
 import mapmaker
 
 DEFAULT_LOAD_DIR = './maps'
+RESERVED_NAMES = set(['random'])
 
 class MapNotFound(IOError):
     pass
@@ -32,6 +33,8 @@ def get_filename(name, load_dir = DEFAULT_LOAD_DIR):
 
 def check_rotation(maps, load_dir = DEFAULT_LOAD_DIR):
     for map in maps:
+        if map in RESERVED_NAMES:
+            continue
         if not os.path.isfile(get_filename(map, load_dir)):
             raise MapNotFound('map %s does not exist' % map)
 
