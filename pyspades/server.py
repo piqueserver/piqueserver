@@ -975,17 +975,16 @@ class Team(object):
         self.id = id
         self.name = name
         self.protocol = protocol
-        self.players = protocol.players
         self.initialize()
     
     def get_players(self):
-        for player in self.players.values():
+        for player in self.protocol.players.values():
             if player.team is self:
                 yield player
     
     def count(self):
         count = 0
-        for player in self.players.values():
+        for player in self.protocol.players.values():
             if player.team is self:
                 count += 1
         return count
