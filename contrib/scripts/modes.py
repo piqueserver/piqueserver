@@ -45,7 +45,7 @@ MODE_WELCOME = (
         +str(int((1-SOLDIER_HIT_BUFF)*100))+'%.',
     'Assassin: Switch to the grenade to toggle your invisibility cloak.',
     'Sniper: Shoot a surface block three times to teleport on top of it.',
-    'Medic: Use the pickaxe to heal teammates. Type /build to see the available structures.')
+    'Medic: Use the spade to heal teammates. Type /build to see the available structures.')
 
 DEFAULT_MODE = SOLDIER_MODE
 QUICKBUILD_WALL = ((0, 0, 0), (-1, 0, 0), (-1, 0, 1), (-2, 0, 0), (-2, 0, 1), 
