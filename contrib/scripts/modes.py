@@ -17,8 +17,7 @@ CLOAK_COOLDOWN = 5.0
 CLOAK_COOLDOWN_ENABLED = False
 # To make sure that people don't cloak to the intel. Units in blocks.
 CLOAK_INTEL_DISRUPTION = 64.0
-# Sets if swinging the pickaxe or spade disables cloak
-CLOAK_DISABLE_PICKAXE = True
+# Sets if swinging the spade disables cloak
 CLOAK_DISABLE_SPADE = True
 
 # The max number of blocks someone can teleport
@@ -246,11 +245,7 @@ def apply_script(protocol, connection, config):
                                   'The enemy intel disrupts your cloaking field')
                                 player.disable_cloak()
                         if player.world_object.fire:
-                            if player.tool == PICKAXE_TOOL and CLOAK_DISABLE_PICKAXE == True:
-                                player.send_chat(
-                                  'The swinging pickaxe disrupts your cloaking field')
-                                player.disable_cloak()
-                            elif player.tool == SPADE_TOOL and CLOAK_DISABLE_SPADE == True:
+                            if player.tool == SPADE_TOOL and CLOAK_DISABLE_SPADE == True:
                                 player.send_chat(
                                   'The swinging spade disrputs your cloaking field')
                                 player.disable_cloak()
@@ -414,7 +409,7 @@ def apply_script(protocol, connection, config):
             if self.mode == ASSASSIN_MODE and self.tool == WEAPON_TOOL:
                 self.send_chat("Assassin's bullets do no damage")
                 return False
-            elif (self.mode == MEDIC_MODE and self.tool == PICKAXE_TOOL and 
+            elif (self.mode == MEDIC_MODE and self.tool == SPADE_TOOL and 
                   self.team == hit_player.team and self.can_heal == True):
                 if hit_player.hp >= 100:
                     if self.health_message == True:
