@@ -519,8 +519,8 @@ def invisible(connection, player = None):
         player.send_chat("You're now invisible.")
         connection.protocol.irc_say('* %s became invisible' % player.name)
         position_data.set((0, 0, 0), player.player_id)
-        kill_action.not_fall = True
-        kill_action.player1 = kill_action.player2 = player.player_id
+        kill_action.kill_type = WEAPON_KILL
+        kill_action.player_id = kill_action.killer_id = player.player_id
         player.protocol.send_contained(position_data, sender = player)
         player.protocol.send_contained(kill_action, sender = player,
             save = True)
@@ -530,10 +530,12 @@ def invisible(connection, player = None):
         pos = player.team.get_random_location()
         x, y, z = pos
         create_player.player_id = player.player_id
-        create_player.name = None
+        create_player.name = player.name
         create_player.x = x
-        create_player.y = y - 128
+        create_player.y = y
+        create_player.z = z
         create_player.weapon = player.weapon
+        create_player.team = player.team.id
         world_object = player.world_object
         position_data.set(world_object.position.get(), player.player_id)
         orientation_data.set(world_object.orientation.get(), player.player_id)
