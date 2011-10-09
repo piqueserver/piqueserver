@@ -108,7 +108,7 @@ class IRCBot(irc.IRCClient):
                 result = handle_command(self, params[0], params[1:])
                 if result is not None:
                     self.send("%s: %s" % (user, result))
-            else:
+            elif msg.startswith(self.factory.chatprefix):
                 max_len = MAX_IRC_CHAT_SIZE - len(self.protocol.server_prefix) - 1
                 message = ("<%s> %s" % (prefixed_username, msg))[:max_len]
                 print message.encode('ascii', 'replace')
@@ -145,6 +145,7 @@ class IRCClientFactory(protocol.ClientFactory):
         self.realname = config.get('realname', server.name).encode('ascii')
         self.channel = config.get('channel', "#pyspades.bots").encode('ascii')
         self.commandprefix = config.get('commandprefix', '.').encode('ascii')
+        self.chatprefix = config.get('chatprefix', '').encode('ascii')
     
     def startedConnecting(self, connector):
         print "Connecting to IRC server..."
