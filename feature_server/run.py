@@ -428,7 +428,8 @@ class FeatureProtocol(ServerProtocol):
         self.default_cap_limit = config.get('cap_limit', 10.0)
         self.set_time_limit(self.map_info.time_limit)
         self.max_score = self.map_info.cap_limit or self.default_cap_limit
-        self.advance_on_win = config.get('advance_on_win', False)
+        self.advance_on_win = int(config.get('advance_on_win', False))
+        self.win_count = itertools.count(1)
         try:
             self.bans = json.load(open('bans.txt', 'rb'))
         except IOError:
@@ -794,7 +795,9 @@ class FeatureProtocol(ServerProtocol):
     # events
     
     def on_game_end(self, player):
-        if self.advance_on_win:
+        if self.advance_on_win <= 0:
+            return
+        if self.win_count.next() % self.advance_on_win == 0:
             self.advance_rotation('Game finished!')
     
     def on_advance(self, map_name):
