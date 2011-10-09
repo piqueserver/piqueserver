@@ -74,6 +74,7 @@ class EditWidget(QtGui.QWidget):
         super(EditWidget, self).__init__(parent)
         self.z_cache = {}
         self.map = self.parent().map
+        self.tool = Brush(self)
         self.set_z(63)
         self.update_scale()
         self.set_color(Qt.black)
@@ -161,12 +162,12 @@ class EditWidget(QtGui.QWidget):
             self.current_color = None
             super(EditWidget, self).mousePressEvent(event)
             return
-        self.draw_pencil(event)
+        self.draw_tool(event)
     
     def mouseMoveEvent(self, event):
         self.update_mouse_position(event)
         if self.current_color is not None:
-            self.draw_pencil(event)
+            self.draw_tool(event)
         else:
             super(EditWidget, self).mouseMoveEvent(event)
     
@@ -182,27 +183,17 @@ class EditWidget(QtGui.QWidget):
         self.x = x
         self.y = y
     
-    def draw_pencil(self, event):
+    def draw_tool(self, event):
         x = self.x
         y = self.y
         if x in xrange(512) and y in xrange(512):
             old_x = self.old_x or x
             old_y = self.old_y or y
-            color = self.current_color
             map = self.map
             z = self.z
             image = self.image
             painter = QPainter(image)
-            if self.current_color is self.eraser:
-                painter.setCompositionMode(QPainter.CompositionMode_Source)
-            pen = QtGui.QPen(color)
-            pen.setWidth(self.brush_size)
-            pen.setCapStyle(Qt.RoundCap)
-            painter.setPen(pen)
-            if x == old_x and y == old_y:
-                painter.drawPoint(x, y)
-            else:
-                painter.drawLine(old_x, old_y, x, y)
+            self.tool.draw(painter, old_x, old_y, x, y)
             self.repaint()
         self.old_x = x
         self.old_y = y
@@ -288,9 +279,52 @@ class ScrollArea(QtGui.QScrollArea):
         self.old_x = x
         self.old_y = y
 
+class Tool(object):
+    def __init__(self, editor):
+        self.editor = editor
+        self.initialize()
+    
+    def initialize(self):
+        pass
+    
+    def draw(self, painter):
+        pass
+
+class Brush(Tool):
+    def draw(self, painter, old_x, old_y, x, y):
+        editor = self.editor
+        color = editor.current_color
+        if color is editor.eraser:
+            painter.setCompositionMode(QPainter.CompositionMode_Source)
+        pen = QtGui.QPen(color)
+        pen.setWidth(editor.brush_size)
+        pen.setCapStyle(Qt.RoundCap)
+        painter.setPen(pen)
+        if x == old_x and y == old_y:
+            painter.drawPoint(x, y)
+        else:
+            painter.drawLine(old_x, old_y, x, y)
+
+class Texture(Tool):
+    image = None
+    def initialize(self):
+        name = QtGui.QFileDialog.getOpenFileName(self.editor,
+            'Select texture file')[0]
+        if not name:
+            return
+        self.image = QtGui.QImage(name)
+        
+    def draw(self, painter, old_x, old_y, x, y):
+        if self.image is None:
+            return
+        painter.drawImage(
+            x - self.image.width() / 2.0, 
+            y - self.image.height() / 2.0, 
+            self.image)
+        
 TOOLS = {
-    # 'Selection' : None,
-    'Brush' : None
+    'Brush' : Brush,
+    'Texture' : Texture
 }
 
 class Settings(QtGui.QWidget):
@@ -304,6 +338,9 @@ class Settings(QtGui.QWidget):
         
         self.tool = LabeledWidget('Tool', QtGui.QListWidget())
         self.tool.widget.addItems(TOOLS.keys())
+        self.tool.widget.setCurrentRow(0)
+        self.tool.widget.itemClicked.connect(self.tool_changed)
+        
         layout.addWidget(self.tool)
         
         self.z_value = LabeledSpinBox('Current Z')
@@ -325,6 +362,9 @@ class Settings(QtGui.QWidget):
         layout.addWidget(self.color_button)
         
         self.update_values()
+    
+    def tool_changed(self, value):
+        self.editor.tool = TOOLS[value.text()](self.editor)
     
     def set_brush_size(self):
         self.editor.brush_size = self.brush_size.spinbox.value()
