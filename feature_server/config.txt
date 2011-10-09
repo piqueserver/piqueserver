@@ -75,13 +75,13 @@
     "balanced_teams" : 1,
     "login_retries" : 3,
     "irc" : {
-        "enabled" : true,
-        "nickname" : "MatBot2",
+        "enabled" : false,
+        "nickname" : "pyspades",
         "username" : "pyspades",
         "realname" : "pyspades server bot",
         "server" : "irc.quakenet.org",
         "port" : 6667,
-        "channel" : "#matpow3",
+        "channel" : "#pyspades.bots",
         "commandprefix" : "."
     },
     "iocp" : true,
