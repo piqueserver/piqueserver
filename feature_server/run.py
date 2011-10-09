@@ -745,7 +745,8 @@ class FeatureProtocol(ServerProtocol):
     
     def end_votekick(self, enough, result = None, left = False):
         victim = self.votekick_player
-        self.votekick_player = None
+        voting_player = self.voting_player
+        self.votekick_player = self.voting_player = None
         if result is not None:
             self.send_chat('Votekick for %s has ended. %s.' % (victim.name, 
                 result), irc = True)
@@ -757,10 +758,9 @@ class FeatureProtocol(ServerProtocol):
                     self.votekick_ban_duration)
             else:
                 victim.kick(silent = True)
-        elif not self.voting_player.admin: # admins are powerful, yeah
-            self.voting_player.last_votekick = reactor.seconds()
+        elif not voting_player.admin: # admins are powerful, yeah
+            voting_player.last_votekick = reactor.seconds()
         self.votes = self.votekick_call = None
-        self.voting_player = None
         self.votekick_update_call.stop()
     
     def votekick_update(self):
