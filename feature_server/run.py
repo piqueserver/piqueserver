@@ -539,6 +539,7 @@ class FeatureProtocol(ServerProtocol):
             self.map_info = Map(name)
         except MapNotFound:
             return False
+        self.cancel_votekick()
         self.max_score = self.map_info.cap_limit or self.default_cap_limit
         self.set_map(self.map_info.data)
         self.set_time_limit(self.map_info.time_limit)
@@ -729,19 +730,25 @@ class FeatureProtocol(ServerProtocol):
             self.votekick_call.cancel()
             self.end_votekick(True, 'Player kicked')
     
-    def cancel_votekick(self, connection):
+    def cancel_votekick(self, connection = None):
         if self.votes is None:
             return 'No votekick in progress.'
-        if not connection.admin and connection is not self.voting_player:
+        if (connection and not connection.admin and 
+            connection is not self.voting_player):
             return 'You did not start the votekick.'
         self.votekick_call.cancel()
-        self.end_votekick(False, 'Cancelled by %s' % connection.name)
+        if connection is None:
+            message = None
+        else:
+            message = 'Cancelled by %s' % connection.name
+        self.end_votekick(False, message)
     
-    def end_votekick(self, enough, result, left = False):
+    def end_votekick(self, enough, result = None, left = False):
         victim = self.votekick_player
         self.votekick_player = None
-        self.send_chat('Votekick for %s has ended. %s.' % (victim.name, result),
-            irc = True)
+        if result is not None:
+            self.send_chat('Votekick for %s has ended. %s.' % (victim.name, 
+                result), irc = True)
         if enough:
             if self.votekick_ban_duration:
                 reason = self.votekick_reason
