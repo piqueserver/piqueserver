@@ -643,11 +643,12 @@ cdef class World(object):
         VXLData map
         list objects
 
-    def __init__(self, map):
+    def __init__(self):
         self.objects = []
-        self.map = map
     
     def update(self, double dt):
+        if self.map is None:
+            return
         cdef Object instance
         for instance in self.objects[:]:
             instance.update(dt)

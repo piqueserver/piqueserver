@@ -384,6 +384,10 @@ def encode_lines(value):
             lines.append(encode(line))
         return lines
 
+def random_choice_cycle(choices):
+    while 1:
+        yield random.choice(choices)
+
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
     version = CLIENT_VERSION
@@ -419,15 +423,13 @@ class FeatureProtocol(ServerProtocol):
     
     interface = None
     
-    def __init__(self, config, map):        
-        self.map = map.data
-        self.map_info = map
-        self.map_rotator = itertools.cycle(config['maps'])
-        self.map_rotator.next()
+    def __init__(self, config):        
+        if config.get('random_rotation', False):
+            self.map_rotator_type = random_choice_cycle
+        else:
+            self.map_rotator_type = itertools.cycle
         self.default_time_limit = config.get('default_time_limit', 20.0)
         self.default_cap_limit = config.get('cap_limit', 10.0)
-        self.set_time_limit(self.map_info.time_limit)
-        self.max_score = self.map_info.cap_limit or self.default_cap_limit
         self.advance_on_win = int(config.get('advance_on_win', False))
         self.win_count = itertools.count(1)
         try:
@@ -436,7 +438,6 @@ class FeatureProtocol(ServerProtocol):
             self.bans = []
         self.game_mode = 'ctf'
         self.config = config
-        self.update_format()
         if len(self.name) > MAX_SERVER_NAME_SIZE:
             print '(server name too long; it will be truncated to "%s")' % (
                 self.name[:MAX_SERVER_NAME_SIZE])
@@ -446,9 +447,6 @@ class FeatureProtocol(ServerProtocol):
         self.friendly_fire_time = config.get('grief_friendly_fire_time', 2.0)
         self.fall_damage = config.get('fall_damage', True)
         self.teamswitch_interval = config.get('teamswitch_interval', 0)
-        self.tip_frequency = config.get('tip_frequency', 0)
-        if self.tips is not None and self.tip_frequency > 0:
-            reactor.callLater(self.tip_frequency * 60, self.send_tip)
         self.max_players = config.get('max_players', 20)
         self.max_connections_per_ip = config.get('max_connections_per_ip', 0)
         self.passwords = config.get('passwords', {})
@@ -505,7 +503,13 @@ class FeatureProtocol(ServerProtocol):
         for password in self.passwords.get('admin', []):
             if password == 'replaceme':
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
+                
         ServerProtocol.__init__(self)
+        self.set_map_rotation(config['maps'])
+        self.update_format()
+        self.tip_frequency = config.get('tip_frequency', 0)
+        if self.tips is not None and self.tip_frequency > 0:
+            reactor.callLater(self.tip_frequency * 60, self.send_tip)
         # locked teams
         self.blue_team.locked = False
         self.green_team.locked = False
@@ -537,27 +541,25 @@ class FeatureProtocol(ServerProtocol):
         if self.rollback_in_progress:
             return 'Rollback in progress.'
         try:
-            self.map_info = Map(name)
+            self.map_info = self.get_map(name)
         except MapNotFound:
             return False
         self.cancel_votekick()
         self.max_score = self.map_info.cap_limit or self.default_cap_limit
         self.set_map(self.map_info.data)
         self.set_time_limit(self.map_info.time_limit)
-        if self.rollback_map is not None:
-            self.rollback_map = self.map.copy()
-        if hasattr(self, 'block_info'):
-            # this is very ugly - we need a 'map updated' event
-            self.block_info = None
         self.update_format()
         return True
+    
+    def get_map(self, name):
+        return Map(name)
     
     def set_map_rotation(self, maps, now = True):
         try:
             check_rotation(maps)
         except MapNotFound:
             return False
-        self.map_rotator = itertools.cycle(maps)
+        self.map_rotator = self.map_rotator_type(maps)
         if now:
             self.advance_rotation()
         return True
@@ -805,17 +807,6 @@ class FeatureProtocol(ServerProtocol):
 
 PORT = 32887
 
-try:
-    maps = config['maps']
-    check_rotation(maps)
-    map = Map(maps[0])
-except KeyError:
-    print 'no maps specified!'
-    raise SystemExit()
-except IOError, e:
-    print e
-    raise SystemExit()
-
 # apply scripts
 
 protocol_class = FeatureProtocol
@@ -837,7 +828,7 @@ for script in script_objects:
 
 protocol_class.connection_class = connection_class
 
-protocol_instance = protocol_class(config, map)
+protocol_instance = protocol_class(config)
 interface = config.get('network_interface', '')
 
 protocol_instance.listen(interface)

@@ -173,8 +173,8 @@ def apply_script(protocol, connection, config):
             for x in xrange(512):
                 tc_owner.append(-1)
 
-        def __init__(self, config, map):
-            result = protocol.__init__(self, config, map)
+        def __init__(self, *arg, **kw):
+            result = protocol.__init__(self, *arg, **kw)
             self.gameplay_loop = LoopingCall(self.update_tc_score)
             self.gameplay_loop.start(self.territory_update_time)
             self.reset_ownership()

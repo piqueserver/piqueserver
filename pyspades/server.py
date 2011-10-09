@@ -975,7 +975,6 @@ class Team(object):
         self.id = id
         self.name = name
         self.protocol = protocol
-        self.initialize()
     
     def get_players(self):
         for player in self.protocol.players.values():
@@ -1043,6 +1042,7 @@ class ServerProtocol(DatagramProtocol):
     speedhack_detect = True
     fog_color = (128, 232, 255)
     winning_player = None
+    world = None
     
     def __init__(self):
         self.connections = {}
@@ -1053,9 +1053,9 @@ class ServerProtocol(DatagramProtocol):
         self.green_team = Team(1, 'Green', self)
         self.blue_team.other = self.green_team
         self.green_team.other = self.blue_team
-        self.world = world.World(self.map)
+        self.world = world.World()
         self.update_loop = LoopingCall(self.update_world)
-        self.update_loop.start(UPDATE_FREQUENCY)
+        self.update_loop.start(UPDATE_FREQUENCY, False)
     
     def update_world(self):
         self.world.update(UPDATE_FREQUENCY)

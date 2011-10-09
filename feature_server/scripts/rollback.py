@@ -38,10 +38,6 @@ def apply_script(protocol, connection, config):
             return connection.on_block_destroy(self, x, y, z, value)
 
     class RollbackProtocol(protocol):
-        def __init__(self, config, map):
-            self.rollback_map = map.data.copy()
-            protocol.__init__(self, config, map)
-        
         rollback_in_progress = False
         rollback_max_rows = 10 # per 'cycle', intended to cap cpu usage
         rollback_max_packets = 180 # per 'cycle' cap for (unique packets * players)
@@ -193,6 +189,10 @@ def apply_script(protocol, connection, config):
                 self.send_contained(block_action, save = True)
                 packets_sent += 1
                 yield packets_sent
+        
+        def on_map_change(self, map):
+            self.rollback_map = map.copy()
+            return protocol.on_map_change(self, map)
         
         def on_game_end(self, player):
             if rollback_on_game_end:

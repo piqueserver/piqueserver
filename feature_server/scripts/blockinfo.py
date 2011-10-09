@@ -84,5 +84,9 @@ def apply_script(protocol, connection, config):
     
     class BlockInfoProtocol(protocol):
         block_info = None
+        
+        def on_map_change(self, map):
+            self.block_info = None
+            return protocol.on_map_change(self, map)
     
     return BlockInfoProtocol, BlockInfoConnection

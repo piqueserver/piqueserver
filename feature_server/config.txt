@@ -24,6 +24,7 @@
     "max_connections_per_ip" : 3,
     "cap_limit" : 10,
     "maps" : ["pyspades", "bridgewars", "anticbridge"],
+    "random_rotation" : false,
     "default_time_limit" : 15,
     "advance_on_win" : false,
     "respawn_time" : 5,
