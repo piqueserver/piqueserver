@@ -39,15 +39,6 @@ def check_rotation(maps, load_dir = DEFAULT_LOAD_DIR):
             raise MapNotFound('map %s does not exist' % map)
 
 class Map(object):
-    name = None
-    author = None
-    version = None
-    description = None
-    time_limit = None
-    
-    data = None
-    info = None
-    
     def __init__(self, name, load_dir = DEFAULT_LOAD_DIR):
         self.load_information(name, load_dir)
         if not self.generate_map(name):
@@ -66,6 +57,7 @@ class Map(object):
         self.extensions = getattr(info, 'extensions', {})
         self.script = getattr(info, 'apply_script', None)
         self.time_limit = getattr(info, 'time_limit', None)
+        self.cap_limit = getattr(info, 'cap_limit', None)
         
     def apply_script(self, protocol, connection, config):
         if self.script is not None:

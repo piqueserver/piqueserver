@@ -425,7 +425,9 @@ class FeatureProtocol(ServerProtocol):
         self.map_rotator = itertools.cycle(config['maps'])
         self.map_rotator.next()
         self.default_time_limit = config.get('default_time_limit', 20.0)
+        self.default_cap_limit = config.get('cap_limit', 10.0)
         self.set_time_limit(self.map_info.time_limit)
+        self.max_score = self.map_info.cap_limit or self.default_cap_limit
         self.advance_on_win = config.get('advance_on_win', False)
         try:
             self.bans = json.load(open('bans.txt', 'rb'))
@@ -437,7 +439,6 @@ class FeatureProtocol(ServerProtocol):
         if len(self.name) > MAX_SERVER_NAME_SIZE:
             print '(server name too long; it will be truncated to "%s")' % (
                 self.name[:MAX_SERVER_NAME_SIZE])
-        self.max_score = config.get('cap_limit', None)
         self.respawn_time = config.get('respawn_time', 5)
         self.master = config.get('master', True)
         self.friendly_fire = config.get('friendly_fire', True)
@@ -538,6 +539,7 @@ class FeatureProtocol(ServerProtocol):
             self.map_info = Map(name)
         except MapNotFound:
             return False
+        self.max_score = self.map_info.cap_limit or self.default_cap_limit
         self.set_map(self.map_info.data)
         self.set_time_limit(self.map_info.time_limit)
         if self.rollback_map is not None:
