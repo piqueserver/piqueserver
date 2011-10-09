@@ -56,27 +56,28 @@ class IRCBot(irc.IRCClient):
     
     def joined(self, channel):
         if channel == self.factory.channel:
-            self.ops = []
-            self.voices = []
+            self.ops = set()
+            self.voices = set()
         print "Joined channel %s" % channel
     
     def irc_NICK(self, prefix, params):
         user = prefix.split('!', 1)[0]
         new_user = params[0]
         if user in self.ops:
-            self.ops.remove(user)
-            self.ops.append(new_user)
+            self.ops.discard(user)
+            self.ops.add(new_user)
         if user in self.voices:
-            self.voices.remove(user)
-            self.voices.append(new_user)
+            self.voices.discard(user)
+            self.voices.add(new_user)
     
     def irc_RPL_NAMREPLY(self, *arg):
         if not arg[1][2] == self.factory.channel:
             return
         for name in arg[1][3].split():
             mode = name[0]
-            l = {'@':self.ops, '+':self.voices}
-            if mode in l: l[mode].append(name[1:])
+            l = {'@': self.ops, '+': self.voices}
+            if mode in l: 
+                l[mode].add(name[1:])
     
     def left(self, channel):
         if channel == self.factory.channel:
@@ -91,10 +92,10 @@ class IRCBot(irc.IRCClient):
             if mode not in ll:
                 continue
             l = ll[mode]
-            if name not in l and set:
-                l.append(name)
-            elif name in l and not set:
-                l.remove(name)
+            if set:
+                l.add(name)
+            elif not set:
+                l.discard(name)
     
     @channel
     def privmsg(self, user, channel, msg):
@@ -115,10 +116,8 @@ class IRCBot(irc.IRCClient):
     
     @channel
     def userLeft(self, user, channel):
-        if user in self.ops:
-            self.ops.remove(user)
-        if user in self.voices:
-            self.voices.remove(user)
+        self.ops.discard(user)
+        self.voices.discard(user)
     
     def send(self, msg, filter = False):
         msg = msg.encode('cp1252', 'replace')
