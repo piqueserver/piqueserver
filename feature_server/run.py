@@ -402,7 +402,7 @@ class FeatureTeam(Team):
     def get_entity_location(self, entity_id):
         get_location = self.protocol.map_info.get_entity_location
         if get_location is not None:
-            result = get_location()
+            result = get_location(self, entity_id)
             if result is not None:
                 return result
         return Team.get_entity_location(self, entity_id)
