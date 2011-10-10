@@ -110,6 +110,7 @@ class IRCBot(irc.IRCClient):
                     self.send("%s: %s" % (user, result))
             elif msg.startswith(self.factory.chatprefix):
                 max_len = MAX_IRC_CHAT_SIZE - len(self.protocol.server_prefix) - 1
+                msg = msg[len(self.factory.chatprefix):].strip()
                 message = ("<%s> %s" % (prefixed_username, msg))[:max_len]
                 print message.encode('ascii', 'replace')
                 self.factory.server.send_chat(encode(message))
