@@ -73,7 +73,7 @@ if sys.version_info < (2, 7):
 
 import pyspades.debug
 from pyspades.server import (ServerProtocol, ServerConnection, position_data,
-    grenade_packet)
+    grenade_packet, Team)
 from map import Map, MapNotFound, check_rotation
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
@@ -166,7 +166,9 @@ class FeatureConnection(ServerConnection):
     def get_spawn_location(self):
         get_location = self.protocol.map_info.get_spawn_location
         if get_location is not None:
-            return get_location(self)
+            result = get_location(self)
+            if result is not None:
+                return result
         return ServerConnection.get_spawn_location(self)
     
     def disconnect(self):
@@ -394,6 +396,17 @@ def random_choice_cycle(choices):
     while 1:
         yield random.choice(choices)
 
+class FeatureTeam(Team):
+    locked = False
+    
+    def get_entity_location(self, entity_id):
+        get_location = self.protocol.map_info.get_entity_location
+        if get_location is not None:
+            result = get_location()
+            if result is not None:
+                return result
+        return Team.get_entity_location(self, entity_id)
+
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
     version = CLIENT_VERSION
@@ -426,8 +439,9 @@ class FeatureProtocol(ServerProtocol):
     god_blocks = None
     
     last_time = None
-    
     interface = None
+    
+    team_class = FeatureTeam
     
     def __init__(self, config):        
         if config.get('random_rotation', False):
@@ -516,9 +530,6 @@ class FeatureProtocol(ServerProtocol):
         self.tip_frequency = config.get('tip_frequency', 0)
         if self.tips is not None and self.tip_frequency > 0:
             reactor.callLater(self.tip_frequency * 60, self.send_tip)
-        # locked teams
-        self.blue_team.locked = False
-        self.green_team.locked = False
     
     def set_time_limit(self, time_limit = None):
         if self.advance_call is not None:

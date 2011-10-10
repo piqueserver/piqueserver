@@ -1006,14 +1006,19 @@ class Team(object):
         self.set_base()
     
     def set_flag(self):
-        self.flag = Flag([BLUE_FLAG, GREEN_FLAG][self.id], self.protocol,
-            *self.get_random_location(True))
+        entity_id = [BLUE_FLAG, GREEN_FLAG][self.id]
+        self.flag = Flag(entity_id, self.protocol,
+            *self.get_entity_location(entity_id))
         self.flag.team = self
         return self.flag
 
     def set_base(self):
-        self.base = Base([BLUE_BASE, GREEN_BASE][self.id], self.protocol,
-            *self.get_random_location(True))
+        entity_id = [BLUE_BASE, GREEN_BASE][self.id]
+        self.base = Base(entity_id, self.protocol,
+            *self.get_entity_location(entity_id))
+    
+    def get_entity_location(self, entity_id):
+        return self.get_random_location(True)
     
     def get_random_location(self, force_land = False):
         if force_land and len(self.spawns) > 0:
@@ -1046,14 +1051,15 @@ class ServerProtocol(DatagramProtocol):
     fog_color = (128, 232, 255)
     winning_player = None
     world = None
+    team_class = Team
     
     def __init__(self):
         self.connections = {}
         self.players = MultikeyDict()
         self.connection_ids = IDPool()
         self.player_ids = IDPool()
-        self.blue_team = Team(0, 'Blue', self)
-        self.green_team = Team(1, 'Green', self)
+        self.blue_team = self.team_class(0, 'Blue', self)
+        self.green_team = self.team_class(1, 'Green', self)
         self.blue_team.other = self.green_team
         self.green_team.other = self.blue_team
         self.world = world.World()
