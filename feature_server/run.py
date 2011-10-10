@@ -164,7 +164,7 @@ class FeatureConnection(ServerConnection):
         self.protocol.irc_say('* %s entered the game' % self.name)
     
     def get_spawn_location(self):
-        get_location = self.protocol.map.get_spawn_location
+        get_location = self.protocol.map_info.get_spawn_location
         if get_location is not None:
             return get_location(self)
         return ServerConnection.get_spawn_location(self)
