@@ -163,6 +163,12 @@ class FeatureConnection(ServerConnection):
             self.address[0], self.player_id)
         self.protocol.irc_say('* %s entered the game' % self.name)
     
+    def get_spawn_location(self):
+        get_location = self.protocol.map.get_spawn_location
+        if get_location is not None:
+            return get_location(self)
+        return ServerConnection.get_spawn_location(self)
+    
     def disconnect(self):
         if self.name is not None:
             print self.printable_name, 'disconnected!'

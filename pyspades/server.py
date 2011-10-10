@@ -488,10 +488,13 @@ class ServerConnection(BaseConnection):
             self.spawn_call = reactor.callLater(
                 self.respawn_time, self.spawn)
     
+    def get_spawn_location(self):
+        return self.team.get_random_location(True)
+    
     def spawn(self, pos = None):
         self.spawn_call = None
         if pos is None:
-            x, y, z = self.team.get_random_location(True)
+            x, y, z = self.get_spawn_location()
             z -= 1
         else:
             x, y, z = pos

@@ -58,6 +58,7 @@ class Map(object):
         self.script = getattr(info, 'apply_script', None)
         self.time_limit = getattr(info, 'time_limit', None)
         self.cap_limit = getattr(info, 'cap_limit', None)
+        self.get_spawn_location = getattr(info, 'get_spawn_location', None)
         
     def apply_script(self, protocol, connection, config):
         if self.script is not None:
