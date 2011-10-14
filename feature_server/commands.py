@@ -103,23 +103,20 @@ def ban(connection, value, *arg):
     player = get_player(connection.protocol, value)
     player.ban(reason, duration)
 
-from pyspades.ipaddr import IPNetwork
-
 @admin
 def banip(connection, ip, *arg):
     duration, reason = get_ban_arguments(connection, arg)
     try:
-        net = IPNetwork(ip)
         connection.protocol.add_ban(ip, reason, duration)
-        reason = ': ' + reason if reason is not None else ''
-        duration = duration or None
-        if duration is None:
-            return 'IP/network %s permabanned%s' % (ip, reason)
-        else:
-            return 'IP/network %s banned for %s%s' % (ip,
-                prettify_timespan(duration * 60), reason)
-    except:
+    except ValueError:
         return 'Invalid IP address/network.'
+    reason = ': ' + reason if reason is not None else ''
+    duration = duration or None
+    if duration is None:
+        return 'IP/network %s permabanned%s' % (ip, reason)
+    else:
+        return 'IP/network %s banned for %s%s' % (ip,
+            prettify_timespan(duration * 60), reason)
 
 @admin
 def unban(connection, ip):
@@ -133,8 +130,7 @@ def unban(connection, ip):
 @admin
 def undo_ban(connection, *arg):
     if len(connection.protocol.bans)>0:
-        result = connection.protocol.bans.pop()
-        connection.protocol.save_bans()
+        result = connection.protocol.undo_last_ban()
         return ('Ban for %s undone.' % result[0])
     else:
         return 'No bans to undo.'

@@ -84,9 +84,9 @@ from twisted.protocols.basic import LineReceiver
 from pyspades.common import encode, decode, prettify_timespan
 from pyspades.constants import *
 from pyspades.master import MAX_SERVER_NAME_SIZE
+from networkdict import NetworkDict, get_network
 
 import commands
-from pyspades.ipaddr import IPAddress, IPNetwork
 
 CHAT_WINDOW_SIZE = 5
 CHAT_PER_SECOND = 0.5
@@ -131,19 +131,18 @@ class FeatureConnection(ServerConnection):
             print '(master client connected)'
         protocol = self.protocol
         client_ip = self.address[0]
-        for ban in protocol.bans:
-            username = ban[0]
-            ip = ban[1]
-            timestamp = ban[3]
-            if IPAddress(client_ip) in IPNetwork(ip):
-                if timestamp is not None and reactor.seconds() >= timestamp:
-                    protocol.remove_ban(ip)
-                    protocol.save_bans()
-                else:
-                    print 'banned user %s (%s) attempted to join' % (username, 
-                        ip)
-                    self.disconnect()
-                    return False
+        try:
+            name, reason, timestamp = self.protocol.bans[client_ip]
+            if timestamp is not None and reactor.seconds() >= timestamp:
+                protocol.remove_ban(client_ip)
+                protocol.save_bans()
+            else:
+                print 'banned user %s (%s) attempted to join' % (name, 
+                    client_ip)
+                self.disconnect()
+                return False
+        except KeyError:
+            pass
         manager = self.protocol.ban_manager
         if manager is not None:
             reason = manager.get_ban(client_ip)
@@ -452,10 +451,11 @@ class FeatureProtocol(ServerProtocol):
         self.default_cap_limit = config.get('cap_limit', 10.0)
         self.advance_on_win = int(config.get('advance_on_win', False))
         self.win_count = itertools.count(1)
+        self.bans = NetworkDict()
         try:
-            self.bans = json.load(open('bans.txt', 'rb'))
+            self.bans.read_list(json.load(open('bans.txt', 'rb')))
         except IOError:
-            self.bans = []
+            pass
         self.game_mode = 'ctf'
         self.config = config
         if len(self.name) > MAX_SERVER_NAME_SIZE:
@@ -650,20 +650,20 @@ class FeatureProtocol(ServerProtocol):
         Ban an ip with an optional reason and
         duration in minutes. If duration is None, ban is permanent.
         """
+        network = get_network(ip)
         for connection in self.connections.values():
-            if connection.address[0] == ip:
+            if get_network(connection.address[0]) in network:
                 name = connection.name
                 connection.kick(silent = True)
-                
         if duration:
             duration = reactor.seconds() + duration * 60
         else:
             duration = None
-        self.bans.append((name or '(unknown)', ip, reason, duration))
+        self.bans[ip] = (name or '(unknown)', reason, duration)
         self.save_bans()
     
     def remove_ban(self, ip):
-        results = [self.bans.remove(n) for n in self.bans if n[1] == ip]
+        results = self.bans.remove(ip)
         print 'Removing ban:', ip, results
         self.save_bans()
 
@@ -673,7 +673,7 @@ class FeatureProtocol(ServerProtocol):
         return result
     
     def save_bans(self):
-        json.dump(self.bans, open('bans.txt', 'wb'))
+        json.dump(self.bans.make_list(), open('bans.txt', 'wb'))
         if self.ban_publish is not None:
             self.ban_publish.update()
     

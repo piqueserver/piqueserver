@@ -42,10 +42,7 @@ class PublishServer(object):
     
     def update(self):
         bans = []
-        for entry in self.protocol.bans:
-            ip = entry[1]
-            reason = entry[2]
-            timestamp = entry[3]
+        for network, (name, reason, timestamp) in self.protocol.bans.iteritems():
             if timestamp is None or reactor.seconds() < timestamp:
-                bans.append({"ip" : ip, "reason" : reason})
+                bans.append({"ip" : network, "reason" : reason})
         self.json_bans = json.dumps(bans)
