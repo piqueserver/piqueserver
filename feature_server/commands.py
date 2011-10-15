@@ -640,11 +640,7 @@ def server_name(connection, *arg):
 @admin
 def toggle_master(connection):
     protocol = connection.protocol
-    protocol.master = not protocol.master
-    if protocol.master_connection is None:
-        protocol.set_master()
-    else:
-        protocol.master_connection.disconnect()
+    protocol.set_master_state(not protocol.master)
     message = ("toggled master broadcast %s." % ['off', 'on'][
         int(protocol.master)])
     protocol.irc_say("* %s " % connection.name + message)

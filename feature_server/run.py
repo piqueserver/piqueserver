@@ -421,6 +421,7 @@ class FeatureProtocol(ServerProtocol):
     remote_console = None
     debug_log = None
     advance_call = None
+    master_reconnect_call = None
     
     # votekick
     votekick_time = 120 # 2 minutes
@@ -641,9 +642,26 @@ class FeatureProtocol(ServerProtocol):
         ServerProtocol.got_master_connection(self, *arg, **kw)
     
     def master_disconnected(self, *arg, **kw):
-        print 'Master connection lost, reconnecting in 20 seconds...'
         ServerProtocol.master_disconnected(self, *arg, **kw)
-        reactor.callLater(20, self.set_master)
+        if self.master and self.master_reconnect_call is None:
+            print 'Master connection lost, reconnecting in 20 seconds...'
+            self.master_reconnect_call = reactor.callLater(20, self.set_master)
+    
+    def set_master_state(self, value):
+        if value == self.master:
+            return
+        self.master = value
+        has_connection = self.master_connection is not None
+        has_reconnect = self.master_reconnect_call is not None
+        if value:
+            if not has_connection and not has_reconnect:
+                self.set_master()
+        else:
+            if has_reconnect:
+                self.master_reconnect_call.cancel()
+                self.master_reconnect_call = None
+            if has_connection:
+                self.master_connection.disconnect()
 
     def add_ban(self, ip, reason, duration, name = None):
         """
