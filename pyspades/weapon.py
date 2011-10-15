@@ -81,7 +81,7 @@ class BaseWeapon(object):
     
     def is_empty(self, tolerance = 4):
         ammo = self.get_ammo(True)
-        return ammo < -tolerance
+        return ammo < -tolerance or not self.shoot
 
 class Rifle(BaseWeapon):
     name = 'Rifle'
