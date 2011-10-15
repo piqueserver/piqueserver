@@ -21,12 +21,12 @@ class NetworkDict(object):
     
     def read_list(self, values):
         for item in values:
-            self[item[0]] = item[1:]
+            self[item[1]] = [item[0]] + item[2:]
         
     def make_list(self):
         values = []
         for network, value in self.iteritems():
-            values.append([network] + list(value))
+            values.append([value[0]] + [network] + list(value[1:]))
         return values
     
     def remove(self, key):
