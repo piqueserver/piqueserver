@@ -2,15 +2,13 @@
 
 import commands
 
-def ratio(connection):
+def ratio(connection, user=None):
+    if user != None:
+        connection = commands.get_player(connection.protocol, user)
     if connection not in connection.protocol.players:
         raise KeyError()
-    if connection.deaths == 0:
-        ratio_msg = "You have a kill-death ratio of %s" % (
-            "0.00000" if connection.kills == 0 else "INFINITY")
-    else:
-        ratio = connection.kills/float(connection.deaths)
-        ratio_msg = "You have a kill-death ratio of %.5f" % ratio
+    ratio = connection.kills/float(max(1,connection.deaths))
+    ratio_msg = "You have a kill-death ratio of %.2f" % ratio
     return ('%s (%s kills, %s deaths).' %
         (ratio_msg, connection.kills, connection.deaths))
 
