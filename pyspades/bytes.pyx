@@ -100,9 +100,12 @@ cdef class ByteReader:
         cdef char * pos = self.check_available(4)
         return read_float(pos, big_endian)
     
-    cpdef readString(self):
+    cpdef readString(self, int size = -1):
         value = self.pos
-        self.pos += len(value) + 1
+        if size == -1:
+            self.pos += len(value) + 1
+        else:
+            self.pos += size
         return value
         
     cpdef ByteReader readReader(self, int size = -1):

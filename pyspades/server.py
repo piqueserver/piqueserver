@@ -61,7 +61,7 @@ map_data = loaders.MapChunk()
 map_start = loaders.MapStart()
 state_data = loaders.StateData()
 ctf_data = loaders.CTFState()
-state_data.state = ctf_data
+tc_data = loaders.TCState()
 intel_drop = loaders.IntelDrop()
 intel_pickup = loaders.IntelPickup()
 intel_capture = loaders.IntelCapture()
@@ -71,6 +71,8 @@ set_hp = loaders.SetHP()
 change_weapon = loaders.ChangeWeapon()
 change_team = loaders.ChangeTeam()
 weapon_reload = loaders.WeaponReload()
+territory_capture = loaders.TerritoryCapture()
+progress_bar = loaders.TerritoryCapture()
 
 def check_nan(*values):
     for value in values:
@@ -233,22 +235,27 @@ class ServerConnection(BaseConnection):
                             return
                         world_object.set_position(x, y, z)
                         self.on_position_update()
-                        other_flag = self.team.other.flag
-                        if vector_collision(world_object.position, self.team.base):
-                            if other_flag.player is self:
-                                self.capture_flag()
-                            last_refill = self.last_refill
-                            if (last_refill is None or 
-                            reactor.seconds() - last_refill > 
-                            self.protocol.refill_interval):
-                                self.last_refill = reactor.seconds()
-                                if self.on_refill() != False:
-                                    self.refill()
                         if self.filter_visibility_data:
                             return
-                        if other_flag.player is None and vector_collision(
-                        world_object.position, other_flag):
-                            self.take_flag()
+                        game_mode = self.protocol.game_mode
+                        if game_mode == CTF_MODE:
+                            other_flag = self.team.other.flag
+                            if vector_collision(world_object.position, 
+                            self.team.base):
+                                if other_flag.player is self:
+                                    self.capture_flag()
+                                last_refill = self.last_refill
+                                if (last_refill is None or 
+                                reactor.seconds() - last_refill > 
+                                self.protocol.refill_interval):
+                                    self.last_refill = reactor.seconds()
+                                    if self.on_refill() != False:
+                                        self.refill()
+                            if other_flag.player is None and vector_collision(
+                            world_object.position, other_flag):
+                                self.take_flag()
+                        elif game_mode == TC_MODE:
+                            pass
                         position_data.player_id = self.player_id
                         position_data.x = x
                         position_data.y = y
@@ -472,17 +479,6 @@ class ServerConnection(BaseConnection):
         if not local:
             self.send_contained(restock)
     
-    def take_flag(self):
-        if not self.hp:
-            return
-        flag = self.team.other.flag
-        if flag.player is not None:
-            return
-        self.on_flag_take()
-        flag.player = self
-        intel_pickup.player_id = self.player_id
-        self.protocol.send_contained(intel_pickup, save = True)
-    
     def respawn(self):
         if self.spawn_call is None:
             self.spawn_call = reactor.callLater(
@@ -519,7 +515,18 @@ class ServerConnection(BaseConnection):
         else:
             self.protocol.send_contained(create_player, save = True)
         self.on_spawn((x, y, z))
-    
+
+    def take_flag(self):
+        if not self.hp:
+            return
+        flag = self.team.other.flag
+        if flag.player is not None:
+            return
+        self.on_flag_take()
+        flag.player = self
+        intel_pickup.player_id = self.player_id
+        self.protocol.send_contained(intel_pickup, save = True)
+
     def capture_flag(self):
         other_team = self.team.other
         flag = other_team.flag
@@ -688,10 +695,6 @@ class ServerConnection(BaseConnection):
         # send initial data
         blue = self.protocol.blue_team
         green = self.protocol.green_team
-        blue_flag = blue.flag
-        green_flag = green.flag
-        blue_base = blue.base
-        green_base = green.base
         
         if self.player_id is None:
             self.player_id = self.protocol.player_ids.pop()
@@ -699,35 +702,52 @@ class ServerConnection(BaseConnection):
 
         state_data.player_id = self.player_id
         state_data.fog_color = self.protocol.fog_color
-        ctf_data.cap_limit = self.protocol.max_score
-        ctf_data.team1_score = blue.score
-        ctf_data.team2_score = green.score
+        state_data.team1_color = blue.color
+        state_data.team1_name = blue.name
+        state_data.team2_color = green.color
+        state_data.team2_name = green.name
         
-        ctf_data.team1_base_x = blue_base.x
-        ctf_data.team1_base_y = blue_base.y
-        ctf_data.team1_base_z = blue_base.z
+        game_mode = self.protocol.game_mode
         
-        ctf_data.team2_base_x = green_base.x
-        ctf_data.team2_base_y = green_base.y
-        ctf_data.team2_base_z = green_base.z
-        
-        if blue_flag.player is None:
-            ctf_data.team1_flag_x = blue_flag.x
-            ctf_data.team1_flag_y = blue_flag.y
-            ctf_data.team1_flag_z = blue_flag.z
-            ctf_data.team1_has_intel = False
-        else:
-            ctf_data.team1_carrier = blue_flag.player.player_id
-            ctf_data.team1_has_intel = True
-        
-        if green_flag.player is None:
-            ctf_data.team2_flag_x = green_flag.x
-            ctf_data.team2_flag_y = green_flag.y
-            ctf_data.team2_flag_z = green_flag.z
-            ctf_data.team2_has_intel = False
-        else:
-            ctf_data.team2_carrier = green_flag.player.player_id
-            ctf_data.team2_has_intel = True
+        if game_mode == CTF_MODE:
+            blue_base = blue.base
+            blue_flag = blue.flag
+            green_base = green.base
+            green_flag = green.flag
+            ctf_data.cap_limit = self.protocol.max_score
+            ctf_data.team1_score = blue.score
+            ctf_data.team2_score = green.score
+            
+            ctf_data.team1_base_x = blue_base.x
+            ctf_data.team1_base_y = blue_base.y
+            ctf_data.team1_base_z = blue_base.z
+            
+            ctf_data.team2_base_x = green_base.x
+            ctf_data.team2_base_y = green_base.y
+            ctf_data.team2_base_z = green_base.z
+            
+            if blue_flag.player is None:
+                ctf_data.team1_flag_x = blue_flag.x
+                ctf_data.team1_flag_y = blue_flag.y
+                ctf_data.team1_flag_z = blue_flag.z
+                ctf_data.team1_has_intel = False
+            else:
+                ctf_data.team1_carrier = blue_flag.player.player_id
+                ctf_data.team1_has_intel = True
+            
+            if green_flag.player is None:
+                ctf_data.team2_flag_x = green_flag.x
+                ctf_data.team2_flag_y = green_flag.y
+                ctf_data.team2_flag_z = green_flag.z
+                ctf_data.team2_has_intel = False
+            else:
+                ctf_data.team2_carrier = green_flag.player.player_id
+                ctf_data.team2_has_intel = True
+            
+            state_data.state = ctf_data
+            
+        elif game_mode == TC_MODE:
+            state_data.state = tc_data
         
         saved_loaders.append(state_data.generate())
         
@@ -800,10 +820,12 @@ class ServerConnection(BaseConnection):
         if not self.map_data.dataLeft():
             self.map_data = None
             for data in self.saved_loaders:
+                # print 'sending: %r' % str(data)
                 sized_data.data = data
+                continue
                 self.send_loader(sized_data, True)
             self.saved_loaders = None
-            self.on_join()
+            # self.on_join()
             return
         for _ in xrange(4):
             if not self.map_data.dataLeft():
@@ -829,7 +851,7 @@ class ServerConnection(BaseConnection):
         else:
             chat_message.chat_type = CHAT_TEAM
             # 34 is guaranteed to be out of range!
-            chat_message.player_id = 34
+            chat_message.player_id = 0
             prefix = self.protocol.server_prefix + ' '
         lines = textwrap.wrap(value, MAX_CHAT_SIZE - len(prefix) - 1)
         for line in lines:
@@ -941,6 +963,7 @@ class ServerConnection(BaseConnection):
         pass
 
 class Entity(Vertex3):
+    team = None
     def __init__(self, id, protocol, *arg, **kw):
         Vertex3.__init__(self, *arg, **kw)
         self.id = id
@@ -948,6 +971,11 @@ class Entity(Vertex3):
     
     def update(self):
         move_object.object_type = self.id
+        if self.team is None:
+            state = 0
+        else:
+            state = self.team.id
+        move_object.state = state
         move_object.x = self.x
         move_object.y = self.y
         move_object.z = self.z
@@ -955,12 +983,53 @@ class Entity(Vertex3):
 
 class Flag(Entity):
     player = None
-    team = None
     
     def update(self):
         if self.player is not None:
             return
         Entity.update(self)
+
+class Territory(Flag):
+    progress = 0.0
+    players = None
+    start = None
+    
+    def __init__(self, *arg, **kw):
+        Flag.__init__(self, *arg, **kw)
+        self.players = set()
+    
+    def add_player(self, player):
+        self.get_progress(True)
+        self.players.add(player)
+        
+    def remove_player(self, player):
+        self.get_progress(True)
+        self.players.discard(player)
+        
+    def get_progress(self, set = False):
+        """
+        Return progress (between 0 and 1 - 0 is full blue control, 1 is full
+        green control) and optionally set the current progress.
+        """
+        rate = self.get_rate()
+        start = self.start
+        if rate == 0.0 or start is None:
+            return self.progress
+        dt = reactor.seconds() - start
+        progress = max(0, min(1, self.progress + rate * dt))
+        if set:
+            self.progress = progress
+            self.start = reactor.seconds()
+        return progress
+    
+    def get_rate(self):
+        rate = 0.0
+        for player in self.players:
+            if player.team.id:
+                rate += TC_CAPTURE_RATE
+            else:
+                rate -= TC_CAPTURE_RATE
+        return rate
 
 class Base(Entity):
     pass
@@ -968,16 +1037,18 @@ class Base(Entity):
 class Team(object):
     score = None
     flag = None
+    base = None
     other = None
     protocol = None
     name = None
     spawns = None
     kills = None
     
-    def __init__(self, id, name, protocol):
+    def __init__(self, id, name, color, protocol):
         self.id = id
         self.name = name
         self.protocol = protocol
+        self.color = color
     
     def get_players(self):
         for player in self.protocol.players.values():
@@ -996,26 +1067,30 @@ class Team(object):
         self.kills = 0
         self.spawns = spawns = []
         x_offset = self.id * 384
-        map = self.protocol.map
-        for x in xrange(x_offset, 128 + x_offset):
-            for y in xrange(128, 384):
-                z = map.get_z(x, y)
-                if z < 63:
-                    spawns.append((x, y))
-        self.set_flag()
-        self.set_base()
+        for (x, y) in self.protocol.spawns:
+            if x in xrange(x_offset, 128 + x_offset) and y in xrange(128, 384):
+                spawns.append((x, y))
+        if self.protocol.game_mode == CTF_MODE:
+            self.set_flag()
+            self.set_base()
     
     def set_flag(self):
-        entity_id = [BLUE_FLAG, GREEN_FLAG][self.id]
-        self.flag = Flag(entity_id, self.protocol,
-            *self.get_entity_location(entity_id))
-        self.flag.team = self
+        if self.flag is None:
+            entity_id = [BLUE_FLAG, GREEN_FLAG][self.id]
+            self.flag = Flag(entity_id, self.protocol)
+            self.flag.team = self
+            self.protocol.entities.append(self.flag)
+        self.flag.set(*self.get_entity_location(entity_id))
         return self.flag
 
     def set_base(self):
-        entity_id = [BLUE_BASE, GREEN_BASE][self.id]
-        self.base = Base(entity_id, self.protocol,
-            *self.get_entity_location(entity_id))
+        if self.base is None:
+            entity_id = [BLUE_BASE, GREEN_BASE][self.id]
+            self.base = Base(entity_id, self.protocol)
+            self.base.team = self
+            self.protocol.entities.append(self.base)
+        self.base.set(*self.get_entity_location(entity_id))
+        return self.base
     
     def get_entity_location(self, entity_id):
         return self.get_random_location(True)
@@ -1034,6 +1109,7 @@ class ServerProtocol(DatagramProtocol):
     connection_class = ServerConnection
 
     name = 'pyspades server'
+    game_mode = CTF_MODE
     max_players = 20
     connections = None
     connection_ids = None
@@ -1052,19 +1128,38 @@ class ServerProtocol(DatagramProtocol):
     winning_player = None
     world = None
     team_class = Team
+    territory_count = 6
+    team1_color = (0, 0, 196)
+    team2_color = (0, 196, 0)
+    team1_name = 'Blue'
+    team2_name = 'Green'
     
     def __init__(self):
+        self.entities = []
         self.connections = {}
         self.players = MultikeyDict()
         self.connection_ids = IDPool()
         self.player_ids = IDPool()
-        self.blue_team = self.team_class(0, 'Blue', self)
-        self.green_team = self.team_class(1, 'Green', self)
+        self.blue_team = self.team_class(0, self.team1_name, self.team1_color,
+            self)
+        self.green_team = self.team_class(1, self.team2_name, self.team2_color,
+            self)
+        self.teams = [self.blue_team, self.green_team]
         self.blue_team.other = self.green_team
         self.green_team.other = self.blue_team
         self.world = world.World()
         self.update_loop = LoopingCall(self.update_world)
         self.update_loop.start(UPDATE_FREQUENCY, False)
+    
+    def reset_tc(self):
+        self.entities = []
+        for i in xrange(self.territory_count):
+            flag = Territory(i, self, *self.get_random_location())
+            flag.team = [self.blue_team, self.green_team][
+                int(i >= self.territory_count / 2)]
+            flag.progress = float(team.id)
+            self.entities.append(flag)
+            tc_data.set_items(self.entities)
     
     def update_world(self):
         self.world.update(UPDATE_FREQUENCY)
@@ -1072,6 +1167,14 @@ class ServerProtocol(DatagramProtocol):
     
     def set_map(self, map):
         self.map = map
+        self.spawns = spawns = []
+        for x in xrange(512):
+            for y in xrange(512):
+                z = map.get_z(x, y)
+                if z < 63:
+                    spawns.append((x, y))
+        if self.game_mode == TC_MODE:
+            self.reset_tc()
         self.world.map = map
         self.on_map_change(map)
         self.blue_team.initialize()
@@ -1089,19 +1192,24 @@ class ServerProtocol(DatagramProtocol):
             connection.send_map(data)
         self.update_entities()
     
-    def reset_game(self, player):
+    def reset_game(self, player = None, territory = None):
         blue_team = self.blue_team
         green_team = self.green_team
         blue_team.initialize()
         green_team.initialize()
         blue_team = self.blue_team
         green_team = self.green_team
-        intel_capture.player_id = player.player_id
-        intel_capture.winning = True
-        self.send_contained(intel_capture, save = True)
-        for team in (blue_team, green_team):
-            for entity in (team.flag, team.base):
-                entity.update()
+        if self.game_mode == CTF_MODE:
+            intel_capture.player_id = player.player_id
+            intel_capture.winning = True
+            self.send_contained(intel_capture, save = True)
+        elif self.game_mode == TC_MODE:
+            territory_capture.object_index = territory.id
+            territory_capture.winning = True
+            territory_capture.state = territory.team.id
+            self.reset_tc()
+        for entity in self.entities:
+            entity.update()
         for player in self.players.values():
             player.hp = 0
         for player in self.players.values():
@@ -1119,6 +1227,15 @@ class ServerProtocol(DatagramProtocol):
             else:
                 break
         return new_name
+    
+    def get_random_location(self, force_land = True):
+        if force_land and len(self.spawns) > 0:
+            x, y = random.choice(self.spawns)
+            return (x, y, self.map.get_z(x, y))
+        x = random.randrange(512)
+        y = random.randrange(512)
+        z = self.map.get_z(x, y)
+        return x, y, z
     
     def startProtocol(self):
         self.set_master()
@@ -1160,10 +1277,7 @@ class ServerProtocol(DatagramProtocol):
         blue_team = self.blue_team
         green_team = self.green_team
         map = self.map
-        for entity in (blue_team.flag, 
-                       green_team.flag, 
-                       blue_team.base, 
-                       green_team.base):
+        for entity in self.entities:
             moved = False
             if map.get_solid(entity.x, entity.y, entity.z - 1):
                 moved = True

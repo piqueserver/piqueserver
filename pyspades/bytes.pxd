@@ -11,7 +11,7 @@ cdef class ByteReader:
     cpdef int readShort(self, bint unsigned = ?, bint big_endian = ?)
     cpdef long long readInt(self, bint unsigned = ?, bint big_endian = ?)
     cpdef float readFloat(self, bint big_endian = ?)
-    cpdef readString(self)
+    cpdef readString(self, int size = ?)
     cpdef ByteReader readReader(self, int size = ?)
     cpdef int dataLeft(self)
     cdef void _skip(self, int bytes)
