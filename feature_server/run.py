@@ -525,7 +525,9 @@ class FeatureProtocol(ServerProtocol):
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
                 
         ServerProtocol.__init__(self)
-        self.set_map_rotation(config['maps'])
+        if not self.set_map_rotation(config['maps']):
+            print 'Invalid map in map rotation, exiting.'
+            raise SystemExit()
         self.update_format()
         self.tip_frequency = config.get('tip_frequency', 0)
         if self.tips is not None and self.tip_frequency > 0:
