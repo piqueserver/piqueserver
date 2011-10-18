@@ -819,11 +819,11 @@ class ServerConnection(BaseConnection):
             return
         if not self.map_data.dataLeft():
             self.map_data = None
-            for data in self.saved_loaders:
+            # for data in self.saved_loaders:
                 # print 'sending: %r' % str(data)
-                sized_data.data = data
-                continue
-                self.send_loader(sized_data, True)
+                # sized_data.data = data
+                # continue
+                # self.send_loader(sized_data, True)
             self.saved_loaders = None
             # self.on_join()
             return
