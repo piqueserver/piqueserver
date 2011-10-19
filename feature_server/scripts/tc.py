@@ -159,8 +159,6 @@ def apply_script(protocol, connection, config):
                                      'time' : reactor.seconds() + 2}
             
     class TCProtocol(protocol):
-
-        game_mode = 'tc'
         green_tc_score = 0
         blue_tc_score = 0
         green_tc_held = [0 for n in xrange(8*8)]

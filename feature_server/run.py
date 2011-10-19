@@ -457,7 +457,6 @@ class FeatureProtocol(ServerProtocol):
             self.bans.read_list(json.load(open('bans.txt', 'rb')))
         except IOError:
             pass
-        self.game_mode = 'ctf'
         self.config = config
         if len(self.name) > MAX_SERVER_NAME_SIZE:
             print '(server name too long; it will be truncated to "%s")' % (

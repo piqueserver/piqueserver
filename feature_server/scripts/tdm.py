@@ -33,7 +33,6 @@ def apply_script(protocol, connection, config):
 
         kill_limit = config.get('kill_limit', 100)
         intel_points = config.get('intel_points', 10)
-        game_mode = 'tdm'
     
         def get_kill_count(self):
             green_kills = self.green_team.kills
