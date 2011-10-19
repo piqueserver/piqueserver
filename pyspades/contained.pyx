@@ -386,7 +386,13 @@ cdef class ObjectTerritory(Loader):
 
     cpdef write(self, ByteWriter reader):
         write_position(reader, self.item.x, self.item.y, self.item.z)
-        reader.writeInt(self.item.team.id, True, False)
+        team = self.item.team
+        cdef int state
+        if team is None:
+            state = NEUTRAL_TEAM
+        else:
+            state = team.id
+        reader.writeInt(state, True, False)
 
 DEF MAX_TERRITORIES = 15
 DEF TERRITORY_SIZE = 4 * 4
