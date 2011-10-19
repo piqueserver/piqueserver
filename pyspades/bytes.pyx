@@ -43,6 +43,7 @@ cdef extern from "bytes_c.cpp":
     void rewind_stream(void * stream, int bytes)
     object get_stream(void * stream)
     size_t get_stream_size(void * stream)
+    size_t get_stream_pos(void * stream)
 
 class NoDataLeft(Exception):
     pass
@@ -103,9 +104,11 @@ cdef class ByteReader:
     cpdef readString(self, int size = -1):
         value = self.pos
         if size == -1:
-            self.pos += len(value) + 1
-        else:
-            self.pos += size
+            size = len(value) + 1
+        if size > self.end - self.pos:
+            size = self.end - self.pos
+            value = value[:size]
+        self.pos += size
         return value
         
     cpdef ByteReader readReader(self, int size = -1):
@@ -117,8 +120,18 @@ cdef class ByteReader:
         self.pos += size
         return reader
     
+    cpdef size_t tell(self):
+        return self.pos - self.data
+    
     cpdef int dataLeft(self):
         return self.end - self.pos
+    
+    cpdef seek(self, size_t pos):
+        self.pos = self.data + pos
+        if self.pos > self.end:
+            self.pos = self.end
+        if self.pos < self.data:
+            self.pos = self.data
     
     cdef void _skip(self, int bytes):
         self.pos += bytes
@@ -187,6 +200,9 @@ cdef class ByteWriter:
     
     cpdef rewind(self, int bytes):
         rewind_stream(self.stream, bytes)
+    
+    cpdef size_t tell(self):
+        return get_stream_pos(self.stream)
     
     def __str__(self):
         return get_stream(self.stream)

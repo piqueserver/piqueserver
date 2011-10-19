@@ -200,6 +200,15 @@ inline size_t get_stream_size(void * stream)
     return ss->str().length();
 }
 
+inline size_t get_stream_pos(void * stream)
+{
+    stringstream * ss = (stringstream*)stream;
+    streampos pos = ss->tellp();
+    if (pos == (streampos)-1)
+        return 0;
+    return pos;
+}
+
 inline PyObject * get_stream(void * stream)
 {
     stringstream * ss = (stringstream*)stream;

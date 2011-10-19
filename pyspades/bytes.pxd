@@ -17,6 +17,8 @@ cdef class ByteReader:
     cdef void _skip(self, int bytes)
     cpdef skipBytes(self, int bytes)
     cpdef rewind(self, int value)
+    cpdef seek(self, size_t pos)
+    cpdef size_t tell(self)
 
 cdef class ByteWriter:
     cdef void * stream
@@ -33,3 +35,4 @@ cdef class ByteWriter:
     cpdef writeString(self, value, int size = ?)
     cpdef pad(self, int bytes)
     cpdef rewind(self, int bytes)
+    cpdef size_t tell(self)
