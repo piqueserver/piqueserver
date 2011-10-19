@@ -1029,6 +1029,7 @@ class Territory(Flag):
     start = None
     rate = 0.0
     finish_call = None
+    capturing_team = None
     
     def __init__(self, *arg, **kw):
         Flag.__init__(self, *arg, **kw)
@@ -1043,34 +1044,58 @@ class Territory(Flag):
         self.get_progress(True)
         self.players.discard(player)
         self.update_rate()
+        self.send_progress(player)
     
     def update_rate(self):
-        rate = 0.0
+        rate = 0
         for player in self.players:
             if player.team.id:
-                rate += TC_CAPTURE_RATE
+                rate += 1
             else:
-                rate -= TC_CAPTURE_RATE
+                rate -= 1
         self.rate = rate
         progress = self.progress
         if self.finish_call is not None:
             self.finish_call.cancel()
             self.finish_call = None
-        if rate == 0.0:
+        if rate == 0:
+            self.capturing_team = None
             return
-        if rate < 0:
-            end_time = reactor.seconds() + progress / -rate
         else:
-            end_time = reactor.seconds() + (1.0 - progress) / rate
-        self.finish_call = reactor.callLater(end_time, self.finish)
+            rate_value = rate * TC_CAPTURE_RATE
+            if rate_value < 0:
+                self.capturing_team = self.protocol.blue_team
+                end_time = reactor.seconds() + progress / -rate_value
+            else:
+                self.capturing_team = self.protocol.green_team
+                end_time = reactor.seconds() + (1.0 - progress) / rate_value
+            self.finish_call = reactor.callLater(end_time, self.finish)
+        self.send_progress()
+    
+    def send_progress(self, remove_player = None):
+        progress_bar.object_index = self.index
+        if remove_player is not None or self.capturing_team is None:
+            progress_bar.capturing_team = NEUTRAL_TEAM
+        else:
+            progress_bar.capturing_team = self.team.id
+        progress_bar.progress = self.get_progress()
+        if remove_player is not None:
+            progress_bar.rate = 0
+        else:
+            progress_bar.rate = int(math.fabs(self.rate))
+        if remove_player is not None:
+            remove_player.send_contained(progress_bar)
+        else:
+            for player in self.players:
+                player.send_contained(progress_bar)
     
     def finish(self):
         self.finish_call = None
         protocol = self.protocol
         if self.rate:
-            team = protocol.blue_team
-        else:
             team = protocol.green_team
+        else:
+            team = protocol.blue_team
         self.team = team
         
     def get_progress(self, set = False):
