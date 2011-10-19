@@ -459,12 +459,12 @@ cdef class Character(Object):
         acceleration.y /= v13
         cdef double old_acceleration = acceleration.z
         self.calculate_position(dt)
-        if 0.0 != acceleration.z or old_acceleration <= 0.239999994635582:
+        if 0.0 != acceleration.z or old_acceleration <= 0.24:
             pass
         else:
             acceleration.x *= 0.5
             acceleration.y *= 0.5
-            if old_acceleration > 0.4799999892711639:
+            if old_acceleration > 0.58:
                 if self.fall_callback is not None:
                     self.fall_callback(-27 - old_acceleration**3 * -256.0)
         return 0

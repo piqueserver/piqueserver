@@ -25,10 +25,18 @@ import json
 import itertools
 import random
 import time
+import shutil
 
-try:
-    config = json.load(open('config.txt', 'rb'))
-except IOError, e:
+for index, name in enumerate(('config.txt', 'config.txt.default')):
+    try:
+        config = json.load(open(name, 'rb'))
+        if index != 0:
+            print '(creating config.txt from %s)' % name
+            shutil.copy(name, 'config.txt')
+        break
+    except IOError, e:
+        pass
+else:
     raise SystemExit('no config.txt file found')
 
 if len(sys.argv) > 1:
