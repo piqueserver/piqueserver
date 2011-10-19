@@ -462,6 +462,19 @@ class FeatureProtocol(ServerProtocol):
             print '(server name too long; it will be truncated to "%s")' % (
                 self.name[:MAX_SERVER_NAME_SIZE])
         self.respawn_time = config.get('respawn_time', 5)
+        game_mode = config.get('game_mode', 'ctf')
+        if game_mode == 'ctf':
+            self.game_mode = CTF_MODE
+        elif game_mode == 'tc':
+            self.game_mode = TC_MODE
+        else:
+            raise NotImplementedError('invalid game mode: %s' % game_mode)
+        team1 = config.get('team1', {})
+        team2 = config.get('team2', {})
+        self.team1_name = team1.get('name', 'Blue')
+        self.team2_name = team2.get('name', 'Green')
+        self.team1_color = team1.get('color', (0, 0, 196))
+        self.team2_color = team2.get('color', (0, 196, 0))
         self.master = config.get('master', True)
         self.friendly_fire = config.get('friendly_fire', True)
         self.friendly_fire_time = config.get('grief_friendly_fire_time', 2.0)

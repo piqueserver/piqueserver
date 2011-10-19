@@ -22,6 +22,7 @@
     ],
     "max_players" : 32,
     "max_connections_per_ip" : 3,
+    "game_mode" : "ctf",
     "cap_limit" : 10,
     "maps" : ["pyspades", "bridgewars", "anticbridge"],
     "random_rotation" : false,
@@ -43,6 +44,14 @@
     "default_ban_duration" : 1440,
     "speedhack_detect" : true,
     "network_interface" : "",
+    "team1" : {
+        "name" : "Blue",
+        "color" : (0, 0, 196)
+    }
+    "team2" : {
+        "name" : "Green",
+        "color" : (0, 196, 0)
+    }
     "passwords" : {
         "admin" : ["replaceme"],
         "trusted" : []
