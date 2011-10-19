@@ -1005,7 +1005,7 @@ class Entity(Vertex3):
     def update(self):
         move_object.object_type = self.id
         if self.team is None:
-            state = 0
+            state = NEUTRAL_TEAM
         else:
             state = self.team.id
         move_object.state = state
@@ -1036,17 +1036,21 @@ class Territory(Flag):
     def add_player(self, player):
         self.get_progress(True)
         self.players.add(player)
-        self.rate = self.get_rate()
-        self.schedule_finish()
+        self.update_rate()
         
     def remove_player(self, player):
         self.get_progress(True)
         self.players.discard(player)
-        self.rate = self.get_rate()
-        self.schedule_finish()
+        self.update_rate()
     
-    def schedule_finish(self):
-        rate = self.rate
+    def update_rate(self):
+        rate = 0.0
+        for player in self.players:
+            if player.team.id:
+                rate += TC_CAPTURE_RATE
+            else:
+                rate -= TC_CAPTURE_RATE
+        self.rate = rate
         progress = self.progress
         if self.finish_call is not None:
             self.finish_call.cancel()
@@ -1067,7 +1071,6 @@ class Territory(Flag):
         else:
             team = protocol.green_team
         self.team = team
-        self.update()
         
     def get_progress(self, set = False):
         """
@@ -1085,15 +1088,6 @@ class Territory(Flag):
             self.start = reactor.seconds()
             
         return progress
-    
-    def get_rate(self):
-        rate = 0.0
-        for player in self.players:
-            if player.team.id:
-                rate += TC_CAPTURE_RATE
-            else:
-                rate -= TC_CAPTURE_RATE
-        return rate
 
 class Base(Entity):
     pass
@@ -1139,8 +1133,8 @@ class Team(object):
             self.set_base()
     
     def set_flag(self):
+        entity_id = [BLUE_FLAG, GREEN_FLAG][self.id]
         if self.flag is None:
-            entity_id = [BLUE_FLAG, GREEN_FLAG][self.id]
             self.flag = Flag(entity_id, self.protocol)
             self.flag.team = self
             self.protocol.entities.append(self.flag)
@@ -1148,8 +1142,8 @@ class Team(object):
         return self.flag
 
     def set_base(self):
+        entity_id = [BLUE_BASE, GREEN_BASE][self.id]
         if self.base is None:
-            entity_id = [BLUE_BASE, GREEN_BASE][self.id]
             self.base = Base(entity_id, self.protocol)
             self.base.team = self
             self.protocol.entities.append(self.base)
