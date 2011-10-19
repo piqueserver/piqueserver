@@ -706,7 +706,8 @@ class ServerConnection(BaseConnection):
             existing_player.kills = player.kills
             existing_player.team = player.team.id
             existing_player.color = make_color(*player.color)
-            saved_loaders.append(existing_player.generate())
+            self.send_contained(existing_player, True)
+            # saved_loaders.append(existing_player.generate())
     
         # send initial data
         blue = self.protocol.blue_team
@@ -1086,7 +1087,6 @@ class Territory(Flag):
         if set:
             self.progress = progress
             self.start = reactor.seconds()
-            
         return progress
 
 class Base(Entity):
@@ -1167,7 +1167,7 @@ class ServerProtocol(DatagramProtocol):
     connection_class = ServerConnection
 
     name = 'pyspades server'
-    game_mode = CTF_MODE
+    game_mode = TC_MODE
     max_players = 20
     connections = None
     connection_ids = None
