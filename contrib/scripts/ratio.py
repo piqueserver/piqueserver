@@ -24,9 +24,10 @@ def apply_script(protocol, connection, config):
             
             if ret:
                 return ret
-            
-            if self != killer:
-                killer.ratio_kills += 1
+
+            if killer is not None and self.team is not  killer.team:
+                if self != killer:
+                    killer.ratio_kills += 1
             
             self.ratio_deaths += 1
     
