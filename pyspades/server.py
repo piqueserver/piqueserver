@@ -706,8 +706,7 @@ class ServerConnection(BaseConnection):
             existing_player.kills = player.kills
             existing_player.team = player.team.id
             existing_player.color = make_color(*player.color)
-            self.send_contained(existing_player, True)
-            # saved_loaders.append(existing_player.generate())
+            self.send_contained(existing_player)
     
         # send initial data
         blue = self.protocol.blue_team

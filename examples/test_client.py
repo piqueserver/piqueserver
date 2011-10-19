@@ -25,8 +25,8 @@ from pyspades.tools import *
 class TestProtocol(ClientProtocol):
     pass
 
-HOST = '127.0.0.1'
-# HOST = get_server_ip('aos://16777343')
+# HOST = '127.0.0.1'
+HOST = get_server_ip('aos://3332851788')
 PORT = 32887
 
 reactor.listenUDP(0, TestProtocol(HOST, PORT))

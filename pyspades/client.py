@@ -113,7 +113,7 @@ class ClientConnection(BaseConnection):
             # data = packet.data
             # if data.dataLeft():
                 # raw_input('not completely parsed')
-            print contained.id
+            # print contained.id
             if contained.id == loaders.MapStart.id:
                 print 'map size:', contained.size
                 self.map_size = contained.size
@@ -122,8 +122,6 @@ class ClientConnection(BaseConnection):
                 self.map.write(contained.data)
                 if len(self.map) == self.map_size:
                     print 'done!', len(self.map)
-                    import code
-                    code.interact(local = locals())
             # newdata = ByteWriter()
             # contained.write(newdata)
             # if contained.id != loaders.PlayerData.id:
