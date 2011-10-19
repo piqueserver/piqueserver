@@ -19,7 +19,7 @@ from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from pyspades.protocol import (BaseConnection, sized_sequence, 
-    sized_data, in_packet, out_packet)
+    sized_data, in_packet, out_packet, get_timer, generate_loader_data)
 from pyspades.bytes import ByteReader, ByteWriter
 from pyspades.packet import load_client_packet
 from pyspades.loaders import *
@@ -127,6 +127,7 @@ class ServerConnection(BaseConnection):
     world_object = None
     last_block = None
     map_data = None
+    state_data = None
     
     def __init__(self, protocol, address):
         BaseConnection.__init__(self)
@@ -623,11 +624,13 @@ class ServerConnection(BaseConnection):
         set_hp.not_fall = int(type != FALL_KILL)
         if hit_indicator is None:
             if hit_by is not None and hit_by is not self:
-                hit_indicator = self.world_object.get_hit_direction(
-                    hit_by.world_object.position)
+                hit_indicator = hit_by.world_object.position
             else:
-                hit_indicator = 0
-        set_hp.hit_indicator = hit_indicator
+                hit_indicator = (0, 0, 0)
+        x, y, z = hit_indicator
+        set_hp.source_x = x
+        set_hp.source_y = y
+        set_hp.source_z = z
         self.send_contained(set_hp)
     
     def set_weapon(self, weapon, local = False):
@@ -749,7 +752,9 @@ class ServerConnection(BaseConnection):
         elif game_mode == TC_MODE:
             state_data.state = tc_data
         
-        saved_loaders.append(state_data.generate())
+        self.state_data = state_data.generate()
+        
+        saved_loaders.append(self.state_data)
         
     def grenade_exploded(self, grenade):
         if self.name is None:
@@ -775,9 +780,8 @@ class ServerConnection(BaseConnection):
                     continue
                 elif returned is not None:
                     damage = returned
-                indicator = player.world_object.get_hit_direction(position)
                 player.set_hp(player.hp - damage, self,
-                    hit_indicator = indicator, type = GRENADE_KILL)
+                    hit_indicator = position, type = GRENADE_KILL)
         if self.on_block_destroy(x, y, z, GRENADE_DESTROY) == False:
             return
         map = self.protocol.map
@@ -817,22 +821,38 @@ class ServerConnection(BaseConnection):
             self.send_contained(map_start)
         elif self.map_data is None:
             return
+            
         if not self.map_data.dataLeft():
             self.map_data = None
-            # for data in self.saved_loaders:
-                # print 'sending: %r' % str(data)
-                # sized_data.data = data
-                # continue
-                # self.send_loader(sized_data, True)
+            for data in self.saved_loaders:
+                sized_data.data = data
+                self.send_loader(sized_data, True)
             self.saved_loaders = None
-            # self.on_join()
+            self.on_join()
             return
         for _ in xrange(4):
             if not self.map_data.dataLeft():
                 break
             map_data.data = self.map_data.read(1024)
+            if len(map_data.data) != 1024:
+                self._hack_state_data()
             self.send_contained(map_data).addCallback(self.got_map_ack)
             self.map_packets_sent += 1
+    
+    def _hack_state_data(self):
+        if self.state_data is not None:
+            # ugliest hack ever (client crashes otherwise)
+            sequence = self.packet_handler1.sequence + 2
+            out_packet.unique = self.unique
+            out_packet.connection_id = 0
+            out_packet.timer = get_timer()
+            sized_data.data = self.state_data
+            sized_data.ack = False
+            sized_data.byte = 0
+            sized_data.sequence = sequence
+            out_packet.data = generate_loader_data(sized_data)
+            self.state_data = None
+            self.send_data(str(out_packet.generate()))
     
     def got_map_ack(self, ack):
         self.map_packets_sent -= 1
@@ -851,7 +871,7 @@ class ServerConnection(BaseConnection):
         else:
             chat_message.chat_type = CHAT_TEAM
             # 34 is guaranteed to be out of range!
-            chat_message.player_id = 0
+            chat_message.player_id = 34
             prefix = self.protocol.server_prefix + ' '
         lines = textwrap.wrap(value, MAX_CHAT_SIZE - len(prefix) - 1)
         for line in lines:
