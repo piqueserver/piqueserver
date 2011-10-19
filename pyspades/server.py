@@ -256,7 +256,15 @@ class ServerConnection(BaseConnection):
                             world_object.position, other_flag):
                                 self.take_flag()
                         elif game_mode == TC_MODE:
-                            pass
+                            for entity in self.protocol.entities:
+                                collides = vector_collision(entity, 
+                                    world_object.position, TC_CAPTURE_DISTANCE)
+                                if self in entity.players:
+                                    if not collides:
+                                        entity.remove_player(self)
+                                else:
+                                    if collides:
+                                        entity.add_player(self)
                         position_data.player_id = self.player_id
                         position_data.x = x
                         position_data.y = y
@@ -550,24 +558,30 @@ class ServerConnection(BaseConnection):
     
     def drop_flag(self):
         protocol = self.protocol
-        for flag in (protocol.blue_team.flag, protocol.green_team.flag):
-            player = flag.player
-            if player is not self:
-                continue
-            self.on_flag_drop()
-            position = self.world_object.position
-            x = int(position.x)
-            y = int(position.y)
-            z = max(0, int(position.z))
-            z = self.protocol.map.get_z(x, y, z)
-            flag.set(x, y, z)
-            flag.player = None
-            intel_drop.player_id = self.player_id
-            intel_drop.x = flag.x
-            intel_drop.y = flag.y
-            intel_drop.z = flag.z
-            self.protocol.send_contained(intel_drop, save = True)
-            break
+        game_mode = protocol.game_mode
+        if game_mode == CTF_MODE:
+            for flag in (protocol.blue_team.flag, protocol.green_team.flag):
+                player = flag.player
+                if player is not self:
+                    continue
+                self.on_flag_drop()
+                position = self.world_object.position
+                x = int(position.x)
+                y = int(position.y)
+                z = max(0, int(position.z))
+                z = self.protocol.map.get_z(x, y, z)
+                flag.set(x, y, z)
+                flag.player = None
+                intel_drop.player_id = self.player_id
+                intel_drop.x = flag.x
+                intel_drop.y = flag.y
+                intel_drop.z = flag.z
+                self.protocol.send_contained(intel_drop, save = True)
+                break
+        elif game_mode == TC_MODE:
+            for entity in protocol.entities:
+                if self in entity.players:
+                    entity.remove_player(self)
     
     def disconnect(self):
         if self.disconnected:
@@ -624,7 +638,7 @@ class ServerConnection(BaseConnection):
         set_hp.not_fall = int(type != FALL_KILL)
         if hit_indicator is None:
             if hit_by is not None and hit_by is not self:
-                hit_indicator = hit_by.world_object.position
+                hit_indicator = hit_by.world_object.position.get()
             else:
                 hit_indicator = (0, 0, 0)
         x, y, z = hit_indicator
@@ -781,7 +795,7 @@ class ServerConnection(BaseConnection):
                 elif returned is not None:
                     damage = returned
                 player.set_hp(player.hp - damage, self,
-                    hit_indicator = position, type = GRENADE_KILL)
+                    hit_indicator = position.get(), type = GRENADE_KILL)
         if self.on_block_destroy(x, y, z, GRENADE_DESTROY) == False:
             return
         map = self.protocol.map
@@ -1013,6 +1027,7 @@ class Territory(Flag):
     progress = 0.0
     players = None
     start = None
+    finish_call = None
     
     def __init__(self, *arg, **kw):
         Flag.__init__(self, *arg, **kw)
@@ -1021,10 +1036,17 @@ class Territory(Flag):
     def add_player(self, player):
         self.get_progress(True)
         self.players.add(player)
+        self.schedule_finish()
         
     def remove_player(self, player):
         self.get_progress(True)
         self.players.discard(player)
+        self.schedule_finish()
+    
+    def schedule_finish(self):
+        rate = self.get_rate()
+        if rate == 0.0:
+            return
         
     def get_progress(self, set = False):
         """
@@ -1040,6 +1062,7 @@ class Territory(Flag):
         if set:
             self.progress = progress
             self.start = reactor.seconds()
+            
         return progress
     
     def get_rate(self):
@@ -1175,11 +1198,10 @@ class ServerProtocol(DatagramProtocol):
         self.entities = []
         for i in xrange(self.territory_count):
             flag = Territory(i, self, *self.get_random_location())
-            flag.team = [self.blue_team, self.green_team][
-                int(i >= self.territory_count / 2)]
-            flag.progress = float(team.id)
+            flag.team = self.teams[int(i >= self.territory_count / 2)]
+            flag.progress = float(flag.team.id)
             self.entities.append(flag)
-            tc_data.set_items(self.entities)
+            tc_data.set_entities(self.entities)
     
     def update_world(self):
         self.world.update(UPDATE_FREQUENCY)
