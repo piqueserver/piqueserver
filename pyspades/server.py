@@ -437,8 +437,7 @@ class ServerConnection(BaseConnection):
                                 team = None
                             else:
                                 team = self.team
-                            self.protocol.send_contained(contained, 
-                                sender = self, team = team)
+                            self.protocol.send_contained(contained, team = team)
                     elif contained.id == loaders.FogColor.id:
                         color = get_color(contained.color)
                         self.on_command('fog', [str(item) for item in color])
@@ -1027,6 +1026,7 @@ class Territory(Flag):
     progress = 0.0
     players = None
     start = None
+    rate = 0.0
     finish_call = None
     
     def __init__(self, *arg, **kw):
@@ -1036,24 +1036,45 @@ class Territory(Flag):
     def add_player(self, player):
         self.get_progress(True)
         self.players.add(player)
+        self.rate = self.get_rate()
         self.schedule_finish()
         
     def remove_player(self, player):
         self.get_progress(True)
         self.players.discard(player)
+        self.rate = self.get_rate()
         self.schedule_finish()
     
     def schedule_finish(self):
-        rate = self.get_rate()
+        rate = self.rate
+        progress = self.progress
+        if self.finish_call is not None:
+            self.finish_call.cancel()
+            self.finish_call = None
         if rate == 0.0:
             return
+        if rate < 0:
+            end_time = reactor.seconds() + progress / -rate
+        else:
+            end_time = reactor.seconds() + (1.0 - progress) / rate
+        self.finish_call = reactor.callLater(end_time, self.finish)
+    
+    def finish(self):
+        self.finish_call = None
+        protocol = self.protocol
+        if self.rate:
+            team = protocol.blue_team
+        else:
+            team = protocol.green_team
+        self.team = team
+        self.update()
         
     def get_progress(self, set = False):
         """
         Return progress (between 0 and 1 - 0 is full blue control, 1 is full
         green control) and optionally set the current progress.
         """
-        rate = self.get_rate()
+        rate = self.rate
         start = self.start
         if rate == 0.0 or start is None:
             return self.progress
