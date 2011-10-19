@@ -1167,7 +1167,7 @@ class ServerProtocol(DatagramProtocol):
     connection_class = ServerConnection
 
     name = 'pyspades server'
-    game_mode = TC_MODE
+    game_mode = CTF_MODE
     max_players = 20
     connections = None
     connection_ids = None
