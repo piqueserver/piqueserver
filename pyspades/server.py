@@ -1139,6 +1139,7 @@ class Team(object):
             self.flag.team = self
             self.protocol.entities.append(self.flag)
         self.flag.set(*self.get_entity_location(entity_id))
+        self.flag.player = None
         return self.flag
 
     def set_base(self):
