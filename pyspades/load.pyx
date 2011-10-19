@@ -29,6 +29,7 @@ cdef inline int make_color(int r, int g, int b, a):
     return b | (g << 8) | (r << 16) | (<int>((a / 255.0) * 128) << 24)
 
 import time
+import random
 
 cdef inline int get_z(int x, int y, MapData * map, int start = 0):
     cdef int z
@@ -99,6 +100,21 @@ cdef class VXLData:
             if not get_solid(x, y, h_z, self.map):
                 return h_z + 1
         return 0
+    
+    cpdef tuple get_random_point(self, int x1, int y1, int x2, int y2):
+        cdef int x, y
+        get_random_point(x1, y1, x2, y2, self.map, random.random(),
+            random.random(), &x, &y)
+        return x, y
+    
+    def count_land(self, int x1, y1, x2, y2):
+        cdef int land = 0
+        cdef int x, y
+        for x in range(x1, x2):
+            for y in range(y1, y2):
+                if get_solid(x, y, 62, self.map):
+                    land += 1
+        return land
     
     def remove_point(self, int x, int y, int z, bint user = True, 
                      bint no_collapse = False):

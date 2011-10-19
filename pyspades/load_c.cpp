@@ -357,6 +357,44 @@ inline MapData * copy_map(MapData * map)
     return new MapData(*map);
 }
 
+struct Point2D
+{
+    int x, y;
+};
+
+inline unsigned int random(unsigned int a, unsigned int b, float value)
+{
+    return (unsigned int)(value * (b - a) + a);
+}
+
+inline void get_random_point(int x1, int y1, int x2, int y2, MapData * map,
+                             float random_1, float random_2,
+                             int * end_x, int * end_y)
+{
+    vector<Point2D> items;
+    int size = 0;
+    int x, y;
+    for(x = x1; x < x2; x++){
+        for(y = y1; y < y2; y++) {
+            if (map->geometry[get_pos(x, y, 62)]) {
+                Point2D item;
+                item.x = x;
+                item.y = y;
+                items.push_back(item);
+                size += 1;
+            }
+        }
+    }
+    if (size == 0) {
+        *end_x = random(x1, x2, random_1);
+        *end_y = random(y1, y2, random_2);
+    } else {
+        Point2D item = items[random(0, size, random_1)];
+        *end_x = item.x;
+        *end_y = item.y;
+    }
+}
+
 struct MapGenerator
 {
     MapData * map;

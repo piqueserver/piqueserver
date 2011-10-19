@@ -493,7 +493,16 @@ class ServerConnection(BaseConnection):
                 self.respawn_time, self.spawn)
     
     def get_spawn_location(self):
-        return self.team.get_random_location(True)
+        game_mode = self.protocol.game_mode
+        if game_mode == CTF_MODE:
+            return self.team.get_random_location(True)
+        elif game_mode == TC_MODE:
+            base = random.choice(list(self.team.get_entities()))
+            x1 = max(0, base.x - SPAWN_RADIUS)
+            y1 = max(0, base.y - SPAWN_RADIUS)
+            x2 = min(512, base.x + SPAWN_RADIUS)
+            y2 = min(512, base.y + SPAWN_RADIUS)
+            return self.protocol.get_random_location(True, (x1, y1, x2, y2))
     
     def spawn(self, pos = None):
         self.spawn_call = None
@@ -1053,7 +1062,8 @@ class Territory(Flag):
             else:
                 rate -= 1
         progress = self.progress
-        if (progress == 1.0 and rate > 0) or (progress == 0.0 and rate < 0):
+        if ((progress == 1.0 and (rate > 0 or rate == 0)) or 
+           (progress == 0.0 and (rate < 0 or rate == 0))):
             return
         self.rate = rate
         self.rate_value = rate * TC_CAPTURE_RATE
@@ -1069,14 +1079,21 @@ class Territory(Flag):
             else:
                 self.capturing_team = self.protocol.green_team
                 end_time = (1.0 - progress) / rate_value
-            self.finish_call = reactor.callLater(end_time, self.finish)
+            if self.capturing_team is not self.team:
+                self.finish_call = reactor.callLater(end_time, self.finish)
         self.send_progress()
     
     def send_progress(self):
         progress_bar.object_index = self.id
-        progress_bar.capturing_team = self.capturing_team.id
-        progress_bar.progress = 1 - self.get_progress()
-        progress_bar.rate = int(math.fabs(self.rate))
+        capturing_team = self.team.other
+        progress_bar.capturing_team = capturing_team.id
+        rate = self.rate
+        progress = self.get_progress()
+        if self.team.id:
+            rate = -rate
+            progress = 1 - progress
+        progress_bar.progress = progress
+        progress_bar.rate = rate
         self.protocol.send_contained(progress_bar)
     
     def finish(self):
@@ -1123,7 +1140,6 @@ class Team(object):
     other = None
     protocol = None
     name = None
-    spawns = None
     kills = None
     
     def __init__(self, id, name, color, protocol):
@@ -1147,8 +1163,6 @@ class Team(object):
     def initialize(self):
         self.score = 0
         self.kills = 0
-        x_offset = self.id * 384
-        self.spawns = self.protocol.get_land(x_offset, 128, 128 + x_offset, 384)
         if self.protocol.game_mode == CTF_MODE:
             self.set_flag()
             self.set_base()
@@ -1176,14 +1190,14 @@ class Team(object):
         return self.get_random_location(True)
     
     def get_random_location(self, force_land = False):
-        if force_land and len(self.spawns) > 0:
-            x, y = random.choice(self.spawns)
-            return (x, y, self.protocol.map.get_z(x, y))
         x_offset = self.id * 384
-        x = self.id * 384 + random.randrange(128)
-        y = 128 + random.randrange(256)
-        z = self.protocol.map.get_z(x, y)
-        return x, y, z
+        return self.protocol.get_random_location(force_land, (
+            x_offset, 128, 128 + x_offset, 384))
+    
+    def get_entities(self):
+        for item in self.protocol.entities:
+            if item.team is self:
+                yield item
 
 class ServerProtocol(DatagramProtocol):
     connection_class = ServerConnection
@@ -1233,8 +1247,9 @@ class ServerProtocol(DatagramProtocol):
     def reset_tc(self):
         self.entities = []
         # cool algorithm number 1
-        territory_count = int(len(self.spawns)/(512.0 * 512.0))*(
-            MAX_TERRITORY_COUNT-MIN_TERRITORY_COUNT) + MIN_TERRITORY_COUNT
+        land_count = self.map.count_land(0, 0, 512, 512)
+        territory_count = int((land_count/(512.0 * 512.0))*(
+            MAX_TERRITORY_COUNT-MIN_TERRITORY_COUNT) + MIN_TERRITORY_COUNT)
         j = 512.0 / territory_count
         for i in xrange(territory_count):
             x1 = i * j
@@ -1266,12 +1281,6 @@ class ServerProtocol(DatagramProtocol):
     
     def set_map(self, map):
         self.map = map
-        self.spawns = spawns = []
-        for x in xrange(512):
-            for y in xrange(512):
-                z = map.get_z(x, y)
-                if z < 63:
-                    spawns.append((x, y))
         self.world.map = map
         self.on_map_change(map)
         self.blue_team.initialize()
@@ -1331,25 +1340,12 @@ class ServerProtocol(DatagramProtocol):
     def get_random_location(self, force_land = True, zone = (0, 0, 512, 512)):
         x1, y1, x2, y2 = zone
         if force_land:
-            spawns = self.get_land(x1, y1, x2, y2)
-            if spawns:
-                x, y = random.choice(spawns)
-                return (x, y, self.map.get_z(x, y))
-        x = random.randrange(x1, x2)
-        y = random.randrange(y1, y2)
+            x, y = self.map.get_random_point(x1, y1, x2, y2)
+        else:
+            x = random.randrange(x1, x2)
+            y = random.randrange(y1, y2)
         z = self.map.get_z(x, y)
         return x, y, z
-    
-    def get_land(self, x1, y1, x2, y2):
-        if x1 == 0 and y1 == 0 and x2 == 512 and y2 == 512:
-            return self.spawns
-        items = []
-        x_range = xrange(int(x1), int(x2))
-        y_range = xrange(int(y1), int(y2))
-        for (x, y) in self.spawns:
-            if x in x_range and y in y_range:
-                items.append((x, y))
-        return items
     
     def startProtocol(self):
         self.set_master()

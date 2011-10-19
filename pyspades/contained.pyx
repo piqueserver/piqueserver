@@ -572,7 +572,8 @@ cdef class ProgressBar(Loader):
     id = 18
     
     cdef public:
-        unsigned int object_index, capturing_team, rate
+        unsigned int object_index, capturing_team
+        int rate
         float progress
     
     cpdef read(self, ByteReader reader):
@@ -580,7 +581,7 @@ cdef class ProgressBar(Loader):
         self.capturing_team = reader.readByte(True)
         reader.skipBytes(1)
         self.progress = reader.readFloat(False)
-        self.rate = reader.readInt(True, False)
+        self.rate = reader.readInt(False, False)
     
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
@@ -588,7 +589,7 @@ cdef class ProgressBar(Loader):
         reader.writeByte(self.capturing_team, True)
         reader.pad(1)
         reader.writeFloat(self.progress, False)
-        reader.writeInt(self.rate, True, False)
+        reader.writeInt(self.rate, False, False)
 
 cdef class IntelCapture(Loader):
     id = 19

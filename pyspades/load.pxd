@@ -19,11 +19,15 @@ cdef extern from "load_c.cpp":
     bint get_solid(int x, int y, int z, MapData * map)
     int get_color(int x, int y, int z, MapData * map)
     void set_point(int x, int y, int z, MapData * map, bint solid, int color)
+    int get_random_point(int x1, int y1, int x2, int y2, MapData * map, 
+                         float random_1, float random_2,
+                         int * x, int * y)
 
 cdef class VXLData:
     cdef MapData * map
 
     cpdef int get_solid(self, int x, int y, int z)
+    cpdef tuple get_random_point(self, int x1, int y1, int x2, int y2)
     cpdef int get_color(self, int x, int y, int z)
     cpdef int get_z(self, int x, int y, int start = ?)
     cpdef int get_height(self, int x, int y)
