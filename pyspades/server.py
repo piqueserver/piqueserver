@@ -1087,7 +1087,10 @@ class Territory(Flag):
     
     def send_progress(self):
         progress_bar.object_index = self.id
-        capturing_team = self.team.other
+        if self.team is None:
+            capturing_team = self.capturing_team
+        else:
+            capturing_team = self.team.other
         progress_bar.capturing_team = capturing_team.id
         rate = self.rate
         progress = self.get_progress()
