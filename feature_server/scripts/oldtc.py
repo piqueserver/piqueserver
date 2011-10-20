@@ -307,7 +307,7 @@ def apply_script(protocol, connection, config):
                 player = self.get_a_player(self.green_team)
                 if player:
                     self.reset_game(player)
-                    self.on_game_end(player)
+                    self.on_game_end()
                 return True
             elif (self.blue_tc_score>=self.score_limit and
                   self.blue_tc_score>self.green_tc_score):
@@ -316,7 +316,7 @@ def apply_script(protocol, connection, config):
                 player = self.get_a_player(self.blue_team)
                 if player:
                     self.reset_game(player)
-                    self.on_game_end(player)
+                    self.on_game_end()
                 return True
             return False
 
@@ -368,9 +368,9 @@ def apply_script(protocol, connection, config):
             self.reset_ownership()
             self.init_cap_boxes()
         
-        def on_game_end(self, player):
+        def on_game_end(self):
             self.reset_tc()
-            return protocol.on_game_end(self, player)
+            return protocol.on_game_end(self)
 
         def get_a_player(self, team):
             for n in self.players.values():

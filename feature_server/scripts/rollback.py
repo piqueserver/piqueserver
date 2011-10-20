@@ -194,9 +194,9 @@ def apply_script(protocol, connection, config):
             self.rollback_map = map.copy()
             return protocol.on_map_change(self, map)
         
-        def on_game_end(self, player):
+        def on_game_end(self):
             if rollback_on_game_end:
                 self.start_rollback(None, None, 0, 0, 512, 512, False)
-            return protocol.on_game_end(self, player)
+            return protocol.on_game_end(self)
         
     return RollbackProtocol, RollbackConnection

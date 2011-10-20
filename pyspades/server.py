@@ -557,7 +557,7 @@ class ServerConnection(BaseConnection):
         if (self.protocol.max_score not in (0, None) and 
         self.team.score + 1 >= self.protocol.max_score):
             self.protocol.reset_game(self)
-            self.protocol.on_game_end(self)
+            self.protocol.on_game_end()
         else:
             intel_capture.player_id = self.player_id
             intel_capture.winning = False
@@ -1114,6 +1114,7 @@ class Territory(Flag):
         self.team = team
         if team.score >= protocol.max_score:
             protocol.reset_game(territory = self)
+            protocol.on_game_end()
         else:
             territory_capture.object_index = self.id
             territory_capture.state = self.team.id
@@ -1458,7 +1459,7 @@ class ServerProtocol(DatagramProtocol):
 
     # events
     
-    def on_game_end(self, player):
+    def on_game_end(self):
         pass
     
     def on_world_update(self):
