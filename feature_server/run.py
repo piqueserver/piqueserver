@@ -670,7 +670,12 @@ class FeatureProtocol(ServerProtocol):
         ServerProtocol.master_disconnected(self, *arg, **kw)
         if self.master and self.master_reconnect_call is None:
             print 'Master connection lost, reconnecting in 20 seconds...'
-            self.master_reconnect_call = reactor.callLater(20, self.set_master)
+            self.master_reconnect_call = reactor.callLater(20, 
+                self.reconnect_master)
+    
+    def reconnect_master(self):
+        self.master_reconnect_call = None
+        self.set_master()
     
     def set_master_state(self, value):
         if value == self.master:
