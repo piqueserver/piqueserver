@@ -1,3 +1,5 @@
+from pyspades.constants import *
+
 from commands import add
 
 def score(connection):
