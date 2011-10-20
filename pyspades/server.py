@@ -494,15 +494,17 @@ class ServerConnection(BaseConnection):
     
     def get_spawn_location(self):
         game_mode = self.protocol.game_mode
-        if game_mode == CTF_MODE:
-            return self.team.get_random_location(True)
-        elif game_mode == TC_MODE:
-            base = random.choice(list(self.team.get_entities()))
-            x1 = max(0, base.x - SPAWN_RADIUS)
-            y1 = max(0, base.y - SPAWN_RADIUS)
-            x2 = min(512, base.x + SPAWN_RADIUS)
-            y2 = min(512, base.y + SPAWN_RADIUS)
-            return self.protocol.get_random_location(True, (x1, y1, x2, y2))
+        if game_mode == TC_MODE:
+            try:
+                base = random.choice(list(self.team.get_entities()))
+                x1 = max(0, base.x - SPAWN_RADIUS)
+                y1 = max(0, base.y - SPAWN_RADIUS)
+                x2 = min(512, base.x + SPAWN_RADIUS)
+                y2 = min(512, base.y + SPAWN_RADIUS)
+                return self.protocol.get_random_location(True, (x1, y1, x2, y2))
+            except IndexError:
+                pass
+        return self.team.get_random_location(True)
     
     def spawn(self, pos = None):
         self.spawn_call = None
