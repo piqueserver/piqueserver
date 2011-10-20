@@ -475,8 +475,7 @@ class FeatureProtocol(ServerProtocol):
             self.game_mode = CTF_MODE
         elif game_mode == 'tc':
             self.game_mode = TC_MODE
-        else:
-            raise NotImplementedError('invalid game mode: %s' % game_mode)
+        self.game_mode_name = game_mode
         team1 = config.get('team1', {})
         team2 = config.get('team2', {})
         self.team1_name = team1.get('name', 'Blue')
@@ -870,6 +869,11 @@ protocol_class = FeatureProtocol
 connection_class = FeatureConnection
 
 script_objects = []
+script_names = config.get('scripts', [])
+game_mode = config.get('game_mode', 'ctf')
+if game_mode not in ('ctf', 'tc'):
+    # must be a script with this game mode
+    script_names.append(game_mode)
 
 for script in config.get('scripts', []):
     try:

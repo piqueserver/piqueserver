@@ -6,9 +6,7 @@ def score(connection):
 add(score)
 
 def apply_script(protocol, connection, config):
-    
     class TDMConnection(connection):
-    
         def on_spawn(self, pos):
             self.send_chat(self.explain_game_mode())
             self.send_chat(self.protocol.get_kill_count())
@@ -30,7 +28,7 @@ def apply_script(protocol, connection, config):
                     % self.protocol.intel_points)
             
     class TDMProtocol(protocol):
-
+        game_mode = CTF_MODE
         kill_limit = config.get('kill_limit', 100)
         intel_points = config.get('intel_points', 10)
     
