@@ -497,7 +497,7 @@ class FeatureProtocol(ServerProtocol):
         self.server_prefix = encode(config.get('server_prefix', '[*]'))
         self.balanced_teams = config.get('balanced_teams', None)
         self.login_retries = config.get('login_retries', 1)
-        self.default_ban_time = config.get('default_ban_time', 24*60)
+        self.default_ban_time = config.get('default_ban_duration', 24*60)
         self.votekick_ban_duration = config.get('votekick_ban_duration', 15)
         self.votekick_percentage = config.get('votekick_percentage', 25)
         self.votekick_public_votes = config.get('votekick_public_votes', True)
