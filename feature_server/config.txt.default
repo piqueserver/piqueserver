@@ -1,5 +1,5 @@
 {
-    "name" : "pyspades server - %(map_name)s",
+    "name" : "pyspades server",
     "motd" : [
         "Welcome to %(server_name)s! See /help for new commands.",
         "Map is %(map_name)s by %(map_author)s.",
