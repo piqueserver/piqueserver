@@ -561,10 +561,10 @@ class FeatureProtocol(ServerProtocol):
         if self.advance_call is not None:
             self.advance_call.cancel()
             self.advance_call = None
+        time_limit = time_limit or self.default_time_limit
         if time_limit == False:
             return
-        time_limit = (time_limit or self.default_time_limit) * 60.0
-        self.advance_call = reactor.callLater(time_limit, self._time_up)
+        self.advance_call = reactor.callLater(time_limit * 60.0, self._time_up)
     
     def _time_up(self):
         self.advance_call = None
