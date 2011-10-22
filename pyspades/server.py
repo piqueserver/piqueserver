@@ -131,7 +131,7 @@ class ProgressiveMapGenerator(object):
         self.compressor = zlib.compressobj(COMPRESSION_LEVEL)
     
     def get_size(self):
-        return 2 * 1024 * 1024 # 2 mb
+        return 1.5 * 1024 * 1024 # 2 mb
     
     def read(self, size):
         data = self.data
