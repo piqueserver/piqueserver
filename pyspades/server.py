@@ -1089,12 +1089,14 @@ class Territory(Flag):
         progress_bar.object_index = self.id
         if self.team is None:
             capturing_team = self.capturing_team
+            team = capturing_team.other
         else:
             capturing_team = self.team.other
+            team = self.team
         progress_bar.capturing_team = capturing_team.id
         rate = self.rate
         progress = self.get_progress()
-        if self.team.id:
+        if team.id:
             rate = -rate
             progress = 1 - progress
         progress_bar.progress = progress
