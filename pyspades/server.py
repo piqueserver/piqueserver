@@ -245,13 +245,7 @@ class ServerConnection(BaseConnection):
                             self.team.base):
                                 if other_flag.player is self:
                                     self.capture_flag()
-                                last_refill = self.last_refill
-                                if (last_refill is None or 
-                                reactor.seconds() - last_refill > 
-                                self.protocol.refill_interval):
-                                    self.last_refill = reactor.seconds()
-                                    if self.on_refill() != False:
-                                        self.refill()
+                                self.check_refill()
                             if other_flag.player is None and vector_collision(
                             world_object.position, other_flag):
                                 self.take_flag()
@@ -265,6 +259,9 @@ class ServerConnection(BaseConnection):
                                 else:
                                     if collides:
                                         entity.add_player(self)
+                                if collides and vector_collision(entitiy,
+                                world_object.position):
+                                    self.check_refill()
                         position_data.player_id = self.player_id
                         position_data.x = x
                         position_data.y = y
@@ -453,6 +450,14 @@ class ServerConnection(BaseConnection):
                             return
                         self.set_team(team)
             return
+    
+    def check_refill(self):
+        last_refill = self.last_refill
+        if (last_refill is None or 
+        reactor.seconds() - last_refill > self.protocol.refill_interval):
+            self.last_refill = reactor.seconds()
+            if self.on_refill() != False:
+                self.refill()
 
     def get_location(self):
         position = self.world_object.position
