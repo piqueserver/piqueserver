@@ -79,7 +79,7 @@
     },
     "server_prefix" : "[*]",
     "user_blocks_only" : false,
-    "logfile" : "log.txt",
+    "logfile" : "./logs/log.txt",
     "rotate_daily" : true,
     "debug_log" : false,
     "balanced_teams" : 1,

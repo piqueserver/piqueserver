@@ -96,6 +96,20 @@ from networkdict import NetworkDict, get_network
 
 import commands
 
+def create_path(path):
+    if path:
+        try:
+            os.makedirs(path)
+        except OSError:
+            pass
+
+def create_filename_path(path):
+    create_path(os.path.dirname(path))
+
+def open_create(filename, mode):
+    create_filename_path(filename)
+    return open(filename, mode)
+
 CHAT_WINDOW_SIZE = 5
 CHAT_PER_SECOND = 0.5
 
@@ -531,9 +545,10 @@ class FeatureProtocol(ServerProtocol):
         logfile = config.get('logfile', None)
         if logfile is not None and logfile.strip():
             if config.get('rotate_daily', False):
+                create_filename_path(logfile)
                 logging_file = DailyLogFile(logfile, '.')
             else:
-                logging_file = open(logfile, 'a')
+                logging_file = open_create(logfile, 'a')
             log.addObserver(log.FileLogObserver(logging_file).emit)
             log.msg('pyspades server started on %s' % time.strftime('%c'))
         log.startLogging(sys.stdout) # force twisted logging
@@ -721,7 +736,7 @@ class FeatureProtocol(ServerProtocol):
         return result
     
     def save_bans(self):
-        json.dump(self.bans.make_list(), open('bans.txt', 'wb'))
+        json.dump(self.bans.make_list(), open_create('bans.txt', 'wb'))
         if self.ban_publish is not None:
             self.ban_publish.update()
     
