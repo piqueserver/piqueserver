@@ -259,7 +259,7 @@ class ServerConnection(BaseConnection):
                                 else:
                                     if collides:
                                         entity.add_player(self)
-                                if collides and vector_collision(entitiy,
+                                if collides and vector_collision(entity,
                                 world_object.position):
                                     self.check_refill()
                         position_data.player_id = self.player_id
