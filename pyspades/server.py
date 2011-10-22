@@ -44,6 +44,8 @@ import zlib
 ORIENTATION_DISTANCE = 128.0
 ORIENTATION_DISTANCE_SQUARED = 128.0 ** 2
 
+COMPRESSION_LEVEL = 9
+
 create_player = loaders.CreatePlayer()
 position_data = loaders.PositionData()
 orientation_data = loaders.OrientationData()
@@ -97,6 +99,67 @@ class SlidingWindow(object):
     def get(self):
         return self.window[0], self.window[-1]
 
+class MapGeneratorChild(object):
+    pos = 0
+    def __init__(self, generator):
+        self.parent = generator
+    
+    def get_size(self):
+        return self.parent.get_size()
+    
+    def read(self, size):
+        pos = self.pos
+        if pos + size > self.parent.pos:
+            self.parent.read(size)
+        data = self.parent.all_data[pos:pos+size]
+        self.pos += len(data)
+        return data
+    
+    def data_left(self):
+        return self.parent.data_left() or self.pos < self.parent.pos
+
+class ProgressiveMapGenerator(object):
+    data = ''
+    done = False
+    
+    # parent attributes
+    all_data = ''
+    pos = 0
+    def __init__(self, map, parent = False):
+        self.parent = parent
+        self.generator = map.get_generator()
+        self.compressor = zlib.compressobj(COMPRESSION_LEVEL)
+    
+    def get_size(self):
+        return 2 * 1024 * 1024 # 2 mb
+    
+    def read(self, size):
+        data = self.data
+        generator = self.generator
+        if len(data) < size and generator is not None:
+            while 1:
+                map_data = generator.get_data(1024)
+                if generator.done:
+                    self.generator = None
+                    data += self.compressor.flush()
+                    break
+                data += self.compressor.compress(map_data)
+                if len(data) >= size:
+                    break
+        if self.parent:
+            # save the data in case we are a parent
+            self.all_data += data
+            self.pos += len(data)
+        else:
+            self.data = data[size:]
+            return data[:size]
+    
+    def get_child(self):
+        return MapGeneratorChild(self)
+    
+    def data_left(self):
+        return bool(self.data) or self.generator is not None
+
 class ServerConnection(BaseConnection):
     master = False
     protocol = None
@@ -127,7 +190,6 @@ class ServerConnection(BaseConnection):
     world_object = None
     last_block = None
     map_data = None
-    state_data = None
     
     def __init__(self, protocol, address):
         BaseConnection.__init__(self)
@@ -706,9 +768,8 @@ class ServerConnection(BaseConnection):
             # this shouldn't happen, but let's make sure
             self.disconnect()
             return
-        # send players
         self._send_connection_data()
-        self.send_map(zlib.compress(self.protocol.map.generate()))
+        self.send_map(ProgressiveMapGenerator(self.protocol.map))
     
     def _send_connection_data(self):
         saved_loaders = self.saved_loaders = []
@@ -722,7 +783,7 @@ class ServerConnection(BaseConnection):
             existing_player.kills = player.kills
             existing_player.team = player.team.id
             existing_player.color = make_color(*player.color)
-            self.send_contained(existing_player)
+            saved_loaders.append(existing_player.generate())
     
         # send initial data
         blue = self.protocol.blue_team
@@ -781,9 +842,7 @@ class ServerConnection(BaseConnection):
         elif game_mode == TC_MODE:
             state_data.state = tc_data
         
-        self.state_data = state_data.generate()
-        
-        saved_loaders.append(self.state_data)
+        saved_loaders.append(state_data.generate())
         
     def grenade_exploded(self, grenade):
         if self.name is None:
@@ -845,13 +904,13 @@ class ServerConnection(BaseConnection):
     
     def send_map(self, data = None):
         if data is not None:
-            self.map_data = ByteReader(data)
-            map_start.size = len(data)
+            self.map_data = data
+            map_start.size = data.get_size()
             self.send_contained(map_start)
         elif self.map_data is None:
             return
             
-        if not self.map_data.dataLeft():
+        if not self.map_data.data_left():
             self.map_data = None
             for data in self.saved_loaders:
                 sized_data.data = data
@@ -859,29 +918,12 @@ class ServerConnection(BaseConnection):
             self.saved_loaders = None
             self.on_join()
             return
-        for _ in xrange(4):
-            if not self.map_data.dataLeft():
+        for _ in xrange(6):
+            if not self.map_data.data_left():
                 break
             map_data.data = self.map_data.read(1024)
-            if len(map_data.data) != 1024:
-                self._hack_state_data()
             self.send_contained(map_data).addCallback(self.got_map_ack)
             self.map_packets_sent += 1
-    
-    def _hack_state_data(self):
-        if self.state_data is not None:
-            # ugliest hack ever (client crashes otherwise)
-            sequence = self.packet_handler1.sequence + 2
-            out_packet.unique = self.unique
-            out_packet.connection_id = 0
-            out_packet.timer = get_timer()
-            sized_data.data = self.state_data
-            sized_data.ack = False
-            sized_data.byte = 0
-            sized_data.sequence = sequence
-            out_packet.data = generate_loader_data(sized_data)
-            self.state_data = None
-            self.send_data(str(out_packet.generate()))
     
     def got_map_ack(self, ack):
         self.map_packets_sent -= 1
@@ -1300,17 +1342,18 @@ class ServerProtocol(DatagramProtocol):
         self.green_team.initialize()
         if self.game_mode == TC_MODE:
             self.reset_tc()
-        data = zlib.compress(map.generate())
         self.players = MultikeyDict()
-        for connection in self.connections.values():
-            if connection.player_id is None:
-                continue
-            if connection.map_data is not None:
-                connection.disconnect()
-                continue
-            connection.reset()
-            connection._send_connection_data()
-            connection.send_map(data)
+        if self.connections:
+            data = ProgressiveMapGenerator(self.map, parent = True)
+            for connection in self.connections.values():
+                if connection.player_id is None:
+                    continue
+                if connection.map_data is not None:
+                    connection.disconnect()
+                    continue
+                connection.reset()
+                connection._send_connection_data()
+                connection.send_map(data.get_child())
         self.update_entities()
     
     def reset_game(self, player = None, territory = None):

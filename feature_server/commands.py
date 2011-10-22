@@ -587,7 +587,7 @@ def reset_game(connection):
         if resetting_player is connection:
             return
     connection.protocol.reset_game(resetting_player)
-    connection.protocol.on_game_end(resetting_player)
+    connection.protocol.on_game_end()
     connection.protocol.send_chat('Game has been reset by %s' % connection.name,
         irc = True)
 

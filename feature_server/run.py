@@ -876,7 +876,7 @@ class FeatureProtocol(ServerProtocol):
     
     # events
     
-    def on_game_end(self, player):
+    def on_game_end(self):
         if self.advance_on_win <= 0:
             return
         if self.win_count.next() % self.advance_on_win == 0:
