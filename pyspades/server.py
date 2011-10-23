@@ -297,9 +297,9 @@ class ServerConnection(BaseConnection):
                             self.set_location()
                             return
                         world_object.set_position(x, y, z)
-                        self.on_position_update()
                         if self.filter_visibility_data:
                             return
+                        self.on_position_update()
                         game_mode = self.protocol.game_mode
                         if game_mode == CTF_MODE:
                             other_flag = self.team.other.flag
@@ -620,7 +620,6 @@ class ServerConnection(BaseConnection):
         if player is not self:
             return
         self.add_score(10) # 10 points for intel
-        self.on_flag_capture()
         if (self.protocol.max_score not in (0, None) and 
         self.team.score + 1 >= self.protocol.max_score):
             self.protocol.reset_game(self)
@@ -632,6 +631,7 @@ class ServerConnection(BaseConnection):
             self.team.score += 1
             flag = other_team.set_flag()
             flag.update()
+        self.on_flag_capture()
     
     def drop_flag(self):
         protocol = self.protocol
@@ -641,7 +641,6 @@ class ServerConnection(BaseConnection):
                 player = flag.player
                 if player is not self:
                     continue
-                self.on_flag_drop()
                 position = self.world_object.position
                 x = int(position.x)
                 y = int(position.y)
@@ -654,6 +653,7 @@ class ServerConnection(BaseConnection):
                 intel_drop.y = flag.y
                 intel_drop.z = flag.z
                 self.protocol.send_contained(intel_drop, save = True)
+                self.on_flag_drop()
                 break
         elif game_mode == TC_MODE:
             for entity in protocol.entities:
