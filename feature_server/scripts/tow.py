@@ -1,20 +1,12 @@
 from pyspades.constants import *
 from pyspades.server import Territory
+import random
 
-CP_COUNT = 6
+CP_COUNT = 8
+CP_EXTRA_COUNT = CP_COUNT + 2 # PLUS last 'spawn'
 
-BLUE_CP = []
-GREEN_CP = []
-
-move = 512 / (CP_COUNT + 1)
-x = 0
-for _ in xrange(CP_COUNT / 2):
-    x += move
-    BLUE_CP.append((x, 512 / 2))
-
-for _ in xrange(CP_COUNT / 2):
-    x += move
-    GREEN_CP.append((x, 512 / 2))
+def limit(value):
+    return min(512, max(0, value))
 
 class TugTerritory(Territory):
     disabled = True
@@ -40,31 +32,65 @@ def get_index(value):
 def apply_script(protocol, connection, config):
     class TugConnection(connection):
         def get_spawn_location(self):
-            return self.team.spawn_cp.get_spawn_location()
+            if self.team.spawn_cp is None:
+                base = self.team.last_spawn
+            else:
+                base = self.team.spawn_cp
+            return base.get_spawn_location()
             
     class TugProtocol(protocol):
         game_mode = TC_MODE
         
         def get_cp_entities(self):
+            # generate positions
+            
+            blue_cp = []
+            green_cp = []
+
+            move = 512 / CP_EXTRA_COUNT
+            x = -move / 2
+            y = self.get_random_location(
+                zone = (move, 0, move * 2, 512))[1]
+            for i in xrange(CP_EXTRA_COUNT / 2):
+                x += move
+                blue_cp.append((x, y))
+                y = self.get_random_location(
+                    zone = (x, limit(y - 64), x + move, limit(y + 64)))[1]
+
+            for i in xrange(CP_EXTRA_COUNT / 2):
+                x += move
+                green_cp.append((x, y))
+                y = self.get_random_location(
+                    zone = (x, limit(y - 64), x + move, limit(y + 64)))[1]
             index = 0
             entities = []
             map = self.map
             
-            for x, y in BLUE_CP:
+            # make entities
+            
+            for i, (x, y) in enumerate(blue_cp):
                 entity = TugTerritory(index, self, *(x, y, map.get_z(x, y)))
                 entity.team = self.blue_team
-                entities.append(entity)
-                index += 1
+                if i == 0:
+                    self.blue_team.last_spawn = entity
+                    entity.id = -1
+                else:
+                    entities.append(entity)
+                    index += 1
             
             self.blue_team.cp = entities[-1]
             self.blue_team.cp.disabled = False
             self.blue_team.spawn_cp = entities[-2]
                 
-            for x, y in GREEN_CP:
+            for i, (x, y) in enumerate(green_cp):
                 entity = TugTerritory(index, self, *(x, y, map.get_z(x, y)))
                 entity.team = self.green_team
-                entities.append(entity)
-                index += 1
+                if i == len(green_cp) - 1:
+                    self.green_team.last_spawn = entity
+                    entity.id = index + 1
+                else:
+                    entities.append(entity)
+                    index += 1
 
             self.green_team.cp = entities[-CP_COUNT/2]
             self.green_team.cp.disabled = False
@@ -89,7 +115,7 @@ def apply_script(protocol, connection, config):
                     team.spawn_cp = self.entities[get_index(
                         team.spawn_cp.id + move)]
                 except IndexError:
-                    pass
+                    team.spawn_cp = team.last_spawn
             cp = (self.blue_team.cp, self.green_team.cp)
             for entity in self.entities:
                 if not entity.disabled and entity not in cp:
