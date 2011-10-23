@@ -1,12 +1,16 @@
 from pyspades.constants import *
 from pyspades.server import Territory
 import random
+import math
+from math import pi
 
 CP_COUNT = 8
 CP_EXTRA_COUNT = CP_COUNT + 2 # PLUS last 'spawn'
-
-def limit(value):
-    return min(512, max(0, value))
+ANGLE = 65
+START_ANGLE = math.radians(-ANGLE)
+END_ANGLE = math.radians(ANGLE)
+DELTA_ANGLE = math.radians(30)
+FIX_ANGLE = math.radians(4)
 
 class TugTerritory(Territory):
     disabled = True
@@ -29,6 +33,20 @@ def get_index(value):
         raise IndexError()
     return value
 
+def random_up_down(value):
+    value /= 2
+    return random.uniform(-value, value)
+
+def limit_angle(value):
+    return min(END_ANGLE, max(START_ANGLE, value))
+
+def limit_dimension(value):
+    return min(511, max(0, value))
+
+def get_point(x, y, magnitude, angle):
+    return (limit_dimension(x + math.cos(angle) * magnitude),
+            limit_dimension(y + math.sin(angle) * magnitude))
+
 def apply_script(protocol, connection, config):
     class TugConnection(connection):
         def get_spawn_location(self):
@@ -44,29 +62,56 @@ def apply_script(protocol, connection, config):
         def get_cp_entities(self):
             # generate positions
             
+            map = self.map
             blue_cp = []
             green_cp = []
 
+            magnitude = 10
+            angle = random.uniform(START_ANGLE, END_ANGLE)
+            x, y = (0, random.randrange(64, 512 - 64))
+            
+            points = []
+            
+            square_1 = xrange(128)
+            square_2 = xrange(512 - 128, 512)
+            
+            while 1:
+                top = int(y) in square_1
+                bottom = int(y) in square_2
+                if top:
+                    angle = limit_angle(angle + FIX_ANGLE)
+                elif bottom:
+                    angle = limit_angle(angle - FIX_ANGLE)
+                else:
+                    angle = limit_angle(angle + random_up_down(DELTA_ANGLE))
+                magnitude += random_up_down(2)
+                magnitude = min(15, max(5, magnitude))
+                x2, y2 = get_point(x, y, magnitude, angle)
+                if x2 >= 511:
+                    break
+                x, y = x2, y2
+                points.append((int(x), int(y)))
+            
             move = 512 / CP_EXTRA_COUNT
-            x = -move / 2
-            y = self.get_random_location(
-                zone = (move, 0, move * 2, 512))[1]
-            for i in xrange(CP_EXTRA_COUNT / 2):
-                x += move
-                blue_cp.append((x, y))
-                y = self.get_random_location(
-                    zone = (x, limit(y - 64), x + move, limit(y + 64)))[1]
-
-            for i in xrange(CP_EXTRA_COUNT / 2):
-                x += move
-                green_cp.append((x, y))
-                y = self.get_random_location(
-                    zone = (x, limit(y - 64), x + move, limit(y + 64)))[1]
-            index = 0
-            entities = []
-            map = self.map
+            offset = move / 2
+            
+            for i in xrange(CP_EXTRA_COUNT):
+                index = 0
+                while 1:
+                    p_x, p_y = points[index]
+                    index += 1
+                    if p_x >= offset:
+                        break
+                if i < CP_EXTRA_COUNT / 2:
+                    blue_cp.append((p_x, p_y))
+                else:
+                    green_cp.append((p_x, p_y))
+                offset += move
             
             # make entities
+            
+            index = 0
+            entities = []
             
             for i, (x, y) in enumerate(blue_cp):
                 entity = TugTerritory(index, self, *(x, y, map.get_z(x, y)))
