@@ -4,13 +4,17 @@ import random
 import math
 from math import pi
 
-CP_COUNT = 8
+CP_COUNT = 6
 CP_EXTRA_COUNT = CP_COUNT + 2 # PLUS last 'spawn'
 ANGLE = 65
 START_ANGLE = math.radians(-ANGLE)
 END_ANGLE = math.radians(ANGLE)
 DELTA_ANGLE = math.radians(30)
 FIX_ANGLE = math.radians(4)
+
+HELP = [
+    "In Tug of War, you capture your opponents' front CP to advance."
+]
 
 class TugTerritory(Territory):
     disabled = True
@@ -55,6 +59,11 @@ def apply_script(protocol, connection, config):
             else:
                 base = self.team.spawn_cp
             return base.get_spawn_location()
+            
+        def on_spawn(self, pos):
+            for line in HELP:
+                self.send_chat(line)
+            return connection.on_spawn(self, pos)
             
     class TugProtocol(protocol):
         game_mode = TC_MODE
