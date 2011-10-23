@@ -141,7 +141,7 @@ def apply_script(protocol, connection, config):
                 entity.team = self.green_team
                 if i == len(green_cp) - 1:
                     self.green_team.last_spawn = entity
-                    entity.id = index + 1
+                    entity.id = index
                 else:
                     entities.append(entity)
                     index += 1
