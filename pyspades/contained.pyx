@@ -22,13 +22,13 @@ from pyspades.bytes cimport ByteReader, ByteWriter
 
 cdef inline void read_position(ByteReader reader, float * x, float * y, 
                                float * z):
-    x[0] = reader.readFloat(False) - 0.5
-    y[0] = reader.readFloat(False) - 0.5
+    x[0] = reader.readFloat(False)
+    y[0] = reader.readFloat(False)
     z[0] = reader.readFloat(False)
 
 cdef inline void write_position(ByteWriter reader, float x, float y, float z):
-    reader.writeFloat(x + 0.5, False)
-    reader.writeFloat(y + 0.5, False)
+    reader.writeFloat(x, False)
+    reader.writeFloat(y, False)
     reader.writeFloat(z, False)
 
 cdef class _InformationCommon(Loader):
