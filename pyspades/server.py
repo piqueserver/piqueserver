@@ -564,11 +564,7 @@ class ServerConnection(BaseConnection):
         if game_mode == TC_MODE:
             try:
                 base = random.choice(list(self.team.get_entities()))
-                x1 = max(0, base.x - SPAWN_RADIUS)
-                y1 = max(0, base.y - SPAWN_RADIUS)
-                x2 = min(512, base.x + SPAWN_RADIUS)
-                y2 = min(512, base.y + SPAWN_RADIUS)
-                return self.protocol.get_random_location(True, (x1, y1, x2, y2))
+                return base.get_spawn_location()
             except IndexError:
                 pass
         return self.team.get_random_location(True)
@@ -622,6 +618,7 @@ class ServerConnection(BaseConnection):
         self.add_score(10) # 10 points for intel
         if (self.protocol.max_score not in (0, None) and 
         self.team.score + 1 >= self.protocol.max_score):
+            self.on_flag_capture()
             self.protocol.reset_game(self)
             self.protocol.on_game_end()
         else:
@@ -631,7 +628,7 @@ class ServerConnection(BaseConnection):
             self.team.score += 1
             flag = other_team.set_flag()
             flag.update()
-        self.on_flag_capture()
+            self.on_flag_capture()
     
     def drop_flag(self):
         protocol = self.protocol
@@ -1161,6 +1158,7 @@ class Territory(Flag):
         if self.team is not None:
             self.team.score -= 1
         self.team = team
+        protocol.on_cp_capture(self)
         if team.score >= protocol.max_score:
             protocol.reset_game(territory = self)
             protocol.on_game_end()
@@ -1184,6 +1182,13 @@ class Territory(Flag):
         if set:
             self.progress = progress
         return progress
+    
+    def get_spawn_location(self):
+        x1 = max(0, self.x - SPAWN_RADIUS)
+        y1 = max(0, self.y - SPAWN_RADIUS)
+        x2 = min(512, self.x + SPAWN_RADIUS)
+        y2 = min(512, self.y + SPAWN_RADIUS)
+        return self.protocol.get_random_location(True, (x1, y1, x2, y2))
 
 class Base(Entity):
     pass
@@ -1300,8 +1305,20 @@ class ServerProtocol(DatagramProtocol):
         self.update_loop.start(UPDATE_FREQUENCY, False)
     
     def reset_tc(self):
-        self.entities = []
+        self.entities = self.get_cp_entities()
+        for entity in self.entities:
+            team = entity.team
+            if team is None:
+                entity.progress = 0.5
+            else:
+                team.score += 1
+                entity.progress = float(team.id)
+        tc_data.set_entities(self.entities)
+        self.max_score = len(self.entities)
+    
+    def get_cp_entities(self):
         # cool algorithm number 1
+        entities = []
         land_count = self.map.count_land(0, 0, 512, 512)
         territory_count = int((land_count/(512.0 * 512.0))*(
             MAX_TERRITORY_COUNT-MIN_TERRITORY_COUNT) + MIN_TERRITORY_COUNT)
@@ -1321,14 +1338,8 @@ class ServerProtocol(DatagramProtocol):
                 # odd number - neutral
                 team = None
             flag.team = team
-            if team is None:
-                flag.progress = 0.5
-            else:
-                team.score += 1
-                flag.progress = float(team.id)
-            self.entities.append(flag)
-            tc_data.set_entities(self.entities)
-        self.max_score = territory_count
+            entities.append(flag)
+        return entities
     
     def update_world(self):
         self.world.update(UPDATE_FREQUENCY)
@@ -1508,6 +1519,9 @@ class ServerProtocol(DatagramProtocol):
         self.send_contained(fog_color, save = True)
 
     # events
+    
+    def on_cp_capture(self, cp):
+        pass
     
     def on_game_end(self):
         pass
