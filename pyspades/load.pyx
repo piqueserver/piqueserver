@@ -82,13 +82,9 @@ cdef class VXLData:
         return map
     
     cpdef int get_solid(self, int x, int y, int z):
-        if x < 0 or x >= 512 or y < 0 or y >= 512 or z < 0 or z >= 64:
-            return 0
         return get_solid(x, y, z, self.map)
     
     cpdef int get_color(self, int x, int y, int z):
-        if x < 0 or x >= 512 or y < 0 or y >= 512 or z < 0 or z >= 64:
-            return 0
         return get_color(x, y, z, self.map)
     
     cpdef int get_z(self, int x, int y, int start = 0):
@@ -176,7 +172,7 @@ cdef class VXLData:
     
     cpdef bint set_point(self, int x, int y, int z, tuple color_tuple, 
                          bint user = True):
-        if user and (z not in xrange(62) or not self.has_neighbors(x, y, z)):
+        if user and ((z < 0 or z >= 512) or not self.has_neighbors(x, y, z)):
             return False
         r, g, b, a = color_tuple
         cdef int color = make_color(r, g, b, a)

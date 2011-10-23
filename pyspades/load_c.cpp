@@ -40,6 +40,22 @@
 
 using namespace std;
 
+void inline limit(int * value, int min, int max)
+{
+    if (*value > max) {
+        *value = max;
+    } 
+    else if (*value < min)
+    {
+        *value = min;
+    }
+}
+
+int inline valid_position(int x, int y, int z)
+{
+    return x >= 0 && x < 512 && y >= 0 && y < 512 && z >= 0 && z < 64;
+}
+
 struct MapData
 {
     bitset<MAP_X * MAP_Y * MAP_Z> geometry;
@@ -49,11 +65,15 @@ struct MapData
 
 int inline get_solid(int x, int y, int z, MapData * map)
 {
+    if (!valid_position(x, y, z))
+        return 0;
     return map->geometry[get_pos(x, y, z)];
 }
 
 int inline get_color(int x, int y, int z, MapData * map)
 {
+    if (!valid_position(x, y, z))
+        return 0;
     map_type<int, int>::const_iterator iter = map->colors.find(
         get_pos(x, y, z));
     if (iter == map->colors.end())
@@ -63,6 +83,8 @@ int inline get_color(int x, int y, int z, MapData * map)
 
 void inline set_point(int x, int y, int z, MapData * map, bool solid, int color)
 {
+    if (!valid_position(x, y, z))
+        return;
     int i = get_pos(x, y, z);
     map->geometry[i] = solid;
     if (!solid)
@@ -252,9 +274,7 @@ char * out_global = 0;
 void create_temp()
 {
    if (out_global == 0)
-   {
-       out_global = (char *)malloc(10 * 1024 * 1024); // allocate 8 mb
-   }
+       out_global = (char *)malloc(10 * 1024 * 1024); // allocate 10 mb
 }
 
 PyObject * save_vxl(MapData * map)
@@ -371,6 +391,10 @@ inline void get_random_point(int x1, int y1, int x2, int y2, MapData * map,
                              float random_1, float random_2,
                              int * end_x, int * end_y)
 {
+    limit(&x1, 0, 511);
+    limit(&y1, 0, 511);
+    limit(&x2, 0, 511);
+    limit(&y2, 0, 511);
     vector<Point2D> items;
     int size = 0;
     int x, y;
