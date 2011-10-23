@@ -31,6 +31,7 @@ class TugTerritory(Territory):
         for player in self.players.copy():
             self.remove_player(player)
         self.disabled = True
+        self.progress = float(self.team.id)
 
 def get_index(value):
     if value < 0:
