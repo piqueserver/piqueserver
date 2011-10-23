@@ -1375,10 +1375,14 @@ class ServerProtocol(DatagramProtocol):
         blue_team = self.blue_team
         green_team = self.green_team
         if self.game_mode == CTF_MODE:
+            if player is None:
+                self.players.values()[0]
             intel_capture.player_id = player.player_id
             intel_capture.winning = True
             self.send_contained(intel_capture, save = True)
         elif self.game_mode == TC_MODE:
+            if territory is None:
+                territory = self.entities[0]
             territory_capture.object_index = territory.id
             territory_capture.winning = True
             territory_capture.state = territory.team.id

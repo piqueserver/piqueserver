@@ -12,7 +12,7 @@ for _ in xrange(CP_COUNT / 2):
     x += move
     BLUE_CP.append((x, 512 / 2))
 
-for i in xrange(CP_COUNT / 2):
+for _ in xrange(CP_COUNT / 2):
     x += move
     GREEN_CP.append((x, 512 / 2))
 
@@ -31,6 +31,11 @@ class TugTerritory(Territory):
         for player in self.players.copy():
             self.remove_player(player)
         self.disabled = True
+
+def get_index(value):
+    if value < 0:
+        raise IndexError()
+    return value
 
 def apply_script(protocol, connection, config):
     class TugConnection(connection):
@@ -76,14 +81,18 @@ def apply_script(protocol, connection, config):
             for team in self.teams:
                 try:
                     old_cp = team.cp
-                    team.cp = self.entities[team.cp.id + move]
+                    team.cp = self.entities[get_index(team.cp.id + move)]
                     team.cp.enable()
-                    old_cp.disable()
                 except IndexError:
                     pass
                 try:
-                    team.spawn_cp = self.entities[team.spawn_cp.id + move]
+                    team.spawn_cp = self.entities[get_index(
+                        team.spawn_cp.id + move)]
                 except IndexError:
                     pass
+            cp = (self.blue_team.cp, self.green_team.cp)
+            for entity in self.entities:
+                if not entity.disabled and entity not in cp:
+                    entity.disable()
 
     return TugProtocol, TugConnection
