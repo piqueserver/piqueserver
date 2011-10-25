@@ -28,7 +28,8 @@ cdef inline object allocate_memory(int size, char ** i):
 
 cdef inline int check_default_int(int value, int default) except -1:
     if value != default:
-        raise NotImplementedError(
+        from pyspades.exceptions import InvalidData
+        raise InvalidData(
             'check_default() failed: was %s, should be %s' % (value, default))
     return 0
 

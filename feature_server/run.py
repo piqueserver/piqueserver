@@ -93,6 +93,8 @@ from pyspades.common import encode, decode, prettify_timespan
 from pyspades.constants import *
 from pyspades.master import MAX_SERVER_NAME_SIZE
 from networkdict import NetworkDict, get_network
+from pyspades.exceptions import InvalidData
+from pyspades.bytes import NoDataLeft
 
 import commands
 
@@ -481,6 +483,7 @@ class FeatureProtocol(ServerProtocol):
             self.bans.read_list(json.load(open('bans.txt', 'rb')))
         except IOError:
             pass
+        self.hard_bans = set() # possible DDoS'ers are added here
         self.config = config
         if len(self.name) > MAX_SERVER_NAME_SIZE:
             print '(server name too long; it will be truncated to "%s")' % (
@@ -742,15 +745,23 @@ class FeatureProtocol(ServerProtocol):
     
     def datagramReceived(self, data, address):
         # simple pyspades query
+        ip = address[0]
+        if ip in self.hard_bans:
+            return
         if data == 'HELLO':
             self.transport.write('HI', address)
             return
         current_time = reactor.seconds()
-        ServerProtocol.datagramReceived(self, data, address)
+        try:
+            ServerProtocol.datagramReceived(self, data, address)
+        except (NoDataLeft, InvalidData):
+            print 'IP %s was hardbanned for invalid data or possibly DDoS.' % ip
+            self.hard_bans.add(ip)
+            return
         dt = reactor.seconds() - current_time
         if dt > 1.0:
             print '(warning: processing %r from %s took %s)' % (
-                data, address[0], dt)
+                data, ip, dt)
     
     def irc_say(self, msg):
         if self.irc_relay:

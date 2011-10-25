@@ -1,3 +1,7 @@
+DEF INT_ERROR = -0xFFFFFFFF >> 1
+DEF LONG_LONG_ERROR = -0xFFFFFFFFFFFFFFFF >> 1
+DEF FLOAT_ERROR = float('nan')
+
 cdef class ByteReader:
     cdef char * data
     cdef char * pos
@@ -7,10 +11,12 @@ cdef class ByteReader:
     
     cdef char * check_available(self, int size) except NULL
     cpdef read(self, int bytes = ?)
-    cpdef int readByte(self, bint unsigned = ?)
-    cpdef int readShort(self, bint unsigned = ?, bint big_endian = ?)
-    cpdef long long readInt(self, bint unsigned = ?, bint big_endian = ?)
-    cpdef float readFloat(self, bint big_endian = ?)
+    cpdef int readByte(self, bint unsigned = ?) except INT_ERROR
+    cpdef int readShort(self, bint unsigned = ?, bint big_endian = ?) \
+                        except INT_ERROR
+    cpdef long long readInt(self, bint unsigned = ?, bint big_endian = ?) \
+                            except LONG_LONG_ERROR
+    cpdef float readFloat(self, bint big_endian = ?) except FLOAT_ERROR
     cpdef readString(self, int size = ?)
     cpdef ByteReader readReader(self, int size = ?)
     cpdef int dataLeft(self)

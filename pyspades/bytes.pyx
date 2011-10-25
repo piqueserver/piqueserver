@@ -48,6 +48,10 @@ cdef extern from "bytes_c.cpp":
 class NoDataLeft(Exception):
     pass
     
+DEF INT_ERROR = -0xFFFFFFFF >> 1
+DEF LONG_LONG_ERROR = -0xFFFFFFFFFFFFFFFF >> 1
+DEF FLOAT_ERROR = float('nan')
+    
 cdef class ByteReader:
     def __init__(self, input, int start = 0, int size = -1):
         self.input = input
@@ -75,14 +79,15 @@ cdef class ByteReader:
         self.pos += bytes
         return ret
     
-    cpdef int readByte(self, bint unsigned = False):
+    cpdef int readByte(self, bint unsigned = False) except INT_ERROR:
         cdef char * pos = self.check_available(1)
         if unsigned:
             return read_ubyte(pos)
         else:
             return read_byte(pos)
     
-    cpdef int readShort(self, bint unsigned = False, bint big_endian = True):
+    cpdef int readShort(self, bint unsigned = False, bint big_endian = True) \
+                        except INT_ERROR:
         cdef char * pos = self.check_available(2)
         if unsigned:
             return read_ushort(pos, big_endian)
@@ -90,14 +95,14 @@ cdef class ByteReader:
             return read_short(pos, big_endian)
 
     cpdef long long readInt(self, bint unsigned = False, 
-                            bint big_endian = True):
+                            bint big_endian = True) except LONG_LONG_ERROR:
         cdef char * pos = self.check_available(4)
         if unsigned:
             return read_uint(pos, big_endian)
         else:
             return read_int(pos, big_endian)
 
-    cpdef float readFloat(self, bint big_endian = True):
+    cpdef float readFloat(self, bint big_endian = True) except? FLOAT_ERROR:
         cdef char * pos = self.check_available(4)
         return read_float(pos, big_endian)
     
