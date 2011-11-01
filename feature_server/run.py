@@ -755,6 +755,8 @@ class FeatureProtocol(ServerProtocol):
         try:
             ServerProtocol.datagramReceived(self, data, address)
         except (NoDataLeft, InvalidData):
+            import traceback
+            traceback.print_exc()
             print 'IP %s was hardbanned for invalid data or possibly DDoS.' % ip
             self.hard_bans.add(ip)
             return

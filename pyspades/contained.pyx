@@ -403,7 +403,7 @@ cdef class ObjectTerritory(Loader):
         reader.writeInt(state, True, False)
 
 DEF MAX_TERRITORIES = 16
-DEF TERRITORY_SIZE = 4 * 3 + 1
+DEF TERRITORY_SIZE = 4 * 4
 DEF TERRITORY_DATA = MAX_TERRITORIES * TERRITORY_SIZE
 
 cdef class TCState(Loader):
@@ -439,6 +439,18 @@ modes = {
     TC_MODE : TCState
 }
 
+cdef inline tuple read_team_color(ByteReader reader):
+    b = reader.readByte(True)
+    g = reader.readByte(True)
+    r = reader.readByte(True)
+    return (r, g, b)
+
+cdef inline void write_team_color(ByteWriter reader, tuple color):
+    r, g, b = color
+    reader.writeByte(b, True)
+    reader.writeByte(g, True)
+    reader.writeByte(r, True)
+
 cdef class StateData(Loader):
     id = 11
     
@@ -452,12 +464,9 @@ cdef class StateData(Loader):
 
     cpdef read(self, ByteReader reader):
         self.player_id = reader.readByte(True)
-        self.fog_color = (reader.readByte(True), reader.readByte(True),
-            reader.readByte(True))
-        self.team1_color = (reader.readByte(True), reader.readByte(True),
-            reader.readByte(True))
-        self.team2_color = (reader.readByte(True), reader.readByte(True),
-            reader.readByte(True))
+        self.fog_color = read_team_color(reader)
+        self.team1_color = read_team_color(reader)
+        self.team2_color = read_team_color(reader)
         cdef int mode = reader.readByte(True)
         self.state = modes[mode](reader)
         self.team1_name = decode(reader.readString(10))
@@ -466,9 +475,9 @@ cdef class StateData(Loader):
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
-        for values in (self.fog_color, self.team1_color, self.team2_color):
-            for value in values:
-                reader.writeByte(value, True)
+        write_team_color(reader, self.fog_color)
+        write_team_color(reader, self.team1_color)
+        write_team_color(reader, self.team2_color)
         reader.writeByte(self.state.id, True)
         self.state.write(reader)
         reader.writeString(encode(self.team1_name), 10)
@@ -658,12 +667,10 @@ cdef class FogColor(Loader):
         int color
     
     cpdef read(self, ByteReader reader):
-        reader.skipBytes(3)
         self.color = reader.readInt(True, False) >> 5
     
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
-        reader.pad(3)
         reader.writeInt(self.color << 5, True, False)
 
 cdef class WeaponReload(Loader):
