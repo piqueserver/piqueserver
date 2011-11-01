@@ -105,6 +105,8 @@ class IRCBot(irc.IRCClient):
                 self.admin = (user in self.ops)
                 self.name = prefixed_username
                 params = msg[len(self.factory.commandprefix):].split()
+                if not params:
+                    return
                 result = handle_command(self, params[0], params[1:])
                 if result is not None:
                     self.send("%s: %s" % (user, result))

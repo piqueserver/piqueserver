@@ -46,11 +46,11 @@
     "network_interface" : "",
     "team1" : {
         "name" : "Blue",
-        "color" : [0, 0, 196]
+        "color" : [0, 0, 255]
     },
     "team2" : {
         "name" : "Green",
-        "color" : [0, 196, 0]
+        "color" : [0, 255, 0]
     },
     "passwords" : {
         "admin" : ["replaceme"],

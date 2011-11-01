@@ -587,9 +587,9 @@ class ServerConnection(BaseConnection):
         self.refill(True)
         create_player.player_id = self.player_id
         create_player.name = self.name
-        create_player.x = x
-        create_player.y = y
-        create_player.z = z
+        create_player.x = x - 0.5
+        create_player.y = y - 0.5
+        create_player.z = z - 0.5
         create_player.weapon = self.weapon
         create_player.team = self.team.id
         if self.filter_visibility_data:
@@ -753,6 +753,7 @@ class ServerConnection(BaseConnection):
             kill_action.player_id = self.player_id
         if by is not None and by is not self:
             by.add_score(1)
+        kill_action.respawn_time = self.respawn_time
         self.protocol.send_contained(kill_action, save = True)
         self.world_object.dead = True
         self.respawn()
@@ -897,6 +898,8 @@ class ServerConnection(BaseConnection):
     
     def _on_reload(self):
         weapon_reload.player_id = self.player_id
+        weapon_reload.clip_ammo = self.weapon_object.current_ammo
+        weapon_reload.reserve_ammo = self.weapon_object.current_stock
         self.protocol.send_contained(weapon_reload)
     
     def send_map(self, data = None):
