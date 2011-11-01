@@ -114,13 +114,11 @@ cdef class HitPacket(Loader):
     
     cpdef read(self, ByteReader reader):
         self.player_id = reader.readByte(True)
-        reader.skipBytes(2)
         self.value = reader.readByte(True)
     
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
-        reader.pad(2)
         reader.writeByte(self.value, True)
 
 cdef class SetHP(Loader):
