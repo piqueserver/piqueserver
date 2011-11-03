@@ -665,11 +665,11 @@ cdef class FogColor(Loader):
         int color
     
     cpdef read(self, ByteReader reader):
-        self.color = reader.readInt(True, False) >> 5
+        self.color = reader.readInt(True, False) >> 8
     
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
-        reader.writeInt(self.color << 5, True, False)
+        reader.writeInt(self.color << 8, True, False)
 
 cdef class WeaponReload(Loader):
     id = 24
