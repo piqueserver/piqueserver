@@ -28,7 +28,7 @@
     "random_rotation" : false,
     "default_time_limit" : 15,
     "advance_on_win" : false,
-    "respawn_time" : 5,
+    "respawn_time" : 8,
     "squad_respawn_time" : 8,
     "squad_size" : 4,
     "auto_squad" : false,
