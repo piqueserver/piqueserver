@@ -248,8 +248,7 @@ class ServerConnection(BaseConnection):
                 if contained.id == loaders.ExistingPlayer.id:
                     if self.name is not None:
                         return
-                    team = [self.protocol.blue_team, 
-                        self.protocol.green_team][contained.team]
+                    team = self.protocol.teams[contained.team]
                     if self.on_team_join(team) == False:
                         team = team.other
                     self.team = team
@@ -506,8 +505,7 @@ class ServerConnection(BaseConnection):
                         self.weapon = contained.weapon
                         self.set_weapon(self.weapon)
                     elif contained.id == loaders.ChangeTeam.id:
-                        team = [self.protocol.blue_team,
-                            self.protocol.green_team][contained.team]
+                        team = self.protocol.teams[contained.team]
                         if self.on_team_join(team) == False:
                             return
                         self.set_team(team)
@@ -1396,7 +1394,7 @@ class ServerProtocol(DatagramProtocol):
         for player in self.players.values():
             player.hp = 0
         for player in self.players.values():
-            if player.name is not None:
+            if player.team is not None:
                 player.spawn()
     
     def get_name(self, name):

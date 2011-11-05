@@ -280,24 +280,24 @@ cdef class BlockAction(Loader):
     id = 10
     
     cdef public:
-        unsigned int x, y, z, value, player_id
+        int x, y, z, value, player_id
 
     cpdef read(self, ByteReader reader):
         self.player_id = reader.readByte(True)
         self.value = reader.readByte(True)
         reader.skipBytes(1)
-        self.x = reader.readInt(True, False)
-        self.y = reader.readInt(True, False)
-        self.z = reader.readInt(True, False)
+        self.x = reader.readInt(False, False)
+        self.y = reader.readInt(False, False)
+        self.z = reader.readInt(False, False)
     
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
         reader.writeByte(self.value, True)
         reader.pad(1)
-        reader.writeInt(self.x, True, False)
-        reader.writeInt(self.y, True, False)
-        reader.writeInt(self.z, True, False)
+        reader.writeInt(self.x, False, False)
+        reader.writeInt(self.y, False, False)
+        reader.writeInt(self.z, False, False)
 
 cdef class CTFState(Loader):
     id = 0
