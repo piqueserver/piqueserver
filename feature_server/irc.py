@@ -149,7 +149,7 @@ class IRCClientFactory(protocol.ClientFactory):
         self.channel = config.get('channel', "#pyspades.bots").encode('ascii')
         self.commandprefix = config.get('commandprefix', '.').encode('ascii')
         self.chatprefix = config.get('chatprefix', '').encode('ascii')
-        self.password = config.get('password', None) or None
+        self.password = config.get('password', '').encode('ascii') or None
     
     def startedConnecting(self, connector):
         print "Connecting to IRC server..."
