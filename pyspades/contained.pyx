@@ -20,15 +20,22 @@ from pyspades.constants import *
 from pyspades.loaders cimport Loader
 from pyspades.bytes cimport ByteReader, ByteWriter
 
+cdef inline float limit(float a):
+    if a > 512.0:
+        return 512.0
+    elif a < 0.0:
+        return 0.0
+    return a
+
 cdef inline void read_position(ByteReader reader, float * x, float * y, 
                                float * z):
-    x[0] = reader.readFloat(False)
-    y[0] = reader.readFloat(False)
+    x[0] = limit(reader.readFloat(False) - 0.5)
+    y[0] = limit(reader.readFloat(False) - 0.5)
     z[0] = reader.readFloat(False)
 
 cdef inline void write_position(ByteWriter reader, float x, float y, float z):
-    reader.writeFloat(x, False)
-    reader.writeFloat(y, False)
+    reader.writeFloat(limit(x + 0.5), False)
+    reader.writeFloat(limit(y + 0.5), False)
     reader.writeFloat(z, False)
 
 cdef inline unsigned int read_color(ByteReader reader):
@@ -43,7 +50,35 @@ cdef inline void write_color(ByteWriter reader, unsigned int value):
     reader.writeByte((value >> 8) & 0xFF)
     reader.writeByte((value >> 16) & 0xFF)
 
-cdef class _InformationCommon(Loader):
+cdef class PositionData(Loader):
+    id = 0
+    
+    cdef public:
+        int player_id
+        float x, y, z
+
+    def set(self, pos, player_id):
+        cdef float x, y, z
+        x, y, z = pos
+        self.x = x
+        self.y = y
+        self.z = z
+        self.player_id = player_id
+        
+    cpdef read(self, ByteReader reader):
+        self.player_id = reader.readByte(True)
+        reader.skipBytes(2)
+        read_position(reader, &self.x, &self.y, &self.z)
+    
+    cpdef write(self, ByteWriter reader):
+        reader.writeByte(self.id, True)
+        reader.writeByte(self.player_id, True)
+        reader.pad(2)
+        write_position(reader, self.x, self.y, self.z)
+
+cdef class OrientationData(Loader):
+    id = 1
+    
     cdef public:
         int player_id
         float x, y, z
@@ -70,12 +105,6 @@ cdef class _InformationCommon(Loader):
         reader.writeFloat(self.x, False)
         reader.writeFloat(self.y, False)
         reader.writeFloat(self.z, False)
-
-cdef class PositionData(_InformationCommon):
-    id = 0
-
-cdef class OrientationData(_InformationCommon):
-    id = 1
 
 cdef class InputData(Loader):
     id = 2

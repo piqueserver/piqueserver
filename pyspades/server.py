@@ -532,7 +532,7 @@ class ServerConnection(BaseConnection):
             self.world_object.set_position(x, y, z)
         position_data.x = x
         position_data.y = y
-        position_data.z = z
+        position_data.z = z - 0.5
         position_data.player_id = self.player_id
         if self.filter_visibility_data:
             self.send_contained(position_data)
@@ -585,8 +585,8 @@ class ServerConnection(BaseConnection):
         self.refill(True)
         create_player.player_id = self.player_id
         create_player.name = self.name
-        create_player.x = x - 0.5
-        create_player.y = y - 0.5
+        create_player.x = x
+        create_player.y = y
         create_player.z = z - 0.5
         create_player.weapon = self.weapon
         create_player.team = self.team.id
