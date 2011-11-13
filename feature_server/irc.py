@@ -52,7 +52,7 @@ class IRCBot(irc.IRCClient):
     nickname = property(_get_nickname)
     
     def signedOn(self):
-        self.join(self.factory.channel)
+        self.join(self.factory.channel, self.factory.password)
     
     def joined(self, channel):
         if channel == self.factory.channel:
@@ -149,6 +149,7 @@ class IRCClientFactory(protocol.ClientFactory):
         self.channel = config.get('channel', "#pyspades.bots").encode('ascii')
         self.commandprefix = config.get('commandprefix', '.').encode('ascii')
         self.chatprefix = config.get('chatprefix', '').encode('ascii')
+        self.password = config.get('password', None) or None
     
     def startedConnecting(self, connector):
         print "Connecting to IRC server..."

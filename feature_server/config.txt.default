@@ -92,6 +92,7 @@
         "server" : "irc.quakenet.org",
         "port" : 6667,
         "channel" : "#pyspades.bots",
+        "password" : "",
         "commandprefix" : ".",
         "chatprefix" : ""
     },
