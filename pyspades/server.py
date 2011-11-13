@@ -444,16 +444,16 @@ class ServerConnection(BaseConnection):
                             if self.on_block_destroy(x, y, z, value) == False:
                                 return
                             elif value == DESTROY_BLOCK:
-                                self.blocks += 1
-                                map.remove_point(x, y, z)
-                                self.on_block_removed(x, y, z)
+                                if map.remove_point(x, y, z):
+                                    self.blocks += 1
+                                    self.on_block_removed(x, y, z)
                             elif value == SPADE_DESTROY:
-                                map.remove_point(x, y, z)
-                                map.remove_point(x, y, z + 1)
-                                map.remove_point(x, y, z - 1)
-                                self.on_block_removed(x, y, z)
-                                self.on_block_removed(x, y, z + 1)
-                                self.on_block_removed(x, y, z - 1)
+                                if map.remove_point(x, y, z):
+                                    self.on_block_removed(x, y, z)
+                                if map.remove_point(x, y, z + 1):
+                                    self.on_block_removed(x, y, z + 1)
+                                if map.remove_point(x, y, z - 1):
+                                    self.on_block_removed(x, y, z - 1)
                             self.last_block_destroy = reactor.seconds()
                         block_action.x = x
                         block_action.y = y
@@ -530,9 +530,12 @@ class ServerConnection(BaseConnection):
         else:
             x, y, z = location
             self.world_object.set_position(x, y, z)
+            x += 0.5
+            y += 0.5
+            z -= 0.5        
         position_data.x = x
         position_data.y = y
-        position_data.z = z - 0.5
+        position_data.z = z
         position_data.player_id = self.player_id
         if self.filter_visibility_data:
             self.send_contained(position_data)
@@ -585,8 +588,8 @@ class ServerConnection(BaseConnection):
         self.refill(True)
         create_player.player_id = self.player_id
         create_player.name = self.name
-        create_player.x = x
-        create_player.y = y
+        create_player.x = x + 0.5
+        create_player.y = y + 0.5
         create_player.z = z - 0.5
         create_player.weapon = self.weapon
         create_player.team = self.team.id
@@ -872,10 +875,8 @@ class ServerConnection(BaseConnection):
         for nade_x in xrange(x - 1, x + 2):
             for nade_y in xrange(y - 1, y + 2):
                 for nade_z in xrange(z - 1, z + 2):
-                    map.remove_point(nade_x, nade_y, 
-                        nade_z)
-                    self.on_block_removed(nade_x, nade_y,
-                        nade_z)
+                    if map.remove_point(nade_x, nade_y, nade_z):
+                        self.on_block_removed(nade_x, nade_y, nade_z)
         block_action.x = x
         block_action.y = y
         block_action.z = z

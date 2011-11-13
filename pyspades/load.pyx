@@ -115,14 +115,14 @@ cdef class VXLData:
     def remove_point(self, int x, int y, int z, bint user = True, 
                      bint no_collapse = False):
         if x < 0 or x >= 512 or y < 0 or y >= 512 or z < 0 or z >= 64:
-            return
+            return False
         if user and z >= 62:
-            return
+            return False
         if not get_solid(x, y, z, self.map):
-            return
+            return False
         set_point(x, y, z, self.map, 0, 0)
         if no_collapse:
-            return
+            return True
         start = time.time()
         for node_x, node_y, node_z in self.get_neighbors(x, y, z):
             if node_z >= 62:
@@ -131,6 +131,7 @@ cdef class VXLData:
         taken = time.time() - start
         if taken > 0.1:
             print 'removing block at', x, y, z, 'took:', taken
+        return True
     
     def remove_point_unsafe(self, int x, int y, int z):
         set_point(x, y, z, self.map, 0, 0)
