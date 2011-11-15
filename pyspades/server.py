@@ -75,6 +75,7 @@ change_team = loaders.ChangeTeam()
 weapon_reload = loaders.WeaponReload()
 territory_capture = loaders.TerritoryCapture()
 progress_bar = loaders.ProgressBar()
+world_update = loaders.WorldUpdate()
 
 def check_nan(*values):
     for value in values:
@@ -275,12 +276,6 @@ class ServerConnection(BaseConnection):
                         world_object.set_orientation(x, y, z)
                         if self.filter_visibility_data:
                             return
-                        orientation_data.x = x
-                        orientation_data.y = y
-                        orientation_data.z = z
-                        orientation_data.player_id = self.player_id
-                        self.protocol.send_contained(orientation_data, 
-                            True, sender = self)
                     elif contained.id == loaders.PositionData.id:
                         x, y, z = contained.x, contained.y, contained.z
                         if check_nan(x, y, z):
@@ -323,12 +318,6 @@ class ServerConnection(BaseConnection):
                                 if collides and vector_collision(entity,
                                 world_object.position):
                                     self.check_refill()
-                        position_data.player_id = self.player_id
-                        position_data.x = x
-                        position_data.y = y
-                        position_data.z = z
-                        self.protocol.send_contained(position_data, 
-                            sender = self)
                     elif contained.id == loaders.InputData.id:
                         world_object.set_walk(contained.up, contained.down,
                             contained.left, contained.right)
@@ -355,17 +344,29 @@ class ServerConnection(BaseConnection):
                     elif contained.id == loaders.WeaponReload.id:
                         self.weapon_object.reload()
                     elif contained.id == loaders.HitPacket.id:
-                        if self.weapon_object.is_empty():
+                        value = contained.value
+                        is_melee = value == MELEE
+                        if not is_melee and self.weapon_object.is_empty():
                             return
                         player = self.protocol.players[contained.player_id]
-                        hit_amount = self.weapon_object.damage[
-                            contained.value]
+                        if is_melee:
+                            hit_amount = self.protocol.melee_damage
+                        else:
+                            hit_amount = self.weapon_object.get_damage(
+                                value, self.world_object.position,
+                                player.world_object.position)
                         returned = self.on_hit(hit_amount, player)
                         if returned == False:
                             return
                         elif returned is not None:
                             hit_amount = returned
-                        player.hit(hit_amount, self)
+                        if is_melee:
+                            type = MELEE_KILL
+                        elif contained.value == HEAD:
+                            type = HEADSHOT_KILL
+                        else:
+                            type = WEAPON_KILL
+                        player.hit(hit_amount, self, type)
                     elif contained.id == loaders.GrenadePacket.id:
                         if not self.grenades:
                             return
@@ -536,11 +537,7 @@ class ServerConnection(BaseConnection):
         position_data.x = x
         position_data.y = y
         position_data.z = z
-        position_data.player_id = self.player_id
-        if self.filter_visibility_data:
-            self.send_contained(position_data)
-        else:
-            self.protocol.send_contained(position_data)
+        self.send_contained(position_data)
     
     def get_orientation_sequence(self):
         sequence = self.orientation_sequence
@@ -691,7 +688,7 @@ class ServerConnection(BaseConnection):
         self.on_reset()
         self.name = self.team = self.hp = self.world_object = None
     
-    def hit(self, value, by = None):
+    def hit(self, value, by = None, type = WEAPON_KILL):
         if self.hp is None:
             return
         if by is not None and self.team is by.team:
@@ -703,7 +700,7 @@ class ServerConnection(BaseConnection):
                     return
             elif not friendly_fire:
                 return
-        self.set_hp(self.hp - value, by, type = WEAPON_KILL)
+        self.set_hp(self.hp - value, by, type = type)
     
     def set_hp(self, value, hit_by = None, type = WEAPON_KILL, 
                hit_indicator = None):
@@ -1291,6 +1288,8 @@ class ServerProtocol(DatagramProtocol):
     team2_color = (0, 196, 0)
     team1_name = 'Blue'
     team2_name = 'Green'
+    loop_count = 0
+    melee_damage = 100
     
     def __init__(self):
         self.entities = []
@@ -1349,6 +1348,24 @@ class ServerProtocol(DatagramProtocol):
     def update_world(self):
         self.world.update(UPDATE_FREQUENCY)
         self.on_world_update()
+        self.loop_count = (self.loop_count + 1) % int(UPDATE_FPS / NETWORK_FPS)
+        if self.loop_count == 0:
+            self.update_network()
+    
+    def update_network(self):
+        items = []
+        for i in xrange(32):
+            try:
+                player = self.players[i]
+                world_object = player.world_object
+                position = world_object.position.get()
+                orientation = world_object.orientation.get()
+            except (KeyError, TypeError):
+                position = (0.0, 0.0, 0.0)
+                orientation = (0.0, 0.0, 0.0)
+            items.append((position, orientation))
+        world_update.items = items
+        self.send_contained(world_update)
     
     def set_map(self, map):
         self.map = map
