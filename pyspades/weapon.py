@@ -1,6 +1,7 @@
 import math
 from twisted.internet import reactor
 from pyspades.constants import *
+from pyspades.collision import distance_3d_vector
 
 class BaseWeapon(object):
     shoot = False
@@ -82,6 +83,9 @@ class BaseWeapon(object):
     def is_empty(self, tolerance = 4):
         ammo = self.get_ammo(True)
         return ammo < -tolerance or not self.shoot
+    
+    def get_damage(self, value, position1, position2):
+        return self.damage[value]
 
 class Rifle(BaseWeapon):
     name = 'Rifle'
@@ -92,10 +96,10 @@ class Rifle(BaseWeapon):
     slow_reload = False
     
     damage = {
-        0 : 49,
-        1 : 100,
-        2 : 33,
-        3 : 33
+        TORSO : 49,
+        HEAD : 100,
+        ARMS : 33,
+        LEGS : 33
     }
 
 class SMG(BaseWeapon):
@@ -107,10 +111,10 @@ class SMG(BaseWeapon):
     slow_reload = False
     
     damage = {
-        0 : 24,
-        1 : 75,
-        2 : 16,
-        3 : 16
+        TORSO : 24,
+        HEAD : 75,
+        ARMS : 16,
+        LEGS : 16
     }
 
 class Shotgun(BaseWeapon):
@@ -122,16 +126,22 @@ class Shotgun(BaseWeapon):
     slow_reload = True
     
     damage = {
-        0 : 19,
-        1 : 33,
-        2 : 14,
-        3 : 14
+        TORSO : 21,
+        HEAD : 24,
+        ARMS : 14,
+        LEGS : 14
     }
+    
+    def get_damage(self, value, position1, position2):
+        damage = self.damage[value]
+        if distance_3d_vector(position1, position2) <= 25:
+            damage *= 3
+        return damage
 
 WEAPONS = {
     SEMI_WEAPON : Rifle,
     SMG_WEAPON : SMG,
-    SHOTGUN_WEAPON : Shotgun
+    SHOTGUN_WEAPON : Shotgun,
 }
 
 for id, weapon in WEAPONS.iteritems():
