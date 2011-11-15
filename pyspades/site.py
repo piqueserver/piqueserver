@@ -9,7 +9,7 @@ START_IDENTIFIER = '<pre>#/MAX PING NAME (Click to Join)\n'
 END_IDENTIFIER = '</pre>'
 
 ServerEntry = namedtuple('ServerEntry', ['name', 'ip', 'ping', 'players', 
-    'max'])
+    'max', 'country'])
 
 def got_servers(data, defer):
     start = data.index(START_IDENTIFIER) + len(START_IDENTIFIER)
@@ -21,12 +21,13 @@ def got_servers(data, defer):
         players = int(players)
         max = int(max)
         ping = int(value[5:10].strip())
-        identifier = value[11:]
+        country = value[48:50]
+        identifier = value[70:]
         end_start = identifier.index('>')+1
         real_identifier = int(identifier[15:end_start-2])
         ip = get_server_ip(real_identifier)
         name = identifier[end_start:-4]
-        servers.append(ServerEntry(name, ip, ping, players, max))
+        servers.append(ServerEntry(name, ip, ping, players, max, country))
     defer.callback(servers)
 
 def get_servers():
