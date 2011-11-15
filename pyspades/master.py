@@ -30,7 +30,7 @@ import random
 MAX_SERVER_NAME_SIZE = 31
 
 HOST = 'ace-spades.com'
-PORT = 32886
+PORT = 32885
 
 class AddServer(Loader):
     __slots__ = ['count', 'max_players', 'name']
@@ -72,7 +72,7 @@ class MasterConnection(BaseConnection):
         if self.connected:
             return
         connect_request.auth_val = self.auth_val
-        connect_request.version = 30 << 24 # increments for each version
+        connect_request.version = 28 << 24 # increments for each version
         connect_request.client = True
         self.send_loader(connect_request, False, 255)
         reactor.callLater(5, self.send_request)
