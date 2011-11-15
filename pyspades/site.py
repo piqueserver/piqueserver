@@ -5,7 +5,7 @@ from pyspades.tools import get_server_ip
 
 SERVER_LIST = 'http://ace-spades.com/?page_id=5'
 
-START_IDENTIFIER = '<pre>#/MAX PING NAME (Click to Join)\n'
+START_IDENTIFIER = '<pre>#/MAX PING CNTRY NAME (Click to Join)\n'
 END_IDENTIFIER = '</pre>'
 
 ServerEntry = namedtuple('ServerEntry', ['name', 'ip', 'ping', 'players', 
