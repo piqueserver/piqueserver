@@ -349,12 +349,16 @@ class ServerConnection(BaseConnection):
                         if not is_melee and self.weapon_object.is_empty():
                             return
                         player = self.protocol.players[contained.player_id]
+                        position1 = self.world_object.position
+                        position2 = player.world_object.position
                         if is_melee:
+                            if not vector_collision(position1, position2,
+                                                    MELEE_DISTANCE):
+                                return
                             hit_amount = self.protocol.melee_damage
                         else:
                             hit_amount = self.weapon_object.get_damage(
-                                value, self.world_object.position,
-                                player.world_object.position)
+                                value, position1, position2)
                         returned = self.on_hit(hit_amount, player)
                         if returned == False:
                             return
@@ -693,8 +697,8 @@ class ServerConnection(BaseConnection):
             return
         if by is not None and self.team is by.team:
             friendly_fire = self.protocol.friendly_fire
-            hit_time = self.protocol.friendly_fire_time
             if friendly_fire == 'on_grief':
+                hit_time = self.protocol.friendly_fire_time
                 if (self.last_block_destroy is None 
                 or reactor.seconds() - self.last_block_destroy >= hit_time):
                     return
