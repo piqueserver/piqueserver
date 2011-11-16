@@ -35,6 +35,7 @@
     "master" : true,
     "friendly_fire" : false,
     "grief_friendly_fire_time" : 2,
+    "melee_damage" : 100
     "fall_damage" : true,
     "set_god_build" : false,
     "teamswitch_interval" : 0,
@@ -126,6 +127,4 @@
         "mat^2" : "The very likeable mat^2 has entered!"
     },
     "rollback_on_game_end" : false,
-    
-    "melee_damage" : 20
 }

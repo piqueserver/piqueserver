@@ -509,6 +509,7 @@ class FeatureProtocol(ServerProtocol):
         self.fall_damage = config.get('fall_damage', True)
         self.teamswitch_interval = config.get('teamswitch_interval', 0)
         self.max_players = config.get('max_players', 20)
+        self.melee_damage = config.get('melee_damage', 100)
         self.max_connections_per_ip = config.get('max_connections_per_ip', 0)
         self.passwords = config.get('passwords', {})
         self.server_prefix = encode(config.get('server_prefix', '[*]'))
