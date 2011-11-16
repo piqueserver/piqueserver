@@ -126,5 +126,5 @@
     "welcomes" : {
         "mat^2" : "The very likeable mat^2 has entered!"
     },
-    "rollback_on_game_end" : false,
+    "rollback_on_game_end" : false
 }
