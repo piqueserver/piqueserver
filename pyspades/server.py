@@ -1355,12 +1355,16 @@ class ServerProtocol(DatagramProtocol):
     def update_network(self):
         items = []
         for i in xrange(32):
+            position = orientation = None
             try:
                 player = self.players[i]
-                world_object = player.world_object
-                position = world_object.position.get()
-                orientation = world_object.orientation.get()
+                if not player.filter_visibility_data:
+                    world_object = player.world_object
+                    position = world_object.position.get()
+                    orientation = world_object.orientation.get()
             except (KeyError, TypeError):
+                pass
+            if position is None:
                 position = (0.0, 0.0, 0.0)
                 orientation = (0.0, 0.0, 0.0)
             items.append((position, orientation))
