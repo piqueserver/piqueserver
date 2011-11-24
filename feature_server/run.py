@@ -57,6 +57,12 @@ else:
     from pyspades.common import crc32
     CLIENT_VERSION = crc32(open('../data/client.exe', 'rb').read())
 
+# reverse bytes
+CLIENT_VERSION = ((CLIENT_VERSION & 0x000000FF) << 24 |
+                  (CLIENT_VERSION & 0x0000FF00) << 8 |
+                  (CLIENT_VERSION & 0x00FF0000) >> 8 |
+                  (CLIENT_VERSION & 0xFF000000) >> 24)
+
 if iocp and sys.platform == 'win32':
     # install IOCP
     try:
@@ -150,7 +156,7 @@ class FeatureConnection(ServerConnection):
     chat_count = 0
     current_grenade = None
     
-    def on_connect(self, loader):
+    def on_connect(self):
         if self.master:
             print '(master client connected)'
         protocol = self.protocol
@@ -164,7 +170,7 @@ class FeatureConnection(ServerConnection):
                 print 'banned user %s (%s) attempted to join' % (name, 
                     client_ip)
                 self.disconnect()
-                return False
+                return
         except KeyError:
             pass
         manager = self.protocol.ban_manager
@@ -174,7 +180,8 @@ class FeatureConnection(ServerConnection):
                 print ('federated banned user (%s) attempted to join, '
                     'banned for %r') % (client_ip, reason)
                 self.disconnect()
-                return False
+                return
+        ServerConnection.on_connect(self)
     
     def on_join(self):
         if self.protocol.motd is not None:
@@ -469,7 +476,8 @@ class FeatureProtocol(ServerProtocol):
     
     game_mode = None # default to None so we can check
     
-    def __init__(self, config):        
+    def __init__(self, interface, config):
+        self.config = config
         if config.get('random_rotation', False):
             self.map_rotator_type = random_choice_cycle
         else:
@@ -567,7 +575,7 @@ class FeatureProtocol(ServerProtocol):
             if password == 'replaceme':
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
                 
-        ServerProtocol.__init__(self)
+        ServerProtocol.__init__(self, 32887, interface)
         if not self.set_map_rotation(config['maps']):
             print 'Invalid map in map rotation, exiting.'
             raise SystemExit()
@@ -669,10 +677,6 @@ class FeatureProtocol(ServerProtocol):
         for line in value:
             lines.append(encode(self.format(line, extra)))
         return lines
-    
-    def stopProtocol(self):
-        if reactor.running:
-            self.listen()
     
     def listen(self, interface = None):
         if interface is None:
@@ -927,10 +931,11 @@ for script in script_objects:
 
 protocol_class.connection_class = connection_class
 
-protocol_instance = protocol_class(config)
 interface = config.get('network_interface', '')
+if interface == '':
+    interface = '*'
 
-protocol_instance.listen(interface)
+protocol_instance = protocol_class(interface, config)
 print 'Started server on port %s...' % PORT
 
 if profile:

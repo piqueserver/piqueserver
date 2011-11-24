@@ -15,11 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
-from pyspades.protocol import (BaseConnection, sized_sequence, 
-    sized_data, in_packet, out_packet, get_timer, generate_loader_data)
+from pyspades.protocol import (BaseConnection, BaseProtocol, 
+    generate_loader_data)
 from pyspades.bytes import ByteReader, ByteWriter
 from pyspades.packet import load_client_packet
 from pyspades.loaders import *
@@ -33,6 +32,7 @@ from pyspades.collision import vector_collision
 from pyspades import world
 from pyspades.debug import *
 from pyspades.weapon import WEAPONS
+import enet
 
 import random
 import math
@@ -162,10 +162,8 @@ class ProgressiveMapGenerator(object):
         return bool(self.data) or self.generator is not None
 
 class ServerConnection(BaseConnection):
-    master = False
-    protocol = None
-    is_client = False
     address = None
+    master = False
     player_id = None
     map_packets_sent = 0
     team = None
@@ -192,329 +190,304 @@ class ServerConnection(BaseConnection):
     last_block = None
     map_data = None
     
-    def __init__(self, protocol, address):
-        BaseConnection.__init__(self)
-        self.protocol = protocol
-        self.address = address
+    def __init__(self, *arg, **kw):
+        BaseConnection.__init__(self, *arg, **kw)
+        protocol = self.protocol
+        address = self.peer.address
+        self.address = (address.host, address.port)
         self.respawn_time = protocol.respawn_time
         self.timers = SlidingWindow(TIMER_WINDOW_ENTRIES)
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
     
-    def loader_received(self, loader):
-        if self.connection_id is None:
-            if loader.id == ConnectionRequest.id:
-                if loader.client:
-                    if loader.version != self.protocol.version:
-                        self.disconnect()
-                        return
-                    max_players = min(32, self.protocol.max_players)
-                    if len(self.protocol.connections) > max_players:
-                        self.disconnect()
-                        return
-                    if self.protocol.max_connections_per_ip:
-                        shared = [conn for conn in
-                            self.protocol.connections.values()
-                            if conn.address[0] == self.address[0]]
-                        if len(shared) > self.protocol.max_connections_per_ip:
-                            self.disconnect()
-                            return
-                self.master = not loader.client
-                if self.on_connect(loader) == False:
-                    return
-                self.auth_val = loader.auth_val
-                self.connection_id = self.protocol.connection_ids.pop()
-                self.unique = loader.value & 3
-                connection_response = ConnectionResponse()
-                connection_response.auth_val = loader.auth_val
-                connection_response.unique = self.unique
-                connection_response.connection_id = self.connection_id
-
-                self.send_loader(connection_response, True, 0xFF
-                    ).addCallback(self._connection_ack)
-            else:
-                self.disconnect()
+    def on_connect(self):
+        if self.peer.eventData != self.protocol.version:
+            self.disconnect()
             return
-        else:
-            if loader.id == Packet10.id:
-                return
-            elif loader.id == Disconnect.id:
+        max_players = min(32, self.protocol.max_players)
+        if len(self.protocol.connections) > max_players:
+            self.disconnect()
+            return
+        if self.protocol.max_connections_per_ip:
+            shared = [conn for conn in
+                self.protocol.connections.values()
+                if conn.address[0] == self.address[0]]
+            if len(shared) > self.protocol.max_connections_per_ip:
                 self.disconnect()
                 return
-            elif loader.id == Ping.id:
-                return
-        
+        if not self.disconnected:
+            self._connection_ack()
+    
+    def loader_received(self, loader):
         if self.player_id is not None:
-            if loader.id in (SizedData.id, SizedSequenceData.id):
-                contained = load_client_packet(loader.data)
-                if contained.id == loaders.ExistingPlayer.id:
-                    if self.name is not None:
+            contained = load_client_packet(ByteReader(loader.data))
+            if contained.id == loaders.ExistingPlayer.id:
+                if self.name is not None:
+                    return
+                team = self.protocol.teams[contained.team]
+                if self.on_team_join(team) == False:
+                    team = team.other
+                self.team = team
+                name = contained.name
+                 # vanilla AoS behaviour
+                if name == 'Deuce':
+                    name = name + str(self.player_id)
+                self.name = self.protocol.get_name(name)
+                self.set_weapon(contained.weapon, True)
+                self.protocol.players[self.name, self.player_id] = self
+                if self.protocol.speedhack_detect:
+                    self.speedhack_detect = True
+                self.on_login(self.name)
+                self.spawn()
+                return
+            if self.hp:
+                world_object = self.world_object
+                if contained.id == loaders.OrientationData.id:
+                    x, y, z = contained.x, contained.y, contained.z
+                    if check_nan(x, y, z):
+                        self.on_hack_attempt(
+                            'Invalid orientation data received')
                         return
+                    world_object.set_orientation(x, y, z)
+                    if self.filter_visibility_data:
+                        return
+                elif contained.id == loaders.PositionData.id:
+                    x, y, z = contained.x, contained.y, contained.z
+                    if check_nan(x, y, z):
+                        self.on_hack_attempt(
+                            'Invalid position data received')
+                        return
+                    position = world_object.position
+                    if (self.speedhack_detect and (
+                    math.fabs(x - position.x) > RUBBERBAND_DISTANCE or
+                    math.fabs(y - position.y) > RUBBERBAND_DISTANCE or
+                    math.fabs(z - position.z) > RUBBERBAND_DISTANCE_Z)):
+                        # vanilla behaviour
+                        self.set_location()
+                        return
+                    world_object.set_position(x, y, z)
+                    if self.filter_visibility_data:
+                        return
+                    self.on_position_update()
+                    game_mode = self.protocol.game_mode
+                    if game_mode == CTF_MODE:
+                        other_flag = self.team.other.flag
+                        if vector_collision(world_object.position, 
+                        self.team.base):
+                            if other_flag.player is self:
+                                self.capture_flag()
+                            self.check_refill()
+                        if other_flag.player is None and vector_collision(
+                        world_object.position, other_flag):
+                            self.take_flag()
+                    elif game_mode == TC_MODE:
+                        for entity in self.protocol.entities:
+                            collides = vector_collision(entity, 
+                                world_object.position, TC_CAPTURE_DISTANCE)
+                            if self in entity.players:
+                                if not collides:
+                                    entity.remove_player(self)
+                            else:
+                                if collides:
+                                    entity.add_player(self)
+                            if collides and vector_collision(entity,
+                            world_object.position):
+                                self.check_refill()
+                elif contained.id == loaders.InputData.id:
+                    world_object.set_walk(contained.up, contained.down,
+                        contained.left, contained.right)
+                    if self.tool == WEAPON_TOOL:
+                        self.weapon_object.set_shoot(contained.fire)
+                    contained.player_id = self.player_id
+                    z_acceleration = world_object.acceleration.z
+                    jump = contained.jump
+                    if jump and not (z_acceleration >= 0 and 
+                                     z_acceleration < 0.017):
+                        jump = False
+                    world_object.set_animation(contained.fire, jump, 
+                        contained.crouch, contained.aim)
+                    contained.jump = jump
+                    if (self.fly and contained.crouch and
+                        world_object.acceleration.z != 0.0):
+                        world_object.jump = True
+                        contained.jump = True
+                        self.send_contained(contained)
+                    if self.filter_visibility_data:
+                        return
+                    self.protocol.send_contained(contained, 
+                        sender = self)
+                elif contained.id == loaders.WeaponReload.id:
+                    self.weapon_object.reload()
+                elif contained.id == loaders.HitPacket.id:
+                    value = contained.value
+                    is_melee = value == MELEE
+                    if not is_melee and self.weapon_object.is_empty():
+                        return
+                    player = self.protocol.players[contained.player_id]
+                    position1 = self.world_object.position
+                    position2 = player.world_object.position
+                    if is_melee:
+                        if not vector_collision(position1, position2,
+                                                MELEE_DISTANCE):
+                            return
+                        hit_amount = self.protocol.melee_damage
+                    else:
+                        hit_amount = self.weapon_object.get_damage(
+                            value, position1, position2)
+                    returned = self.on_hit(hit_amount, player)
+                    if returned == False:
+                        return
+                    elif returned is not None:
+                        hit_amount = returned
+                    if is_melee:
+                        type = MELEE_KILL
+                    elif contained.value == HEAD:
+                        type = HEADSHOT_KILL
+                    else:
+                        type = WEAPON_KILL
+                    player.hit(hit_amount, self, type)
+                elif contained.id == loaders.GrenadePacket.id:
+                    if not self.grenades:
+                        return
+                    self.grenades -= 1
+                    if self.on_grenade(contained.value) == False:
+                        return
+                    grenade = self.protocol.world.create_object(
+                        world.Grenade, contained.value,
+                        Vertex3(*contained.position), None,
+                        Vertex3(*contained.velocity), self.grenade_exploded)
+                    self.on_grenade_thrown(grenade)
+                    if self.filter_visibility_data:
+                        return
+                    contained.player_id = self.player_id
+                    self.protocol.send_contained(contained, 
+                        sender = self)
+                elif contained.id == loaders.SetTool.id:
+                    if self.on_tool_set_attempt(contained.value) == False:
+                        return
+                    self.tool = contained.value
+                    if self.tool == WEAPON_TOOL:
+                        self.weapon_object.set_shoot(self.world_object.fire)
+                    self.on_tool_changed(self.tool)
+                    if self.filter_visibility_data:
+                        return
+                    set_tool.player_id = self.player_id
+                    set_tool.value = contained.value
+                    self.protocol.send_contained(set_tool, sender = self)
+                elif contained.id == loaders.SetColor.id:
+                    color = get_color(contained.value)
+                    if self.on_color_set_attempt(color) == False:
+                        return
+                    self.color = color
+                    self.on_color_set(color)
+                    contained.player_id = self.player_id
+                    self.protocol.send_contained(contained, sender = self,
+                        save = True)
+                elif contained.id == loaders.BlockAction.id:
+                    value = contained.value
+                    if value == BUILD_BLOCK:
+                        interval = TOOL_INTERVAL[BLOCK_TOOL]
+                    elif self.tool == WEAPON_TOOL:
+                        if self.weapon_object.is_empty():
+                            return
+                        interval = WEAPON_INTERVAL[self.weapon]
+                    else:
+                        interval = TOOL_INTERVAL[self.tool]
+                    current_time = reactor.seconds()
+                    last_time = self.last_block
+                    self.last_block = current_time
+                    if (last_time is not None and
+                    current_time - last_time < interval):
+                        self.rapids.add(current_time)
+                        if self.rapids.check():
+                            start, end = self.rapids.get()
+                            if end - start < MAX_RAPID_SPEED:
+                                print 'RAPID HACK:', self.rapids.window
+                                self.on_hack_attempt('Rapid hack detected')
+                        return
+                    map = self.protocol.map
+                    x = contained.x
+                    y = contained.y
+                    z = contained.z
+                    if z >= 62:
+                        return
+                    if value == BUILD_BLOCK:
+                        self.blocks -= 1
+                        if self.blocks < -5:
+                            return
+                        elif self.on_block_build_attempt(x, y, z) == False:
+                            return
+                        elif not map.set_point(x, y, z, self.color + (255,)):
+                            return
+                        self.on_block_build(x, y, z)
+                    else:
+                        if self.on_block_destroy(x, y, z, value) == False:
+                            return
+                        elif value == DESTROY_BLOCK:
+                            if map.remove_point(x, y, z):
+                                self.blocks += 1
+                                self.on_block_removed(x, y, z)
+                        elif value == SPADE_DESTROY:
+                            if map.remove_point(x, y, z):
+                                self.on_block_removed(x, y, z)
+                            if map.remove_point(x, y, z + 1):
+                                self.on_block_removed(x, y, z + 1)
+                            if map.remove_point(x, y, z - 1):
+                                self.on_block_removed(x, y, z - 1)
+                        self.last_block_destroy = reactor.seconds()
+                    block_action.x = x
+                    block_action.y = y
+                    block_action.z = z
+                    block_action.value = contained.value
+                    block_action.player_id = self.player_id
+                    self.protocol.send_contained(block_action, save = True)
+                    self.protocol.update_entities()
+            if self.name:
+                if contained.id == loaders.ChatMessage.id:
+                    if not self.name:
+                        return
+                    value = contained.value
+                    if value.startswith('/'):
+                        value = encode(value[1:])
+                        try:
+                            splitted = shlex.split(value)
+                        except ValueError:
+                            # shlex failed. let's just split per space
+                            splitted = value.split(' ')
+                        if splitted:
+                            command = splitted.pop(0)
+                        else:
+                            command = ''
+                        splitted = [decode(value) for value in splitted]
+                        self.on_command(command, splitted)
+                    else:
+                        global_message = contained.chat_type == CHAT_ALL
+                        result = self.on_chat(value, global_message)
+                        if result == False:
+                            return
+                        elif result is not None:
+                            value = result
+                        contained.chat_type = [CHAT_TEAM, CHAT_ALL][
+                            int(global_message)]
+                        contained.value = value
+                        contained.player_id = self.player_id
+                        if global_message:
+                            team = None
+                        else:
+                            team = self.team
+                        self.protocol.send_contained(contained, team = team)
+                elif contained.id == loaders.FogColor.id:
+                    color = get_color(contained.color)
+                    self.on_command('fog', [str(item) for item in color])
+                elif contained.id == loaders.ChangeWeapon.id:
+                    if self.on_weapon_set(contained.weapon) == False:
+                        return
+                    self.weapon = contained.weapon
+                    self.set_weapon(self.weapon)
+                elif contained.id == loaders.ChangeTeam.id:
                     team = self.protocol.teams[contained.team]
                     if self.on_team_join(team) == False:
-                        team = team.other
-                    self.team = team
-                    name = contained.name
-                     # vanilla AoS behaviour
-                    if name == 'Deuce':
-                        name = name + str(self.player_id)
-                    self.name = self.protocol.get_name(name)
-                    self.set_weapon(contained.weapon, True)
-                    self.protocol.players[self.name, self.player_id] = self
-                    if self.protocol.speedhack_detect:
-                        self.speedhack_detect = True
-                    self.on_login(self.name)
-                    self.spawn()
-                    return
-                if self.hp:
-                    world_object = self.world_object
-                    if contained.id == loaders.OrientationData.id:
-                        x, y, z = contained.x, contained.y, contained.z
-                        if check_nan(x, y, z):
-                            self.on_hack_attempt(
-                                'Invalid orientation data received')
-                            return
-                        world_object.set_orientation(x, y, z)
-                        if self.filter_visibility_data:
-                            return
-                    elif contained.id == loaders.PositionData.id:
-                        x, y, z = contained.x, contained.y, contained.z
-                        if check_nan(x, y, z):
-                            self.on_hack_attempt(
-                                'Invalid position data received')
-                            return
-                        position = world_object.position
-                        if (self.speedhack_detect and (
-                        math.fabs(x - position.x) > RUBBERBAND_DISTANCE or
-                        math.fabs(y - position.y) > RUBBERBAND_DISTANCE or
-                        math.fabs(z - position.z) > RUBBERBAND_DISTANCE_Z)):
-                            # vanilla behaviour
-                            self.set_location()
-                            return
-                        world_object.set_position(x, y, z)
-                        if self.filter_visibility_data:
-                            return
-                        self.on_position_update()
-                        game_mode = self.protocol.game_mode
-                        if game_mode == CTF_MODE:
-                            other_flag = self.team.other.flag
-                            if vector_collision(world_object.position, 
-                            self.team.base):
-                                if other_flag.player is self:
-                                    self.capture_flag()
-                                self.check_refill()
-                            if other_flag.player is None and vector_collision(
-                            world_object.position, other_flag):
-                                self.take_flag()
-                        elif game_mode == TC_MODE:
-                            for entity in self.protocol.entities:
-                                collides = vector_collision(entity, 
-                                    world_object.position, TC_CAPTURE_DISTANCE)
-                                if self in entity.players:
-                                    if not collides:
-                                        entity.remove_player(self)
-                                else:
-                                    if collides:
-                                        entity.add_player(self)
-                                if collides and vector_collision(entity,
-                                world_object.position):
-                                    self.check_refill()
-                    elif contained.id == loaders.InputData.id:
-                        world_object.set_walk(contained.up, contained.down,
-                            contained.left, contained.right)
-                        if self.tool == WEAPON_TOOL:
-                            self.weapon_object.set_shoot(contained.fire)
-                        contained.player_id = self.player_id
-                        z_acceleration = world_object.acceleration.z
-                        jump = contained.jump
-                        if jump and not (z_acceleration >= 0 and 
-                                         z_acceleration < 0.017):
-                            jump = False
-                        world_object.set_animation(contained.fire, jump, 
-                            contained.crouch, contained.aim)
-                        contained.jump = jump
-                        if (self.fly and contained.crouch and
-                            world_object.acceleration.z != 0.0):
-                            world_object.jump = True
-                            contained.jump = True
-                            self.send_contained(contained)
-                        if self.filter_visibility_data:
-                            return
-                        self.protocol.send_contained(contained, 
-                            sender = self)
-                    elif contained.id == loaders.WeaponReload.id:
-                        self.weapon_object.reload()
-                    elif contained.id == loaders.HitPacket.id:
-                        value = contained.value
-                        is_melee = value == MELEE
-                        if not is_melee and self.weapon_object.is_empty():
-                            return
-                        player = self.protocol.players[contained.player_id]
-                        position1 = self.world_object.position
-                        position2 = player.world_object.position
-                        if is_melee:
-                            if not vector_collision(position1, position2,
-                                                    MELEE_DISTANCE):
-                                return
-                            hit_amount = self.protocol.melee_damage
-                        else:
-                            hit_amount = self.weapon_object.get_damage(
-                                value, position1, position2)
-                        returned = self.on_hit(hit_amount, player)
-                        if returned == False:
-                            return
-                        elif returned is not None:
-                            hit_amount = returned
-                        if is_melee:
-                            type = MELEE_KILL
-                        elif contained.value == HEAD:
-                            type = HEADSHOT_KILL
-                        else:
-                            type = WEAPON_KILL
-                        player.hit(hit_amount, self, type)
-                    elif contained.id == loaders.GrenadePacket.id:
-                        if not self.grenades:
-                            return
-                        self.grenades -= 1
-                        if self.on_grenade(contained.value) == False:
-                            return
-                        grenade = self.protocol.world.create_object(
-                            world.Grenade, contained.value,
-                            Vertex3(*contained.position), None,
-                            Vertex3(*contained.velocity), self.grenade_exploded)
-                        self.on_grenade_thrown(grenade)
-                        if self.filter_visibility_data:
-                            return
-                        contained.player_id = self.player_id
-                        self.protocol.send_contained(contained, 
-                            sender = self)
-                    elif contained.id == loaders.SetTool.id:
-                        if self.on_tool_set_attempt(contained.value) == False:
-                            return
-                        self.tool = contained.value
-                        if self.tool == WEAPON_TOOL:
-                            self.weapon_object.set_shoot(self.world_object.fire)
-                        self.on_tool_changed(self.tool)
-                        if self.filter_visibility_data:
-                            return
-                        set_tool.player_id = self.player_id
-                        set_tool.value = contained.value
-                        self.protocol.send_contained(set_tool, sender = self)
-                    elif contained.id == loaders.SetColor.id:
-                        color = get_color(contained.value)
-                        if self.on_color_set_attempt(color) == False:
-                            return
-                        self.color = color
-                        self.on_color_set(color)
-                        contained.player_id = self.player_id
-                        self.protocol.send_contained(contained, sender = self,
-                            save = True)
-                    elif contained.id == loaders.BlockAction.id:
-                        value = contained.value
-                        if value == BUILD_BLOCK:
-                            interval = TOOL_INTERVAL[BLOCK_TOOL]
-                        elif self.tool == WEAPON_TOOL:
-                            if self.weapon_object.is_empty():
-                                return
-                            interval = WEAPON_INTERVAL[self.weapon]
-                        else:
-                            interval = TOOL_INTERVAL[self.tool]
-                        current_time = reactor.seconds()
-                        last_time = self.last_block
-                        self.last_block = current_time
-                        if (last_time is not None and
-                        current_time - last_time < interval):
-                            self.rapids.add(current_time)
-                            if self.rapids.check():
-                                start, end = self.rapids.get()
-                                if end - start < MAX_RAPID_SPEED:
-                                    print 'RAPID HACK:', self.rapids.window
-                                    self.on_hack_attempt('Rapid hack detected')
-                            return
-                        map = self.protocol.map
-                        x = contained.x
-                        y = contained.y
-                        z = contained.z
-                        if z >= 62:
-                            return
-                        if value == BUILD_BLOCK:
-                            self.blocks -= 1
-                            if self.blocks < -5:
-                                return
-                            elif self.on_block_build_attempt(x, y, z) == False:
-                                return
-                            elif not map.set_point(x, y, z, self.color + (255,)):
-                                return
-                            self.on_block_build(x, y, z)
-                        else:
-                            if self.on_block_destroy(x, y, z, value) == False:
-                                return
-                            elif value == DESTROY_BLOCK:
-                                if map.remove_point(x, y, z):
-                                    self.blocks += 1
-                                    self.on_block_removed(x, y, z)
-                            elif value == SPADE_DESTROY:
-                                if map.remove_point(x, y, z):
-                                    self.on_block_removed(x, y, z)
-                                if map.remove_point(x, y, z + 1):
-                                    self.on_block_removed(x, y, z + 1)
-                                if map.remove_point(x, y, z - 1):
-                                    self.on_block_removed(x, y, z - 1)
-                            self.last_block_destroy = reactor.seconds()
-                        block_action.x = x
-                        block_action.y = y
-                        block_action.z = z
-                        block_action.value = contained.value
-                        block_action.player_id = self.player_id
-                        self.protocol.send_contained(block_action, save = True)
-                        self.protocol.update_entities()
-                if self.name:
-                    if contained.id == loaders.ChatMessage.id:
-                        if not self.name:
-                            return
-                        value = contained.value
-                        if value.startswith('/'):
-                            value = encode(value[1:])
-                            try:
-                                splitted = shlex.split(value)
-                            except ValueError:
-                                # shlex failed. let's just split per space
-                                splitted = value.split(' ')
-                            if splitted:
-                                command = splitted.pop(0)
-                            else:
-                                command = ''
-                            splitted = [decode(value) for value in splitted]
-                            self.on_command(command, splitted)
-                        else:
-                            global_message = contained.chat_type == CHAT_ALL
-                            result = self.on_chat(value, global_message)
-                            if result == False:
-                                return
-                            elif result is not None:
-                                value = result
-                            contained.chat_type = [CHAT_TEAM, CHAT_ALL][
-                                int(global_message)]
-                            contained.value = value
-                            contained.player_id = self.player_id
-                            if global_message:
-                                team = None
-                            else:
-                                team = self.team
-                            self.protocol.send_contained(contained, team = team)
-                    elif contained.id == loaders.FogColor.id:
-                        color = get_color(contained.color)
-                        self.on_command('fog', [str(item) for item in color])
-                    elif contained.id == loaders.ChangeWeapon.id:
-                        if self.on_weapon_set(contained.weapon) == False:
-                            return
-                        self.weapon = contained.weapon
-                        self.set_weapon(self.weapon)
-                    elif contained.id == loaders.ChangeTeam.id:
-                        team = self.protocol.teams[contained.team]
-                        if self.on_team_join(team) == False:
-                            return
-                        self.set_team(team)
-            return
+                        return
+                    self.set_team(team)
     
     def check_refill(self):
         last_refill = self.last_refill
@@ -667,9 +640,6 @@ class ServerConnection(BaseConnection):
             return
         print_top_100()
         BaseConnection.disconnect(self)
-        del self.protocol.connections[self.address]
-        if self.connection_id is not None and not self.master:
-            self.protocol.connection_ids.put_back(self.connection_id)
         if self.name is not None:
             self.drop_flag()
             player_left.player_id = self.player_id
@@ -766,7 +736,7 @@ class ServerConnection(BaseConnection):
     def add_score(self, score):
         self.kills += score
     
-    def _connection_ack(self, ack = None):
+    def _connection_ack(self):
         if self.master:
             # this shouldn't happen, but let's make sure
             self.disconnect()
@@ -916,8 +886,8 @@ class ServerConnection(BaseConnection):
         if not self.map_data.data_left():
             self.map_data = None
             for data in self.saved_loaders:
-                sized_data.data = data
-                self.send_loader(sized_data, True)
+                packet = enet.Packet(str(data), enet.PACKET_FLAG_RELIABLE)
+                self.peer.send(0, packet)
             self.saved_loaders = None
             self.on_join()
             return
@@ -925,13 +895,10 @@ class ServerConnection(BaseConnection):
             if not self.map_data.data_left():
                 break
             map_data.data = self.map_data.read(1024)
-            self.send_contained(map_data).addCallback(self.got_map_ack)
-            self.map_packets_sent += 1
+            self.send_contained(map_data)
     
-    def got_map_ack(self, ack):
-        self.map_packets_sent -= 1
-        if not self.map_packets_sent:
-            self.send_map()
+    def continue_map_transfer(self):
+        self.send_map()
     
     def send_data(self, data):
         self.protocol.transport.write(data, self.address)
@@ -968,9 +935,6 @@ class ServerConnection(BaseConnection):
                 '(or really awful connection)')
 
     # events/hooks
-    
-    def on_connect(self, loader):
-        pass
 
     def on_join(self):
         pass
@@ -1265,7 +1229,7 @@ class Team(object):
             if item.team is self:
                 yield item
 
-class ServerProtocol(DatagramProtocol):
+class ServerProtocol(BaseProtocol):
     connection_class = ServerConnection
 
     name = 'pyspades server'
@@ -1295,7 +1259,8 @@ class ServerProtocol(DatagramProtocol):
     loop_count = 0
     melee_damage = 100
     
-    def __init__(self):
+    def __init__(self, *arg, **kw):
+        BaseProtocol.__init__(self, *arg, **kw)
         self.entities = []
         self.connections = {}
         self.players = MultikeyDict()
@@ -1355,6 +1320,13 @@ class ServerProtocol(DatagramProtocol):
         self.loop_count = (self.loop_count + 1) % int(UPDATE_FPS / NETWORK_FPS)
         if self.loop_count == 0:
             self.update_network()
+    
+    def update(self):
+        BaseProtocol.update(self)
+        for player in self.connections.values():
+            if (player.map_data is not None and 
+            not player.peer.reliableDataInTransit):
+                player.continue_map_transfer()
     
     def update_network(self):
         items = []
@@ -1473,17 +1445,6 @@ class ServerProtocol(DatagramProtocol):
                 count += 1
         self.master_connection.set_count(count)
     
-    def datagramReceived(self, data, address):
-        if not data:
-            return
-        in_packet.read(data)
-        if address not in self.connections:
-            if in_packet.connection_id != CONNECTIONLESS:
-                return
-            self.connections[address] = self.connection_class(self, address)
-        connection = self.connections[address]
-        connection.packet_received(in_packet)
-    
     def update_entities(self):
         blue_team = self.blue_team
         green_team = self.green_team
@@ -1506,7 +1467,7 @@ class ServerProtocol(DatagramProtocol):
                        team = None, save = False):
         
         if sequence:
-            loader = sized_sequence
+            flags = enet.PACKET_FLAG_UNSEQUENCED
             check_distance = (sender is not None and 
                               sender.world_object is not None)
             if check_distance:
@@ -1514,10 +1475,11 @@ class ServerProtocol(DatagramProtocol):
                 x = position.x
                 y = position.y
         else:
-            loader = sized_data
+            flags = enet.PACKET_FLAG_RELIABLE
         data = ByteWriter()
         contained.write(data)
-        loader.data = data
+        data = str(data)
+        packet = enet.Packet(data, flags)
         for player in self.connections.values():
             if player is sender or player.player_id is None:
                 continue
@@ -1529,12 +1491,11 @@ class ServerProtocol(DatagramProtocol):
                     distance_squared = (position.x - x)**2 + (position.y - y)**2
                     if distance_squared > ORIENTATION_DISTANCE_SQUARED:
                         continue
-                loader.sequence2 = player.get_orientation_sequence()
             if player.saved_loaders is not None:
                 if save:
                     player.saved_loaders.append(data)
             else:
-                player.send_loader(loader, not sequence)
+                player.peer.send(0, packet)
     
     def send_chat(self, value, global_message = None, sender = None,
                   team = None):
