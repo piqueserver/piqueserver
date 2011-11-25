@@ -1322,7 +1322,7 @@ class ServerProtocol(BaseProtocol):
                 player.continue_map_transfer()
         self.world.update(UPDATE_FREQUENCY)
         self.on_world_update()
-        if loop_count % int(UPDATE_FPS / NETWORK_FPS) == 0:
+        if self.loop_count % int(UPDATE_FPS / NETWORK_FPS) == 0:
             self.update_network()
     
     def update_network(self):
