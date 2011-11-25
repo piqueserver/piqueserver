@@ -410,6 +410,7 @@ cdef class Peer:
     """
 
     cdef ENetPeer *_enet_peer
+    cdef object hash
 
     def __richcmp__(self, obj, op):
         if isinstance(obj, Peer):
@@ -420,7 +421,9 @@ cdef class Peer:
         raise NotImplementedError
     
     def __hash__(self):
-        return self.incomingPeerID
+        if self.hash is None:
+            self.hash = self.incomingPeerID
+        return self.hash
 
     def send(self, channelID, Packet packet):
         """

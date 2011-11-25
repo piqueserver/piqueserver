@@ -1274,8 +1274,6 @@ class ServerProtocol(BaseProtocol):
         self.blue_team.other = self.green_team
         self.green_team.other = self.blue_team
         self.world = world.World()
-        self.update_loop = LoopingCall(self.update_world)
-        self.update_loop.start(UPDATE_FREQUENCY, False)
         self.set_master()
     
     def reset_tc(self):
@@ -1315,19 +1313,17 @@ class ServerProtocol(BaseProtocol):
             entities.append(flag)
         return entities
     
-    def update_world(self):
-        self.world.update(UPDATE_FREQUENCY)
-        self.on_world_update()
-        self.loop_count = (self.loop_count + 1) % int(UPDATE_FPS / NETWORK_FPS)
-        if self.loop_count == 0:
-            self.update_network()
-    
     def update(self):
+        self.loop_count += 1
         BaseProtocol.update(self)
         for player in self.connections.values():
             if (player.map_data is not None and 
             not player.peer.reliableDataInTransit):
                 player.continue_map_transfer()
+        self.world.update(UPDATE_FREQUENCY)
+        self.on_world_update()
+        if loop_count % int(UPDATE_FPS / NETWORK_FPS) == 0:
+            self.update_network()
     
     def update_network(self):
         items = []
