@@ -451,6 +451,7 @@ class FeatureProtocol(ServerProtocol):
     debug_log = None
     advance_call = None
     master_reconnect_call = None
+    master = False
     
     # votekick
     votekick_time = 120 # 2 minutes
@@ -509,7 +510,6 @@ class FeatureProtocol(ServerProtocol):
         self.team2_name = team2.get('name', 'Green')
         self.team1_color = tuple(team1.get('color', (0, 0, 196)))
         self.team2_color = tuple(team2.get('color', (0, 196, 0)))
-        self.master = config.get('master', True)
         self.friendly_fire = config.get('friendly_fire', True)
         self.friendly_fire_time = config.get('grief_friendly_fire_time', 2.0)
         self.fall_damage = config.get('fall_damage', True)
@@ -573,16 +573,18 @@ class FeatureProtocol(ServerProtocol):
             if password == 'replaceme':
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
 
+        ServerProtocol.__init__(self, 32887, interface)
+        if not self.set_map_rotation(config['maps']):
+            print 'Invalid map in map rotation, exiting.'
+            raise SystemExit()
+
         self.update_format()
         self.tip_frequency = config.get('tip_frequency', 0)
         if self.tips is not None and self.tip_frequency > 0:
             reactor.callLater(self.tip_frequency * 60, self.send_tip)
 
-        ServerProtocol.__init__(self, 32887, interface)
-        self.host.receiveCallback = self.receive_callback
-        if not self.set_map_rotation(config['maps']):
-            print 'Invalid map in map rotation, exiting.'
-            raise SystemExit()
+        self.master = config.get('master', True)
+        self.set_master()
     
     def set_time_limit(self, time_limit = None):
         if self.advance_call is not None:
