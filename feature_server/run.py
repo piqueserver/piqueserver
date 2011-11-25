@@ -745,6 +745,7 @@ class FeatureProtocol(ServerProtocol):
     
     def receive_callback(self, address, data):
         if data == 'HELLO':
+            print 'sending response to', address.host, address.port
             self.host.socket.send(address, 'HI')
             return 1
         if address.host in self.hard_bans:
