@@ -107,6 +107,8 @@ class BaseProtocol(object):
             event_type = event.type
             peer = event.peer
             is_client = peer in self.clients
+            if event_type == enet.EVENT_TYPE_DISCONNECT:
+                print 'le disconnect from', peer
             if is_client:
                 connection = self.clients[peer]
                 if event_type == enet.EVENT_TYPE_CONNECT:
