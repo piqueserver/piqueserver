@@ -572,17 +572,17 @@ class FeatureProtocol(ServerProtocol):
         for password in self.passwords.get('admin', []):
             if password == 'replaceme':
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
-                
-        ServerProtocol.__init__(self, 32887, interface)
-        if not self.set_map_rotation(config['maps']):
-            print 'Invalid map in map rotation, exiting.'
-            raise SystemExit()
+
         self.update_format()
         self.tip_frequency = config.get('tip_frequency', 0)
         if self.tips is not None and self.tip_frequency > 0:
             reactor.callLater(self.tip_frequency * 60, self.send_tip)
-        
+
+        ServerProtocol.__init__(self, 32887, interface)
         self.host.receiveCallback = self.receive_callback
+        if not self.set_map_rotation(config['maps']):
+            print 'Invalid map in map rotation, exiting.'
+            raise SystemExit()
     
     def set_time_limit(self, time_limit = None):
         if self.advance_call is not None:
