@@ -17,8 +17,7 @@
 
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
-from pyspades.protocol import (BaseConnection, BaseProtocol, 
-    generate_loader_data)
+from pyspades.protocol import BaseConnection, BaseProtocol
 from pyspades.bytes import ByteReader, ByteWriter
 from pyspades.packet import load_client_packet
 from pyspades.loaders import *

@@ -17,10 +17,7 @@
 
 from twisted.internet import reactor
 from pyspades.bytes import ByteReader, ByteWriter
-from pyspades.packet import Packet, generate_loader_data
-from pyspades.loaders import Ack
 from twisted.internet.defer import Deferred
-from pyspades.loaders import *
 from twisted.internet.task import LoopingCall
 from pyspades.common import hexify, stringify, binify
 import enet

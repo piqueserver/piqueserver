@@ -7,12 +7,10 @@ from Cython.Build import cythonize
 ext_modules = []
 
 names = [
-    'pyspades.compression',
     'pyspades.load',
     'pyspades.compressedvxl',
     'pyspades.bytes',
     'pyspades.packet',
-    'pyspades.loaders',
     'pyspades.contained',
     'pyspades.common',
     'pyspades.world'
