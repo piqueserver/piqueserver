@@ -163,7 +163,6 @@ class ProgressiveMapGenerator(object):
 
 class ServerConnection(BaseConnection):
     address = None
-    master = False
     player_id = None
     map_packets_sent = 0
     team = None
@@ -196,7 +195,6 @@ class ServerConnection(BaseConnection):
         address = self.peer.address
         self.address = (address.host, address.port)
         self.respawn_time = protocol.respawn_time
-        self.timers = SlidingWindow(TIMER_WINDOW_ENTRIES)
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
     
     def on_connect(self):
@@ -635,11 +633,8 @@ class ServerConnection(BaseConnection):
                 if self in entity.players:
                     entity.remove_player(self)
     
-    def disconnect(self):
-        if self.disconnected:
-            return
+    def on_disconnect(self):
         print_top_100()
-        BaseConnection.disconnect(self)
         if self.name is not None:
             self.drop_flag()
             player_left.player_id = self.player_id
@@ -737,10 +732,6 @@ class ServerConnection(BaseConnection):
         self.kills += score
     
     def _connection_ack(self):
-        if self.master:
-            # this shouldn't happen, but let's make sure
-            self.disconnect()
-            return
         self._send_connection_data()
         self.send_map(ProgressiveMapGenerator(self.protocol.map))
     
@@ -891,7 +882,7 @@ class ServerConnection(BaseConnection):
             self.saved_loaders = None
             self.on_join()
             return
-        for _ in xrange(6):
+        for _ in xrange(10):
             if not self.map_data.data_left():
                 break
             map_data.data = self.map_data.read(1024)
@@ -918,21 +909,6 @@ class ServerConnection(BaseConnection):
         for line in lines:
             chat_message.value = '%s%s' % (prefix, line)
             self.send_contained(chat_message)
-    
-    def timer_received(self, value):
-        if not self.speedhack_detect:
-            return
-        timers = self.timers
-        seconds = reactor.seconds()
-        timers.add((value, seconds))
-        if not timers.check():
-            return
-        (start_timer, start_seconds), (end_timer, end_seconds) = timers.get()
-        diff = (end_timer - start_timer) / (end_seconds - start_seconds)
-        if diff > MAX_TIMER_SPEED:
-            print 'SPEEDHACK -> Diff:', diff, timers.window
-            self.on_hack_attempt('Speedhack detected '
-                '(or really awful connection)')
 
     # events/hooks
 

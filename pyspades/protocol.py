@@ -55,10 +55,6 @@ class BaseConnection(object):
         self.peer.send(0, packet)
     
     # events
-    def timer_received(self, value):
-        # XXX we'll have to hack a bit on ENet to make it pass this
-        # information to us
-        pass
     
     def on_disconnect(self):
         pass
@@ -107,8 +103,6 @@ class BaseProtocol(object):
             event_type = event.type
             peer = event.peer
             is_client = peer in self.clients
-            if event_type == enet.EVENT_TYPE_DISCONNECT:
-                print 'le disconnect from', peer
             if is_client:
                 connection = self.clients[peer]
                 if event_type == enet.EVENT_TYPE_CONNECT:

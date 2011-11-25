@@ -157,8 +157,6 @@ class FeatureConnection(ServerConnection):
     current_grenade = None
     
     def on_connect(self):
-        if self.master:
-            print '(master client connected)'
         protocol = self.protocol
         client_ip = self.address[0]
         try:
@@ -201,7 +199,7 @@ class FeatureConnection(ServerConnection):
                 return result
         return ServerConnection.get_spawn_location(self)
     
-    def disconnect(self):
+    def on_disconnect(self):
         if self.name is not None:
             print self.printable_name, 'disconnected!'
             self.protocol.irc_say('* %s disconnected' % self.name)
@@ -214,7 +212,7 @@ class FeatureConnection(ServerConnection):
                     left = True)
         else:
             print '%s disconnected' % self.address[0]
-        ServerConnection.disconnect(self)
+        ServerConnection.on_disconnect(self)
     
     def on_command(self, command, parameters):
         result = commands.handle_command(self, command, parameters)
