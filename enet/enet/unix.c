@@ -1,70 +1,103 @@
 /** 
- @file  win32.c
- @brief ENet Win32 system specific functions
+ @file  unix.c
+ @brief ENet Unix system specific functions
 */
-#ifdef WIN32
+#ifndef WIN32
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/ioctl.h>
+#include <sys/time.h>
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
 #include <time.h>
+
 #define ENET_BUILDING_LIB 1
 #include "enet/enet.h"
+
+#ifdef HAS_FCNTL
+#include <fcntl.h>
+#endif
+
+#ifdef __APPLE__
+#undef HAS_POLL
+#endif
+
+#ifdef HAS_POLL
+#include <sys/poll.h>
+#endif
+
+#ifndef HAS_SOCKLEN_T
+typedef int socklen_t;
+#endif
+
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
 
 static enet_uint32 timeBase = 0;
 
 int
 enet_initialize (void)
 {
-    WORD versionRequested = MAKEWORD (1, 1);
-    WSADATA wsaData;
-   
-    if (WSAStartup (versionRequested, & wsaData))
-       return -1;
-
-    if (LOBYTE (wsaData.wVersion) != 1||
-        HIBYTE (wsaData.wVersion) != 1)
-    {
-       WSACleanup ();
-       
-       return -1;
-    }
-
-    timeBeginPeriod (1);
-
     return 0;
 }
 
 void
 enet_deinitialize (void)
 {
-    timeEndPeriod (1);
-
-    WSACleanup ();
 }
 
 enet_uint32
 enet_time_get (void)
 {
-    return (enet_uint32) timeGetTime () - timeBase;
+    struct timeval timeVal;
+
+    gettimeofday (& timeVal, NULL);
+
+    return timeVal.tv_sec * 1000 + timeVal.tv_usec / 1000 - timeBase;
 }
 
 void
 enet_time_set (enet_uint32 newTimeBase)
 {
-    timeBase = (enet_uint32) timeGetTime () - newTimeBase;
+    struct timeval timeVal;
+
+    gettimeofday (& timeVal, NULL);
+    
+    timeBase = timeVal.tv_sec * 1000 + timeVal.tv_usec / 1000 - newTimeBase;
 }
 
 int
 enet_address_set_host (ENetAddress * address, const char * name)
 {
-    struct hostent * hostEntry;
+    struct hostent * hostEntry = NULL;
+#ifdef HAS_GETHOSTBYNAME_R
+    struct hostent hostData;
+    char buffer [2048];
+    int errnum;
 
+#if defined(linux) || defined(__linux) || defined(__linux__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+    gethostbyname_r (name, & hostData, buffer, sizeof (buffer), & hostEntry, & errnum);
+#else
+    hostEntry = gethostbyname_r (name, & hostData, buffer, sizeof (buffer), & errnum);
+#endif
+#else
     hostEntry = gethostbyname (name);
+#endif
+
     if (hostEntry == NULL ||
         hostEntry -> h_addrtype != AF_INET)
     {
-        unsigned long host = inet_addr (name);
-        if (host == INADDR_NONE)
+#ifdef HAS_INET_PTON
+        if (! inet_pton (AF_INET, name, & address -> host))
+#else
+        if (! inet_aton (name, (struct in_addr *) & address -> host))
+#endif
             return -1;
-        address -> host = host;
         return 0;
     }
 
@@ -76,10 +109,15 @@ enet_address_set_host (ENetAddress * address, const char * name)
 int
 enet_address_get_host_ip (const ENetAddress * address, char * name, size_t nameLength)
 {
+#ifdef HAS_INET_NTOP
+    if (inet_ntop (AF_INET, & address -> host, name, nameLength) == NULL)
+#else
     char * addr = inet_ntoa (* (struct in_addr *) & address -> host);
-    if (addr == NULL)
+    if (addr != NULL)
+        strncpy (name, addr, nameLength);
+    else
+#endif
         return -1;
-    strncpy (name, addr, nameLength);
     return 0;
 }
 
@@ -87,11 +125,25 @@ int
 enet_address_get_host (const ENetAddress * address, char * name, size_t nameLength)
 {
     struct in_addr in;
-    struct hostent * hostEntry;
-    
+    struct hostent * hostEntry = NULL;
+#ifdef HAS_GETHOSTBYADDR_R
+    struct hostent hostData;
+    char buffer [2048];
+    int errnum;
+
     in.s_addr = address -> host;
-    
+
+#if defined(linux) || defined(__linux) || defined(__linux__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
+    gethostbyaddr_r ((char *) & in, sizeof (struct in_addr), AF_INET, & hostData, buffer, sizeof (buffer), & hostEntry, & errnum);
+#else
+    hostEntry = gethostbyaddr_r ((char *) & in, sizeof (struct in_addr), AF_INET, & hostData, buffer, sizeof (buffer), & errnum);
+#endif
+#else
+    in.s_addr = address -> host;
+
     hostEntry = gethostbyaddr ((char *) & in, sizeof (struct in_addr), AF_INET);
+#endif
+
     if (hostEntry == NULL)
       return enet_address_get_host_ip (address, name, nameLength);
 
@@ -122,13 +174,13 @@ enet_socket_bind (ENetSocket socket, const ENetAddress * address)
 
     return bind (socket,
                  (struct sockaddr *) & sin,
-                 sizeof (struct sockaddr_in)) == SOCKET_ERROR ? -1 : 0;
+                 sizeof (struct sockaddr_in)); 
 }
 
-int
+int 
 enet_socket_listen (ENetSocket socket, int backlog)
 {
-    return listen (socket, backlog < 0 ? SOMAXCONN : backlog) == SOCKET_ERROR ? -1 : 0;
+    return listen (socket, backlog < 0 ? SOMAXCONN : backlog);
 }
 
 ENetSocket
@@ -140,15 +192,16 @@ enet_socket_create (ENetSocketType type)
 int
 enet_socket_set_option (ENetSocket socket, ENetSocketOption option, int value)
 {
-    int result = SOCKET_ERROR;
+    int result = -1;
     switch (option)
     {
         case ENET_SOCKOPT_NONBLOCK:
-        {
-            u_long nonBlocking = (u_long) value;
-            result = ioctlsocket (socket, FIONBIO, & nonBlocking);
+#ifdef HAS_FCNTL
+            result = fcntl (socket, F_SETFL, O_NONBLOCK | fcntl (socket, F_GETFL));
+#else
+            result = ioctl (socket, FIONBIO, & value);
+#endif
             break;
-        }
 
         case ENET_SOCKOPT_BROADCAST:
             result = setsockopt (socket, SOL_SOCKET, SO_BROADCAST, (char *) & value, sizeof (int));
@@ -169,7 +222,7 @@ enet_socket_set_option (ENetSocket socket, ENetSocketOption option, int value)
         default:
             break;
     }
-    return result == SOCKET_ERROR ? -1 : 0;
+    return result == -1 ? -1 : 0;
 }
 
 int
@@ -183,21 +236,21 @@ enet_socket_connect (ENetSocket socket, const ENetAddress * address)
     sin.sin_port = ENET_HOST_TO_NET_16 (address -> port);
     sin.sin_addr.s_addr = address -> host;
 
-    return connect (socket, (struct sockaddr *) & sin, sizeof (struct sockaddr_in)) == SOCKET_ERROR ? -1 : 0;
+    return connect (socket, (struct sockaddr *) & sin, sizeof (struct sockaddr_in));
 }
 
 ENetSocket
 enet_socket_accept (ENetSocket socket, ENetAddress * address)
 {
-    SOCKET result;
+    int result;
     struct sockaddr_in sin;
-    int sinLength = sizeof (struct sockaddr_in);
+    socklen_t sinLength = sizeof (struct sockaddr_in);
 
     result = accept (socket, 
                      address != NULL ? (struct sockaddr *) & sin : NULL, 
                      address != NULL ? & sinLength : NULL);
-
-    if (result == INVALID_SOCKET)
+    
+    if (result == -1)
       return ENET_SOCKET_NULL;
 
     if (address != NULL)
@@ -207,12 +260,12 @@ enet_socket_accept (ENetSocket socket, ENetAddress * address)
     }
 
     return result;
-}
-
+} 
+    
 void
 enet_socket_destroy (ENetSocket socket)
 {
-    closesocket (socket);
+    close (socket);
 }
 
 int
@@ -221,8 +274,11 @@ enet_socket_send (ENetSocket socket,
                   const ENetBuffer * buffers,
                   size_t bufferCount)
 {
+    struct msghdr msgHdr;
     struct sockaddr_in sin;
-    DWORD sentLength;
+    int sentLength;
+
+    memset (& msgHdr, 0, sizeof (struct msghdr));
 
     if (address != NULL)
     {
@@ -231,25 +287,25 @@ enet_socket_send (ENetSocket socket,
         sin.sin_family = AF_INET;
         sin.sin_port = ENET_HOST_TO_NET_16 (address -> port);
         sin.sin_addr.s_addr = address -> host;
+
+        msgHdr.msg_name = & sin;
+        msgHdr.msg_namelen = sizeof (struct sockaddr_in);
     }
 
-    if (WSASendTo (socket, 
-                   (LPWSABUF) buffers,
-                   (DWORD) bufferCount,
-                   & sentLength,
-                   0,
-                   address != NULL ? (struct sockaddr *) & sin : 0,
-                   address != NULL ? sizeof (struct sockaddr_in) : 0,
-                   NULL,
-                   NULL) == SOCKET_ERROR)
+    msgHdr.msg_iov = (struct iovec *) buffers;
+    msgHdr.msg_iovlen = bufferCount;
+
+    sentLength = sendmsg (socket, & msgHdr, MSG_NOSIGNAL);
+    
+    if (sentLength == -1)
     {
-       if (WSAGetLastError () == WSAEWOULDBLOCK)
+       if (errno == EWOULDBLOCK)
          return 0;
 
        return -1;
     }
 
-    return (int) sentLength;
+    return sentLength;
 }
 
 int
@@ -258,33 +314,35 @@ enet_socket_receive (ENetSocket socket,
                      ENetBuffer * buffers,
                      size_t bufferCount)
 {
-    INT sinLength = sizeof (struct sockaddr_in);
-    DWORD flags = 0,
-          recvLength;
+    struct msghdr msgHdr;
     struct sockaddr_in sin;
+    int recvLength;
 
-    if (WSARecvFrom (socket,
-                     (LPWSABUF) buffers,
-                     (DWORD) bufferCount,
-                     & recvLength,
-                     & flags,
-                     address != NULL ? (struct sockaddr *) & sin : NULL,
-                     address != NULL ? & sinLength : NULL,
-                     NULL,
-                     NULL) == SOCKET_ERROR)
+    memset (& msgHdr, 0, sizeof (struct msghdr));
+
+    if (address != NULL)
     {
-       switch (WSAGetLastError ())
-       {
-       case WSAEWOULDBLOCK:
-       case WSAECONNRESET:
-          return 0;
-       }
+        msgHdr.msg_name = & sin;
+        msgHdr.msg_namelen = sizeof (struct sockaddr_in);
+    }
+
+    msgHdr.msg_iov = (struct iovec *) buffers;
+    msgHdr.msg_iovlen = bufferCount;
+
+    recvLength = recvmsg (socket, & msgHdr, MSG_NOSIGNAL);
+
+    if (recvLength == -1)
+    {
+       if (errno == EWOULDBLOCK)
+         return 0;
 
        return -1;
     }
 
-    if (flags & MSG_PARTIAL)
+#ifdef HAS_MSGHDR_FLAGS
+    if (msgHdr.msg_flags & MSG_TRUNC)
       return -1;
+#endif
 
     if (address != NULL)
     {
@@ -292,7 +350,7 @@ enet_socket_receive (ENetSocket socket,
         address -> port = ENET_NET_TO_HOST_16 (sin.sin_port);
     }
 
-    return (int) recvLength;
+    return recvLength;
 }
 
 int
@@ -309,13 +367,44 @@ enet_socketset_select (ENetSocket maxSocket, ENetSocketSet * readSet, ENetSocket
 int
 enet_socket_wait (ENetSocket socket, enet_uint32 * condition, enet_uint32 timeout)
 {
+#ifdef HAS_POLL
+    struct pollfd pollSocket;
+    int pollCount;
+    
+    pollSocket.fd = socket;
+    pollSocket.events = 0;
+
+    if (* condition & ENET_SOCKET_WAIT_SEND)
+      pollSocket.events |= POLLOUT;
+
+    if (* condition & ENET_SOCKET_WAIT_RECEIVE)
+      pollSocket.events |= POLLIN;
+
+    pollCount = poll (& pollSocket, 1, timeout);
+
+    if (pollCount < 0)
+      return -1;
+
+    * condition = ENET_SOCKET_WAIT_NONE;
+
+    if (pollCount == 0)
+      return 0;
+
+    if (pollSocket.revents & POLLOUT)
+      * condition |= ENET_SOCKET_WAIT_SEND;
+    
+    if (pollSocket.revents & POLLIN)
+      * condition |= ENET_SOCKET_WAIT_RECEIVE;
+
+    return 0;
+#else
     fd_set readSet, writeSet;
     struct timeval timeVal;
     int selectCount;
-    
+
     timeVal.tv_sec = timeout / 1000;
     timeVal.tv_usec = (timeout % 1000) * 1000;
-    
+
     FD_ZERO (& readSet);
     FD_ZERO (& writeSet);
 
@@ -337,12 +426,13 @@ enet_socket_wait (ENetSocket socket, enet_uint32 * condition, enet_uint32 timeou
 
     if (FD_ISSET (socket, & writeSet))
       * condition |= ENET_SOCKET_WAIT_SEND;
-    
+
     if (FD_ISSET (socket, & readSet))
       * condition |= ENET_SOCKET_WAIT_RECEIVE;
 
     return 0;
-} 
+#endif
+}
 
 #endif
 

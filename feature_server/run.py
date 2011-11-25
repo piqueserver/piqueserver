@@ -583,6 +583,8 @@ class FeatureProtocol(ServerProtocol):
         self.tip_frequency = config.get('tip_frequency', 0)
         if self.tips is not None and self.tip_frequency > 0:
             reactor.callLater(self.tip_frequency * 60, self.send_tip)
+        
+        self.host.receiveCallback = self.receive_callback
     
     def set_time_limit(self, time_limit = None):
         if self.advance_call is not None:
@@ -677,13 +679,6 @@ class FeatureProtocol(ServerProtocol):
         for line in value:
             lines.append(encode(self.format(line, extra)))
         return lines
-    
-    def listen(self, interface = None):
-        if interface is None:
-            interface = self.interface
-        else:
-            self.interface = interface
-        reactor.listenUDP(PORT, self, interface)
         
     def got_master_connection(self, *arg, **kw):
         print 'Master connection established.'
@@ -748,17 +743,18 @@ class FeatureProtocol(ServerProtocol):
         if self.ban_publish is not None:
             self.ban_publish.update()
     
-    def datagramReceived(self, data, address):
-        # simple pyspades query
-        ip = address[0]
-        if ip in self.hard_bans:
-            return
+    def receive_callback(self, address, data):
         if data == 'HELLO':
-            self.transport.write('HI', address)
-            return
+            self.host.socket.send(address, 'HI')
+            return 1
+        if address.host in self.hard_bans:
+            return 1
+    
+    def data_received(self, peer, packet):
+        ip = peer.address.host
         current_time = reactor.seconds()
         try:
-            ServerProtocol.datagramReceived(self, data, address)
+            ServerProtocol.data_received(self, peer, packet)
         except (NoDataLeft, InvalidData):
             import traceback
             traceback.print_exc()
@@ -769,6 +765,7 @@ class FeatureProtocol(ServerProtocol):
         if dt > 1.0:
             print '(warning: processing %r from %s took %s)' % (
                 data, ip, dt)
+        
     
     def irc_say(self, msg):
         if self.irc_relay:

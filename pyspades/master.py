@@ -28,6 +28,8 @@ import random
 
 MAX_SERVER_NAME_SIZE = 31
 
+MASTER_VERSION = 29
+
 HOST = 'ace-spades.com'
 PORT = 32886
 
@@ -51,22 +53,10 @@ class AddServer(Loader):
             reader.writeByte(self.count, True)
 
 add_server = AddServer()
-connect_request = ConnectionRequest()
 
 class MasterConnection(BaseConnection):
     disconnect_callback = None
     connected = False
-    def __init__(self, protocol, name, max, defer):
-        BaseConnection.__init__(self)
-
-        self.protocol = protocol
-    
-        self.name = name
-        self.max = max
-        self.defer = defer
-        self.auth_val = random.randint(0, 0xFFFF)
-        self.send_request()
-    
     def on_connect(self):
         self.connected = True
             
@@ -94,35 +84,10 @@ from twisted.web.client import getPage
 def get_external_ip():
     return getPage(IP_GETTER)
 
-class MasterProtocol(object):
-    connection_class = MasterConnection
-    def __init__(self, name, max, defer = None):
-        BaseProtocol.__init__(self)
-        self.name = name
-        self.max = max
-        self.defer = defer
-        
-    def startProtocol(self):
-        reactor.resolve(HOST).addCallback(self.hostResolved)
-    
-    def stopProtocol(self):
-        self.connection.disconnect()
-    
-    def hostResolved(self, ip):
-        self.transport.connect(ip, PORT)
-        self.connection = self.connection_class(self, self.name, 
-            self.max, self.defer)
-        
-    def set_count(self, value):
-        self.connection.set_count(value)
-        
-    def datagramReceived(self, data, address):
-        in_packet.read(data)
-        self.connection.packet_received(in_packet)
-
-def get_master_connection(name, max, host):
+def get_master_connection(name, max, protocol):
     defer = Deferred()
-    protocol.name = name
-    protocol.max = max
-    protocol.defer = defer
+    connection = protocol.connect(MasterConnection, HOST, PORT, MASTER_VERSION)
+    connection.name = name
+    connection.max = max
+    connection.defer = defer
     return defer

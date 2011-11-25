@@ -1276,6 +1276,7 @@ class ServerProtocol(BaseProtocol):
         self.world = world.World()
         self.update_loop = LoopingCall(self.update_world)
         self.update_loop.start(UPDATE_FREQUENCY, False)
+        self.set_master()
     
     def reset_tc(self):
         self.entities = self.get_cp_entities()
@@ -1420,14 +1421,10 @@ class ServerProtocol(BaseProtocol):
         z = self.map.get_z(x, y)
         return x, y, z
     
-    def startProtocol(self):
-        self.set_master()
-    
     def set_master(self):
         if self.master:
-            get_master_connection(self.name, self.max_players,
-                self.transport.interface).addCallback(
-                self.got_master_connection)
+            get_master_connection(self.name, self.max_players, self
+                ).addCallback(self.got_master_connection)
         
     def got_master_connection(self, connection):
         self.master_connection = connection

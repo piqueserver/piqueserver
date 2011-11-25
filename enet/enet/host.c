@@ -90,6 +90,7 @@ enet_host_create (const ENetAddress * address, size_t peerCount, size_t channelL
     host -> receivedAddress.port = 0;
     host -> receivedData = NULL;
     host -> receivedDataLength = 0;
+    host -> receiveCallback = NULL;
      
     host -> totalSentData = 0;
     host -> totalSentPackets = 0;

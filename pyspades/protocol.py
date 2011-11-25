@@ -33,9 +33,6 @@ class BaseConnection(object):
         self.protocol = protocol
         self.peer = peer
     
-    def packet_received(self, packet):
-        pass
-    
     def disconnect(self):
         if self.disconnected:
             return
@@ -79,9 +76,28 @@ class BaseProtocol(object):
         self.update_loop = LoopingCall(self.update)
         self.update_loop.start(update_interval, False)
         self.connections = {}
-        self.clients = []
+        self.clients = {}
     
+    def connect(self, connection_class, host, port, version, channel_count = 1):
+        peer = self.host.connect(enet.Address(host, port), channel_count, 
+            version)
+        connection = connection_class(self, peer)
+        self.clients[peer] = connection
+        return connection
     
+    def on_connect(self, peer):
+        connection = self.connection_class(self, peer)
+        self.connections[peer] = connection
+        connection.on_connect()
+    
+    def on_disconnect(self, peer):
+        connection = self.connections.pop(peer)
+        connection.disconnected = True
+        connection.on_disconnect()
+    
+    def data_received(self, peer, packet):
+        connection = self.connections[peer]
+        connection.loader_received(packet)
     
     def update(self):
         while 1:
@@ -90,16 +106,21 @@ class BaseProtocol(object):
                 break
             event_type = event.type
             peer = event.peer
-            if event_type == enet.EVENT_TYPE_CONNECT:
-                connection = self.connection_class(self, event.peer)
-                self.connections[peer] = connection
-                connection.on_connect()
-            elif event_type == enet.EVENT_TYPE_DISCONNECT:
-                connection = self.connections.pop(peer)
-                connection.disconnected = True
-                connection.on_disconnect()
-            elif event.type == enet.EVENT_TYPE_RECEIVE:
-                connection = self.connections[peer]
-                connection.loader_received(event.packet)
-        
+            is_client = peer in self.clients
+            if is_client:
+                connection = self.clients[peer]
+                if event_type == enet.EVENT_TYPE_CONNECT:
+                    connection.on_connect()
+                elif event_type == enet.EVENT_TYPE_DISCONNECT:
+                    connection.on_disconnect()
+                    del self.clients[peer]
+                elif event.type == enet.EVENT_TYPE_RECEIVE:
+                    connection.loader_received(event.packet)
+            else:
+                if event_type == enet.EVENT_TYPE_CONNECT:
+                    self.on_connect(peer)
+                elif event_type == enet.EVENT_TYPE_DISCONNECT:
+                    self.on_disconnect(peer)
+                elif event.type == enet.EVENT_TYPE_RECEIVE:
+                    self.data_received(peer, event.packet)
         

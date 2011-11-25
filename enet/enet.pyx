@@ -21,6 +21,10 @@ cdef extern from "enet/enet.h":
         ENET_PORT_ANY = 0
 
     ctypedef int ENetSocket
+    
+    ctypedef struct ENetBuffer:
+        void * data
+        size_t dataLength
 
     ctypedef struct ENetAddress:
         enet_uint32 host
@@ -107,10 +111,14 @@ cdef extern from "enet/enet.h":
         ENetPeer *peers
         size_t peerCount
         size_t channelLimit
+        enet_uint8 *receivedData
+        size_t receivedDataLength
+        ENetAddress receivedAddress
         enet_uint32 totalSentData
         enet_uint32 totalSentPackets
         enet_uint32 totalReceivedData
         enet_uint32 totalReceivedPackets
+        int (*receiveCallback)()
 
     ctypedef enum ENetEventType:
         ENET_EVENT_TYPE_NONE = 0
@@ -166,6 +174,10 @@ cdef extern from "enet/enet.h":
     void enet_peer_disconnect(ENetPeer *peer, enet_uint32 data)
     void enet_peer_disconnect_now(ENetPeer *peer, enet_uint32 data)
     void enet_peer_disconnect_later(ENetPeer *peer, enet_uint32 data)
+    
+    # Socket functions
+    int enet_socket_send(ENetSocket socket, ENetAddress * address, 
+        ENetBuffer * buffer, size_t size)
 
 cdef enum:
     MAXHOSTNAME = 257
@@ -203,9 +215,13 @@ cdef class Socket:
     """
 
     cdef ENetSocket _enet_socket
-
-    def fileno(self):
-        return self._enet_socket
+    
+    def send(self, Address address, data):
+        cdef ENetBuffer buffer
+        buffer.data = <void*>(<char*>data)
+        buffer.dataLength = len(data)
+        cdef int result = enet_socket_send(self._enet_socket, 
+            &address._enet_address, &buffer, 1)
 
 cdef class Address:
     """
@@ -808,6 +824,8 @@ cdef class Event:
                 (<Packet> self._packet)._enet_packet = self._enet_event.packet
             return self._packet
 
+cdef Host current_host = None
+
 cdef class Host:
     """
     Host (Address address, int peerCount, int channelLimit,
@@ -829,6 +847,7 @@ cdef class Host:
 
     cdef ENetHost *_enet_host
     cdef bool dealloc
+    cdef object _receiveCallback
 
     def __init__ (self, Address address=None, peerCount=0, channelLimit=0,
             incomingBandwidth=0, outgoingBandwidth=0):
@@ -893,7 +912,8 @@ cdef class Host:
         Waits for events on the host specified and shuttles packets between
         the host and its peers. The timeout is in milliseconds.
         """
-
+        global current_host
+        current_host = self
         if self._enet_host:
             event = Event()
             result = enet_host_service(
@@ -1013,6 +1033,25 @@ cdef class Host:
 
         def __set__(self, value):
             self._enet_host.totalReceivedPackets = value
+    
+    property receiveCallback:
+        def __get__(self):
+            return self._receiveCallback
+        
+        def __set__(self, value):
+            if value is None:
+                self._enet_host.receiveCallback = NULL
+            else:
+                self._enet_host.receiveCallback = receive_callback
+            self._receiveCallback = value
+
+cdef int receive_callback():
+    cdef ENetHost * host = current_host._enet_host
+    cdef Address address = Address(None, 0)
+    address._enet_address = host.receivedAddress
+    cdef object ret = current_host._receiveCallback(address,
+        (<char*>host.receivedData)[:host.receivedDataLength])
+    return int(bool(ret))
 
 def _enet_atexit():
     enet_deinitialize()
