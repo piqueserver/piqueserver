@@ -57,6 +57,12 @@ else:
     from pyspades.common import crc32
     CLIENT_VERSION = crc32(open('../data/client.exe', 'rb').read())
 
+# reverse bytes
+CLIENT_VERSION = ((CLIENT_VERSION & 0x000000FF) << 24 |
+                  (CLIENT_VERSION & 0x0000FF00) << 8 |
+                  (CLIENT_VERSION & 0x00FF0000) >> 8 |
+                  (CLIENT_VERSION & 0xFF000000) >> 24)
+
 if iocp and sys.platform == 'win32':
     # install IOCP
     try:
@@ -150,9 +156,7 @@ class FeatureConnection(ServerConnection):
     chat_count = 0
     current_grenade = None
     
-    def on_connect(self, loader):
-        if self.master:
-            print '(master client connected)'
+    def on_connect(self):
         protocol = self.protocol
         client_ip = self.address[0]
         try:
@@ -164,7 +168,7 @@ class FeatureConnection(ServerConnection):
                 print 'banned user %s (%s) attempted to join' % (name, 
                     client_ip)
                 self.disconnect()
-                return False
+                return
         except KeyError:
             pass
         manager = self.protocol.ban_manager
@@ -174,7 +178,8 @@ class FeatureConnection(ServerConnection):
                 print ('federated banned user (%s) attempted to join, '
                     'banned for %r') % (client_ip, reason)
                 self.disconnect()
-                return False
+                return
+        ServerConnection.on_connect(self)
     
     def on_join(self):
         if self.protocol.motd is not None:
@@ -194,7 +199,7 @@ class FeatureConnection(ServerConnection):
                 return result
         return ServerConnection.get_spawn_location(self)
     
-    def disconnect(self):
+    def on_disconnect(self):
         if self.name is not None:
             print self.printable_name, 'disconnected!'
             self.protocol.irc_say('* %s disconnected' % self.name)
@@ -207,7 +212,7 @@ class FeatureConnection(ServerConnection):
                     left = True)
         else:
             print '%s disconnected' % self.address[0]
-        ServerConnection.disconnect(self)
+        ServerConnection.on_disconnect(self)
     
     def on_command(self, command, parameters):
         result = commands.handle_command(self, command, parameters)
@@ -469,7 +474,8 @@ class FeatureProtocol(ServerProtocol):
     
     game_mode = None # default to None so we can check
     
-    def __init__(self, config):        
+    def __init__(self, interface, config):
+        self.config = config
         if config.get('random_rotation', False):
             self.map_rotator_type = random_choice_cycle
         else:
@@ -567,7 +573,7 @@ class FeatureProtocol(ServerProtocol):
             if password == 'replaceme':
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
                 
-        ServerProtocol.__init__(self)
+        ServerProtocol.__init__(self, 32887, interface)
         if not self.set_map_rotation(config['maps']):
             print 'Invalid map in map rotation, exiting.'
             raise SystemExit()
@@ -575,6 +581,8 @@ class FeatureProtocol(ServerProtocol):
         self.tip_frequency = config.get('tip_frequency', 0)
         if self.tips is not None and self.tip_frequency > 0:
             reactor.callLater(self.tip_frequency * 60, self.send_tip)
+        
+        self.host.receiveCallback = self.receive_callback
     
     def set_time_limit(self, time_limit = None):
         if self.advance_call is not None:
@@ -669,17 +677,6 @@ class FeatureProtocol(ServerProtocol):
         for line in value:
             lines.append(encode(self.format(line, extra)))
         return lines
-    
-    def stopProtocol(self):
-        if reactor.running:
-            self.listen()
-    
-    def listen(self, interface = None):
-        if interface is None:
-            interface = self.interface
-        else:
-            self.interface = interface
-        reactor.listenUDP(PORT, self, interface)
         
     def got_master_connection(self, *arg, **kw):
         print 'Master connection established.'
@@ -744,17 +741,18 @@ class FeatureProtocol(ServerProtocol):
         if self.ban_publish is not None:
             self.ban_publish.update()
     
-    def datagramReceived(self, data, address):
-        # simple pyspades query
-        ip = address[0]
-        if ip in self.hard_bans:
-            return
+    def receive_callback(self, address, data):
         if data == 'HELLO':
-            self.transport.write('HI', address)
-            return
+            self.host.socket.send(address, 'HI')
+            return 1
+        if address.host in self.hard_bans:
+            return 1
+    
+    def data_received(self, peer, packet):
+        ip = peer.address.host
         current_time = reactor.seconds()
         try:
-            ServerProtocol.datagramReceived(self, data, address)
+            ServerProtocol.data_received(self, peer, packet)
         except (NoDataLeft, InvalidData):
             import traceback
             traceback.print_exc()
@@ -765,6 +763,7 @@ class FeatureProtocol(ServerProtocol):
         if dt > 1.0:
             print '(warning: processing %r from %s took %s)' % (
                 data, ip, dt)
+        
     
     def irc_say(self, msg):
         if self.irc_relay:
@@ -927,10 +926,11 @@ for script in script_objects:
 
 protocol_class.connection_class = connection_class
 
-protocol_instance = protocol_class(config)
 interface = config.get('network_interface', '')
+if interface == '':
+    interface = '*'
 
-protocol_instance.listen(interface)
+protocol_instance = protocol_class(interface, config)
 print 'Started server on port %s...' % PORT
 
 if profile:

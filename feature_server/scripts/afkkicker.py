@@ -20,9 +20,9 @@ def apply_script(protocol, connection, config):
                 player.kick('Autokick: player was afk')        
     
     class AfkKickerConnection(connection):
-        def on_connect(self, loader):
+        def on_connect(self):
             self.afk = False
-            return connection.on_connect(self, loader)
+            return connection.on_connect(self)
 
         def on_input_update(self):
             self.afk = False
