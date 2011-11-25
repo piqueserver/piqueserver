@@ -574,6 +574,7 @@ class FeatureProtocol(ServerProtocol):
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
 
         ServerProtocol.__init__(self, 32887, interface)
+        self.host.receiveCallback = self.receive_callback
         if not self.set_map_rotation(config['maps']):
             print 'Invalid map in map rotation, exiting.'
             raise SystemExit()
@@ -745,7 +746,6 @@ class FeatureProtocol(ServerProtocol):
     
     def receive_callback(self, address, data):
         if data == 'HELLO':
-            print 'sending response to', address.host, address.port
             self.host.socket.send(address, 'HI')
             return 1
         if address.host in self.hard_bans:
