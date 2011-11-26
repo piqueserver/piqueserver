@@ -60,7 +60,7 @@ class BaseConnection(object):
         
     @property
     def latency(self):
-        return self.host.roundTripTime
+        return self.peer.roundTripTime
 
 class BaseProtocol(object):
     connection_class = BaseConnection
