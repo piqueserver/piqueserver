@@ -31,7 +31,7 @@ MAX_SERVER_NAME_SIZE = 31
 MASTER_VERSION = 29
 
 HOST = 'ace-spades.com'
-PORT = 32886
+PORT = 32885
 
 class AddServer(Loader):
     __slots__ = ['count', 'max_players', 'name', 'port']
