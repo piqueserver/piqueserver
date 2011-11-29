@@ -35,6 +35,8 @@ class BaseConnection(object):
             return
         self.disconnected = True
         self.peer.reset()
+        self.protocol.remove_peer(self.peer)
+        self.on_disconnect()
     
     def loader_received(self, loader):
         raise NotImplementedError('loader_received() not implemented')
@@ -97,6 +99,12 @@ class BaseProtocol(object):
     def data_received(self, peer, packet):
         connection = self.connections[peer]
         connection.loader_received(packet)
+
+    def remove_peer(self, peer):
+        if peer in self.connections:
+            del self.connections[peer]
+        elif peer in self.clients:
+            del self.clients[peer]
     
     def update(self):
         try:
@@ -127,3 +135,7 @@ class BaseProtocol(object):
             # make sure the LoopingCall doesn't catch this and stops
             import traceback
             traceback.print_exc()
+
+def make_client(*arg, **kw):
+    protocol = BaseProtocol()
+    return protocol.connect(*arg, **kw)

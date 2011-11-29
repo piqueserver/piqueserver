@@ -16,7 +16,7 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from pyspades.loaders import Loader
-from pyspades.protocol import BaseConnection, BaseProtocol
+from pyspades.protocol import BaseConnection
 from pyspades.tools import make_server_number, get_server_ip
 from pyspades.loaders import *
 from pyspades.common import *
