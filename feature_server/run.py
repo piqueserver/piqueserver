@@ -572,8 +572,9 @@ class FeatureProtocol(ServerProtocol):
         for password in self.passwords.get('admin', []):
             if password == 'replaceme':
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
-
-        ServerProtocol.__init__(self, 32887, interface)
+        
+        port = config.get('port', 32887)
+        ServerProtocol.__init__(self, port, interface)
         self.host.receiveCallback = self.receive_callback
         if not self.set_map_rotation(config['maps']):
             print 'Invalid map in map rotation, exiting.'
@@ -901,8 +902,6 @@ class FeatureProtocol(ServerProtocol):
     def on_advance(self, map_name):
         pass
 
-PORT = 32887
-
 # apply scripts
 
 protocol_class = FeatureProtocol
@@ -934,7 +933,7 @@ if interface == '':
     interface = '*'
 
 protocol_instance = protocol_class(interface, config)
-print 'Started server on port %s...' % PORT
+print 'Started server...'
 
 if profile:
     import cProfile

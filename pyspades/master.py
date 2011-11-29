@@ -34,7 +34,7 @@ HOST = 'ace-spades.com'
 PORT = 32886
 
 class AddServer(Loader):
-    __slots__ = ['count', 'max_players', 'name']
+    __slots__ = ['count', 'max_players', 'name', 'port']
 
     id = 4
 
@@ -43,11 +43,13 @@ class AddServer(Loader):
             self.count = reader.readByte(True)
         else:
             self.max_players = reader.readByte(True)
+            self.port = reader.readShort(True, False)
             self.name = reader.readString()
     
     def write(self, reader):
         if self.count is None:
             reader.writeByte(self.max_players)
+            reader.writeShort(self.port, True, False)
             reader.writeString(self.name)
         else:
             reader.writeByte(self.count, True)
@@ -62,6 +64,7 @@ class MasterConnection(BaseConnection):
             
         add_server.count = None
         add_server.name = self.name
+        add_server.port = self.port
         add_server.max_players = self.max
         self.send_contained(add_server)
         
@@ -89,5 +92,6 @@ def get_master_connection(name, max, protocol):
     connection = protocol.connect(MasterConnection, HOST, PORT, MASTER_VERSION)
     connection.name = name
     connection.max = max
+    connection.port = protocol.host.address.port
     connection.defer = defer
     return defer

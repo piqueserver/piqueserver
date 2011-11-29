@@ -21,6 +21,7 @@
         "No griefing, no bad words, etc."
     ],
     "max_players" : 32,
+    "port" : 32887,
     "max_connections_per_ip" : 3,
     "game_mode" : "ctf",
     "cap_limit" : 10,
