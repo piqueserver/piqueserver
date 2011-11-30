@@ -1382,6 +1382,13 @@ class ServerProtocol(BaseProtocol):
                 break
         return new_name
     
+    def get_mode_mode(self):
+        if self.game_mode == CTF_MODE:
+            return 'ctf'
+        elif self.game_mode == TC_MODE:
+            return 'tc'
+        return 'unknown'
+    
     def get_random_location(self, force_land = True, zone = (0, 0, 512, 512)):
         x1, y1, x2, y2 = zone
         if force_land:
@@ -1394,8 +1401,7 @@ class ServerProtocol(BaseProtocol):
     
     def set_master(self):
         if self.master:
-            get_master_connection(self.name, self.max_players, self
-                ).addCallback(self.got_master_connection)
+            get_master_connection(self).addCallback(self.got_master_connection)
         
     def got_master_connection(self, connection):
         self.master_connection = connection

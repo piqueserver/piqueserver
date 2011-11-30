@@ -611,6 +611,9 @@ class FeatureProtocol(ServerProtocol):
             self.send_chat('%s Next map: %s.' % (message, map))
             reactor.callLater(5, self.set_map_name, map)
     
+    def get_mode_name(self):
+        return self.game_mode_name
+    
     def set_map_name(self, name):
         if self.rollback_in_progress:
             return 'Rollback in progress.'
@@ -652,16 +655,14 @@ class FeatureProtocol(ServerProtocol):
         Called when the map (or other variables) have been updated
         """
         config = self.config
-        old_name = self.name
         self.name = encode(self.format(config.get('name', 
             'pyspades server %s' % random.randrange(0, 2000))))
-        if (old_name is not None and self.master_connection is not None 
-        and old_name != self.name):
-            self.master_connection.disconnect()
         self.motd = self.format_lines(config.get('motd', None))
         self.help = self.format_lines(config.get('help', None))
         self.tips = self.format_lines(config.get('tips', None))
         self.rules = self.format_lines(config.get('rules', None))
+        if self.master_connection is not None:
+            self.master_connection.send_server()
     
     def format(self, value, extra = {}):
         map = self.map_info
