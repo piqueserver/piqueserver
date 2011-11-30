@@ -30,7 +30,7 @@ MAX_SERVER_NAME_SIZE = 31
 
 MASTER_VERSION = 29
 
-HOST = 'localhost'
+HOST = 'ace-spades.com'
 PORT = 32885
 
 class AddServer(Loader):
