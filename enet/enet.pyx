@@ -203,6 +203,8 @@ PEER_STATE_DISCONNECTING = ENET_PEER_STATE_DISCONNECTING
 PEER_STATE_ACKNOWLEDGING_DISCONNECT = ENET_PEER_STATE_ACKNOWLEDGING_DISCONNECT
 PEER_STATE_ZOMBIE = ENET_PEER_STATE_ZOMBIE
 
+cdef class Address
+
 cdef class Socket:
     """
     Socket (int socket)
@@ -823,6 +825,8 @@ cdef class Event:
                 self._packet = Packet()
                 (<Packet> self._packet)._enet_packet = self._enet_event.packet
             return self._packet
+
+cdef class Host
 
 cdef Host current_host = None
 
