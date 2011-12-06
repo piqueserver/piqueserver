@@ -36,7 +36,7 @@ def filter_printable(value):
 
 def channel(func):
     def new_func(self, user, channel, *arg, **kw):
-        if not channel == self.factory.channel:
+        if not channel.lower() == self.factory.channel:
             return
         user = user.split('!', 1)[0]
         func(self, user, channel, *arg, **kw)
@@ -55,7 +55,7 @@ class IRCBot(irc.IRCClient):
         self.join(self.factory.channel, self.factory.password)
     
     def joined(self, channel):
-        if channel == self.factory.channel:
+        if channel.lower() == self.factory.channel:
             self.ops = set()
             self.voices = set()
         print "Joined channel %s" % channel
@@ -71,7 +71,7 @@ class IRCBot(irc.IRCClient):
             self.voices.add(new_user)
     
     def irc_RPL_NAMREPLY(self, *arg):
-        if not arg[1][2] == self.factory.channel:
+        if not arg[1][2].lower() == self.factory.channel:
             return
         for name in arg[1][3].split():
             mode = name[0]
@@ -80,7 +80,7 @@ class IRCBot(irc.IRCClient):
                 l[mode].add(name[1:])
     
     def left(self, channel):
-        if channel == self.factory.channel:
+        if channel.lower() == self.factory.channel:
             self.ops = None
             self.voices = None
     
@@ -146,7 +146,8 @@ class IRCClientFactory(protocol.ClientFactory):
             'pyspades%s' % random.randrange(0, 99)).encode('ascii')
         self.username = config.get('username', 'pyspades').encode('ascii')
         self.realname = config.get('realname', server.name).encode('ascii')
-        self.channel = config.get('channel', "#pyspades.bots").encode('ascii')
+        self.channel = config.get('channel', "#pyspades.bots").encode(
+            'ascii').lower()
         self.commandprefix = config.get('commandprefix', '.').encode('ascii')
         self.chatprefix = config.get('chatprefix', '').encode('ascii')
         self.password = config.get('password', '').encode('ascii') or None
