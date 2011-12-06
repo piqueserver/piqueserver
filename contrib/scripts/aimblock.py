@@ -5,6 +5,7 @@
 #
 # Current detection methods:
 # - if one changes target, determine how accurate the gun is with respect to the head
+#   (currently disabled by default, enable below if you want it - the heuristic SUCKS)
 # - if one gets a lot of kills quickly it will warn the admins over IRC
 #
 # There are more possible methods that can be used, but for now, this should work.
@@ -19,7 +20,13 @@ import commands
 AIMBLOCK_SPAM = False
 
 # disable if you don't want to kick people who jerk conviniently onto their targets
-AIMBLOCK_KICK_JERK = True
+# note, needs more tweaking, also might not catch hooch's aimbot
+# ultimately needs lag compensation to be effective, which it doesn't have
+AIMBLOCK_KICK_JERK = False
+
+# disable if you don't want to kick people who jerk conviniently backwards onto their targets
+# -- NOT IMPLEMENTED!
+AIMBLOCK_KICK_SNAP = False
 
 def aimbotcheck(connection, user, minutes):
     connection = commands.get_player(connection.protocol, user)
@@ -39,9 +46,11 @@ def apply_script(protocol, connection, config):
     
     class AImBlockConnection(connection):
         aimbot_detect = True
-        aimbot_heur_max = 0.8
-        aimbot_heur_jerk = 0.45
+        aimbot_heur_max = 0.92
+        aimbot_heur_jerk = 0.33
         aimbot_heur_leeway = 0.9
+        aimbot_heur_snap_thres = -0.1
+        aimbot_heur_snap_score = 1.2
         
         aimbot_heuristic = 0.0
         aimbot_target = None
