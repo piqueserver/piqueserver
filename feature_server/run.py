@@ -48,14 +48,23 @@ iocp = config.get('iocp', True)
 
 frozen = hasattr(sys, 'frozen')
 
+def get_hg_rev():
+    import subprocess
+    pipe = subprocess.Popen(
+        ["hg", "log", "-l", "1", "--template", "{node}"],
+        stdout=subprocess.PIPE, shell = True)
+    return pipe.stdout.read()[:12]
+
 if frozen:
     CLIENT_VERSION = int(open('client_version', 'rb').read())
     path = os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding()))
     sys.path.append(path)
+    SERVER_VERSION = 'win32 build' # most likely
 else:
     sys.path.append('..')
     from pyspades.common import crc32
     CLIENT_VERSION = crc32(open('../data/client.exe', 'rb').read())
+    SERVER_VERSION = get_hg_rev()
 
 # reverse bytes
 CLIENT_VERSION = ((CLIENT_VERSION & 0x000000FF) << 24 |
@@ -474,6 +483,8 @@ class FeatureProtocol(ServerProtocol):
     team_class = FeatureTeam
     
     game_mode = None # default to None so we can check
+    
+    server_version = SERVER_VERSION
     
     def __init__(self, interface, config):
         self.config = config

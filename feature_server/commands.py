@@ -670,6 +670,9 @@ def intel(connection):
             return "%s has the enemy intel!" % flag.player.name
     return "Nobody in your team has the enemy intel."
 
+def version(connection):
+    return 'Server version is "%s"' % connection.protocol.server_version
+
 @admin
 def fog(connection, r, g, b):
     r = int(r)
@@ -738,6 +741,7 @@ command_list = [
     get_time_limit,
     server_name,
     ping,
+    version,
     weapon
 ]
 
