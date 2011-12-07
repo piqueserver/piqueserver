@@ -653,7 +653,7 @@ def ping(connection, value = None):
         player = connection
     else:
         player = get_player(connection.protocol, value)
-    ping = int(player.latency * 1000) or 0
+    ping = player.latency
     if value is None:
         return ('Your ping is %s ms. Lower ping is better, with ideal values '
             'around 50-150' % ping)
