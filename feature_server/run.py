@@ -52,8 +52,11 @@ def get_hg_rev():
     import subprocess
     pipe = subprocess.Popen(
         ["hg", "log", "-l", "1", "--template", "{node}"],
-        stdout=subprocess.PIPE, shell = True)
-    return pipe.stdout.read()[:12]
+        stdout=subprocess.PIPE, stderr = subprocess.PIPE, shell = True)
+    ret = pipe.stdout.read()[:12]
+    if not ret:
+        return '?'
+    return ret
 
 if frozen:
     CLIENT_VERSION = int(open('client_version', 'rb').read())
