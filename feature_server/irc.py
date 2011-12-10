@@ -206,7 +206,7 @@ def who(connection):
         names = [('\x0303' if conn.team.id else '\x0302') + conn.name for conn in
             connection.protocol.players.values()]
     else:
-        names = [conn.name for conn in connection.protocol.players.values()]
+        names = [conn.name+" #"+str(conn.player_id) for conn in connection.protocol.players.values()]
     count = len(names)
     msg = "has %s player%s connected" % ("no" if not count else count,
         "" if count == 1 else "s")
