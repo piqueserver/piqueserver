@@ -1,4 +1,5 @@
 from pyspades.constants import *
+from commands import add, admin
 
 CENTER_X = 256
 CENTER_Y = 256
@@ -7,6 +8,12 @@ HIDE_X = 0
 HIDE_Y = 0
 HIDE_Z = 63
 
+@admin
+def resetflags(connection):
+    connection.protocol.reset_flags()
+
+add(resetflags)
+
 def apply_script(protocol, connection, config):
     game_mode = config.get('game_mode', 'ctf')
     if game_mode != 'ctf':
@@ -14,6 +21,7 @@ def apply_script(protocol, connection, config):
 
     class OneCTFProtocol(protocol):
         map_changed = False
+
         def __init__(self, *arg, **kw):
             protocol.__init__(self, *arg, **kw)
             self.reset_flags()
@@ -31,6 +39,10 @@ def apply_script(protocol, connection, config):
         def on_game_end(self):
             self.reset_flags()
             return protocol.on_game_end(self)
+        
+        def on_map_change(self, m):
+            self.map_changed = True
+            return protocol.on_map_change(self, m)
 
     class OneCTFConnection(connection):
         def on_flag_take(self):
@@ -58,5 +70,11 @@ def apply_script(protocol, connection, config):
         def on_flag_capture(self):
             self.protocol.reset_flags()
             return connection.on_flag_capture(self)
+        
+        def on_spawn(self, pos):
+            if self.protocol.map_changed == True:
+                self.protocol.map_changed = False
+                self.protocol.reset_flags()
+            return connection.on_spawn(self, pos)
     
     return OneCTFProtocol, OneCTFConnection
