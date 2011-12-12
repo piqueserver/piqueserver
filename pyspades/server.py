@@ -244,6 +244,7 @@ class ServerConnection(BaseConnection):
                         self.on_hack_attempt(
                             'Invalid orientation data received')
                         return
+                    self.on_orientation_update(x, y, z)
                     world_object.set_orientation(x, y, z)
                     if self.filter_visibility_data:
                         return
@@ -290,9 +291,12 @@ class ServerConnection(BaseConnection):
                             world_object.position):
                                 self.check_refill()
                 elif contained.id == loaders.InputData.id:
+                    self.on_walk_update(contained.up, contained.down, 
+                        contained.left, contained.right)
                     world_object.set_walk(contained.up, contained.down,
                         contained.left, contained.right)
                     if self.tool == WEAPON_TOOL:
+                        self.on_set_shoot(contained.fire)
                         self.weapon_object.set_shoot(contained.fire)
                     contained.player_id = self.player_id
                     z_acceleration = world_object.acceleration.z
@@ -300,6 +304,8 @@ class ServerConnection(BaseConnection):
                     if jump and not (z_acceleration >= 0 and 
                                      z_acceleration < 0.017):
                         jump = False
+                    self.on_animation_update(contained.fire, jump, 
+                        contained.crouch, contained.aim)
                     world_object.set_animation(contained.fire, jump, 
                         contained.crouch, contained.aim)
                     contained.jump = jump
@@ -363,6 +369,7 @@ class ServerConnection(BaseConnection):
                         return
                     self.tool = contained.value
                     if self.tool == WEAPON_TOOL:
+                        self.on_set_shoot(self.world_object.fire)
                         self.weapon_object.set_shoot(self.world_object.fire)
                     self.on_tool_changed(self.tool)
                     if self.filter_visibility_data:
@@ -993,6 +1000,18 @@ class ServerConnection(BaseConnection):
         pass
     
     def on_reset(self):
+        pass
+    
+    def on_orientation_update(self, x, y, z):
+        pass
+    
+    def on_set_shoot(self, fire):
+        pass
+    
+    def on_walk_update(self, up, down, left, right):
+        pass
+    
+    def on_animation_update(self, fire, jump, crouch, aim):
         pass
 
 class Entity(Vertex3):
