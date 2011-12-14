@@ -296,7 +296,7 @@ class ServerConnection(BaseConnection):
                     world_object.set_walk(contained.up, contained.down,
                         contained.left, contained.right)
                     if self.tool == WEAPON_TOOL:
-                        self.on_set_shoot(contained.fire)
+                        self.on_shoot_set(contained.fire)
                         self.weapon_object.set_shoot(contained.fire)
                     contained.player_id = self.player_id
                     z_acceleration = world_object.acceleration.z
@@ -369,7 +369,7 @@ class ServerConnection(BaseConnection):
                         return
                     self.tool = contained.value
                     if self.tool == WEAPON_TOOL:
-                        self.on_set_shoot(self.world_object.fire)
+                        self.on_shoot_set(self.world_object.fire)
                         self.weapon_object.set_shoot(self.world_object.fire)
                     self.on_tool_changed(self.tool)
                     if self.filter_visibility_data:
@@ -1005,7 +1005,7 @@ class ServerConnection(BaseConnection):
     def on_orientation_update(self, x, y, z):
         pass
     
-    def on_set_shoot(self, fire):
+    def on_shoot_set(self, fire):
         pass
     
     def on_walk_update(self, up, down, left, right):
