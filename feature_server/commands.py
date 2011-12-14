@@ -493,7 +493,7 @@ def fly(connection, player = None):
         if connection in connection.protocol.players:
             return '%s is %s.' % (player.name, message)
 
-from pyspades.server import kill_action, create_player, position_data
+from pyspades.server import kill_action, create_player
 from pyspades.server import orientation_data, input_data
 from pyspades.server import set_tool, set_color
 from pyspades.common import make_color
@@ -514,10 +514,8 @@ def invisible(connection, player = None):
     if player.invisible:
         player.send_chat("You're now invisible.")
         connection.protocol.irc_say('* %s became invisible' % player.name)
-        position_data.set((0, 0, 0), player.player_id)
         kill_action.kill_type = WEAPON_KILL
         kill_action.player_id = kill_action.killer_id = player.player_id
-        player.protocol.send_contained(position_data, sender = player)
         player.protocol.send_contained(kill_action, sender = player,
             save = True)
     else:
@@ -533,8 +531,6 @@ def invisible(connection, player = None):
         create_player.weapon = player.weapon
         create_player.team = player.team.id
         world_object = player.world_object
-        position_data.set(world_object.position.get(), player.player_id)
-        orientation_data.set(world_object.orientation.get(), player.player_id)
         input_data.up = world_object.up
         input_data.down = world_object.down
         input_data.left = world_object.left
@@ -551,8 +547,6 @@ def invisible(connection, player = None):
         set_color.value = make_color(*player.color)
         player.protocol.send_contained(create_player, sender = player,
             save = True)
-        player.protocol.send_contained(position_data, sender = player)
-        player.protocol.send_contained(orientation_data, sender = player)
         player.protocol.send_contained(set_tool, sender = player)
         player.protocol.send_contained(set_color, sender = player,
             save = True)
