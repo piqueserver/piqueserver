@@ -586,7 +586,8 @@ class ServerConnection(BaseConnection):
         flag = self.team.other.flag
         if flag.player is not None:
             return
-        self.on_flag_take()
+        if self.on_flag_take() == False:
+            return
         flag.player = self
         intel_pickup.player_id = self.player_id
         self.protocol.send_contained(intel_pickup, save = True)
