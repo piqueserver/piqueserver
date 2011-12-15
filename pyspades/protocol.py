@@ -67,7 +67,7 @@ class BaseConnection(object):
 class BaseProtocol(object):
     connection_class = BaseConnection
     def __init__(self, port = None, interface = 'localhost', 
-                 update_interval = 1 / 60.0):
+                 update_interval = 1 / 120.0):
         if port is not None and interface is not None:
             address = enet.Address(interface, port)
         else:
