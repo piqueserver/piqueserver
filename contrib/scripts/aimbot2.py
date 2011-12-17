@@ -11,7 +11,6 @@ KICK_HNM_RATIO = False
 KICK_DAMAGE_HACK = True
 KICK_KILLS_IN_TIME = True
 
-
 # A near miss occurs when the player is NEAR_MISS_ANGLE degrees or less off
 # of an enemy
 NEAR_MISS_ANGLE = 10.0
@@ -142,16 +141,15 @@ def apply_script(protocol, connection, config):
             return connection.on_orientation_update(self, x, y, z)
         
         def on_shoot_set(self, shoot):
-            if KICK_HNM_RATIO == True:
-                if self.tool == WEAPON_TOOL:
-                    if shoot == True and self.bullet_loop_running == False:
-                        self.possible_targets = []
-                        for enemy in self.team.other.get_players():
-                            if point_distance2(self, enemy) <= FOG_DISTANCE2:
-                                self.possible_targets.append(enemy)
-                        self.bullet_loop_start(self.weapon_object.delay)
-                    elif shoot == False:
-                        self.bullet_loop_stop()
+            if self.tool == WEAPON_TOOL:
+                if shoot == True and self.bullet_loop_running == False:
+                    self.possible_targets = []
+                    for enemy in self.team.other.get_players():
+                        if point_distance2(self, enemy) <= FOG_DISTANCE2:
+                            self.possible_targets.append(enemy)
+                    self.bullet_loop_start(self.weapon_object.delay)
+                elif shoot == False:
+                    self.bullet_loop_stop()
             return connection.on_shoot_set(self, shoot)
         
         def kill(self, by = None, type = WEAPON_KILL):
@@ -179,21 +177,21 @@ def apply_script(protocol, connection, config):
                     if (value in SEMI_DAMAGE) == False and KICK_DAMAGE_HACK == True:
                         by.kick('Damage hack detected')
                         return
-                    elif KICK_HNM_RATIO == True:
+                    else:
                         by.semi_hits += 1
                         by.semi_near_misses = max(0, by.semi_near_misses - 1)
                 elif by.weapon == SMG_WEAPON:
                     if (value in SMG_DAMAGE) == False and KICK_DAMAGE_HACK == True:
                         by.kick('Damage hack detected')
                         return
-                    elif KICK_HNM_RATIO == True:
+                    else:
                         by.smg_hits += 1
                         by.semi_near_misses = max(0, by.semi_near_misses - 1)
                 elif by.weapon == SHOTGUN_WEAPON:
                     if (value in SHOTGUN_DAMAGE) == False and KICK_DAMAGE_HACK == True:
                         by.kick('Damage hack detected')
                         return
-                    elif KICK_HNM_RATIO == True:
+                    else:
                         current_time = reactor.seconds()
                         if current_time - by.shotgun_time >= HALF_SHOTGUN:
                             by.shotgun_hits += 1
@@ -202,30 +200,31 @@ def apply_script(protocol, connection, config):
             return connection.hit(self, value, by, type)
         
         def check_ratio(self):
-            if self.weapon == SEMI_WEAPON:
-                if (self.semi_hits + self.semi_near_misses) >= SEMI_KICK_MINIMUM:
-                    if self.semi_near_misses == 0:
-                        self.kick('Aimbot detected - T3')
-                        return
-                    elif float(self.semi_hits)/float(self.semi_near_misses) >= SEMI_KICK_RATIO:
-                        self.kick('Aimbot detected - T3')
-                        return
-            elif self.weapon == SMG_WEAPON:
-                if (self.smg_hits + self.smg_near_misses) >= SMG_KICK_MINIMUM:
-                    if self.smg_near_misses == 0:
-                        self.kick('Aimbot detected - T3')
-                        return
-                    elif float(self.smg_hits)/float(self.smg_near_misses) >= SMG_KICK_RATIO:
-                        self.kick('Aimbot detected - T3')
-                        return
-            elif self.weapon == SHOTGUN_WEAPON:
-                if (self.shotgun_hits + self.shotgun_near_misses) >= SHOTGUN_KICK_MINIMUM:
-                    if self.shotgun_near_misses == 0:
-                        self.kick('Aimbot detected - T3')
-                        return
-                    elif float(self.shotgun_hits)/float(self.shotgun_near_misses) >= SHOTGUN_KICK_RATIO:
-                        self.kick('Aimbot detected - T3')
-                        return
+            if KICK_HNM_RATIO == True:
+                if self.weapon == SEMI_WEAPON:
+                    if (self.semi_hits + self.semi_near_misses) >= SEMI_KICK_MINIMUM:
+                        if self.semi_near_misses == 0:
+                            self.kick('Aimbot detected - T3')
+                            return
+                        elif float(self.semi_hits)/float(self.semi_near_misses) >= SEMI_KICK_RATIO:
+                            self.kick('Aimbot detected - T3')
+                            return
+                elif self.weapon == SMG_WEAPON:
+                    if (self.smg_hits + self.smg_near_misses) >= SMG_KICK_MINIMUM:
+                        if self.smg_near_misses == 0:
+                            self.kick('Aimbot detected - T3')
+                            return
+                        elif float(self.smg_hits)/float(self.smg_near_misses) >= SMG_KICK_RATIO:
+                            self.kick('Aimbot detected - T3')
+                            return
+                elif self.weapon == SHOTGUN_WEAPON:
+                    if (self.shotgun_hits + self.shotgun_near_misses) >= SHOTGUN_KICK_MINIMUM:
+                        if self.shotgun_near_misses == 0:
+                            self.kick('Aimbot detected - T3')
+                            return
+                        elif float(self.shotgun_hits)/float(self.shotgun_near_misses) >= SHOTGUN_KICK_RATIO:
+                            self.kick('Aimbot detected - T3')
+                            return
 
         def on_bullet_fire(self):
             # Remembering the past offers a performance boost, particularly with the SMG
