@@ -1,5 +1,6 @@
 from pyspades.constants import *
 from commands import add, admin
+from pyspades.collision import vector_collision
 
 CENTER_X = 256
 CENTER_Y = 256
@@ -7,6 +8,13 @@ CENTER_Y = 256
 HIDE_X = 0
 HIDE_Y = 0
 HIDE_Z = 63
+
+# In reverse ctf, the goal is to take the intel to the enemy base
+REVERSE_CTF = True
+# The message to send when a player takes the intel to the wrong base
+# when playing reverse ctf
+REVERSE_CTF_MESSAGE_ENABLED = True
+REVERSE_CTF_MESSAGE = 'Take the intel to the enemy base to score.'
 
 @admin
 def resetflags(connection):
@@ -47,16 +55,15 @@ def apply_script(protocol, connection, config):
     class OneCTFConnection(connection):
         def on_flag_take(self):
             flag = self.team.flag
-            flag.set(HIDE_X, HIDE_Y, HIDE_Z)
-            flag.update()
-            # Hack until on_flag_take can be updated to return false
-            # to force a flag pickup cancel
-            flag.player = False
+            if flag.player is None:
+                flag.set(HIDE_X, HIDE_Y, HIDE_Z)
+                flag.update()
+            else:
+                return False
             return connection.on_flag_take(self)
         
         def on_flag_drop(self):
             flag = self.team.flag
-            flag.player = None
             position = self.world_object.position
             x = int(position.x)
             y = int(position.y)
@@ -66,6 +73,21 @@ def apply_script(protocol, connection, config):
             flag.set(x, y, z)
             flag.update()
             return connection.on_flag_drop(self)
+        
+        def on_position_update(self):
+            if REVERSE_CTF == True:
+                if vector_collision(self.world_object.position, self.team.other.base):
+                    other_flag = self.team.other.flag
+                    if other_flag.player is self:
+                        connection.capture_flag(self)
+            return connection.on_position_update(self)
+
+        def capture_flag(self):
+            if REVERSE_CTF == True:
+                if REVERSE_CTF_MESSAGE_ENABLED == True:
+                    self.send_chat(REVERSE_CTF_MESSAGE)
+                return False
+            return connection.capture_flag(self)
 
         def on_flag_capture(self):
             self.protocol.reset_flags()
