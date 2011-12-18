@@ -92,9 +92,12 @@ class BaseProtocol(object):
         connection.on_connect()
     
     def on_disconnect(self, peer):
-        connection = self.connections.pop(peer)
-        connection.disconnected = True
-        connection.on_disconnect()
+        try:
+            connection = self.connections.pop(peer)
+            connection.disconnected = True
+            connection.on_disconnect()
+        except KeyError:
+            return
     
     def data_received(self, peer, packet):
         connection = self.connections[peer]

@@ -325,7 +325,10 @@ class ServerConnection(BaseConnection):
                     is_melee = value == MELEE
                     if not is_melee and self.weapon_object.is_empty():
                         return
-                    player = self.protocol.players[contained.player_id]
+                    try:
+                        player = self.protocol.players[contained.player_id]
+                    except KeyError:
+                        return
                     position1 = self.world_object.position
                     position2 = player.world_object.position
                     if is_melee:

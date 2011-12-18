@@ -779,7 +779,7 @@ class FeatureProtocol(ServerProtocol):
         dt = reactor.seconds() - current_time
         if dt > 1.0:
             print '(warning: processing %r from %s took %s)' % (
-                data, ip, dt)
+                packet.data, ip, dt)
         
     
     def irc_say(self, msg):
