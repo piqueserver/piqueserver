@@ -5,50 +5,67 @@ from math import sqrt, cos, acos, pi, tan
 from commands import add, admin
 from twisted.internet import reactor
 
-KICK_SNAP_HEADSHOT = True
-# Hit near miss ratio
-KICK_HNM_RATIO = False
-KICK_DAMAGE_HACK = True
-KICK_KILLS_IN_TIME = True
+# This is an option for data collection. Data is outputted to aimbot2log.txt
+DATA_COLLECTION = False
 
-# A near miss occurs when the player is NEAR_MISS_ANGLE degrees or less off
-# of an enemy
-NEAR_MISS_ANGLE = 10.0
+# This controls which detection methods are enabled
+DETECT_SNAP_HEADSHOT = True
+DETECT_HIT_PERCENT = True
+DETECT_DAMAGE_HACK = True
+DETECT_KILLS_IN_TIME = True
 
-# Approximate size of player's heads in blocks
-HEAD_RADIUS = 0.7
+# If both the below and above controls are set to True, a player will be
+# banned instead of kicked
+SNAP_HEADSHOT_BAN = False
+HIT_PERCENT_BAN = False
+DAMAGE_HACK_BAN = True
+KILLS_IN_TIME_BAN = True
+
+# These controls are only used if banning instead of kicking is enabled
+# Time is given in minutes. Set to 0 for a permaban
+SNAP_HEADSHOT_BAN_DURATION = 60
+HIT_PERCENT_BAN_DURATION = 120
+DAMAGE_HACK_BAN_DURATION = 0
+KILLS_IN_TIME_BAN_DURATION = 2880
+
+# The minimum number of near misses + hits that are fired before
+# we can kick or ban someone using the hit percentage check
+SEMI_KICK_MINIMUM = 15
+SMG_KICK_MINIMUM = 40
+SHOTGUN_KICK_MINIMUM = 15
+
+# Kick a player if the above minimum is met and if the
+# bullet hit percentage is greater than or equal to this amount
+SEMI_KICK_PERC = 0.85
+SMG_KICK_PERC = 0.70
+SHOTGUN_KICK_PERC = 0.85
+
+# If the number of headshot snaps exceeds the SNAP_HEADSHOT_THRESHOLD in the
+# given SNAP_HEADSHOT_TIME, kick the player. This check is performed every
+# time somebody performs a headshot snap
+SNAP_HEADSHOT_TIME = 20.0
+SNAP_HEADSHOT_THRESHOLD = 6
 
 # When the user's orientation angle (degrees) changes more than this amount,
 # check if the user snapped to an enemy's head. If it is aligned with a head,
 # record this as a headshot snap
 SNAP_HEADSHOT_ANGLE = 90.0
 
-# If the number of headshot snaps exceeds the SNAP_HEADSHOT_THRESHOLD in the
-# given SNAP_HEADSHOT_TIME, kick the player. This check is performed every
-# time somebody performs a headshot snap
-SNAP_HEADSHOT_TIME = 20.0
-SNAP_HEADSHOT_THRESHOLD = 4
-
-# 128 is the approximate fog distance, but bump it up a little
-# just in case
-FOG_DISTANCE = 135.0
-
-# The minimum number of near misses + hits that are fired before
-# we can kick someone using the hit/near miss ratio check
-SEMI_KICK_MINIMUM = 15
-SMG_KICK_MINIMUM = 40
-SHOTGUN_KICK_MINIMUM = 15
-
-# Kick a player if the above minimum is met and if the
-# hit to near miss ratio is greater than or equal to this amount
-SEMI_KICK_RATIO = 1.2
-SMG_KICK_RATIO = 0.8
-SHOTGUN_KICK_RATIO = 0.8
+# A near miss occurs when the player is NEAR_MISS_ANGLE degrees or less off
+# of an enemy
+NEAR_MISS_ANGLE = 10.0
 
 # Valid damage values for each gun
 SEMI_DAMAGE = (33,49,100)
 SMG_DAMAGE = (16,24,75)
 SHOTGUN_DAMAGE = (14,21,24,42,63,72)
+
+# Approximate size of player's heads in blocks
+HEAD_RADIUS = 0.7
+
+# 128 is the approximate fog distance, but bump it up a little
+# just in case
+FOG_DISTANCE = 135.0
 
 # If a player gets more kills than the KILL_THRESHOLD in the given
 # KILL_TIME, kick the player. This check is performed every
@@ -84,7 +101,7 @@ def apply_script(protocol, connection, config):
         def __init__(self, *arg, **kw):
             connection.__init__(self, *arg, **kw)
             self.semi_hits = self.smg_hits = self.shotgun_hits = 0
-            self.semi_near_misses = self.smg_near_misses = self.shotgun_near_misses = 0
+            self.semi_count = self.smg_count = self.shotgun_count = 0
             self.last_target = None
             self.first_orientation = True
             self.kill_times = []
@@ -98,18 +115,18 @@ def apply_script(protocol, connection, config):
             return connection.on_spawn(self, pos)
 
         def bullet_loop_start(self, interval):
-            if self.bullet_loop_running == False:
+            if not self.bullet_loop_running:
                 self.bullet_loop_running = True
                 self.bullet_loop.start(interval)
         
         def bullet_loop_stop(self):
-            if self.bullet_loop_running == True:
+            if self.bullet_loop_running:
                 self.bullet_loop_running = False
                 self.bullet_loop.stop()
-
+        
         def on_orientation_update(self, x, y, z):
-            if KICK_SNAP_HEADSHOT == True:
-                if self.first_orientation == False:
+            if DETECT_SNAP_HEADSHOT:
+                if not self.first_orientation:
                     orient = self.world_object.orientation
                     old_orient_v = (orient.x, orient.y, orient.z)
                     new_orient_v = (x, y, z)
@@ -131,7 +148,10 @@ def apply_script(protocol, connection, config):
                                     else:
                                         pop_count += 1
                                 if headshot_snap_count >= SNAP_HEADSHOT_THRESHOLD:
-                                    self.kick('Aimbot detected - T1')
+                                    if SNAP_HEADSHOT_BAN:
+                                        self.ban('Aimbot detected - T1', SNAP_HEADSHOT_BAN_DURATION)
+                                    else:
+                                        self.kick('Aimbot detected - T1')
                                     return
                                 for i in xrange(0, pop_count):
                                     self.headshot_snap_times.pop(0)
@@ -142,18 +162,18 @@ def apply_script(protocol, connection, config):
         
         def on_shoot_set(self, shoot):
             if self.tool == WEAPON_TOOL:
-                if shoot == True and self.bullet_loop_running == False:
+                if shoot and not self.bullet_loop_running:
                     self.possible_targets = []
                     for enemy in self.team.other.get_players():
                         if point_distance2(self, enemy) <= FOG_DISTANCE2:
                             self.possible_targets.append(enemy)
                     self.bullet_loop_start(self.weapon_object.delay)
-                elif shoot == False:
+                elif not shoot:
                     self.bullet_loop_stop()
             return connection.on_shoot_set(self, shoot)
         
         def kill(self, by = None, type = WEAPON_KILL):
-            if (type == WEAPON_KILL or type == HEADSHOT_KILL) and KICK_KILLS_IN_TIME == True:
+            if (type == WEAPON_KILL or type == HEADSHOT_KILL) and DETECT_KILLS_IN_TIME:
                 current_time = reactor.seconds()
                 kill_count = 1
                 pop_count = 0
@@ -163,81 +183,84 @@ def apply_script(protocol, connection, config):
                     else:
                         pop_count += 1
                 if kill_count >= KILL_THRESHOLD:
-                    by.kick('Aimbot detected - T2')
+                    if KILLS_IN_TIME_BAN:
+                        by.ban('Aimbot detected - T2', KILLS_IN_TIME_BAN_DURATION)
+                    else:
+                        by.kick('Aimbot detected - T2')
                     return
                 for i in xrange(0, pop_count):
                     by.kill_times.pop(0)
                 by.kill_times.append(current_time)
             return connection.kill(self, by, type)
+        
+        def damage_hack_eject(self):
+            if DAMAGE_HACK_BAN:
+                self.ban('Damage hack detected', DAMAGE_HACK_BAN_DURATION)
+            else:
+                self.kick('Damage hack detected')
 
         def hit(self, value, by = None, type = WEAPON_KILL):
             if (type == WEAPON_KILL or type == HEADSHOT_KILL) and by != None:
                 # Any hit will be counted as a near miss
                 if by.weapon == SEMI_WEAPON:
-                    if (value in SEMI_DAMAGE) == False and KICK_DAMAGE_HACK == True:
-                        by.kick('Damage hack detected')
+                    if (not (value in SEMI_DAMAGE)) and DETECT_DAMAGE_HACK:
+                        by.damage_hack_eject()
                         return
                     else:
                         by.semi_hits += 1
-                        by.semi_near_misses = max(0, by.semi_near_misses - 1)
                 elif by.weapon == SMG_WEAPON:
-                    if (value in SMG_DAMAGE) == False and KICK_DAMAGE_HACK == True:
-                        by.kick('Damage hack detected')
+                    if (not (value in SMG_DAMAGE)) and DETECT_DAMAGE_HACK:
+                        by.damage_hack_eject()
                         return
                     else:
                         by.smg_hits += 1
-                        by.semi_near_misses = max(0, by.semi_near_misses - 1)
                 elif by.weapon == SHOTGUN_WEAPON:
-                    if (value in SHOTGUN_DAMAGE) == False and KICK_DAMAGE_HACK == True:
-                        by.kick('Damage hack detected')
+                    if (not (value in SHOTGUN_DAMAGE)) and DETECT_DAMAGE_HACK:
+                        by.damage_hack_eject()
                         return
                     else:
                         current_time = reactor.seconds()
                         if current_time - by.shotgun_time >= HALF_SHOTGUN:
                             by.shotgun_hits += 1
-                            by.shotgun_near_misses = max(0, by.shotgun_near_misses - 1)
                             by.shotgun_time = current_time
             return connection.hit(self, value, by, type)
         
-        def check_ratio(self):
-            if KICK_HNM_RATIO == True:
+        def hit_percent_eject(self):
+            if HIT_PERCENT_BAN:
+                self.ban('Aimbot detected - T3', HIT_PERCENT_BAN_DURATION)
+            else:
+                self.kick('Aimbot detected - T3')
+
+        def check_percent(self):
+            if DETECT_HIT_PERCENT:
                 if self.weapon == SEMI_WEAPON:
-                    if (self.semi_hits + self.semi_near_misses) >= SEMI_KICK_MINIMUM:
-                        if self.semi_near_misses == 0:
-                            self.kick('Aimbot detected - T3')
-                            return
-                        elif float(self.semi_hits)/float(self.semi_near_misses) >= SEMI_KICK_RATIO:
-                            self.kick('Aimbot detected - T3')
+                    if self.semi_count >= SEMI_KICK_MINIMUM:
+                        if float(self.semi_hits)/float(self.semi_count) >= SEMI_KICK_PERC:
+                            self.hit_percent_eject()
                             return
                 elif self.weapon == SMG_WEAPON:
-                    if (self.smg_hits + self.smg_near_misses) >= SMG_KICK_MINIMUM:
-                        if self.smg_near_misses == 0:
-                            self.kick('Aimbot detected - T3')
-                            return
-                        elif float(self.smg_hits)/float(self.smg_near_misses) >= SMG_KICK_RATIO:
-                            self.kick('Aimbot detected - T3')
+                    if self.smg_count >= SMG_KICK_MINIMUM:
+                        if float(self.smg_hits)/float(self.smg_count) >= SMG_KICK_PERC:
+                            self.hit_percent_eject()
                             return
                 elif self.weapon == SHOTGUN_WEAPON:
-                    if (self.shotgun_hits + self.shotgun_near_misses) >= SHOTGUN_KICK_MINIMUM:
-                        if self.shotgun_near_misses == 0:
-                            self.kick('Aimbot detected - T3')
-                            return
-                        elif float(self.shotgun_hits)/float(self.shotgun_near_misses) >= SHOTGUN_KICK_RATIO:
-                            self.kick('Aimbot detected - T3')
+                    if self.shotgun_count >= SHOTGUN_KICK_MINIMUM:
+                        if float(self.shotgun_hits)/float(self.shotgun_count) >= SHOTGUN_KICK_PERC:
+                            self.hit_percent_eject()
                             return
 
         def on_bullet_fire(self):
             # Remembering the past offers a performance boost, particularly with the SMG
             if self.last_target != None:
                 if self.last_target.hp != None:
-                    if self.check_near_miss(self.last_target) == True:
-                        self.check_ratio()
+                    if self.check_near_miss(self.last_target):
+                        self.check_percent()
                         return
             for enemy in self.possible_targets:
                 if enemy.hp != None and enemy != self.last_target:
-                    if self.check_near_miss(enemy) == True:
+                    if self.check_near_miss(enemy):
                         self.last_target = enemy
-                        self.check_ratio()
+                        self.check_percent()
                         return
 
         def check_near_miss(self, target):
@@ -248,25 +271,26 @@ def apply_script(protocol, connection, config):
             orient_v = (orient.x, orient.y, orient.z)
             if (dot3d(orient_v, position_v)/magnitude(position_v)) >= NEAR_MISS_COS:
                 if self.weapon == SEMI_WEAPON:
-                    self.semi_near_misses += 1
+                    self.semi_count += 1
                 elif self.weapon == SMG_WEAPON:
-                    self.smg_near_misses += 1
+                    self.smg_count += 1
                 elif self.weapon == SHOTGUN_WEAPON:
-                    self.shotgun_near_misses += 1
+                    self.shotgun_count += 1
                 return True
             return False
         
         # Data collection stuff
         def on_disconnect(self):
             self.bullet_loop_stop()
-            if self.name != None:
-                with open('aimbot2log.txt','a') as myfile:
-                    output = self.name.encode('ascii','ignore').replace(',','') + ','
-                    output += str(self.semi_hits) + ',' + str(self.semi_near_misses) + ','
-                    output += str(self.smg_hits) + ',' + str(self.smg_near_misses) + ','
-                    output += str(self.shotgun_hits) + ',' + str(self.shotgun_near_misses) + '\n'
-                    myfile.write(output)
-                    myfile.close()
+            if DATA_COLLECTION:
+                if self.name != None:
+                    with open('aimbot2log.txt','a') as myfile:
+                        output = self.name.encode('ascii','ignore').replace(',','') + ','
+                        output += str(self.semi_hits) + ',' + str(self.semi_count) + ','
+                        output += str(self.smg_hits) + ',' + str(self.smg_count) + ','
+                        output += str(self.shotgun_hits) + ',' + str(self.shotgun_count) + '\n'
+                        myfile.write(output)
+                        myfile.close()
             return connection.on_disconnect(self)
     
     return protocol, Aimbot2Connection
