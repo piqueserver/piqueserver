@@ -10,7 +10,7 @@ HIDE_Y = 0
 HIDE_Z = 63
 
 # In reverse ctf, the goal is to take the intel to the enemy base
-REVERSE_CTF = True
+REVERSE_CTF = False
 # The message to send when a player takes the intel to the wrong base
 # when playing reverse ctf
 REVERSE_CTF_MESSAGE_ENABLED = True
@@ -58,6 +58,8 @@ def apply_script(protocol, connection, config):
             if flag.player is None:
                 flag.set(HIDE_X, HIDE_Y, HIDE_Z)
                 flag.update()
+                if REVERSE_CTF and REVERSE_CTF_MESSAGE_ENABLED:
+                    self.send_chat(REVERSE_CTF_MESSAGE)
             else:
                 return False
             return connection.on_flag_take(self)
@@ -75,7 +77,7 @@ def apply_script(protocol, connection, config):
             return connection.on_flag_drop(self)
         
         def on_position_update(self):
-            if REVERSE_CTF == True:
+            if REVERSE_CTF:
                 if vector_collision(self.world_object.position, self.team.other.base):
                     other_flag = self.team.other.flag
                     if other_flag.player is self:
@@ -83,8 +85,8 @@ def apply_script(protocol, connection, config):
             return connection.on_position_update(self)
 
         def capture_flag(self):
-            if REVERSE_CTF == True:
-                if REVERSE_CTF_MESSAGE_ENABLED == True:
+            if REVERSE_CTF:
+                if REVERSE_CTF_MESSAGE_ENABLED:
                     self.send_chat(REVERSE_CTF_MESSAGE)
                 return False
             return connection.capture_flag(self)

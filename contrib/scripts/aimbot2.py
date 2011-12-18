@@ -261,7 +261,7 @@ def apply_script(protocol, connection, config):
             self.bullet_loop_stop()
             if self.name != None:
                 with open('aimbot2log.txt','a') as myfile:
-                    output = self.name.replace(',','') + ','
+                    output = self.name.encode('ascii','ignore').replace(',','') + ','
                     output += str(self.semi_hits) + ',' + str(self.semi_near_misses) + ','
                     output += str(self.smg_hits) + ',' + str(self.smg_near_misses) + ','
                     output += str(self.shotgun_hits) + ',' + str(self.shotgun_near_misses) + '\n'
