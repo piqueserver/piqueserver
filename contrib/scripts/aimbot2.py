@@ -8,7 +8,8 @@ from twisted.internet import reactor
 # This is an option for data collection. Data is outputted to aimbot2log.txt
 DATA_COLLECTION = False
 
-# This controls which detection methods are enabled
+# This controls which detection methods are enabled. If a player is detected
+# using one of these methods, the player is kicked.
 DETECT_SNAP_HEADSHOT = True
 DETECT_HIT_PERCENT = True
 DETECT_DAMAGE_HACK = True
@@ -41,7 +42,7 @@ SMG_KICK_PERC = 0.70
 SHOTGUN_KICK_PERC = 0.85
 
 # If the number of headshot snaps exceeds the SNAP_HEADSHOT_THRESHOLD in the
-# given SNAP_HEADSHOT_TIME, kick the player. This check is performed every
+# given SNAP_HEADSHOT_TIME, kick or ban the player. This check is performed every
 # time somebody performs a headshot snap
 SNAP_HEADSHOT_TIME = 20.0
 SNAP_HEADSHOT_THRESHOLD = 6
@@ -68,7 +69,7 @@ HEAD_RADIUS = 0.7
 FOG_DISTANCE = 135.0
 
 # If a player gets more kills than the KILL_THRESHOLD in the given
-# KILL_TIME, kick the player. This check is performed every
+# KILL_TIME, kick or ban the player. This check is performed every
 # time somebody kills someone with a gun
 KILL_TIME = 20.0
 KILL_THRESHOLD = 10
@@ -113,9 +114,6 @@ def apply_script(protocol, connection, config):
         def on_spawn(self, pos):
             self.first_orientation = True
             return connection.on_spawn(self, pos)
-        
-        def on_position_update(self):
-            return connection.on_position_update(self)
 
         def bullet_loop_start(self, interval):
             if not self.bullet_loop.running:
