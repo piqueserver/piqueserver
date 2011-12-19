@@ -25,7 +25,7 @@ KILLS_IN_TIME_BAN = True
 # Time is given in minutes. Set to 0 for a permaban
 SNAP_HEADSHOT_BAN_DURATION = 60
 HIT_PERCENT_BAN_DURATION = 120
-DAMAGE_HACK_BAN_DURATION = 0
+DAMAGE_HACK_BAN_DURATION = 2880
 KILLS_IN_TIME_BAN_DURATION = 2880
 
 # The minimum number of near misses + hits that are fired before
@@ -80,9 +80,10 @@ NEAR_MISS_COS = cos(NEAR_MISS_ANGLE * (pi/180.0))
 SNAP_HEADSHOT_ANGLE_COS = cos(SNAP_HEADSHOT_ANGLE * (pi/180.0))
 
 def point_distance2(c1, c2):
-    p1 = c1.world_object.position
-    p2 = c2.world_object.position
-    return (p1.x - p2.x)**2 + (p1.y - p2.y)**2 + (p1.z - p2.z)**2
+    if c1.world_object is not None and c2.world_object is not None:
+        p1 = c1.world_object.position
+        p2 = c2.world_object.position
+        return (p1.x - p2.x)**2 + (p1.y - p2.y)**2 + (p1.z - p2.z)**2
 
 def dot3d(v1, v2):
     return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]
@@ -107,26 +108,26 @@ def apply_script(protocol, connection, config):
             self.kill_times = []
             self.headshot_snap_times = []
             self.bullet_loop = LoopingCall(self.on_bullet_fire)
-            self.bullet_loop_running = False
             self.shotgun_time = 0.0
         
         def on_spawn(self, pos):
             self.first_orientation = True
             return connection.on_spawn(self, pos)
+        
+        def on_position_update(self):
+            return connection.on_position_update(self)
 
         def bullet_loop_start(self, interval):
-            if not self.bullet_loop_running:
-                self.bullet_loop_running = True
+            if not self.bullet_loop.running:
                 self.bullet_loop.start(interval)
         
         def bullet_loop_stop(self):
-            if self.bullet_loop_running:
-                self.bullet_loop_running = False
+            if self.bullet_loop.running:
                 self.bullet_loop.stop()
         
         def on_orientation_update(self, x, y, z):
             if DETECT_SNAP_HEADSHOT:
-                if not self.first_orientation:
+                if not self.first_orientation and self.world_object is not None:
                     orient = self.world_object.orientation
                     old_orient_v = (orient.x, orient.y, orient.z)
                     new_orient_v = (x, y, z)
@@ -162,7 +163,7 @@ def apply_script(protocol, connection, config):
         
         def on_shoot_set(self, shoot):
             if self.tool == WEAPON_TOOL:
-                if shoot and not self.bullet_loop_running:
+                if shoot and not self.bullet_loop.running:
                     self.possible_targets = []
                     for enemy in self.team.other.get_players():
                         if point_distance2(self, enemy) <= FOG_DISTANCE2:
@@ -264,19 +265,20 @@ def apply_script(protocol, connection, config):
                         return
 
         def check_near_miss(self, target):
-            p_self = self.world_object.position
-            p_targ = target.world_object.position
-            position_v = (p_targ.x - p_self.x, p_targ.y - p_self.y, p_targ.z - p_self.z)
-            orient = self.world_object.orientation
-            orient_v = (orient.x, orient.y, orient.z)
-            if (dot3d(orient_v, position_v)/magnitude(position_v)) >= NEAR_MISS_COS:
-                if self.weapon == SEMI_WEAPON:
-                    self.semi_count += 1
-                elif self.weapon == SMG_WEAPON:
-                    self.smg_count += 1
-                elif self.weapon == SHOTGUN_WEAPON:
-                    self.shotgun_count += 1
-                return True
+            if self.world_object is not None and target.world_object is not None:
+                p_self = self.world_object.position
+                p_targ = target.world_object.position
+                position_v = (p_targ.x - p_self.x, p_targ.y - p_self.y, p_targ.z - p_self.z)
+                orient = self.world_object.orientation
+                orient_v = (orient.x, orient.y, orient.z)
+                if (dot3d(orient_v, position_v)/magnitude(position_v)) >= NEAR_MISS_COS:
+                    if self.weapon == SEMI_WEAPON:
+                        self.semi_count += 1
+                    elif self.weapon == SMG_WEAPON:
+                        self.smg_count += 1
+                    elif self.weapon == SHOTGUN_WEAPON:
+                        self.shotgun_count += 1
+                    return True
             return False
         
         # Data collection stuff
