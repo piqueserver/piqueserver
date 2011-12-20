@@ -172,7 +172,8 @@ def apply_script(protocol, connection, config):
             return connection.on_shoot_set(self, shoot)
         
         def kill(self, by = None, type = WEAPON_KILL):
-            if (type == WEAPON_KILL or type == HEADSHOT_KILL) and DETECT_KILLS_IN_TIME:
+            if by is not None and (type == WEAPON_KILL or type == HEADSHOT_KILL) \
+            and DETECT_KILLS_IN_TIME:
                 current_time = reactor.seconds()
                 kill_count = 1
                 pop_count = 0
