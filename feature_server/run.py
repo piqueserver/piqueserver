@@ -52,7 +52,7 @@ def get_hg_rev():
     import subprocess
     pipe = subprocess.Popen(
         ["hg", "log", "-l", "1", "--template", "{node}"],
-        stdout=subprocess.PIPE, stderr = subprocess.PIPE, shell = True)
+        stdout=subprocess.PIPE, stderr = subprocess.PIPE)
     ret = pipe.stdout.read()[:12]
     if not ret:
         return '?'
