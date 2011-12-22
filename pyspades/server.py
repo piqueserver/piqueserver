@@ -1232,7 +1232,7 @@ class ServerProtocol(BaseProtocol):
 
     name = 'pyspades server'
     game_mode = CTF_MODE
-    max_players = 20
+    max_players = 32
     connections = None
     connection_ids = None
     player_ids = None
@@ -1258,6 +1258,7 @@ class ServerProtocol(BaseProtocol):
     melee_damage = 100
     
     def __init__(self, *arg, **kw):
+        self.max_connections = self.max_players
         BaseProtocol.__init__(self, *arg, **kw)
         self.entities = []
         self.connections = {}
