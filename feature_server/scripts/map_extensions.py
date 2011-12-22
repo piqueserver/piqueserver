@@ -19,5 +19,13 @@ def apply_script(protocol, connection, config):
             if value < 0 and self.hp >= 100: # do nothing at max health
                 return
             self.set_hp(self.hp - value)
-
+        
+        def on_command(self, command, parameters):
+            disabled = self.protocol.map_info.extensions.get(
+                'disabled_commands', [])
+            if command in disabled:
+                self.send_chat("Command '%s' disabled for this map" % command)
+                return
+            return connection.on_command(self, command, parameters)
+            
     return protocol, MapExtensionConnection

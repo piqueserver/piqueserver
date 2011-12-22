@@ -50,6 +50,7 @@ class Map(object):
             info = imp.load_source(name, info_file)
         except IOError:
             info = None
+        self.data = info
         self.name = getattr(info, 'name', name)
         self.author = getattr(info, 'author', '(unknown)')
         self.version = getattr(info, 'version', '1.0')
