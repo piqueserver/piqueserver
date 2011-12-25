@@ -190,40 +190,50 @@ def hollow(*arguments):
 
 add(hollow)
 
-def hollow_r(connection, thickness = 1, protect = None, protect2 = None):
-    thickness = int(thickness)
+def hollow_r(connection, thickness = 1):
+    m = connection.protocol.map
+    thickness = int(thickness) - 1
     x1 = min(connection.block1_x, connection.block2_x)
     x2 = max(connection.block1_x, connection.block2_x)
     y1 = min(connection.block1_y, connection.block2_y)
     y2 = max(connection.block1_y, connection.block2_y)
     z1 = min(connection.block1_z, connection.block2_z)
     z2 = max(connection.block1_z, connection.block2_z)
-    if protect2 == None:
-        protect2 = []
-        for xx in xrange(x1, x2 + 1):
-            for yy in xrange(y1, y2 + 1):
-                for zz in xrange(z1, z2 + 1):
-                    if not connection.protocol.map.get_solid(xx, yy, zz):
-                        protect2.append((xx, yy, zz))
-        hollow_r(connection, thickness, [], protect2)
-    elif thickness > 0:
-        protect3 = []
-        for block in protect2:
-            for rel_x in xrange(-1, 2):
-                for rel_y in xrange(-1, 2):
-                    for rel_z in xrange(-1, 2):
-                        check = (block[0] + rel_x, block[1] + rel_y, block[2] + rel_z)
-                        if (not check in protect) and (not check in protect2) and (not check in protect3):
-                            protect3.append(check)
-        hollow_r(connection, thickness - 1, protect + protect2, protect3)
-    else:
-        protect += protect2
-        for xx in xrange(x1, x2 + 1):
-            for yy in xrange(y1, y2 + 1):
-                for zz in xrange(z1, z2 + 1):
-                    if not (xx, yy, zz) in protect:
-                        remove_block(connection.protocol, xx, yy, zz)
-
+    blocks = []
+    xr = x2 - x1 + 1
+    yr = y2 - y1 + 1
+    zr = z2 - z1 + 1
+    for x in xrange(0, xr):
+        blocks.append([])
+        for y in xrange(0, yr):
+            blocks[x].append([])
+            for z in xrange(0, zr):
+                blocks[x][y].append(False)
+    def hollow_check(xc, yc, zc, thickness):
+        if thickness > 0:
+            for xx in xrange(xc - 1, xc + 2):
+                if xx >= 0 and xx < xr:
+                    for yy in xrange(yc - 1, yc + 2):
+                        if yy >= 0 and yy < yr:
+                            for zz in xrange(zc - 1, zc + 2):
+                                if zz >= 0 and zz < zr:
+                                    blocks[xx][yy][zz] = True
+                                    if m.get_solid(x1 + xx, y1 + yy, z1 + zz):
+                                        hollow_check(xx, yy, zz, thickness - 1)
+    for x in xrange(0, xr):
+        for y in xrange(0, yr):
+            for z in xrange(0, zr):
+                if m.get_solid(x1 + x, y1 + y, z1 + z):
+                    if m.is_surface(x1 + x, y1 + y, z1 + z):
+                        blocks[x][y][z] = True
+                        hollow_check(x, y, z, thickness)
+                else:
+                    blocks[x][y][z] = True
+    for x in xrange(0, xr):
+        for y in xrange(0, yr):
+            for z in xrange(0, zr):
+                if not blocks[x][y][z]:
+                    remove_block(connection.protocol, x1 + x, y1 + y, z1 + z)
 
 def apply_script(protocol, connection, config):
     class MapMakingToolsConnection(connection):

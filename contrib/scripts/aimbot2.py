@@ -41,6 +41,12 @@ SEMI_KICK_PERC = 0.85
 SMG_KICK_PERC = 0.70
 SHOTGUN_KICK_PERC = 0.85
 
+# If a player gets more kills than the KILL_THRESHOLD in the given
+# KILL_TIME, kick or ban the player. This check is performed every
+# time somebody kills someone with a gun
+KILL_TIME = 20.0
+KILL_THRESHOLD = 10
+
 # If the number of headshot snaps exceeds the SNAP_HEADSHOT_THRESHOLD in the
 # given SNAP_HEADSHOT_TIME, kick or ban the player. This check is performed every
 # time somebody performs a headshot snap
@@ -67,12 +73,6 @@ HEAD_RADIUS = 0.7
 # 128 is the approximate fog distance, but bump it up a little
 # just in case
 FOG_DISTANCE = 135.0
-
-# If a player gets more kills than the KILL_THRESHOLD in the given
-# KILL_TIME, kick or ban the player. This check is performed every
-# time somebody kills someone with a gun
-KILL_TIME = 20.0
-KILL_THRESHOLD = 10
 
 # Don't touch any of this stuff
 HALF_SHOTGUN = 0.5*Shotgun.delay
@@ -172,25 +172,25 @@ def apply_script(protocol, connection, config):
             return connection.on_shoot_set(self, shoot)
         
         def kill(self, by = None, type = WEAPON_KILL):
-            if by is not None and (type == WEAPON_KILL or type == HEADSHOT_KILL) \
-            and DETECT_KILLS_IN_TIME:
-                current_time = reactor.seconds()
-                kill_count = 1
-                pop_count = 0
-                for old_time in by.kill_times:
-                    if current_time - old_time <= KILL_TIME:
-                        kill_count += 1
-                    else:
-                        pop_count += 1
-                if kill_count >= KILL_THRESHOLD:
-                    if KILLS_IN_TIME_BAN:
-                        by.ban('Aimbot detected - T2', KILLS_IN_TIME_BAN_DURATION)
-                    else:
-                        by.kick('Aimbot detected - T2')
-                    return
-                for i in xrange(0, pop_count):
-                    by.kill_times.pop(0)
-                by.kill_times.append(current_time)
+            if by is not None and by is not self and DETECT_KILLS_IN_TIME:
+                if type == WEAPON_KILL or type == HEADSHOT_KILL:
+                    current_time = reactor.seconds()
+                    kill_count = 1
+                    pop_count = 0
+                    for old_time in by.kill_times:
+                        if current_time - old_time <= KILL_TIME:
+                            kill_count += 1
+                        else:
+                            pop_count += 1
+                    if kill_count >= KILL_THRESHOLD:
+                        if KILLS_IN_TIME_BAN:
+                            by.ban('Aimbot detected - T2', KILLS_IN_TIME_BAN_DURATION)
+                        else:
+                            by.kick('Aimbot detected - T2')
+                        return
+                    for i in xrange(0, pop_count):
+                        by.kill_times.pop(0)
+                    by.kill_times.append(current_time)
             return connection.kill(self, by, type)
         
         def damage_hack_eject(self):
@@ -200,29 +200,29 @@ def apply_script(protocol, connection, config):
                 self.kick('Damage hack detected')
 
         def hit(self, value, by = None, type = WEAPON_KILL):
-            if (type == WEAPON_KILL or type == HEADSHOT_KILL) and by != None:
-                # Any hit will be counted as a near miss
-                if by.weapon == SEMI_WEAPON:
-                    if (not (value in SEMI_DAMAGE)) and DETECT_DAMAGE_HACK:
-                        by.damage_hack_eject()
-                        return
-                    else:
-                        by.semi_hits += 1
-                elif by.weapon == SMG_WEAPON:
-                    if (not (value in SMG_DAMAGE)) and DETECT_DAMAGE_HACK:
-                        by.damage_hack_eject()
-                        return
-                    else:
-                        by.smg_hits += 1
-                elif by.weapon == SHOTGUN_WEAPON:
-                    if (not (value in SHOTGUN_DAMAGE)) and DETECT_DAMAGE_HACK:
-                        by.damage_hack_eject()
-                        return
-                    else:
-                        current_time = reactor.seconds()
-                        if current_time - by.shotgun_time >= HALF_SHOTGUN:
-                            by.shotgun_hits += 1
-                            by.shotgun_time = current_time
+            if by is not None and by is not self:
+                if type == WEAPON_KILL or type == HEADSHOT_KILL:
+                    if by.weapon == SEMI_WEAPON:
+                        if (not (value in SEMI_DAMAGE)) and DETECT_DAMAGE_HACK:
+                            by.damage_hack_eject()
+                            return
+                        else:
+                            by.semi_hits += 1
+                    elif by.weapon == SMG_WEAPON:
+                        if (not (value in SMG_DAMAGE)) and DETECT_DAMAGE_HACK:
+                            by.damage_hack_eject()
+                            return
+                        else:
+                            by.smg_hits += 1
+                    elif by.weapon == SHOTGUN_WEAPON:
+                        if (not (value in SHOTGUN_DAMAGE)) and DETECT_DAMAGE_HACK:
+                            by.damage_hack_eject()
+                            return
+                        else:
+                            current_time = reactor.seconds()
+                            if current_time - by.shotgun_time >= HALF_SHOTGUN:
+                                by.shotgun_hits += 1
+                                by.shotgun_time = current_time
             return connection.hit(self, value, by, type)
         
         def hit_percent_eject(self):
@@ -251,13 +251,13 @@ def apply_script(protocol, connection, config):
 
         def on_bullet_fire(self):
             # Remembering the past offers a performance boost, particularly with the SMG
-            if self.last_target != None:
-                if self.last_target.hp != None:
+            if self.last_target is not None:
+                if self.last_target.hp is not None:
                     if self.check_near_miss(self.last_target):
                         self.check_percent()
                         return
             for enemy in self.possible_targets:
-                if enemy.hp != None and enemy != self.last_target:
+                if enemy.hp is not None and enemy is not self.last_target:
                     if self.check_near_miss(enemy):
                         self.last_target = enemy
                         self.check_percent()
