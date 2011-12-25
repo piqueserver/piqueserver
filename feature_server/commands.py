@@ -756,6 +756,41 @@ def add(func, name = None):
         name = func.func_name
     commands[name.lower()] = func
 
+# optional commands
+try:
+    import pygeoip
+    database = pygeoip.GeoIP('./data/GeoLiteCity.dat')
+    
+    @name('from')
+    def where_from(connection, value = None):
+        if value is None:
+            if connection not in connection.protocol.players:
+                raise ValueError()
+            player = connection
+        else:
+            player = get_player(connection.protocol, value)
+        record = database.record_by_addr(player.address[0])
+        if record is None:
+            return 'Player location could not be determined.'
+        items = []
+        for entry in ('country_name', 'city', 'region_name'):
+            # sometimes, the record entries are numbers or nonexistent
+            try:
+                value = record[entry]
+                int(value) # if this raises a ValueError, it's not a number
+                continue
+            except KeyError:
+                continue
+            except ValueError:
+                pass
+            items.append(value)
+        return '%s is from %s' % (player.name, ', '.join(items))
+    add(where_from)
+except ImportError:
+    print "('from' command disabled - missing pygeoip)"
+except (IOError, OSError):
+    print "('from' command disabled - missing data/GeoLiteCity.dat)"
+
 def handle_command(connection, command, parameters):
     command = command.lower()
     try:
