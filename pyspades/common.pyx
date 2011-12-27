@@ -94,7 +94,8 @@ import zlib
 def crc32(data):
     return zlib.crc32(data) & 0xffffffff
 
-# Ace of Spades uses the CP437 character set
+# Ace of Spades uses the CP437 character set for chat and Windows-1252 for
+# player list
 
 def encode(value):
     if value is not None:

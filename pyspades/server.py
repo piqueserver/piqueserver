@@ -187,6 +187,7 @@ class ServerConnection(BaseConnection):
     world_object = None
     last_block = None
     map_data = None
+    last_position_update = None
     
     def __init__(self, *arg, **kw):
         BaseConnection.__init__(self, *arg, **kw)
@@ -249,6 +250,11 @@ class ServerConnection(BaseConnection):
                     if self.filter_visibility_data:
                         return
                 elif contained.id == loaders.PositionData.id:
+                    current_time = reactor.seconds()
+                    if (self.last_position_update is not None and current_time -
+                    self.last_position_update < MAX_POSITION_RATE):
+                        return
+                    self.last_position_update = current_time
                     x, y, z = contained.x, contained.y, contained.z
                     if check_nan(x, y, z):
                         self.on_hack_attempt(
