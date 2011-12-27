@@ -596,6 +596,9 @@ def change_map(connection, value):
     if not protocol.set_map_rotation((value,), True):
         return 'Map %s does not exist' % value
     protocol.irc_say("* %s changed map to '%s'" % (name, value))
+    
+def mapname(connection):
+    return 'Current map: ' + connection.protocol.map_info.name
 
 @admin
 def advance(connection):
@@ -736,7 +739,8 @@ command_list = [
     server_name,
     ping,
     version,
-    weapon
+    weapon,
+    mapname
 ]
 
 commands = {}
