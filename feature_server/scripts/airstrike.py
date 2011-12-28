@@ -11,6 +11,11 @@ def airstrike(connection, value = None):
 
 commands.add(airstrike)
 
+def a(connection, value = None):
+    return airstrike(connection, value)
+
+commands.add(a)
+
 def apply_script(protocol, connection, config):
     class AirstrikeConnection(connection):
         airstrike = False
