@@ -45,22 +45,21 @@ struct Orientation
     Vector3 f, s, h;
 };
 
-inline const Orientation & get_orientation(float orientation_x, 
-                                           float orientation_y,
-                                           float orientation_z)
+inline void get_orientation(Orientation * o,
+                            float orientation_x, 
+                            float orientation_y,
+                            float orientation_z)
 {
     float f;
-    Orientation o;
-    o.f.x = orientation_x;
-    o.f.y = orientation_y;
-    o.f.z = orientation_z;
+    o->f.x = orientation_x;
+    o->f.y = orientation_y;
+    o->f.z = orientation_z;
     f = sqrtf(orientation_x*orientation_x + orientation_y*orientation_y);
-    o.s.x = -orientation_y/f;
-    o.s.y = orientation_x/f;
-    o.h.x = -orientation_z*o.s.y;
-    o.h.y = orientation_z*o.s.x;
-    o.h.z = orientation_x*o.s.y - orientation_y*o.s.x;
-    return o;
+    o->s.x = -orientation_y/f;
+    o->s.y = orientation_x/f;
+    o->h.x = -orientation_z*o->s.y;
+    o->h.y = orientation_z*o->s.x;
+    o->h.z = orientation_x*o->s.y - orientation_y*o->s.x;
 }
 
 float distance3d(float x1, float y1, float z1, float x2, float y2, float z2)
@@ -74,8 +73,8 @@ int validate_hit(float shooter_x, float shooter_y, float shooter_z,
                  float tolerance)
 {
     float cx, cy, cz, r, x, y;
-    const Orientation & o = get_orientation(orientation_x, orientation_y, 
-                                            orientation_z);
+    Orientation o;
+    get_orientation(&o, orientation_x, orientation_y, orientation_z);
     ox -= shooter_x;
     oy -= shooter_y;
     oz -= shooter_z;

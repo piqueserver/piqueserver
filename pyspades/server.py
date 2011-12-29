@@ -335,8 +335,9 @@ class ServerConnection(BaseConnection):
                         return
                     valid_hit = world_object.validate_hit(player.world_object,
                         value, HIT_TOLERANCE)
-                    self.misses.add(valid_hit)
+                    self.misses.add(not valid_hit)
                     if not valid_hit:
+                        self.send_chat('Missed! %s' % reactor.seconds())
                         if sum(self.misses.window) >= MAX_MISSES:
                             self.on_hack_attempt('Too many invalid hits')
                         return
