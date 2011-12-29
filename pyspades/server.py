@@ -196,7 +196,6 @@ class ServerConnection(BaseConnection):
         self.address = (address.host, address.port)
         self.respawn_time = protocol.respawn_time
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
-        self.misses = SlidingWindow(MISSES_WINDOW_ENTRIES)
     
     def on_connect(self):
         if self.peer.eventData != self.protocol.version:
@@ -335,11 +334,7 @@ class ServerConnection(BaseConnection):
                         return
                     valid_hit = world_object.validate_hit(player.world_object,
                         value, HIT_TOLERANCE)
-                    self.misses.add(not valid_hit)
                     if not valid_hit:
-                        self.send_chat('Missed! %s' % reactor.seconds())
-                        if sum(self.misses.window) >= MAX_MISSES:
-                            self.on_hack_attempt('Too many invalid hits')
                         return
                     position1 = world_object.position
                     position2 = player.world_object.position
