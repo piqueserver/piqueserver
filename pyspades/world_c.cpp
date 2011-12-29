@@ -45,9 +45,9 @@ struct Orientation
     Vector3 f, s, h;
 };
 
-inline Orientation get_orientation(float orientation_x, 
-                                   float orientation_y,
-                                   float orientation_z)
+inline const Orientation & get_orientation(float orientation_x, 
+                                           float orientation_y,
+                                           float orientation_z)
 {
     float f;
     Orientation o;
@@ -74,8 +74,8 @@ int validate_hit(float shooter_x, float shooter_y, float shooter_z,
                  float tolerance)
 {
     float cx, cy, cz, r, x, y;
-    Orientation & o = get_orientation(orientation_x, orientation_y, 
-                                      orientation_z);
+    const Orientation & o = get_orientation(orientation_x, orientation_y, 
+                                            orientation_z);
     ox -= shooter_x;
     oy -= shooter_y;
     oz -= shooter_z;
