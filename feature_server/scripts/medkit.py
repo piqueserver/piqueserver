@@ -13,6 +13,10 @@ def medkit(connection):
         connection.send_chat("You don't have any medkits or have full health!")
 add(medkit)
 
+def m(connection):
+    return medkit(connection)
+add(m)
+
 def apply_script(protocol, connection, config):
     default_medkits = config.get('medkits', 1)
     medkit_heal_amount = config.get('medkit_heal_amount', 40)
