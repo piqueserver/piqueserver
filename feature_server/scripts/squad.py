@@ -9,7 +9,6 @@ SQUAD_NAMES = set([
    'Uniform','Victor','Whiskey','X-ray','Yankee','Zulu'])
 
 def follow(self, playerkey = None):
-    
     if playerkey is None:
         squad_pref = None
         squad = self.squad
@@ -27,7 +26,6 @@ def follow(self, playerkey = None):
     return self.join_squad(squad, squad_pref)
 
 def squad(self, squadkey = None):
-
     if self.protocol.squad_size <= 1:
         return 'Squads are disabled on this server.'
 
@@ -57,7 +55,6 @@ for func in (squad, follow):
     add(func)
 
 def apply_script(protocol, connection, config):
-
     protocol.squad_respawn_time = config.get('squad_respawn_time', 
         protocol.respawn_time)
     protocol.squad_size = config.get('squad_size', 0)
@@ -203,7 +200,6 @@ def apply_script(protocol, connection, config):
                     
         def get_follow_location(self, follow):
             x, y, z = (follow.world_object.position.get())
-            z -= 2
             return x, y, z
 
         def on_team_leave(self):

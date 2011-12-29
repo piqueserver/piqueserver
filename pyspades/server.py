@@ -196,6 +196,7 @@ class ServerConnection(BaseConnection):
         self.address = (address.host, address.port)
         self.respawn_time = protocol.respawn_time
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
+        self.misses = SlidingWindow(MISSES_WINDOW_ENTRIES)
     
     def on_connect(self):
         if self.peer.eventData != self.protocol.version:
@@ -261,10 +262,7 @@ class ServerConnection(BaseConnection):
                             'Invalid position data received')
                         return
                     position = world_object.position
-                    if (self.speedhack_detect and (
-                    math.fabs(x - position.x) > RUBBERBAND_DISTANCE or
-                    math.fabs(y - position.y) > RUBBERBAND_DISTANCE or
-                    math.fabs(z - position.z) > RUBBERBAND_DISTANCE_Z)):
+                    if not self.is_valid_position(x, y, z):
                         # vanilla behaviour
                         self.set_location()
                         return
@@ -335,7 +333,14 @@ class ServerConnection(BaseConnection):
                         player = self.protocol.players[contained.player_id]
                     except KeyError:
                         return
-                    position1 = self.world_object.position
+                    valid_hit = world_object.validate_hit(player.world_object,
+                        value, HIT_TOLERANCE)
+                    self.misses.add(valid_hit)
+                    if not valid_hit:
+                        if sum(self.misses.window) >= MAX_MISSES:
+                            self.on_hack_attempt('Too many invalid hits')
+                        return
+                    position1 = world_object.position
                     position2 = player.world_object.position
                     if is_melee:
                         if not vector_collision(position1, position2,
@@ -361,6 +366,8 @@ class ServerConnection(BaseConnection):
                     if not self.grenades:
                         return
                     self.grenades -= 1
+                    if not self.is_valid_position(*contained.position):
+                        contained.position = self.world_object.position.get()
                     if self.on_grenade(contained.value) == False:
                         return
                     grenade = self.protocol.world.create_object(
@@ -502,6 +509,19 @@ class ServerConnection(BaseConnection):
                         return
                     self.set_team(team)
     
+    def is_valid_position(self, x, y, z, distance = None, z_distance = None):
+        if not self.speedhack_detect:
+            return True
+        if distance is None and z_distance is None:
+            distance = RUBBERBAND_DISTANCE
+            z_distance = RUBBERBAND_DISTANCE_Z
+        if z_distance is None:
+            z_distance = distance
+        position = self.world_object.position
+        return (math.fabs(x - position.x) < distance and
+                math.fabs(y - position.y) < distance and
+                math.fabs(z - position.z) < z_distance)
+    
     def check_refill(self):
         last_refill = self.last_refill
         if (last_refill is None or 
@@ -564,7 +584,7 @@ class ServerConnection(BaseConnection):
         self.spawn_call = None
         if pos is None:
             x, y, z = self.get_spawn_location()
-            z -= 1
+            z -= 1.4 # super magic value
         else:
             x, y, z = pos
         if self.world_object is not None:
