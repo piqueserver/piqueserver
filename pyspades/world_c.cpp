@@ -57,6 +57,7 @@ inline void get_orientation(Orientation * o,
     f = sqrtf(orientation_x*orientation_x + orientation_y*orientation_y);
     o->s.x = -orientation_y/f;
     o->s.y = orientation_x/f;
+    o->s.z = 0.0f;
     o->h.x = -orientation_z*o->s.y;
     o->h.y = orientation_z*o->s.x;
     o->h.z = orientation_x*o->s.y - orientation_y*o->s.x;
