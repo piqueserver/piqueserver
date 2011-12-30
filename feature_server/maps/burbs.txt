@@ -1,0 +1,4 @@
+name = 'burbs'
+version = '11.0'
+author = 'Sasquatch'
+description = ('Think Nuketown only much larger. Best fog is 211 211 166.')
