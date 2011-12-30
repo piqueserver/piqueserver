@@ -604,6 +604,12 @@ def change_map(connection, *maps):
         return 'Invalid map in map rotation (%s)' % map_list
     map_list = ', '.join(maps)
     protocol.irc_say("* %s changed map rotation to %s" % (name, map_list))
+
+@name('revertrotation')
+@admin
+def revert_rotation(connection):
+    maps = connection.protocol.config['maps']
+    return change_map(connection, *maps)
     
 def mapname(connection):
     return 'Current map: ' + connection.protocol.map_info.name
