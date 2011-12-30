@@ -753,6 +753,7 @@ command_list = [
     reset_game,
     toggle_master,
     change_map,
+    revert_rotation,
     advance,
     set_time_limit,
     get_time_limit,
