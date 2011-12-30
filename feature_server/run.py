@@ -109,7 +109,8 @@ from twisted.internet.stdio import StandardIO
 from twisted.protocols.basic import LineReceiver
 from pyspades.common import encode, decode, prettify_timespan
 from pyspades.constants import *
-from pyspades.master import MAX_SERVER_NAME_SIZE
+from pyspades.master import MAX_SERVER_NAME_SIZE, get_external_ip
+from pyspades.tools import make_server_number
 from networkdict import NetworkDict, get_network
 from pyspades.exceptions import InvalidData
 from pyspades.bytes import NoDataLeft
@@ -464,6 +465,8 @@ class FeatureProtocol(ServerProtocol):
     advance_call = None
     master_reconnect_call = None
     master = False
+    ip = None
+    identifier = None
     
     # votekick
     votekick_time = 120 # 2 minutes
@@ -600,6 +603,14 @@ class FeatureProtocol(ServerProtocol):
 
         self.master = config.get('master', True)
         self.set_master()
+        
+        # superficial things (e.g. getting external IP)
+        get_external_ip().addCallback(self.got_external_ip)
+    
+    def got_external_ip(self, ip):
+        self.ip = ip
+        self.identifier = 'aos://%s' % make_server_number(ip)
+        print 'Server identifier is %s' % self.identifier
     
     def set_time_limit(self, time_limit = None):
         if self.advance_call is not None:

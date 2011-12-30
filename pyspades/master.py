@@ -81,6 +81,8 @@ class MasterConnection(BaseConnection):
 
 from twisted.web.client import getPage
 
+IP_GETTER = 'http://automation.whatismyip.com/n09230945.asp'
+
 def get_external_ip():
     return getPage(IP_GETTER)
 

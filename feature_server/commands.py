@@ -602,7 +602,6 @@ def change_map(connection, *maps):
     map_list = ', '.join(maps)
     if not protocol.set_map_rotation(maps, True):
         return 'Invalid map in map rotation (%s)' % map_list
-    map_list = ', '.join(maps)
     protocol.irc_say("* %s changed map rotation to %s" % (name, map_list))
 
 @name('revertrotation')
@@ -684,6 +683,14 @@ def intel(connection):
 def version(connection):
     return 'Server version is "%s"' % connection.protocol.server_version
 
+@name('server')
+def server_info(connection):
+    protocol = connection.protocol
+    msg = 'You are playing on "%s"' % protocol.name
+    if protocol.identifier is not None:
+        msg += ' at %s' % protocol.identifier
+    return msg
+
 @admin
 def fog(connection, r, g, b):
     r = int(r)
@@ -752,6 +759,7 @@ command_list = [
     server_name,
     ping,
     version,
+    server_info,
     weapon,
     mapname
 ]
