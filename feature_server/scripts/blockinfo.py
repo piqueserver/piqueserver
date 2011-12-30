@@ -1,9 +1,10 @@
 from pyspades.collision import distance_3d_vector
 from pyspades.common import prettify_timespan
-from commands import add, admin, name, get_player
+from commands import add, admin, name, get_player, alias
 from twisted.internet import reactor
 
 @name('griefcheck')
+@alias('gc')
 @admin
 def grief_check(connection, player, time = None):
     player = get_player(connection.protocol, player)

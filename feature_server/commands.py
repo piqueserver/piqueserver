@@ -402,6 +402,7 @@ def teleport(connection, player1, player2 = None, silent = False):
     else:
         connection.protocol.send_chat(message, irc = True)
 
+@alias('tps')
 @admin
 def tpsilent(connection, player1, player2 = None):
     teleport(connection, player1, player2, silent = True)
@@ -504,6 +505,7 @@ from pyspades.server import orientation_data, input_data
 from pyspades.server import set_tool, set_color
 from pyspades.common import make_color
 
+@alias('invis')
 @admin
 def invisible(connection, player = None):
     if player is not None:
@@ -762,7 +764,8 @@ command_list = [
     version,
     server_info,
     weapon,
-    mapname
+    mapname,
+    revert_rotation
 ]
 
 commands = {}
