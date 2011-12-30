@@ -111,7 +111,8 @@
         "squad",
         "disco",
         "antijerk",
-        "savemap"
+        "savemap",
+        "ratio"
     ],
     
     "load_saved_map" : false,
