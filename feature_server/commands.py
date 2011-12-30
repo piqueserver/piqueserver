@@ -590,12 +590,14 @@ import itertools
 
 @name('map')
 @admin
-def change_map(connection, value):
+def change_map(connection, *maps):
     name = connection.name
     protocol = connection.protocol
-    if not protocol.set_map_rotation((value,), True):
-        return 'Map %s does not exist' % value
-    protocol.irc_say("* %s changed map to '%s'" % (name, value))
+    map_list = ', '.join(maps)
+    if not protocol.set_map_rotation(maps, True):
+        return 'Invalid map in map rotation (%s)' % map_list
+    map_list = ', '.join(maps)
+    protocol.irc_say("* %s changed map rotation to %s" % (name, map_list))
     
 def mapname(connection):
     return 'Current map: ' + connection.protocol.map_info.name
