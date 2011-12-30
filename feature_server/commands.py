@@ -764,8 +764,7 @@ command_list = [
     version,
     server_info,
     weapon,
-    mapname,
-    revert_rotation
+    mapname
 ]
 
 commands = {}
