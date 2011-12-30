@@ -39,6 +39,15 @@ def name(name):
         return func
     return dec
 
+def alias(name):
+    def dec(func):
+        try:
+            func.aliases.append(name)
+        except AttributeError:
+            func.aliases = [name]
+        return func
+    return dec
+
 def get_player(protocol, value):
     try:
         if value.startswith('#'):
@@ -367,6 +376,7 @@ def global_chat(connection):
     connection.protocol.send_chat('Global chat %s' % ('enabled' if
         connection.protocol.global_chat else 'disabled'), irc = True)
 
+@alias('tp')
 @admin
 def teleport(connection, player1, player2 = None, silent = False):
     player1 = get_player(connection.protocol, player1)
@@ -391,10 +401,6 @@ def teleport(connection, player1, player2 = None, silent = False):
         connection.protocol.irc_say('* ' + message)
     else:
         connection.protocol.send_chat(message, irc = True)
-
-@admin
-def tp(connection, player1, player2 = None):
-    teleport(connection, player1, player2)
 
 @admin
 def tpsilent(connection, player1, player2 = None):
@@ -722,7 +728,6 @@ command_list = [
     toggle_kill,
     toggle_teamkill,
     teleport,
-    tp,
     tpsilent,
     go_to,
     move,
@@ -746,9 +751,7 @@ command_list = [
 ]
 
 commands = {}
-
-for command_func in command_list:
-    commands[command_func.func_name] = command_func
+aliases = {}
 
 rights = {
     'builder' : ['god', 'goto']
@@ -760,7 +763,16 @@ def add(func, name = None):
     """
     if name is None:
         name = func.func_name
-    commands[name.lower()] = func
+    name = name.lower()
+    commands[name] = func
+    try:
+        for alias in func.aliases:
+            aliases[alias.lower()] = name
+    except AttributeError:
+        pass
+
+for command_func in command_list:
+    add(command_func)
 
 # optional commands
 try:
@@ -799,6 +811,10 @@ except (IOError, OSError):
 
 def handle_command(connection, command, parameters):
     command = command.lower()
+    try:
+        command = aliases[command]
+    except KeyError:
+        pass
     try:
         command_func = commands[command]
     except KeyError:

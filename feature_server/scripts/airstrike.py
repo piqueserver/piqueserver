@@ -6,15 +6,11 @@ from twisted.internet import reactor
 import random
 import commands
 
+@commands.alias('a')
 def airstrike(connection, value = None):
     return connection.start_airstrike(value)
 
 commands.add(airstrike)
-
-def a(connection, value = None):
-    return airstrike(connection, value)
-
-commands.add(a)
 
 def apply_script(protocol, connection, config):
     class AirstrikeConnection(connection):
