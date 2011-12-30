@@ -274,6 +274,8 @@ cdef class Character(Object):
                               orientation.x, orientation.y, orientation.z,
                               x, y, z, tolerance):
             return False
+        if part == HEAD:
+            z -= 0.5
         if not can_see(self.world.map, x, y, z, 
                        position1.x, position1.y, position1.z):
             return False
