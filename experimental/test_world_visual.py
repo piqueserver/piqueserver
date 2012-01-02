@@ -1,4 +1,4 @@
-# Copyright (c) Mathias Kaerlev 2011.
+# Copyright (c) Mathias Kaerlev 2011-2012.
 
 # This file is part of pyspades.
 
