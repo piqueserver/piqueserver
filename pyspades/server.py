@@ -539,7 +539,7 @@ class ServerConnection(BaseConnection):
             self.world_object.set_position(x, y, z)
             x += 0.5
             y += 0.5
-            z -= 0.5        
+            z -= 0.5
         position_data.x = x
         position_data.y = y
         position_data.z = z
@@ -723,14 +723,15 @@ class ServerConnection(BaseConnection):
         set_hp.source_z = z
         self.send_contained(set_hp)
     
-    def set_weapon(self, weapon, local = False):
+    def set_weapon(self, weapon, local = False, no_kill = False):
         self.weapon = weapon
         if self.weapon_object is not None:
             self.weapon_object.reset()
         self.weapon_object = WEAPONS[weapon](self._on_reload)
         if not local:
             self.protocol.send_contained(change_weapon, save = True)
-            self.kill(type = CLASS_CHANGE_KILL)
+            if not no_kill:
+                self.kill(type = CLASS_CHANGE_KILL)
     
     def set_team(self, team):
         if team is self.team:
