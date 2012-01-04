@@ -862,6 +862,4 @@ def handle_command(connection, command, parameters):
     except InvalidTeam:
         return 'Invalid team specifier'
     except ValueError:
-        import traceback
-        traceback.print_exc()
         return 'Invalid parameters'
