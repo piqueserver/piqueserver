@@ -16,6 +16,7 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+from random import choice
 from pyspades.constants import *
 from pyspades.common import prettify_timespan
 from twisted.internet import reactor
@@ -500,17 +501,18 @@ def fly(connection, player = None):
         if connection in connection.protocol.players:
             return '%s is %s.' % (player.name, message)
 
-from pyspades.server import kill_action, create_player
+from pyspades.contained import KillAction
+from pyspades.server import create_player, set_tool, set_color
 from pyspades.server import orientation_data, input_data
-from pyspades.server import set_tool, set_color
 from pyspades.common import make_color
 
 @alias('invis')
 @admin
 def invisible(connection, player = None):
+    protocol = connection.protocol
     if player is not None:
-        player = get_player(connection.protocol, player)
-    elif connection in connection.protocol.players:
+        player = get_player(protocol, player)
+    elif connection in protocol.players:
         player = connection
     else:
         raise ValueError()
@@ -521,16 +523,16 @@ def invisible(connection, player = None):
     player.killing = not player.invisible
     if player.invisible:
         player.send_chat("You're now invisible.")
-        connection.protocol.irc_say('* %s became invisible' % player.name)
-        kill_action.kill_type = WEAPON_KILL
+        protocol.irc_say('* %s became invisible' % player.name)
+        kill_action = KillAction()
+        kill_action.kill_type = choice([GRENADE_KILL, FALL_KILL])
         kill_action.player_id = kill_action.killer_id = player.player_id
-        player.protocol.send_contained(kill_action, sender = player,
-            save = True)
+        reactor.callLater(1.0 / NETWORK_FPS, protocol.send_contained,
+            kill_action, sender = player)
     else:
         player.send_chat("You return to visibility.")
-        connection.protocol.irc_say('* %s became visible' % player.name)
-        pos = player.team.get_random_location()
-        x, y, z = pos
+        protocol.irc_say('* %s became visible' % player.name)
+        x, y, z = player.world_object.position.get()
         create_player.player_id = player.player_id
         create_player.name = player.name
         create_player.x = x
@@ -553,13 +555,11 @@ def invisible(connection, player = None):
         set_tool.value = player.tool
         set_color.player_id = player.player_id
         set_color.value = make_color(*player.color)
-        player.protocol.send_contained(create_player, sender = player,
-            save = True)
-        player.protocol.send_contained(set_tool, sender = player)
-        player.protocol.send_contained(set_color, sender = player,
-            save = True)
-        player.protocol.send_contained(input_data, sender = player)
-    if connection is player or connection not in connection.protocol.players:
+        protocol.send_contained(create_player, sender = player, save = True)
+        protocol.send_contained(set_tool, sender = player)
+        protocol.send_contained(set_color, sender = player, save = True)
+        protocol.send_contained(input_data, sender = player)
+    if connection is player or connection not in protocol.players:
         return
     if player.invisible:
         return '%s is now invisible' % player.name
