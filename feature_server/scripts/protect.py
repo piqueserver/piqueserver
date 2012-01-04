@@ -3,17 +3,18 @@ from pyspades.common import coordinates
 
 @admin
 def protect(connection, value = None):
+    protocol = connection.protocol
     if value is None:
-        connection.protocol.protected = None
-        connection.protocol.send_chat('All areas unprotected.', irc = True)
+        protocol.protected = None
+        protocol.send_chat('All areas unprotected', irc = True)
     else:
-        if connection.protocol.protected is None:
-            connection.protocol.protected = set()
+        if protocol.protected is None:
+            protocol.protected = set()
         pos = coordinates(value)
-        connection.protocol.protected.symmetric_difference_update([pos])
-        connection.protocol.send_chat('The area at %s is now %sprotected.' %
-            (value.upper(), 'un' if pos not in connection.protocol.protected
-            else ''), irc = True)
+        protocol.protected.symmetric_difference_update([pos])
+        message = 'The area at %s is now %s' % (value.upper(),
+            'protected' if pos in protocol.protected else 'unprotected')
+        protocol.send_chat(message, irc = True)
 
 add(protect)
 
@@ -26,6 +27,11 @@ def apply_script(protocol, connection, config):
     
     class ProtectProtocol(protocol):
         protected = None
+        
+        def on_map_change(self, map):
+            self.protected = set(coordinates(s) for s in
+                getattr(self.map_info.info, 'protected', []))
+            protocol.on_map_change(self, map)
         
         def is_indestructable(self, x, y, z):
             if self.is_protected(x, y):
