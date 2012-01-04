@@ -33,10 +33,20 @@ cdef inline int check_default_int(int value, int default) except -1:
             'check_default() failed: was %s, should be %s' % (value, default))
     return 0
 
+cdef class Quaternion
 cdef class Vertex3:
     cdef public:
         double x, y, z
-    
-    cpdef get(self)
-    cpdef set(self, double x, double y, double z)
-    cpdef set_vector(self, Vertex3 vector)
+    cpdef Quaternion get_rotation_to(self, Vertex3 A)
+
+cdef class Vertex2:
+    cdef public:
+        double x, y
+
+cdef class Quaternion:
+    cdef public:
+        double w, x, y, z
+    cpdef Quaternion set_angle_axis(self, double radians, Vertex3 axis)
+    cpdef Quaternion slerp(self, Quaternion q, double t)
+    cpdef Quaternion nlerp(self, Quaternion q, double t)
+    cpdef Vertex3 transform_vector(self, Vertex3 v)

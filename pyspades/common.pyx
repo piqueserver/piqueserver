@@ -1,4 +1,4 @@
-# Copyright (c) Mathias Kaerlev 2011-2012.
+# Copyright (c) Mathias Kaerlev 2011.
 
 # This file is part of pyspades.
 
@@ -15,6 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from math import pi
+
+cdef extern from "math.h":
+    double sqrt(double x)
+    double sin(double x)
+    double cos(double x)
+    double acos(double x)
+
 def get_color(color):
     b = color & 0xFF
     g = (color & 0xFF00) >> 8
@@ -30,6 +38,7 @@ def binify(data, size = 2):
     return binText
 
 MAX_HEX_SIZE = 110
+EPSILON = 0.0000001
 
 def hexify(data, max = MAX_HEX_SIZE):
     hexed = str(data).encode('hex')
@@ -106,17 +115,229 @@ def decode(value):
         return value.decode('cp437', 'replace')
 
 cdef class Vertex3:
+    # NOTE: for the most part this behaves as a 2d vector, with z being tacked on
+    # so it's useful for orientation math
+    
     def __init__(self, *arg):
         if arg:
             self.set(*arg)
     
-    cpdef get(self):
+    def copy(self):
+        return Vertex3(self.x, self.y, self.z)
+    
+    def get(self):
         return self.x, self.y, self.z
     
-    cpdef set(self, double x, double y, double z):
+    def set(self, double x, double y, double z):
         self.x = x
         self.y = y
         self.z = z
     
-    cpdef set_vector(self, Vertex3 vector):
+    def set_vector(self, Vertex3 vector):
         self.set(vector.x, vector.y, vector.z)
+    
+    def zero(self):
+        self.x = self.y = self.z = 0.0
+    
+    def __add__(self, Vertex3 A):
+        return Vertex3(self.x + A.x, self.y + A.y, self.z + A.z)
+    
+    def __sub__(self, Vertex3 A):
+        return Vertex3(self.x - A.x, self.y - A.y, self.z - A.z)
+    
+    def __mul__(self, double k):
+        return Vertex3(self.x * k, self.y * k, self.z * k)
+    
+    def __div__(self, double k):
+        return Vertex3(self.x / k, self.y / k, self.z / k)
+    
+    def __iadd__(self, Vertex3 A):
+        self.x += A.x
+        self.y += A.y
+        self.z += A.z
+        return self
+    
+    def __isub__(self, Vertex3 A):
+        self.x -= A.x
+        self.y -= A.y
+        self.z -= A.z
+        return self
+    
+    def __imul__(self, double k):
+        self.x *= k
+        self.y *= k
+        self.z *= k
+        return self
+    
+    def __idiv__(self, double k):
+        self.x /= k
+        self.y /= k
+        self.z /= k
+        return self
+    
+    def translate(self, double x, double y, double z):
+        self.x += x
+        self.y += y
+        self.z += z
+        return self
+    
+    def cross(self, Vertex3 A):
+        return Vertex3(
+            self.y * A.z - self.z * A.y,
+            self.z * A.x - self.x * A.z,
+            self.x * A.y - self.y * A.x)
+    
+    def dot(self, Vertex3 A):
+        return self.x * A.x + self.y * A.y
+    
+    def perp_dot(self, Vertex3 A):
+        return self.x * A.y - self.y * A.x
+    
+    def rotate(self, Vertex3 A):
+        self.x, self.y = self.x * A.x - self.y * A.y, self.x * A.y + self.y * A.x
+        return self
+    
+    def unrotate(self, Vertex3 A):
+        self.x, self.y = self.x * A.x + self.y * A.y, self.y * A.x - self.x * A.y
+        return self
+    
+    def length(self):
+        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
+    
+    def length_sqr(self):
+        return self.x * self.x + self.y * self.y + self.z * self.z
+    
+    def is_zero(self):
+        return self.length_sqr() < EPSILON
+    
+    def normal(self):
+        k = self.length()
+        return k and Vertex3(self.x / k, self.y / k, self.z / k) or Vertex3()
+    
+    def normalize(self):
+        k = self.length()
+        self.x, self.y, self.z = (k and (self.x / k, self.y / k, self.z / k) or
+            (0.0, 0.0, 0.0))
+        return k
+    
+    cpdef Quaternion get_rotation_to(self, Vertex3 A):
+        q = Quaternion()
+        v0 = self.normal()
+        v1 = A.normal()
+        d = v0.dot(v1)
+        if d >= 1.0:
+            return Quaternion()
+        if d < EPSILON - 1.0:
+            axis = Vertex3(1.0, 0.0, 0.0).cross(self)
+            if axis.is_zero():
+                axis = Vertex3(0.0, 1.0, 0.0).cross(self)
+            axis.normalise()
+            q.set_angle_axis(pi, axis)
+        else:
+            k = sqrt((1.0 + d) * 2.0)
+            inv_k = 1.0 / k
+            c = v0.cross(v1)
+            q.x = c.x * inv_k
+            q.y = c.y * inv_k
+            q.z = c.z * inv_k
+            q.w = k * 0.5
+            q.normalize()
+        return q
+    
+    def __neg__(self):
+        return Vertex3(-self.x, -self.y, -self.z)
+    
+    def __pos__(self):
+        return Vertex3(+self.x, +self.y, +self.z)
+    
+    def __str__(self):
+        return "(%s %s %s)" % (self.x, self.y, self.z)
+    
+cdef class Quaternion:
+    def __init__(self, *arg):
+        self.w = 1.0
+        if arg:
+            self.set(*arg)
+    
+    def copy(self):
+        return Vertex3(self.x, self.y, self.z)
+    
+    def get(self):
+        return self.w, self.x, self.y, self.z
+    
+    def set(self, double w, double x, double y, double z):
+        self.w = w
+        self.x = x
+        self.y = y
+        self.z = z
+    
+    cpdef Quaternion set_angle_axis(self, double radians, Vertex3 axis):
+        # axis must be normalized
+        half_angle = radians * 0.5
+        sha = sin(half_angle)
+        self.w = cos(half_angle)
+        self.x = axis.x * sha
+        self.y = axis.y * sha
+        self.z = axis.z * sha
+        return self
+    
+    cpdef Quaternion slerp(self, Quaternion q, double t):
+        if t <= 0.0: return self
+        if t >= 1.0: return q
+        
+        cos_omega = self.x * q.x + self.y * q.y + self.z * q.z + self.w * q.w
+        k0, k1 = 1.0 - t, t
+        if cos_omega < 0.0:
+            q.w, q.x, q.y, q.z = -q.w, -q.x, -q.y, -q.z
+            cos_omega = -cos_omega
+        if cos_omega <= 0.9999:
+            omega = acos(cos_omega)
+            sin_omega = sin(omega)
+            k0 = sin(k0 * omega) / sin_omega
+            k1 = sin(k1 * omega) / sin_omega
+        
+        return Quaternion(
+            k0 * self.w + k1 * q.w,
+            k0 * self.x + k1 * q.x,
+            k0 * self.y + k1 * q.y,
+            k0 * self.z + k1 * q.z)
+    
+    cpdef Quaternion nlerp(self, Quaternion q, double t):
+        return (self.multiply_scalar(1.0 - t) + q.multiply_scalar(t)).normalize()
+    
+    cpdef Vertex3 transform_vector(self, Vertex3 v):
+        tx = self.w*v.x + self.y*v.z - self.z*v.y
+        ty = self.w*v.y - self.x*v.z + self.z*v.x
+        tz = self.w*v.z + self.x*v.y - self.y*v.x
+        tw = -(self.x*v.x + self.y*v.y + self.z*v.z)
+        
+        return Vertex3(
+            -tw*self.x + tx*self.w - ty*self.z + tz*self.y,
+            -tw*self.y + ty*self.w - tz*self.x + tx*self.z,
+            -tw*self.z + tz*self.w - tx*self.y + ty*self.x)
+    
+    def normalize(self):
+        k = self.w * self.w + self.x * self.x + self.y * self.y + self.z * self.z
+        if abs(k - 1.0) > EPSILON:
+            k = 1.0 / sqrt(k)
+            self.w *= k
+            self.x *= k
+            self.y *= k
+            self.z *= k
+        return self
+    
+    def multiply_scalar(self, double k):
+        return Quaternion(self.w * k, self.x * k, self.y * k, self.z * k)
+    
+    def __add__(self, Quaternion A):
+        return Quaternion(self.w + A.w, self.x + A.x, self.y + A.y, self.z + A.z)
+    
+    def __mul__(self, Quaternion A):
+        return Quaternion(
+            self.w * A.w - self.x * A.x - self.y * A.y - self.z * A.z,
+            self.w * A.x + self.x * A.w + self.y * A.z - self.z * A.y,
+            self.w * A.y + self.y * A.w + self.z * A.x - self.x * A.z,
+            self.w * A.z + self.z * A.w + self.x * A.y - self.y * A.x)
+    
+    def __str__(self):
+        return "(%s %s %s %s)" % (self.w, self.x, self.y, self.z)
