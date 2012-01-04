@@ -119,7 +119,7 @@ def banip(connection, ip, *arg):
     try:
         connection.protocol.add_ban(ip, reason, duration)
     except ValueError:
-        return 'Invalid IP address/network.'
+        return 'Invalid IP address/network'
     reason = ': ' + reason if reason is not None else ''
     duration = duration or None
     if duration is None:
@@ -132,18 +132,18 @@ def banip(connection, ip, *arg):
 def unban(connection, ip):
     try:
         connection.protocol.remove_ban(ip)
-        return 'IP unbanned.'
+        return 'IP unbanned'
     except KeyError:
-        return 'IP not found in ban list.'
+        return 'IP not found in ban list'
 
 @name('undoban')
 @admin
 def undo_ban(connection, *arg):
     if len(connection.protocol.bans)>0:
         result = connection.protocol.undo_last_ban()
-        return ('Ban for %s undone.' % result[0])
+        return ('Ban for %s undone' % result[0])
     else:
-        return 'No bans to undo.'
+        return 'No bans to undo!'
 
 @admin
 def say(connection, *arg):
@@ -247,7 +247,7 @@ def pm(connection, value, *arg):
 def streak(connection):
     if connection not in connection.protocol.players:
         raise KeyError()
-    return ('Your current kill streak is %s. Best is %s kills.' %
+    return ('Your current kill streak is %s. Best is %s kills' %
         (connection.streak, connection.best_streak))
 @admin
 def lock(connection, value):
@@ -372,7 +372,7 @@ def deaf(connection, value = None):
         if not connection.admin and 'deaf' not in connection.rights:
             return 'No administrator rights!'
         connection = get_player(connection.protocol, value)
-    message = '%s deaf.' % ('now' if not connection.deaf else 'no longer')
+    message = '%s deaf' % ('now' if not connection.deaf else 'no longer')
     connection.protocol.irc_say('%s is %s' % (connection.name, message))
     message = "You're " + message
     if connection.deaf:
@@ -473,45 +473,46 @@ def god(connection, value = None):
     if connection.god:
         message = '%s entered GOD MODE!' % connection.name
     else:
-        message = '%s returned to being a mere human.' % connection.name
+        message = '%s returned to being a mere human' % connection.name
     connection.protocol.send_chat(message, irc = True)
 
 @name('godbuild')
 @admin
 def god_build(connection, player = None):
+    protocol = connection.protocol
     if player is not None:
-        player = get_player(connection.protocol, player)
-    elif connection not in connection.protocol.players:
-        raise ValueError()
-    else:
+        player = get_player(protocol, player)
+    elif connection in protocol.players:
         player = connection
+    else:
+        raise ValueError()
     if not player.god:
-        return 'Placing god blocks is only allowed in god mode.'
+        return 'Placing god blocks is only allowed in god mode'
     player.god_build = not player.god_build
-    message = ('now placing god blocks.' if player.god_build else
-        'no longer placing god blocks.')
-    if connection is not player:
-        connection.send_chat('%s is %s' % (player.name, message))
+    
+    message = ('now placing god blocks' if player.god_build else
+        'no longer placing god blocks')
     player.send_chat("You're %s" % message)
-    connection.protocol.irc_say('* %s is %s' % (player.name, message))
+    if connection is not player and connection in protocol.players:
+        connection.send_chat('%s is %s' % (player.name, message))
+    protocol.irc_say('* %s is %s' % (player.name, message))
 
 @admin
 def fly(connection, player = None):
+    protocol = connection.protocol
     if player is not None:
-        player = get_player(connection.protocol, player)
-    elif connection not in connection.protocol.players:
-        raise ValueError()
-    else:
+        player = get_player(protocol, player)
+    elif connection in protocol.players:
         player = connection
-    player.fly = not player.fly
-    message = 'now flying' if player.fly else 'no longer flying'
-    connection.protocol.irc_say('* %s is %s' % (player.name, message))
-    if connection is player:
-        return "You're %s." % message
     else:
-        player.send_chat("You're %s." % message)
-        if connection in connection.protocol.players:
-            return '%s is %s.' % (player.name, message)
+        raise ValueError()
+    player.fly = not player.fly
+    
+    message = 'now flying' if player.fly else 'no longer flying'
+    player.send_chat("You're %s" % message)
+    if connection is not player and connection in protocol.players:
+        connection.send_chat('%s is %s' % (player.name, message))
+    protocol.irc_say('* %s is %s' % (player.name, message))
 
 from pyspades.contained import KillAction
 from pyspades.server import create_player, set_tool, set_color, input_data
@@ -533,7 +534,7 @@ def invisible(connection, player = None):
     player.god_build = False
     player.killing = not player.invisible
     if player.invisible:
-        player.send_chat("You're now invisible.")
+        player.send_chat("You're now invisible")
         protocol.irc_say('* %s became invisible' % player.name)
         kill_action = KillAction()
         kill_action.kill_type = choice([GRENADE_KILL, FALL_KILL])
@@ -541,7 +542,7 @@ def invisible(connection, player = None):
         reactor.callLater(1.0 / NETWORK_FPS, protocol.send_contained,
             kill_action, sender = player)
     else:
-        player.send_chat("You return to visibility.")
+        player.send_chat("You return to visibility")
         protocol.irc_say('* %s became visible' % player.name)
         x, y, z = player.world_object.position.get()
         create_player.player_id = player.player_id
@@ -570,12 +571,11 @@ def invisible(connection, player = None):
         protocol.send_contained(set_tool, sender = player)
         protocol.send_contained(set_color, sender = player, save = True)
         protocol.send_contained(input_data, sender = player)
-    if connection is player or connection not in protocol.players:
-        return
-    if player.invisible:
-        return '%s is now invisible' % player.name
-    else:
-        return '%s is now visible' % player.name
+    if connection is not player and connection in protocol.players:
+        if player.invisible:
+            return '%s is now invisible' % player.name
+        else:
+            return '%s is now visible' % player.name
 
 @admin
 def ip(connection, value = None):
@@ -642,9 +642,9 @@ def set_time_limit(connection, value):
 def get_time_limit(connection):
     advance_call = connection.protocol.advance_call
     if advance_call is None:
-        return 'No time limit set.'
+        return 'No time limit set'
     left = int(math.ceil((advance_call.getTime() - reactor.seconds()) / 60.0))
-    return 'There are %s minutes left.' % left
+    return 'There are %s minutes left' % left
 
 @name('servername')
 @admin
@@ -664,7 +664,7 @@ def server_name(connection, *arg):
 def toggle_master(connection):
     protocol = connection.protocol
     protocol.set_master_state(not protocol.master)
-    message = ("toggled master broadcast %s." % ['off', 'on'][
+    message = ("toggled master broadcast %s" % ['OFF', 'ON'][
         int(protocol.master)])
     protocol.irc_say("* %s " % connection.name + message)
     return ("You " + message)
@@ -678,8 +678,7 @@ def ping(connection, value = None):
         player = get_player(connection.protocol, value)
     ping = player.latency
     if value is None:
-        return ('Your ping is %s ms. Lower ping is better, with ideal values '
-            'around 50-150' % ping)
+        return ('Your ping is %s ms. Lower ping is better!' % ping)
     return "%s's ping is %s ms" % (player.name, ping)
 
 def intel(connection):
@@ -691,7 +690,7 @@ def intel(connection):
             return "You have the enemy intel, return to base!"
         else:
             return "%s has the enemy intel!" % flag.player.name
-    return "Nobody in your team has the enemy intel."
+    return "Nobody in your team has the enemy intel"
 
 def version(connection):
     return 'Server version is "%s"' % connection.protocol.server_version
@@ -721,7 +720,7 @@ def weapon(connection, value):
         weapon = 'Shotgun'
     else:
         weapon = '(unknown)'
-    return '%s has a %s.' % (player.name, weapon)
+    return '%s has a %s' % (player.name, weapon)
     
 command_list = [
     help,
