@@ -244,19 +244,22 @@ def pm(connection, value, *arg):
     player.send_chat('PM from %s: %s' % (connection.name, message))
     return 'PM sent to %s' % player.name
 
-def admin(connection, *arg):
+@name('admin')
+def to_admin(connection, *arg):
     message = join_arguments(arg)
     connection.protocol.irc_say('(ADMINS) <%s> %s' % (connection.name, message))
-    for player in connection.protocol.players:
-        if player.admin:
+    for player in connection.protocol.players.values():
+        if player.admin and player is not connection:
             player.send_chat('To ADMINS from %s: %s' % 
                 (connection.name, message))
+    return 'Message sent to admins'
 
 def streak(connection):
     if connection not in connection.protocol.players:
         raise KeyError()
     return ('Your current kill streak is %s. Best is %s kills' %
         (connection.streak, connection.best_streak))
+
 @admin
 def lock(connection, value):
     team = get_team(connection, value)
@@ -595,6 +598,23 @@ def ip(connection, value = None):
         player = get_player(connection.protocol, value)
     return 'The IP of %s is %s' % (player.name, player.address[0])
 
+@name('whowas')
+@admin
+def who_was(connection, value):
+    value = value.lower()
+    ret = None
+    exact_match = False
+    for name, ip in connection.protocol.player_memory:
+        name_lower = name.lower()
+        if name_lower == value:
+            ret = (name, ip)
+            exact_match = True
+        elif not exact_match and name_lower.count(value):
+            ret = (name, ip)
+    if ret is None:
+        raise InvalidPlayer()
+    return "%s's most recent IP was %s" % ret
+
 @name('resetgame')
 @admin
 def reset_game(connection):
@@ -733,6 +753,7 @@ def weapon(connection, value):
 command_list = [
     help,
     pm,
+    to_admin,
     login,
     kick,
     votekick,
@@ -740,6 +761,7 @@ command_list = [
     cancel_vote,
     intel,
     ip,
+    who_was,
     fog,
     ban,
     banip,

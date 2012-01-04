@@ -59,7 +59,7 @@ def apply_script(protocol, connection, config):
             self.kick(message)
         
         def on_user_login(self, user_type):
-            if user_type == 'admin':
+            if user_type == 'admin' and self.afk_kick_call:
                 self.afk_kick_call.cancel()
                 self.afk_kick_call = None
             return connection.on_user_login(self, user_type)

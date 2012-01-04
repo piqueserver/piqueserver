@@ -26,6 +26,7 @@ import itertools
 import random
 import time
 import shutil
+from collections import deque
 
 for index, name in enumerate(('config.txt', 'config.txt.default')):
     try:
@@ -223,6 +224,7 @@ class FeatureConnection(ServerConnection):
                 self.protocol.votekick_call.cancel()
                 self.protocol.end_votekick(True, 'Player left the game',
                     left = True)
+            self.protocol.player_memory.append((self.name, self.address[0]))
         else:
             print '%s disconnected' % self.address[0]
         ServerConnection.on_disconnect(self)
@@ -461,6 +463,7 @@ class FeatureProtocol(ServerProtocol):
     bans = None
     ban_publish = None
     ban_manager = None
+    player_memory = None
     irc_relay = None
     balanced_teams = None
     timestamps = None
@@ -515,6 +518,7 @@ class FeatureProtocol(ServerProtocol):
         except IOError:
             pass
         self.hard_bans = set() # possible DDoS'ers are added here
+        self.player_memory = deque(maxlen = 100)
         self.config = config
         if len(self.name) > MAX_SERVER_NAME_SIZE:
             print '(server name too long; it will be truncated to "%s")' % (
