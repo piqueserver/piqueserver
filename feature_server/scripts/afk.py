@@ -10,7 +10,7 @@ def afk(connection, player):
         prettify_timespan(reactor.seconds() - player.last_activity, True))
 
 @name('kickafk')
-#@admin
+@admin
 def kick_afk(connection, minutes, amount = None):
     protocol = connection.protocol
     minutes = int(minutes)

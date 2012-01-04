@@ -244,6 +244,14 @@ def pm(connection, value, *arg):
     player.send_chat('PM from %s: %s' % (connection.name, message))
     return 'PM sent to %s' % player.name
 
+def admin(connection, *arg):
+    message = join_arguments(arg)
+    connection.protocol.irc_say('(ADMINS) <%s> %s' % (connection.name, message))
+    for player in connection.protocol.players:
+        if player.admin:
+            player.send_chat('To ADMINS from %s: %s' % 
+                (connection.name, message))
+
 def streak(connection):
     if connection not in connection.protocol.players:
         raise KeyError()
