@@ -315,6 +315,10 @@ class FeatureConnection(ServerConnection):
             killer.best_streak = max(killer.streak, killer.best_streak)
         killer.team.kills += 1
     
+    def on_reset(self):
+        self.streak = 0
+        self.best_streak = 0
+    
     def grenade_exploded(self, grenade):
         self.current_grenade = grenade
         ServerConnection.grenade_exploded(self, grenade)
