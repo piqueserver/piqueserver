@@ -399,6 +399,9 @@ class FeatureConnection(ServerConnection):
     def ban(self, reason = None, duration = None):
         reason = ': ' + reason if reason is not None else ''
         duration = duration or None
+        if self.protocol.votekick_player is self:
+            self.protocol.votekick_call.cancel()
+            self.protocol.end_votekick(False, 'Player banned')
         if duration is None:
             message = '%s permabanned%s' % (self.name, reason)
         else:
