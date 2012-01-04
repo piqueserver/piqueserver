@@ -795,12 +795,14 @@ class FeatureProtocol(ServerProtocol):
         if dt > 1.0:
             print '(warning: processing %r from %s took %s)' % (
                 packet.data, ip, dt)
-        
     
-    def irc_say(self, msg):
+    def irc_say(self, msg, me = False):
         if self.irc_relay:
-            self.irc_relay.send(msg, filter = True)
-            
+            if me:
+                self.irc_relay.me(msg, filter = True)
+            else:
+                self.irc_relay.send(msg, filter = True)
+    
     def send_tip(self):
         line = self.tips[random.randrange(len(self.tips))]
         self.send_chat(line)
@@ -923,8 +925,8 @@ class FeatureProtocol(ServerProtocol):
     
     def on_game_end(self):
         if self.advance_on_win <= 0:
-            return
-        if self.win_count.next() % self.advance_on_win == 0:
+            self.irc_say('Round ended!', me = True)
+        elif self.win_count.next() % self.advance_on_win == 0:
             self.advance_rotation('Game finished!')
     
     def on_advance(self, map_name):
