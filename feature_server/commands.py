@@ -266,15 +266,27 @@ def unlock(connection, value):
         team.name))
 
 @admin
-def switch(connection, value = None):
-    if value is not None:
-        connection = get_player(connection.protocol, value)
-    elif connection not in connection.protocol.players:
+def switch(connection, player = None):
+    protocol = connection.protocol
+    if player is not None:
+        player = get_player(protocol, player)
+    elif connection in protocol.players:
+        player = connection
+    else:
         raise ValueError()
-    connection.respawn_time = connection.protocol.respawn_time
-    connection.set_team(connection.team.other)
-    connection.protocol.send_chat('%s has switched teams' % connection.name,
-        irc = True)
+    if player.invisible:
+        player.on_team_leave()
+        player.team = player.team.other
+        player.spawn(player.world_object.position.get())
+        player.send_chat('Switched to %s team' % player.team.name)
+        if connection is not player and connection in protocol.players:
+            connection.send_chat('Switched %s to %s team' % (player.name,
+                player.team.name))
+        protocol.irc_say('%s silently switched teams' % player.name)
+    else:
+        player.respawn_time = protocol.respawn_time
+        player.set_team(player.team.other)
+        protocol.send_chat('%s switched teams' % player.name, irc = True)
 
 @name('setbalance')
 @admin
@@ -502,8 +514,7 @@ def fly(connection, player = None):
             return '%s is %s.' % (player.name, message)
 
 from pyspades.contained import KillAction
-from pyspades.server import create_player, set_tool, set_color
-from pyspades.server import orientation_data, input_data
+from pyspades.server import create_player, set_tool, set_color, input_data
 from pyspades.common import make_color
 
 @alias('invis')
