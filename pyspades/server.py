@@ -266,9 +266,9 @@ class ServerConnection(BaseConnection):
                         self.set_location()
                         return
                     world_object.set_position(x, y, z)
+                    self.on_position_update()
                     if self.filter_visibility_data:
                         return
-                    self.on_position_update()
                     game_mode = self.protocol.game_mode
                     if game_mode == CTF_MODE:
                         other_flag = self.team.other.flag
@@ -294,9 +294,9 @@ class ServerConnection(BaseConnection):
                             world_object.position):
                                 self.check_refill()
                 elif contained.id == loaders.InputData.id:
-                    self.on_walk_update(contained.up, contained.down, 
-                        contained.left, contained.right)
                     world_object.set_walk(contained.up, contained.down,
+                        contained.left, contained.right)
+                    self.on_walk_update(contained.up, contained.down, 
                         contained.left, contained.right)
                     if self.tool == WEAPON_TOOL:
                         self.on_shoot_set(contained.fire)
@@ -307,9 +307,9 @@ class ServerConnection(BaseConnection):
                     if jump and not (z_acceleration >= 0 and 
                                      z_acceleration < 0.017):
                         jump = False
-                    self.on_animation_update(contained.fire, jump, 
-                        contained.crouch, contained.aim)
                     world_object.set_animation(contained.fire, jump, 
+                        contained.crouch, contained.aim)
+                    self.on_animation_update(contained.fire, jump, 
                         contained.crouch, contained.aim)
                     contained.jump = jump
                     if (self.fly and contained.crouch and
