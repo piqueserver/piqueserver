@@ -21,7 +21,7 @@ def kick_afk(connection, minutes, amount = None):
     minutes_s = prettify_timespan(seconds)
     lower_bound = reactor.seconds() - seconds
     for conn in protocol.connections.values():
-        if conn.last_activity < lower_bound:
+        if not conn.admin and conn.last_activity < lower_bound:
             to_kick.append(conn)
     if not to_kick:
         return 'No players or connections inactive for %s' % minutes_s
