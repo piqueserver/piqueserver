@@ -1,4 +1,4 @@
-# Copyright (c) Mathias Kaerlev 2011.
+# Copyright (c) Mathias Kaerlev 2011-2012.
 
 # This file is part of pyspades.
 
@@ -260,7 +260,7 @@ cdef class Quaternion:
             self.set(*arg)
     
     def copy(self):
-        return Vertex3(self.x, self.y, self.z)
+        return Quaternion(self.w, self.x, self.y, self.z)
     
     def get(self):
         return self.w, self.x, self.y, self.z
@@ -282,8 +282,8 @@ cdef class Quaternion:
         return self
     
     cpdef Quaternion slerp(self, Quaternion q, double t):
-        if t <= 0.0: return self
-        if t >= 1.0: return q
+        if t <= 0.0: return self.copy()
+        if t >= 1.0: return q.copy()
         
         cos_omega = self.x * q.x + self.y * q.y + self.z * q.z + self.w * q.w
         k0, k1 = 1.0 - t, t
