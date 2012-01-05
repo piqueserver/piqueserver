@@ -246,9 +246,13 @@ def pm(connection, value, *arg):
 
 @name('admin')
 def to_admin(connection, *arg):
+    protocol = connection.protocol
     message = join_arguments(arg)
-    connection.protocol.irc_say('(ADMINS) <%s> %s' % (connection.name, message))
-    for player in connection.protocol.players.values():
+    prefix = '(ADMINS)'
+    if protocol.irc_relay and protocol.irc_relay.colors:
+        prefix = '\x0304' + prefix + '\x0f'
+    protocol.irc_say(prefix + ' <%s> %s' % (connection.name, message))
+    for player in protocol.players.values():
         if player.admin and player is not connection:
             player.send_chat('To ADMINS from %s: %s' % 
                 (connection.name, message))
@@ -564,16 +568,15 @@ def invisible(connection, player = None):
         create_player.weapon = player.weapon
         create_player.team = player.team.id
         world_object = player.world_object
+        input_data.player_id = player.player_id
         input_data.up = world_object.up
         input_data.down = world_object.down
         input_data.left = world_object.left
         input_data.right = world_object.right
-        input_data.player_id = player.player_id
         input_data.fire = world_object.fire
         input_data.jump = world_object.jump
         input_data.crouch = world_object.crouch
         input_data.aim = world_object.aim
-        input_data.player_id = player.player_id
         set_tool.player_id = player.player_id
         set_tool.value = player.tool
         set_color.player_id = player.player_id
@@ -872,24 +875,25 @@ def handle_command(connection, command, parameters):
         command = aliases[command]
     except KeyError:
         pass
-    try:
-        command_func = commands[command]
-    except KeyError:
-        return # 'Invalid command'
-    try:
-        if hasattr(command_func, 'admin'):
-            if (not connection.admin and 
-                (connection.rights is None or
-                command_func.func_name not in connection.rights)):
-                return 'No administrator rights!'
-        return command_func(connection, *parameters)
-    except KeyError:
-        return # 'Invalid command'
-    except TypeError:
-        return 'Invalid number of arguments for %s' % command
-    except InvalidPlayer:
-        return 'No such player'
-    except InvalidTeam:
-        return 'Invalid team specifier'
-    except ValueError:
-        return 'Invalid parameters'
+##     try:
+    command_func = commands[command]
+##     except KeyError:
+##         return # 'Invalid command'
+##     try:
+##         if hasattr(command_func, 'admin'):
+##             if (not connection.admin and 
+##                 (connection.rights is None or
+##                 command_func.func_name not in connection.rights)):
+##                 return 'No administrator rights!'
+    return command_func(connection, *parameters)
+##         return command_func(connection, *parameters)
+##     except KeyError:
+##         return # 'Invalid command'
+##     except TypeError:
+##         return 'Invalid number of arguments for %s' % command
+##     except InvalidPlayer:
+##         return 'No such player'
+##     except InvalidTeam:
+##         return 'Invalid team specifier'
+##     except ValueError:
+##         return 'Invalid parameters'
