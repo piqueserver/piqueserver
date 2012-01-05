@@ -20,9 +20,9 @@ def kick_afk(connection, minutes, amount = None):
     seconds = minutes * 60.0
     minutes_s = prettify_timespan(seconds)
     lower_bound = reactor.seconds() - seconds
-    for connection in protocol.connections.values():
-        if connection.last_activity < lower_bound:
-            to_kick.append(connection)
+    for conn in protocol.connections.values():
+        if conn.last_activity < lower_bound:
+            to_kick.append(conn)
     if not to_kick:
         return 'No players or connections inactive for %s' % minutes_s
     to_kick.sort(key = attrgetter('last_activity'))
@@ -35,8 +35,8 @@ def kick_afk(connection, minutes, amount = None):
             kicks += 1
         else:
             conn.disconnect()
-    message = ('%s players and %s connections over %s inactive kicked or '
-        'terminated' % (kicks, amount - kicks, minutes_s))
+    message = ('%s players kicked, %s connections terminated for %s '
+        'inactivity' % (kicks, amount - kicks, minutes_s))
     protocol.irc_say('* ' + message)
     if connection in protocol.players:
         return message
