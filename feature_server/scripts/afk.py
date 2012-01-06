@@ -54,15 +54,14 @@ def apply_script(protocol, connection, config):
         
         def afk_kick(self):
             time_inactive = reactor.seconds() - self.last_activity
-            time_inactive = ceil(time_inactive / 60.0) * 60.0
-            message = 'Inactive for %s' % prettify_timespan(time_inactive)
-            self.kick(message)
+            time_inactive = max(1.0, round(time_inactive / 60.0)) * 60.0
+            self.kick('Inactive for %s' % prettify_timespan(time_inactive))
         
-        def on_reset(self):
+        def on_disconnect(self):
             if self.afk_kick_call:
                 self.afk_kick_call.cancel()
                 self.afk_kick_call = None
-            connection.on_reset(self)
+            connection.on_disconnect(self)
         
         def on_user_login(self, user_type):
             if user_type == 'admin' and self.afk_kick_call:
