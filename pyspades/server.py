@@ -182,6 +182,7 @@ class ServerConnection(BaseConnection):
     last_block_destroy = None
     filter_visibility_data = False
     speedhack_detect = False
+    rapid_hack_detect = False
     fly = False
     timers = None
     world_object = None
@@ -234,6 +235,7 @@ class ServerConnection(BaseConnection):
                 self.protocol.players[self.name, self.player_id] = self
                 if self.protocol.speedhack_detect:
                     self.speedhack_detect = True
+                self.rapid_hack_detect = True
                 self.on_login(self.name)
                 self.spawn()
                 return
@@ -411,8 +413,8 @@ class ServerConnection(BaseConnection):
                     current_time = reactor.seconds()
                     last_time = self.last_block
                     self.last_block = current_time
-                    if (last_time is not None and
-                    current_time - last_time < interval):
+                    if (self.rapid_hack_detect and last_time is not None and
+                        current_time - last_time < interval):
                         self.rapids.add(current_time)
                         if self.rapids.check():
                             start, end = self.rapids.get()
