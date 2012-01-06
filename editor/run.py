@@ -448,12 +448,12 @@ class MapEditor(QtGui.QMainWindow):
 
         self.copy_action_external = QtGui.QAction('&Copy External', self,
             shortcut = QtGui.QKeySequence('Ctrl+Shift+C'),
-            triggered = self.copy_selected_external)
+            triggered = self.copy_external_selected)
         self.edit.addAction(self.copy_action_external)
 
         self.paste_action_external = QtGui.QAction('&Paste External', self,
             shortcut = QtGui.QKeySequence('Ctrl+Shift+V'), 
-            triggered = self.paste_selected_external)
+            triggered = self.paste_external_selected)
         self.edit.addAction(self.paste_action_external)
         
         self.clear_action = QtGui.QAction('Cl&ear', self,
@@ -545,7 +545,7 @@ class MapEditor(QtGui.QMainWindow):
             return
         self.edit_widget.set_image(image)
     
-    def copy_selected_external(self):
+    def copy_external_selected(self):
         image = self.edit_widget.image
         width = image.width()
         height = image.height()
@@ -557,7 +557,7 @@ class MapEditor(QtGui.QMainWindow):
                     new_image.setPixel(x, y, fuchsia)
         self.clipboard.setImage(new_image)
     
-    def paste_selected_external(self):
+    def paste_external_selected(self):
         image = self.clipboard.image()
         if not image:
             return
