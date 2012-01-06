@@ -20,6 +20,7 @@ pyspades - map editor
 """
 
 import sys
+import os
 sys.path.append('..')
 
 import math
@@ -425,7 +426,7 @@ class MapEditor(QtGui.QMainWindow):
         self.file.addSeparator()
         
         self.voxed_action = QtGui.QAction('Open in VOXED', 
-            self, shortcut = Qt.Key_F5, triggered = self.open_voxed)
+            self, shortcut = QtGui.QKeySequence('F5'), triggered = self.open_voxed)
         self.file.addAction(self.voxed_action)
         
         self.file.addSeparator()
@@ -529,11 +530,15 @@ class MapEditor(QtGui.QMainWindow):
         if self.filename is None:
             return
         if self.voxed_filename is None:
-            name = QtGui.QFileDialog.getOpenFileName(self,
-                'Select voxed.exe', filter = '*.exe')[0]
-            if not name:
-                return
-            self.voxed_filename = name
+            default_path = 'C:\\Ace of Spades\\voxed.exe'
+            if os.path.exists(default_path):
+                self.voxed_filename = default_path
+            else:
+                name = QtGui.QFileDialog.getOpenFileName(self,
+                    'Select voxed.exe', filter = '*.exe')[0]
+                if not name:
+                    return
+                self.voxed_filename = name
         subprocess.call([self.voxed_filename, self.filename])
     
     def copy_selected(self):
