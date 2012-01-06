@@ -445,6 +445,16 @@ class MapEditor(QtGui.QMainWindow):
             shortcut = QtGui.QKeySequence.Paste, 
             triggered = self.paste_selected)
         self.edit.addAction(self.paste_action)
+
+        self.copy_action_external = QtGui.QAction('&Copy External', self,
+            shortcut = QtGui.QKeySequence('Ctrl+Shift+C'),
+            triggered = self.copy_selected_external)
+        self.edit.addAction(self.copy_action_external)
+
+        self.paste_action_external = QtGui.QAction('&Paste External', self,
+            shortcut = QtGui.QKeySequence('Ctrl+Shift+V'), 
+            triggered = self.paste_selected_external)
+        self.edit.addAction(self.paste_action_external)
         
         self.clear_action = QtGui.QAction('Cl&ear', self,
             shortcut = QtGui.QKeySequence.Delete, 
@@ -528,11 +538,37 @@ class MapEditor(QtGui.QMainWindow):
     
     def copy_selected(self):
         self.clipboard.setImage(self.edit_widget.image)
-
+    
     def paste_selected(self):
         image = self.clipboard.image()
         if not image:
             return
+        self.edit_widget.set_image(image)
+    
+    def copy_selected_external(self):
+        image = self.edit_widget.image
+        width = image.width()
+        height = image.height()
+        new_image = image.copy(0, 0, width, height)
+        fuchsia = 4294902015
+        for y in xrange(0, height):
+            for x in xrange(0, width):
+                if new_image.pixel(x, y) == 0:
+                    new_image.setPixel(x, y, fuchsia)
+        self.clipboard.setImage(new_image)
+    
+    def paste_selected_external(self):
+        image = self.clipboard.image()
+        if not image:
+            return
+        width = image.width()
+        height = image.height()
+        image = image.convertToFormat(QtGui.QImage.Format_ARGB32)
+        fuchsia = 4294902015
+        for y in xrange(0, height):
+            for x in xrange(0, width):
+                if image.pixel(x, y) == fuchsia:
+                    image.setPixel(x, y, 0)
         self.edit_widget.set_image(image)
     
     def clear_selected(self):
