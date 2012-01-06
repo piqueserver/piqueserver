@@ -58,6 +58,12 @@ def apply_script(protocol, connection, config):
             message = 'Inactive for %s' % prettify_timespan(time_inactive)
             self.kick(message)
         
+        def on_reset(self):
+            if self.afk_kick_call:
+                self.afk_kick_call.cancel()
+                self.afk_kick_call = None
+            connection.on_reset(self)
+        
         def on_user_login(self, user_type):
             if user_type == 'admin' and self.afk_kick_call:
                 self.afk_kick_call.cancel()
