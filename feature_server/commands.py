@@ -297,7 +297,7 @@ def switch(connection, player = None):
         if connection is not player and connection in protocol.players:
             connection.send_chat('Switched %s to %s team' % (player.name,
                 player.team.name))
-        protocol.irc_say('%s silently switched teams' % player.name)
+        protocol.irc_say('* %s silently switched teams' % player.name)
     else:
         player.respawn_time = protocol.respawn_time
         player.set_team(player.team.other)
