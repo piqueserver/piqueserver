@@ -53,6 +53,8 @@ def stringify(data, max = MAX_HEX_SIZE):
     return '%r' % data
 
 def coordinates(data):
+    if data is None:
+        raise ValueError()
     if len(data) != 2:
         raise ValueError()
     x = (ord(data[0].lower()) - ord('a')) * 64
