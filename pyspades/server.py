@@ -566,7 +566,7 @@ class ServerConnection(BaseConnection):
     def respawn(self):
         if self.spawn_call is None:
             self.spawn_call = reactor.callLater(
-                self.respawn_time, self.spawn)
+                self.get_respawn_time(), self.spawn)
     
     def get_spawn_location(self):
         game_mode = self.protocol.game_mode
@@ -577,6 +577,9 @@ class ServerConnection(BaseConnection):
             except IndexError:
                 pass
         return self.team.get_random_location(True)
+    
+    def get_respawn_time(self):
+        return self.respawn_time
     
     def spawn(self, pos = None):
         self.spawn_call = None
@@ -758,7 +761,7 @@ class ServerConnection(BaseConnection):
             kill_action.player_id = self.player_id
         if by is not None and by is not self:
             by.add_score(1)
-        kill_action.respawn_time = self.respawn_time
+        kill_action.respawn_time = self.get_respawn_time()
         self.protocol.send_contained(kill_action, save = True)
         self.world_object.dead = True
         self.respawn()
