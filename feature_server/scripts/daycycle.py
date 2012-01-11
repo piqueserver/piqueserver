@@ -3,11 +3,11 @@ from twisted.internet.task import LoopingCallimport commands@commands.name('d
         return 'Day cycle speed is %s.' % connection.protocol.time_multiplier
     value = float(value)    protocol = connection.protocol
     protocol.time_multiplier = value    if value == 0.0:
-        if protocol.day_loop.running:            protocol.day_loop.stop()
+        if protocol.daycycle_loop.running:            protocol.daycycle_loop.stop()
         protocol.send_chat('Day cycle stopped.', irc = True)
     else:
-        if not protocol.day_loop.running:
-            protocol.day_loop.start(protocol.day_update_frequency)        protocol.send_chat('Day cycle speed changed to %s.' % value, irc = True)
+        if not protocol.daycycle_loop.running:
+            protocol.daycycle_loop.start(protocol.day_update_frequency)        protocol.send_chat('Day cycle speed changed to %s.' % value, irc = True)
 from math import floor, modf
 
 @commands.name('daytime')
@@ -65,10 +65,21 @@ def interpolate_hsb((h1, s1, b1), (h2, s2, b2), t):
 def rgb_distance((r1, g1, b1), (r2, g2, b2)):
     return int(abs(r1 - r2) + abs(g1 - g2) + abs(b1 - b2))
 def apply_script(protocol, connection, config):    class DayCycleProtocol(protocol):        current_color = None
-        current_time = 0.00
-        day_duration = 24 * 60 * 60.00        day_update_frequency = 0.1
-        time_multiplier = 48.
-                def __init__(self, *arg, **kw):            protocol.__init__(self, *arg, **kw)            self.day_loop = LoopingCall(self.update_day_color)
+        current_time = None
+        daycycle_loop = None
+        day_duration = None        day_update_frequency = None
+        time_multiplier = None
+                def __init__(self, *arg, **kw):            protocol.__init__(self, *arg, **kw)
+            self.daycycle_loop = LoopingCall(self.update_day_color)            self.reset_daycycle()
+        
+        def reset_daycycle(self):
+            if not self.daycycle_loop:
+                return
+            self.current_color = None
+            self.current_time = 7.00
+            self.day_duration = 24 * 60 * 60.00
+            self.day_update_frequency = 0.1
+            self.time_multiplier = 48.0
             self.day_colors = [
                 ( 0.00, (0.05,   0.05, 0.05), False),
                 ( 4.00, (0.05,   0.77, 0.05), False),
@@ -87,8 +98,9 @@ def rgb_distance((r1, g1, b1), (r2, g2, b2)):
                 self.day_update_frequency)
             self.target_color_index = 0
             self.next_color()
-            self.day_loop.start(self.day_update_frequency)                def update_day_color(self):
-            self.current_time += self.time_step * self.time_multiplier
+            if not self.daycycle_loop.running:
+                self.daycycle_loop.start(self.day_update_frequency)
+                def update_day_color(self):
             if self.current_time >= 24.00:
                 self.current_time = wrap(0.00, 24.00, self.current_time)
             while (self.current_time < self.start_time or
@@ -107,6 +119,7 @@ def rgb_distance((r1, g1, b1), (r2, g2, b2)):
             if (self.current_color is None or
                 rgb_distance(self.current_color, new_color) > 3):
                 self.current_color = new_color                self.set_fog_color(self.current_color)
+            self.current_time += self.time_step * self.time_multiplier
         
         def next_color(self):
             self.start_time, self.start_color, _ = (
@@ -120,6 +133,6 @@ def rgb_distance((r1, g1, b1), (r2, g2, b2)):
                 self.target_color = hsb_to_rgb(*self.target_color)
         
         def on_map_change(self, map):
-            self.current_time = 7.0
+            self.reset_daycycle()
             protocol.on_map_change(self, map)
         return DayCycleProtocol, connection
