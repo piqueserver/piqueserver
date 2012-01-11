@@ -58,7 +58,7 @@ def apply_script(protocol, connection, config):
             self.kick('Inactive for %s' % prettify_timespan(time_inactive))
         
         def on_disconnect(self):
-            if self.afk_kick_call and self.afk_kick.active():
+            if self.afk_kick_call and self.afk_kick_call.active():
                 self.afk_kick_call.cancel()
             self.afk_kick_call = None
             connection.on_disconnect(self)
