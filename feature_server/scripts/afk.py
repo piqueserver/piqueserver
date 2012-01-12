@@ -53,9 +53,12 @@ def apply_script(protocol, connection, config):
         last_activity = None
         
         def afk_kick(self):
-            time_inactive = reactor.seconds() - self.last_activity
-            time_inactive = max(1.0, round(time_inactive / 60.0)) * 60.0
-            self.kick('Inactive for %s' % prettify_timespan(time_inactive))
+            if self.name:
+                time_inactive = reactor.seconds() - self.last_activity
+                time_inactive = max(1.0, round(time_inactive / 60.0)) * 60.0
+                self.kick('Inactive for %s' % prettify_timespan(time_inactive))
+            else:
+                self.disconnect()
         
         def on_disconnect(self):
             if self.afk_kick_call and self.afk_kick_call.active():
