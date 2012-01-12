@@ -277,6 +277,11 @@ class FeatureConnection(ServerConnection):
                         for nade_z in xrange(z - 1, z + 2):
                             if is_indestructable(nade_x, nade_y, nade_z):
                                 return False
+        map_on_block_destroy = self.protocol.map_info.on_block_destroy
+        if map_on_block_destroy is not None:
+            result = map_on_block_destroy(self, x, y, z, mode)
+            if result == False:
+                return result
     
     def on_block_removed(self, x, y, z):
         if self.protocol.user_blocks is not None:
