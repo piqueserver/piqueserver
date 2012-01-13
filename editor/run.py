@@ -33,6 +33,8 @@ from PySide.QtGui import QMessageBox
 from pyspades.load import VXLData, get_color_tuple
 
 WATER_COLOR = (64, 108, 129)
+TRANSPARENT = 0x00000000
+FUCHSIA = 0xFFFF00FF
 WATER_PEN = QtGui.QColor(*WATER_COLOR)
 
 class LabeledSpinBox(QtGui.QWidget):
@@ -211,10 +213,10 @@ class EditWidget(QtGui.QWidget):
         self.image.fill(0)
         self.repaint()
     
-    def set_z(self, z):
+    def set_z(self, z, repaint = True, update_map = True, update_values = True):
         map = self.map
         image = self.image
-        if image is not None:
+        if image is not None and update_map:
             map.set_overview(image.overview, self.z)
         self.z = max(0, min(63, z))
         try:
@@ -225,8 +227,9 @@ class EditWidget(QtGui.QWidget):
                 QtGui.QImage.Format_ARGB32)
             self.z_cache[self.z] = image
         self.image = image
-        self.repaint()
-        if self.settings is not None:
+        if repaint:
+            self.repaint()
+        if self.settings is not None and update_values:
             self.settings.update_values()
     
     def set_image(self, image):
@@ -555,11 +558,10 @@ class MapEditor(QtGui.QMainWindow):
         width = image.width()
         height = image.height()
         new_image = image.copy(0, 0, width, height)
-        fuchsia = 4294902015
         for y in xrange(0, height):
             for x in xrange(0, width):
-                if new_image.pixel(x, y) == 0:
-                    new_image.setPixel(x, y, fuchsia)
+                if new_image.pixel(x, y) == TRANSPARENT:
+                    new_image.setPixel(x, y, FUCHSIA)
         self.clipboard.setImage(new_image)
     
     def paste_external_selected(self):
@@ -569,11 +571,10 @@ class MapEditor(QtGui.QMainWindow):
         width = image.width()
         height = image.height()
         image = image.convertToFormat(QtGui.QImage.Format_ARGB32)
-        fuchsia = 4294902015
         for y in xrange(0, height):
             for x in xrange(0, width):
-                if image.pixel(x, y) == fuchsia:
-                    image.setPixel(x, y, 0)
+                if image.pixel(x, y) == FUCHSIA:
+                    image.setPixel(x, y, TRANSPARENT)
         self.edit_widget.set_image(image)
     
     def clear_selected(self):
