@@ -237,10 +237,11 @@ class EditWidget(QtGui.QWidget):
         if self.settings is not None and update_values:
             self.settings.update_values()
     
-    def set_image(self, image):
+    def set_image(self, image, repaint = True):
         painter = QPainter(self.image)
         painter.drawImage(0, 0, image)
-        self.repaint()
+        if repaint:
+            self.repaint()
     
     def save_overview(self):
         self.map.set_overview(self.image.overview, self.z)
@@ -482,6 +483,20 @@ class MapEditor(QtGui.QMainWindow):
             triggered = self.clear_selected)
         self.edit.addAction(self.clear_action)
 
+        self.transform = menu.addMenu('&Transform')
+
+        self.mirror_horizontal_action = QtGui.QAction('&Mirror horizontal', self,
+            triggered = self.mirror_horizontal)
+        self.transform.addAction(self.mirror_horizontal_action)
+
+        self.mirror_vertical_action = QtGui.QAction('&Mirror vertical', self,
+            triggered = self.mirror_vertical)
+        self.transform.addAction(self.mirror_vertical_action)
+
+        self.mirror_both_action = QtGui.QAction('&Mirror both', self,
+            triggered = self.mirror_both)
+        self.transform.addAction(self.mirror_both_action)
+
         self.heightmap = menu.addMenu('&Heightmap')
 
         self.additive_heightmap_action = QtGui.QAction('&Additive', self,
@@ -660,6 +675,33 @@ class MapEditor(QtGui.QMainWindow):
         self.clear_selected()
         self.edit_widget.set_image(image)
     
+    def mirror(self, hor, ver):
+        old_z = self.edit_widget.z
+        progress = QtGui.QProgressDialog(self.edit_widget)
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setMinimum(0)
+        progress.setMaximum(63)
+        progress.setCancelButtonText('Abort')
+        progress.setLabelText('Mirroring...')
+        for z in xrange(0, 64):
+            if progress.wasCanceled():
+                break
+            progress.setValue(z)
+            self.edit_widget.set_z(z, False, True, False)
+            mirrored_image = self.edit_widget.image.mirrored(hor, ver)
+            self.clear_selected()
+            self.edit_widget.set_image(mirrored_image, False)
+        self.edit_widget.set_z(old_z, True, True, True)
+
+    def mirror_horizontal(self):
+        self.mirror(True, False)
+
+    def mirror_vertical(self):
+        self.mirror(False, True)
+    
+    def mirror_both(self):
+        self.mirror(True, True)
+
     def clear_selected(self):
         self.edit_widget.clear()
     
