@@ -470,7 +470,7 @@ class MapEditor(QtGui.QMainWindow):
         self.heightmap = menu.addMenu('&Heightmap')
 
         self.additive_heightmap_action = QtGui.QAction('&Additive', self,
-            triggered = self.additive_heightmap)
+            triggered = self.generate_heightmap)
         self.heightmap.addAction(self.additive_heightmap_action)
 
         self.subtractive_heightmap_action = QtGui.QAction('&Subtractive', self,
@@ -594,35 +594,40 @@ class MapEditor(QtGui.QMainWindow):
         self.edit_widget.clear()
     
     def get_height(self, color):
-        return int(math.floor((float(QtGui.qRed(color))+float(QtGui.qGreen(color))+
+        return int(math.floor((float(QtGui.qRed(color)) + float(QtGui.qGreen(color)) + 
                     float(QtGui.qBlue(color)))/12.0))
 
-    def additive_heightmap(self):
+    def generate_heightmap(self, custom_color = None, preserve_water = False):
         h_name = QtGui.QFileDialog.getOpenFileName(self,
             'Select heightmap file', filter = IMAGE_FILTER)[0]
         if h_name is None:
             return
         h_image = QImage(h_name)
-        c_name = QtGui.QFileDialog.getOpenFileName(self,
-            'Select color file', filter = IMAGE_FILTER)[0]
-        if c_name is None:
-            return
-        c_image = QImage(c_name)
-        #def set_z(self, z, repaint = True, update_map = True, update_values = True):
+        if custom_color is None:
+            c_name = QtGui.QFileDialog.getOpenFileName(self,
+                'Select color file', filter = IMAGE_FILTER)[0]
+            if c_name is None:
+                return
+            c_image = QImage(c_name)
         z_old = self.edit_widget.z
         for y in xrange(0, 512):
             for x in xrange(0, 512):
                 height = self.get_height(h_image.pixel(x, y))
-                color = c_image.pixel(x, y)
-                for z in xrange(0, height):
-                    self.edit_widget.set_z(63 - z, False, False, False)
-                    self.edit_widget.image.setPixel(x, y, color)
+                if custom_color is None:
+                    color = c_image.pixel(x, y)
+                for z in xrange(0, height + 1):
+                    if z != 0 or preserve_water is False:
+                        self.edit_widget.set_z(63 - z, False, False, False)
+                        if custom_color is None:
+                            self.edit_widget.image.setPixel(x, y, color)
+                        else:
+                            self.edit_widget.image.setPixel(x, y, custom_color)
         for z in xrange(0, 64):
             self.edit_widget.set_z(z, False, True, False)
         self.edit_widget.set_z(z, True, False, False)
     
     def subtractive_heightmap(self):
-        pass
+        return self.generate_heightmap(TRANSPARENT, True)
     
     def quit(self):
         self.app.exit()
