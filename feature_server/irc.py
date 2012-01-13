@@ -188,7 +188,7 @@ class IRCRelay(object):
     def me(self, *arg, **kw):
         if self.factory.bot is None:
             return
-        self.factory.bot.describe(*arg, **kw)
+        self.factory.bot.me(*arg, **kw)
 
 def colors(connection):
     if connection in connection.protocol.players:
