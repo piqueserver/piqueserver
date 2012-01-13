@@ -36,7 +36,10 @@ from pyspades.load import VXLData, get_color_tuple
 WATER_COLOR = (64, 108, 129)
 TRANSPARENT = QtGui.qRgba(0, 0, 0, 0)
 FUCHSIA = QtGui.qRgb(255, 0, 255)
-IMAGE_FILTER = 'Images (*.bmp *.gif *.jpg *.jpeg *.png *.pbm *.pgm *.ppm *.tiff *.xbm *.xpm)'
+IMAGE_OPEN_FILTER = 'Images (*.bmp *.gif *.jpg *.jpeg *.png *.pbm *.pgm *.ppm *.tiff *.xbm *.xpm)'
+IMAGE_SAVE_FILTER = 'Portable Network Graphics (*.png);;Windows Bitmap (*.bmp);;\
+Joint Photographic Experts Group (*.jpg);;Joint Photographic Experts Group (*.jpeg);;\
+Portable Pixmap (*.ppm);;Tagged Image File Format (*.tiff);;X11 Bitmap (*.xbm);;X11 Pixmap (*.xpm)'
 WATER_PEN = QtGui.QColor(*WATER_COLOR)
 
 class LabeledSpinBox(QtGui.QWidget):
@@ -315,7 +318,7 @@ class Texture(Tool):
     image = None
     def initialize(self):
         name = QtGui.QFileDialog.getOpenFileName(self.editor,
-            'Select texture file', filter = IMAGE_FILTER)[0]
+            'Select texture file', filter = IMAGE_OPEN_FILTER)[0]
         if not name:
             return
         self.image = QImage(name)
@@ -429,6 +432,16 @@ class MapEditor(QtGui.QMainWindow):
             shortcut = QtGui.QKeySequence('Ctrl+Shift+S'), 
             triggered = self.save_as_selected)
         self.file.addAction(self.save_as_action)
+
+        self.export = self.file.addMenu('&Export')
+
+        self.color_map = QtGui.QAction('Colormap', self, 
+            triggered = self.export_color_map)
+        self.export.addAction(self.color_map)
+
+        self.height_map = QtGui.QAction('Heightmap', self, 
+            triggered = self.export_height_map)
+        self.export.addAction(self.height_map)
         
         self.file.addSeparator()
         
@@ -558,6 +571,61 @@ class MapEditor(QtGui.QMainWindow):
                 self.voxed_filename = name
         subprocess.call([self.voxed_filename, self.filename])
     
+    def export_color_map(self):
+        name = QtGui.QFileDialog.getSaveFileName(self,
+            'Save colormap as...', filter = IMAGE_SAVE_FILTER)[0]
+        if not name:
+            return
+        color_image = QImage(512, 512, QImage.Format_ARGB32)
+        old_z = self.edit_widget.z
+        progress = QtGui.QProgressDialog(self.edit_widget)
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setMinimum(0)
+        progress.setMaximum(511)
+        progress.setCancelButtonText('Abort')
+        progress.setLabelText('Exporting colormap...')
+        for y in xrange(0, 512):
+            if progress.wasCanceled():
+                break
+            progress.setValue(y)
+            for x in xrange(0, 512):
+                for z in xrange(0, 64):
+                    self.edit_widget.set_z(z, False, False, False)
+                    color = self.edit_widget.image.pixel(x, y)
+                    if color != TRANSPARENT:
+                        color_image.setPixel(x, y, color)
+                        break
+        color_image.save(name)
+        self.edit_widget.set_z(old_z, False, False, False)
+
+    
+    def export_height_map(self):
+        name = QtGui.QFileDialog.getSaveFileName(self,
+            'Save heightmap as...', filter = IMAGE_SAVE_FILTER)[0]
+        if not name:
+            return
+        height_image = QImage(512, 512, QImage.Format_ARGB32)
+        old_z = self.edit_widget.z
+        progress = QtGui.QProgressDialog(self.edit_widget)
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setMinimum(0)
+        progress.setMaximum(511)
+        progress.setCancelButtonText('Abort')
+        progress.setLabelText('Exporting heightmap...')
+        for y in xrange(0, 512):
+            if progress.wasCanceled():
+                break
+            progress.setValue(y)
+            for x in xrange(0, 512):
+                for z in xrange(0, 64):
+                    self.edit_widget.set_z(z, False, False, False)
+                    if self.edit_widget.image.pixel(x, y) != TRANSPARENT:
+                        height = (63 - z) * 4
+                        height_image.setPixel(x, y, QtGui.qRgb(height, height, height))
+                        break
+        height_image.save(name)
+        self.edit_widget.set_z(old_z, False, False, False)
+
     def copy_selected(self):
         self.clipboard.setImage(self.edit_widget.image)
     
@@ -601,17 +669,17 @@ class MapEditor(QtGui.QMainWindow):
 
     def generate_heightmap(self, custom_color = None, preserve_water = False):
         h_name = QtGui.QFileDialog.getOpenFileName(self,
-            'Select heightmap file', filter = IMAGE_FILTER)[0]
+            'Select heightmap file', filter = IMAGE_OPEN_FILTER)[0]
         if h_name is None:
             return
         h_image = QImage(h_name)
         if custom_color is None:
             c_name = QtGui.QFileDialog.getOpenFileName(self,
-                'Select color file', filter = IMAGE_FILTER)[0]
+                'Select color file', filter = IMAGE_OPEN_FILTER)[0]
             if c_name is None:
                 return
             c_image = QImage(c_name)
-        z_old = self.edit_widget.z
+        old_z = self.edit_widget.z
         progress = QtGui.QProgressDialog(self.edit_widget)
         progress.setWindowModality(Qt.WindowModal)
         progress.setMinimum(0)
@@ -635,7 +703,7 @@ class MapEditor(QtGui.QMainWindow):
                             self.edit_widget.image.setPixel(x, y, custom_color)
         for z in xrange(0, 64):
             self.edit_widget.set_z(z, False, True, False)
-        self.edit_widget.set_z(z, True, False, False)
+        self.edit_widget.set_z(old_z, True, False, False)
     
     def subtractive_heightmap(self):
         return self.generate_heightmap(TRANSPARENT, True)
