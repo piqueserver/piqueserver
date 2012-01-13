@@ -29,12 +29,14 @@ from PySide import QtGui, QtCore
 from PySide.QtCore import Qt
 from PySide.QtGui import QPainter
 from PySide.QtGui import QMessageBox
+from PySide.QtGui import QImage
 
 from pyspades.load import VXLData, get_color_tuple
 
 WATER_COLOR = (64, 108, 129)
-TRANSPARENT = 0x00000000
-FUCHSIA = 0xFFFF00FF
+TRANSPARENT = QtGui.qRgba(0, 0, 0, 0)
+FUCHSIA = QtGui.qRgb(255, 0, 255)
+IMAGE_FILTER = 'Images (*.bmp *.gif *.jpg *.jpeg *.png *.pbm *.pgm *.ppm *.tiff *.xbm *.xpm)'
 WATER_PEN = QtGui.QColor(*WATER_COLOR)
 
 class LabeledSpinBox(QtGui.QWidget):
@@ -57,7 +59,7 @@ class LabeledWidget(QtGui.QWidget):
         for item in (self.label, self.widget):
             self.layout.addWidget(item)
 
-class MapImage(QtGui.QImage):
+class MapImage(QImage):
     def __init__(self, overview, *arg, **kw):
         self.overview = overview
         super(MapImage, self).__init__(overview, *arg, **kw)
@@ -224,7 +226,7 @@ class EditWidget(QtGui.QWidget):
         except KeyError:
             overview = map.get_overview(self.z)
             image = MapImage(overview, 512, 512,
-                QtGui.QImage.Format_ARGB32)
+                QImage.Format_ARGB32)
             self.z_cache[self.z] = image
         self.image = image
         if repaint:
@@ -313,10 +315,10 @@ class Texture(Tool):
     image = None
     def initialize(self):
         name = QtGui.QFileDialog.getOpenFileName(self.editor,
-            'Select texture file')[0]
+            'Select texture file', filter = IMAGE_FILTER)[0]
         if not name:
             return
-        self.image = QtGui.QImage(name)
+        self.image = QImage(name)
         
     def draw(self, painter, old_x, old_y, x, y):
         if self.image is None:
@@ -464,6 +466,16 @@ class MapEditor(QtGui.QMainWindow):
             shortcut = QtGui.QKeySequence.Delete, 
             triggered = self.clear_selected)
         self.edit.addAction(self.clear_action)
+
+        self.heightmap = menu.addMenu('&Heightmap')
+
+        self.additive_heightmap_action = QtGui.QAction('&Additive', self,
+            triggered = self.additive_heightmap)
+        self.heightmap.addAction(self.additive_heightmap_action)
+
+        self.subtractive_heightmap_action = QtGui.QAction('&Subtractive', self,
+            triggered = self.subtractive_heightmap)
+        self.heightmap.addAction(self.subtractive_heightmap_action)
         
         self.map = VXLData()
         
@@ -570,7 +582,7 @@ class MapEditor(QtGui.QMainWindow):
             return
         width = image.width()
         height = image.height()
-        image = image.convertToFormat(QtGui.QImage.Format_ARGB32)
+        image = image.convertToFormat(QImage.Format_ARGB32)
         for y in xrange(0, height):
             for x in xrange(0, width):
                 if image.pixel(x, y) == FUCHSIA:
@@ -580,6 +592,37 @@ class MapEditor(QtGui.QMainWindow):
     
     def clear_selected(self):
         self.edit_widget.clear()
+    
+    def get_height(self, color):
+        return int(math.floor((float(QtGui.qRed(color))+float(QtGui.qGreen(color))+
+                    float(QtGui.qBlue(color)))/12.0))
+
+    def additive_heightmap(self):
+        h_name = QtGui.QFileDialog.getOpenFileName(self,
+            'Select heightmap file', filter = IMAGE_FILTER)[0]
+        if h_name is None:
+            return
+        h_image = QImage(h_name)
+        c_name = QtGui.QFileDialog.getOpenFileName(self,
+            'Select color file', filter = IMAGE_FILTER)[0]
+        if c_name is None:
+            return
+        c_image = QImage(c_name)
+        #def set_z(self, z, repaint = True, update_map = True, update_values = True):
+        z_old = self.edit_widget.z
+        for y in xrange(0, 512):
+            for x in xrange(0, 512):
+                height = self.get_height(h_image.pixel(x, y))
+                color = c_image.pixel(x, y)
+                for z in xrange(0, height):
+                    self.edit_widget.set_z(63 - z, False, False, False)
+                    self.edit_widget.image.setPixel(x, y, color)
+        for z in xrange(0, 64):
+            self.edit_widget.set_z(z, False, True, False)
+        self.edit_widget.set_z(z, True, False, False)
+    
+    def subtractive_heightmap(self):
+        pass
     
     def quit(self):
         self.app.exit()
