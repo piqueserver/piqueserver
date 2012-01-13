@@ -610,7 +610,16 @@ class MapEditor(QtGui.QMainWindow):
                 return
             c_image = QImage(c_name)
         z_old = self.edit_widget.z
+        progress = QtGui.QProgressDialog(self.edit_widget)
+        progress.setMinimum(0)
+        progress.setMaximum(512)
+        progress.setCancelButtonText('Abort')
+        progress.setLabelText('Generating from heightmap...')
+        progress.setWindowModality(Qt.WindowModal)
         for y in xrange(0, 512):
+            if progress.wasCanceled():
+                break
+            progress.setValue(y)
             for x in xrange(0, 512):
                 height = self.get_height(h_image.pixel(x, y))
                 if custom_color is None:
