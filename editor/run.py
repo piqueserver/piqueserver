@@ -497,6 +497,18 @@ class MapEditor(QtGui.QMainWindow):
             triggered = self.mirror_both)
         self.transform.addAction(self.mirror_both_action)
 
+        self.rotate_90_CW_action = QtGui.QAction('&Rotate 90\xb0 CW', self,
+            triggered = self.rotate_90_CW)
+        self.transform.addAction(self.rotate_90_CW_action)
+
+        self.rotate_90_CCW_action = QtGui.QAction('&Rotate 90\xb0 CCW', self,
+            triggered = self.rotate_90_CCW)
+        self.transform.addAction(self.rotate_90_CCW_action)
+
+        self.rotate_180_action = QtGui.QAction('&Rotate 180\xb0', self,
+            triggered = self.rotate_180)
+        self.transform.addAction(self.rotate_180_action)
+
         self.heightmap = menu.addMenu('&Heightmap')
 
         self.additive_heightmap_action = QtGui.QAction('&Additive', self,
@@ -701,7 +713,36 @@ class MapEditor(QtGui.QMainWindow):
     
     def mirror_both(self):
         self.mirror(True, True)
+    
+    def rotate(self, angle):
+        old_z = self.edit_widget.z
+        progress = QtGui.QProgressDialog(self.edit_widget)
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setMinimum(0)
+        progress.setMaximum(63)
+        progress.setCancelButtonText('Abort')
+        progress.setLabelText('Rotating...')
+        transform = QtGui.QTransform()
+        transform.rotate(angle)
+        for z in xrange(0, 64):
+            if progress.wasCanceled():
+                break
+            progress.setValue(z)
+            self.edit_widget.set_z(z, False, True, False)
+            rotated_image = self.edit_widget.image.transformed(transform)
+            self.clear_selected()
+            self.edit_widget.set_image(rotated_image, False)
+        self.edit_widget.set_z(old_z, True, True, True)
+    
+    def rotate_90_CW(self):
+        self.rotate(90)
 
+    def rotate_90_CCW(self):
+        self.rotate(-90)
+    
+    def rotate_180(self):
+        self.rotate(180)
+    
     def clear_selected(self):
         self.edit_widget.clear()
     
