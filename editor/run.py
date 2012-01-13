@@ -670,13 +670,13 @@ class MapEditor(QtGui.QMainWindow):
     def generate_heightmap(self, custom_color = None, preserve_water = False):
         h_name = QtGui.QFileDialog.getOpenFileName(self,
             'Select heightmap file', filter = IMAGE_OPEN_FILTER)[0]
-        if h_name is None:
+        if not h_name:
             return
         h_image = QImage(h_name)
         if custom_color is None:
             c_name = QtGui.QFileDialog.getOpenFileName(self,
                 'Select color file', filter = IMAGE_OPEN_FILTER)[0]
-            if c_name is None:
+            if not c_name:
                 return
             c_image = QImage(c_name)
         old_z = self.edit_widget.z
