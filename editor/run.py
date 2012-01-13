@@ -575,6 +575,7 @@ class MapEditor(QtGui.QMainWindow):
             for x in xrange(0, width):
                 if image.pixel(x, y) == FUCHSIA:
                     image.setPixel(x, y, TRANSPARENT)
+        self.clear_selected()
         self.edit_widget.set_image(image)
     
     def clear_selected(self):
