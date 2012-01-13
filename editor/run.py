@@ -412,12 +412,14 @@ class MapEditor(QtGui.QMainWindow):
         self.file = menu.addMenu('&File')
         
         self.new_action = QtGui.QAction('&New', self,
+            shortcut = QtGui.QKeySequence('Ctrl+N'), 
             triggered = self.new_selected)
         self.file.addAction(self.new_action)
         
-        self.load_action = QtGui.QAction('&Load', self,
-            triggered = self.load_selected)
-        self.file.addAction(self.load_action)
+        self.open_action = QtGui.QAction('&Open', self,
+            shortcut = QtGui.QKeySequence('Ctrl+O'), 
+            triggered = self.open_selected)
+        self.file.addAction(self.open_action)
         
         self.save_action = QtGui.QAction('&Save', self, 
             shortcut=QtGui.QKeySequence.Save, triggered = self.save_selected)
@@ -511,7 +513,7 @@ class MapEditor(QtGui.QMainWindow):
         self.edit_widget.apply_default()
         self.filename = None
     
-    def load_selected(self):
+    def open_selected(self):
         name = QtGui.QFileDialog.getOpenFileName(self,
             'Select map file', filter = '*.vxl')[0]
         if not name:
@@ -611,11 +613,11 @@ class MapEditor(QtGui.QMainWindow):
             c_image = QImage(c_name)
         z_old = self.edit_widget.z
         progress = QtGui.QProgressDialog(self.edit_widget)
+        progress.setWindowModality(Qt.WindowModal)
         progress.setMinimum(0)
-        progress.setMaximum(512)
+        progress.setMaximum(511)
         progress.setCancelButtonText('Abort')
         progress.setLabelText('Generating from heightmap...')
-        progress.setWindowModality(Qt.WindowModal)
         for y in xrange(0, 512):
             if progress.wasCanceled():
                 break
