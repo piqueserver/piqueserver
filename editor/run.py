@@ -19,6 +19,7 @@
 pyspades - map editor
 """
 
+import struct
 import sys
 import os
 sys.path.append('..')
@@ -750,13 +751,13 @@ class MapEditor(QtGui.QMainWindow):
         return int(math.floor((float(QtGui.qRed(color)) + float(QtGui.qGreen(color)) + 
                     float(QtGui.qBlue(color)))/12.0))
 
-    def generate_heightmap(self, custom_color = None, preserve_water = False):
+    def generate_heightmap(self, delete = False):
         h_name = QtGui.QFileDialog.getOpenFileName(self,
             'Select heightmap file', filter = IMAGE_OPEN_FILTER)[0]
         if not h_name:
             return
         h_image = QImage(h_name)
-        if custom_color is None:
+        if not delete:
             c_name = QtGui.QFileDialog.getOpenFileName(self,
                 'Select color file', filter = IMAGE_OPEN_FILTER)[0]
             if not c_name:
@@ -769,27 +770,36 @@ class MapEditor(QtGui.QMainWindow):
         progress.setMaximum(511)
         progress.setCancelButtonText('Abort')
         progress.setLabelText('Generating from heightmap...')
+        packed_transparent = struct.pack('I', TRANSPARENT)
         for y in xrange(0, 512):
             if progress.wasCanceled():
                 break
             progress.setValue(y)
+            height_line = h_image.scanLine(y)
+            if not delete:
+                color_line = c_image.scanLine(y)
             for x in xrange(0, 512):
-                height = self.get_height(h_image.pixel(x, y))
-                if custom_color is None:
-                    color = c_image.pixel(x, y)
+                height = self.get_height(struct.unpack('I', height_line[x*4:x*4+4])[0])
                 for z in xrange(0, height + 1):
-                    if z != 0 or preserve_water is False:
+                    if z != 0 or not delete:
                         self.edit_widget.set_z(63 - z, False, False, False)
-                        if custom_color is None:
-                            self.edit_widget.image.setPixel(x, y, color)
+                        display_line = self.edit_widget.image.scanLine(y)
+                        if not delete:
+                            display_line[x*4] = color_line[x*4]
+                            display_line[x*4+1] = color_line[x*4+1]
+                            display_line[x*4+2] = color_line[x*4+2]
+                            display_line[x*4+3] = color_line[x*4+3]
                         else:
-                            self.edit_widget.image.setPixel(x, y, custom_color)
+                            display_line[x*4] = packed_transparent[0]
+                            display_line[x*4+1] = packed_transparent[1]
+                            display_line[x*4+2] = packed_transparent[2]
+                            display_line[x*4+3] = packed_transparent[3]
         for z in xrange(0, 64):
             self.edit_widget.set_z(z, False, True, False)
         self.edit_widget.set_z(old_z, True, False, False)
     
     def subtractive_heightmap(self):
-        return self.generate_heightmap(TRANSPARENT, True)
+        return self.generate_heightmap(True)
     
     def quit(self):
         self.app.exit()
