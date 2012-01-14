@@ -48,19 +48,19 @@ UPDATE_INTERVAL = 10
 PYSPADES_TIMEOUT = 2
 INPUT = 'in.html'
 
-SITE = 'http://ace-spades.com/forums/bb-login.php'
+SITE = 'http://ace-spades.com/forums/ucp.php?mode=login'
 
 from twisted.python import log
 
 def got_user(data, name):
-    result = data.count('Log in Failed') == 0
+    result = bool(data.count('You have been successfully logged in.'))
     print 'Auth for %s -> %s' % (name, result)
     return result
 
 def check_user(name, password):
     return getPage(SITE, method='POST', 
         postdata = urllib.urlencode(
-            {'user_login' : name, 'password' : password}
+            {'username' : name, 'password' : password, 'login' : 'Login'}
         ),
         headers = {'Content-Type' : 'application/x-www-form-urlencoded'}
         ).addCallback(got_user, name).addErrback(log.err)
