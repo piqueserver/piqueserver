@@ -22,7 +22,6 @@ pyspades - map editor
 import struct
 import sys
 import os
-import time
 sys.path.append('..')
 
 import math
@@ -244,7 +243,7 @@ class EditWidget(QtGui.QWidget):
             self.settings.update_values()
     
     def set_image(self, image, repaint = True):
-        self.clear(repaint)
+        self.clear(False)
         painter = QPainter(self.image)
         painter.drawImage(0, 0, image)
         if repaint:
@@ -615,28 +614,6 @@ class MapEditor(QtGui.QMainWindow):
                     return
                 self.voxed_filename = name
         subprocess.call([self.voxed_filename, self.filename])
-    
-    def export_color_map2(self):
-        name = QtGui.QFileDialog.getSaveFileName(self,
-            'Save colormap as...', filter = IMAGE_SAVE_FILTER)[0]
-        if not name:
-            return
-        color_image = QImage(512, 512, QImage.Format_ARGB32)
-        old_z = self.edit_widget.z
-        progress = progress_dialog(self.edit_widget, 0, 511, 'Exporting colormap...')
-        for y in xrange(0, 512):
-            if progress.wasCanceled():
-                break
-            progress.setValue(y)
-            for x in xrange(0, 512):
-                for z in xrange(0, 64):
-                    self.edit_widget.set_z(z, False, False, False)
-                    color = self.edit_widget.image.pixel(x, y)
-                    if color != TRANSPARENT:
-                        color_image.setPixel(x, y, color)
-                        break
-        color_image.save(name)
-        self.edit_widget.set_z(old_z, False, False, False)
 
     def export_color_map(self):
         name = QtGui.QFileDialog.getSaveFileName(self,
@@ -795,47 +772,6 @@ class MapEditor(QtGui.QMainWindow):
     def get_height(self, color):
         return int(math.floor((float(QtGui.qRed(color)) + float(QtGui.qGreen(color)) + 
                     float(QtGui.qBlue(color)))/12.0))
-
-    def generate_heightmap2(self, delete = False):
-        h_name = QtGui.QFileDialog.getOpenFileName(self,
-            'Select heightmap file', filter = IMAGE_OPEN_FILTER)[0]
-        if not h_name:
-            return
-        h_image = QImage(h_name)
-        if not delete:
-            c_name = QtGui.QFileDialog.getOpenFileName(self,
-                'Select color file', filter = IMAGE_OPEN_FILTER)[0]
-            if not c_name:
-                return
-            c_image = QImage(c_name)
-        old_z = self.edit_widget.z
-        progress = progress_dialog(self.edit_widget, 0, 511, 'Generating from heightmap...')
-        for y in xrange(0, 512):
-            if progress.wasCanceled():
-                break
-            progress.setValue(y)
-            height_line = h_image.scanLine(y)
-            if not delete:
-                color_line = c_image.scanLine(y)
-            for x in xrange(0, 512):
-                height = self.get_height(struct.unpack('I', height_line[x*4:x*4+4])[0])
-                for z in xrange(0, height + 1):
-                    if z != 0 or not delete:
-                        self.edit_widget.set_z(63 - z, False, False, False)
-                        image_line = self.edit_widget.image.scanLine(y)
-                        if not delete:
-                            image_line[x*4] = color_line[x*4]
-                            image_line[x*4+1] = color_line[x*4+1]
-                            image_line[x*4+2] = color_line[x*4+2]
-                            image_line[x*4+3] = color_line[x*4+3]
-                        else:
-                            image_line[x*4] = TRANSPARENT_PACKED
-                            image_line[x*4+1] = TRANSPARENT_PACKED
-                            image_line[x*4+2] = TRANSPARENT_PACKED
-                            image_line[x*4+3] = TRANSPARENT_PACKED
-        for z in xrange(0, 64):
-            self.edit_widget.set_z(z, False, True, False)
-        self.edit_widget.set_z(old_z, True, False, False)
     
     def generate_heightmap(self, delete = False):
         h_name = QtGui.QFileDialog.getOpenFileName(self,
