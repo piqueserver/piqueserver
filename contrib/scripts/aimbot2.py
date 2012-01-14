@@ -31,15 +31,15 @@ KILLS_IN_TIME_BAN_DURATION = 2880
 
 # The minimum number of near misses + hits that are fired before
 # we can kick or ban someone using the hit percentage check
-SEMI_KICK_MINIMUM = 15
-SMG_KICK_MINIMUM = 40
-SHOTGUN_KICK_MINIMUM = 15
+SEMI_KICK_MINIMUM = 30
+SMG_KICK_MINIMUM = 80
+SHOTGUN_KICK_MINIMUM = 30
 
 # Kick a player if the above minimum is met and if the
 # bullet hit percentage is greater than or equal to this amount
-SEMI_KICK_PERC = 0.85
-SMG_KICK_PERC = 0.70
-SHOTGUN_KICK_PERC = 0.85
+SEMI_KICK_PERC = 0.90
+SMG_KICK_PERC = 0.75
+SHOTGUN_KICK_PERC = 0.90
 
 # If a player gets more kills than the KILL_THRESHOLD in the given
 # KILL_TIME, kick or ban the player. This check is performed every
