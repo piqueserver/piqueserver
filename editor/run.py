@@ -22,6 +22,7 @@ pyspades - map editor
 import struct
 import sys
 import os
+import time
 sys.path.append('..')
 
 import math
@@ -36,11 +37,14 @@ from pyspades.load import VXLData, get_color_tuple
 
 WATER_COLOR = (64, 108, 129)
 TRANSPARENT = QtGui.qRgba(0, 0, 0, 0)
-FUCHSIA = QtGui.qRgb(255, 0, 255)
-IMAGE_OPEN_FILTER = 'Images (*.bmp *.gif *.jpg *.jpeg *.png *.pbm *.pgm *.ppm *.tiff *.xbm *.xpm)'
+TRANSPARENT_PACKED = struct.pack('I', TRANSPARENT)
+FUCHSIA = QtGui.qRgba(255, 0, 255, 255)
+FUCHSIA_PACKED = struct.pack('I', FUCHSIA)
 IMAGE_SAVE_FILTER = 'Portable Network Graphics (*.png);;Windows Bitmap (*.bmp);;\
 Joint Photographic Experts Group (*.jpg);;Joint Photographic Experts Group (*.jpeg);;\
 Portable Pixmap (*.ppm);;Tagged Image File Format (*.tiff);;X11 Bitmap (*.xbm);;X11 Pixmap (*.xpm)'
+IMAGE_OPEN_FILTER = 'All Formats (*.bmp *.gif *.jpg *.jpeg *.png *.pbm *.pgm *.ppm *.tiff *.xbm *.xpm)' + \
+    IMAGE_SAVE_FILTER
 WATER_PEN = QtGui.QColor(*WATER_COLOR)
 
 class LabeledSpinBox(QtGui.QWidget):
@@ -215,9 +219,10 @@ class EditWidget(QtGui.QWidget):
             self.update_scale()
             self.repaint()
     
-    def clear(self):
+    def clear(self, repaint = True):
         self.image.fill(0)
-        self.repaint()
+        if repaint:
+            self.repaint()
     
     def set_z(self, z, repaint = True, update_map = True, update_values = True):
         map = self.map
@@ -239,6 +244,7 @@ class EditWidget(QtGui.QWidget):
             self.settings.update_values()
     
     def set_image(self, image, repaint = True):
+        self.clear(repaint)
         painter = QPainter(self.image)
         painter.drawImage(0, 0, image)
         if repaint:
@@ -404,6 +410,15 @@ class Settings(QtGui.QWidget):
     def keyReleaseEvent(self, event):
         self.editor.keyReleaseEvent(event)
 
+def progress_dialog(parent, minn, maxn, text):
+    progress = QtGui.QProgressDialog(parent)
+    progress.setWindowModality(Qt.WindowModal)
+    progress.setMinimum(minn)
+    progress.setMaximum(maxn)
+    progress.setCancelButtonText('Abort')
+    progress.setLabelText(text)
+    return progress
+
 class MapEditor(QtGui.QMainWindow):
     filename = None
     voxed_filename = None
@@ -497,6 +512,8 @@ class MapEditor(QtGui.QMainWindow):
         self.mirror_both_action = QtGui.QAction('&Mirror both', self,
             triggered = self.mirror_both)
         self.transform.addAction(self.mirror_both_action)
+
+        self.transform.addSeparator()
 
         self.rotate_90_CW_action = QtGui.QAction('&Rotate 90\xb0 CW', self,
             triggered = self.rotate_90_CW)
@@ -599,19 +616,14 @@ class MapEditor(QtGui.QMainWindow):
                 self.voxed_filename = name
         subprocess.call([self.voxed_filename, self.filename])
     
-    def export_color_map(self):
+    def export_color_map2(self):
         name = QtGui.QFileDialog.getSaveFileName(self,
             'Save colormap as...', filter = IMAGE_SAVE_FILTER)[0]
         if not name:
             return
         color_image = QImage(512, 512, QImage.Format_ARGB32)
         old_z = self.edit_widget.z
-        progress = QtGui.QProgressDialog(self.edit_widget)
-        progress.setWindowModality(Qt.WindowModal)
-        progress.setMinimum(0)
-        progress.setMaximum(511)
-        progress.setCancelButtonText('Abort')
-        progress.setLabelText('Exporting colormap...')
+        progress = progress_dialog(self.edit_widget, 0, 511, 'Exporting colormap...')
         for y in xrange(0, 512):
             if progress.wasCanceled():
                 break
@@ -626,31 +638,73 @@ class MapEditor(QtGui.QMainWindow):
         color_image.save(name)
         self.edit_widget.set_z(old_z, False, False, False)
 
-    
+    def export_color_map(self):
+        name = QtGui.QFileDialog.getSaveFileName(self,
+            'Save colormap as...', filter = IMAGE_SAVE_FILTER)[0]
+        if not name:
+            return
+        color_image = QImage(512, 512, QImage.Format_ARGB32)
+        color_lines = []
+        height_found = []
+        for y in xrange(0, 512):
+            color_lines.append(color_image.scanLine(y))
+            height_found.append([])
+            for x in xrange(0, 512):
+                height_found[y].append(False)
+        old_z = self.edit_widget.z
+        progress = progress_dialog(self.edit_widget, 0, 63, 'Exporting colormap...')
+        for z in xrange(0, 64):
+            if progress.wasCanceled():
+                break
+            progress.setValue(z)
+            self.edit_widget.set_z(z, False, False, False)
+            for y in xrange(0, 512):
+                image_line = self.edit_widget.image.scanLine(y)
+                color_line = color_lines[y]
+                for x in xrange(0, 512):
+                    if height_found[y][x] is False:
+                        s = x*4
+                        image_pixel = image_line[s:s+4]
+                        if image_pixel != TRANSPARENT_PACKED:
+                            height_found[y][x] = True
+                            color_line[s:s+4] = image_pixel
+        color_image.save(name)
+        self.edit_widget.set_z(old_z, False, False, False)
+
     def export_height_map(self):
         name = QtGui.QFileDialog.getSaveFileName(self,
             'Save heightmap as...', filter = IMAGE_SAVE_FILTER)[0]
         if not name:
             return
+        height_packed = []
+        for z in xrange(0, 64):
+            height = (63 - z) * 4
+            height_packed.append(struct.pack('I', QtGui.qRgba(height, height, height, 255)))
         height_image = QImage(512, 512, QImage.Format_ARGB32)
-        old_z = self.edit_widget.z
-        progress = QtGui.QProgressDialog(self.edit_widget)
-        progress.setWindowModality(Qt.WindowModal)
-        progress.setMinimum(0)
-        progress.setMaximum(511)
-        progress.setCancelButtonText('Abort')
-        progress.setLabelText('Exporting heightmap...')
+        height_lines = []
+        height_found = []
         for y in xrange(0, 512):
+            height_lines.append(height_image.scanLine(y))
+            height_found.append([])
+            for x in xrange(0, 512):
+                height_found[y].append(False)
+        old_z = self.edit_widget.z
+        progress = progress_dialog(self.edit_widget, 0, 63, 'Exporting heightmap...')
+        for z in xrange(0, 64):
             if progress.wasCanceled():
                 break
-            progress.setValue(y)
-            for x in xrange(0, 512):
-                for z in xrange(0, 64):
-                    self.edit_widget.set_z(z, False, False, False)
-                    if self.edit_widget.image.pixel(x, y) != TRANSPARENT:
-                        height = (63 - z) * 4
-                        height_image.setPixel(x, y, QtGui.qRgb(height, height, height))
-                        break
+            progress.setValue(z)
+            self.edit_widget.set_z(z, False, False, False)
+            packed_value = height_packed[z]
+            for y in xrange(0, 512):
+                image_line = self.edit_widget.image.scanLine(y)
+                height_line = height_lines[y]
+                for x in xrange(0, 512):
+                    if height_found[y][x] is False:
+                        s = x*4
+                        if image_line[s:s+4] != TRANSPARENT_PACKED:
+                            height_found[y][x] = True
+                            height_line[s:s+4] = packed_value
         height_image.save(name)
         self.edit_widget.set_z(old_z, False, False, False)
 
@@ -662,16 +716,18 @@ class MapEditor(QtGui.QMainWindow):
         if not image:
             return
         self.edit_widget.set_image(image)
-    
+            
     def copy_external_selected(self):
         image = self.edit_widget.image
         width = image.width()
         height = image.height()
         new_image = image.copy(0, 0, width, height)
         for y in xrange(0, height):
+            line = new_image.scanLine(y)
             for x in xrange(0, width):
-                if new_image.pixel(x, y) == TRANSPARENT:
-                    new_image.setPixel(x, y, FUCHSIA)
+                s = x*4
+                if line[s:s+4] == TRANSPARENT_PACKED:
+                    line[s:s+4] = FUCHSIA_PACKED
         self.clipboard.setImage(new_image)
     
     def paste_external_selected(self):
@@ -682,27 +738,22 @@ class MapEditor(QtGui.QMainWindow):
         height = image.height()
         image = image.convertToFormat(QImage.Format_ARGB32)
         for y in xrange(0, height):
+            line = image.scanLine(y)
             for x in xrange(0, width):
-                if image.pixel(x, y) == FUCHSIA:
-                    image.setPixel(x, y, TRANSPARENT)
-        self.clear_selected()
+                s = x*4
+                if line[s:s+4] == FUCHSIA_PACKED:
+                    line[s:s+4] = TRANSPARENT_PACKED
         self.edit_widget.set_image(image)
     
     def mirror(self, hor, ver):
         old_z = self.edit_widget.z
-        progress = QtGui.QProgressDialog(self.edit_widget)
-        progress.setWindowModality(Qt.WindowModal)
-        progress.setMinimum(0)
-        progress.setMaximum(63)
-        progress.setCancelButtonText('Abort')
-        progress.setLabelText('Mirroring...')
+        progress = progress_dialog(self.edit_widget, 0, 63, 'Mirroring...')
         for z in xrange(0, 64):
             if progress.wasCanceled():
                 break
             progress.setValue(z)
             self.edit_widget.set_z(z, False, True, False)
             mirrored_image = self.edit_widget.image.mirrored(hor, ver)
-            self.clear_selected()
             self.edit_widget.set_image(mirrored_image, False)
         self.edit_widget.set_z(old_z, True, True, True)
 
@@ -717,12 +768,7 @@ class MapEditor(QtGui.QMainWindow):
     
     def rotate(self, angle):
         old_z = self.edit_widget.z
-        progress = QtGui.QProgressDialog(self.edit_widget)
-        progress.setWindowModality(Qt.WindowModal)
-        progress.setMinimum(0)
-        progress.setMaximum(63)
-        progress.setCancelButtonText('Abort')
-        progress.setLabelText('Rotating...')
+        progress = progress_dialog(self.edit_widget, 0, 63, 'Rotating...')
         transform = QtGui.QTransform()
         transform.rotate(angle)
         for z in xrange(0, 64):
@@ -731,7 +777,6 @@ class MapEditor(QtGui.QMainWindow):
             progress.setValue(z)
             self.edit_widget.set_z(z, False, True, False)
             rotated_image = self.edit_widget.image.transformed(transform)
-            self.clear_selected()
             self.edit_widget.set_image(rotated_image, False)
         self.edit_widget.set_z(old_z, True, True, True)
     
@@ -751,7 +796,7 @@ class MapEditor(QtGui.QMainWindow):
         return int(math.floor((float(QtGui.qRed(color)) + float(QtGui.qGreen(color)) + 
                     float(QtGui.qBlue(color)))/12.0))
 
-    def generate_heightmap(self, delete = False):
+    def generate_heightmap2(self, delete = False):
         h_name = QtGui.QFileDialog.getOpenFileName(self,
             'Select heightmap file', filter = IMAGE_OPEN_FILTER)[0]
         if not h_name:
@@ -764,13 +809,7 @@ class MapEditor(QtGui.QMainWindow):
                 return
             c_image = QImage(c_name)
         old_z = self.edit_widget.z
-        progress = QtGui.QProgressDialog(self.edit_widget)
-        progress.setWindowModality(Qt.WindowModal)
-        progress.setMinimum(0)
-        progress.setMaximum(511)
-        progress.setCancelButtonText('Abort')
-        progress.setLabelText('Generating from heightmap...')
-        packed_transparent = struct.pack('I', TRANSPARENT)
+        progress = progress_dialog(self.edit_widget, 0, 511, 'Generating from heightmap...')
         for y in xrange(0, 512):
             if progress.wasCanceled():
                 break
@@ -783,21 +822,66 @@ class MapEditor(QtGui.QMainWindow):
                 for z in xrange(0, height + 1):
                     if z != 0 or not delete:
                         self.edit_widget.set_z(63 - z, False, False, False)
-                        display_line = self.edit_widget.image.scanLine(y)
+                        image_line = self.edit_widget.image.scanLine(y)
                         if not delete:
-                            display_line[x*4] = color_line[x*4]
-                            display_line[x*4+1] = color_line[x*4+1]
-                            display_line[x*4+2] = color_line[x*4+2]
-                            display_line[x*4+3] = color_line[x*4+3]
+                            image_line[x*4] = color_line[x*4]
+                            image_line[x*4+1] = color_line[x*4+1]
+                            image_line[x*4+2] = color_line[x*4+2]
+                            image_line[x*4+3] = color_line[x*4+3]
                         else:
-                            display_line[x*4] = packed_transparent[0]
-                            display_line[x*4+1] = packed_transparent[1]
-                            display_line[x*4+2] = packed_transparent[2]
-                            display_line[x*4+3] = packed_transparent[3]
+                            image_line[x*4] = TRANSPARENT_PACKED
+                            image_line[x*4+1] = TRANSPARENT_PACKED
+                            image_line[x*4+2] = TRANSPARENT_PACKED
+                            image_line[x*4+3] = TRANSPARENT_PACKED
         for z in xrange(0, 64):
             self.edit_widget.set_z(z, False, True, False)
         self.edit_widget.set_z(old_z, True, False, False)
     
+    def generate_heightmap(self, delete = False):
+        h_name = QtGui.QFileDialog.getOpenFileName(self,
+            'Select heightmap file', filter = IMAGE_OPEN_FILTER)[0]
+        if not h_name:
+            return
+        h_image = QImage(h_name)
+        if not delete:
+            c_name = QtGui.QFileDialog.getOpenFileName(self,
+                'Select color file', filter = IMAGE_OPEN_FILTER)[0]
+            if not c_name:
+                return
+            c_image = QImage(c_name)
+        height_values = []
+        color_lines = []
+        for y in xrange(0, 512):
+            height_values.append([])
+            height_line = h_image.scanLine(y)
+            if not delete:
+                color_lines.append(c_image.scanLine(y))
+            for x in xrange(0,512):
+                height_values[y].append(self.get_height(struct.unpack('I', height_line[x*4:x*4+4])[0]))
+        old_z = self.edit_widget.z
+        progress = progress_dialog(self.edit_widget, 0, 63, 'Generating from heightmap...')
+        for z in xrange(0, 64):
+            if progress.wasCanceled():
+                break
+            progress.setValue(z)
+            if z == 0 and delete:
+                continue
+            self.edit_widget.set_z(63 - z, False, False, False)
+            for y in xrange(0, 512):
+                image_line = self.edit_widget.image.scanLine(y)
+                if not delete:
+                    color_line = color_lines[y]
+                for x in xrange(0, 512):
+                    if z <= height_values[y][x]:
+                        s = x*4
+                        if not delete:
+                            image_line[s:s+4] = color_line[s:s+4]
+                        else:
+                            image_line[s:s+4] = TRANSPARENT_PACKED
+        for z in xrange(0, 64):
+            self.edit_widget.set_z(z, False, True, False)
+        self.edit_widget.set_z(old_z, True, False, False)
+
     def subtractive_heightmap(self):
         return self.generate_heightmap(True)
     
