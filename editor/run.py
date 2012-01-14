@@ -42,7 +42,7 @@ FUCHSIA_PACKED = struct.pack('I', FUCHSIA)
 IMAGE_SAVE_FILTER = 'Portable Network Graphics (*.png);;Windows Bitmap (*.bmp);;\
 Joint Photographic Experts Group (*.jpg);;Joint Photographic Experts Group (*.jpeg);;\
 Portable Pixmap (*.ppm);;Tagged Image File Format (*.tiff);;X11 Bitmap (*.xbm);;X11 Pixmap (*.xpm)'
-IMAGE_OPEN_FILTER = 'All Formats (*.bmp *.gif *.jpg *.jpeg *.png *.pbm *.pgm *.ppm *.tiff *.xbm *.xpm)' + \
+IMAGE_OPEN_FILTER = 'All Formats (*.bmp *.gif *.jpg *.jpeg *.png *.pbm *.pgm *.ppm *.tiff *.xbm *.xpm);;' + \
     IMAGE_SAVE_FILTER
 WATER_PEN = QtGui.QColor(*WATER_COLOR)
 
