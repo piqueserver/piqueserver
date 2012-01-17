@@ -214,7 +214,10 @@ class EditWidget(QtGui.QWidget):
         if self.main.app.keyboardModifiers() & Qt.ControlModifier:
             self.set_brush_size(self.brush_size + wheelEvent.delta() / 120.0)
         else:
-            self.scale += (wheelEvent.delta() / 120.0) / 10.0
+            delta = abs(wheelEvent.delta()) / 120.0 + 0.25
+            if wheelEvent.delta() < 0.0:
+                delta = 1.0 / delta
+            self.scale *= delta
             self.update_scale()
             self.repaint()
     
