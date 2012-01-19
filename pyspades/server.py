@@ -300,9 +300,11 @@ class ServerConnection(BaseConnection):
                         contained.left, contained.right)
                     self.on_walk_update(contained.up, contained.down, 
                         contained.left, contained.right)
-                    if self.tool == WEAPON_TOOL:
-                        self.on_shoot_set(contained.fire)
-                        self.weapon_object.set_shoot(contained.fire)
+                    if world_object.fire != contained.fire:
+                        if self.tool == WEAPON_TOOL:
+                            self.weapon_object.set_shoot(contained.fire)
+                        if self.tool == WEAPON_TOOL or self.tool == SPADE_TOOL:
+                            self.on_shoot_set(contained.fire)
                     contained.player_id = self.player_id
                     z_acceleration = world_object.acceleration.z
                     jump = contained.jump
