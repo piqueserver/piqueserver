@@ -248,10 +248,14 @@ def pm(connection, value, *arg):
 def to_admin(connection, *arg):
     protocol = connection.protocol
     message = join_arguments(arg)
-    prefix = '(ADMINS)'
-    if protocol.irc_relay and protocol.irc_relay.colors:
-        prefix = '\x0304' + prefix + '\x0f'
-    protocol.irc_say(prefix + ' <%s> %s' % (connection.name, message))
+    if not message:
+        return "Enter a message you want to send, like /admin I'm stuck"
+    prefix = '(TO ADMINS)'
+    irc_relay = protocol.irc_relay
+    if irc_relay:
+        if irc_relay.factory.bot and irc_relay.factory.bot.colors:
+            prefix = '\x0304' + prefix + '\x0f'
+        irc_relay.send(prefix + ' <%s> %s' % (connection.name, message))
     for player in protocol.players.values():
         if player.admin and player is not connection:
             player.send_chat('To ADMINS from %s: %s' % 
@@ -879,20 +883,20 @@ def handle_command(connection, command, parameters):
         command_func = commands[command]
     except KeyError:
         return # 'Invalid command'
-    try:
-        if hasattr(command_func, 'admin'):
-            if (not connection.admin and 
-                (connection.rights is None or
-                command_func.func_name not in connection.rights)):
-                return 'No administrator rights!'
-        return command_func(connection, *parameters)
-    except KeyError:
-        return # 'Invalid command'
-    except TypeError:
-        return 'Invalid number of arguments for %s' % command
-    except InvalidPlayer:
-        return 'No such player'
-    except InvalidTeam:
-        return 'Invalid team specifier'
-    except ValueError:
-        return 'Invalid parameters'
+##     try:
+##         if hasattr(command_func, 'admin'):
+##             if (not connection.admin and 
+##                 (connection.rights is None or
+##                 command_func.func_name not in connection.rights)):
+##                 return 'No administrator rights!'
+    return command_func(connection, *parameters)
+##     except KeyError:
+##         return # 'Invalid command'
+##     except TypeError:
+##         return 'Invalid number of arguments for %s' % command
+##     except InvalidPlayer:
+##         return 'No such player'
+##     except InvalidTeam:
+##         return 'Invalid team specifier'
+##     except ValueError:
+##         return 'Invalid parameters'
