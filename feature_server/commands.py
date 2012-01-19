@@ -883,20 +883,20 @@ def handle_command(connection, command, parameters):
         command_func = commands[command]
     except KeyError:
         return # 'Invalid command'
-##     try:
-##         if hasattr(command_func, 'admin'):
-##             if (not connection.admin and 
-##                 (connection.rights is None or
-##                 command_func.func_name not in connection.rights)):
-##                 return 'No administrator rights!'
-    return command_func(connection, *parameters)
-##     except KeyError:
-##         return # 'Invalid command'
-##     except TypeError:
-##         return 'Invalid number of arguments for %s' % command
-##     except InvalidPlayer:
-##         return 'No such player'
-##     except InvalidTeam:
-##         return 'Invalid team specifier'
-##     except ValueError:
-##         return 'Invalid parameters'
+    try:
+        if hasattr(command_func, 'admin'):
+            if (not connection.admin and 
+                (connection.rights is None or
+                command_func.func_name not in connection.rights)):
+                return 'No administrator rights!'
+        return command_func(connection, *parameters)
+    except KeyError:
+        return # 'Invalid command'
+    except TypeError:
+        return 'Invalid number of arguments for %s' % command
+    except InvalidPlayer:
+        return 'No such player'
+    except InvalidTeam:
+        return 'Invalid team specifier'
+    except ValueError:
+        return 'Invalid parameters'
