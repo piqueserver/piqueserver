@@ -62,6 +62,7 @@ class Map(object):
         self.get_spawn_location = getattr(info, 'get_spawn_location', None)
         self.get_entity_location = getattr(info, 'get_entity_location', None)
         self.on_map_change = getattr(info, 'on_map_change', None)
+        self.on_map_leave = getattr(info, 'on_map_leave', None)
         self.on_block_destroy = getattr(info, 'on_block_destroy', None)
         
     def apply_script(self, protocol, connection, config):
