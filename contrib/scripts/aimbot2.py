@@ -2,7 +2,7 @@ from twisted.internet.task import LoopingCall
 from pyspades.constants import *
 from pyspades.weapon import Shotgun
 from math import sqrt, cos, acos, pi, tan
-from commands import add, admin
+from commands import add, admin, get_player
 from twisted.internet import reactor
 
 # This is an option for data collection. Data is outputted to aimbot2log.txt
@@ -98,6 +98,27 @@ def scale(v, scale):
 def subtract(v1, v2):
     return (v1[0]-v2[0], v1[1]-v2[1], v1[2]-v2[2])
 
+def accuracy(connection, name = None):
+    if name is None:
+        player = connection
+    else:
+        player = get_player(connection.protocol, name)
+    if player.semi_count != 0:
+        semi_percent = str(int(100.0 * (float(player.semi_hits)/float(player.semi_count)))) + '%'
+    else:
+        semi_percent = 'None'
+    if player.smg_count != 0:
+        smg_percent = str(int(100.0 * (float(player.smg_hits)/float(player.smg_count)))) + '%'
+    else:
+        smg_percent = 'None'
+    if player.shotgun_count != 0:
+        shotgun_percent = str(int(100.0 * (float(player.shotgun_hits)/float(player.shotgun_count)))) + '%'
+    else:
+        shotgun_percent = 'None'
+    connection.send_chat('Semi: ' + semi_percent + ' SMG: ' + smg_percent +' Shotgun: ' + shotgun_percent)
+
+add(accuracy)
+
 def apply_script(protocol, connection, config):    
     class Aimbot2Connection(connection):
         def __init__(self, *arg, **kw):
@@ -148,9 +169,9 @@ def apply_script(protocol, connection, config):
                                         pop_count += 1
                                 if headshot_snap_count >= SNAP_HEADSHOT_THRESHOLD:
                                     if SNAP_HEADSHOT_BAN:
-                                        self.ban('Aimbot detected - T1', SNAP_HEADSHOT_BAN_DURATION)
+                                        self.ban('Aimbot detected - heasdshot snap', SNAP_HEADSHOT_BAN_DURATION)
                                     else:
-                                        self.kick('Aimbot detected - T1')
+                                        self.kick('Aimbot detected - heasdshot snap')
                                     return
                                 for i in xrange(0, pop_count):
                                     self.headshot_snap_times.pop(0)
@@ -184,9 +205,9 @@ def apply_script(protocol, connection, config):
                             pop_count += 1
                     if kill_count >= KILL_THRESHOLD:
                         if KILLS_IN_TIME_BAN:
-                            by.ban('Aimbot detected - T2', KILLS_IN_TIME_BAN_DURATION)
+                            by.ban('Aimbot detected - kills in time window', KILLS_IN_TIME_BAN_DURATION)
                         else:
-                            by.kick('Aimbot detected - T2')
+                            by.kick('Aimbot detected - kills in time window')
                         return
                     for i in xrange(0, pop_count):
                         by.kill_times.pop(0)
@@ -227,9 +248,9 @@ def apply_script(protocol, connection, config):
         
         def hit_percent_eject(self):
             if HIT_PERCENT_BAN:
-                self.ban('Aimbot detected - T3', HIT_PERCENT_BAN_DURATION)
+                self.ban('Aimbot detected - hit percent', HIT_PERCENT_BAN_DURATION)
             else:
-                self.kick('Aimbot detected - T3')
+                self.kick('Aimbot detected - hit percent')
 
         def check_percent(self):
             if DETECT_HIT_PERCENT:
