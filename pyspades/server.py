@@ -183,7 +183,6 @@ class ServerConnection(BaseConnection):
     filter_visibility_data = False
     speedhack_detect = False
     rapid_hack_detect = False
-    fly = False
     timers = None
     world_object = None
     last_block = None
@@ -296,9 +295,9 @@ class ServerConnection(BaseConnection):
                             world_object.position):
                                 self.check_refill()
                 elif contained.id == loaders.InputData.id:
-                    world_object.set_walk(contained.up, contained.down,
-                        contained.left, contained.right)
                     self.on_walk_update(contained.up, contained.down, 
+                        contained.left, contained.right)
+                    world_object.set_walk(contained.up, contained.down,
                         contained.left, contained.right)
                     if world_object.fire != contained.fire:
                         if self.tool == WEAPON_TOOL:
@@ -306,21 +305,20 @@ class ServerConnection(BaseConnection):
                         if self.tool == WEAPON_TOOL or self.tool == SPADE_TOOL:
                             self.on_shoot_set(contained.fire)
                     contained.player_id = self.player_id
-                    z_acceleration = world_object.acceleration.z
-                    jump = contained.jump
-                    if jump and not (z_acceleration >= 0 and 
-                                     z_acceleration < 0.017):
-                        jump = False
-                    world_object.set_animation(contained.fire, jump, 
+                    z_acc = world_object.acceleration.z
+                    if contained.jump and not (z_acc >= 0 and z_acc < 0.017):
+                        contained.jump = False
+                    returned = self.on_animation_update(contained.fire,
+                        contained.jump, contained.crouch, contained.aim)
+                    if returned is not None:
+                        fire, jump, crouch, aim = returned
+                        if (fire != contained.fire or jump != contained.jump or
+                            crouch != contained.crouch or aim != contained.aim):
+                            (contained.fire, contained.jump, contained.crouch,
+                                contained.aim) = returned
+                            self.send_contained(contained)
+                    world_object.set_animation(contained.fire, contained.jump, 
                         contained.crouch, contained.aim)
-                    self.on_animation_update(contained.fire, jump, 
-                        contained.crouch, contained.aim)
-                    contained.jump = jump
-                    if (self.fly and contained.crouch and
-                        world_object.acceleration.z != 0.0):
-                        world_object.jump = True
-                        contained.jump = True
-                        self.send_contained(contained)
                     if self.filter_visibility_data:
                         return
                     self.protocol.send_contained(contained, 

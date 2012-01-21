@@ -160,6 +160,7 @@ class FeatureConnection(ServerConnection):
     login_retries = None
     god = False
     god_build = False
+    fly = False
     invisible = False
     building = True
     killing = True
@@ -325,6 +326,11 @@ class FeatureConnection(ServerConnection):
     def on_reset(self):
         self.streak = 0
         self.best_streak = 0
+    
+    def on_animation_update(self, fire, jump, crouch, aim):
+        if self.fly and crouch and self.world_object.acceleration.z != 0.0:
+            jump = True
+        return fire, jump, crouch, aim
     
     def grenade_exploded(self, grenade):
         self.current_grenade = grenade
