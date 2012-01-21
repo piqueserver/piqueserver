@@ -738,6 +738,10 @@ def server_info(connection):
         msg += ' at %s' % protocol.identifier
     return msg
 
+def scripts(connection):
+    scripts = connection.protocol.config.get('scripts', [])
+    return 'Scripts enabled: %s' % (', '.join(scripts))
+
 @admin
 def fog(connection, r, g, b):
     r = int(r)
@@ -810,6 +814,7 @@ command_list = [
     ping,
     version,
     server_info,
+    scripts,
     weapon,
     mapname
 ]

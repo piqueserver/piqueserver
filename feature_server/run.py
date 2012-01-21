@@ -977,13 +977,16 @@ if game_mode not in ('ctf', 'tc'):
     # must be a script with this game mode
     script_names.append(game_mode)
 
-for script in config.get('scripts', []):
+script_names = config.get('scripts', [])
+
+for script in script_names[:]:
     try:
         module = __import__('scripts.%s' % script, globals(), locals(), 
             [script])
         script_objects.append(module)
     except ImportError, e:
         print "(script '%s' not found: %r)" % (script, e)
+        script_names.remove(script)
 
 for script in script_objects:
     protocol_class, connection_class = script.apply_script(protocol_class,
