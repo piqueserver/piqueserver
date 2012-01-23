@@ -258,6 +258,11 @@ class FeatureConnection(ServerConnection):
             self.protocol.user_blocks.add((x, y, z))
     
     def on_block_destroy(self, x, y, z, mode):
+        map_on_block_destroy = self.protocol.map_info.on_block_destroy
+        if map_on_block_destroy is not None:
+            result = map_on_block_destroy(self, x, y, z, mode)
+            if result == False:
+                return result
         if not self.building:
             return False
         if not self.god:
@@ -278,11 +283,6 @@ class FeatureConnection(ServerConnection):
                         for nade_z in xrange(z - 1, z + 2):
                             if is_indestructable(nade_x, nade_y, nade_z):
                                 return False
-        map_on_block_destroy = self.protocol.map_info.on_block_destroy
-        if map_on_block_destroy is not None:
-            result = map_on_block_destroy(self, x, y, z, mode)
-            if result == False:
-                return result
     
     def on_block_removed(self, x, y, z):
         if self.protocol.user_blocks is not None:
@@ -693,6 +693,10 @@ class FeatureProtocol(ServerProtocol):
                 return True
         if self.god_blocks is not None:
             if (x, y, z) in self.god_blocks:
+                return True
+        map_is_indestructable = self.map_info.is_indestructable
+        if map_is_indestructable is not None:
+            if map_is_indestructable(self, x, y, z) == True:
                 return True
         return False
     
