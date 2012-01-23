@@ -41,7 +41,9 @@ def check_rotation(maps, load_dir = DEFAULT_LOAD_DIR):
 class Map(object):
     def __init__(self, name, load_dir = DEFAULT_LOAD_DIR):
         self.load_information(name, load_dir)
-        if not self.generate_map(name):
+        if self.gen_script:
+            self.data = self.gen_script(mapmaker.Mapmaker())
+        else:
             self.load_vxl(name, load_dir)
 
     def load_information(self, name, load_dir):
@@ -57,6 +59,7 @@ class Map(object):
         self.description = getattr(info, 'description', '')
         self.extensions = getattr(info, 'extensions', {})
         self.script = getattr(info, 'apply_script', None)
+        self.gen_script = getattr(info, 'gen_script', None)
         self.time_limit = getattr(info, 'time_limit', None)
         self.cap_limit = getattr(info, 'cap_limit', None)
         self.get_spawn_location = getattr(info, 'get_spawn_location', None)
@@ -73,11 +76,3 @@ class Map(object):
     def load_vxl(self, name, load_dir):
         check_rotation((name,))
         self.data = VXLData(open(get_filename(name, load_dir), 'rb'))
-
-    def generate_map(self, name):
-        if name == 'random':
-            self.data = mapmaker.generator_random()
-            self.author = "Triplefox"
-            return True
-        else:
-            return False
