@@ -17,16 +17,14 @@ DETECT_KILLS_IN_TIME = True
 
 # If both the below and above controls are set to True, a player will be
 # banned instead of kicked
-SNAP_HEADSHOT_BAN = False
-HIT_PERCENT_BAN = False
-DAMAGE_HACK_BAN = True
+SNAP_HEADSHOT_BAN = True
+HIT_PERCENT_BAN = True
 KILLS_IN_TIME_BAN = True
 
 # These controls are only used if banning instead of kicking is enabled
 # Time is given in minutes. Set to 0 for a permaban
-SNAP_HEADSHOT_BAN_DURATION = 60
-HIT_PERCENT_BAN_DURATION = 120
-DAMAGE_HACK_BAN_DURATION = 2880
+SNAP_HEADSHOT_BAN_DURATION = 1400
+HIT_PERCENT_BAN_DURATION = 1440
 KILLS_IN_TIME_BAN_DURATION = 2880
 
 # The minimum number of near misses + hits that are fired before
@@ -213,32 +211,23 @@ def apply_script(protocol, connection, config):
                         by.kill_times.pop(0)
                     by.kill_times.append(current_time)
             return connection.kill(self, by, type)
-        
-        def damage_hack_eject(self):
-            if DAMAGE_HACK_BAN:
-                self.ban('Damage hack detected', DAMAGE_HACK_BAN_DURATION)
-            else:
-                self.kick('Damage hack detected')
 
         def hit(self, value, by = None, type = WEAPON_KILL):
             if by is not None and by is not self:
                 if type == WEAPON_KILL or type == HEADSHOT_KILL:
                     if by.weapon == SEMI_WEAPON:
                         if (not (value in SEMI_DAMAGE)) and DETECT_DAMAGE_HACK:
-                            by.damage_hack_eject()
-                            return
+                            return False
                         else:
                             by.semi_hits += 1
                     elif by.weapon == SMG_WEAPON:
                         if (not (value in SMG_DAMAGE)) and DETECT_DAMAGE_HACK:
-                            by.damage_hack_eject()
-                            return
+                            return False
                         else:
                             by.smg_hits += 1
                     elif by.weapon == SHOTGUN_WEAPON:
                         if (not (value in SHOTGUN_DAMAGE)) and DETECT_DAMAGE_HACK:
-                            by.damage_hack_eject()
-                            return
+                            return False
                         else:
                             current_time = reactor.seconds()
                             if current_time - by.shotgun_time >= HALF_SHOTGUN:
