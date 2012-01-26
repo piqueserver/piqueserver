@@ -12,6 +12,7 @@ DATA_COLLECTION = False
 # using one of these methods, the player is kicked.
 DETECT_SNAP_HEADSHOT = True
 DETECT_HIT_PERCENT = True
+DETECT_HIT_PERCENT_MAX = True
 DETECT_DAMAGE_HACK = True
 DETECT_KILLS_IN_TIME = True
 
@@ -19,13 +20,21 @@ DETECT_KILLS_IN_TIME = True
 # banned instead of kicked
 SNAP_HEADSHOT_BAN = True
 HIT_PERCENT_BAN = True
+HIT_PERCENT_MAX_BAN = True
 KILLS_IN_TIME_BAN = True
 
 # These controls are only used if banning instead of kicking is enabled
 # Time is given in minutes. Set to 0 for a permaban
 SNAP_HEADSHOT_BAN_DURATION = 1400
 HIT_PERCENT_BAN_DURATION = 1440
+HIT_PERCENT_MAX_BAN_DURATION = 1440
 KILLS_IN_TIME_BAN_DURATION = 2880
+
+# Kick or ban a player if their hit percent exceeds this value at any time
+# The general idea here is to detect players with greater than 100% accuracy
+# This should be impossible for normal players to achieve
+# By default it's set to 110%, just in case
+MAX_PERC = 1.1
 
 # The minimum number of near misses + hits that are fired before
 # we can kick or ban someone using the hit percentage check
@@ -33,7 +42,7 @@ SEMI_KICK_MINIMUM = 30
 SMG_KICK_MINIMUM = 80
 SHOTGUN_KICK_MINIMUM = 30
 
-# Kick a player if the above minimum is met and if the
+# Kick or ban a player if the above minimum is met and if the
 # bullet hit percentage is greater than or equal to this amount
 SEMI_KICK_PERC = 0.90
 SMG_KICK_PERC = 0.75
@@ -113,7 +122,7 @@ def accuracy(connection, name = None):
         shotgun_percent = str(int(100.0 * (float(player.shotgun_hits)/float(player.shotgun_count)))) + '%'
     else:
         shotgun_percent = 'None'
-    connection.send_chat('Semi: ' + semi_percent + ' SMG: ' + smg_percent +' Shotgun: ' + shotgun_percent)
+    return 'Semi: ' + semi_percent + ' SMG: ' + smg_percent +' Shotgun: ' + shotgun_percent
 
 add(accuracy)
 
@@ -167,9 +176,9 @@ def apply_script(protocol, connection, config):
                                         pop_count += 1
                                 if headshot_snap_count >= SNAP_HEADSHOT_THRESHOLD:
                                     if SNAP_HEADSHOT_BAN:
-                                        self.ban('Aimbot detected - heasdshot snap', SNAP_HEADSHOT_BAN_DURATION)
+                                        self.ban('Aimbot detected - headshot snap', SNAP_HEADSHOT_BAN_DURATION)
                                     else:
-                                        self.kick('Aimbot detected - heasdshot snap')
+                                        self.kick('Aimbot detected - headshot snap')
                                     return
                                 for i in xrange(0, pop_count):
                                     self.headshot_snap_times.pop(0)
@@ -235,29 +244,44 @@ def apply_script(protocol, connection, config):
                                 by.shotgun_time = current_time
             return connection.hit(self, value, by, type)
         
-        def hit_percent_eject(self):
-            if HIT_PERCENT_BAN:
-                self.ban('Aimbot detected - hit percent', HIT_PERCENT_BAN_DURATION)
-            else:
-                self.kick('Aimbot detected - hit percent')
+        def hit_percent_eject(self, accuracy):
+            if DETECT_HIT_PERCENT:
+                accuracy = '%i%% %s hit accuracy' % (100.0 * accuracy, self.weapon.name)
+                if HIT_PERCENT_BAN:
+                    self.ban('Aimbot detected - ' + accuracy, HIT_PERCENT_BAN_DURATION)
+                else:
+                    self.kick('Aimbot detected - ' + accuracy)
+        
+        def hit_percent_max_eject(self, accuracy):
+            if DETECT_HIT_PERCENT_MAX:
+                accuracy = '%i%% %s hit accuracy' % (100.0 * accuracy, self.weapon.name)
+                if HIT_PERCENT_MAX_BAN:
+                    self.ban('Hacking detected - ' + accuracy, HIT_PERCENT_MAX_BAN_DURATION)
+                else:
+                    self.kick('Hacking detected - ' + accuracy)
 
         def check_percent(self):
-            if DETECT_HIT_PERCENT:
-                if self.weapon == SEMI_WEAPON:
-                    if self.semi_count >= SEMI_KICK_MINIMUM:
-                        if float(self.semi_hits)/float(self.semi_count) >= SEMI_KICK_PERC:
-                            self.hit_percent_eject()
-                            return
-                elif self.weapon == SMG_WEAPON:
-                    if self.smg_count >= SMG_KICK_MINIMUM:
-                        if float(self.smg_hits)/float(self.smg_count) >= SMG_KICK_PERC:
-                            self.hit_percent_eject()
-                            return
-                elif self.weapon == SHOTGUN_WEAPON:
-                    if self.shotgun_count >= SHOTGUN_KICK_MINIMUM:
-                        if float(self.shotgun_hits)/float(self.shotgun_count) >= SHOTGUN_KICK_PERC:
-                            self.hit_percent_eject()
-                            return
+            if self.weapon == SEMI_WEAPON:
+                semi_perc = float(self.semi_hits)/float(self.semi_count)
+                if semi_perc >= MAX_PERC:
+                    self.hit_percent_max_eject(semi_perc)
+                if self.semi_count >= SEMI_KICK_MINIMUM:
+                    if semi_perc >= SEMI_KICK_PERC:
+                        self.hit_percent_eject(semi_perc)
+            elif self.weapon == SMG_WEAPON:
+                smg_perc = float(self.smg_hits)/float(self.smg_count)
+                if smg_perc >= MAX_PERC:
+                    self.hit_percent_max_eject(smg_perc)
+                if self.smg_count >= SMG_KICK_MINIMUM:
+                    if smg_perc >= SMG_KICK_PERC:
+                        self.hit_percent_eject(smg_perc)
+            elif self.weapon == SHOTGUN_WEAPON:
+                shotgun_perc = float(self.shotgun_hits)/float(self.shotgun_count)
+                if shotgun_perc >= MAX_PERC:
+                    self.hit_percent_max_eject(shotgun_perc)
+                if self.shotgun_count >= SHOTGUN_KICK_MINIMUM:
+                    if shotgun_perc >= SHOTGUN_KICK_PERC:
+                        self.hit_percent_eject(shotgun_perc)
 
         def on_bullet_fire(self):
             # Remembering the past offers a performance boost, particularly with the SMG
