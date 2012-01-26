@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-SEMI_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON = xrange(3)
+RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON = xrange(3)
+SEMI_WEAPON = RIFLE_WEAPON
 TORSO, HEAD, ARMS, LEGS, MELEE = xrange(5)
 SPADE_TOOL, BLOCK_TOOL, WEAPON_TOOL, GRENADE_TOOL = xrange(4)
 BUILD_BLOCK, DESTROY_BLOCK, SPADE_DESTROY, GRENADE_DESTROY = xrange(4)

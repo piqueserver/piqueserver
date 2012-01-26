@@ -139,10 +139,12 @@ class Shotgun(BaseWeapon):
         return damage
 
 WEAPONS = {
-    SEMI_WEAPON : Rifle,
+    RIFLE_WEAPON : Rifle,
     SMG_WEAPON : SMG,
     SHOTGUN_WEAPON : Shotgun,
 }
 
 for id, weapon in WEAPONS.iteritems():
     weapon.id = id
+
+WEAPONS['SEMI_WEAPON'] = WEAPONS['RIFLE_WEAPON']
