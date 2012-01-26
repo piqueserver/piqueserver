@@ -1,6 +1,6 @@
 from twisted.internet.task import LoopingCall
 from pyspades.constants import *
-from pyspades.weapon import Shotgun
+from pyspades.weapon import Shotgun, WEAPONS
 from math import sqrt, cos, acos, pi, tan
 from commands import add, admin, get_player
 from twisted.internet import reactor
@@ -246,19 +246,21 @@ def apply_script(protocol, connection, config):
         
         def hit_percent_eject(self, accuracy):
             if DETECT_HIT_PERCENT:
-                accuracy = '%i%% %s hit accuracy' % (100.0 * accuracy, self.weapon.name)
+                message = 'Aimbot detected - %i%% %s hit accuracy' %\
+                          (100.0 * accuracy, WEAPONS[self.weapon].name)
                 if HIT_PERCENT_BAN:
-                    self.ban('Aimbot detected - ' + accuracy, HIT_PERCENT_BAN_DURATION)
+                    self.ban(message, HIT_PERCENT_BAN_DURATION)
                 else:
-                    self.kick('Aimbot detected - ' + accuracy)
+                    self.kick(message)
         
         def hit_percent_max_eject(self, accuracy):
             if DETECT_HIT_PERCENT_MAX:
-                accuracy = '%i%% %s hit accuracy' % (100.0 * accuracy, self.weapon.name)
+                message = 'Hacking detected - %i%% %s hit accuracy' %\
+                          (100.0 * accuracy, WEAPONS[self.weapon].name)
                 if HIT_PERCENT_MAX_BAN:
-                    self.ban('Hacking detected - ' + accuracy, HIT_PERCENT_MAX_BAN_DURATION)
+                    self.ban(message, HIT_PERCENT_MAX_BAN_DURATION)
                 else:
-                    self.kick('Hacking detected - ' + accuracy)
+                    self.kick(message)
 
         def check_percent(self):
             if self.weapon == SEMI_WEAPON:
