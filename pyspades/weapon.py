@@ -146,5 +146,3 @@ WEAPONS = {
 
 for id, weapon in WEAPONS.iteritems():
     weapon.id = id
-
-WEAPONS['SEMI_WEAPON'] = WEAPONS['RIFLE_WEAPON']
