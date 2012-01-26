@@ -20,7 +20,7 @@ DETECT_KILLS_IN_TIME = True
 # banned instead of kicked
 SNAP_HEADSHOT_BAN = True
 HIT_PERCENT_BAN = True
-HIT_PERCENT_MAX_BAN = True
+HIT_PERCENT_MAX_BAN = False
 KILLS_IN_TIME_BAN = True
 
 # These controls are only used if banning instead of kicking is enabled
@@ -38,21 +38,21 @@ MAX_PERC = 1.1
 
 # The minimum number of near misses + hits that are fired before
 # we can kick or ban someone using the hit percentage check
-SEMI_KICK_MINIMUM = 30
-SMG_KICK_MINIMUM = 80
-SHOTGUN_KICK_MINIMUM = 30
+SEMI_KICK_MINIMUM = 45
+SMG_KICK_MINIMUM = 90
+SHOTGUN_KICK_MINIMUM = 45
 
 # Kick or ban a player if the above minimum is met and if the
 # bullet hit percentage is greater than or equal to this amount
 SEMI_KICK_PERC = 0.90
-SMG_KICK_PERC = 0.75
+SMG_KICK_PERC = 0.80
 SHOTGUN_KICK_PERC = 0.90
 
 # If a player gets more kills than the KILL_THRESHOLD in the given
 # KILL_TIME, kick or ban the player. This check is performed every
 # time somebody kills someone with a gun
 KILL_TIME = 20.0
-KILL_THRESHOLD = 10
+KILL_THRESHOLD = 15
 
 # If the number of headshot snaps exceeds the SNAP_HEADSHOT_THRESHOLD in the
 # given SNAP_HEADSHOT_TIME, kick or ban the player. This check is performed every
