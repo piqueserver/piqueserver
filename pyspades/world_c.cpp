@@ -154,3 +154,70 @@ long can_see(void * map, float x0, float y0, float z0, float x1, float y1,
     }
     return 1;
 }
+
+long cast_ray(void * map, float x0, float y0, float z0, float x1, float y1,
+    float z1, float length, long* x, long* y, long* z)
+{
+    x1 = x0 + x1 * length;
+    y1 = y0 + y1 * length;
+    z1 = z0 + z1 * length;
+    Vector3 f, g;
+    LongVector3 a, c, d, p, i;
+    long cnt = 0;
+
+    ftol(x0-.5f,&a.x); ftol(y0-.5f,&a.y); ftol(z0-.5f,&a.z);
+    ftol(x1-.5f,&c.x); ftol(y1-.5f,&c.y); ftol(z1-.5f,&c.z);
+
+    if (c.x <  a.x) {
+        d.x = -1; f.x = x0-a.x; g.x = (x0-x1)*1024; cnt += a.x-c.x;
+    }
+    else if (c.x != a.x) {
+        d.x =  1; f.x = a.x+1-x0; g.x = (x1-x0)*1024; cnt += c.x-a.x;
+    }
+    else 
+        f.x = g.x = 0;
+    if (c.y <  a.y) {
+        d.y = -1; f.y = y0-a.y;   g.y = (y0-y1)*1024; cnt += a.y-c.y;
+    }
+    else if (c.y != a.y) {
+        d.y =  1; f.y = a.y+1-y0; g.y = (y1-y0)*1024; cnt += c.y-a.y;
+    }
+    else
+        f.y = g.y = 0;
+    if (c.z <  a.z) {
+        d.z = -1; f.z = z0-a.z;   g.z = (z0-z1)*1024; cnt += a.z-c.z;
+    }
+    else if (c.z != a.z) {
+        d.z =  1; f.z = a.z+1-z0; g.z = (z1-z0)*1024; cnt += c.z-a.z;
+    }
+    else
+        f.z = g.z = 0;
+
+    ftol(f.x*g.z - f.z*g.x,&p.x); ftol(g.x,&i.x);
+    ftol(f.y*g.z - f.z*g.y,&p.y); ftol(g.y,&i.y);
+    ftol(f.y*g.x - f.x*g.y,&p.z); ftol(g.z,&i.z);
+
+    if (cnt > length)
+        cnt = (long)length;
+    while (cnt)
+    {
+        if (((p.x|p.y) >= 0) && (a.z != c.z)) {
+            a.z += d.z; p.x -= i.x; p.y -= i.y;
+        }
+        else if ((p.z >= 0) && (a.x != c.x)) {
+            a.x += d.x; p.x += i.z; p.z -= i.y;
+        }
+        else {
+            a.y += d.y; p.y += i.z; p.z += i.x;
+        }
+
+        if (isvoxelsolidwrap(map, a.x, a.y,a.z)) {
+            *x = a.x;
+            *y = a.y;
+            *z = a.z;
+            return 1;
+        }
+        cnt--;
+    }
+    return 0;
+}

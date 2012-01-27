@@ -29,9 +29,10 @@ cdef extern from "world_c.cpp":
         float shooter_x, float shooter_y, float shooter_z,
         float orientation_x, float orientation_y, float orientation_z,
         float victim_x, float victim_y, float victim_z, float tolerance)
-    int c_can_see "can_see" (void * map, float x0, float y0, float z0, float x1,
-                             float y1, float z1)
-
+    int c_can_see "can_see" (void * map, float x0, float y0, float z0,
+        float x1, float y1, float z1)
+    int c_cast_ray "cast_ray" (void * map, float x0, float y0, float z0,
+        float x1, float y1, float z1, float length, long* x, long* y, long* z)
 from libc.math cimport sqrt
 
 cdef inline bint isvoxelsolid(VXLData map, double x, double y, double z):
@@ -60,11 +61,13 @@ cdef inline bint isvoxelsolidwrap(void * c_map, float x, float y, float z):
     cdef VXLData map = <VXLData>c_map
     return isvoxelsolid2(map, x, y, z);
 
-cdef inline bint can_see(VXLData map, 
-                         float x1, float y1, float z1,
-                         float x2, float y2, float z2):
+cdef inline bint can_see(VXLData map, float x1, float y1, float z1,
+    float x2, float y2, float z2):
     return c_can_see(<void*>map, x1, y1, z1, x2, y2, z2)
-                         
+
+cdef inline bint cast_ray(VXLData map, float x1, float y1, float z1,
+    float x2, float y2, float z2, float length, long* x, long* y, long* z):
+    return c_cast_ray(<void*>map, x1, y1, z1, x2, y2, z2, length, x, y, z)
 
 cdef class Object
 cdef class World
@@ -251,6 +254,15 @@ cdef class Character(Object):
         cdef Vertex3 position = self.position
         return can_see(self.world.map, position.x, position.y, position.z, 
             x, y, z)
+    
+    cpdef cast_ray(self, length = 32.0):
+        cdef Vertex3 position = self.position
+        cdef Vertex3 direction = self.orientation.normal()
+        cdef long x, y, z
+        if cast_ray(self.world.map, position.x, position.y, position.z, 
+            direction.x, direction.y, direction.z, length, &x, &y, &z):
+            return x, y, z
+        return None
     
     def validate_hit(self, Character other, part, float tolerance):
         cdef Vertex3 position1 = self.position
