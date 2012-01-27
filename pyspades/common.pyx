@@ -254,7 +254,7 @@ cdef class Vertex3:
     
     def __str__(self):
         return "(%s %s %s)" % (self.x, self.y, self.z)
-    
+
 cdef class Quaternion:
     def __init__(self, *arg):
         self.w = 1.0
@@ -308,15 +308,26 @@ cdef class Quaternion:
         return (self.multiply_scalar(1.0 - t) + q.multiply_scalar(t)).normalize()
     
     cpdef Vertex3 transform_vector(self, Vertex3 v):
-        tx = self.w*v.x + self.y*v.z - self.z*v.y
-        ty = self.w*v.y - self.x*v.z + self.z*v.x
-        tz = self.w*v.z + self.x*v.y - self.y*v.x
-        tw = -(self.x*v.x + self.y*v.y + self.z*v.z)
+        tx = self.w * v.x + self.y * v.z - self.z * v.y
+        ty = self.w * v.y - self.x * v.z + self.z * v.x
+        tz = self.w * v.z + self.x * v.y - self.y * v.x
+        tw = -(self.x * v.x + self.y * v.y + self.z * v.z)
         
         return Vertex3(
-            -tw*self.x + tx*self.w - ty*self.z + tz*self.y,
-            -tw*self.y + ty*self.w - tz*self.x + tx*self.z,
-            -tw*self.z + tz*self.w - tx*self.y + ty*self.x)
+            -tw * self.x + tx * self.w - ty * self.z + tz * self.y,
+            -tw * self.y + ty * self.w - tz * self.x + tx * self.z,
+            -tw * self.z + tz * self.w - tx * self.y + ty * self.x)
+    
+    cpdef Vertex3 inverse_transform_vector(self, Vertex3 v):
+        tx = self.w * v.x - self.y * v.z + self.z * v.y;
+        ty = self.w * v.y + self.x * v.z - self.z * v.x;
+        tz = self.w * v.z - self.x * v.y + self.y * v.x;
+        tw = self.x * v.x + self.y * v.y + self.z * v.z;
+        
+        return Vertex3(
+            tw * self.x + tx * self.w + ty * self.z - tz * self.y,
+            tw * self.y + ty * self.w + tz * self.x - tx * self.z,
+            tw * self.z + tz * self.w + tx * self.y - ty * self.x)
     
     def normalize(self):
         k = self.w * self.w + self.x * self.x + self.y * self.y + self.z * self.z
@@ -331,6 +342,21 @@ cdef class Quaternion:
     def multiply_scalar(self, double k):
         return Quaternion(self.w * k, self.x * k, self.y * k, self.z * k)
     
+    def get_matrix(self):
+        x2, y2, z2 = self.x * self.x, self.y * self.y, self.z * self.z
+        xy = self.x * self.y
+        xz = self.x * self.z
+        yz = self.y * self.z
+        wx = self.w * self.x
+        wy = self.w * self.y
+        wz = self.w * self.z
+        
+        # column-major
+        return (1.0 - 2.0 * (y2 + z2), 2.0 * (xy - wz), 2.0 * (xz + wy), 0.0,
+            2.0 * (xy + wz),1.0 - 2.0 * (x2 + z2), 2.0 * (yz - wx), 0.0,
+            2.0 * (xz - wy), 2.0 * (yz + wx), 1.0 - 2.0 * (x2 + y2), 0.0,
+            0.0, 0.0, 0.0, 1.0)
+    
     def __add__(self, Quaternion A):
         return Quaternion(self.w + A.w, self.x + A.x, self.y + A.y, self.z + A.z)
     
@@ -340,6 +366,12 @@ cdef class Quaternion:
             self.w * A.x + self.x * A.w + self.y * A.z - self.z * A.y,
             self.w * A.y + self.y * A.w + self.z * A.x - self.x * A.z,
             self.w * A.z + self.z * A.w + self.x * A.y - self.y * A.x)
+    
+    def __neg__(self):
+        return Quaternion(self.w, -self.x, -self.y, -self.z)
+    
+    def __pos__(self):
+        return Quaternion(self.w, +self.x, +self.y, +self.z)
     
     def __str__(self):
         return "(%s %s %s %s)" % (self.w, self.x, self.y, self.z)

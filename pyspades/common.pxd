@@ -50,3 +50,4 @@ cdef class Quaternion:
     cpdef Quaternion slerp(self, Quaternion q, double t)
     cpdef Quaternion nlerp(self, Quaternion q, double t)
     cpdef Vertex3 transform_vector(self, Vertex3 v)
+    cpdef Vertex3 inverse_transform_vector(self, Vertex3 v)
