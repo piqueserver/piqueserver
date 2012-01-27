@@ -8,6 +8,7 @@ from twisted.internet import reactor
 @admin
 def grief_check(connection, player, time = None):
     player = get_player(connection.protocol, player)
+    protocol = connection.protocol
     color = connection not in connection.protocol.players and connection.colors
     minutes = float(time or 2)
     if minutes < 0.0:
@@ -22,9 +23,10 @@ def grief_check(connection, player, time = None):
     message = '%s removed %s block%s in the last ' % (player_name,
         len(blocks) or 'no', '' if len(blocks) == 1 else 's')
     if minutes == 1.0:
-        message += 'minute.'
+        minutes_s = 'minute'
     else:
-        message += '%s minutes.' % ('%f' % minutes).rstrip('0').rstrip('.')
+        minutes_s = '%s minutes' % ('%f' % minutes).rstrip('0').rstrip('.')
+    message += minutes_s + '.'
     if len(blocks):
         infos = set(blocks)
         infos.discard(None)
@@ -40,8 +42,8 @@ def grief_check(connection, player, time = None):
         else:
             message += ' All of them were map blocks.'
         last = blocks_removed[-1]
-        message += ' Last one was destroyed %s ago' % (
-            prettify_timespan(reactor.seconds() - last[0], get_seconds = True))
+        time_s = prettify_timespan(reactor.seconds() - last[0], get_seconds = True)
+        message += ' Last one was destroyed %s ago' % time_s
         whom = last[1]
         if whom is None and len(names) > 0:
             message += ', and was part of the map'
@@ -50,6 +52,19 @@ def grief_check(connection, player, time = None):
             if color:
                 name = ('\x0303' if team else '\x0302') + name + '\x0f'
             message += ', and belonged to %s' % name
+        message += '.'
+    switch_sentence = False
+    if player.last_switch is not None and player.last_switch >= time:
+        time_s = prettify_timespan(reactor.seconds() - player.last_switch,
+            get_seconds = True)
+        message += ' %s joined %s team %s ago' % (player_name,
+            player.team.name, time_s)
+        switch_sentence = True
+    teamkills = len([t for t in player.teamkill_times or [] if t >= time])
+    if teamkills > 0:
+        s = ', and killed' if switch_sentence else ' %s killed' % player_name
+        message += s + ' %s teammates in the last %s' % (teamkills, minutes_s)
+    if switch_sentence or teamkills > 0:
         message += '.'
     if connection.protocol.votekick_player is player:
         dist = distance_3d_vector(player.world_object.position,
@@ -65,6 +80,11 @@ add(grief_check)
 def apply_script(protocol, connection, config):
     class BlockInfoConnection(connection):
         blocks_removed = None
+        teamkill_times = None
+        
+        def on_reset(self):
+            self.blocks_removed = None
+            self.teamkill_times = None
         
         def on_block_build(self, x, y, z):
             if self.protocol.block_info is None:
@@ -82,12 +102,19 @@ def apply_script(protocol, connection, config):
                 self.protocol.block_info.pop(pos, None))
             self.blocks_removed.append(info)
             connection.on_block_removed(self, x, y, z)
+        
+        def on_kill(self, killer):
+            if killer and killer.team is self.team:
+                if killer.teamkill_times is None:
+                    killer.teamkill_times = []
+                killer.teamkill_times.append(reactor.seconds())
+            connection.on_kill(self, killer)
     
     class BlockInfoProtocol(protocol):
         block_info = None
         
         def on_map_change(self, map):
             self.block_info = None
-            return protocol.on_map_change(self, map)
+            protocol.on_map_change(self, map)
     
     return BlockInfoProtocol, BlockInfoConnection
