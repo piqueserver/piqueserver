@@ -124,7 +124,7 @@ def accuracy(connection, name = None):
         shotgun_percent = str(int(100.0 * (float(player.shotgun_hits)/float(player.shotgun_count)))) + '%'
     else:
         shotgun_percent = 'None'
-    return 'Semi: ' + semi_percent + ' SMG: ' + smg_percent +' Shotgun: ' + shotgun_percent
+    return '%s has an accuracy of: Semi: %s SMG: %s Shotgun: %s' % (player.name, semi_percent, smg_percent, shotgun_percent)
 
 add(accuracy)
 
