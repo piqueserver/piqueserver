@@ -1,6 +1,5 @@
 from twisted.internet.task import LoopingCall
 from pyspades.constants import *
-from pyspades.weapon import Shotgun, WEAPONS
 from math import sqrt, cos, acos, pi, tan
 from commands import add, admin, get_player
 from twisted.internet import reactor
@@ -12,29 +11,33 @@ DATA_COLLECTION = False
 # using one of these methods, the player is kicked.
 DETECT_SNAP_HEADSHOT = True
 DETECT_HIT_PERCENT = True
-DETECT_HIT_PERCENT_MAX = True
 DETECT_DAMAGE_HACK = True
 DETECT_KILLS_IN_TIME = True
+DETECT_MULTIPLE_BULLETS = True
 
 # If both the below and above controls are set to True, a player will be
 # banned instead of kicked
 SNAP_HEADSHOT_BAN = True
 HIT_PERCENT_BAN = True
-HIT_PERCENT_MAX_BAN = False
 KILLS_IN_TIME_BAN = True
+MULTIPLE_BULLETS_BAN = True
 
 # These controls are only used if banning instead of kicking is enabled
 # Time is given in minutes. Set to 0 for a permaban
 SNAP_HEADSHOT_BAN_DURATION = 1400
 HIT_PERCENT_BAN_DURATION = 1440
-HIT_PERCENT_MAX_BAN_DURATION = 1440
 KILLS_IN_TIME_BAN_DURATION = 2880
+MULTIPLE_BULLETS_BAN_DURATION = 10080
 
-# Kick or ban a player if their hit percent exceeds this value at any time
-# The general idea here is to detect players with greater than 100% accuracy
-# This should be impossible for normal players to achieve
-# By default it's set to 110%, just in case
-MAX_PERC = 1.1
+# If more than or equal to this number of weapon hit packets are recieved
+# from the client in half the weapon delay time, then kick or ban the player.
+# This method of detection should have 100% detection and no false positives
+# with the current aimbot.
+# Note that the current aimbot does not modify the number of bullets
+# of the shotgun, so this method will not work if the player uses a shotgun.
+# These values may need to be changed if an update to the aimbot is released.
+SEMI_MULTIPLE_BULLETS_MAX = 8
+SMG_MULTIPLE_BULLETS_MAX = 8
 
 # The minimum number of near misses + hits that are fired before
 # we can kick or ban someone using the hit percentage check
@@ -82,7 +85,6 @@ HEAD_RADIUS = 0.7
 FOG_DISTANCE = 135.0
 
 # Don't touch any of this stuff
-HALF_SHOTGUN = 0.5*Shotgun.delay
 FOG_DISTANCE2 = FOG_DISTANCE**2
 NEAR_MISS_COS = cos(NEAR_MISS_ANGLE * (pi/180.0))
 SNAP_HEADSHOT_ANGLE_COS = cos(SNAP_HEADSHOT_ANGLE * (pi/180.0))
@@ -137,7 +139,8 @@ def apply_script(protocol, connection, config):
             self.kill_times = []
             self.headshot_snap_times = []
             self.bullet_loop = LoopingCall(self.on_bullet_fire)
-            self.shotgun_time = 0.0
+            self.shot_time = 0.0
+            self.multiple_bullets_count = 0
         
         def on_spawn(self, pos):
             self.first_orientation = True
@@ -220,67 +223,66 @@ def apply_script(protocol, connection, config):
                         by.kill_times.pop(0)
                     by.kill_times.append(current_time)
             return connection.kill(self, by, type)
+        
+        def multiple_bullets_eject(self):
+            if DETECT_MULTIPLE_BULLETS:
+                if MULTIPLE_BULLETS_BAN:
+                    self.ban('Aimbot detected - multiple bullets', MULTIPLE_BULLETS_BAN_DURATION)
+                else:
+                    self.kick('Aimbot detected - multiple bullets')
 
         def hit(self, value, by = None, type = WEAPON_KILL):
             if by is not None and by is not self:
                 if type == WEAPON_KILL or type == HEADSHOT_KILL:
+                    current_time = reactor.seconds()
+                    if current_time - by.shot_time > (0.5 * self.weapon_object.delay):
+                        by.multiple_bullets_count = 0
+                        by.shot_time = current_time
+                    by.multiple_bullets_count += 1
                     if by.weapon == SEMI_WEAPON:
                         if (not (value in SEMI_DAMAGE)) and DETECT_DAMAGE_HACK:
                             return False
                         else:
                             by.semi_hits += 1
+                            if by.multiple_bullets_count >= SEMI_MULTIPLE_BULLETS_MAX:
+                                by.multiple_bullets_eject()
                     elif by.weapon == SMG_WEAPON:
                         if (not (value in SMG_DAMAGE)) and DETECT_DAMAGE_HACK:
                             return False
                         else:
                             by.smg_hits += 1
+                            if by.multiple_bullets_count >= SMG_MULTIPLE_BULLETS_MAX:
+                                by.multiple_bullets_eject()
                     elif by.weapon == SHOTGUN_WEAPON:
                         if (not (value in SHOTGUN_DAMAGE)) and DETECT_DAMAGE_HACK:
                             return False
                         else:
-                            current_time = reactor.seconds()
-                            if current_time - by.shotgun_time >= HALF_SHOTGUN:
+                            if by.multiple_bullets_count == 1:
                                 by.shotgun_hits += 1
-                                by.shotgun_time = current_time
             return connection.hit(self, value, by, type)
         
         def hit_percent_eject(self, accuracy):
             if DETECT_HIT_PERCENT:
                 message = 'Aimbot detected - %i%% %s hit accuracy' %\
-                          (100.0 * accuracy, WEAPONS[self.weapon].name)
+                          (100.0 * accuracy, self.weapon_object.name)
                 if HIT_PERCENT_BAN:
                     self.ban(message, HIT_PERCENT_BAN_DURATION)
-                else:
-                    self.kick(message)
-        
-        def hit_percent_max_eject(self, accuracy):
-            if DETECT_HIT_PERCENT_MAX:
-                message = 'Hacking detected - %i%% %s hit accuracy' %\
-                          (100.0 * accuracy, WEAPONS[self.weapon].name)
-                if HIT_PERCENT_MAX_BAN:
-                    self.ban(message, HIT_PERCENT_MAX_BAN_DURATION)
                 else:
                     self.kick(message)
 
         def check_percent(self):
             if self.weapon == SEMI_WEAPON:
                 semi_perc = float(self.semi_hits)/float(self.semi_count)
-                if semi_perc >= MAX_PERC:
-                    self.hit_percent_max_eject(semi_perc)
                 if self.semi_count >= SEMI_KICK_MINIMUM:
                     if semi_perc >= SEMI_KICK_PERC:
                         self.hit_percent_eject(semi_perc)
             elif self.weapon == SMG_WEAPON:
                 smg_perc = float(self.smg_hits)/float(self.smg_count)
-                if smg_perc >= MAX_PERC:
-                    self.hit_percent_max_eject(smg_perc)
                 if self.smg_count >= SMG_KICK_MINIMUM:
                     if smg_perc >= SMG_KICK_PERC:
                         self.hit_percent_eject(smg_perc)
             elif self.weapon == SHOTGUN_WEAPON:
                 shotgun_perc = float(self.shotgun_hits)/float(self.shotgun_count)
-                if shotgun_perc >= MAX_PERC:
-                    self.hit_percent_max_eject(shotgun_perc)
                 if self.shotgun_count >= SHOTGUN_KICK_MINIMUM:
                     if shotgun_perc >= SHOTGUN_KICK_PERC:
                         self.hit_percent_eject(shotgun_perc)
