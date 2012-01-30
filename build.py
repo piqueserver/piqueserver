@@ -20,7 +20,7 @@ names = [
 
 for name in names:
     ext_modules.append(Extension(name, ['./%s.pyx' % name.replace('.', '/')],
-        language = 'c++'))
+        language = 'c++', include_dirs=['./pyspades']))
 
 setup(
     name = 'pyspades extensions',

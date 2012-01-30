@@ -19,9 +19,9 @@ import array
 import random
 import math
 import sys
+from pyspades.load cimport VXLData
 
 sys.path.append('..')
-from pyspades.load import VXLData
 
 cdef class Heightmap:
     cdef public int width
@@ -68,13 +68,21 @@ cdef class Heightmap:
                 bot = self.get_repeat(x,y+1)
                 center = self.hmap[x+y*self.width]
                 self.hmap[x+y*self.width] = (top + left + right + bot + center)/5
-    def midpoint_displace(self, double jittervalue, \
+    cpdef midpoint_displace(self, double jittervalue, \
                           double spanscalingmultiplier):
         """Midpoint displacement with the diamond-square algorithm."""
         
-        span = self.width+1
-        spanscaling = 1.
-
+        cdef int span = self.width+1
+        cdef float spanscaling = 1.
+        cdef float jitterrange
+        cdef float jitteroffset
+        cdef int halfspan
+        cdef float topleft
+        cdef float topright
+        cdef float botleft
+        cdef float botright
+        cdef float center
+        
         for iterations in xrange(9): # hardcoded for 512x512
             jitterrange = jittervalue * spanscaling
             jitteroffset = - jitterrange / 2
@@ -146,27 +154,34 @@ cdef class Heightmap:
                 for yy in xrange(y, maxy):
                     qty = (abs(yy - midy))/midx
                     self.set_repeat(xx,yy,qty)
-    def truncate(self):
+    cpdef truncate(self):
         for idx in xrange(0,len(self.hmap)):
             self.hmap[idx] = min(max(self.hmap[idx],0.0),1.0)
-    def offset_z(self, double qty):
+    cpdef offset_z(self, double qty):
         for idx in xrange(0,len(self.hmap)):
             self.hmap[idx] = self.hmap[idx]+qty
-    def rescale_z(self, double multiple):
+    cpdef rescale_z(self, double multiple):
         for idx in xrange(0,len(self.hmap)):
             self.hmap[idx] = self.hmap[idx]*multiple
-    cpdef writeVXL(self, painting_algorithm):
+    cpdef writeVXL(self, gradient):
         self.truncate()
-        vxl = VXLData()
+        cdef VXLData vxl = VXLData()
+
+        cdef zcoldef = gradient.array()        
+
+        cdef int x = 0
+        cdef int y = 0
+        cdef int h = 0
+        cdef int z = 0
         
-        for x in xrange(0, self.width):
-            for y in xrange(0, self.height):
-                h = int(self.get(x,y) * 63)
-                col = painting_algorithm(x,y,h)
-                for z in xrange(2, 63):
-                    if h<=z:
-                        vxl.set_point_unsafe(x, y, z, col)
-                vxl.set_point_unsafe(x, y, 63, col)
+        while x<self.width:
+            y = 0
+            while y<self.height:
+                h = int(self.hmap[x+y*self.height] * 63)
+                col = paint_gradient(zcoldef,x,y,h)
+                vxl.set_column_fast(x, y, h, 63, int(min(63,h+3)), col)
+                y+=1
+            x+=1
         return vxl
     def river(self,startx,starty,length):
         posx = startx
@@ -208,6 +223,17 @@ cdef class Heightmap:
             self.mult_repeat(posx-1,posy+1,0.5)
             self.mult_repeat(posx+1,posy-1,0.5)    
 
+cdef lim_byte(int val):
+    return max(0,min(255,val))
+
+cdef paint_gradient(object zcoltable, int x,int y,int z):
+    cdef int zz = z*3
+    cdef int rnd = random.randint(-4,4)
+    return (lim_byte(zcoltable[zz]+rnd),
+            lim_byte(zcoltable[zz+1]+rnd),
+            lim_byte(zcoltable[zz+2]+rnd),
+            255)
+
 class Gradient:
     def __init__(self):
         self.steps = []
@@ -225,10 +251,15 @@ class Gradient:
             self.set_step(n, (start_color[0] + r_dist*pct,
                               start_color[1] + g_dist*pct,
                               start_color[2] + b_dist*pct))
-    def list(self):
-        result = list(self.steps)
-        result.reverse()
-        return result
+    def array(self):
+        base = list(self.steps)
+        base.reverse()
+        result = []
+        for rgb in base:
+            result.append(int(rgb[0]))
+            result.append(int(rgb[1]))
+            result.append(int(rgb[2]))
+        return array.array('i',result)
 
 class Mapmaker:
     """Scripting API."""

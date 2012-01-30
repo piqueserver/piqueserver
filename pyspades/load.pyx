@@ -186,6 +186,17 @@ cdef class VXLData:
         set_point(x, y, z, self.map, 1, color)
         return True
     
+    cpdef bint set_column_fast(self, int x, int y, int z_start,
+                                int z_end, int z_color_end,
+                                tuple color_tuple):
+        """Set a column's solidity, but only color a limited amount from
+            the top."""
+        r, g, b, a = color_tuple 
+        cdef int color = make_color(r, g, b, a)
+        set_column_solid(x, y, z_start, z_end, self.map, 1)
+        set_column_color(x, y, z_start, z_color_end, self.map, color)
+        return True
+    
     def set_point_unsafe_int(self, int x, int y, int z, int color):
         set_point(x, y, z, self.map, 1, color)
     

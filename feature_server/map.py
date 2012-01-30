@@ -41,10 +41,12 @@ def check_rotation(maps, load_dir = DEFAULT_LOAD_DIR):
 class Map(object):
     def __init__(self, name, load_dir = DEFAULT_LOAD_DIR):
         self.load_information(name, load_dir)
+        print("*** loading %s" % name)
         if self.gen_script:
             self.data = self.gen_script(mapmaker.Mapmaker())
         else:
             self.load_vxl(name, load_dir)
+        print("load completed successfully.")
 
     def load_information(self, name, load_dir):
         info_file = os.path.join(load_dir, '%s.txt' % name)

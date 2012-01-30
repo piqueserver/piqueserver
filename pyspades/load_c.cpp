@@ -93,6 +93,49 @@ void inline set_point(int x, int y, int z, MapData * map, bool solid, int color)
         map->colors[i] = color;
 }
 
+void inline set_column_solid(int x, int y, int z_start, int z_end,
+                           MapData * map, bool solid)
+{
+    if (!valid_position(x, y, z_start) || !valid_position(x, y, z_end))
+        return;
+    if (z_end<z_start)
+        return;
+    int i = get_pos(x, y, z_start);
+    int i_end = get_pos(x, y, z_end);
+    if (!solid)
+    {
+        while (i<=i_end)
+        {
+            map->geometry[i] = solid;
+            i += MAP_X*MAP_Y;
+        }
+    }
+    else
+    {
+        while (i<=i_end)
+        {
+            map->geometry[i] = solid;
+            i += MAP_X*MAP_Y;
+        }
+    }
+}
+
+void inline set_column_color(int x, int y, int z_start, int z_end,
+                           MapData * map, int color)
+{
+    if (!valid_position(x, y, z_start) || !valid_position(x, y, z_end))
+        return;
+    if (z_end<z_start)
+        return;
+    int i = get_pos(x, y, z_start);
+    int i_end = get_pos(x, y, z_end);
+    while (i<=i_end)
+    {
+        map->colors[i] = color;
+        i += MAP_X*MAP_Y;
+    }
+}
+
 MapData * load_vxl(unsigned char * v)
 {
    MapData * map = new MapData;

@@ -19,6 +19,10 @@ cdef extern from "load_c.cpp":
     bint get_solid(int x, int y, int z, MapData * map)
     int get_color(int x, int y, int z, MapData * map)
     void set_point(int x, int y, int z, MapData * map, bint solid, int color)
+    void set_column_solid(int x, int y, int start_z, int end_z,
+                    MapData * map, bint solid)
+    void set_column_color(int x, int y, int start_z, int end_z,
+                    MapData * map, int color)
     int get_random_point(int x1, int y1, int x2, int y2, MapData * map, 
                          float random_1, float random_2,
                          int * x, int * y)
@@ -38,3 +42,6 @@ cdef class VXLData:
     cpdef bint set_point(self, int x, int y, int z, tuple color_tuple, 
                          bint user = ?)
     cpdef bint set_point_unsafe(self, int x, int y, int z, tuple color_tuple)
+    cpdef bint set_column_fast(self, int x, int y, int start_z,
+                                 int end_z, int end_color_z,
+                                 tuple color_tuple)

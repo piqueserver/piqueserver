@@ -15,17 +15,5 @@ def gen_script(mapmaker):
     gradient.rgb(16, (71,89,33), 32, (70,112,41))
     gradient.rgb(32, (70,112,41), 48, (125,153,61))
     gradient.rgb(48, (125,153,61), 64, (171,176,135))
-
-    zcoltable = gradient.list()
     
-    import random
-
-    def lim(val):
-        return max(0,min(255,val))
-
-    def painting(x,y,z):
-        mod_r = lim(zcoltable[z][0]+random.randint(-4,4))
-        mod_g = lim(zcoltable[z][1]+random.randint(-4,4))
-        mod_b = lim(zcoltable[z][2]+random.randint(-4,4))
-        return (mod_r,mod_g,mod_b,255)
-    return hmap.writeVXL(painting)
+    return hmap.writeVXL(gradient)
