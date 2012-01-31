@@ -27,6 +27,8 @@
     "maps" : ["pyspades", "bridgewars", "anticbridge"],
     "random_rotation" : false,
     "default_time_limit" : 15,
+    "time_announcements" : [1,2,3,4,5,6,7,8,9,10,30,60,120,180,
+                            240,300,600,900,1200,1800,2400,3000],
     "advance_on_win" : false,
     "respawn_time" : 8,
     "squad_respawn_time" : 8,

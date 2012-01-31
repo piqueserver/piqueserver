@@ -521,6 +521,9 @@ class FeatureProtocol(ServerProtocol):
             self.map_rotator_type = itertools.cycle
         self.default_time_limit = config.get('default_time_limit', 20.0)
         self.default_cap_limit = config.get('cap_limit', 10.0)
+        self.time_announcements = config.get('time_announcements',
+                [1,2,3,4,5,6,7,8,9,10,30,60,120,180,240,300,600,900,1200,1800,
+                 2400,3000])
         self.advance_on_win = int(config.get('advance_on_win', False))
         self.win_count = itertools.count(1)
         self.bans = NetworkDict()
@@ -641,11 +644,40 @@ class FeatureProtocol(ServerProtocol):
         time_limit = time_limit or self.default_time_limit
         if time_limit == False:
             return
+        
+        # reset old time announcements
+        try:
+            for n in self.times_call:
+                n.cancel()
+        except:
+            pass
+
+        # create new time announcements
+        self.times_call = []
+        times = self.time_announcements
+        for n in times:
+            mod_time = (time_limit * 60.0 - n)
+            if mod_time > 0:
+                self.times_call.append(reactor.callLater(mod_time,
+                                                      self._time_warning,
+                                                      n))
+        
         self.advance_call = reactor.callLater(time_limit * 60.0, self._time_up)
     
     def _time_up(self):
         self.advance_call = None
         self.advance_rotation('Time up!')
+
+    def _time_warning(self, remaining):
+        if remaining<60.001:
+            if remaining < 1.001:
+                self.send_chat('1...')
+            elif remaining < 10.001:
+                self.send_chat('%s...' % int(remaining))
+            else:
+                self.send_chat('%s seconds remaining.' % int(remaining))
+        else:
+            self.send_chat('%s minutes remaining.' % remaining//60)
     
     def advance_rotation(self, message = None):
         self.set_time_limit(False)
