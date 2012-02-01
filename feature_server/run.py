@@ -655,7 +655,8 @@ class FeatureProtocol(ServerProtocol):
         # create new time announcements
         self.times_call = []
         times = self.time_announcements
-        for n in times:
+        for baseval in times:
+            n = float(baseval)
             mod_time = (time_limit * 60.0 - n)
             if mod_time > 0:
                 self.times_call.append(reactor.callLater(mod_time,
@@ -677,7 +678,7 @@ class FeatureProtocol(ServerProtocol):
             else:
                 self.send_chat('%s seconds remaining.' % int(remaining))
         else:
-            self.send_chat('%s minutes remaining.' % remaining//60)
+            self.send_chat('%s minutes remaining.' % int(remaining/60))
     
     def advance_rotation(self, message = None):
         self.set_time_limit(False)
