@@ -4,16 +4,51 @@ author = 'Triplefox'
 description = ('Random generated map.')
 
 def gen_script(mapmaker):
-    hmap = mapmaker.Heightmap(0.6)
-    hmap.midpoint_displace(1.4,0.68)
-    hmap.smoothing()
     
-    gradient = mapmaker.Gradient()
-    gradient.set_step(0, (2,100,86))
-    gradient.set_step(1, (71,110,39))
-    gradient.rgb(1, (71,110,39), 16, (71,89,33))
-    gradient.rgb(16, (71,89,33), 32, (70,112,41))
-    gradient.rgb(32, (70,112,41), 48, (125,153,61))
-    gradient.rgb(48, (125,153,61), 64, (171,176,135))
+    grass = mapmaker.Gradient()
+    grass.set_step_rgb(0, (2,100,86))
+    grass.hsv(1, (102,73,58), 32, (106,78,71))
+    grass.hsv(32, (106,78,71), 64, (106,48,86))
+
+    snow = mapmaker.Gradient()
+    snow.set_step_rgb(0, (101,193,214))
+    snow.hsv(1, (221,55,48), 16, (184,30,84))
+    snow.hsv(16, (184,30,84), 48, (160,20,87))
+    snow.hsv(48, (160,20,87), 56, (140,18,98))
+    snow.hsv(56, (140,18,98), 64, (142,13,100))
+
+    hill = mapmaker.Gradient()
+    hill.set_step_rgb(0, (2,100,86))
+    hill.hsv(1, (102,73,58), 64, (17,36,87))
     
-    return hmap.writeVXL(gradient)
+    water = mapmaker.Gradient()
+    water.set_step_rgb(0, (2,100,86))
+    water.hsv(1, (64,26,70), 16, (119,65,40))
+    water.hsv(16, (119,65,40), 64, (125,153,61))
+    
+    grass_biome = mapmaker.Biome(grass, 0.95, -0.1)
+    snow_biome = mapmaker.Biome(snow, 0.5, -0.4)
+    hill_biome = mapmaker.Biome(hill, 0.9, -0.3)
+    water_biome = mapmaker.Biome(water, 1.2, -0.15)
+
+    bmap = mapmaker.BiomeMap([grass_biome,snow_biome,
+                              hill_biome,water_biome],32,32)
+    points = [(0,0,water_biome),(31,31,water_biome),
+              (31,0,water_biome),(0,31,water_biome),
+              (15,0,water_biome),(15,31,water_biome),
+              (15,7,snow_biome),(15,15,grass_biome),(15,22,hill_biome)]
+    points.extend(bmap.randompoints(2,grass_biome,0,8,32,16))
+    points.extend(bmap.randompoints(1,hill_biome,0,8,32,16))
+    points.extend(bmap.randompoints(1,water_biome,8,8,16,16))
+    bmap.pointflood(points)
+    bmap.jitter()
+    hmap, gradients = bmap.create_heightmap()
+    #hmap = mapmaker.Heightmap(0.5)
+    hmap.midpoint_displace(0.3,0.68,4)
+    hmap.jitter_colors(10)
+    hmap.smoothing()    
+    #hmap.fill_col(1)
+    hmap.truncate()
+    hmap.rewrite_gradient_fill(gradients)
+    
+    return hmap.writeVXL()

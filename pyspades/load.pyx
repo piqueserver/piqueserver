@@ -188,11 +188,9 @@ cdef class VXLData:
     
     cpdef bint set_column_fast(self, int x, int y, int z_start,
                                 int z_end, int z_color_end,
-                                tuple color_tuple):
+                                int color):
         """Set a column's solidity, but only color a limited amount from
             the top."""
-        r, g, b, a = color_tuple 
-        cdef int color = make_color(r, g, b, a)
         set_column_solid(x, y, z_start, z_end, self.map, 1)
         set_column_color(x, y, z_start, z_color_end, self.map, color)
         return True

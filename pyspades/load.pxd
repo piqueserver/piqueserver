@@ -44,4 +44,4 @@ cdef class VXLData:
     cpdef bint set_point_unsafe(self, int x, int y, int z, tuple color_tuple)
     cpdef bint set_column_fast(self, int x, int y, int start_z,
                                  int end_z, int end_color_z,
-                                 tuple color_tuple)
+                                 int color)
