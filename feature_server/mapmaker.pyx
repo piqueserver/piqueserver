@@ -25,12 +25,13 @@ from pyspades.load cimport VXLData
 sys.path.append('..')
 
 class Biome:
-    def __init__(self, gradient, height, variation):
+    def __init__(self, gradient, height, variation, noise):
         """Create a biome with a Gradient object,
             typical height(0.0-1.0), and height variation(0.0-1.0)."""
         self.gradient = gradient
         self.height = height
         self.variation = variation
+        self.noise = noise
         self.id = -1
 
 cdef class BiomeMap:
@@ -121,10 +122,13 @@ cdef class BiomeMap:
             x = idx % self.width
             y = idx // self.height
             biome = self.tmap[idx]
-            hmap.rect_simple(x*self.twidth,y*self.theight,
+            hmap.rect_noise(x*self.twidth,y*self.theight,
                             self.twidth,self.theight,
-                             biome.height+random.random()*biome.variation,
-                             biome.id)
+                            biome.noise,
+                            biome.height+random.random()*biome.variation)
+            hmap.rect_color(x*self.twidth,y*self.theight,
+                            self.twidth,self.theight,
+                            biome.id)
 
         return hmap, self.gradients
         
@@ -146,9 +150,13 @@ cdef class Heightmap:
     cpdef inline double get_repeat(self, int x, int y):
         """This allows the algorithm to tile at the edges."""
         return self.hmap[(x%self.width)+(y%self.height)*self.width]
+    cpdef inline set(self, int x, int y, double val):
+        self.hmap[x+y*self.height] = val
     cpdef inline set_repeat(self, int x, int y, double val):
         """This allows the algorithm to tile at the edges."""
         self.hmap[(x%self.width)+(y%self.height)*self.width] = val
+    cpdef inline add_repeat(self, int x, int y, double val):
+        self.hmap[(x%self.width)+(y%self.height)*self.width] += val
     cpdef inline int get_col(self, int x, int y):
         return self.cmap[x+y*self.height]
     cpdef inline int get_col_repeat(self, int x, int y):
@@ -165,7 +173,7 @@ cdef class Heightmap:
         cdef double halfjitter = jitter * 0.5
         for idx in xrange(len(self.hmap)):
             self.hmap[idx] = midpoint + (random.random()*jitter -
-                                         halfjitter) # TUNABLE
+                                         halfjitter)
     cpdef peaking(self):
         """Adds a "peaking" feel to the map."""
         for idx in xrange(len(self.hmap)):
@@ -270,12 +278,20 @@ cdef class Heightmap:
                 orig = self.get_repeat(x,y)
                 dist = orig - heightmap.get_repeat(x,y)
                 self.set_repeat(x,y, orig - dist * alphamap.get_repeat(x,y))
-    cpdef rect_simple(self, int x, int y, int w, int h, double z, int col):
-        maxx = x+w
-        maxy = y+h
-        for xx in xrange(x, maxx):
-            for yy in xrange(y, maxy):
+    cpdef rect_solid(self, int x, int y, int w, int h, double z):
+        for xx in xrange(x, x+w):
+            for yy in xrange(y, y+h):
                 self.set_repeat(xx,yy,z)
+    cpdef rect_noise(self, int x, int y, int w, int h,
+                     double jitter, double midpoint):        
+        cdef double halfjitter = jitter * 0.5
+        for xx in xrange(x,x+w):
+            for yy in xrange(y,y+h):            
+                self.set(xx,yy, midpoint + (random.random()*jitter -
+                                         halfjitter))
+    cpdef rect_color(self, int x, int y, int w, int h, int col):
+        for xx in xrange(x, x+w):
+            for yy in xrange(y, y+h):
                 self.set_col_repeat(xx,yy,col)        
     cpdef truncate(self):
         """Truncates the heightmap to a valid (0-1) range.
@@ -329,45 +345,24 @@ cdef class Heightmap:
                                 self.cmap[idx])
             idx+=1
         return vxl
-    def river(self,startx,starty,length):
-        posx = startx
-        posy = starty
-        recorded = {}
-        for n in xrange(length):
-            recorded[(posx,posy)] = True
-            curheight = self.get_repeat(posx,posy)
-            candidates = []
-            for mx in xrange(-20,21):
-                for my in xrange(-20,21):
-                    if not recorded.has_key((posx+mx, posy+my)):
-                        candidates.append((mx,my,
-                                           self.get_repeat(posx+mx,posy+my)))                    
-
-            # sort by manhattan distance then (slightly) by lowest height
-            candidates.sort(key=lambda cd: -cd[2]*0.1 + (
-                abs(cd[0]-posx)+abs(cd[1]-posy)))
-            
-            chosen = list(random.choice(candidates))
-            
-            # limit step size to 1
-            if abs(chosen[0])>1:
-                chosen[0] = int(math.copysign(1,chosen[0]))
-            if abs(chosen[1])>1:
-                chosen[1] = int(math.copysign(1,chosen[1]))
-            posx += chosen[0]
-            posy += chosen[1]
-        for r in recorded:
-            posx = r[0]
-            posy = r[1]
-            self.set_repeat(posx,posy,0)
-            self.mult_repeat(posx-1,posy,0.2)
-            self.mult_repeat(posx+1,posy,0.2)
-            self.mult_repeat(posx,posy+1,0.2)
-            self.mult_repeat(posx,posy-1,0.2)
-            self.mult_repeat(posx-1,posy-1,0.5)
-            self.mult_repeat(posx+1,posy+1,0.5)
-            self.mult_repeat(posx-1,posy+1,0.5)
-            self.mult_repeat(posx+1,posy-1,0.5)    
+    cpdef line_add(self,int x,int y,
+                int x2,int y2,int radius, double depth):
+        cdef int posx, posy
+        for c in bresenham_line(x,y,x2,y2):
+            posx = c[0]
+            posy = c[1]
+            for x in xrange(-radius,radius+1):
+                for y in xrange(-radius,radius+1):
+                    self.add_repeat(posx+x,posy+y,depth)
+    cpdef line_set(self,int x,int y,
+                int x2,int y2,int radius, double height):
+        cdef int posx, posy
+        for c in bresenham_line(x,y,x2,y2):
+            posx = c[0]
+            posy = c[1]
+            for x in xrange(-radius,radius+1):
+                for y in xrange(-radius,radius+1):
+                    self.set_repeat(posx+x,posy+y,height)
 
 cdef lim_byte(int val):
     return max(0,min(255,val))
@@ -382,6 +377,33 @@ cdef inline int paint_gradient(object zcoltable, int z):
                       lim_byte(zcoltable[zz+1]+rnd),
                       lim_byte(zcoltable[zz+2]+rnd)
                       )
+
+cdef inline list bresenham_line(int x, int y, int x2, int y2):
+    cdef int steep = 0
+    cdef list coords = []
+    cdef int dx, dy, sx, sy, d
+    dx = abs(x2 - x)
+    if (x2 - x) > 0: sx = 1
+    else: sx = -1
+    dy = abs(y2 - y)
+    if (y2 - y) > 0: sy = 1
+    else: sy = -1
+    if dy > dx:
+        steep = 1
+        x,y = y,x
+        dx,dy = dy,dx
+        sx,sy = sy,sx
+    d = (2 * dy) - dx
+    for i in xrange(0,dx):
+        if steep: coords.append((y,x))
+        else: coords.append((x,y))
+        while d >= 0:
+            y = y + sy
+            d = d - (2 * dx)
+        x = x + sx
+        d = d + (2 * dy)
+    coords.append((x2,y2))
+    return coords    
 
 from feature_server.color import *
 
@@ -403,8 +425,8 @@ class Gradient:
             self.set_step_rgb(n, interpolate_rgb(start_color,
                                              end_color,
                                              pct))
-    def hsv(self, start_pos, start_color, end_pos, end_color):
-        """Linear interpolation of (0-360,0-100,0-100) HSV values
+    def hsb(self, start_pos, start_color, end_pos, end_color):
+        """Linear interpolation of (0-360,0-100,0-100) HSB values
             as used in GIMP."""
         dist = end_pos - start_pos
         start_color = (start_color[0]/360.,
