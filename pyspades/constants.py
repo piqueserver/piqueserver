@@ -16,7 +16,7 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 MASTER_VERSION = 30
-GAME_VERSION = 075001
+GAME_VERSION = 1
 RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON = xrange(3)
 SEMI_WEAPON = RIFLE_WEAPON
 TORSO, HEAD, ARMS, LEGS, MELEE = xrange(5)
