@@ -347,17 +347,17 @@ class ServerConnection(BaseConnection):
                     else:
                         hit_amount = self.weapon_object.get_damage(
                             value, position1, position2)
-                    returned = self.on_hit(hit_amount, player)
-                    if returned == False:
-                        return
-                    elif returned is not None:
-                        hit_amount = returned
                     if is_melee:
                         type = MELEE_KILL
                     elif contained.value == HEAD:
                         type = HEADSHOT_KILL
                     else:
                         type = WEAPON_KILL
+                    returned = self.on_hit(hit_amount, player, type)
+                    if returned == False:
+                        return
+                    elif returned is not None:
+                        hit_amount = returned
                     player.hit(hit_amount, self, type)
                 elif contained.id == loaders.GrenadePacket.id:
                     if not self.grenades:
@@ -864,7 +864,7 @@ class ServerConnection(BaseConnection):
                 damage = grenade.get_damage(player.world_object.position)
                 if damage == 0:
                     continue
-                returned = self.on_hit(damage, player)
+                returned = self.on_hit(damage, player, GRENADE_KILL)
                 if returned == False:
                     continue
                 elif returned is not None:
@@ -964,7 +964,7 @@ class ServerConnection(BaseConnection):
     def on_command(self, command, parameters):
         pass
     
-    def on_hit(self, hit_amount, hit_player):
+    def on_hit(self, hit_amount, hit_player, type):
         pass
     
     def on_kill(self, killer):
