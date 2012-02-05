@@ -290,7 +290,7 @@ class FeatureConnection(ServerConnection):
         if self.protocol.god_blocks is not None:
             self.protocol.god_blocks.discard((x, y, z))
     
-    def on_hit(self, hit_amount, player):
+    def on_hit(self, hit_amount, player, type):
         if not self.protocol.killing:
             self.send_chat(
                 "You can't kill anyone right now! Damage is turned OFF")
