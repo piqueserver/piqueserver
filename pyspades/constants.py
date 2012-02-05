@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+MASTER_VERSION = 30
+GAME_VERSION = 075001
 RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON = xrange(3)
 SEMI_WEAPON = RIFLE_WEAPON
 TORSO, HEAD, ARMS, LEGS, MELEE = xrange(5)
@@ -31,6 +33,8 @@ MIN_TERRITORY_COUNT = 3
 MAX_TERRITORY_COUNT = 7
 NEUTRAL_TEAM = 2
 SPAWN_RADIUS = 32
+MINE_RANGE = 3
+BUILD_TOLERANCE = 5
 
 MELEE_DISTANCE = 3
 

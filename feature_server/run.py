@@ -60,21 +60,12 @@ def get_hg_rev():
     return ret
 
 if frozen:
-    CLIENT_VERSION = int(open('client_version', 'rb').read())
     path = os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding()))
     sys.path.append(path)
     SERVER_VERSION = 'win32 build' # most likely
 else:
     sys.path.append('..')
-    from pyspades.common import crc32
-    CLIENT_VERSION = crc32(open('../data/client.exe', 'rb').read())
     SERVER_VERSION = get_hg_rev()
-
-# reverse bytes
-CLIENT_VERSION = ((CLIENT_VERSION & 0x000000FF) << 24 |
-                  (CLIENT_VERSION & 0x0000FF00) << 8 |
-                  (CLIENT_VERSION & 0x00FF0000) >> 8 |
-                  (CLIENT_VERSION & 0xFF000000) >> 24)
 
 if iocp and sys.platform == 'win32':
     # install IOCP
@@ -327,10 +318,10 @@ class FeatureConnection(ServerConnection):
         self.streak = 0
         self.best_streak = 0
     
-    def on_animation_update(self, fire, jump, crouch, aim):
-        if self.fly and crouch and self.world_object.acceleration.z != 0.0:
+    def on_animation_update(self, primary_fire, secondary_fire, jump, crouch):
+        if self.fly and crouch and self.world_object.velocity.z != 0.0:
             jump = True
-        return fire, jump, crouch, aim
+        return primary_fire, secondary_fire, jump, crouch
     
     def grenade_exploded(self, grenade):
         self.current_grenade = grenade
@@ -470,7 +461,6 @@ class FeatureTeam(Team):
 
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
-    version = CLIENT_VERSION
     bans = None
     ban_publish = None
     ban_manager = None

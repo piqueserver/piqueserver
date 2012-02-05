@@ -64,12 +64,10 @@ cdef class PositionData(Loader):
         self.z = z
         
     cpdef read(self, ByteReader reader):
-        reader.skipBytes(3)
         read_position(reader, &self.x, &self.y, &self.z)
     
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
-        reader.pad(3)
         write_position(reader, self.x, self.y, self.z)
 
 cdef class OrientationData(Loader):
@@ -86,14 +84,12 @@ cdef class OrientationData(Loader):
         self.z = z
         
     cpdef read(self, ByteReader reader):
-        reader.skipBytes(3)
         self.x = reader.readFloat(False)
         self.y = reader.readFloat(False)
         self.z = reader.readFloat(False)
     
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
-        reader.pad(3)
         reader.writeFloat(self.x, False)
         reader.writeFloat(self.y, False)
         reader.writeFloat(self.z, False)
@@ -105,7 +101,6 @@ cdef class WorldUpdate(Loader):
         list items
     
     cpdef read(self, ByteReader reader):
-        reader.skipBytes(3)
         cdef list items = []
         self.items = items
         for _ in range(32):
@@ -119,7 +114,6 @@ cdef class WorldUpdate(Loader):
     
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
-        reader.pad(3)
         cdef tuple item
         for item in self.items:
             (p_x, p_y, p_z), (o_x, o_y, o_z) = item
@@ -134,29 +128,27 @@ cdef class InputData(Loader):
     id = 3
     cdef public:
         int player_id
-        bint up, down, left, right, fire, jump, crouch, aim
+        bint up, down, left, right, primary_fire, secondary_fire, jump, crouch
     
     cpdef read(self, ByteReader reader):
         self.player_id = reader.readByte(True)
-        reader.skipBytes(2)
         cdef int firstByte = reader.readInt(True, False)
         self.up = (firstByte >> 0) & 1
         self.down = (firstByte >> 1) & 1
         self.left = (firstByte >> 2) & 1
         self.right = (firstByte >> 3) & 1
-        self.fire = (firstByte >> 4) & 1
-        self.jump = (firstByte >> 5) & 1
-        self.crouch = (firstByte >> 6) & 1
-        self.aim = (firstByte >> 7) & 1
+        self.primary_fire = (firstByte >> 4) & 1
+        self.secondary_fire = (firstByte >> 5) & 1
+        self.jump = (firstByte >> 6) & 1
+        self.crouch = (firstByte >> 7) & 1
     
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
-        reader.pad(2)
         cdef int byte
         byte = (self.up | (self.down << 1) | (self.left << 2) | 
-            (self.right << 3) | (self.fire << 4) | (self.jump << 5) |
-            (self.crouch << 6) | (self.aim << 7))
+            (self.right << 3) | (self.primary_fire << 4) | 
+            (self.secondary_fire << 5) | (self.jump << 6) | (self.crouch << 7))
         reader.writeInt(byte, True, False)
 
 cdef class HitPacket(Loader):
@@ -184,7 +176,6 @@ cdef class SetHP(Loader):
         self.hp = reader.readByte(True)
         # FALL = 0, WEAPON = 1
         self.not_fall = reader.readByte(True)
-        reader.skipBytes(1)
         self.source_x = reader.readFloat(False)
         self.source_y = reader.readFloat(False)
         self.source_z = reader.readFloat(False)
@@ -193,7 +184,6 @@ cdef class SetHP(Loader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.hp, True)
         reader.writeByte(self.not_fall, True)
-        reader.pad(1)
         reader.writeFloat(self.source_x, False)
         reader.writeFloat(self.source_y, False)
         reader.writeFloat(self.source_z, False)
@@ -208,7 +198,6 @@ cdef class GrenadePacket(Loader):
 
     cpdef read(self, ByteReader reader):
         self.player_id = reader.readByte(True)
-        reader.skipBytes(2)
         self.value = reader.readFloat(False)
         self.position = (reader.readFloat(False), reader.readFloat(False),
             reader.readFloat(False))
@@ -218,7 +207,6 @@ cdef class GrenadePacket(Loader):
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
-        reader.pad(2)
         reader.writeFloat(self.value, False)
         for value in self.position:
             reader.writeFloat(value, False)
@@ -292,7 +280,6 @@ cdef class MoveObject(Loader):
     cpdef read(self, ByteReader reader):
         self.object_type = reader.readByte(True)
         self.state = reader.readByte(True)
-        reader.skipBytes(1)
         self.x = reader.readFloat(False)
         self.y = reader.readFloat(False)
         self.z = reader.readFloat(False)
@@ -301,7 +288,6 @@ cdef class MoveObject(Loader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.object_type, True)
         reader.writeByte(self.state, True)
-        reader.pad(1)
         reader.writeFloat(self.x, False)
         reader.writeFloat(self.y, False)
         reader.writeFloat(self.z, False)
@@ -338,7 +324,6 @@ cdef class BlockAction(Loader):
     cpdef read(self, ByteReader reader):
         self.player_id = reader.readByte(True)
         self.value = reader.readByte(True)
-        reader.skipBytes(1)
         self.x = reader.readInt(False, False)
         self.y = reader.readInt(False, False)
         self.z = reader.readInt(False, False)
@@ -347,10 +332,36 @@ cdef class BlockAction(Loader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
         reader.writeByte(self.value, True)
-        reader.pad(1)
         reader.writeInt(self.x, False, False)
         reader.writeInt(self.y, False, False)
         reader.writeInt(self.z, False, False)
+
+cdef class BlockLine(Loader):
+    id = 12
+    
+    cdef public:
+        int player_id
+        int x1, y1, z1
+        int x2, y2, z2
+    
+    cpdef read(self, ByteReader reader):
+        self.player_id = reader.readByte(True)
+        self.x1 = reader.readInt(False, False)
+        self.y1 = reader.readInt(False, False)
+        self.z1 = reader.readInt(False, False)
+        self.x2 = reader.readInt(False, False)
+        self.y2 = reader.readInt(False, False)
+        self.z2 = reader.readInt(False, False)
+    
+    cpdef write(self, ByteWriter reader):
+        reader.writeByte(self.id, True)
+        reader.writeByte(self.player_id, True)
+        reader.writeInt(self.x1, False, False)
+        reader.writeInt(self.y1, False, False)
+        reader.writeInt(self.z1, False, False)
+        reader.writeInt(self.x2, False, False)
+        reader.writeInt(self.y2, False, False)
+        reader.writeInt(self.z2, False, False)
 
 cdef class CTFState(Loader):
     id = 0
@@ -369,7 +380,6 @@ cdef class CTFState(Loader):
         self.team2_score = reader.readInt(True, False)
         self.cap_limit = reader.readInt(True, False)
         cdef int intel_flags = reader.readByte(True)
-        reader.skipBytes(3)
         self.team1_has_intel = intel_flags & 1
         self.team2_has_intel = (intel_flags >> 1) & 1
         if self.team1_has_intel:
@@ -392,7 +402,7 @@ cdef class CTFState(Loader):
         read_position(reader, &self.team2_base_x, &self.team2_base_y,
             &self.team2_base_z)
         
-        reader.skipBytes(196) # padding for TCState - sigh...
+        reader.skipBytes(151) # padding for TCState - sigh...
     
     cpdef write(self, ByteWriter reader):
         reader.writeInt(self.team1_score, True, False)
@@ -401,7 +411,6 @@ cdef class CTFState(Loader):
         cdef int intel_flags = (self.team1_has_intel | (
             self.team2_has_intel << 1))
         reader.writeByte(intel_flags, True)
-        reader.pad(3)
         if self.team1_has_intel:
             reader.writeByte(self.team1_carrier, True)
             reader.pad(11)
@@ -422,7 +431,7 @@ cdef class CTFState(Loader):
         write_position(reader, self.team2_base_x, self.team2_base_y,
             self.team2_base_z)
             
-        reader.pad(196) # padding for TCState - sigh...
+        reader.pad(151) # padding for TCState - sigh...
 
 cdef class Territory(Loader):
     cdef public:
@@ -432,12 +441,10 @@ cdef class Territory(Loader):
     cpdef read(self, ByteReader reader):
         read_position(reader, &self.x, &self.y, &self.z)
         self.state = reader.readByte(True)
-        reader.skipBytes(3)
     
     cpdef write(self, ByteWriter reader):
         write_position(reader, self.x, self.y, self.z)
         reader.writeByte(self.state, True)
-        reader.pad(3)
 
 cdef class ObjectTerritory(Loader):
     cdef public:
@@ -503,7 +510,7 @@ cdef inline void write_team_color(ByteWriter reader, tuple color):
     reader.writeByte(r, True)
 
 cdef class StateData(Loader):
-    id = 12
+    id = 13
     
     cdef public:
         int player_id
@@ -535,7 +542,7 @@ cdef class StateData(Loader):
         reader.writeString(encode(self.team2_name), 10)
 
 cdef class KillAction(Loader):
-    id = 13
+    id = 14
     
     cdef public:
         int player_id, killer_id, kill_type, respawn_time
@@ -570,25 +577,23 @@ cdef class _CommonMessage(Loader):
         reader.writeString(encode(self.value))    
 
 cdef class ChatMessage(_CommonMessage):
-    id = 14
+    id = 15
 
 cdef class MapStart(Loader):
-    id = 15
+    id = 16
     
     cdef public:
         unsigned int size
     
     cpdef read(self, ByteReader reader):
-        reader.skipBytes(3)
         self.size = reader.readInt(True, False)
     
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
-        reader.pad(3)
         reader.writeInt(self.size, True, False)
 
 cdef class MapChunk(Loader):
-    id = 16
+    id = 17
     
     cdef public:
         object data
@@ -601,7 +606,7 @@ cdef class MapChunk(Loader):
         reader.write(self.data)
 
 cdef class PlayerLeft(Loader):
-    id = 17
+    id = 18
     
     cdef public:
         int player_id
@@ -614,7 +619,7 @@ cdef class PlayerLeft(Loader):
         reader.writeByte(self.player_id, True)
 
 cdef class TerritoryCapture(Loader):
-    id = 18
+    id = 19
     
     cdef public:
         unsigned int object_index, winning, state
@@ -631,7 +636,7 @@ cdef class TerritoryCapture(Loader):
         reader.writeByte(self.state, True)
 
 cdef class ProgressBar(Loader):
-    id = 19
+    id = 20
     
     cdef public:
         unsigned int object_index, capturing_team
@@ -652,7 +657,7 @@ cdef class ProgressBar(Loader):
         reader.writeFloat(self.progress, False)
 
 cdef class IntelCapture(Loader):
-    id = 20
+    id = 21
     
     cdef public:
         int player_id
@@ -668,7 +673,7 @@ cdef class IntelCapture(Loader):
         reader.writeByte(self.winning, True)
 
 cdef class IntelPickup(Loader):
-    id = 21
+    id = 22
     
     cdef public:
         int player_id
@@ -681,7 +686,7 @@ cdef class IntelPickup(Loader):
         reader.writeByte(self.player_id, True)
 
 cdef class IntelDrop(Loader):
-    id = 22
+    id = 23
     
     cdef public:
         int player_id
@@ -689,17 +694,15 @@ cdef class IntelDrop(Loader):
     
     cpdef read(self, ByteReader reader):
         self.player_id = reader.readByte(True)
-        reader.skipBytes(2)
         read_position(reader, &self.x, &self.y, &self.z)
     
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
-        reader.pad(2)
         write_position(reader, self.x, self.y, self.z)
 
 cdef class Restock(Loader):
-    id = 23
+    id = 24
     
     cdef public:
         int player_id
@@ -712,7 +715,7 @@ cdef class Restock(Loader):
         reader.writeByte(self.player_id, True)
 
 cdef class FogColor(Loader):
-    id = 24
+    id = 25
     
     cdef public:
         int color
@@ -725,7 +728,7 @@ cdef class FogColor(Loader):
         reader.writeInt(self.color << 8, True, False)
 
 cdef class WeaponReload(Loader):
-    id = 25
+    id = 26
     
     cdef public:
         int player_id, clip_ammo, reserve_ammo
@@ -742,7 +745,7 @@ cdef class WeaponReload(Loader):
         reader.writeByte(self.reserve_ammo, True)
 
 cdef class ChangeTeam(Loader):
-    id = 26
+    id = 27
     cdef public:
         int player_id, team
 
@@ -756,7 +759,7 @@ cdef class ChangeTeam(Loader):
         reader.writeByte(self.team, False)
 
 cdef class ChangeWeapon(Loader):
-    id = 27
+    id = 28
     cdef public:
         int player_id, weapon
 
@@ -783,10 +786,10 @@ cdef class _CommonServerMessage(Loader):
         reader.writeByte(self.message, True)
 
 cdef class BasicServerMessage(_CommonServerMessage):
-    id = 28
-
-cdef class ServerMessage(_CommonServerMessage):
     id = 29
 
-cdef class ServerLoadMessage(_CommonMessage):
+cdef class ServerMessage(_CommonServerMessage):
     id = 30
+
+cdef class ServerLoadMessage(_CommonMessage):
+    id = 31

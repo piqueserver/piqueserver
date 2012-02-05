@@ -25,8 +25,29 @@ world_c.cpp - this shit is hazardous
 // Cython->C++
 
 #define isvoxelsolidwrap __pyx_f_8pyspades_5world_isvoxelsolidwrap
-
 static int isvoxelsolidwrap(void *, float, float, float);
+
+// from vxl.h
+#define CHUNK 1023 //zlib buffer size
+#define VSID 512    //Maximum .VXL dimensions in both x & y direction
+#define VSIDM (VSID-1)
+#define VSIDSQ (VSID*VSID)
+#define VSIDSQM (VSIDSQ-1)
+#define MAXSCANDIST 128
+#define MAXSCANSQ (MAXSCANDIST*MAXSCANDIST)
+#define VOXSIZ (VSIDSQ*MAXZDIM)
+#define SCPITCH 128
+#define SQRT 0.70710678f
+#define MINERANGE 3
+#define MAXZDIM 64 //Maximum .VXL dimensions in z direction (height)
+#define MAXZDIMM (MAXZDIM-1)
+#define MAXZDIMMM (MAXZDIM-2)
+#define PI 3.141592653589793f
+#define PORT 32887
+#define GRID_SIZE 64
+
+// common.h
+#define CUBE_ARRAY_LENGTH 64
 
 #include <math.h>
 
@@ -220,4 +241,94 @@ long cast_ray(void * map, float x0, float y0, float z0, float x1, float y1,
         cnt--;
     }
     return 0;
+}
+
+size_t cube_line(int x1, int y1, int z1, int x2, int y2, int z2,
+                 LongVector3 * cube_array)
+{
+	LongVector3 c, d;
+	long ixi, iyi, izi, dx, dy, dz, dxi, dyi, dzi;
+	size_t count = 0;
+
+	//Note: positions MUST be rounded towards -inf
+	c.x = x1;
+	c.y = y1;
+	c.z = z1;
+
+	d.x = x2 - x1;
+	d.y = y2 - y1;
+	d.z = z2 - z1;
+
+	if (d.x < 0) ixi = -1;
+	else ixi = 1;
+	if (d.y < 0) iyi = -1;
+	else iyi = 1;
+	if (d.z < 0) izi = -1;
+	else izi = 1;
+
+	if ((fabsf(d.x) >= fabsf(d.y)) && (fabsf(d.x) >= fabsf(d.z)))
+	{
+		dxi = 1024; dx = 512;
+		dyi = (long)(!d.y ? 0x3fffffff/VSID : fabsf(d.x*1024/d.y));
+		dy = dyi/2;
+		dzi = (long)(!d.z ? 0x3fffffff/VSID : fabsf(d.x*1024/d.z));
+		dz = dzi/2;
+	}
+	else if (fabsf(d.y) >= fabsf(d.z))
+	{
+		dyi = 1024; dy = 512;
+		dxi = (long)(!d.x ? 0x3fffffff/VSID : fabsf(d.y*1024/d.x));
+		dx = dxi/2;
+		dzi = (long)(!d.z ? 0x3fffffff/VSID : fabsf(d.y*1024/d.z));
+		dz = dzi/2;
+	}
+	else
+	{
+		dzi = 1024; dz = 512;
+		dxi = (long)(!d.x ? 0x3fffffff/VSID : fabsf(d.z*1024/d.x));
+		dx = dxi/2;
+		dyi = (long)(!d.y ? 0x3fffffff/VSID : fabsf(d.z*1024/d.y));
+		dy = dyi/2;
+	}
+	if (ixi >= 0) dx = dxi-dx;
+	if (iyi >= 0) dy = dyi-dy;
+	if (izi >= 0) dz = dzi-dz;
+
+	while (1)
+	{
+		cube_array[count] = c;
+
+		if(count++ == CUBE_ARRAY_LENGTH)
+			return count;
+
+		if(c.x == x2 &&
+			c.y == y2 &&
+			c.z == z2)
+			return count;
+
+		if ((dz <= dx) && (dz <= dy))
+		{
+			c.z += izi;
+			if (c.z < 0 || c.z >= MAXZDIM)
+				return count;
+			dz += dzi;
+		}
+		else
+		{
+			if (dx < dy)
+			{
+				c.x += ixi;
+				if ((unsigned long)c.x >= VSID)
+					return count;
+				dx += dxi;
+			}
+			else
+			{
+				c.y += iyi;
+				if ((unsigned long)c.y >= VSID)
+					return count;
+				dy += dyi;
+			}
+		}
+	}
 }

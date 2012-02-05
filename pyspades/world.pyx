@@ -25,6 +25,10 @@ cdef extern from "math.h":
     double fabs(double x)
 
 cdef extern from "world_c.cpp":
+    enum:
+        CUBE_ARRAY_LENGTH
+    struct LongVector3:
+        int x, y, z
     int c_validate_hit "validate_hit" (
         float shooter_x, float shooter_y, float shooter_z,
         float orientation_x, float orientation_y, float orientation_z,
@@ -33,6 +37,8 @@ cdef extern from "world_c.cpp":
         float x1, float y1, float z1)
     int c_cast_ray "cast_ray" (void * map, float x0, float y0, float z0,
         float x1, float y1, float z1, float length, long* x, long* y, long* z)
+    size_t cube_line_c "cube_line"(int, int, int, int, int, int, LongVector3 *)
+    
 from libc.math cimport sqrt
 
 cdef inline bint isvoxelsolid(VXLData map, double x, double y, double z):
@@ -97,23 +103,23 @@ cdef class Object:
 cdef class Grenade(Object):
     cdef public:
         Vertex3 position
-        Vertex3 acceleration
+        Vertex3 velocity
         double time_left
         object callback
 
     def initialize(self, double time_left, Vertex3 position, 
-                   Vertex3 orientation, Vertex3 acceleration, callback = None):
+                   Vertex3 orientation, Vertex3 velocity, callback = None):
         self.name = 'grenade'
         self.callback = callback
         self.position = Vertex3()
-        self.acceleration = Vertex3()
+        self.velocity = Vertex3()
         self.position.set_vector(position)
         if orientation is None:
-            self.acceleration.set_vector(acceleration)
+            self.velocity.set_vector(velocity)
         else:
-            self.acceleration.x = orientation.x + acceleration.x
-            self.acceleration.y = orientation.y + acceleration.y
-            self.acceleration.z = orientation.z + acceleration.z
+            self.velocity.x = orientation.x + velocity.x
+            self.velocity.y = orientation.y + velocity.y
+            self.velocity.z = orientation.z + velocity.z
         self.time_left = time_left
     
     cdef int hit_test(self, Vertex3 position):
@@ -141,7 +147,7 @@ cdef class Grenade(Object):
     cdef int update(self, double dt) except -1:
         cdef VXLData map = self.world.map
         cdef Vertex3 position = self.position
-        cdef Vertex3 acceleration = self.acceleration
+        cdef Vertex3 velocity = self.velocity
         self.time_left -= dt
         if self.time_left <= 0:
             # hurt players here
@@ -149,47 +155,48 @@ cdef class Grenade(Object):
                 self.callback(self)
             self.delete()
             return 0
-        acceleration.z += dt
+        velocity.z += dt
         cdef double new_dt = dt * 32.0
         cdef double old_x, old_y, old_z
         old_x = position.x
         old_y = position.y
         old_z = position.z
-        position.x += acceleration.x * new_dt
-        position.y += acceleration.y * new_dt
-        position.z += acceleration.z * new_dt
+        position.x += velocity.x * new_dt
+        position.y += velocity.y * new_dt
+        position.z += velocity.z * new_dt
         if not isvoxelsolid2(map, position.x, position.y, position.z):
             return 0
         cdef bint collided = False
         if <int>old_z != <int>position.z:
             if ((<int>position.x == <int>old_x and <int>position.y == <int>old_y)
             or not isvoxelsolid2(map, position.x, position.y, old_z)):
-                acceleration.z = -acceleration.z
+                velocity.z = -velocity.z
                 collided = True
         if not collided and <int>old_x != <int>position.x:
             if ((<int>old_y == <int>position.y and <int>old_z == <int>position.z)
             or not isvoxelsolid2(map, old_x, position.y, position.z)):
-                acceleration.x = -acceleration.x
+                velocity.x = -velocity.x
                 collided = True
         if not collided and <int>old_y != <int>position.y:
             if ((<int>old_x == <int>position.x and <int>old_z == <int>position.z)
             or not isvoxelsolid2(map, position.x, old_y, position.z)):
-                acceleration.y = -acceleration.y
+                velocity.y = -velocity.y
                 collided = True
         position.x = old_x
         position.y = old_y
         position.z = old_z
-        acceleration.x *= 0.36
-        acceleration.y *= 0.36
-        acceleration.z *= 0.36
+        velocity.x *= 0.36
+        velocity.y *= 0.36
+        velocity.z *= 0.36
         return 0
         
 cdef class Character(Object):
     cdef public:
-        Vertex3 position, orientation, acceleration
-        bint fire, jump, crouch, aim
+        Vertex3 position, orientation, velocity
+        bint primary_fire, secondary_fire, jump, crouch
         bint up, down, left, right
         bint null, null2
+        bint primary_weapon
         double last_time
         double guess_z
         bint dead
@@ -198,8 +205,10 @@ cdef class Character(Object):
     def initialize(self, Vertex3 position, Vertex3 orientation, 
                    fall_callback = None):
         self.name = 'character'
-        self.fire = self.jump = self.crouch = self.aim = False
-        self.up = self.up = self.up = self.up = False
+        self.primary_fire = self.secondary_fire = False
+        self.primary_weapon = False
+        self.jump = self.crouch = False
+        self.up = self.down = self.left = self.right = False
         self.null = self.null2
         self.last_time = 0.0
         self.guess_z = 0.0
@@ -207,15 +216,18 @@ cdef class Character(Object):
         self.fall_callback = fall_callback
         self.position = Vertex3()
         self.orientation = Vertex3()
-        self.acceleration = Vertex3()
+        self.velocity = Vertex3()
         if position is not None:
             self.position.set_vector(position)
         if orientation is not None:
             self.orientation.set_vector(orientation)
     
-    def set_animation(self, fire = None, jump = None, crouch = None, aim = None):
-        if fire is not None:
-            self.fire = fire
+    def set_animation(self, primary_fire = None, secondary_fire = None, 
+                      jump = None, crouch = None):
+        if primary_fire is not None:
+            self.primary_fire = primary_fire
+        if secondary_fire is not None:
+            self.secondary_fire = secondary_fire
         if jump is not None:
             self.jump = jump
         if crouch is not None:
@@ -225,8 +237,9 @@ cdef class Character(Object):
                 else:
                     self.position.z -= 0.9
             self.crouch = crouch
-        if aim is not None:
-            self.aim = aim
+    
+    def set_weapon(self, is_primary):
+        self.primary_weapon = is_primary
     
     def set_walk(self, bint up, bint down, bint left, bint right):
         self.up = up
@@ -237,8 +250,9 @@ cdef class Character(Object):
     def set_position(self, x, y, z, reset = False):
         self.position.set(x, y, z)
         if reset:
-            self.acceleration.set(0.0, 0.0, 0.0)
-            self.fire = self.jump = self.crouch = self.aim = False
+            self.velocity.set(0.0, 0.0, 0.0)
+            self.primary_fire = self.secondary_fire = False 
+            self.jump = self.crouch = False
             self.up = self.down = self.left = self.right = False
         
     def set_orientation(self, x, y, z):
@@ -247,7 +261,7 @@ cdef class Character(Object):
     def throw_grenade(self, time_left, callback = None):
         position = Vertex3(self.position.x, self.position.y, self.guess_z)
         item = self.world.create_object(Grenade, time_left, position, 
-            self.orientation, self.acceleration, callback)
+            self.orientation, self.velocity, callback)
         return item
     
     cpdef int can_see(self, float x, float y, float z):
@@ -286,21 +300,16 @@ cdef class Character(Object):
                               orientation.x, orientation.y, orientation.z,
                               x, y, z, tolerance):
             return False
-        # if part == HEAD:
-            # z -= 0.5
-        # if not can_see(self.world.map, x, y, z, 
-                       # position1.x, position1.y, position1.z):
-            # return False
         return True
         
     cdef int update(self, double dt) except -1:
         if self.dead:
             return 0
         cdef Vertex3 orientation = self.orientation
-        cdef Vertex3 acceleration = self.acceleration
+        cdef Vertex3 velocity = self.velocity
         if self.jump:
             self.jump = False
-            acceleration.z = -0.36
+            velocity.z = -0.36
         cdef int v2 = self.null
         cdef double v3 = dt
         cdef double v4
@@ -309,16 +318,16 @@ cdef class Character(Object):
             v3 = v4
         elif self.crouch:
             v3 = dt * 0.3
-        elif self.aim:
+        elif self.secondary_fire and self.primary_weapon:
             v3 = dt * 0.5
         if (self.up or self.down) and (self.left or self.right):
             v3 *= 0.70710678 # SQRT
         if self.up:
-            acceleration.x += orientation.x * v3
-            acceleration.y += orientation.y * v3
+            velocity.x += orientation.x * v3
+            velocity.y += orientation.y * v3
         elif self.down:
-            acceleration.x -= orientation.x * v3
-            acceleration.y -= orientation.y * v3
+            velocity.x -= orientation.x * v3
+            velocity.y -= orientation.y * v3
         
         cdef double xypow, orienty_over_xypow, orientx_over_xypow
         
@@ -330,28 +339,28 @@ cdef class Character(Object):
                 orienty_over_xypow = -orientation.y / xypow
                 orientx_over_xypow = orientation.x / xypow
             if self.left:
-                acceleration.x -= orienty_over_xypow * v3
-                acceleration.y -= orientx_over_xypow * v3
+                velocity.x -= orienty_over_xypow * v3
+                velocity.y -= orientx_over_xypow * v3
             else:
-                acceleration.x += orienty_over_xypow * v3
-                acceleration.y += orientx_over_xypow * v3
+                velocity.x += orienty_over_xypow * v3
+                velocity.y += orientx_over_xypow * v3
         cdef double v13 = dt + 1.0
-        cdef double v9 = acceleration.z + dt
-        acceleration.z = v9 / v13
+        cdef double v9 = velocity.z + dt
+        velocity.z = v9 / v13
         if not self.null2:
             if not self.null:
                 v13 = dt * 4.0 + 1.0
         else:
             v13 = dt * 6.0 + 1.0
-        acceleration.x /= v13
-        acceleration.y /= v13
-        cdef double old_acceleration = acceleration.z
+        velocity.x /= v13
+        velocity.y /= v13
+        cdef double old_acceleration = velocity.z
         self.calculate_position(dt)
-        if 0.0 != acceleration.z or old_acceleration <= 0.24:
+        if 0.0 != velocity.z or old_acceleration <= 0.24:
             pass
         else:
-            acceleration.x *= 0.5
-            acceleration.y *= 0.5
+            velocity.x *= 0.5
+            velocity.y *= 0.5
             if self.fall_callback is not None and old_acceleration > 0.58:
                 old_acceleration -= 0.58
                 self.fall_callback(old_acceleration**2 * 4096)
@@ -359,13 +368,13 @@ cdef class Character(Object):
     
     cdef int calculate_position(self, double dt) except -1:
         cdef Vertex3 orientation = self.orientation
-        cdef Vertex3 acceleration = self.acceleration
+        cdef Vertex3 velocity = self.velocity
         cdef VXLData map = self.world.map
         cdef Vertex3 position = self.position
         cdef int v1 = 0
         cdef double v4 = dt * 32.0
-        cdef double v43 = acceleration.x * v4 + position.x
-        cdef double v45 = acceleration.y * v4 + position.y
+        cdef double v43 = velocity.x * v4 + position.x
+        cdef double v45 = velocity.y * v4 + position.y
         cdef double v3 = 0.45
         cdef double v47
         cdef double v5
@@ -377,7 +386,7 @@ cdef class Character(Object):
             v5 = 1.35
         cdef double v31 = v5
         cdef double v29 = position.z + v47
-        if acceleration.x < 0.0:
+        if velocity.x < 0.0:
             v3 = -0.45
         cdef double v26 = v3
         cdef double v19 = v5
@@ -399,7 +408,7 @@ cdef class Character(Object):
         cdef double v20, v39, v33, v9, v23, v10, 
         if v19 >= -1.36:
             if self.crouch or orientation.z >= 0.5:
-                acceleration.x = 0
+                velocity.x = 0
             else:
                 v20 = 0.35
                 v39 = position.y - 0.45
@@ -419,14 +428,14 @@ cdef class Character(Object):
                     if v20 < -2.36:
                         break
                 if v9 >= -2.36:
-                    acceleration.x = 0.0
+                    velocity.x = 0.0
                 else:
                     v1 = 1
                     position.x = v43
         else:
             position.x = v43
         cdef double v11
-        if acceleration.y >= 0.0:
+        if velocity.y >= 0.0:
             v11 = 0.45
         else:
             v11 = -0.45
@@ -478,22 +487,22 @@ cdef class Character(Object):
                         position.y = v45
                         label34 = True
             if not label34:
-                acceleration.y = 0.0
+                velocity.y = 0.0
         else:
             position.y = v45
             if v1:
                 label34 = True
         cdef double v30
         if label34:
-            acceleration.x *= 0.5
-            acceleration.y *= 0.5
+            velocity.x *= 0.5
+            velocity.y *= 0.5
             self.last_time = time.time()
             v30 = v29 - 1.0
             v31 = -1.35
         else:
-            if acceleration.z < 0.0:
+            if velocity.z < 0.0:
                 v31 = -v31
-            v30 = acceleration.z * dt * 32.0 + v29
+            v30 = velocity.z * dt * 32.0 + v29
         self.null = 1
         cdef double v46 = v30 + v31
         cdef double v42 = position.y - 0.45
@@ -513,10 +522,10 @@ cdef class Character(Object):
                 elif isvoxelsolid(map, v37, v44, v46):
                     flag = True
         if flag:
-            if acceleration.z >= 0.0:
+            if velocity.z >= 0.0:
                 self.null2 = position.z > 61.0
                 self.null = 0
-            acceleration.z = 0
+            velocity.z = 0
         else:
             position.z = v30 - v47
         cdef double v16 = self.last_time
@@ -548,3 +557,23 @@ cdef class World(object):
         new_object = klass(self, *arg, **kw)
         self.objects.append(new_object)
         return new_object
+
+# utility functions
+
+cdef class Int3:
+    cdef public:
+        int x, y, z
+
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+
+def cube_line(x1, y1, z1, x2, y2, z2):
+    cdef LongVector3 array[CUBE_ARRAY_LENGTH]
+    cdef size_t size = cube_line_c(x1, y1, z1, x2, y2, z2, array)
+    cdef list point_list = []
+    cdef int i
+    for i in range(size):
+        point_list.append(Int3(array[i].x, array[i].y, array[i].z))
+    return point_list

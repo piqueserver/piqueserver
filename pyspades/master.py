@@ -23,12 +23,11 @@ from pyspades.common import *
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from pyspades.bytes import ByteReader
+from pyspades.constants import MASTER_VERSION
 
 import random
 
 MAX_SERVER_NAME_SIZE = 31
-
-MASTER_VERSION = 29
 
 HOST = 'ace-spades.com'
 PORT = 32886

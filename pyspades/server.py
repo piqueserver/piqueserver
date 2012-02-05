@@ -26,7 +26,7 @@ from pyspades import contained as loaders
 from pyspades.multidict import MultikeyDict
 from pyspades.idpool import IDPool
 from pyspades.master import get_master_connection
-from pyspades.collision import vector_collision
+from pyspades.collision import vector_collision, collision_3d
 from pyspades import world
 from pyspades.debug import *
 from pyspades.weapon import WEAPONS
@@ -74,6 +74,7 @@ weapon_reload = loaders.WeaponReload()
 territory_capture = loaders.TerritoryCapture()
 progress_bar = loaders.ProgressBar()
 world_update = loaders.WorldUpdate()
+block_line = loaders.BlockLine()
 
 def check_nan(*values):
     for value in values:
@@ -298,26 +299,30 @@ class ServerConnection(BaseConnection):
                         contained.left, contained.right)
                     world_object.set_walk(contained.up, contained.down,
                         contained.left, contained.right)
-                    if world_object.fire != contained.fire:
+                    if world_object.primary_fire != contained.primary_fire:
                         if self.tool == WEAPON_TOOL:
-                            self.weapon_object.set_shoot(contained.fire)
+                            self.weapon_object.set_shoot(contained.primary_fire)
                         if self.tool == WEAPON_TOOL or self.tool == SPADE_TOOL:
-                            self.on_shoot_set(contained.fire)
+                            self.on_shoot_set(contained.primary_fire)
                     contained.player_id = self.player_id
-                    z_acc = world_object.acceleration.z
-                    if contained.jump and not (z_acc >= 0 and z_acc < 0.017):
+                    z_vel = world_object.velocity.z
+                    if contained.jump and not (z_vel >= 0 and z_vel < 0.017):
                         contained.jump = False
-                    returned = self.on_animation_update(contained.fire,
-                        contained.jump, contained.crouch, contained.aim)
+                    returned = self.on_animation_update(contained.primary_fire,
+                        contained.secondary_fire, contained.jump, 
+                        contained.crouch)
                     if returned is not None:
-                        fire, jump, crouch, aim = returned
-                        if (fire != contained.fire or jump != contained.jump or
-                            crouch != contained.crouch or aim != contained.aim):
-                            (contained.fire, contained.jump, contained.crouch,
-                                contained.aim) = returned
+                        fire1, fire2, jump, crouch = returned
+                        if (fire1 != contained.primary_fire or 
+                            fire2 != contained.secondary_fire or
+                            jump != contained.jump or
+                            crouch != contained.crouch):
+                            (contained.primary_fire, contained.secondary_fire,
+                                contained.jump, contained.crouch) = returned
                             self.send_contained(contained)
-                    world_object.set_animation(contained.fire, contained.jump, 
-                        contained.crouch, contained.aim)
+                    world_object.set_animation(contained.primary_fire,
+                        contained.secondary_fire, contained.jump, 
+                        contained.crouch)
                     if self.filter_visibility_data:
                         return
                     self.protocol.send_contained(contained, 
@@ -382,8 +387,10 @@ class ServerConnection(BaseConnection):
                         return
                     self.tool = contained.value
                     if self.tool == WEAPON_TOOL:
-                        self.on_shoot_set(self.world_object.fire)
-                        self.weapon_object.set_shoot(self.world_object.fire)
+                        self.on_shoot_set(self.world_object.primary_fire)
+                        self.weapon_object.set_shoot(
+                            self.world_object.primary_fire)
+                    self.world_object.set_weapon(self.tool == WEAPON_TOOL)
                     self.on_tool_changed(self.tool)
                     if self.filter_visibility_data:
                         return
@@ -429,7 +436,7 @@ class ServerConnection(BaseConnection):
                         return
                     if value == BUILD_BLOCK:
                         self.blocks -= 1
-                        if self.blocks < -5:
+                        if self.blocks < -BUILD_TOLERANCE:
                             return
                         elif self.on_block_build_attempt(x, y, z) == False:
                             return
@@ -458,6 +465,32 @@ class ServerConnection(BaseConnection):
                     block_action.player_id = self.player_id
                     self.protocol.send_contained(block_action, save = True)
                     self.protocol.update_entities()
+                elif contained.id == loaders.BlockLine.id:
+                    x1, y1, z1 = (contained.x1, contained.y1, contained.z1)
+                    x2, y2, z2 = (contained.x2, contained.y2, contained.z2)
+                    pos = world_object.position
+                    if not collision_3d(pos.x, pos.y, pos.z, x2, y2, z2):
+                        return
+                    points = world.cube_line(x1, y1, z1, x2, y2, z2)
+                    if not points:
+                        return
+                    if len(points) > (self.blocks + BUILD_TOLERANCE):
+                        print len(points), self.blocks
+                        return
+                    map = self.protocol.map
+                    for point in points:
+                        self.blocks -= 1
+                        x, y, z = point.x, point.y, point.z
+                        if self.on_block_build_attempt(x, y, z) == False:
+                            break
+                        elif not map.set_point(x, y, z, self.color + (255,)):
+                            break
+                        self.on_block_build(x, y, z)
+                    contained.x2 = x
+                    contained.y2 = y
+                    contained.z2 = z
+                    contained.player_id = self.player_id
+                    self.protocol.send_contained(contained, save = True)
             if self.name:
                 if contained.id == loaders.ChatMessage.id:
                     if not self.name:
@@ -1042,7 +1075,7 @@ class ServerConnection(BaseConnection):
     def on_walk_update(self, up, down, left, right):
         pass
     
-    def on_animation_update(self, fire, jump, crouch, aim):
+    def on_animation_update(self, primary_fire, secondary_fire, jump, crouch):
         pass
 
 class Entity(Vertex3):
@@ -1283,6 +1316,7 @@ class ServerProtocol(BaseProtocol):
     team2_name = 'Green'
     loop_count = 0
     melee_damage = 100
+    version = GAME_VERSION
     
     def __init__(self, *arg, **kw):
         self.max_connections = self.max_players
