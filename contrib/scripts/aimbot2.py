@@ -235,7 +235,7 @@ def apply_script(protocol, connection, config):
             if by is not None and by is not self:
                 if type == WEAPON_KILL or type == HEADSHOT_KILL:
                     current_time = reactor.seconds()
-                    if current_time - by.shot_time > (0.5 * self.weapon_object.delay):
+                    if current_time - by.shot_time > (0.25 * by.weapon_object.delay):
                         by.multiple_bullets_count = 0
                         by.shot_time = current_time
                     if type == HEADSHOT_KILL:
