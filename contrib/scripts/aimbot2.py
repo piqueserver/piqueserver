@@ -9,10 +9,10 @@ DATA_COLLECTION = False
 
 # This controls which detection methods are enabled. If a player is detected
 # using one of these methods, the player is kicked.
-DETECT_SNAP_HEADSHOT = True
-DETECT_HIT_PERCENT = True
+DETECT_SNAP_HEADSHOT = False
+DETECT_HIT_PERCENT = False
 DETECT_DAMAGE_HACK = True
-DETECT_KILLS_IN_TIME = True
+DETECT_KILLS_IN_TIME = False
 DETECT_MULTIPLE_BULLETS = True
 
 # If both the below and above controls are set to True, a player will be
@@ -238,7 +238,8 @@ def apply_script(protocol, connection, config):
                     if current_time - by.shot_time > (0.5 * self.weapon_object.delay):
                         by.multiple_bullets_count = 0
                         by.shot_time = current_time
-                    by.multiple_bullets_count += 1
+                    if type == HEADSHOT_KILL:
+                        by.multiple_bullets_count += 1
                     if by.weapon == SEMI_WEAPON:
                         if (not (value in SEMI_DAMAGE)) and DETECT_DAMAGE_HACK:
                             return False
