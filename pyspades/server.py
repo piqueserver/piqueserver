@@ -1545,3 +1545,6 @@ class ServerProtocol(BaseProtocol):
     
     def on_map_change(self, map):
         pass
+
+    def on_map_leave(self):
+        pass
