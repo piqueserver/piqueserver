@@ -19,6 +19,8 @@ from pyspades.load import VXLData
 
 import os
 import imp
+import math
+import random
 
 import mapmaker
 
@@ -33,6 +35,7 @@ def get_filename(name, load_dir = DEFAULT_LOAD_DIR):
 
 def check_rotation(maps, load_dir = DEFAULT_LOAD_DIR):
     for map in maps:
+        map = map.split("#")[0].strip()
         if map in RESERVED_NAMES:
             continue
         if not os.path.isfile(get_filename(map, load_dir)):
@@ -40,12 +43,27 @@ def check_rotation(maps, load_dir = DEFAULT_LOAD_DIR):
 
 class Map(object):
     def __init__(self, name, load_dir = DEFAULT_LOAD_DIR):
-        self.load_information(name, load_dir)
-        print("*** loading %s" % name)
+
+        seedsplit = name.split("#")
+        if len(seedsplit)>1: # user specified a seed
+            basename = seedsplit[0].strip()
+            seed = int(seedsplit[1])
+        else: # manufacture a reproducable seed value
+            basename = name
+            random.seed()
+            seed = random.randint(0,math.pow(2,31))
+        
+        self.load_information(basename, load_dir)
+        
         if self.gen_script:
+            # retitle the map with the seed
+            self.name = basename+" #%s" % seed
+            print("*** loading %s" % self.name)
+            random.seed(seed)
             self.data = self.gen_script(mapmaker.Mapmaker())
         else:
-            self.load_vxl(name, load_dir)
+            print("*** loading %s" % self.name)
+            self.load_vxl(basename, load_dir)
         print("load completed successfully.")
 
     def load_information(self, name, load_dir):

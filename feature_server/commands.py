@@ -644,10 +644,20 @@ import itertools
 
 @name('map')
 @admin
-def change_map(connection, *maps):
+def change_map(connection, *pre_maps):
     name = connection.name
     protocol = connection.protocol
+
+    # parse seed numbering
+    maps = []
+    for n in pre_maps:
+        if n[0]=="#" and len(maps)>0:
+            maps[-1] += " "+n
+        else:
+            maps.append(n)
+    
     map_list = ', '.join(maps)
+    
     if not protocol.set_map_rotation(maps, True):
         return 'Invalid map in map rotation (%s)' % map_list
     protocol.irc_say("* %s changed map rotation to %s" % (name, map_list))
