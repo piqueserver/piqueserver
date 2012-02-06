@@ -60,7 +60,7 @@ class Map(object):
             self.name = basename+" #%s" % seed
             print("*** loading %s" % self.name)
             random.seed(seed)
-            self.data = self.gen_script(mapmaker.Mapmaker())
+            self.data = self.gen_script(mapmaker.Mapmaker(basename, seed))
         else:
             print("*** loading %s" % self.name)
             self.load_vxl(basename, load_dir)

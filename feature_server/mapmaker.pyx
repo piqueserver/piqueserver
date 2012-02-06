@@ -451,8 +451,10 @@ class Gradient:
 
 class Mapmaker:
     """Scripting API."""
-    def __init__(self):
+    def __init__(self, rotation_name, seed):
         self.Heightmap = Heightmap
         self.Gradient = Gradient
         self.Biome = Biome
         self.BiomeMap = BiomeMap
+        self.rotation_name = rotation_name
+        self.seed = seed
