@@ -46,6 +46,7 @@ def apply_script(protocol, connection, config):
             else:
                 self.babel = False
             if self.babel:
+                self.map_info.cap_limit = 1
                 self.map_info.get_entity_location = get_entity_location
                 self.map_info.get_spawn_location = get_spawn_location
                 for x in xrange(256 - PLATFORM_WIDTH, 256 + PLATFORM_WIDTH):
