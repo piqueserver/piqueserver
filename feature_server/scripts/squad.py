@@ -234,11 +234,11 @@ def apply_script(protocol, connection, config):
                                    self.squad)
                 if (self.squad_pref is not None and self.squad_pref.hp and
                     self.squad_pref.team is self.team):
-                    self.set_location(self.get_follow_location(
+                    self.set_location_safe(self.get_follow_location(
                         self.squad_pref))
                 else:
                     if len(live_members)>0:
-                        self.set_location(self.get_follow_location(
+                        self.set_location_safe(self.get_follow_location(
                             random.choice(live_members)))
             return connection.on_spawn(self, pos)
 

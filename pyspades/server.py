@@ -195,7 +195,8 @@ class ServerConnection(BaseConnection):
         self.address = (address.host, address.port)
         self.respawn_time = protocol.respawn_time
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
-    
+        self.pos_table = self.protocol.pos_table
+        
     def on_connect(self):
         if self.peer.eventData != self.protocol.version:
             self.disconnect()
@@ -531,12 +532,52 @@ class ServerConnection(BaseConnection):
         position = self.world_object.position
         return position.x, position.y, position.z
     
+    def location_free(self, x, y, z):
+        return self.protocol.map.get_solid(x, y, z)==0 and\
+               self.protocol.map.get_solid(x, y, z + 1)==0 and\
+               self.protocol.map.get_solid(x, y, z + 2)==0
+    
+    def set_location_safe(self, location = None, center = True):
+        if location is None:
+            position = self.world_object.position
+            x, y, z = position.x, position.y, position.z
+        else:
+            x, y, z = location
+            if center:
+                x -= 0.5
+                y -= 0.5
+                z += 0.5
+            
+            # search for valid locations near the specified point
+            modpos = 0
+            while modpos<len(self.pos_table) and not\
+                      self.location_free(x + self.pos_table[modpos][0],
+                                         y + self.pos_table[modpos][1], 
+                                         z + self.pos_table[modpos][2]):
+                modpos+=1
+            if modpos == len(self.pos_table): # nothing nearby
+                position = self.world_object.position
+                x, y, z = position.x, position.y, position.z
+            else:
+                x = x + self.pos_table[modpos][0]
+                y = y + self.pos_table[modpos][1]
+                z = z + self.pos_table[modpos][2]
+                self.world_object.set_position(x, y, z)
+                x += 0.5
+                y += 0.5
+                z -= 0.5
+        position_data.x = x
+        position_data.y = y
+        position_data.z = z
+        self.send_contained(position_data)
+        
     def set_location(self, location = None):
         if location is None:
             position = self.world_object.position
             x, y, z = position.x, position.y, position.z
         else:
             x, y, z = location
+            
             self.world_object.set_position(x, y, z)
             x += 0.5
             y += 0.5
@@ -1301,6 +1342,16 @@ class ServerProtocol(BaseProtocol):
         self.green_team.other = self.blue_team
         self.world = world.World()
         self.set_master()
+        
+        # safe position LUT
+        self.pos_table = []
+        for x in xrange(-5,6):
+            for y in xrange(-5,6):
+                for z in xrange(-5,6):
+                    self.pos_table.append((x,y,z))
+        self.pos_table.sort(key=lambda vec: abs(vec[0]*1.03) +\
+                                            abs(vec[1]*1.02) +\
+                                            abs(vec[2]*1.01))
     
     def reset_tc(self):
         self.entities = self.get_cp_entities()

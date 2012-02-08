@@ -434,6 +434,10 @@ def teleport(connection, player1, player2 = None, silent = False):
     else:
         connection.protocol.send_chat(message, irc = True)
 
+@admin
+def unstick(connection):
+    connection.set_location_safe(connection.get_location())
+      
 @alias('tps')
 @admin
 def tpsilent(connection, player1, player2 = None):
@@ -807,6 +811,7 @@ command_list = [
     tpsilent,
     go_to,
     move,
+    unstick,
     where,
     god,
     god_build,
