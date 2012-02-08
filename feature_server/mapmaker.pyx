@@ -35,7 +35,7 @@ class Biome:
         self.id = -1
 
 cdef class BiomeMap:
-    """A tilemap containing biome data for a heightmap."""
+    """A tilemap containing biome data for a HeightMap."""
     cdef public int width
     cdef public int height
     cdef public int twidth
@@ -63,9 +63,9 @@ cdef class BiomeMap:
     cpdef noise(self):
         for idx in xrange(len(self.tmap)):
             self.tmap[idx] = random.choice(self.biomes)
-    cpdef randompoints(self, qty, biome, x=0, y=0, w=None,
+    cpdef random_points(self, qty, biome, x=0, y=0, w=None,
                        h=None):
-        """Generate some points for pointflood()"""
+        """Generate some points for point_flood()"""
         result = []
         if w is None:
             w = self.width
@@ -76,7 +76,7 @@ cdef class BiomeMap:
                          random.randint(y,y+h),
                          biome))
         return result
-    cpdef pointflood(self, points):
+    cpdef point_flood(self, points):
         """Each tuple of (x,y,biome) in the "points" list
         is round-robined through a flooding
         algorithm. The algorithm uses one queue for each flood,
@@ -111,10 +111,10 @@ cdef class BiomeMap:
             self.tmap[idx] = self.get_repeat(x + random.randint(-1,1),
                                              y + random.randint(-1,1))
     cpdef create_heightmap(self):
-        """Return a heightmap with unfinished color data and a list of
+        """Return a HeightMap with unfinished color data and a list of
         gradients. When finished with post-processing, use
         hmap.rewrite_gradient_fill(gradients). """
-        cdef Heightmap hmap = Heightmap(0.)
+        cdef HeightMap hmap = HeightMap(0.)
 
         # paste a rectangle into each biome's area
         
@@ -133,7 +133,7 @@ cdef class BiomeMap:
         return hmap, self.gradients
         
 
-cdef class Heightmap:
+cdef class HeightMap:
     cdef public int width
     cdef public int height
     cdef public object hmap
@@ -262,21 +262,21 @@ cdef class Heightmap:
             self.cmap[idx] = self.get_col_repeat(nx, ny)            
             idx+=1
         
-    cpdef level_against_heightmap(self, Heightmap other, double height):
-        """Use another heightmap as an alpha-mask to force values to a
+    cpdef level_against_heightmap(self, HeightMap other, double height):
+        """Use another HeightMap as an alpha-mask to force values to a
             specific height"""
         for x in xrange(0, self.width):
             for y in xrange(0, self.height):
                 orig = self.get_repeat(x,y)
                 dist = orig - height
                 self.set_repeat(x,y, orig - dist * other.get_repeat(x,y))
-    cpdef blend_heightmaps(self, Heightmap alphamap, Heightmap heightmap):
-        """Blend according to two heightmaps: one as an alpha-mask,
+    cpdef blend_heightmaps(self, HeightMap alphamap, HeightMap HeightMap):
+        """Blend according to two HeightMaps: one as an alpha-mask,
             the other contains desired heights"""
         for x in xrange(0, self.width):
             for y in xrange(0, self.height):
                 orig = self.get_repeat(x,y)
-                dist = orig - heightmap.get_repeat(x,y)
+                dist = orig - HeightMap.get_repeat(x,y)
                 self.set_repeat(x,y, orig - dist * alphamap.get_repeat(x,y))
     cpdef rect_solid(self, int x, int y, int w, int h, double z):
         for xx in xrange(x, x+w):
@@ -294,7 +294,7 @@ cdef class Heightmap:
             for yy in xrange(y, y+h):
                 self.set_col_repeat(xx,yy,col)        
     cpdef truncate(self):
-        """Truncates the heightmap to a valid (0-1) range.
+        """Truncates the HeightMap to a valid (0-1) range.
         Do this before painting or writing to voxels to avoid crashing."""
         for idx in xrange(0,len(self.hmap)):
             self.hmap[idx] = min(max(self.hmap[idx],0.0),1.0)
@@ -328,7 +328,7 @@ cdef class Heightmap:
             h = int(self.hmap[idx] * 63)
             self.cmap[idx] = paint_gradient(zcoldefs[self.cmap[idx]],h)
             idx+=1
-    cpdef writeVXL(self):
+    cpdef write_vxl(self):
         cdef VXLData vxl = VXLData()
 
         cdef int x = 0
@@ -452,7 +452,7 @@ class Gradient:
 class Mapmaker:
     """Scripting API."""
     def __init__(self, rotation_name, seed):
-        self.Heightmap = Heightmap
+        self.HeightMap = HeightMap
         self.Gradient = Gradient
         self.Biome = Biome
         self.BiomeMap = BiomeMap

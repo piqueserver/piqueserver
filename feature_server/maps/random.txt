@@ -51,11 +51,11 @@ def gen_script(mapmaker):
         points.append((n,31,water_biome))
 
     # additional randomized points
-    points.extend(bmap.randompoints(2,grass_biome,0,8,32,16))
-    points.extend(bmap.randompoints(1,hill_biome,0,8,32,16))
-    points.extend(bmap.randompoints(1,water_biome,8,8,16,16))
+    points.extend(bmap.random_points(2,grass_biome,0,8,32,16))
+    points.extend(bmap.random_points(1,hill_biome,0,8,32,16))
+    points.extend(bmap.random_points(1,water_biome,8,8,16,16))
     
-    bmap.pointflood(points)
+    bmap.point_flood(points)
     bmap.jitter()
 
     # transform the biome map into a heightmap
@@ -83,4 +83,4 @@ def gen_script(mapmaker):
     hmap.truncate()
     hmap.rewrite_gradient_fill(gradients)
     
-    return hmap.writeVXL()
+    return hmap.write_vxl()
