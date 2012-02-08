@@ -535,7 +535,8 @@ class ServerConnection(BaseConnection):
     def location_free(self, x, y, z):
         return self.protocol.map.get_solid(x, y, z)==0 and\
                self.protocol.map.get_solid(x, y, z + 1)==0 and\
-               self.protocol.map.get_solid(x, y, z + 2)==0
+               self.protocol.map.get_solid(x, y, z + 2)==0 and\
+               self.protocol.map.get_solid(x, y, z + 3)==1
     
     def set_location_safe(self, location = None, center = True):
         if location is None:
@@ -543,10 +544,14 @@ class ServerConnection(BaseConnection):
             x, y, z = position.x, position.y, position.z
         else:
             x, y, z = location
+            
             if center:
                 x -= 0.5
                 y -= 0.5
                 z += 0.5
+            x = int(x)
+            y = int(y)
+            z = int(z)
             
             # search for valid locations near the specified point
             modpos = 0
