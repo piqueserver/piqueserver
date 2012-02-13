@@ -642,6 +642,9 @@ class ServerConnection(BaseConnection):
             z -= 1.4 # super magic value
         else:
             x, y, z = pos
+        returned = self.on_spawn_location((x, y, z))
+        if returned is not None:
+            x, y, z = returned
         if self.world_object is not None:
             self.world_object.set_position(x, y, z, True)
         else:
@@ -1013,6 +1016,9 @@ class ServerConnection(BaseConnection):
     def on_spawn(self, pos):
         pass
     
+    def on_spawn_location(self, pos):
+        pass
+    
     def on_chat(self, value, global_message):
         pass
         
@@ -1283,7 +1289,12 @@ class Team(object):
             self.flag = Flag(entity_id, self.protocol)
             self.flag.team = self
             self.protocol.entities.append(self.flag)
-        self.flag.set(*self.get_entity_location(entity_id))
+        location = self.get_entity_location(entity_id)
+        returned = self.protocol.on_flag_spawn(location[0], location[1], 
+                        location[2], self.flag, entity_id)
+        if returned is not None:
+            location = returned
+        self.flag.set(*location)
         self.flag.player = None
         return self.flag
 
@@ -1293,7 +1304,12 @@ class Team(object):
             self.base = Base(entity_id, self.protocol)
             self.base.team = self
             self.protocol.entities.append(self.base)
-        self.base.set(*self.get_entity_location(entity_id))
+        location = self.get_entity_location(entity_id)
+        returned = self.protocol.on_base_spawn(location[0], location[1], 
+                        location[2], self.base, entity_id)
+        if returned is not None:
+            location = returned
+        self.base.set(*location)
         return self.base
     
     def get_entity_location(self, entity_id):
@@ -1487,6 +1503,7 @@ class ServerProtocol(BaseProtocol):
                 player.spawn()
     
     def get_name(self, name):
+        name = name.replace('%', '')
         i = 0
         new_name = name
         names = [p.name.lower() for p in self.players.values()]
@@ -1612,4 +1629,10 @@ class ServerProtocol(BaseProtocol):
         pass
 
     def on_map_leave(self):
+        pass
+
+    def on_base_spawn(self, x, y, z, base, entity_id):
+        pass
+    
+    def on_flag_spawn(self, x, y, z, flag, entity_id):
         pass
