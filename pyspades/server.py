@@ -1487,6 +1487,7 @@ class ServerProtocol(BaseProtocol):
                 player.spawn()
     
     def get_name(self, name):
+        name = name.replace('%', '')
         i = 0
         new_name = name
         names = [p.name.lower() for p in self.players.values()]
