@@ -246,7 +246,9 @@ class ServerConnection(BaseConnection):
                         self.on_hack_attempt(
                             'Invalid orientation data received')
                         return
-                    self.on_orientation_update(x, y, z)
+                    returned = self.on_orientation_update(x, y, z)
+                    if returned is not None:
+                        x, y, z = returned
                     world_object.set_orientation(x, y, z)
                     if self.filter_visibility_data:
                         return
@@ -295,8 +297,15 @@ class ServerConnection(BaseConnection):
                             world_object.position):
                                 self.check_refill()
                 elif contained.id == loaders.InputData.id:
-                    self.on_walk_update(contained.up, contained.down, 
+                    returned = self.on_walk_update(contained.up, contained.down, 
                         contained.left, contained.right)
+                    if returned is not None:
+                        up, down, left, right = returned
+                        if (up != contained.up or down != contained.down or
+                            left != contained.left or right != contained.right):
+                            (contained.up, contained.down, contained.left,
+                                contained.right) = returned
+                            self.send_contained(contained)
                     world_object.set_walk(contained.up, contained.down,
                         contained.left, contained.right)
                     if world_object.fire != contained.fire:
