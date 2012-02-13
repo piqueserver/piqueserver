@@ -329,6 +329,8 @@ class ServerConnection(BaseConnection):
                         sender = self)
                 elif contained.id == loaders.WeaponReload.id:
                     self.weapon_object.reload()
+                    contained.player_id = self.player_id
+                    self.protocol.send_contained(contained, sender = self)
                 elif contained.id == loaders.HitPacket.id:
                     value = contained.value
                     is_melee = value == MELEE
@@ -934,7 +936,7 @@ class ServerConnection(BaseConnection):
         weapon_reload.player_id = self.player_id
         weapon_reload.clip_ammo = self.weapon_object.current_ammo
         weapon_reload.reserve_ammo = self.weapon_object.current_stock
-        self.protocol.send_contained(weapon_reload)
+        self.send_contained(weapon_reload)
     
     def send_map(self, data = None):
         if data is not None:
@@ -1456,6 +1458,7 @@ class ServerProtocol(BaseProtocol):
                 player.spawn()
     
     def get_name(self, name):
+        name = name.replace('%', '')
         i = 0
         new_name = name
         names = [p.name.lower() for p in self.players.values()]
