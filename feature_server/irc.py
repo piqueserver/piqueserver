@@ -19,7 +19,7 @@ from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
 from pyspades.constants import MAX_CHAT_SIZE
 from pyspades.common import encode, decode
-from commands import *
+from commands import handle_input, add
 
 import random
 import string
@@ -104,10 +104,8 @@ class IRCBot(irc.IRCClient):
             if msg.startswith(self.factory.commandprefix):
                 self.admin = (user in self.ops)
                 self.name = prefixed_username
-                params = msg[len(self.factory.commandprefix):].split()
-                if not params:
-                    return
-                result = handle_command(self, params[0], params[1:])
+                input = msg[len(self.factory.commandprefix):]
+                result = handle_input(self, input)
                 if result is not None:
                     self.send("%s: %s" % (user, result))
             elif msg.startswith(self.factory.chatprefix):

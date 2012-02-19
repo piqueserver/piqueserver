@@ -102,12 +102,11 @@ import pyspades.debug
 from pyspades.server import (ServerProtocol, ServerConnection, position_data,
     grenade_packet, Team)
 from map import Map, MapNotFound, check_rotation
+from console import create_console
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.python import log
 from twisted.python.logfile import DailyLogFile
-from twisted.internet.stdio import StandardIO
-from twisted.protocols.basic import LineReceiver
 from pyspades.common import encode, decode, prettify_timespan
 from pyspades.constants import *
 from pyspades.master import MAX_SERVER_NAME_SIZE, get_external_ip
@@ -134,19 +133,6 @@ def open_create(filename, mode):
 
 CHAT_WINDOW_SIZE = 5
 CHAT_PER_SECOND = 0.5
-
-class ConsoleInput(LineReceiver):
-    delimiter = '\n'
-    protocol = None
-    def __init__(self, protocol):
-        self.protocol = protocol
-
-    def lineReceived(self, line):
-        self.protocol.send_chat(line)
-
-def writelines(fp, lines):
-    for line in lines:
-        fp.write(line + "\r\n")
 
 class FeatureConnection(ServerConnection):
     printable_name = None
@@ -607,9 +593,7 @@ class FeatureProtocol(ServerProtocol):
         
         self.start_time = reactor.seconds()
         
-        if sys.platform != 'win32':
-            self.console = ConsoleInput(self)
-            StandardIO(self.console)
+        self.console = create_console(self)
         
         for password in self.passwords.get('admin', []):
             if password == 'replaceme':

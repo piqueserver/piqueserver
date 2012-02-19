@@ -16,9 +16,11 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
+import shlex
 from random import choice
 from pyspades.constants import *
 from pyspades.common import prettify_timespan
+from pyspades.server import parse_command
 from twisted.internet import reactor
 
 class InvalidPlayer(Exception):
@@ -920,3 +922,7 @@ def handle_command(connection, command, parameters):
         return 'Invalid team specifier'
     except ValueError:
         return 'Invalid parameters'
+
+def handle_input(connection, input):
+    # for IRC and console
+    return handle_command(connection, *parse_command(input))

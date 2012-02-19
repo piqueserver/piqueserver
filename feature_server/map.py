@@ -25,49 +25,50 @@ import random
 import mapmaker
 
 DEFAULT_LOAD_DIR = './maps'
-RESERVED_NAMES = set(['random'])
 
 class MapNotFound(IOError):
     pass
 
-def get_filename(name, load_dir = DEFAULT_LOAD_DIR):
+def get_map_filename(name, load_dir = DEFAULT_LOAD_DIR):
     return os.path.join(load_dir, '%s.vxl' % name)
+
+def get_meta_filename(name, load_dir = DEFAULT_LOAD_DIR):
+    return os.path.join(load_dir, '%s.txt' % name)
 
 def check_rotation(maps, load_dir = DEFAULT_LOAD_DIR):
     for map in maps:
         map = map.split("#")[0].strip()
-        if map in RESERVED_NAMES:
-            continue
-        if not os.path.isfile(get_filename(map, load_dir)):
+        if (not os.path.isfile(get_map_filename(map, load_dir)) 
+        and not os.path.isfile(get_meta_filename(map, load_dir))):
             raise MapNotFound('map %s does not exist' % map)
 
 class Map(object):
     def __init__(self, name, load_dir = DEFAULT_LOAD_DIR):
-
         seedsplit = name.split("#")
-        if len(seedsplit)>1: # user specified a seed
+        if len(seedsplit) > 1: # user specified a seed
             basename = seedsplit[0].strip()
             seed = int(seedsplit[1])
         else: # manufacture a reproducable seed value
             basename = name
             random.seed()
-            seed = random.randint(0,math.pow(2,31))
+            seed = random.randint(0, math.pow(2, 31))
         
         self.load_information(basename, load_dir)
         
         if self.gen_script:
             # retitle the map with the seed
-            self.name = basename+" #%s" % seed
-            print("*** loading %s" % self.name)
+            self.name = basename + " #%s" % seed
+            print "Generating map '%s'..." % self.name
             random.seed(seed)
             self.data = self.gen_script(mapmaker.Mapmaker(basename, seed))
         else:
-            print("*** loading %s" % self.name)
+            print "Loading map '%s'..." % self.name
             self.load_vxl(basename, load_dir)
-        print("load completed successfully.")
+
+        print 'Map loaded successfully.'
 
     def load_information(self, name, load_dir):
-        info_file = os.path.join(load_dir, '%s.txt' % name)
+        info_file = get_meta_filename(name, load_dir)
         try:
             info = imp.load_source(name, info_file)
         except IOError:
@@ -95,5 +96,9 @@ class Map(object):
         return protocol, connection
 
     def load_vxl(self, name, load_dir):
-        check_rotation((name,))
-        self.data = VXLData(open(get_filename(name, load_dir), 'rb'))
+        try:
+            fp = open(get_map_filename(name, load_dir), 'rb')
+        except OSError:
+            raise MapNotFound('map %s does not exist' % name)
+        self.data = VXLData(fp)
+        fp.close()

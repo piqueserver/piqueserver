@@ -81,6 +81,20 @@ def check_nan(*values):
             return True
     return False
 
+def parse_command(input):
+    value = encode(input)
+    try:
+        splitted = shlex.split(value)
+    except ValueError:
+        # shlex failed. let's just split per space
+        splitted = value.split(' ')
+    if splitted:
+        command = splitted.pop(0)
+    else:
+        command = ''
+    splitted = [decode(value) for value in splitted]
+    return command, splitted
+
 class SlidingWindow(object):
     def __init__(self, entries):
         self.entries = entries
@@ -474,18 +488,7 @@ class ServerConnection(BaseConnection):
                         return
                     value = contained.value
                     if value.startswith('/'):
-                        value = encode(value[1:])
-                        try:
-                            splitted = shlex.split(value)
-                        except ValueError:
-                            # shlex failed. let's just split per space
-                            splitted = value.split(' ')
-                        if splitted:
-                            command = splitted.pop(0)
-                        else:
-                            command = ''
-                        splitted = [decode(value) for value in splitted]
-                        self.on_command(command, splitted)
+                        self.on_command(*parse_command(value[1:]))
                     else:
                         global_message = contained.chat_type == CHAT_ALL
                         result = self.on_chat(value, global_message)
