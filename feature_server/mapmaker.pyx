@@ -129,8 +129,12 @@ cdef class BiomeMap:
             hmap.rect_color(x*self.twidth,y*self.theight,
                             self.twidth,self.theight,
                             biome.id)
-
+            
         return hmap, self.gradients
+    cpdef rect_of_point(self, x, y):
+        x_pos = x*self.twidth
+        y_pos = y*self.theight
+        return [x_pos, y_pos, x_pos+self.twidth, y_pos+self.theight]
         
 
 cdef class HeightMap:
@@ -367,7 +371,7 @@ cdef class HeightMap:
 cdef lim_byte(int val):
     return max(0,min(255,val))
 
-cdef inline int make_color(int r, int g, int b):
+cpdef inline int make_color(int r, int g, int b):
     return b | (g << 8) | (r << 16) | (<int>128 << 24)
 
 cdef inline int paint_gradient(object zcoltable, int z):
@@ -458,3 +462,4 @@ class Mapmaker:
         self.BiomeMap = BiomeMap
         self.rotation_name = rotation_name
         self.seed = seed
+        self.make_color = make_color

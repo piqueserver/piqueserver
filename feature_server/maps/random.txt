@@ -82,5 +82,37 @@ def gen_script(mapmaker):
     hmap.smoothing()    
     hmap.truncate()
     hmap.rewrite_gradient_fill(gradients)
+
+    vxl = hmap.write_vxl()
+            
+    def tree(x,y):
+        green = mapmaker.make_color(98,193,69)
+        brown = mapmaker.make_color(189,124,67)
+        if x > 1 and y > 1 and x < 510 and y < 510: 
+            z = int(hmap.get(x,y)*63 - 7)
+            if z >= 0 and z + 7 < 62:
+                
+                vxl.set_columns_fast([[x,y,z,z+3,z+3,green],
+                [x+1,y,z,z+3,z+3,green],
+                [x-1,y,z,z+3,z+3,green],
+                [x,y+1,z,z+3,z+3,green],
+                [x,y-1,z,z+3,z+3,green],
+                [x,y,z+3,z+3+4,z+3+3,brown],
+                [x+1,y+1,z+1,z+2,z+2,green],
+                [x-1,y+1,z+1,z+2,z+2,green],
+                [x+1,y-1,z+1,z+2,z+2,green],
+                [x-1,y-1,z+1,z+2,z+2,green],
+                [x+2,y,z+1,z+2,z+2,green],
+                [x-2,y,z+1,z+2,z+2,green],
+                [x,y-2,z+1,z+2,z+2,green],
+                [x,y+2,z+1,z+2,z+2,green]])
+
+    for x in xrange(0, bmap.width):
+        for y in xrange(0, bmap.height):
+            if bmap.get_repeat(x, y) is hill_biome:
+                left, top, right, bottom = bmap.rect_of_point(x,y)
+                for ct in xrange(random.randint(1,20)):
+                    tree(random.randint(left,right),\
+                     random.randint(top,bottom))
     
-    return hmap.write_vxl()
+    return vxl

@@ -45,3 +45,4 @@ cdef class VXLData:
     cpdef bint set_column_fast(self, int x, int y, int start_z,
                                  int end_z, int end_color_z,
                                  int color)
+    cpdef bint set_columns_fast(self, object columns)
