@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-import msvcrt
 import sys
 from commands import handle_input
 from twisted.internet import reactor
@@ -25,6 +24,8 @@ stdout = sys.__stdout__
 
 if sys.platform == 'win32':
     # StandardIO on Windows does not work, so we create a silly replacement
+    import msvcrt
+    
     class StandardIO(object):
         disconnecting = False
         interval = 0.01
