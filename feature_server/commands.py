@@ -16,7 +16,6 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import shlex
 from random import choice
 from pyspades.constants import *
 from pyspades.common import prettify_timespan
