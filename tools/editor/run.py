@@ -22,7 +22,7 @@ pyspades - map editor
 import struct
 import sys
 import os
-sys.path.append('..')
+sys.path.append('../../')
 
 import math
 import subprocess

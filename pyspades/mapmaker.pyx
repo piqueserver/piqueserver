@@ -453,7 +453,7 @@ class Gradient:
             result.append(int(rgb[2]))
         return array.array('i',result)
 
-class Mapmaker:
+class Mapmaker(object):
     """Scripting API."""
     def __init__(self, rotation_name, seed):
         self.HeightMap = HeightMap

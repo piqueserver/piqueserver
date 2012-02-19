@@ -15,7 +15,7 @@ names = [
     'pyspades.common',
     'pyspades.world',
     'pyspades.loaders',
-    'feature_server.mapmaker'
+    'pyspades.mapmaker'
 ]
 
 for name in names:
