@@ -372,14 +372,14 @@ cdef class CTFState(Loader):
         reader.skipBytes(3)
         self.team1_has_intel = intel_flags & 1
         self.team2_has_intel = (intel_flags >> 1) & 1
-        if self.team1_has_intel:
+        if self.team2_has_intel:
             self.team1_carrier = reader.readByte(True)
             reader.skipBytes(12 - 1)
         else:
             read_position(reader, &self.team1_flag_x, &self.team1_flag_y,
                 &self.team1_flag_z)
         
-        if self.team2_has_intel:
+        if self.team1_has_intel:
             self.team2_carrier = reader.readByte(True)
             reader.skipBytes(12 - 1)
         else:
@@ -402,14 +402,14 @@ cdef class CTFState(Loader):
             self.team2_has_intel << 1))
         reader.writeByte(intel_flags, True)
         reader.pad(3)
-        if self.team1_has_intel:
+        if self.team2_has_intel:
             reader.writeByte(self.team1_carrier, True)
             reader.pad(11)
         else:
             write_position(reader, self.team1_flag_x, self.team1_flag_y,
                 self.team1_flag_z)
         
-        if self.team2_has_intel:
+        if self.team1_has_intel:
             reader.writeByte(self.team2_carrier, True)
             reader.pad(11)
         else:
