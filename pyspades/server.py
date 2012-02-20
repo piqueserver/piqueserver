@@ -1550,8 +1550,6 @@ class ServerProtocol(BaseProtocol):
         self.master_connection.set_count(count)
     
     def update_entities(self):
-        blue_team = self.blue_team
-        green_team = self.green_team
         map = self.map
         for entity in self.entities:
             moved = False
@@ -1564,7 +1562,7 @@ class ServerProtocol(BaseProtocol):
                 while not map.get_solid(entity.x, entity.y, entity.z):
                     moved = True
                     entity.z += 1
-            if moved:
+            if moved or self.on_update_entity(entity):
                 entity.update()
     
     def send_contained(self, contained, sequence = False, sender = None,
@@ -1638,4 +1636,7 @@ class ServerProtocol(BaseProtocol):
         pass
     
     def on_flag_spawn(self, x, y, z, flag, entity_id):
+        pass
+
+    def on_update_entity(self, entity):
         pass
