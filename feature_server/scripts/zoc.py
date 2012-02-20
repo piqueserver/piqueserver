@@ -5,7 +5,7 @@ def apply_script(protocol, connection, config):
     
     class ZOCConnection(connection):
         """Zones of control: Dropped intel and tents exert influence
-        over nearby area, restricting player ability to create or destroy."""
+        over nearby area, restricting player ability to destroy."""
 
         block_undo = None
         
@@ -31,6 +31,7 @@ def apply_script(protocol, connection, config):
             self.block_undo.append((x, y, z))
             if len(self.block_undo) > self.protocol.zoc_block_undo:
                 del self.block_undo[0]
+            return connection.on_block_build(self, x, y, z)
         
         def is_zoc(self, x, y, z):
             for zoc in self.protocol.zone_cache:
