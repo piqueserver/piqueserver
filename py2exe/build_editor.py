@@ -6,7 +6,7 @@ import sys
 sys.path.append('..')
 
 setup(
-    console = ['../editor/run.py'],
+    console = ['../tools/editor/run.py'],
     zipfile = None,
     options = {
         'py2exe' : {

@@ -22,29 +22,15 @@ Manage pool of IDs.
 import itertools
 
 class IDPool(object):
-    _newIds = None
-    _freeIds = None
-
     def __init__(self, start = 0):
-        """
-        Initializes a new pool, counting from start
-        """
-        self._freeIds = []
-        self._newIds = itertools.count(start)
+        self.free_ids = []
+        self.new_ids = itertools.count(start)
 
     def pop(self):
-        """
-        Take out an ID from the pool, and wait for it to be
-        put back again (see L{putBack})
-        @return: A new ID from the pool.
-        """
-        if self._freeIds:
-            return self._freeIds.pop()
+        if self.free_ids:
+            return self.free_ids.pop()
         else:
-            return self._newIds.next()
+            return self.new_ids.next()
 
     def put_back(self, id):
-        """
-        Puts back a previously popped ID.
-        """
-        self._freeIds.append(id)
+        self.free_ids.append(id)
