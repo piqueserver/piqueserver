@@ -175,7 +175,7 @@ class IRCRelay(object):
     
     def __init__(self, protocol, config):
         self.factory = IRCClientFactory(protocol, config)
-        reactor.connectTCP(config.get('server'), config.get('port', 6667),
+        protocol.connectTCP(config.get('server'), config.get('port', 6667),
             self.factory)
     
     def send(self, *arg, **kw):

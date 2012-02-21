@@ -984,6 +984,16 @@ class FeatureProtocol(ServerProtocol):
     def on_advance(self, map_name):
         pass
     
+    # useful twisted wrappers
+    
+    def listenTCP(self, *arg, **kw):
+        return reactor.listenTCP(*arg, 
+            interface = self.config.get('interface', ''), **kw)
+    
+    def connectTCP(self, *arg, **kw):
+        return reactor.connectTCP(*arg, 
+            bindArgument = (self.config.get('interface', ''), 0), **kw)
+    
 PORT = 32887
 
 # apply scripts

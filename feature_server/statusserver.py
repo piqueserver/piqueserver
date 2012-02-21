@@ -98,7 +98,7 @@ class StatusServerFactory(object):
         root.putChild('', StatusPage(self))
         root.putChild('overview', MapOverview(self))
         site = server.Site(root)
-        reactor.listenTCP(config.get('port', 32886), site)
+        protocol.listenTCP(config.get('port', 32886), site)
     
     def get_overview(self):
         current_time = reactor.seconds()

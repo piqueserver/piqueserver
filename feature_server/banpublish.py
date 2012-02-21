@@ -37,7 +37,7 @@ class PublishServer(object):
         self.protocol = protocol
         publish_resource = PublishResource(self)
         site = server.Site(publish_resource)
-        reactor.listenTCP(config.get('port', 32885), site)
+        protocol.listenTCP(config.get('port', 32885), site)
         self.update()
     
     def update(self):

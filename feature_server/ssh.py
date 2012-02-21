@@ -34,4 +34,4 @@ class RemoteConsole(object):
     def __init__(self, server, config):
         users = config.get('users', {})
         factory = create_remote_factory(locals(), users)
-        reactor.listenTCP(config.get('port', 38827), factory)
+        server.listenTCP(config.get('port', 38827), factory)
