@@ -16,7 +16,6 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from pyspades.load import VXLData
-from pyspades.mapmaker import Mapmaker
 
 import os
 import imp
@@ -59,7 +58,7 @@ class Map(object):
             self.name = basename + " #%s" % seed
             print "Generating map '%s'..." % self.name
             random.seed(seed)
-            self.data = self.gen_script(Mapmaker(basename, seed))
+            self.data = self.gen_script(basename, seed)
         else:
             print "Loading map '%s'..." % self.name
             self.load_vxl(basename, load_dir)

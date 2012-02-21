@@ -3,7 +3,9 @@ version = '1.0'
 author = 'Triplefox'
 description = ('Random generated map.')
 
-def gen_script(mapmaker):
+def gen_script(basename, seed):
+
+    from pyspades import mapmaker
 
     # define the gradients
     

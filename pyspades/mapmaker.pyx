@@ -24,7 +24,7 @@ from pyspades.load cimport VXLData
 
 sys.path.append('..')
 
-class Biome:
+class Biome(object):
     def __init__(self, gradient, height, variation, noise):
         """Create a biome with a Gradient object,
             typical height(0.0-1.0), and height variation(0.0-1.0)."""
@@ -34,7 +34,7 @@ class Biome:
         self.noise = noise
         self.id = -1
 
-cdef class BiomeMap:
+cdef class BiomeMap(object):
     """A tilemap containing biome data for a HeightMap."""
     cdef public int width
     cdef public int height
@@ -137,7 +137,7 @@ cdef class BiomeMap:
         return [x_pos, y_pos, x_pos+self.twidth, y_pos+self.theight]
         
 
-cdef class HeightMap:
+cdef class HeightMap(object):
     cdef public int width
     cdef public int height
     cdef public object hmap
@@ -411,7 +411,7 @@ cdef inline list bresenham_line(int x, int y, int x2, int y2):
 
 from feature_server.color import *
 
-class Gradient:
+class Gradient(object):
     def __init__(self):
         self.steps = []
         for n in xrange(0,64):
@@ -452,14 +452,3 @@ class Gradient:
             result.append(int(rgb[1]))
             result.append(int(rgb[2]))
         return array.array('i',result)
-
-class Mapmaker(object):
-    """Scripting API."""
-    def __init__(self, rotation_name, seed):
-        self.HeightMap = HeightMap
-        self.Gradient = Gradient
-        self.Biome = Biome
-        self.BiomeMap = BiomeMap
-        self.rotation_name = rotation_name
-        self.seed = seed
-        self.make_color = make_color
