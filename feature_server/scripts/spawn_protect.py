@@ -13,8 +13,8 @@ def apply_script(protocol, connection, config):
 
         def on_hit(self, hit_amount, player, type):
             cur_timestamp = reactor.seconds() - spawn_protect_time
-            if cur_timestamp < self.spawn_timestamp:
-                timespan = -(cur_timestamp - self.spawn_timestamp)
+            if cur_timestamp < hit_player.spawn_timestamp:
+                timespan = -(cur_timestamp - hit_player.spawn_timestamp)
                 self.send_chat(
                 "%s is spawn-protected for %s." %
                     (player.name,
