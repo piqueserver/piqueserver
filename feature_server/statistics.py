@@ -142,7 +142,7 @@ class StatsClientFactory(ReconnectingClientFactory):
 
 def connect_statistics(host, port, name, password, callback, interface = ''):
     reactor.connectTCP(host, port, StatsClientFactory(name, password, callback),
-        bindArgument(interface, 0))
+        bindArgument = (interface, 0))
 
 if __name__ == '__main__':
     class TestServer(StatsServer):
