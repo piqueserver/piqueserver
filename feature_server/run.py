@@ -992,7 +992,7 @@ class FeatureProtocol(ServerProtocol):
     
     def connectTCP(self, *arg, **kw):
         return reactor.connectTCP(*arg, 
-            bindArgument = (self.config.get('interface', ''), 0), **kw)
+            bindAddress = (self.config.get('interface', ''), 0), **kw)
     
 PORT = 32887
 
