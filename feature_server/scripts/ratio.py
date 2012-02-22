@@ -13,7 +13,7 @@ def ratio(connection, user=None):
     if connection not in connection.protocol.players:
         raise KeyError()
     ratio = connection.ratio_kills/float(max(1,connection.ratio_deaths))
-    ratio_msg = "%s a kill-death ratio of %.2f" % (has_msg, ratio)
+    ratio_msg = has_msg + (" a kill-death ratio of %.2f" % (ratio))
     return ('%s (%s kills, %s deaths).' %
         (ratio_msg, connection.ratio_kills, connection.ratio_deaths))
 
