@@ -79,12 +79,12 @@ class MasterConnection(BaseConnection):
             callback()
         self.disconnect_callback = None
 
-from twisted.web.client import getPage
+from pyspades.web import getPage
 
 IP_GETTER = 'http://automation.whatismyip.com/n09230945.asp'
 
-def get_external_ip():
-    return getPage(IP_GETTER)
+def get_external_ip(interface = ''):
+    return getPage(IP_GETTER, bindAddress = (interface, 0))
 
 def get_master_connection(name, max, protocol):
     defer = Deferred()

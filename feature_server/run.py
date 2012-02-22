@@ -107,6 +107,7 @@ from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.python import log
 from twisted.python.logfile import DailyLogFile
+from pyspades.web import getPage
 from pyspades.common import encode, decode, prettify_timespan
 from pyspades.constants import *
 from pyspades.master import MAX_SERVER_NAME_SIZE, get_external_ip
@@ -613,8 +614,8 @@ class FeatureProtocol(ServerProtocol):
         self.master = config.get('master', True)
         self.set_master()
         
-        # superficial things (e.g. getting external IP)
-        get_external_ip().addCallback(self.got_external_ip)
+        get_external_ip(config.get('interface', '')).addCallback(
+            self.got_external_ip)
     
     def got_external_ip(self, ip):
         self.ip = ip
@@ -992,6 +993,10 @@ class FeatureProtocol(ServerProtocol):
     
     def connectTCP(self, *arg, **kw):
         return reactor.connectTCP(*arg, 
+            bindAddress = (self.config.get('interface', ''), 0), **kw)
+    
+    def getPage(self, *arg, **kw):
+        return getPage(*arg, 
             bindAddress = (self.config.get('interface', ''), 0), **kw)
     
 PORT = 32887
