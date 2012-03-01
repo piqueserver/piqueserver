@@ -11,14 +11,32 @@ def apply_script(protocol, connection, config):
         
         def on_connect(self):
             self.block_undo = []
+            self.zoc_destruction_points = 0
             return connection.on_connect(self)
+
+        def on_spawn(self, pos):
+            self.zoc_destruction_points = 0
+            return connection.on_spawn(self, pos)
         
         def on_block_destroy(self, x, y, z, mode):
             """Restrict destruction of blocks that are on your own team and
             in a zone of control, or blocks that are on the other team and
             are too distant."""
-            if not self.god and self.is_zoc(x, y, z):
-                return False
+            if not self.god:
+                cost = self.is_zoc(x, y, z)
+                if cost == -1:
+                    self.send_chat(
+                        "You're too far away to attack this area!")
+                if mode == SPADE_DESTROY:
+                    cost *= 3
+                elif mode == GRENADE_DESTROY:
+                    cost = self.protocol.zoc_grenade_cost
+                if self.zoc_destruction_points < cost:
+                    self.send_chat("Stop destroying your territory! "+
+                                   "Go fight the enemy!")
+                    return False
+                else:
+                    self.zoc_destruction_points -= cost
             return connection.on_block_destroy(self, x, y, z, mode)
 
         def own_block(self, x, y, z):
@@ -39,17 +57,13 @@ def apply_script(protocol, connection, config):
                     zoc['top'] <= y and zoc['bottom'] >= y):
                     if zoc['team'] is self.team and\
                        not self.own_block(x, y, z):
-                        self.send_chat("You can't destroy areas"+\
-                            " controlled by your team.")
-                        return True
+                        return self.protocol.zoc_block_cost                        
                     else:
                         p_x, p_y, p_z = self.world_object.position.get()
                         dist_sq = (p_x - x) * (p_x - x) +\
                                   (p_y - y) * (p_y - y)
                         if self.protocol.zoc_attack_distance < dist_sq:
-                            self.send_chat(
-                                "You're too far away to attack this area!")
-                            return True
+                            return -1
             return False
     
     class ZOCProtocol(protocol):
@@ -60,12 +74,17 @@ def apply_script(protocol, connection, config):
         zoc_attack_distance = config.get('zoc_attack_distance', 64)
         zoc_attack_distance = zoc_attack_distance * zoc_attack_distance
         zoc_block_undo = config.get('zoc_block_undo', 10)
+        
+        zoc_block_cost = config.get('zoc_block_cost', 6)
+        zoc_points_per_tick = config.get('zoc_points_per_tick', 1)
+        zoc_point_cap = config.get('zoc_point_cap', 6 * zoc_block_cost)
+        zoc_grenade_cost = config.get('zoc_grenade_cost', zoc_point_cap)
 
         def __init__(self, *arg, **kw):
             # we update the zones with a slow loop
             # (simpler than tracking every event that could update zones)
             protocol.__init__(self, *arg, **kw)
-            self.zoc_loop = LoopingCall(self.cache_zones_of_control)
+            self.zoc_loop = LoopingCall(self.zoc_tick)
             if not self.zoc_loop.running:
                 self.zoc_loop.start(5.0)
         
@@ -75,6 +94,13 @@ def apply_script(protocol, connection, config):
                     'right':x + self.zoc_radius,
                     'top':y - self.zoc_radius,
                     'bottom':y + self.zoc_radius}
+
+        def zoc_tick(self):
+            self.cache_zones_of_control()
+            for player in self.players.values():
+                player.zoc_destruction_points += self.zoc_points_per_tick
+                if player.zoc_destruction_points > self.zoc_point_cap:
+                    player.zoc_destruction_points = self.zoc_point_cap
 
         def cache_zones_of_control(self):
             zones = []
