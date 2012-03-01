@@ -64,7 +64,7 @@ def apply_script(protocol, connection, config):
                                   (p_y - y) * (p_y - y)
                         if self.protocol.zoc_attack_distance < dist_sq:
                             return -1
-            return False
+            return 0
     
     class ZOCProtocol(protocol):
 
