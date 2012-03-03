@@ -1,6 +1,8 @@
 from twisted.internet.task import LoopingCall
 from pyspades.constants import *
 
+BK_FREE, BK_FRIENDLY, BK_ENEMY_FAR, BK_ENEMY_NEAR, BK_UNDO = range(5)
+
 def apply_script(protocol, connection, config):
     
     class ZOCConnection(connection):
@@ -23,20 +25,23 @@ def apply_script(protocol, connection, config):
             in a zone of control, or blocks that are on the other team and
             are too distant."""
             if not self.god:
-                cost = self.is_zoc(x, y, z)
-                if cost == -1:
+                zoc = self.zoc_type(x, y, z)
+                if zoc==BK_ENEMY_FAR:
                     self.send_chat(
                         "You're too far away to attack this area!")
-                if mode == SPADE_DESTROY:
-                    cost *= 3
-                elif mode == GRENADE_DESTROY:
-                    cost = self.protocol.zoc_grenade_cost
-                if self.zoc_destruction_points < cost:
-                    self.send_chat("Stop destroying your territory! "+
-                                   "Go fight the enemy!")
                     return False
-                else:
-                    self.zoc_destruction_points -= cost
+                elif zoc==BK_FRIENDLY:
+                    cost = self.protocol.zoc_block_cost
+                    if mode == SPADE_DESTROY:
+                        cost *= 3
+                    elif mode == GRENADE_DESTROY:
+                        cost = self.protocol.zoc_grenade_cost
+                    if self.zoc_destruction_points < cost:
+                        self.send_chat("Stop destroying your territory! "+
+                                       "Go fight the enemy!")
+                        return False
+                    else:
+                        self.zoc_destruction_points -= cost                    
             return connection.on_block_destroy(self, x, y, z, mode)
 
         def own_block(self, x, y, z):
@@ -45,26 +50,38 @@ def apply_script(protocol, connection, config):
                     return True
             return False
 
+        def on_block_build_attempt(self, x, y, z):
+            zoc = self.zoc_type(x, y, z)
+            if zoc == BK_ENEMY_NEAR:
+                self.send_chat("You can't build in enemy territory!")
+                return False
+            else:
+                return connection.on_block_build_attempt(self, x, y, z)
+
         def on_block_build(self, x, y, z):
             self.block_undo.append((x, y, z))
             if len(self.block_undo) > self.protocol.zoc_block_undo:
                 del self.block_undo[0]
             return connection.on_block_build(self, x, y, z)
-        
-        def is_zoc(self, x, y, z):
+
+        def zoc_type(self, x, y, z):
             for zoc in self.protocol.zone_cache:
                 if (zoc['left'] <= x and zoc['right'] >= x and
                     zoc['top'] <= y and zoc['bottom'] >= y):
-                    if zoc['team'] is self.team and\
-                       not self.own_block(x, y, z):
-                        return self.protocol.zoc_block_cost                        
+                    if zoc['team'] is self.team:
+                        if self.own_block(x, y, z):
+                            return BK_UNDO
+                        else:
+                            return BK_FRIENDLY
                     else:
                         p_x, p_y, p_z = self.world_object.position.get()
                         dist_sq = (p_x - x) * (p_x - x) +\
                                   (p_y - y) * (p_y - y)
                         if self.protocol.zoc_attack_distance < dist_sq:
-                            return -1
-            return 0
+                            return BK_ENEMY_FAR
+                        else:
+                            return BK_ENEMY_NEAR
+            return BK_FREE
     
     class ZOCProtocol(protocol):
 
@@ -75,7 +92,7 @@ def apply_script(protocol, connection, config):
         zoc_attack_distance = zoc_attack_distance * zoc_attack_distance
         zoc_block_undo = config.get('zoc_block_undo', 10)
         
-        zoc_block_cost = config.get('zoc_block_cost', 6)
+        zoc_block_cost = config.get('zoc_block_cost', 5)
         zoc_points_per_tick = config.get('zoc_points_per_tick', 1)
         zoc_point_cap = config.get('zoc_point_cap', 6 * zoc_block_cost)
         zoc_grenade_cost = config.get('zoc_grenade_cost', zoc_point_cap)
