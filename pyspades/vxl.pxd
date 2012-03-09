@@ -1,4 +1,4 @@
-cdef extern from "load_c.cpp":
+cdef extern from "vxl_c.cpp":
     enum:
         MAP_X
         MAP_Y

@@ -26,6 +26,16 @@ cdef inline object allocate_memory(int size, char ** i):
     i[0] = PyString_AS_STRING(ob)
     return ob
 
+cdef extern from "common_c.h":
+    struct Vector:
+        float x, y, z
+    
+    struct LongVector:
+        int x, y, z
+    
+    Vector * create_vector(float x, float y, float z)
+    void destroy_vector(Vector*)
+
 cdef inline int check_default_int(int value, int default) except -1:
     if value != default:
         from pyspades.exceptions import InvalidData
@@ -35,13 +45,9 @@ cdef inline int check_default_int(int value, int default) except -1:
 
 cdef class Quaternion
 cdef class Vertex3:
-    cdef public:
-        double x, y, z
+    cdef Vector * value
+    cdef bint is_ref
     cpdef Quaternion get_rotation_to(self, Vertex3 A)
-
-cdef class Vertex2:
-    cdef public:
-        double x, y
 
 cdef class Quaternion:
     cdef public:
@@ -51,3 +57,15 @@ cdef class Quaternion:
     cpdef Quaternion nlerp(self, Quaternion q, double t)
     cpdef Vertex3 transform_vector(self, Vertex3 v)
     cpdef Vertex3 inverse_transform_vector(self, Vertex3 v)
+
+cdef inline Vertex3 create_proxy_vector(Vector * v):
+    cdef Vertex3 new_vector = Vertex3(is_ref = True)
+    new_vector.value = v
+    return new_vector
+
+cdef inline Vertex3 create_vertex3(float x, float y, float z):
+    # faster way of creating Vertex3 instances
+    cdef Vertex3 new_vertex = Vertex3(is_ref = True)
+    new_vertex.value = create_vector(x, y, z)
+    new_vertex.is_ref = False
+    return new_vertex

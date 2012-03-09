@@ -67,14 +67,6 @@ else:
     sys.path.append('..')
     SERVER_VERSION = get_hg_rev()
 
-if iocp and sys.platform == 'win32':
-    # install IOCP
-    try:
-        from twisted.internet import iocpreactor 
-        iocpreactor.install()
-    except ImportError:
-        print '(dependencies missing for fast IOCP, using normal reactor)'
-
 if sys.platform == 'linux2':
     try:
         from twisted.internet import epollreactor
@@ -353,7 +345,7 @@ class FeatureConnection(ServerConnection):
             self.send_chat('Team is locked')
             return False
         balanced_teams = self.protocol.balanced_teams
-        if balanced_teams:
+        if balanced_teams and not team.spectator:
             other_team = team.other
             if other_team.count() < team.count() + 1 - balanced_teams:
                 self.send_chat('Team is full')
