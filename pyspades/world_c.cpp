@@ -292,10 +292,6 @@ long cast_ray(MapData * map, float x0, float y0, float z0, float x1, float y1,
     return 0;
 }
 
-inline float fabsl(int value) {
-    return fabsf((float)value);
-}
-
 size_t cube_line(int x1, int y1, int z1, int x2, int y2, int z2,
                  LongVector * cube_array)
 {
@@ -322,25 +318,25 @@ size_t cube_line(int x1, int y1, int z1, int x2, int y2, int z2,
 	if ((abs(d.x) >= abs(d.y)) && (abs(d.x) >= abs(d.z)))
 	{
 		dxi = 1024; dx = 512;
-		dyi = (long)(!d.y ? 0x3fffffff/VSID : fabsl(d.x*1024/d.y));
+		dyi = (long)(!d.y ? 0x3fffffff/VSID : abs(d.x*1024/d.y));
 		dy = dyi/2;
-		dzi = (long)(!d.z ? 0x3fffffff/VSID : fabsl(d.x*1024/d.z));
+		dzi = (long)(!d.z ? 0x3fffffff/VSID : abs(d.x*1024/d.z));
 		dz = dzi/2;
 	}
 	else if (abs(d.y) >= abs(d.z))
 	{
 		dyi = 1024; dy = 512;
-		dxi = (long)(!d.x ? 0x3fffffff/VSID : fabsl(d.y*1024/d.x));
+		dxi = (long)(!d.x ? 0x3fffffff/VSID : abs(d.y*1024/d.x));
 		dx = dxi/2;
-		dzi = (long)(!d.z ? 0x3fffffff/VSID : fabsl(d.y*1024/d.z));
+		dzi = (long)(!d.z ? 0x3fffffff/VSID : abs(d.y*1024/d.z));
 		dz = dzi/2;
 	}
 	else
 	{
 		dzi = 1024; dz = 512;
-		dxi = (long)(!d.x ? 0x3fffffff/VSID : fabsl(d.z*1024/d.x));
+		dxi = (long)(!d.x ? 0x3fffffff/VSID : abs(d.z*1024/d.x));
 		dx = dxi/2;
-		dyi = (long)(!d.y ? 0x3fffffff/VSID : fabsl(d.z*1024/d.y));
+		dyi = (long)(!d.y ? 0x3fffffff/VSID : abs(d.z*1024/d.y));
 		dy = dyi/2;
 	}
 	if (ixi >= 0) dx = dxi-dx;
