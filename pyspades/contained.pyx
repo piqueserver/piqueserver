@@ -422,7 +422,8 @@ cdef class CTFState(Loader):
         self.team1_score = reader.readInt(True, False)
         self.team2_score = reader.readInt(True, False)
         self.cap_limit = reader.readInt(True, False)
-        cdef int intel_flags = reader.readByte(True)
+        # really an int - sizeof(intel_flags) says otherwise, but oh well
+        cdef int intel_flags = reader.readInt(True, False)
         self.team1_has_intel = intel_flags & 1
         self.team2_has_intel = (intel_flags >> 1) & 1
         if self.team1_has_intel:
@@ -445,7 +446,7 @@ cdef class CTFState(Loader):
         read_position(reader, &self.team2_base_x, &self.team2_base_y,
             &self.team2_base_z)
         
-        reader.skipBytes(151) # padding for TCState - sigh...
+        reader.skipBytes(148) # padding for TCState - sigh...
     
     cpdef write(self, ByteWriter reader):
         reader.writeInt(self.team1_score, True, False)
@@ -453,7 +454,8 @@ cdef class CTFState(Loader):
         reader.writeInt(self.cap_limit, True, False)
         cdef int intel_flags = (self.team1_has_intel | (
             self.team2_has_intel << 1))
-        reader.writeByte(intel_flags, True)
+        # really an int - sizeof(intel_flags) says otherwise, but oh well
+        reader.writeInt(intel_flags, True, False)
         if self.team1_has_intel:
             reader.writeByte(self.team1_carrier, True)
             reader.pad(11)
@@ -474,7 +476,7 @@ cdef class CTFState(Loader):
         write_position(reader, self.team2_base_x, self.team2_base_y,
             self.team2_base_z)
             
-        reader.pad(151) # padding for TCState - sigh...
+        reader.pad(148) # padding for TCState - sigh...
 
 cdef class Territory(Loader):
     cdef public:

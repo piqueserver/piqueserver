@@ -892,7 +892,8 @@ class ServerConnection(BaseConnection):
         elif game_mode == TC_MODE:
             state_data.state = tc_data
         
-        saved_loaders.append(state_data.generate())
+        generated_data = state_data.generate()
+        saved_loaders.append(generated_data)
         
     def grenade_exploded(self, grenade):
         if self.name is None:
