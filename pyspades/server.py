@@ -809,7 +809,7 @@ class ServerConnection(BaseConnection):
             kill_action.player_id = self.player_id
         if by is not None and by is not self:
             by.add_score(1)
-        kill_action.respawn_time = self.get_respawn_time()
+        kill_action.respawn_time = self.get_respawn_time() + 1
         self.protocol.send_contained(kill_action, save = True)
         self.world_object.dead = True
         self.respawn()

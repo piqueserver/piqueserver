@@ -126,8 +126,8 @@ cdef class Character(Object):
                 self.player.p.z += 0.9
                 self.player.e.z += 0.9
         else:
-            if not try_uncrouch(self.player):
-                return
+            self.player.p.z -= 0.9
+            self.player.e.z -= 0.9
         self.player.crouch = value
     
     def set_animation(self, jump, crouch, sneak, sprint):
@@ -216,7 +216,9 @@ cdef class Character(Object):
         self.player.sprint = False
         
     cdef int update(self, double dt) except -1:
-        move_player(self.player)
+        cdef long ret = move_player(self.player)
+        if ret > 0:
+            self.fall_callback(ret)
         return 0
     
     # properties
