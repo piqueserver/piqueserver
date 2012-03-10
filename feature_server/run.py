@@ -912,7 +912,8 @@ class FeatureProtocol(ServerProtocol):
         if self.votes is None:
             return 'No votekick in progress.'
         if (connection and not connection.admin and 
-            connection is not self.voting_player):
+            connection is not self.voting_player and
+            'cancel' not in connection.rights):
             return 'You did not start the votekick.'
         self.votekick_call.cancel()
         if connection is None:
