@@ -247,6 +247,7 @@ def apply_script(protocol, connection, config):
                             by.semi_hits += 1
                             if by.multiple_bullets_count >= SEMI_MULTIPLE_BULLETS_MAX:
                                 by.multiple_bullets_eject()
+                                return False
                     elif by.weapon == SMG_WEAPON:
                         if (not (value in SMG_DAMAGE)) and DETECT_DAMAGE_HACK:
                             return False
@@ -254,6 +255,7 @@ def apply_script(protocol, connection, config):
                             by.smg_hits += 1
                             if by.multiple_bullets_count >= SMG_MULTIPLE_BULLETS_MAX:
                                 by.multiple_bullets_eject()
+                                return False
                     elif by.weapon == SHOTGUN_WEAPON:
                         if (not (value in SHOTGUN_DAMAGE)) and DETECT_DAMAGE_HACK:
                             return False
