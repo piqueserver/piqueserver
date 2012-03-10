@@ -103,7 +103,6 @@ cdef class Character(Object):
         PlayerType * player
     cdef public:
         Vertex3 position, orientation, velocity
-        bint dead
         object fall_callback
     
     def initialize(self, Vertex3 position, Vertex3 orientation, 
@@ -158,7 +157,8 @@ cdef class Character(Object):
             self.up = self.down = self.left = self.right = False
         
     def set_orientation(self, x, y, z):
-        self.orientation.set(x, y, z)
+        cdef Vertex3 v = Vertex3(x, y, z)
+        reorient_player(self.player, v.value)
     
     def throw_grenade(self, time_left, callback = None):
         item = self.world.create_object(Grenade, time_left, self.position, 
@@ -243,6 +243,12 @@ cdef class Character(Object):
             return self.player.mr
         def __set__(self, value):
             self.player.mr = value
+    
+    property dead:
+        def __get__(self):
+            return not self.player.alive
+        def __set__(self, bint value):
+            self.set_dead(value)
             
     property jump:
         def __get__(self):

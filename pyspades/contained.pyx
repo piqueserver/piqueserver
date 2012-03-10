@@ -338,7 +338,8 @@ cdef class CreatePlayer(Loader):
     id = id_iter.next()
     
     cdef public:
-        unsigned int player_id, weapon, team
+        unsigned int player_id, weapon
+        int team
         float x, y, z
         object name
 

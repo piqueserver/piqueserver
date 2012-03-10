@@ -20,10 +20,21 @@ add(protect)
 
 def apply_script(protocol, connection, config):
     class ProtectConnection(connection):
+        def _block_available(self, x, y, z):
+            if not self.god and self.protocol.is_protected(x, y):
+                return False
+        
         def on_block_build_attempt(self, x, y, z):
             if not self.god and self.protocol.is_protected(x, y):
                 return False
             return connection.on_block_build_attempt(self, x, y, z)
+        
+        def on_line_build_attempt(self, points):
+            if not self.god:
+                for point in points:
+                    if self.protocol.is_protected(point.x, point.y):
+                        return False
+            return connection.on_line_build_attempt(self, points)
     
     class ProtectProtocol(protocol):
         protected = None

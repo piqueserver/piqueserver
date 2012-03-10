@@ -218,7 +218,6 @@ class ServerConnection(BaseConnection):
     def loader_received(self, loader):
         if self.player_id is not None:
             contained = load_client_packet(ByteReader(loader.data))
-            print 'received:', contained
             if contained.id in (loaders.ExistingPlayer.id, 
                                 loaders.ShortPlayerData.id):
                 team = self.protocol.teams[contained.team]
@@ -242,8 +241,7 @@ class ServerConnection(BaseConnection):
                     if self.world_object is not None:
                         self.world_object.delete()
                         self.world_object = None
-                else:
-                    self.spawn()
+                self.spawn()
                 return
             if self.hp:
                 world_object = self.world_object
@@ -490,20 +488,16 @@ class ServerConnection(BaseConnection):
                     if not points:
                         return
                     if len(points) > (self.blocks + BUILD_TOLERANCE):
-                        print len(points), self.blocks
                         return
                     map = self.protocol.map
+                    if self.on_line_build_attempt(points) == False:
+                        return
                     for point in points:
-                        self.blocks -= 1
                         x, y, z = point.x, point.y, point.z
-                        if self.on_block_build_attempt(x, y, z) == False:
+                        if not map.set_point(x, y, z, self.color + (255,)):
                             break
-                        elif not map.set_point(x, y, z, self.color + (255,)):
-                            break
-                        self.on_block_build(x, y, z)
-                    contained.x2 = x
-                    contained.y2 = y
-                    contained.z2 = z
+                    self.blocks -= len(points)
+                    self.on_line_build(points)
                     contained.player_id = self.player_id
                     self.protocol.send_contained(contained, save = True)
             if self.name:
@@ -630,32 +624,35 @@ class ServerConnection(BaseConnection):
     
     def spawn(self, pos = None):
         self.spawn_call = None
-        if pos is None:
-            x, y, z = self.get_spawn_location()
-            z -= 1.4 # super magic value
-        else:
-            x, y, z = pos
-        if self.world_object is not None:
-            self.world_object.set_position(x, y, z, True)
-        else:
-            position = Vertex3(x, y, z)
-            self.world_object = self.protocol.world.create_object(
-                world.Character, position, None, self._on_fall)
-        self.world_object.dead = False
-        self.tool = WEAPON_TOOL
-        self.refill(True)
+        spectator = self.team.spectator
+        if not spectator:
+            if pos is None:
+                x, y, z = self.get_spawn_location()
+                z -= 1.4 # super magic value
+            else:
+                x, y, z = pos
+            if self.world_object is not None:
+                self.world_object.set_position(x, y, z, True)
+            else:
+                position = Vertex3(x, y, z)
+                self.world_object = self.protocol.world.create_object(
+                    world.Character, position, None, self._on_fall)
+            self.world_object.dead = False
+            self.tool = WEAPON_TOOL
+            self.refill(True)
+            create_player.x = x + 0.5
+            create_player.y = y + 0.5
+            create_player.z = z - 0.5
+            create_player.weapon = self.weapon
         create_player.player_id = self.player_id
         create_player.name = self.name
-        create_player.x = x + 0.5
-        create_player.y = y + 0.5
-        create_player.z = z - 0.5
-        create_player.weapon = self.weapon
         create_player.team = self.team.id
-        if self.filter_visibility_data:
+        if self.filter_visibility_data and not spectator:
             self.send_contained(create_player)
         else:
             self.protocol.send_contained(create_player, save = True)
-        self.on_spawn((x, y, z))
+        if not spectator:
+            self.on_spawn((x, y, z))
 
     def take_flag(self):
         if not self.hp:
@@ -1041,6 +1038,12 @@ class ServerConnection(BaseConnection):
     
     def on_block_build(self, x, y, z):
         pass
+    
+    def on_line_build_attempt(self, points):
+        pass
+    
+    def on_line_build(self, points):
+        pass
 
     def on_block_destroy(self, x, y, z, mode):
         pass
@@ -1336,6 +1339,7 @@ class ServerProtocol(BaseProtocol):
     loop_count = 0
     melee_damage = 100
     version = GAME_VERSION
+    respawn_waves = False
     
     def __init__(self, *arg, **kw):
         self.max_connections = self.max_players
@@ -1416,7 +1420,8 @@ class ServerProtocol(BaseProtocol):
             position = orientation = None
             try:
                 player = self.players[i]
-                if not player.filter_visibility_data:
+                if (not player.filter_visibility_data and 
+                not player.team.spectator):
                     world_object = player.world_object
                     position = world_object.position.get()
                     orientation = world_object.orientation.get()

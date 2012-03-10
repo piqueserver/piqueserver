@@ -161,7 +161,7 @@ long clipworld(long x, long y, long z)
     if(sz == 63)
         sz=62;
     else if (sz >= 63)
-        return 0;
+        return 1;
     return get_solid((int)x, (int)y, sz, global_map);
 }
 

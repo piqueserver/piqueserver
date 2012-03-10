@@ -224,11 +224,17 @@ class FeatureConnection(ServerConnection):
             self.send_chat(result)
         print log_message.encode('ascii', 'replace')
     
-    def on_block_build_attempt(self, x, y, z):
+    def _can_build(self):
         if not self.building:
             return False
         if not self.god and not self.protocol.building:
             return False
+    
+    def on_block_build_attempt(self, x, y, z):
+        return self._can_build()
+    
+    def on_line_build_attempt(self, points):
+        return self._can_build()
     
     def on_block_build(self, x, y, z):
         if self.god:

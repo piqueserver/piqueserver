@@ -19,7 +19,7 @@ import sys
 sys.path.append('..')
 
 from pyspades.common import *
-from pyspades.load import VXLData, get_color_tuple
+from pyspades.vxl import VXLData, get_color_tuple
 from pyspades import world
 import pyglet
 from pyglet.window import key
@@ -43,7 +43,8 @@ fp.close()
 def on_fall(damage):
     print 'on fall:', damage
 
-new_world = world.World(map)
+new_world = world.World()
+new_world.map = map
 character = new_world.create_object(world.Character,
     Vertex3(20.0, 20.0, 5.0), Vertex3(0.999992012978, 0.0, -0.00399998947978),
     on_fall)
@@ -99,7 +100,7 @@ def on_draw():
     for x, z, color in block_cache.blocks:
         draw_block(x, map_y, z, color)
 
-    x, y = get_position(position.x, position.y, character.guess_z)
+    x, y = get_position(position.x, position.y, position.z)
     add_height = 0
     if not character.crouch:
         add_height = (0.9 / scale) * 600
@@ -120,7 +121,7 @@ def on_nade(nade):
 
 def on_key_press(symbol, modifiers):
     if symbol == key.SPACE:
-        character.set_animation(jump = True)
+        character.jump = True
     elif symbol == key.F:
         character.throw_grenade(5, on_nade)
     elif symbol == key.X:
@@ -137,9 +138,7 @@ def update(dt):
             keyboard[key.UP],
             keyboard[key.DOWN]
         )
-        character.set_animation(
-            crouch = keyboard[key.Z]
-        )
+        character.set_crouch(keyboard[key.Z])
         new_world.update(dt)
 
 # setup :)
