@@ -45,7 +45,6 @@ if len(sys.argv) > 1:
     config.update(eval(json_parameter))
 
 profile = config.get('profile', False)
-iocp = config.get('iocp', True)
 
 frozen = hasattr(sys, 'frozen')
 
@@ -509,9 +508,6 @@ class FeatureProtocol(ServerProtocol):
             self.map_rotator_type = itertools.cycle
         self.default_time_limit = config.get('default_time_limit', 20.0)
         self.default_cap_limit = config.get('cap_limit', 10.0)
-        self.time_announcements = config.get('time_announcements',
-                [1,2,3,4,5,6,7,8,9,10,30,60,120,180,240,300,600,900,1200,1800,
-                 2400,3000])
         self.advance_on_win = int(config.get('advance_on_win', False))
         self.win_count = itertools.count(1)
         self.bans = NetworkDict()
@@ -526,6 +522,7 @@ class FeatureProtocol(ServerProtocol):
             print '(server name too long; it will be truncated to "%s")' % (
                 self.name[:MAX_SERVER_NAME_SIZE])
         self.respawn_time = config.get('respawn_time', 5)
+        self.respawn_waves = config.get('respawn_waves', False)
         game_mode = config.get('game_mode', 'ctf')
         if game_mode == 'ctf':
             self.game_mode = CTF_MODE
@@ -549,6 +546,9 @@ class FeatureProtocol(ServerProtocol):
         self.max_connections_per_ip = config.get('max_connections_per_ip', 0)
         self.passwords = config.get('passwords', {})
         self.server_prefix = encode(config.get('server_prefix', '[*]'))
+        self.time_announcements = config.get('time_announcements',
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30, 60, 120, 180, 240, 300, 600,
+             900, 1200, 1800, 2400, 3000])
         self.balanced_teams = config.get('balanced_teams', None)
         self.login_retries = config.get('login_retries', 1)
         self.default_ban_time = config.get('default_ban_duration', 24*60)

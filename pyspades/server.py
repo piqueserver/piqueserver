@@ -620,7 +620,11 @@ class ServerConnection(BaseConnection):
         return self.team.get_random_location(True)
     
     def get_respawn_time(self):
-        return self.respawn_time
+        if self.protocol.respawn_waves:
+            offset = reactor.seconds() % self.respawn_time
+        else:
+            offset = 0
+        return self.respawn_time - offset
     
     def spawn(self, pos = None):
         self.spawn_call = None
