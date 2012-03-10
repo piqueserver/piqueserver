@@ -632,7 +632,9 @@ class ServerConnection(BaseConnection):
         if not spectator:
             if pos is None:
                 x, y, z = self.get_spawn_location()
-                z -= 1.4 # super magic value
+                x += 0.5
+                y += 0.5
+                z -= 1.4
             else:
                 x, y, z = pos
             if self.world_object is not None:
@@ -644,9 +646,9 @@ class ServerConnection(BaseConnection):
             self.world_object.dead = False
             self.tool = WEAPON_TOOL
             self.refill(True)
-            create_player.x = x + 0.5
-            create_player.y = y + 0.5
-            create_player.z = z - 0.5
+            create_player.x = x
+            create_player.y = y
+            create_player.z = z
             create_player.weapon = self.weapon
         create_player.player_id = self.player_id
         create_player.name = self.name
