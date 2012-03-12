@@ -634,7 +634,7 @@ class ServerConnection(BaseConnection):
                 x, y, z = self.get_spawn_location()
                 x += 0.5
                 y += 0.5
-                z -= 1.4
+                z -= 2.4
             else:
                 x, y, z = pos
             if self.world_object is not None:
