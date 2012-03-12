@@ -22,6 +22,8 @@ from pyspades.common import prettify_timespan
 from pyspades.server import parse_command
 from twisted.internet import reactor
 
+from vote import VoteKick
+
 class InvalidPlayer(Exception):
     pass
 
@@ -181,17 +183,23 @@ def votekick(connection, value, *arg):
         player = get_player(connection.protocol, '#' + value)
     except InvalidPlayer:
         player = get_player(connection.protocol, value)
-    return connection.protocol.start_votekick(connection, player, reason)
+    return connection.protocol.start_vote(VoteKick(connection, player, reason))
 
 @name('y')
 def vote_yes(connection):
     if connection not in connection.protocol.players:
         raise KeyError()
-    return connection.protocol.votekick(connection)
+    if connection.protocol.vote is not None:
+        return connection.protocol.vote.vote(connection)
+    else:
+        return 'No votekick in progress.'        
 
 @name('cancel')
 def cancel_vote(connection):
-    return connection.protocol.cancel_votekick(connection)
+    if connection.protocol.vote is not None:
+        return connection.protocol.vote.cancel(connection)
+    else:
+        return 'No votekick in progress.'        
 
 def rules(connection):
     if connection not in connection.protocol.players:
@@ -921,6 +929,27 @@ def handle_command(connection, command, parameters):
         return 'Invalid team specifier'
     except ValueError:
         return 'Invalid parameters'
+
+def debug_handle_command(connection, command, parameters):
+    # use this when regular handle_command eats errors
+    connection.send_chat("Commands are in DEBUG mode")
+    command = command.lower()
+    try:
+        command = aliases[command]
+    except KeyError:
+        pass
+    try:
+        command_func = commands[command]
+    except KeyError:
+        return # 'Invalid command'
+    if hasattr(command_func, 'admin'):
+        if (not connection.admin and 
+            (connection.rights is None or
+            command_func.func_name not in connection.rights)):
+            return 'No administrator rights!'
+    return command_func(connection, *parameters)
+
+handle_command = debug_handle_command
 
 def handle_input(connection, input):
     # for IRC and console
