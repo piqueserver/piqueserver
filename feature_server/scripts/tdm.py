@@ -20,8 +20,8 @@ def apply_script(protocol, connection, config):
             self.protocol.check_end_game(self)
             return result
         
-        def on_kill(self, killer):
-            result = connection.on_kill(self, killer)
+        def on_kill(self, killer, type):
+            result = connection.on_kill(self, killer, type)
             self.protocol.check_end_game(killer)
             return result
 

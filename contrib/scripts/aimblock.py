@@ -96,7 +96,7 @@ def apply_script(protocol, connection, config):
                     )
             self.protocol.irc_say(aimwarn)
         
-        def on_kill(self, killer):
+        def on_kill(self, killer, type):
             if killer != None and killer != self:
                 killer.aimbot_record_kill()
         
