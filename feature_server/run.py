@@ -672,14 +672,15 @@ class FeatureProtocol(ServerProtocol):
         if message is None:
             self.set_map_name(map)
         else:
-            self.send_chat('%s Next map: %s.' % (message, map), irc = True)
+            self.send_chat('%s Next map: %s.' % (message, map.text),
+                           irc = True)
             reactor.callLater(5, self.set_map_name, map)
     
-    def set_map_name(self, name):
+    def set_map_name(self, rot_info):
         if self.rollback_in_progress:
             return 'Rollback in progress.'
         try:
-            map_info = self.get_map(name)
+            map_info = self.get_map(rot_info)
         except MapNotFound:
             return False
         if self.map_info:
@@ -692,12 +693,12 @@ class FeatureProtocol(ServerProtocol):
         self.update_format()
         return True
     
-    def get_map(self, name):
-        return Map(name)
+    def get_map(self, rot_info):
+        return Map(rot_info)
     
     def set_map_rotation(self, maps, now = True):
         try:
-            check_rotation(maps)
+            maps = check_rotation(maps)
         except MapNotFound:
             return False
         self.map_rotator = self.map_rotator_type(maps)

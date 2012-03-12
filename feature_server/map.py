@@ -27,33 +27,23 @@ DEFAULT_LOAD_DIR = './maps'
 class MapNotFound(IOError):
     pass
 
-def parse_mapname(name):
-    seedsplit = name.split("#")
-    if len(seedsplit) > 1: # user specified a seed
-        basename = seedsplit[0].strip()
-        seed = int(seedsplit[1])
-    else: # manufacture a reproducable seed value
-        basename = name
-        random.seed()
-        seed = random.randint(0, math.pow(2, 31))
-    return RotationInfo(basename, seed)
-
 def check_rotation(maps, load_dir = DEFAULT_LOAD_DIR):
+    nmaps = []
     for map in maps:
-        map = parse_mapname(map)
+        map = RotationInfo(map)
+        nmaps.append(map)
         if (not os.path.isfile(map.map(load_dir))
         and not os.path.isfile(map.meta(load_dir))):
             raise MapNotFound('map %s does not exist' % map)
+    return nmaps
 
 class Map(object):
-    def __init__(self, name, load_dir = DEFAULT_LOAD_DIR):
+    def __init__(self, rot_info, load_dir = DEFAULT_LOAD_DIR):
 
-        rot_info = parse_mapname(name)
-        
         self.load_information(rot_info, load_dir)
         
         if self.gen_script and rot_info.seed is not None:
-            self.name = rot_info.name_seed()
+            self.name = '%s #%s' % (rot_info.file, rot_info.seed)
             print "Generating map '%s'..." % self.name
             random.seed(rot_info.seed)
             self.data = self.gen_script(rot_info.file, rot_info.seed)
@@ -65,12 +55,12 @@ class Map(object):
 
     def load_information(self, rot_info, load_dir):
         try:
-            info = imp.load_source(rot_info.name(), rot_info.meta())
+            info = imp.load_source(rot_info.file, rot_info.meta())
         except IOError:
             info = None
         self.info = info
         self.rot_info = rot_info
-        self.name = getattr(info, 'name', self.rot_info.name())
+        self.name = getattr(info, 'name', self.rot_info.file)
         self.author = getattr(info, 'author', '(unknown)')
         self.version = getattr(info, 'version', '1.0')
         self.description = getattr(info, 'description', '')
@@ -87,7 +77,7 @@ class Map(object):
         self.is_indestructable = getattr(info, 'is_indestructable', None)
 
         if self.gen_script:
-            self.name = self.rot_info.name_seed()
+            self.name = self.rot_info.text
         
     def apply_script(self, protocol, connection, config):
         if self.script is not None:
@@ -98,18 +88,25 @@ class Map(object):
         try:
             fp = open(rot_info.map(load_dir), 'rb')
         except OSError:
-            raise MapNotFound('map %s does not exist' % rot_info.name())
+            raise MapNotFound('map %s does not exist' % rot_info.text)
         self.data = VXLData(fp)
         fp.close()
 
 class RotationInfo(object):
-    def __init__(self, file = "pyspades", seed = None):
-        self.file = file
+    def __init__(self, text = "pyspades"):
+        self.text = text
+        
+        seedsplit = text.split("#")
+        if len(seedsplit) > 1: # user specified a seed
+            basename = seedsplit[0].strip()
+            seed = int(seedsplit[1])
+        else: # manufacture a reproducable seed value
+            basename = text
+            random.seed()
+            seed = random.randint(0, math.pow(2, 31))
+        self.file = basename
         self.seed = seed
-    def name(self):
-        return self.file
-    def name_seed(self):
-        return "%s #%s" % (self.file, self.seed)
+        
     def map(self, load_dir = DEFAULT_LOAD_DIR):
         return os.path.join(load_dir, '%s.vxl' % self.file)
     def meta(self, load_dir = DEFAULT_LOAD_DIR):
