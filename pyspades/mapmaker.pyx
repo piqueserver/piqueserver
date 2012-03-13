@@ -20,7 +20,7 @@ import random
 import math
 import sys
 from collections import deque
-from pyspades.load cimport VXLData
+from pyspades.vxl cimport VXLData
 
 sys.path.append('..')
 

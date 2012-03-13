@@ -102,7 +102,7 @@ def gen_script(basename, seed):
             z = int(hmap.get(x,y)*63 - 3 - trunk_h)
             if z >= 0 and z + 3 + trunk_h < 62:
                 green = random.choice(green_set)
-                vxl.set_columns_fast([[x,y,z,z+3,z+3,green],
+                for n in [[x,y,z,z+3,z+3,green],
                 [x+1,y,z,z+3,z+3,green],
                 [x-1,y,z,z+3,z+3,green],
                 [x,y+1,z,z+3,z+3,green],
@@ -115,7 +115,8 @@ def gen_script(basename, seed):
                 [x+2,y,z+1,z+2,z+2,green],
                 [x-2,y,z+1,z+2,z+2,green],
                 [x,y-2,z+1,z+2,z+2,green],
-                [x,y+2,z+1,z+2,z+2,green]])
+                [x,y+2,z+1,z+2,z+2,green]]:
+                    vxl.set_column_fast(*n)
 
     for x in xrange(0, bmap.width):
         for y in xrange(0, bmap.height):

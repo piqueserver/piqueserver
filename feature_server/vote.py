@@ -17,13 +17,15 @@
 
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
+from pyspades.common import prettify_timespan
+import random
 
 class VoteKick(object):
     
     vote_percentage = 0.
     vote_time = 0.
     vote_interval = 0.
-    votekick_public_votes = True
+    public_votes = True
     ban_duration = 0.
     votes = {}
     instigator = None
@@ -42,14 +44,12 @@ class VoteKick(object):
         self.vote_time = self.protocol.votekick_time
         self.vote_interval = self.protocol.votekick_interval
         self.ban_duration = self.protocol.votekick_ban_duration
-        self.votekick_public_votes = self.protocol.votekick_public_votes
+        self.public_votes = self.protocol.votekick_public_votes
         self.reason = reason
         self.kicked = False
     def votes_left(self):
         return int(((len(self.protocol.players) - 1) / 100.0
             ) * self.vote_percentage) - len(self.votes)
-    def timeout(self):
-        return "Votekick timed out"
     def verify(self):
         target = self.target
         instigator = self.instigator
@@ -59,9 +59,9 @@ class VoteKick(object):
             return "You can't votekick yourself."
         elif target.admin:
             return 'Cannot votekick an administrator.'
-        last_votekick = instigator.last_votekick
-        if (last_votekick is not None and
-        reactor.seconds() - last_votekick < self.vote_interval):
+        last = instigator.last_votekick
+        if (last is not None and
+        reactor.seconds() - last < self.vote_interval):
             return "You can't start a votekick now."
     def start(self):
         instigator = self.instigator
@@ -85,13 +85,14 @@ class VoteKick(object):
         if self.votes is None or connection in self.votes:
             return
         self.votes[connection] = True
-        if self.votekick_public_votes:
+        if self.public_votes:
             self.protocol.send_chat('%s voted YES.' % connection.name)
         if self.votes_left() <= 0:
             self.on_majority()
     def cancel(self, connection = None):
         if (connection and not connection.admin and 
-            connection is not self.instigator):
+            connection is not self.instigator and
+            'cancel' not in connection.rights):
             return 'You did not start the votekick.'
         if connection is None:
             message = 'Cancelled'
@@ -136,7 +137,109 @@ class VoteKick(object):
         else:
             self.target.kick(silent = True)
 
-# Current status:
+class VoteMap(object):
+    
+    vote_percentage = 0.
+    vote_time = 0.
+    vote_interval = 0.
+    extension_time = 0.
+    public_votes = True
+    votes = {} # these votes are two-layered - map, then players
+    instigator = None
+    protocol = None
+    
+    def __init__(self, connection, rot_group):
+        self.instigator = connection
+        self.rot_group = rot_group
+        self.protocol = connection.protocol
+        self.vote_percentage = self.protocol.votemap_percentage
+        self.vote_time = self.protocol.votemap_time
+        self.vote_interval = self.protocol.votemap_interval
+        self.public_votes = self.protocol.votemap_public_votes
+        self.extension_time = self.protocol.votemap_extension_time
+        final_group = random.sample(rot_group, min(len(rot_group),5))
+        if self.extension_time>0:
+            final_group.append("extend")
+        self.votes = {}
+        for rot_data in final_group:
+            self.votes[rot_data.text] = {}
+    def votes_left(self):
+        thresh = int(((len(self.protocol.players)) / 100.0
+            ) * self.vote_percentage)
+        counts = [{name:v, count:len(self.votes[v])} for v in self.votes.keys()]
+        return min(counts, key=count)
+    def verify(self):
+        instigator = self.instigator
+        last = instigator.last_votemap
+        if (last is not None and
+        reactor.seconds() - last < self.vote_interval):
+            return "You can't start a vote now."
+    def start(self):
+        instigator = self.instigator
+        protocol = self.protocol
+        protocol.irc_say(
+            '* %s initiated a map vote.' % instigator.name)
+    def vote(self, connection, mapname):
+        if not self.votes.has_key(mapname):
+            self.protocol.send_chat("Map %s is not available." % suggest.file)
+            return
+        curvotes = self.votes[mapname]        
+        if curvotes is None or connection in curvotes:
+            return
+        curvotes[connection] = True
+        if self.public_votes:
+            self.protocol.send_chat('%s voted for %s.' % (connection.name,
+                                                          mapname))
+        if self.votes_left().count <= 0:
+            self.on_majority()
+    def cancel(self, connection = None):
+        if (connection and not connection.admin and 
+            connection is not self.instigator):
+            return 'You did not start the vote.'
+        if connection is None:
+            message = 'Cancelled'
+        else:
+            message = 'Cancelled by %s' % connection.name
+        self.protocol._finish_vote()
+        self.set_cooldown()
+    def update(self):
+        self.protocol.send_chat(
+            'Choose next map. Say /vote <name> to cast vote.')
+        names = ' '.join([n for n in votes.keys()])
+        self.protocol.send_chat('Maps: ' % names)
+        self.protocol.send_chat('To extend current map: /votemap extend')
+    def on_disconnect(self, connection):
+        pass
+    def on_player_banned(self, connection):
+        pass
+    def on_timeout(self):
+        self.show_result()
+        self.protocol._finish_vote()
+    def on_majority(self):
+        self.show_result()
+        self.protocol._finish_vote()
+    def show_result(self):
+        result = self.votes_left().name
+        if result == "extend":
+            span = prettify_timespan(self.extension_time)
+            self.protocol.send_chat(
+            "Mapvote ended. Current map will be extended %s." % span,
+                irc = True)
+            # schedule next vote for the extension time
+        else:
+            self.protocol.send_chat(
+            "Mapvote ended. Next map will be: %s." % result, irc = True)
+        self.set_cooldown()
+    def set_cooldown(self):
+        if not self.instigator.admin:
+            self.instigator.last_votemap = reactor.seconds()
 
-# I should do another round of factoring AFTER this one,
-# so that "vote" and "votekick" are better differentiated.
+# Current status:
+# change /map, /rotation, /advance behavior to use a map ptr
+# change the commands
+# include separate votekick and votemap entries
+#    ...and allow each to have calls
+#    ...and then shift away from _finish_vote() to inheritance + common calls
+#    ...and then refactor the voting again
+
+# 2nd pass: add suggest
