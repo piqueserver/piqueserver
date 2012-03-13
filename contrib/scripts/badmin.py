@@ -151,7 +151,7 @@ def score_grief(connection, player, time=None): #302 = blue (0), #303 = green (1
     return gscore
 
 def check_percent(self):
-    if self.weapon == SEMI_WEAPON:
+    if self.weapon == RIFLE_WEAPON:
         if self.semi_hits == 0 or self.semi_count == 0:
             return 0;
         else:

@@ -774,7 +774,7 @@ def fog(connection, r, g, b):
 
 def weapon(connection, value):
     player = get_player(connection.protocol, value)
-    if player.weapon == SEMI_WEAPON:
+    if player.weapon == RIFLE_WEAPON:
         weapon = 'Rifle'
     elif player.weapon == SMG_WEAPON:
         weapon = 'SMG'
