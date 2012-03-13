@@ -111,10 +111,10 @@ class SMG(BaseWeapon):
     slow_reload = False
     
     damage = {
-        TORSO : 24,
+        TORSO : 29,
         HEAD : 75,
-        ARMS : 16,
-        LEGS : 16
+        ARMS : 18,
+        LEGS : 18
     }
 
 class Shotgun(BaseWeapon):
@@ -126,17 +126,11 @@ class Shotgun(BaseWeapon):
     slow_reload = True
     
     damage = {
-        TORSO : 21,
-        HEAD : 24,
-        ARMS : 14,
-        LEGS : 14
+        TORSO : 27,
+        HEAD : 37,
+        ARMS : 16,
+        LEGS : 16
     }
-    
-    def get_damage(self, value, position1, position2):
-        damage = self.damage[value]
-        if distance_3d_vector(position1, position2) <= 25:
-            damage *= 3
-        return damage
 
 WEAPONS = {
     RIFLE_WEAPON : Rifle,
