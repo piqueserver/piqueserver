@@ -242,13 +242,13 @@ def apply_script(protocol, connection, config):
                             random.choice(live_members)))
             return connection.on_spawn(self, pos)
 
-        def on_kill(self, killer):
+        def on_kill(self, killer, type):
             if killer is None or killer is self:
                 self.squad_broadcast('Squadmate %s suicided' % self.name)
             else:
                 self.squad_broadcast('Squadmate %s was killed by %s' %
                              (self.name, killer.name))
-            return connection.on_kill(self, killer)
+            return connection.on_kill(self, killer, type)
        
     
     return protocol, SquadConnection

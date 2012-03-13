@@ -799,7 +799,7 @@ class ServerConnection(BaseConnection):
     def kill(self, by = None, type = WEAPON_KILL):
         if self.hp is None:
             return
-        self.on_kill(by)
+        self.on_kill(by, type)
         self.drop_flag()
         self.hp = None
         self.weapon_object.reset()
@@ -1019,7 +1019,7 @@ class ServerConnection(BaseConnection):
     def on_hit(self, hit_amount, hit_player, type):
         pass
     
-    def on_kill(self, killer):
+    def on_kill(self, killer, type):
         pass
     
     def on_team_join(self, team):

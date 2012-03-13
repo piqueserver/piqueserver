@@ -299,7 +299,7 @@ class FeatureConnection(ServerConnection):
             self.god = False
             self.god_build = False
 
-    def on_kill(self, killer):
+    def on_kill(self, killer, type):
         self.streak = 0
         self.airstrike = False
         if killer is None or self.team is killer.team:

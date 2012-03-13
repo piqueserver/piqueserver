@@ -103,12 +103,12 @@ def apply_script(protocol, connection, config):
             self.blocks_removed.append(info)
             connection.on_block_removed(self, x, y, z)
         
-        def on_kill(self, killer):
+        def on_kill(self, killer, type):
             if killer and killer.team is self.team:
                 if killer.teamkill_times is None:
                     killer.teamkill_times = []
                 killer.teamkill_times.append(reactor.seconds())
-            connection.on_kill(self, killer)
+            connection.on_kill(self, killer, type)
     
     class BlockInfoProtocol(protocol):
         block_info = None
