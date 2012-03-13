@@ -26,9 +26,13 @@ import math
 
 class BaseConnection(object):
     disconnected = False
+    timeout_call = None
     def __init__(self, protocol, peer):
         self.protocol = protocol
         self.peer = peer
+    
+    def timed_out(self):
+        self.disconnect()
     
     def disconnect(self):
         if self.disconnected:
@@ -81,10 +85,13 @@ class BaseProtocol(object):
         self.connections = {}
         self.clients = {}
     
-    def connect(self, connection_class, host, port, version, channel_count = 1):
+    def connect(self, connection_class, host, port, version, channel_count = 1,
+                timeout = 5.0):
         peer = self.host.connect(enet.Address(host, port), channel_count, 
             version)
         connection = connection_class(self, peer)
+        connection.timeout_call = reactor.callLater(timeout, 
+            connection.timed_out)
         self.clients[peer] = connection
         return connection
     
@@ -124,6 +131,7 @@ class BaseProtocol(object):
                     connection = self.clients[peer]
                     if event_type == enet.EVENT_TYPE_CONNECT:
                         connection.on_connect()
+                        connection.timeout_call.cancel()
                     elif event_type == enet.EVENT_TYPE_DISCONNECT:
                         connection.on_disconnect()
                         del self.clients[peer]

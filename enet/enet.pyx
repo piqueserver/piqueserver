@@ -2,6 +2,8 @@ import atexit
 
 from cpython cimport bool
 
+from libc.stddef cimport ptrdiff_t
+
 cdef extern from "enet/types.h":
     ctypedef unsigned char enet_uint8
     ctypedef unsigned short enet_uint16
@@ -422,7 +424,7 @@ cdef class Peer:
         raise NotImplementedError
     
     def __hash__(self):
-        return <int>self._enet_peer
+        return <ptrdiff_t>self._enet_peer
 
     def send(self, channelID, Packet packet):
         """

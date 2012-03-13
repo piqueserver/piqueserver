@@ -1,4 +1,4 @@
-from pyspades.load import VXLData
+from pyspades.vxl import VXLData
 from pyspades.common import coordinates
 from pyspades.contained import BlockAction, SetColor
 from pyspades.constants import *

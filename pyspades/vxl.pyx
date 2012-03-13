@@ -194,11 +194,6 @@ cdef class VXLData:
         set_column_solid(x, y, z_start, z_end, self.map, 1)
         set_column_color(x, y, z_start, z_color_end, self.map, color)
         return True
-
-    cpdef bint set_columns_fast(self, object columns):
-        for c in columns:
-            self.set_column_fast(c[0],c[1],c[2],c[3],c[4],c[5])
-        return True
     
     def set_point_unsafe_int(self, int x, int y, int z, int color):
         set_point(x, y, z, self.map, 1, color)

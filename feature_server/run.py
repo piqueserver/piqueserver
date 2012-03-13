@@ -45,7 +45,6 @@ if len(sys.argv) > 1:
     config.update(eval(json_parameter))
 
 profile = config.get('profile', False)
-iocp = config.get('iocp', True)
 
 frozen = hasattr(sys, 'frozen')
 
@@ -60,29 +59,12 @@ def get_hg_rev():
     return ret
 
 if frozen:
-    CLIENT_VERSION = int(open('client_version', 'rb').read())
     path = os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding()))
     sys.path.append(path)
     SERVER_VERSION = 'win32 build' # most likely
 else:
     sys.path.append('..')
-    from pyspades.common import crc32
-    CLIENT_VERSION = crc32(open('../data/client.exe', 'rb').read())
     SERVER_VERSION = get_hg_rev()
-
-# reverse bytes
-CLIENT_VERSION = ((CLIENT_VERSION & 0x000000FF) << 24 |
-                  (CLIENT_VERSION & 0x0000FF00) << 8 |
-                  (CLIENT_VERSION & 0x00FF0000) >> 8 |
-                  (CLIENT_VERSION & 0xFF000000) >> 24)
-
-if iocp and sys.platform == 'win32':
-    # install IOCP
-    try:
-        from twisted.internet import iocpreactor 
-        iocpreactor.install()
-    except ImportError:
-        print '(dependencies missing for fast IOCP, using normal reactor)'
 
 if sys.platform == 'linux2':
     try:
@@ -223,11 +205,17 @@ class FeatureConnection(ServerConnection):
             self.send_chat(result)
         print log_message.encode('ascii', 'replace')
     
-    def on_block_build_attempt(self, x, y, z):
+    def _can_build(self):
         if not self.building:
             return False
         if not self.god and not self.protocol.building:
             return False
+    
+    def on_block_build_attempt(self, x, y, z):
+        return self._can_build()
+    
+    def on_line_build_attempt(self, points):
+        return self._can_build()
     
     def on_block_build(self, x, y, z):
         if self.god:
@@ -293,7 +281,7 @@ class FeatureConnection(ServerConnection):
             self.god = False
             self.god_build = False
 
-    def on_kill(self, killer):
+    def on_kill(self, killer, type):
         self.streak = 0
         self.airstrike = False
         if killer is None or self.team is killer.team:
@@ -309,10 +297,10 @@ class FeatureConnection(ServerConnection):
         self.streak = 0
         self.best_streak = 0
     
-    def on_animation_update(self, fire, jump, crouch, aim):
-        if self.fly and crouch and self.world_object.acceleration.z != 0.0:
+    def on_animation_update(self, primary_fire, secondary_fire, jump, crouch):
+        if self.fly and crouch and self.world_object.velocity.z != 0.0:
             jump = True
-        return fire, jump, crouch, aim
+        return primary_fire, secondary_fire, jump, crouch
     
     def grenade_exploded(self, grenade):
         self.current_grenade = grenade
@@ -344,7 +332,7 @@ class FeatureConnection(ServerConnection):
             self.send_chat('Team is locked')
             return False
         balanced_teams = self.protocol.balanced_teams
-        if balanced_teams:
+        if balanced_teams and not team.spectator:
             other_team = team.other
             if other_team.count() < team.count() + 1 - balanced_teams:
                 self.send_chat('Team is full')
@@ -451,7 +439,6 @@ class FeatureTeam(Team):
 
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
-    version = CLIENT_VERSION
     bans = None
     ban_publish = None
     ban_manager = None
@@ -500,9 +487,6 @@ class FeatureProtocol(ServerProtocol):
             self.map_rotator_type = itertools.cycle
         self.default_time_limit = config.get('default_time_limit', 20.0)
         self.default_cap_limit = config.get('cap_limit', 10.0)
-        self.time_announcements = config.get('time_announcements',
-                [1,2,3,4,5,6,7,8,9,10,30,60,120,180,240,300,600,900,1200,1800,
-                 2400,3000])
         self.advance_on_win = int(config.get('advance_on_win', False))
         self.win_count = itertools.count(1)
         self.bans = NetworkDict()
@@ -517,6 +501,7 @@ class FeatureProtocol(ServerProtocol):
             print '(server name too long; it will be truncated to "%s")' % (
                 self.name[:MAX_SERVER_NAME_SIZE])
         self.respawn_time = config.get('respawn_time', 5)
+        self.respawn_waves = config.get('respawn_waves', False)
         game_mode = config.get('game_mode', 'ctf')
         if game_mode == 'ctf':
             self.game_mode = CTF_MODE
@@ -540,6 +525,9 @@ class FeatureProtocol(ServerProtocol):
         self.max_connections_per_ip = config.get('max_connections_per_ip', 0)
         self.passwords = config.get('passwords', {})
         self.server_prefix = encode(config.get('server_prefix', '[*]'))
+        self.time_announcements = config.get('time_announcements',
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30, 60, 120, 180, 240, 300, 600,
+             900, 1200, 1800, 2400, 3000])
         self.balanced_teams = config.get('balanced_teams', None)
         self.login_retries = config.get('login_retries', 1)
         self.default_ban_time = config.get('default_ban_duration', 24*60)
@@ -591,8 +579,9 @@ class FeatureProtocol(ServerProtocol):
         for password in self.passwords.get('admin', []):
             if password == 'replaceme':
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
-
-        ServerProtocol.__init__(self, 32887, interface)
+        
+        port = config.get('port', 32887)
+        ServerProtocol.__init__(self, port, interface)
         self.host.receiveCallback = self.receive_callback
         if not self.set_map_rotation(config['maps']):
             print 'Invalid map in map rotation, exiting.'
@@ -668,6 +657,9 @@ class FeatureProtocol(ServerProtocol):
                            irc = True)
             reactor.callLater(5, self.set_map_name, map)
     
+    def get_mode_name(self):
+        return self.game_mode_name
+    
     def set_map_name(self, rot_info):
         if self.rollback_in_progress:
             return 'Rollback in progress.'
@@ -716,16 +708,14 @@ class FeatureProtocol(ServerProtocol):
         Called when the map (or other variables) have been updated
         """
         config = self.config
-        old_name = self.name
         self.name = encode(self.format(config.get('name', 
             'pyspades server %s' % random.randrange(0, 2000))))
-        if (old_name is not None and self.master_connection is not None 
-        and old_name != self.name):
-            self.master_connection.disconnect()
         self.motd = self.format_lines(config.get('motd', None))
         self.help = self.format_lines(config.get('help', None))
         self.tips = self.format_lines(config.get('tips', None))
         self.rules = self.format_lines(config.get('rules', None))
+        if self.master_connection is not None:
+            self.master_connection.send_server()
     
     def format(self, value, extra = {}):
         map = self.map_info
@@ -963,7 +953,7 @@ if interface == '':
     interface = '*'
 
 protocol_instance = protocol_class(interface, config)
-print 'Started server on port %s...' % PORT
+print 'Started server...'
 
 if profile:
     import cProfile

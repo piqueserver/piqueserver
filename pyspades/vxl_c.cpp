@@ -18,25 +18,9 @@
 
 */
 
-#define MAP_X 512
-#define MAP_Y 512
-#define MAP_Z 64
-#define get_pos(x, y, z) (x + (y) * MAP_Y + (z) * MAP_X * MAP_Y)
-#define DEFAULT_COLOR 0xFF674028
-
-#include <iostream>
-#include <sstream>
 #include "Python.h"
+#include "vxl_c.h"
 #include <vector>
-#include <bitset>
-
-#ifdef _MSC_VER
-#include <hash_map>
-#define map_type stdext::hash_map
-#else
-#include <tr1/unordered_map>
-#define map_type std::tr1::unordered_map
-#endif
 
 using namespace std;
 
@@ -48,91 +32,6 @@ void inline limit(int * value, int min, int max)
     else if (*value < min)
     {
         *value = min;
-    }
-}
-
-int inline valid_position(int x, int y, int z)
-{
-    return x >= 0 && x < 512 && y >= 0 && y < 512 && z >= 0 && z < 64;
-}
-
-struct MapData
-{
-    bitset<MAP_X * MAP_Y * MAP_Z> geometry;
-    map_type<int, int> colors;
-
-};
-
-int inline get_solid(int x, int y, int z, MapData * map)
-{
-    if (!valid_position(x, y, z))
-        return 0;
-    return map->geometry[get_pos(x, y, z)];
-}
-
-int inline get_color(int x, int y, int z, MapData * map)
-{
-    if (!valid_position(x, y, z))
-        return 0;
-    map_type<int, int>::const_iterator iter = map->colors.find(
-        get_pos(x, y, z));
-    if (iter == map->colors.end())
-        return 0;
-    return iter->second;
-}
-
-void inline set_point(int x, int y, int z, MapData * map, bool solid, int color)
-{
-    if (!valid_position(x, y, z))
-        return;
-    int i = get_pos(x, y, z);
-    map->geometry[i] = solid;
-    if (!solid)
-        map->colors.erase(i);
-    else
-        map->colors[i] = color;
-}
-
-void inline set_column_solid(int x, int y, int z_start, int z_end,
-                           MapData * map, bool solid)
-{
-    if (!valid_position(x, y, z_start) || !valid_position(x, y, z_end))
-        return;
-    if (z_end<z_start)
-        return;
-    int i = get_pos(x, y, z_start);
-    int i_end = get_pos(x, y, z_end);
-    if (!solid)
-    {
-        while (i<=i_end)
-        {
-            map->geometry[i] = solid;
-            i += MAP_X*MAP_Y;
-        }
-    }
-    else
-    {
-        while (i<=i_end)
-        {
-            map->geometry[i] = solid;
-            i += MAP_X*MAP_Y;
-        }
-    }
-}
-
-void inline set_column_color(int x, int y, int z_start, int z_end,
-                           MapData * map, int color)
-{
-    if (!valid_position(x, y, z_start) || !valid_position(x, y, z_end))
-        return;
-    if (z_end<z_start)
-        return;
-    int i = get_pos(x, y, z_start);
-    int i_end = get_pos(x, y, z_end);
-    while (i<=i_end)
-    {
-        map->colors[i] = color;
-        i += MAP_X*MAP_Y;
     }
 }
 

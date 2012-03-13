@@ -1,4 +1,4 @@
-cdef extern from "load_c.cpp":
+cdef extern from "vxl_c.cpp":
     enum:
         MAP_X
         MAP_Y
@@ -45,4 +45,3 @@ cdef class VXLData:
     cpdef bint set_column_fast(self, int x, int y, int start_z,
                                  int end_z, int end_color_z,
                                  int color)
-    cpdef bint set_columns_fast(self, object columns)

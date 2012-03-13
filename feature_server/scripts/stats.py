@@ -20,13 +20,13 @@ def apply_script(protocol, connection, config):
         login_defer = None
         stats_name = None
         
-        def on_kill(self, killer):
+        def on_kill(self, killer, type):
             if killer not in (self, None):
                 if killer.stats_name is not None:
                     self.protocol.stats.add_kill(killer.stats_name)
                 if self.stats_name is not None:
                     self.protocol.stats.add_death(self.stats_name)
-            return connection.on_kill(self, killer)
+            return connection.on_kill(self, killer, type)
         
         def site_login(self, name, password):
             if self.stats_name is not None:

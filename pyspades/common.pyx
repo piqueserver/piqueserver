@@ -120,105 +120,145 @@ cdef class Vertex3:
     # NOTE: for the most part this behaves as a 2d vector, with z being tacked on
     # so it's useful for orientation math
     
-    def __init__(self, *arg):
-        if arg:
-            self.set(*arg)
+    def __init__(self, *arg, is_ref = False):
+        cdef float x, y, z
+        if not is_ref:
+            if arg:
+                x, y, z = arg
+            else:
+                x = y = z = 0.0
+            self.value = create_vector(x, y, z)
+        self.is_ref = is_ref
+    
+    def __dealloc__(self):
+        if not self.is_ref:
+            destroy_vector(self.value)
+            self.value = NULL
     
     def copy(self):
-        return Vertex3(self.x, self.y, self.z)
+        return create_vertex3(self.value.x, self.value.y, self.value.z)
     
     def get(self):
-        return self.x, self.y, self.z
+        return self.value.x, self.value.y, self.value.z
     
-    def set(self, double x, double y, double z):
-        self.x = x
-        self.y = y
-        self.z = z
+    def set(self, float x, float y, float z):
+        self.value.x = x
+        self.value.y = y
+        self.value.z = z
     
     def set_vector(self, Vertex3 vector):
-        self.set(vector.x, vector.y, vector.z)
+        self.value.x = vector.value.x
+        self.value.y = vector.value.y
+        self.value.z = vector.value.z
     
     def zero(self):
-        self.x = self.y = self.z = 0.0
+        self.value.x = self.value.y = self.value.z = 0.0
     
     def __add__(self, Vertex3 A):
-        return Vertex3(self.x + A.x, self.y + A.y, self.z + A.z)
+        cdef Vector * a = (<Vertex3>self).value
+        cdef Vector * b = A.value
+        return create_vertex3(a.x + b.x, a.y + b.y, a.z + b.z)
     
     def __sub__(self, Vertex3 A):
-        return Vertex3(self.x - A.x, self.y - A.y, self.z - A.z)
+        cdef Vector * a = (<Vertex3>self).value
+        cdef Vector * b = A.value
+        return create_vertex3(a.x - b.x, a.y - b.y, a.z - b.z)
     
-    def __mul__(self, double k):
-        return Vertex3(self.x * k, self.y * k, self.z * k)
+    def __mul__(self, float k):
+        cdef Vector * a = (<Vertex3>self).value
+        return create_vertex3(a.x * k, a.y * k, a.z * k)
     
-    def __div__(self, double k):
-        return Vertex3(self.x / k, self.y / k, self.z / k)
+    def __div__(self, float k):
+        cdef Vector * a = (<Vertex3>self).value
+        return create_vertex3(a.x / k, a.y / k, a.z / k)
     
     def __iadd__(self, Vertex3 A):
-        self.x += A.x
-        self.y += A.y
-        self.z += A.z
+        cdef Vector * a = self.value
+        cdef Vector * b = A.value
+        a.x += b.x
+        a.y += b.y
+        a.z += b.z
         return self
     
     def __isub__(self, Vertex3 A):
-        self.x -= A.x
-        self.y -= A.y
-        self.z -= A.z
+        cdef Vector * a = self.value
+        cdef Vector * b = A.value
+        a.x -= b.x
+        a.y -= b.y
+        a.z -= b.z
         return self
     
     def __imul__(self, double k):
-        self.x *= k
-        self.y *= k
-        self.z *= k
+        cdef Vector * a = self.value
+        a.x *= k
+        a.y *= k
+        a.z *= k
         return self
     
     def __idiv__(self, double k):
-        self.x /= k
-        self.y /= k
-        self.z /= k
+        cdef Vector * a = self.value
+        a.x /= k
+        a.y /= k
+        a.z /= k
         return self
     
     def translate(self, double x, double y, double z):
-        self.x += x
-        self.y += y
-        self.z += z
+        cdef Vector * a = self.value
+        a.x += x
+        a.y += y
+        a.z += z
         return self
     
     def cross(self, Vertex3 A):
-        return Vertex3(
-            self.y * A.z - self.z * A.y,
-            self.z * A.x - self.x * A.z,
-            self.x * A.y - self.y * A.x)
+        cdef Vector * a = self.value
+        cdef Vector * b = A.value
+        return create_vertex3(
+            a.y * b.z - a.z * b.y,
+            a.z * b.x - a.x * b.z,
+            a.x * b.y - a.y * b.x)
     
     def dot(self, Vertex3 A):
-        return self.x * A.x + self.y * A.y
+        cdef Vector * a = self.value
+        cdef Vector * b = A.value
+        return a.x * b.x + a.y * b.y
     
     def perp_dot(self, Vertex3 A):
-        return self.x * A.y - self.y * A.x
+        cdef Vector * a = self.value
+        cdef Vector * b = A.value
+        return a.x * b.y - a.y * b.x
     
     def rotate(self, Vertex3 A):
-        self.x, self.y = self.x * A.x - self.y * A.y, self.x * A.y + self.y * A.x
+        cdef Vector * a = self.value
+        cdef Vector * b = A.value
+        a.x, a.y = a.x * b.x - a.y * b.y, a.x * b.y + a.y * b.x
         return self
     
     def unrotate(self, Vertex3 A):
-        self.x, self.y = self.x * A.x + self.y * A.y, self.y * A.x - self.x * A.y
+        cdef Vector * a = self.value
+        cdef Vector * b = A.value
+        a.x, a.y = a.x * b.x + a.y * b.y, a.y * b.x - a.x * b.y
         return self
     
     def length(self):
-        return sqrt(self.x * self.x + self.y * self.y + self.z * self.z)
+        cdef Vector * a = self.value
+        return sqrt(a.x * a.x + a.y * a.y + a.z * a.z)
     
     def length_sqr(self):
-        return self.x * self.x + self.y * self.y + self.z * self.z
+        cdef Vector * a = self.value
+        return a.x * a.x + a.y * a.y + a.z * a.z
     
     def is_zero(self):
         return self.length_sqr() < EPSILON
     
     def normal(self):
-        k = self.length()
-        return k and Vertex3(self.x / k, self.y / k, self.z / k) or Vertex3()
+        cdef float k = self.length()
+        cdef Vector * a = self.value
+        return k and create_vertex3(a.x / k, a.y / k, a.z / k) or Vertex3()
     
     def normalize(self):
-        k = self.length()
-        self.x, self.y, self.z = (k and (self.x / k, self.y / k, self.z / k) or
+        cdef float k = self.length()
+        cdef Vector * a = self.value
+        a.x, a.y, a.z = (k and (a.x / k, a.y / k, a.z / k) or
             (0.0, 0.0, 0.0))
         return k
     
@@ -247,13 +287,35 @@ cdef class Vertex3:
         return q
     
     def __neg__(self):
-        return Vertex3(-self.x, -self.y, -self.z)
+        cdef Vector * a = self.value
+        return create_vertex3(-a.x, -a.y, -a.z)
     
     def __pos__(self):
-        return Vertex3(+self.x, +self.y, +self.z)
+        cdef Vector * a = self.value
+        return create_vertex3(+a.x, +a.y, +a.z)
     
     def __str__(self):
-        return "(%s %s %s)" % (self.x, self.y, self.z)
+        cdef Vector * a = self.value
+        return "(%s %s %s)" % (a.x, a.y, a.z)
+    
+    # properties for python wrapper
+    property x:
+        def __get__(self):
+            return self.value.x
+        def __set__(self, value):
+            self.value.x = value
+
+    property y:
+        def __get__(self):
+            return self.value.y
+        def __set__(self, value):
+            self.value.y = value
+
+    property z:
+        def __get__(self):
+            return self.value.z
+        def __set__(self, value):
+            self.value.z = value
 
 cdef class Quaternion:
     def __init__(self, *arg):

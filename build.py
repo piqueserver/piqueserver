@@ -7,7 +7,7 @@ from Cython.Build import cythonize
 ext_modules = []
 
 names = [
-    'pyspades.load',
+    'pyspades.vxl',
     'pyspades.compressedvxl',
     'pyspades.bytes',
     'pyspades.packet',

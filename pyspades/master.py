@@ -16,25 +16,24 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from pyspades.loaders import Loader
-from pyspades.protocol import BaseConnection, BaseProtocol
+from pyspades.protocol import BaseConnection
 from pyspades.tools import make_server_number, get_server_ip
 from pyspades.loaders import *
 from pyspades.common import *
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from pyspades.bytes import ByteReader
+from pyspades.constants import MASTER_VERSION
 
 import random
 
 MAX_SERVER_NAME_SIZE = 31
 
-MASTER_VERSION = 29
-
 HOST = 'ace-spades.com'
-PORT = 32886
+PORT = 32885
 
 class AddServer(Loader):
-    __slots__ = ['count', 'max_players', 'name']
+    __slots__ = ['count', 'max_players', 'name', 'port', 'game_mode', 'map']
 
     id = 4
 
@@ -43,12 +42,18 @@ class AddServer(Loader):
             self.count = reader.readByte(True)
         else:
             self.max_players = reader.readByte(True)
+            self.port = reader.readShort(True, False)
             self.name = reader.readString()
+            self.game_mode = reader.readString()
+            self.map = reader.readString()
     
     def write(self, reader):
         if self.count is None:
             reader.writeByte(self.max_players)
+            reader.writeShort(self.port, True, False)
             reader.writeString(self.name)
+            reader.writeString(self.game_mode)
+            reader.writeString(self.map)
         else:
             reader.writeByte(self.count, True)
 
@@ -60,10 +65,7 @@ class MasterConnection(BaseConnection):
     def on_connect(self):
         self.connected = True
             
-        add_server.count = None
-        add_server.name = self.name
-        add_server.max_players = self.max
-        self.send_contained(add_server)
+        self.send_server()
         
         if self.defer is not None:
             self.defer.callback(self)
@@ -71,6 +73,16 @@ class MasterConnection(BaseConnection):
     
     def set_count(self, value):
         add_server.count = value
+        self.send_contained(add_server)
+    
+    def send_server(self):
+        protocol = self.server_protocol
+        add_server.count = None
+        add_server.name = protocol.name
+        add_server.game_mode = protocol.get_mode_name()
+        add_server.map = protocol.map_info.name
+        add_server.port = protocol.host.address.port
+        add_server.max_players = protocol.max_players
         self.send_contained(add_server)
     
     def on_disconnect(self):
@@ -86,10 +98,9 @@ IP_GETTER = 'http://automation.whatismyip.com/n09230945.asp'
 def get_external_ip(interface = ''):
     return getPage(IP_GETTER, bindAddress = (interface, 0))
 
-def get_master_connection(name, max, protocol):
+def get_master_connection(protocol):
     defer = Deferred()
     connection = protocol.connect(MasterConnection, HOST, PORT, MASTER_VERSION)
-    connection.name = name
-    connection.max = max
+    connection.server_protocol = protocol
     connection.defer = defer
     return defer
