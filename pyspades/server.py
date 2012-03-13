@@ -871,23 +871,23 @@ class ServerConnection(BaseConnection):
             ctf_data.team2_base_y = green_base.y
             ctf_data.team2_base_z = green_base.z
             
-            if blue_flag.player is None:
-                ctf_data.team1_flag_x = blue_flag.x
-                ctf_data.team1_flag_y = blue_flag.y
-                ctf_data.team1_flag_z = blue_flag.z
-                ctf_data.team1_has_intel = False
-            else:
-                ctf_data.team1_carrier = blue_flag.player.player_id
-                ctf_data.team1_has_intel = True
-            
             if green_flag.player is None:
+                ctf_data.team1_has_intel = 0
                 ctf_data.team2_flag_x = green_flag.x
                 ctf_data.team2_flag_y = green_flag.y
                 ctf_data.team2_flag_z = green_flag.z
-                ctf_data.team2_has_intel = False
             else:
+                ctf_data.team1_has_intel = 1
                 ctf_data.team2_carrier = green_flag.player.player_id
-                ctf_data.team2_has_intel = True
+            
+            if blue_flag.player is None:
+                ctf_data.team2_has_intel = 0
+                ctf_data.team1_flag_x = blue_flag.x
+                ctf_data.team1_flag_y = blue_flag.y
+                ctf_data.team1_flag_z = blue_flag.z
+            else:
+                ctf_data.team2_has_intel = 1
+                ctf_data.team1_carrier = blue_flag.player.player_id
             
             state_data.state = ctf_data
             

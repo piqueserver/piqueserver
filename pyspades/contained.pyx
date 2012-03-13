@@ -135,7 +135,7 @@ cdef class InputData(Loader):
     
     cpdef read(self, ByteReader reader):
         self.player_id = reader.readByte(True)
-        cdef int firstByte = reader.readInt(True, False)
+        cdef int firstByte = reader.readByte(True)
         self.up = (firstByte >> 0) & 1
         self.down = (firstByte >> 1) & 1
         self.left = (firstByte >> 2) & 1
@@ -152,7 +152,7 @@ cdef class InputData(Loader):
         byte = (self.up | (self.down << 1) | (self.left << 2) | 
             (self.right << 3) | (self.jump << 4) | (self.crouch << 5) |
             (self.sneak << 6) | (self.sprint << 7))
-        reader.writeInt(byte, True, False)
+        reader.writeByte(byte, True)
 
 cdef class WeaponInput(Loader):
     id = id_iter.next()
@@ -405,7 +405,7 @@ cdef class BlockLine(Loader):
         reader.writeInt(self.x2, False, False)
         reader.writeInt(self.y2, False, False)
         reader.writeInt(self.z2, False, False)
-
+        
 cdef class CTFState(Loader):
     id = 0
     
@@ -419,23 +419,24 @@ cdef class CTFState(Loader):
         float team2_base_x, team2_base_y, team2_base_z
     
     cpdef read(self, ByteReader reader):
-        self.team1_score = reader.readInt(True, False)
-        self.team2_score = reader.readInt(True, False)
-        self.cap_limit = reader.readInt(True, False)
-        # really an int - sizeof(intel_flags) says otherwise, but oh well
-        cdef int intel_flags = reader.readInt(True, False)
+        self.team1_score = reader.readByte(True)
+        self.team2_score = reader.readByte(True)
+        self.cap_limit = reader.readByte(True)
+
+        cdef int intel_flags = reader.readByte(True)
         self.team1_has_intel = intel_flags & 1
         self.team2_has_intel = (intel_flags >> 1) & 1
-        if self.team1_has_intel:
+        
+        if self.team2_has_intel:
             self.team1_carrier = reader.readByte(True)
-            reader.skipBytes(12 - 1)
+            reader.skipBytes(11)
         else:
             read_position(reader, &self.team1_flag_x, &self.team1_flag_y,
                 &self.team1_flag_z)
         
-        if self.team2_has_intel:
+        if self.team1_has_intel:
             self.team2_carrier = reader.readByte(True)
-            reader.skipBytes(12 - 1)
+            reader.skipBytes(11)
         else:
             read_position(reader, &self.team2_flag_x, &self.team2_flag_y,
                 &self.team2_flag_z)
@@ -445,25 +446,24 @@ cdef class CTFState(Loader):
 
         read_position(reader, &self.team2_base_x, &self.team2_base_y,
             &self.team2_base_z)
-        
-        reader.skipBytes(148) # padding for TCState - sigh...
     
     cpdef write(self, ByteWriter reader):
-        reader.writeInt(self.team1_score, True, False)
-        reader.writeInt(self.team2_score, True, False)
-        reader.writeInt(self.cap_limit, True, False)
+        reader.writeByte(self.team1_score, True)
+        reader.writeByte(self.team2_score, True)
+        reader.writeByte(self.cap_limit, True)
         cdef int intel_flags = (self.team1_has_intel | (
             self.team2_has_intel << 1))
-        # really an int - sizeof(intel_flags) says otherwise, but oh well
-        reader.writeInt(intel_flags, True, False)
-        if self.team1_has_intel:
+            
+        reader.writeByte(intel_flags, True)
+        
+        if self.team2_has_intel:
             reader.writeByte(self.team1_carrier, True)
             reader.pad(11)
         else:
             write_position(reader, self.team1_flag_x, self.team1_flag_y,
                 self.team1_flag_z)
         
-        if self.team2_has_intel:
+        if self.team1_has_intel:
             reader.writeByte(self.team2_carrier, True)
             reader.pad(11)
         else:
@@ -476,7 +476,9 @@ cdef class CTFState(Loader):
         write_position(reader, self.team2_base_x, self.team2_base_y,
             self.team2_base_z)
             
-        reader.pad(148) # padding for TCState - sigh...
+DEF MAX_TERRITORIES = 16
+DEF TERRITORY_SIZE = 4*3+1
+DEF TERRITORY_DATA = MAX_TERRITORIES * TERRITORY_SIZE
 
 cdef class Territory(Loader):
     cdef public:
@@ -503,11 +505,7 @@ cdef class ObjectTerritory(Loader):
             state = NEUTRAL_TEAM
         else:
             state = team.id
-        reader.writeInt(state, True, False)
-
-DEF MAX_TERRITORIES = 16
-DEF TERRITORY_SIZE = 4 * 4
-DEF TERRITORY_DATA = MAX_TERRITORIES * TERRITORY_SIZE
+        reader.writeByte(state, True)
 
 cdef class TCState(Loader):
     id = 1
@@ -517,9 +515,7 @@ cdef class TCState(Loader):
     
     cpdef read(self, ByteReader reader):
         self.territories = []
-        reader.skipBytes(TERRITORY_DATA)
-        cdef unsigned int count = reader.readInt(True, False)
-        reader.rewind(TERRITORY_DATA + 4)
+        cdef unsigned int count = reader.readByte(True)
         for _ in xrange(count):
             self.territories.append(Territory(reader))
     
@@ -532,10 +528,10 @@ cdef class TCState(Loader):
     
     cpdef write(self, ByteWriter reader):
         cdef Loader territory
+        reader.writeByte(len(self.territories), True)
         for territory in self.territories:
             territory.write(reader)
         reader.pad((MAX_TERRITORIES - len(self.territories)) * TERRITORY_SIZE)
-        reader.writeInt(len(self.territories), True, False)
     
 modes = {
     CTF_MODE : CTFState,
@@ -570,10 +566,10 @@ cdef class StateData(Loader):
         self.fog_color = read_team_color(reader)
         self.team1_color = read_team_color(reader)
         self.team2_color = read_team_color(reader)
-        cdef int mode = reader.readByte(True)
-        self.state = modes[mode](reader)
         self.team1_name = decode(reader.readString(10))
         self.team2_name = decode(reader.readString(10))
+        cdef int mode = reader.readByte(True)
+        self.state = modes[mode](reader)
         
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
@@ -581,10 +577,10 @@ cdef class StateData(Loader):
         write_team_color(reader, self.fog_color)
         write_team_color(reader, self.team1_color)
         write_team_color(reader, self.team2_color)
-        reader.writeByte(self.state.id, True)
-        self.state.write(reader)
         reader.writeString(encode(self.team1_name), 10)
         reader.writeString(encode(self.team2_name), 10)
+        reader.writeByte(self.state.id, True)
+        self.state.write(reader)
 
 cdef class KillAction(Loader):
     id = id_iter.next()
