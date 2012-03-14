@@ -194,7 +194,7 @@ class VoteMap(Vote):
             else:
                 counts[v] = {'name':v, 'count':1}
         cvlist = list(counts.values())
-        if len(cvlist<0):
+        if len(cvlist)<0:
             return {'name':self.picks[0], 'count':0}
         mv = cvlist[0]
         for n in counts.keys():
@@ -261,7 +261,7 @@ class VoteMap(Vote):
         else:
             self.protocol.send_chat(
             "Mapvote ended. Next map will be: %s." % result, irc = True)
-            self.protocol.planned_map = result
+            self.protocol.planned_map = check_rotation([result])[0]
         self.set_cooldown()
     def set_cooldown(self):
         if self.instigator is not None and not self.instigator.admin:
