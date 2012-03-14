@@ -27,10 +27,15 @@ from pyspades.constants import MASTER_VERSION
 
 import random
 
+STAGING = 0
+PORT = 32886
+
 MAX_SERVER_NAME_SIZE = 31
 
 HOST = 'ace-spades.com'
-PORT = 32885
+
+if STAGING:
+    PORT = 32886
 
 class AddServer(Loader):
     __slots__ = ['count', 'max_players', 'name', 'port', 'game_mode', 'map']
