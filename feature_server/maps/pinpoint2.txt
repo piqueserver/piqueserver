@@ -1,4 +1,4 @@
 name = 'Pinpoint2'
 version = '2.0'
 author = 'TheGrandmaster'
-description = 'A remake of the famous 'pinpoint' originally by izzy'
+description = "A remake of the famous 'pinpoint' originally by izzy"
