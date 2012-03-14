@@ -568,7 +568,7 @@ def fly(connection, player = None):
     protocol.irc_say('* %s is %s' % (player.name, message))
 
 from pyspades.contained import KillAction
-from pyspades.server import create_player, set_tool, set_color, input_data
+from pyspades.server import create_player, set_tool, set_color, input_data, weapon_input
 from pyspades.common import make_color
 
 @alias('invis')
@@ -611,18 +611,21 @@ def invisible(connection, player = None):
         input_data.down = world_object.down
         input_data.left = world_object.left
         input_data.right = world_object.right
-        input_data.fire = world_object.fire
         input_data.jump = world_object.jump
         input_data.crouch = world_object.crouch
-        input_data.aim = world_object.aim
+        input_data.sneak = world_object.sneak
+        input_data.sprint = world_object.sprint
         set_tool.player_id = player.player_id
         set_tool.value = player.tool
         set_color.player_id = player.player_id
         set_color.value = make_color(*player.color)
+        weapon_input.primary = world_object.primary_fire
+        weapon_input.secondary = world_object.secondary_fire
         protocol.send_contained(create_player, sender = player, save = True)
         protocol.send_contained(set_tool, sender = player)
         protocol.send_contained(set_color, sender = player, save = True)
         protocol.send_contained(input_data, sender = player)
+        protocol.send_contained(weapon_input, sender = player)
     if connection is not player and connection in protocol.players:
         if player.invisible:
             return '%s is now invisible' % player.name

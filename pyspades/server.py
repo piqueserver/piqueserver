@@ -75,6 +75,7 @@ territory_capture = loaders.TerritoryCapture()
 progress_bar = loaders.ProgressBar()
 world_update = loaders.WorldUpdate()
 block_line = loaders.BlockLine()
+weapon_input = loaders.WeaponInput()
 
 def check_nan(*values):
     for value in values:
