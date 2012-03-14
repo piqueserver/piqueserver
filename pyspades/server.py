@@ -358,6 +358,15 @@ class ServerConnection(BaseConnection):
                             # (contained.primary_fire, contained.secondary_fire,
                                 # contained.jump, contained.crouch) = returned
                             # self.send_contained(contained)
+                    returned = self.on_animation_update(contained.jump, contained.crouch,
+                        contained.sneak, contained.sprint)
+                    if returned is not None:
+                        jump, crouch, sneak, sprint = returned
+                        if (jump != contained.jump or crouch != contained.crouch or
+                            sneak != contained.sneak or sprint != contained.sprint):
+                            (contained.jump, contained.crouch, contained.sneak,
+                                contained.sprint) = returned
+                            self.send_contained(contained)
                     world_object.set_animation(contained.jump, contained.crouch,
                         contained.sneak, contained.sprint)
                     if self.filter_visibility_data:
@@ -1165,7 +1174,7 @@ class ServerConnection(BaseConnection):
     def on_walk_update(self, up, down, left, right):
         pass
     
-    def on_animation_update(self, primary_fire, secondary_fire, jump, crouch):
+    def on_animation_update(self, jump, crouch, sneak, sprint):
         pass
 
 class Entity(Vertex3):

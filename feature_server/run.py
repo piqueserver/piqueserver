@@ -299,10 +299,10 @@ class FeatureConnection(ServerConnection):
         self.streak = 0
         self.best_streak = 0
     
-    def on_animation_update(self, primary_fire, secondary_fire, jump, crouch):
+    def on_animation_update(self, jump, crouch, sneak, sprint):
         if self.fly and crouch and self.world_object.velocity.z != 0.0:
             jump = True
-        return primary_fire, secondary_fire, jump, crouch
+        return jump, crouch, sneak, sprint
     
     def grenade_exploded(self, grenade):
         self.current_grenade = grenade
