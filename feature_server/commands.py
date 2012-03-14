@@ -323,6 +323,9 @@ def switch(connection, player = None):
         player = connection
     else:
         raise ValueError()
+    if player.team.spectator:
+        player.send_chat("The switch command can't be used on a spectating player.")
+        return
     if player.invisible:
         player.on_team_leave()
         player.team = player.team.other
