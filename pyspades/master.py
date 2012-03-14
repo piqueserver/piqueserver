@@ -35,7 +35,7 @@ MAX_SERVER_NAME_SIZE = 31
 HOST = 'ace-spades.com'
 
 if STAGING:
-    PORT = 32886
+    PORT = 32885
 
 class AddServer(Loader):
     __slots__ = ['count', 'max_players', 'name', 'port', 'game_mode', 'map']
