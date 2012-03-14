@@ -159,11 +159,10 @@ add(hackinfo)
 
 def apply_script(protocol, connection, config):
     class Aimbot2Protocol(protocol):
-        def start_votekick(self, connection, player, reason = None):
-            if aimbot_match(reason):
-                player.warn_admin('Hack related votekick.')
-                to_admin(self, hackinfo_player(player))
-            return protocol.start_votekick(self, connection, player, reason)
+        def start_votekick(self, payload):
+            if aimbot_match(payload.reason):
+                payload.target.warn_admin('Hack related votekick.')
+            return protocol.start_votekick(self, payload)
 
     class Aimbot2Connection(connection):
         def __init__(self, *arg, **kw):
@@ -188,9 +187,8 @@ def apply_script(protocol, connection, config):
                     player.send_chat(prefix + message)
             irc_relay = self.protocol.irc_relay
             if irc_relay:
-                if prefix != '':
-                    if irc_relay.factory.bot and irc_relay.factory.bot.colors:
-                        prefix = '\x0304' + prefix + '\x0f'
+                if irc_relay.factory.bot and irc_relay.factory.bot.colors:
+                    prefix = '\x0304' + prefix + '\x0f'
                 irc_relay.send(prefix + message)
         
         def on_spawn(self, pos):
@@ -315,7 +313,7 @@ def apply_script(protocol, connection, config):
                     if type == HEADSHOT_KILL:
                         self.multiple_bullets_count += 1
                     if self.weapon == RIFLE_WEAPON:
-                        if (not (value in RIFLE_DAMAGE)) and DETECT_DAMAGE_HACK:
+                        if (not (hit_amount in RIFLE_DAMAGE)) and DETECT_DAMAGE_HACK:
                             return False
                         else:
                             self.rifle_hits += 1
@@ -323,7 +321,7 @@ def apply_script(protocol, connection, config):
                                 self.multiple_bullets_eject()
                                 return False
                     elif self.weapon == SMG_WEAPON:
-                        if (not (value in SMG_DAMAGE)) and DETECT_DAMAGE_HACK:
+                        if (not (hit_amount in SMG_DAMAGE)) and DETECT_DAMAGE_HACK:
                             return False
                         else:
                             self.smg_hits += 1
@@ -331,7 +329,7 @@ def apply_script(protocol, connection, config):
                                 self.multiple_bullets_eject()
                                 return False
                     elif self.weapon == SHOTGUN_WEAPON:
-                        if (not (value in SHOTGUN_DAMAGE)) and DETECT_DAMAGE_HACK:
+                        if (not (hit_amount in SHOTGUN_DAMAGE)) and DETECT_DAMAGE_HACK:
                             return False
                         elif shotgun_use:
                             self.shotgun_hits += 1
