@@ -194,7 +194,7 @@ class VoteMap(Vote):
             else:
                 counts[v] = {'name':v, 'count':1}
         cvlist = list(counts.values())
-        if len(cvlist)<0:
+        if len(cvlist)<=0:
             return {'name':self.picks[0], 'count':0}
         mv = cvlist[0]
         for n in counts.keys():
