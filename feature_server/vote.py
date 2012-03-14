@@ -91,7 +91,7 @@ class VoteKick(Vote):
         target = self.target
         reason = self.reason
         protocol = self.protocol
-        self.votes = {self.instigator}
+        self.votes = {self.instigator:True}
         protocol.irc_say(
             '* %s initiated a votekick against player %s.%s' % (instigator.name,
             target.name, ' Reason: %s' % reason if reason else ''))
