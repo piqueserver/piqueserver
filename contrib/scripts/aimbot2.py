@@ -315,7 +315,7 @@ def apply_script(protocol, connection, config):
                     if type == HEADSHOT_KILL:
                         self.multiple_bullets_count += 1
                     if self.weapon == RIFLE_WEAPON:
-                        if (not (value in RIFLE_DAMAGE)) and DETECT_DAMAGE_HACK:
+                        if (not (hit_amount in RIFLE_DAMAGE)) and DETECT_DAMAGE_HACK:
                             return False
                         else:
                             self.rifle_hits += 1
@@ -323,7 +323,7 @@ def apply_script(protocol, connection, config):
                                 self.multiple_bullets_eject()
                                 return False
                     elif self.weapon == SMG_WEAPON:
-                        if (not (value in SMG_DAMAGE)) and DETECT_DAMAGE_HACK:
+                        if (not (hit_amount in SMG_DAMAGE)) and DETECT_DAMAGE_HACK:
                             return False
                         else:
                             self.smg_hits += 1
@@ -331,7 +331,7 @@ def apply_script(protocol, connection, config):
                                 self.multiple_bullets_eject()
                                 return False
                     elif self.weapon == SHOTGUN_WEAPON:
-                        if (not (value in SHOTGUN_DAMAGE)) and DETECT_DAMAGE_HACK:
+                        if (not (hit_amount in SHOTGUN_DAMAGE)) and DETECT_DAMAGE_HACK:
                             return False
                         elif shotgun_use:
                             self.shotgun_hits += 1
