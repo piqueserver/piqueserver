@@ -242,7 +242,7 @@ class VoteMap(Vote):
             self.protocol.send_chat(
             "Mapvote ended. Current map will be extended %s." % span,
                 irc = True)
-            # schedule next vote for the extension time
+            self.protocol.set_time_limit(self.extension_time)
         else:
             self.protocol.send_chat(
             "Mapvote ended. Next map will be: %s." % result, irc = True)
@@ -255,10 +255,8 @@ class VoteMap(Vote):
 
 # Current status:
 
-# votemap starts at map start now and swaps its update when the actual vote
-# begins
-
-# change /map, /rotation, /advance behavior to use a map ptr
-# change the commands
+# change /map, /rotation, /advance behavior to use a map ptr *
+# scheduling of mapvote *
+# call for mapvote *
 
 # 2nd pass: add suggest

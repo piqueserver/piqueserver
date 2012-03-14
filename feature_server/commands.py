@@ -23,6 +23,7 @@ from pyspades.server import parse_command
 from twisted.internet import reactor
 
 from vote import VoteKick, VoteMap
+from map import check_rotation
 
 class InvalidPlayer(Exception):
     pass
@@ -660,7 +661,29 @@ import itertools
 
 @name('map')
 @admin
-def change_map(connection, *pre_maps):
+def change_planned_map(connection, *pre_maps):
+    name = connection.name
+    protocol = connection.protocol
+
+    # parse seed numbering
+    maps = []
+    for n in pre_maps:
+        if n[0]=="#" and len(maps)>0:
+            maps[-1] += " "+n
+        else:
+            maps.append(n)
+
+    maps = check_rotation([maps[0]])
+    if maps:
+        protocol.planned_map = maps[0]
+        protocol.irc_say("* %s changed next map to %s" % (name, maps[0]))
+        connection.send_chat("Type /advance to force map advance.")
+    else:
+        return 'Invalid map name'
+
+@name('rotation')
+@admin
+def change_rotation(connection, *pre_maps):
     name = connection.name
     protocol = connection.protocol
 
@@ -674,15 +697,16 @@ def change_map(connection, *pre_maps):
     
     map_list = ', '.join(maps)
     
-    if not protocol.set_map_rotation(maps, True):
+    if not protocol.set_map_rotation(maps, False):
         return 'Invalid map in map rotation (%s)' % map_list
     protocol.irc_say("* %s changed map rotation to %s" % (name, map_list))
 
 @name('revertrotation')
 @admin
 def revert_rotation(connection):
-    maps = connection.protocol.config['maps']
-    return change_map(connection, *maps)
+    protocol = connection.protocol
+    protocol.set_map_rotation(protocol.config['maps'], False)                                         False)
+    protocol.irc_say("* %s reverted map rotation to %s" % (name, maps))
     
 def mapname(connection):
     return 'Current map: ' + connection.protocol.map_info.name
@@ -832,7 +856,8 @@ command_list = [
     streak,
     reset_game,
     toggle_master,
-    change_map,
+    change_planned_map,
+    change_rotation,
     revert_rotation,
     advance,
     set_time_limit,

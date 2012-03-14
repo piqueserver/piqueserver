@@ -84,6 +84,7 @@ import pyspades.debug
 from pyspades.server import (ServerProtocol, ServerConnection, position_data,
     grenade_packet, Team)
 from map import Map, MapNotFound, check_rotation
+from vote import VoteMap
 from console import create_console
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
@@ -463,7 +464,12 @@ class FeatureProtocol(ServerProtocol):
     votekick_interval = 3 * 60 # 3 minutes
     votekick_percentage = 25.0
     votekick = None
+    votemap_time = 120
+    votemap_interval = 3 * 60
+    votemap_percentage = 60.0
     votemap = None
+
+    planned_map = None
     
     map_info = None
     spawns = None
@@ -476,6 +482,8 @@ class FeatureProtocol(ServerProtocol):
     team_class = FeatureTeam
     
     game_mode = None # default to None so we can check
+
+    call_schedule = None
     
     server_version = SERVER_VERSION
     
@@ -534,6 +542,12 @@ class FeatureProtocol(ServerProtocol):
         self.votekick_ban_duration = config.get('votekick_ban_duration', 15)
         self.votekick_percentage = config.get('votekick_percentage', 25)
         self.votekick_public_votes = config.get('votekick_public_votes', True)
+        self.call_schedule = []
+        self.planned_map = None
+        self.votemap_autoschedule = config.get('votemap_autoschedule', 180)
+        if self.votemap_autoschedule > 0:
+            self.call_schedule.append({'time':self.votemap_autoschedule,
+                                       'call':self.start_votemap})
         self.speedhack_detect = config.get('speedhack_detect', True)
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
@@ -628,6 +642,13 @@ class FeatureProtocol(ServerProtocol):
                 self.times_call.append(reactor.callLater(mod_time,
                                                       self._time_warning,
                                                       n))
+        for call in self.call_schedule:
+            n = float(call['time'])
+            mod_time = (time_limit * 60.0 - n)
+            if mod_time > 0:
+                self.times_call.append(reactor.callLater(mod_time,
+                                                     call['call'],
+                                                     n))
         
         self.advance_call = reactor.callLater(time_limit * 60.0, self._time_up)
     
@@ -648,7 +669,10 @@ class FeatureProtocol(ServerProtocol):
     
     def advance_rotation(self, message = None):
         self.set_time_limit(False)
-        map = self.map_rotator.next()
+        if self.planned_map is None:
+            self.planned_map = self.map_rotator.next()
+        map = self.planned_map
+        self.planned_map = None
         self.on_advance(map)
         if message is None:
             self.set_map_name(map)
@@ -685,6 +709,7 @@ class FeatureProtocol(ServerProtocol):
             maps = check_rotation(maps)
         except MapNotFound:
             return False
+        self.maps = maps
         self.map_rotator = self.map_rotator_type(maps)
         if now:
             self.advance_rotation()
@@ -837,13 +862,21 @@ class FeatureProtocol(ServerProtocol):
     # voting
 
     def start_votekick(self, payload):
-        print("OK")
         if self.votekick is not None:
             return self.votekick.update()
         self.votekick = payload
         payload.pre()
         payload.start()
 
+    def start_votemap(self, payload = None):
+        if payload is None:
+            payload = VoteMap(None, self.protocol.maps)
+        if self.votekick is not None:
+            return self.votekick.update()
+        self.votekick = payload
+        payload.pre()
+        payload.start()
+        
     def end_votes(self):
         if self.votekick is not None:
             self.votekick.post()
