@@ -66,13 +66,15 @@ def grief_check(connection, player, time = None):
         message += s + ' %s teammates in the last %s' % (teamkills, minutes_s)
     if switch_sentence or teamkills > 0:
         message += '.'
-    #if connection.protocol.votekick_player is player:
-    #    dist = distance_3d_vector(player.world_object.position,
-    #        connection.protocol.voting_player.world_object.position)
-    #    name = ('\x0303' if connection.protocol.voting_player.team.id
-    #        else '\x0302') + connection.protocol.voting_player.name + '\x0f'
-    #    message += (' %s is %d tiles away from %s, who started the votekick.' %
-    #        (player_name, int(dist), name))
+    if connection.protocol.votekick is not None and \
+        connection.protocol.votekick.target is player:
+        vk_instigator = connection.protocol.votekick.instigator
+        dist = distance_3d_vector(player.world_object.position,
+            vk_instigator.world_object.position)
+        name = ('\x0303' if vk_instigator.team.id
+            else '\x0302') + vk_instigator.name + '\x0f'
+        message += (' %s is %d tiles away from %s, who started the votekick.' %
+            (player_name, int(dist), name))
     return message
 
 add(grief_check)
