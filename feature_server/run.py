@@ -508,7 +508,7 @@ class FeatureProtocol(ServerProtocol):
         if len(self.name) > MAX_SERVER_NAME_SIZE:
             print '(server name too long; it will be truncated to "%s")' % (
                 self.name[:MAX_SERVER_NAME_SIZE])
-        self.respawn_time = config.get('respawn_time', 5)
+        self.respawn_time = config.get('respawn_time', 8)
         self.respawn_waves = config.get('respawn_waves', False)
         game_mode = config.get('game_mode', 'ctf')
         if game_mode == 'ctf':
@@ -550,9 +550,10 @@ class FeatureProtocol(ServerProtocol):
                                        'call':self.start_votemap})
         self.votemap_public_votes = config.get('votemap_public_votes', True)
         self.votemap_extension_time = config.get(
-            'votemap_extension_time', 30)
+            'votemap_extension_time', 15)
         self.votemap_player_driven = config.get(
             'votemap_player_driven', False)
+        self.votemap_percentage = config.get('votemap_percentage', 80)
         self.speedhack_detect = config.get('speedhack_detect', True)
         if config.get('user_blocks_only', False):
             self.user_blocks = set()

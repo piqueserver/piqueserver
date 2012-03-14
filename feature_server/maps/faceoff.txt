@@ -1,0 +1,4 @@
+name = 'Faceoff'
+version = '1.0'
+author = 'izzy'
+description = 'Each team has a raised platform, separated by a gap too big to jump across but small enough to see the other side.'

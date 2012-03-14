@@ -1,0 +1,4 @@
+name = 'Pinpoint'
+version = '1.0'
+author = 'izzy'
+description = 'Small spawns that converge into a bottleneck at the center of the map.'

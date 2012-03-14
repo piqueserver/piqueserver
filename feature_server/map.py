@@ -30,7 +30,8 @@ class MapNotFound(IOError):
 def check_rotation(maps, load_dir = DEFAULT_LOAD_DIR):
     nmaps = []
     for map in maps:
-        map = RotationInfo(map)
+        if type(map) is not RotationInfo:
+            map = RotationInfo(map)
         nmaps.append(map)
         if (not os.path.isfile(map.map(load_dir))
         and not os.path.isfile(map.meta(load_dir))):

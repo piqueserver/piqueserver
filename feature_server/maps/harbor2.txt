@@ -1,0 +1,4 @@
+name = 'Harbor 2'
+version = '1.0'
+author = 'Yourself, Supercool Builders, Triplefox'
+description = 'Harbor 2 is an urban map complete with sewers, subways, and many buildings.'

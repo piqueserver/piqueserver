@@ -193,7 +193,10 @@ class VoteMap(Vote):
                 counts[v]['count']+=1
             else:
                 counts[v] = {'name':v, 'count':1}
-        mv = list(counts.values())[0]
+        cvlist = list(counts.values())
+        if len(cvlist<0):
+            return {'name':self.picks[0], 'count':0}
+        mv = cvlist[0]
         for n in counts.keys():
             if counts[n]['count']>mv['count']:
                 mv = n
