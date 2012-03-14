@@ -62,7 +62,8 @@ class VoteKick(Vote):
         self.instigator = connection
         self.target = player
         self.protocol = connection.protocol
-        self.vote_percentage = self.protocol.votekick_percentage
+        #self.vote_percentage = self.protocol.votekick_percentage
+        self.vote_percentage = 100
         self.vote_time = self.protocol.votekick_time
         self.vote_interval = self.protocol.votekick_interval
         self.ban_duration = self.protocol.votekick_ban_duration
@@ -85,12 +86,13 @@ class VoteKick(Vote):
         if (last is not None and
         reactor.seconds() - last < self.vote_interval):
             return "You can't start a votekick now."
+        return True
     def start(self):
         instigator = self.instigator
         target = self.target
         reason = self.reason
         protocol = self.protocol
-        self.votes = {self.instigator : True}
+        self.votes = {self.instigator}
         protocol.irc_say(
             '* %s initiated a votekick against player %s.%s' % (instigator.name,
             target.name, ' Reason: %s' % reason if reason else ''))
@@ -101,6 +103,8 @@ class VoteKick(Vote):
         instigator.send_chat('You initiated a VOTEKICK against %s. '
             'Say /cancel to stop it at any time.' % target.name)
         instigator.send_chat('Reason: %s' % reason)
+        if self.votes_left() <= 0:
+            self.on_majority()
     def vote(self, connection):
         if connection is self.target:
             return "The votekick victim can't vote."
@@ -112,12 +116,12 @@ class VoteKick(Vote):
         if self.votes_left() <= 0:
             self.on_majority()
     def cancel(self, connection = None):
+        if connection is None:
+            message = 'Cancelled'
         if (connection and not connection.admin and 
             connection is not self.instigator and
             'cancel' not in connection.rights):
             return 'You did not start the votekick.'
-        if connection is None:
-            message = 'Cancelled'
         else:
             message = 'Cancelled by %s' % connection.name
         self.show_result(message)
@@ -208,6 +212,7 @@ class VoteMap(Vote):
         if (last is not None and
         reactor.seconds() - last < self.vote_interval):
             return "You can't start a vote now."
+        return True
     def start(self):
         instigator = self.instigator
         protocol = self.protocol

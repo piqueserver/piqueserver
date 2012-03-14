@@ -872,18 +872,26 @@ class FeatureProtocol(ServerProtocol):
     def start_votekick(self, payload):
         if self.votekick is not None:
             return self.votekick.update()
-        self.votekick = payload
-        payload.pre()
-        payload.start()
+        verify = payload.verify()
+        if verify is True:
+            self.votekick = payload
+            payload.pre()
+            payload.start()
+        else:
+            return verify
 
     def start_votemap(self, payload = None):
         if payload is None:
             payload = VoteMap(None, self, self.maps)
         if self.votemap is not None:
             return self.votemap.update()
-        self.votemap = payload
-        payload.pre()
-        payload.start()
+        verify = payload.verify()
+        if verify is True:
+            self.votemap = payload
+            payload.pre()
+            payload.start()
+        else:
+            return verify
         
     def end_votes(self):
         if self.votekick is not None:
@@ -900,6 +908,7 @@ class FeatureProtocol(ServerProtocol):
     # log high CPU usage
     
     def update_world(self):
+        
         last_time = self.last_time
         current_time = reactor.seconds()
         if last_time is not None:
