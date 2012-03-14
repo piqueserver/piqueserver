@@ -62,8 +62,7 @@ class VoteKick(Vote):
         self.instigator = connection
         self.target = player
         self.protocol = connection.protocol
-        #self.vote_percentage = self.protocol.votekick_percentage
-        self.vote_percentage = 100
+        self.vote_percentage = self.protocol.votekick_percentage
         self.vote_time = self.protocol.votekick_time
         self.vote_interval = self.protocol.votekick_interval
         self.ban_duration = self.protocol.votekick_ban_duration
