@@ -207,6 +207,8 @@ class VoteMap(Vote):
         return mv
     def verify(self):
         instigator = self.instigator
+        if instigator is None:
+            return True
         last = instigator.last_votemap
         if (last is not None and
         reactor.seconds() - last < self.vote_interval):
