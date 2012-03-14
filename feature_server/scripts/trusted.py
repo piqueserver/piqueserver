@@ -27,9 +27,10 @@ def apply_script(protocol, connection, config):
             return connection.on_user_login(self, user_type)
     
     class TrustedProtocol(protocol):
-        def start_votekick(self, connection, player, reason = None):
+        def start_votekick(self, payload):
+            player = payload.target
             if player.trusted:
                 return "%s is trusted and you can't votekick him." % player.name
-            return protocol.start_votekick(self, connection, player, reason)
+            return protocol.start_votekick(self, payload)
     
     return TrustedProtocol, TrustedConnection

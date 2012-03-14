@@ -123,6 +123,7 @@ class FeatureConnection(ServerConnection):
     user_types = None
     rights = None
     last_votekick = None
+    last_votemap = None
     last_switch = None
     mute = False
     deaf = False
@@ -187,8 +188,8 @@ class FeatureConnection(ServerConnection):
         if self.name is not None:
             print self.printable_name, 'disconnected!'
             self.protocol.irc_say('* %s disconnected' % self.name)
-            if self.protocol.vote is not None:
-                self.protocol.vote.on_disconnect(self)
+            if self.protocol.votekick is not None:
+                self.protocol.votekick.on_disconnect(self)
             self.protocol.player_memory.append((self.name, self.address[0]))
         else:
             print '%s disconnected' % self.address[0]
@@ -382,8 +383,8 @@ class FeatureConnection(ServerConnection):
     def ban(self, reason = None, duration = None):
         reason = ': ' + reason if reason is not None else ''
         duration = duration or None
-        if self.protocol.vote is not None:
-            self.protocol.vote.on_player_banned(self)
+        if self.protocol.votekick is not None:
+            self.protocol.votekick.on_player_banned(self)
         if duration is None:
             message = '%s permabanned%s' % (self.name, reason)
         else:
@@ -461,9 +462,8 @@ class FeatureProtocol(ServerProtocol):
     votekick_time = 120 # 2 minutes
     votekick_interval = 3 * 60 # 3 minutes
     votekick_percentage = 25.0
-    vote = None
-    vote_call = None
-    vote_update_call = None
+    votekick = None
+    votemap = None
     
     map_info = None
     spawns = None
@@ -670,7 +670,7 @@ class FeatureProtocol(ServerProtocol):
         if self.map_info:
             self.on_map_leave()
         self.map_info = map_info
-        self._finish_vote()
+        self.end_votes()
         self.max_score = self.map_info.cap_limit or self.default_cap_limit
         self.set_map(self.map_info.data)
         self.set_time_limit(self.map_info.time_limit)
@@ -836,29 +836,19 @@ class FeatureProtocol(ServerProtocol):
     
     # voting
 
-    def start_vote(self, payload):
-        if self.vote is not None:
-            return self.vote.update()
-        verify = payload.verify()
-        if verify is not None:
-            return verify
-        self.vote = payload
-        self.vote_call = reactor.callLater(payload.vote_time,
-                payload.on_timeout)
-        if self.vote_update_call is not None:
-            self.vote_update_call.stop()
-        self.vote_update_call = LoopingCall(payload.update)
-        self.vote_update_call.start(30.0, now = False)
+    def start_votekick(self, payload):
+        print("OK")
+        if self.votekick is not None:
+            return self.votekick.update()
+        self.votekick = payload
+        payload.pre()
         payload.start()
 
-    def _finish_vote(self):
-        if self.vote_call and self.vote_call.active():
-            self.vote_call.cancel()
-        if self.vote_update_call:
-            self.vote_update_call.stop()
-        self.vote = None
-        self.vote_call = None
-        self.vote_update_call = None
+    def end_votes(self):
+        if self.votekick is not None:
+            self.votekick.post()
+        if self.votemap is not None:
+            self.votemap.post()
     
     def send_chat(self, value, global_message = True, sender = None,
                   team = None, irc = False):

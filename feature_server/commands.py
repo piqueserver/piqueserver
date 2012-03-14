@@ -22,7 +22,7 @@ from pyspades.common import prettify_timespan
 from pyspades.server import parse_command
 from twisted.internet import reactor
 
-from vote import VoteKick
+from vote import VoteKick, VoteMap
 
 class InvalidPlayer(Exception):
     pass
@@ -183,23 +183,26 @@ def votekick(connection, value, *arg):
         player = get_player(connection.protocol, '#' + value)
     except InvalidPlayer:
         player = get_player(connection.protocol, value)
-    return connection.protocol.start_vote(VoteKick(connection, player, reason))
+    return connection.protocol.start_votekick(
+        VoteKick(connection, player, reason))
 
 @name('y')
 def vote_yes(connection):
     if connection not in connection.protocol.players:
         raise KeyError()
-    if connection.protocol.vote is not None:
-        return connection.protocol.vote.vote(connection)
+    if connection.protocol.votekick is not None:
+        return connection.protocol.votekick.vote(connection)
     else:
         return 'No votekick in progress.'        
 
 @name('cancel')
 def cancel_vote(connection):
-    if connection.protocol.vote is not None:
-        return connection.protocol.vote.cancel(connection)
+    if connection.protocol.votekick is not None:
+        return connection.protocol.votekick.cancel(connection)
+    elif connection.protocol.votemap is not None:
+        return connection.protocol.votemap.cancel(connection)
     else:
-        return 'No votekick in progress.'        
+        return 'No vote in progress.'
 
 def rules(connection):
     if connection not in connection.protocol.players:
@@ -590,10 +593,10 @@ def invisible(connection, player = None):
         input_data.down = world_object.down
         input_data.left = world_object.left
         input_data.right = world_object.right
-        input_data.primary_fire = world_object.primary_fire
-        input_data.secondary_fire = world_object.secondary_fire
+        input_data.fire = world_object.fire
         input_data.jump = world_object.jump
         input_data.crouch = world_object.crouch
+        input_data.aim = world_object.aim
         set_tool.player_id = player.player_id
         set_tool.value = player.tool
         set_color.player_id = player.player_id
@@ -774,7 +777,7 @@ def fog(connection, r, g, b):
 
 def weapon(connection, value):
     player = get_player(connection.protocol, value)
-    if player.weapon == RIFLE_WEAPON:
+    if player.weapon == SEMI_WEAPON:
         weapon = 'Rifle'
     elif player.weapon == SMG_WEAPON:
         weapon = 'SMG'
@@ -949,7 +952,7 @@ def debug_handle_command(connection, command, parameters):
             return 'No administrator rights!'
     return command_func(connection, *parameters)
 
-#handle_command = debug_handle_command
+handle_command = debug_handle_command
 
 def handle_input(connection, input):
     # for IRC and console
