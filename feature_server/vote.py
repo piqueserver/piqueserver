@@ -18,6 +18,7 @@
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from pyspades.common import prettify_timespan
+from map import check_rotation
 import random
 
 class Vote(object):
@@ -168,27 +169,36 @@ class VoteMap(Vote):
     instigator = None
     protocol = None
     
-    def __init__(self, connection, rot_group):
+    def __init__(self, connection, protocol, rot_group):
         self.instigator = connection
         self.rot_group = rot_group
-        self.protocol = connection.protocol
+        self.protocol = protocol
         self.vote_percentage = self.protocol.votemap_percentage
         self.vote_time = self.protocol.votemap_time
         self.vote_interval = self.protocol.votemap_interval
         self.public_votes = self.protocol.votemap_public_votes
         self.extension_time = self.protocol.votemap_extension_time
+        rot_group = [n.text for n in rot_group]
         final_group = random.sample(rot_group, min(len(rot_group),5))
         if self.extension_time>0:
             final_group.append("extend")
+        self.picks = final_group
         self.votes = {}
-        # these votes are two-layered - map, then players
-        for rot_data in final_group:
-            self.votes[rot_data.text] = {}
     def votes_left(self):
-        thresh = int(((len(self.protocol.players)) / 100.0
-            ) * self.vote_percentage)
-        counts = [{name:v, count:len(self.votes[v])} for v in self.votes.keys()]
-        return min(counts, key=count)
+        thresh = int((len(self.protocol.players)) *
+                     self.vote_percentage / 100.0)
+        counts = {}
+        for v in self.votes.values():
+            if counts.has_key(v):
+                counts[v]['count']+=1
+            else:
+                counts[v] = {'name':v, 'count':1}
+        mv = list(counts.values())[0]
+        for n in counts.keys():
+            if counts[n]['count']>mv['count']:
+                mv = n
+        mv['count'] = thresh - mv['count']
+        return mv
     def verify(self):
         instigator = self.instigator
         last = instigator.last_votemap
@@ -198,20 +208,22 @@ class VoteMap(Vote):
     def start(self):
         instigator = self.instigator
         protocol = self.protocol
-        protocol.irc_say(
-            '* %s initiated a map vote.' % instigator.name)
+        if instigator is None:
+            protocol.send_chat(
+            'Time to vote!', irc=True)
+        else:
+            protocol.send_chat(
+            '* %s initiated a map vote.' % instigator.name, irc=True)
+        self.update()
     def vote(self, connection, mapname):
-        if not self.votes.has_key(mapname):
-            self.protocol.send_chat("Map %s is not available." % suggest.file)
+        if not mapname in self.picks:
+            self.protocol.send_chat("Map %s is not available." % mapname)
             return
-        curvotes = self.votes[mapname]        
-        if curvotes is None or connection in curvotes:
-            return
-        curvotes[connection] = True
+        self.votes[connection] = mapname
         if self.public_votes:
             self.protocol.send_chat('%s voted for %s.' % (connection.name,
                                                           mapname))
-        if self.votes_left().count <= 0:
+        if self.votes_left()['count'] <= 0:
             self.on_majority()
     def cancel(self, connection = None):
         if (connection and not connection.admin and 
@@ -226,37 +238,32 @@ class VoteMap(Vote):
     def update(self):
         self.protocol.send_chat(
             'Choose next map. Say /vote <name> to cast vote.')
-        names = ' '.join([n for n in votes.keys()])
-        self.protocol.send_chat('Maps: ' % names)
-        self.protocol.send_chat('To extend current map: /votemap extend')
+        names = ' '.join(self.picks)
+        self.protocol.send_chat('Maps: %s' % names)
+        self.protocol.send_chat('To extend current map: /vote extend')
     def on_timeout(self):
         self.show_result()
-        self.protocol.post()
+        self.post()
     def on_majority(self):
         self.show_result()
-        self.protocol.post()
+        self.post()
     def show_result(self):
-        result = self.votes_left().name
+        result = self.votes_left()['name']
         if result == "extend":
-            span = prettify_timespan(self.extension_time)
+            span = prettify_timespan(self.extension_time * 60.0)
             self.protocol.send_chat(
-            "Mapvote ended. Current map will be extended %s." % span,
+            "Mapvote ended. Current map will play for %s." % span,
                 irc = True)
             self.protocol.set_time_limit(self.extension_time)
         else:
             self.protocol.send_chat(
             "Mapvote ended. Next map will be: %s." % result, irc = True)
+            self.protocol.planned_map = result
         self.set_cooldown()
     def set_cooldown(self):
-        if not self.instigator.admin:
+        if self.instigator is not None and not self.instigator.admin:
             self.instigator.last_votemap = reactor.seconds()
     def on_post(self):
         self.protocol.votemap = None
 
-# Current status:
-
-# change /map, /rotation, /advance behavior to use a map ptr *
-# scheduling of mapvote *
-# call for mapvote *
-
-# 2nd pass: add suggest
+# 2nd pass: add map suggest

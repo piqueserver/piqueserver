@@ -466,7 +466,7 @@ class FeatureProtocol(ServerProtocol):
     votekick = None
     votemap_time = 120
     votemap_interval = 3 * 60
-    votemap_percentage = 60.0
+    votemap_percentage = 80.0
     votemap = None
 
     planned_map = None
@@ -548,6 +548,11 @@ class FeatureProtocol(ServerProtocol):
         if self.votemap_autoschedule > 0:
             self.call_schedule.append({'time':self.votemap_autoschedule,
                                        'call':self.start_votemap})
+        self.votemap_public_votes = config.get('votemap_public_votes', True)
+        self.votemap_extension_time = config.get(
+            'votemap_extension_time', 30)
+        self.votemap_player_driven = config.get(
+            'votemap_player_driven', False)
         self.speedhack_detect = config.get('speedhack_detect', True)
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
@@ -618,8 +623,10 @@ class FeatureProtocol(ServerProtocol):
         print 'Server identifier is %s' % self.identifier
     
     def set_time_limit(self, time_limit = None):
-        if self.advance_call is not None:
-            self.advance_call.cancel()
+        advance_call = self.advance_call
+        if advance_call is not None:
+            add_time = ((advance_call.getTime() - reactor.seconds()) / 60.0)
+            advance_call.cancel()
             self.advance_call = None
         time_limit = time_limit or self.default_time_limit
         if time_limit == False:
@@ -647,8 +654,8 @@ class FeatureProtocol(ServerProtocol):
             mod_time = (time_limit * 60.0 - n)
             if mod_time > 0:
                 self.times_call.append(reactor.callLater(mod_time,
-                                                     call['call'],
-                                                     n))
+                                                         call['call'],
+                                                         None))
         
         self.advance_call = reactor.callLater(time_limit * 60.0, self._time_up)
     
@@ -870,10 +877,10 @@ class FeatureProtocol(ServerProtocol):
 
     def start_votemap(self, payload = None):
         if payload is None:
-            payload = VoteMap(None, self.protocol.maps)
-        if self.votekick is not None:
-            return self.votekick.update()
-        self.votekick = payload
+            payload = VoteMap(None, self, self.maps)
+        if self.votemap is not None:
+            return self.votemap.update()
+        self.votemap = payload
         payload.pre()
         payload.start()
         
