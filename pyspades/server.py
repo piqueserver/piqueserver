@@ -240,6 +240,7 @@ class ServerConnection(BaseConnection):
                 if self.on_team_join(team) == False:
                     if not team.spectator:
                         team = team.other
+                self.team = team
                 if self.name is None:
                     name = contained.name
                      # vanilla AoS behaviour
@@ -248,7 +249,6 @@ class ServerConnection(BaseConnection):
                     self.name = self.protocol.get_name(name)
                     self.protocol.players[self.name, self.player_id] = self
                     self.on_login(self.name)
-                self.team = team
                 self.set_weapon(contained.weapon, True)
                 if self.protocol.speedhack_detect:
                     self.speedhack_detect = True

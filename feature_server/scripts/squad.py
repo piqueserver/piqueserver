@@ -121,6 +121,10 @@ def apply_script(protocol, connection, config):
                 return random.choice(unused)
 
         def join_squad(self, squad, squad_pref):
+
+            if self.team is None or \
+               self.team is self.protocol.spectator_team:
+                return
             
             # same-squad check
 
