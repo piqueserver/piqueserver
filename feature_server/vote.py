@@ -118,7 +118,7 @@ class VoteKick(Vote):
             message = 'Cancelled'
         elif (connection and not connection.admin and 
             connection is not self.instigator and
-            (connection.rights and 'cancel' not in connection.rights)):
+            (connection.rights is None or 'cancel' not in connection.rights)):
             return 'You did not start the votekick.'
         else:
             message = 'Cancelled by %s' % connection.name
