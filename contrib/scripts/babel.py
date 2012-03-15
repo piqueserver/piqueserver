@@ -102,13 +102,13 @@ def apply_script(protocol, connection, config):
             return False
 
         def on_block_build_attempt(self, x, y, z):
-            if invalid_build_position(x, y, z):
+            if self.invalid_build_position(x, y, z):
                 return False
             return connection.on_block_build_attempt(self, x, y, z)
 
         def on_line_build_attempt(self, points):
             for point in points:
-                if invalid_build_position(point.x, point.y, point.z):
+                if self.invalid_build_position(point.x, point.y, point.z):
                     return False
             return connection.on_line_build_attempt(self, points)
 
