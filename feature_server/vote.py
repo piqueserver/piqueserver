@@ -102,24 +102,23 @@ class VoteKick(Vote):
         instigator.send_chat('You initiated a VOTEKICK against %s. '
             'Say /cancel to stop it at any time.' % target.name)
         instigator.send_chat('Reason: %s' % reason)
-        if self.votes_left() <= 0:
-            self.on_majority()
     def vote(self, connection):
         if connection is self.target:
             return "The votekick victim can't vote."
         if self.votes is None or connection in self.votes:
-            return
-        self.votes[connection] = True
-        if self.public_votes:
-            self.protocol.send_chat('%s voted YES.' % connection.name)
+            pass
+        else:
+            self.votes[connection] = True
+            if self.public_votes:
+                self.protocol.send_chat('%s voted YES.' % connection.name)
         if self.votes_left() <= 0:
             self.on_majority()
     def cancel(self, connection = None):
         if connection is None:
             message = 'Cancelled'
-        if (connection and not connection.admin and 
+        elif (connection and not connection.admin and 
             connection is not self.instigator and
-            'cancel' not in connection.rights):
+            (connection.rights and 'cancel' not in connection.rights)):
             return 'You did not start the votekick.'
         else:
             message = 'Cancelled by %s' % connection.name
@@ -155,7 +154,7 @@ class VoteKick(Vote):
             'Votekick for %s has ended. %s.' % (self.target.name,
                                                 result), irc = True)
         if not self.instigator.admin: # set the cooldown
-            self.instigator.last_votekick = reactor.seconds()        
+            self.instigator.last_votekick = reactor.seconds()
     def do_kick(self):
         print "%s votekicked" % self.target.name
         if self.protocol.votekick_ban_duration:
