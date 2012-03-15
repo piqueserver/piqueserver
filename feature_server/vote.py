@@ -140,7 +140,8 @@ class VoteKick(Vote):
             if self.protocol.votekick_ban_duration:
                 self.do_kick()
     def on_player_banned(self, connection):
-        self.cancel(connection)
+        if not self.kicked:
+            self.cancel(connection)
     def on_timeout(self):
         self.show_result("Votekick timed out")
         self.post()
@@ -180,7 +181,7 @@ class VoteMap(Vote):
         self.vote_interval = self.protocol.votemap_interval
         self.public_votes = self.protocol.votemap_public_votes
         self.extension_time = self.protocol.votemap_extension_time
-        rot_group = [n.text for n in rot_group]
+        rot_group = [n.text.lower() for n in rot_group]
         final_group = random.sample(rot_group, min(len(rot_group),5))
         if self.extension_time>0:
             final_group.append("extend")
@@ -224,8 +225,9 @@ class VoteMap(Vote):
             '* %s initiated a map vote.' % instigator.name, irc=True)
         self.update()
     def vote(self, connection, mapname):
+        mapname = mapname.lower()
         if not mapname in self.picks:
-            self.protocol.send_chat("Map %s is not available." % mapname)
+            connection.send_chat("Map %s is not available." % mapname)
             return
         self.votes[connection] = mapname
         if self.public_votes:
@@ -241,8 +243,9 @@ class VoteMap(Vote):
             message = 'Cancelled'
         else:
             message = 'Cancelled by %s' % connection.name
-        self.protocol.post()
+        self.protocol.send_chat(message)
         self.set_cooldown()
+        self.protocol.post()
     def update(self):
         self.protocol.send_chat(
             'Choose next map. Say /vote <name> to cast vote.')

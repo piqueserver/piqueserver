@@ -33,6 +33,7 @@
     "votemap_extension_time" : 15,
     "votemap_player_driven" : false,
     "votemap_autoschedule" : 180,
+    "votemap_time" : 120,
     "votemap_percentage" : 80,
     "respawn_time" : 30,
     "respawn_waves" : true,

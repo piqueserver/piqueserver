@@ -392,7 +392,10 @@ class FeatureConnection(ServerConnection):
             message = '%s banned for %s%s' % (self.name,
                 prettify_timespan(duration * 60), reason)
         self.protocol.send_chat(message, irc = True)
-        self.protocol.add_ban(self.address[0], reason, duration, self.name)
+        if self.address[0]=="127.0.0.1":
+            self.protocol.send_chat("Ban ignored: localhost")
+        else:
+            self.protocol.add_ban(self.address[0], reason, duration, self.name)
 
     def send_lines(self, lines):
         current_time = 0
@@ -549,6 +552,8 @@ class FeatureProtocol(ServerProtocol):
             self.call_schedule.append({'time':self.votemap_autoschedule,
                                        'call':self.start_votemap})
         self.votemap_public_votes = config.get('votemap_public_votes', True)
+        self.votemap_time = config.get(
+            'votemap_time', 120)
         self.votemap_extension_time = config.get(
             'votemap_extension_time', 15)
         self.votemap_player_driven = config.get(
@@ -881,10 +886,10 @@ class FeatureProtocol(ServerProtocol):
             return verify
 
     def start_votemap(self, payload = None):
-        if payload is None:
-            payload = VoteMap(None, self, self.maps)
         if self.votemap is not None:
             return self.votemap.update()
+        if payload is None:
+            payload = VoteMap(None, self, self.maps)
         verify = payload.verify()
         if verify is True:
             self.votemap = payload
