@@ -628,8 +628,9 @@ class FeatureProtocol(ServerProtocol):
         self.identifier = 'aos://%s' % make_server_number(ip)
         print 'Server identifier is %s' % self.identifier
     
-    def set_time_limit(self, time_limit = None):
+    def set_time_limit(self, time_limit = None, additive = False):
         advance_call = self.advance_call
+        add_time = 0.
         if advance_call is not None:
             add_time = ((advance_call.getTime() - reactor.seconds()) / 60.0)
             advance_call.cancel()
@@ -644,6 +645,9 @@ class FeatureProtocol(ServerProtocol):
                 n.cancel()
         except:
             pass
+
+        if additive:
+            time_limit = min(time_limit + add_time, self.default_time_limit)
 
         # create new time announcements
         self.times_call = []
@@ -664,6 +668,7 @@ class FeatureProtocol(ServerProtocol):
                                                          None))
         
         self.advance_call = reactor.callLater(time_limit * 60.0, self._time_up)
+        return time_limit
     
     def _time_up(self):
         self.advance_call = None

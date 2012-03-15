@@ -261,11 +261,11 @@ class VoteMap(Vote):
     def show_result(self):
         result = self.votes_left()['name']
         if result == "extend":
-            span = prettify_timespan(self.extension_time * 60.0)
+            tl = self.protocol.set_time_limit(self.extension_time, True)
+            span = prettify_timespan(tl * 60.0)
             self.protocol.send_chat(
-            "Mapvote ended. Current map will play for %s." % span,
+            "Mapvote ended. Current map will continue for %s." % span,
                 irc = True)
-            self.protocol.set_time_limit(self.extension_time)
         else:
             self.protocol.send_chat(
             "Mapvote ended. Next map will be: %s." % result, irc = True)
