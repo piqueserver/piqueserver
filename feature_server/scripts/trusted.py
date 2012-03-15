@@ -20,9 +20,9 @@ def apply_script(protocol, connection, config):
                 self.speedhack_detect = False
                 self.protocol.irc_say('* %s logged in as %s' %
                     (self.name, user_type))
-                if self.protocol.votekick_player is self:
-                    self.protocol.votekick_call.cancel()
-                    self.protocol.end_votekick(False, 'Player is trusted')
+                if self.protocol.votekick is not None and
+                    self.protocol.votekick.target is self:
+                    self.protocol.votekick.cancel()
                 return 'Logged in as trusted user'
             return connection.on_user_login(self, user_type)
     
