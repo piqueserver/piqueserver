@@ -969,7 +969,7 @@ class ServerConnection(BaseConnection):
         saved_loaders.append(generated_data)
         
     def grenade_exploded(self, grenade):
-        if self.name is None:
+        if self.name is None or self.team.spectator:
             return
         position = grenade.position
         x = position.x
