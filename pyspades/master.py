@@ -17,7 +17,6 @@
 
 from pyspades.loaders import Loader
 from pyspades.protocol import BaseConnection
-from pyspades.tools import make_server_number, get_server_ip
 from pyspades.loaders import *
 from pyspades.common import *
 from twisted.internet import reactor

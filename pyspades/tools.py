@@ -17,31 +17,30 @@
 
 import struct
 
-def make_server_number(ip):
+def make_server_identifier(ip, port = 32887):
     a, b, c, d = ip.split('.')
     a = int(a)
     b = int(b)
     c = int(c)
     d = int(d)
-    return a | (b << 8) | (c << 16) | (d << 24)
+    return 'aos://%s:%s' % (a | (b << 8) | (c << 16) | (d << 24), port)
 
-def make_client_number(ip):
-    value = make_server_number(ip)
-    # as signed integer
-    return struct.unpack('i', struct.pack('I', value))[0]
-
-def get_server_ip(number):
-    try:
-        if number.startswith('aos://'):
-            number = number[6:]
-            number = int(number)
-    except AttributeError:
-        pass
-    a = number & 0xFF
-    b = (number & 0xFF00) >> 8
-    c = (number & 0xFF0000) >> 16
-    d = (number & 0xFF000000) >> 24
-    return '%s.%s.%s.%s' % (a, b, c, d)
+def get_server_details(value):
+    if not value.startswith('aos://'):
+        raise ValueError('invalid server identifier')
+    splitted = value[6:].split(':')
+    if len(splitted) == 1:
+        host, port = splitted
+        host = int(host)
+        port = int(port)
+    else:
+        host = int(splitted[0])
+        port = 32887
+    a = host & 0xFF
+    b = (host & 0xFF00) >> 8
+    c = (host & 0xFF0000) >> 16
+    d = (host & 0xFF000000) >> 24
+    return ('%s.%s.%s.%s' % (a, b, c, d), port)
 
 if __name__ == '__main__':
     import sys

@@ -22,16 +22,22 @@
 <td>pyspades</td>
 <td>slots</td>
 <td>ping</td>
+<td>mode</td>
+<td>map</td>
 <td>server</td>
 <td>address</td>
+
 </tr>
 {% for server in servers %}
     <tr>
-    <td>{{['No', 'Yes'][(server.ip in has_pyspades)|int]}}</td>
-    <td>{{server.players}}/{{server.max}}</td>
+    <td>{{['No', 'Yes'][(server.identifier in has_pyspades)|int]}}</td>
+    <td>{{server.count}}/{{server.max}}</td>
     <td>{{server.ping}}</td>
-    <td><a href="aos://{{make_server_number(server.ip)}}">{{server.name}}</a></td>
-    <td>aos://{{make_server_number(server.ip)}}</td>
+    <td>{{server.game_mode}}</td>
+    <td>{{server.map}}</td>
+
+    <td><a href="{{make_server_identifier(server.ip, server.port)}}">{{server.name}}</a></td>
+    <td>{{make_server_identifier(server.ip, server.port)}}</td>
     </tr>
 {% endfor %}
 </tbody>
@@ -41,7 +47,9 @@
 </br>
 Certified servers:
 {% for server in statistics.connections %}
-    </br><a href="aos://{{make_server_number(server.transport.getPeer().host)}}">{{server.name}}</a>
+    </br><a href="{{make_server_identifier(server.transport.getPeer().host,
+    server.transport.getPeer().port)}}">{{server.name}}</a>
+
 {% endfor %}
 </br>
 </br>
@@ -54,6 +62,7 @@ Highscores:
 <tbody>
 <tr>
 <td>name</td>
+
 <td>kills</td>
 <td>deaths</td>
 <td>ratio</td>
@@ -63,6 +72,7 @@ Highscores:
     <td>{{player[1]['name']}}</td>
     <td>{{player[1]['kills']}}</td>
     <td>{{player[1]['deaths']}}</td>
+
     <td>{{(player[1]['kills'] / (player[1]['deaths'] or 1))|round(2)}}</td>
     </tr>
 {% endfor %}

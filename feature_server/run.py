@@ -94,7 +94,7 @@ from pyspades.web import getPage
 from pyspades.common import encode, decode, prettify_timespan
 from pyspades.constants import *
 from pyspades.master import MAX_SERVER_NAME_SIZE, get_external_ip
-from pyspades.tools import make_server_number
+from pyspades.tools import make_server_identifier
 from networkdict import NetworkDict, get_network
 from pyspades.exceptions import InvalidData
 from pyspades.bytes import NoDataLeft
@@ -605,7 +605,7 @@ class FeatureProtocol(ServerProtocol):
             if password == 'replaceme':
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
         
-        port = config.get('port', 32887)
+        port = self.port = config.get('port', 32887)
         ServerProtocol.__init__(self, port, interface)
         self.host.receiveCallback = self.receive_callback
         if not self.set_map_rotation(config['maps']):
@@ -625,7 +625,7 @@ class FeatureProtocol(ServerProtocol):
     
     def got_external_ip(self, ip):
         self.ip = ip
-        self.identifier = 'aos://%s' % make_server_number(ip)
+        self.identifier = make_server_identifier(ip, self.port)
         print 'Server identifier is %s' % self.identifier
     
     def set_time_limit(self, time_limit = None, additive = False):

@@ -39,7 +39,7 @@ from twisted.web.client import getPage
 from twisted.web import static, server
 from twisted.web.resource import Resource
 from pyspades.site import get_servers
-from pyspades.tools import make_server_number
+from pyspades.tools import make_server_identifier
 import json
 import jinja2
 import urllib
@@ -123,8 +123,7 @@ class QueryProtocol(DatagramProtocol):
     
     def save(self, servers):
         self.saved_pyspades = self.pyspades_set or set()
-        self.pyspades_numbers = [str(make_server_number(item)) for item in
-            self.saved_pyspades]
+        self.pyspades_numbers = self.saved_pyspades.copy()
         self.servers = servers
         self.pyspades_set = None
     
@@ -141,7 +140,7 @@ class QueryProtocol(DatagramProtocol):
     def datagramReceived(self, data, address):
         if self.pyspades_set is None or data != 'HI':
             return
-        self.pyspades_set.add(address[0])
+        self.pyspades_set.add(make_server_identifier(address[0], address[1]))
 
 class MainResource(Resource):
     def __init__(self, root):
@@ -161,7 +160,7 @@ class MainResource(Resource):
             protocol = query, 
             servers = query.servers,
             has_pyspades = query.saved_pyspades, 
-            make_server_number = make_server_number,
+            make_server_identifier = make_server_identifier,
             statistics = self.statistics)
         )
         return data
