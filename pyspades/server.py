@@ -656,17 +656,12 @@ class ServerConnection(BaseConnection):
         position_data.z = z
         self.send_contained(position_data)
     
-    def get_orientation_sequence(self):
-        sequence = self.orientation_sequence
-        self.orientation_sequence = (sequence + 1) & 0xFFFF
-        return sequence
-    
     def refill(self, local = False):
         self.hp = 100
         self.grenades = 3
         self.blocks = 50
         reloading = self.weapon_object.reloading
-        self.weapon_object.reset()
+        self.weapon_object.reset(False)
         if not local:
             self.send_contained(restock)
             if reloading:
