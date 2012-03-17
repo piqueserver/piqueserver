@@ -181,13 +181,14 @@ class Gate:
                 if coordinate == block:
                     return False
             self.blocks.append(coordinate)
-            if (self.record_gate(x+1, y, z) or 
-               self.record_gate(x-1, y, z) or 
-               self.record_gate(x, y+1, z) or 
-               self.record_gate(x, y-1, z) or 
-               self.record_gate(x, y, z+1) or 
-               self.record_gate(x, y, z-1)):
-                 self.support_blocks.append(coordinate)
+            returns = (self.record_gate(x+1, y, z),
+                self.record_gate(x-1, y, z),
+                self.record_gate(x, y+1, z),
+                self.record_gate(x, y-1, z),
+                self.record_gate(x, y, z+1),
+                self.record_gate(x, y, z-1))
+            if True in returns:
+                self.support_blocks.append(coordinate)
         return False
 
 def apply_script(protocol, connection, config):
