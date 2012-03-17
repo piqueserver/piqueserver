@@ -483,9 +483,10 @@ class ServerConnection(BaseConnection):
                         return
                     if value == BUILD_BLOCK:
                         self.blocks -= 1
+                        pos = world_object.position
                         if self.blocks < -BUILD_TOLERANCE:
                             return
-                        elif not collision_3d(pos.x, pos.y, pos.z, x2, y2, z2,
+                        elif not collision_3d(pos.x, pos.y, pos.z, x, y, z,
                                               MAX_BLOCK_DISTANCE):
                             return
                         elif self.on_block_build_attempt(x, y, z) == False:
