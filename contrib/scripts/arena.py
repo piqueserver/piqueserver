@@ -247,11 +247,16 @@ def apply_script(protocol, connection, config):
                     self.check_round_end()
             return returned
         
+        def get_respawn_time(self):
+            if self.protocol.arena_running:
+                return -1
+            else:
+                return 1
+
         def respawn(self):
-            returned = connection.respawn(self)
             if self.protocol.arena_running:
                 return False
-            return returned
+            return connection.respawn(self)
 
         def on_spawn(self, pos):
             returned = connection.on_spawn(self, pos)
