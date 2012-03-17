@@ -1433,7 +1433,7 @@ class ServerProtocol(BaseProtocol):
     respawn_waves = False
     
     def __init__(self, *arg, **kw):
-        self.max_connections = self.max_players + 1
+        self.max_connections = self.max_players
         BaseProtocol.__init__(self, *arg, **kw)
         self.entities = []
         self.connections = {}
