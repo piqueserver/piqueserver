@@ -1623,6 +1623,7 @@ class ServerProtocol(BaseProtocol):
     def got_master_connection(self, connection):
         self.master_connection = connection
         connection.disconnect_callback = self.master_disconnected
+        self.update_master()
     
     def master_disconnected(self):
         self.master_connection = None
