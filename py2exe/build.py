@@ -14,7 +14,7 @@ setup(
             'compressed' : 1,
             'optimize' : 2,
             'bundle_files' : 1,
-            'includes' : ['zope.interface', 'twisted.web.resource'],
-            'packages' : ['pyspades', 'win32com', 'Image']
+            'includes' : ['zope.interface', 'twisted.web.resource', 'six'],
+            'packages' : ['pyspades', 'win32com', 'Image', 'pygeoip']
         }}
 )
