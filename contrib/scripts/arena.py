@@ -1,3 +1,5 @@
+# READ THE INSTRUCTIONS BELOW BEFORE YOU ASK QUESTIONS
+
 # Arena game mode written by Yourself
 # A game of team survival. The last team standing scores a point.
 
@@ -21,7 +23,7 @@
 
 # Sample extensions dictionary of an arena map with two gates:
 # extensions = {
-#     'arena': true,
+#     'arena': True,
 #     'arena_blue_spawn' : (128, 256, 60),
 #     'arena_green_spawn' : (384, 256, 60),
 #     'arena_gates': ((192, 236, 59), (320, 245, 60))
@@ -33,6 +35,7 @@ from pyspades import world
 from pyspades.constants import *
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
+from commands import add, admin
 
 # If ALWAYS_ENABLED is False, then the 'arena' key must be set to True in
 # the 'extensions' dictionary in the map metadata
@@ -45,6 +48,13 @@ SPAWN_ZONE_TIME = 30.0
 HIDE_COORD = (0, 0, 63)
 
 BUILDING_ENABLED = False
+
+@admin
+def coord(connection):
+    connection.get_coord = True
+    return 'Spade a block to get its coordinate.'
+
+add(coord)
 
 def make_color(r, g, b, a):
     r = int(r)
@@ -182,6 +192,16 @@ class Gate:
 
 def apply_script(protocol, connection, config):
     class ArenaConnection(connection):
+        get_coord = False
+
+        def on_block_destroy(self, x, y, z, mode):
+            returned = connection.on_block_destroy(self, x, y, z, mode)
+            if self.get_coord:
+                self.get_coord = False
+                self.send_chat('Coordinate: %i, %i, %i' % (x, y, z))
+                return False
+            return returned
+
         def check_round_end(self, by = None):
             if not self.protocol.arena_running or self.team.spectator:
                 return
@@ -356,7 +376,7 @@ def apply_script(protocol, connection, config):
 
         def on_flag_spawn(self, x, y, z, flag, entity_id):
             if not self.arena_enabled:
-                return protocol.on_base_spawn(self, x, y, z, base, entity_id)
+                return protocol.on_base_spawn(self, x, y, z, flag, entity_id)
             return HIDE_COORD
 
     return ArenaProtocol, ArenaConnection
