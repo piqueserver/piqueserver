@@ -485,6 +485,9 @@ class ServerConnection(BaseConnection):
                         self.blocks -= 1
                         if self.blocks < -BUILD_TOLERANCE:
                             return
+                        elif not collision_3d(pos.x, pos.y, pos.z, x2, y2, z2,
+                                              MAX_BLOCK_DISTANCE):
+                            return
                         elif self.on_block_build_attempt(x, y, z) == False:
                             return
                         elif not map.set_point(x, y, z, self.color + (255,)):
@@ -495,7 +498,7 @@ class ServerConnection(BaseConnection):
                             return
                         elif value == DESTROY_BLOCK:
                             if map.remove_point(x, y, z):
-                                self.blocks += 1
+                                self.blocks = min(50, self.blocks + 1)
                                 self.on_block_removed(x, y, z)
                         elif value == SPADE_DESTROY:
                             if map.remove_point(x, y, z):
@@ -516,7 +519,8 @@ class ServerConnection(BaseConnection):
                     x1, y1, z1 = (contained.x1, contained.y1, contained.z1)
                     x2, y2, z2 = (contained.x2, contained.y2, contained.z2)
                     pos = world_object.position
-                    if not collision_3d(pos.x, pos.y, pos.z, x2, y2, z2):
+                    if not collision_3d(pos.x, pos.y, pos.z, x2, y2, z2,
+                                        MAX_BLOCK_DISTANCE):
                         return
                     points = world.cube_line(x1, y1, z1, x2, y2, z2)
                     if not points:
