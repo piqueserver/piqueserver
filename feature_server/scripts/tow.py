@@ -159,10 +159,8 @@ def apply_script(protocol, connection, config):
                 move = -1
             else:
                 move = 1
-            for team in self.teams:
-                team = self.teams[team]
+            for team in [self.blue_team, self.green_team]:
                 try:
-                    old_cp = team.cp
                     team.cp = self.entities[get_index(team.cp.id + move)]
                     team.cp.enable()
                 except IndexError:
