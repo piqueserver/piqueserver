@@ -85,6 +85,7 @@ from pyspades.server import (ServerProtocol, ServerConnection, position_data,
     grenade_packet, Team)
 from map import Map, MapNotFound, check_rotation
 from vote import VoteMap
+from schedule import ScheduleTimer, schedule_test
 from console import create_console
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
@@ -487,6 +488,7 @@ class FeatureProtocol(ServerProtocol):
     game_mode = None # default to None so we can check
 
     call_schedule = None
+    schedule = None
     
     server_version = SERVER_VERSION
     
@@ -622,6 +624,9 @@ class FeatureProtocol(ServerProtocol):
         
         get_external_ip(config.get('interface', '')).addCallback(
             self.got_external_ip)
+        
+        self.schedule = ScheduleTimer(self)
+        schedule_test(self)
     
     def got_external_ip(self, ip):
         self.ip = ip
