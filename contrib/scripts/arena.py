@@ -42,12 +42,23 @@ from commands import add, admin
 ALWAYS_ENABLED = True
 
 # How long should be spent between rounds in arena (seconds)
-SPAWN_ZONE_TIME = 30.0
+SPAWN_ZONE_TIME = 20.0
+
+# Maximum duration that a round can last. Time is in seconds. Set to 0 to
+# disable the time limit
+MAX_ROUND_TIME = 180
+
+MAP_CHANGE_DELAY = 30.0
 
 # Coordinates to hide the tent and the intel
 HIDE_COORD = (0, 0, 63)
 
 BUILDING_ENABLED = False
+
+if MAX_ROUND_TIME >= 60:
+    MAX_ROUND_TIME_TEXT = '%.2f minutes' % (float(MAX_ROUND_TIME)/60.0)
+else:
+    MAX_ROUND_TIME_TEXT = MAX_ROUND_TIME + ' seconds'
 
 @admin
 def coord(connection):
@@ -121,6 +132,19 @@ def minimize_block_line(points):
     if zlen <= xlen and zlen <= ylen:
         return z
     return x
+
+def get_team_alive_count(team):
+    count = 0
+    for player in team.get_players():
+        if not player.world_object.dead:
+            count += 1
+    return count
+
+def get_team_dead(team):
+    for player in team.get_players():
+        if not player.world_object.dead:
+            return False
+    return True
 
 class CustomException(Exception):
     def __init__(self, value):
@@ -203,39 +227,19 @@ def apply_script(protocol, connection, config):
                 return False
             return returned
 
-        def check_round_end(self, by = None):
-            if not self.protocol.arena_running or self.team.spectator:
-                return
-            team_dead = True
-            for player in self.team.get_players():
-                if not player.world_object.dead:
-                    team_dead = False
-                    break
-            if team_dead:
-                if by is None or by.team is self.team:
-                    for player in self.team.other.get_players():
-                        by = player
-                        break
-                if by is not None:
-                    self.protocol.arena_take_flag = True
-                    self.protocol.send_chat(by.team.name + ' team wins the round!')
-                    by.take_flag()
-                    by.capture_flag()
-                self.protocol.begin_arena_countdown()
-
         def on_disconnect(self):
             if self.protocol.arena_running:
                 if self.world_object is not None:
                     self.world_object.dead = True
-                    self.check_round_end()
+                    self.protocol.check_round_end()
             return connection.on_disconnect(self)
 
-        def on_kill(self, by, type):
+        def on_kill(self, killer, type):
             if self.protocol.arena_running and type != TEAM_CHANGE_KILL:
                 if self.world_object is not None:
                     self.world_object.dead = True
-                    self.check_round_end(by)
-            return connection.on_kill(self, by, type)
+                    self.protocol.check_round_end(killer)
+            return connection.on_kill(self, killer, type)
 
         def on_team_join(self, team):
             returned = connection.on_team_join(self, team)
@@ -244,7 +248,7 @@ def apply_script(protocol, connection, config):
             if self.protocol.arena_running:
                 if self.world_object is not None:
                     self.world_object.dead = True
-                    self.check_round_end()
+                    self.protocol.check_round_end()
             return returned
         
         def get_respawn_time(self):
@@ -265,17 +269,14 @@ def apply_script(protocol, connection, config):
             return returned
 
         def on_spawn_location(self, pos):
-            returned = connection.on_spawn_location(self, pos)
             if self.protocol.arena_enabled:
-                connection.on_spawn_location(self, pos)
                 return self.team.arena_spawn
-            return returned
+            return connection.on_spawn_location(self, pos)
 
         def on_flag_take(self):
-            returned = connection.on_flag_take(self)
             if self.protocol.arena_take_flag:
                 self.protocol.arena_take_flag = False
-                return returned
+                return connection.on_flag_take(self)
             return False
 
         def on_refill(self):
@@ -290,7 +291,61 @@ def apply_script(protocol, connection, config):
         old_killing = None
         arena_enabled = False
         arena_running = False
+        arena_counting_down = False
         arena_take_flag = False
+        arena_countdown_timers = None
+        arena_limit_timer = None
+
+        def check_round_end(self, killer = None, message = True):
+            if not self.arena_running:
+                return
+            for team in (self.green_team, self.blue_team):
+                if get_team_dead(team):
+                    self.arena_win(team.other, killer)
+                    return
+            if message:
+                self.arena_remaining_message()
+
+        def arena_time_limit(self):
+            self.arena_limit_timer = None
+            green_team = self.green_team
+            blue_team = self.blue_team
+            green_count = get_team_alive_count(green_team)
+            blue_count = get_team_alive_count(blue_team)
+            if green_count > blue_count:
+                self.arena_win(green_team)
+            elif green_count < blue_count:
+                self.arena_win(blue_team)
+            else:
+                self.send_chat('Round ends in a tie.')
+            self.begin_arena_countdown()
+
+        def arena_win(self, team, killer = None):
+            if not self.arena_running:
+                return
+            if killer is None or killer.team is not team:
+                for player in team.get_players():
+                    killer = player
+                    break
+            if killer is not None:
+                self.arena_take_flag = True
+                killer.take_flag()
+                killer.capture_flag()
+            self.send_chat(team.name + ' team wins the round!')
+            self.begin_arena_countdown()
+
+        def arena_remaining_message(self):
+            if not self.arena_running:
+                return
+            green_team = self.green_team
+            blue_team = self.blue_team
+            for team in (self.green_team, self.blue_team):
+                num = get_team_alive_count(green_team)
+                team.arena_message = '%i player' % num
+                if num != 1:
+                    team.arena_message += 's'
+                team.arena_message += ' on ' + team.name
+            self.send_chat('%s and %s remain.' % (green_team.arena_message, blue_team.arena_message))
 
         def on_map_change(self, map):
             extensions = self.map_info.extensions
@@ -318,6 +373,7 @@ def apply_script(protocol, connection, config):
                     self.blue_team.arena_spawn = extensions['arena_blue_spawn']
                 else:
                     raise CustomException('No arena_blue_spawn given in map metadata.')
+                self.delay_arena_countdown(MAP_CHANGE_DELAY)
                 self.begin_arena_countdown()
             else:
                 # Cleanup after a map change
@@ -329,6 +385,8 @@ def apply_script(protocol, connection, config):
                     self.killing = self.old_killing
                 self.arena_enabled = False
                 self.arena_running = False
+                self.arena_counting_down = False
+                self.arena_limit_timer = None
                 self.old_respawn_time = None
                 self.old_building = None
                 self.old_killing = None
@@ -353,17 +411,32 @@ def apply_script(protocol, connection, config):
                     player.refill()
 
         def begin_arena_countdown(self):
+            if self.arena_limit_timer is not None:
+                if self.arena_limit_timer.cancelled == 0 and self.arena_limit_timer.called == 0:
+                    self.arena_limit_timer.cancel()
+                    self.arena_limit_timer = None
+            if self.arena_counting_down:
+                return
             self.arena_running = False
+            self.arena_limit_timer = None
+            self.arena_counting_down = True
             self.killing = False
             self.building = False
             self.build_gates()
             self.arena_spawn()
             self.send_chat('The round will begin in %i seconds.' % SPAWN_ZONE_TIME)
+            self.arena_countdown_timers = [reactor.callLater(SPAWN_ZONE_TIME, self.begin_arena)]
             for time in xrange(1, 6):
-                reactor.callLater(SPAWN_ZONE_TIME - time, self.send_chat, str(time))            
-            reactor.callLater(SPAWN_ZONE_TIME, self.begin_arena)
+                self.arena_countdown_timers.append(reactor.callLater(SPAWN_ZONE_TIME - time, self.send_chat, str(time)))
+
+        def delay_arena_countdown(self, amount):
+            if self.arena_counting_down:
+                for timer in self.arena_countdown_timers:
+                    if timer.cancelled == 0 and timer.called == 0:
+                        timer.delay(amount)
 
         def begin_arena(self):
+            self.arena_counting_down = False
             for team in (self.green_team, self.blue_team):
                 if team.count() == 0:
                     self.send_chat('Not enough players on the %s team to begin.' % team.name)
@@ -374,6 +447,9 @@ def apply_script(protocol, connection, config):
             self.building = BUILDING_ENABLED
             self.destroy_gates()
             self.send_chat('Go!')
+            if MAX_ROUND_TIME > 0:
+                self.send_chat('There is a time limit of %s for this round.' % MAX_ROUND_TIME_TEXT)
+                self.arena_limit_timer = reactor.callLater(MAX_ROUND_TIME, self.arena_time_limit)
 
         def on_base_spawn(self, x, y, z, base, entity_id):
             if not self.arena_enabled:
