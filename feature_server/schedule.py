@@ -1,20 +1,9 @@
 from twisted.internet import reactor
 
-def on_loop(protocol):
-    print("i'm looping!")
-def on_point(protocol):
-    print("i'm triggered!")
-def on_point2(protocol):
-    print("i'm triggered too!")
-
-def schedule_test(protocol):
-    myschedule = Schedule(protocol, [
-                AlarmLater(on_loop, 0, 5, True),
-                AlarmGameTime(on_point2, protocol.default_time_limit, -10),
-                AlarmLater(on_point, 0, 1, False)])
-    protocol.schedule.queue(myschedule)
-
 class ScheduleTimer(object):
+    """A "safe" scheduler which allows multiple groups of timed events to
+    queue and destroy themselves gracefully.
+    """
     def __init__(self, protocol):
         self.call_later = None
         self.schedules = []
@@ -47,17 +36,19 @@ class ScheduleTimer(object):
             self.held_schedule = min_schedule
             self.call_later = reactor.callLater(max(min_time,0), self.do_call)
     def do_call(self):
-        self.held_call.call(self.protocol)
+        self.held_call.call()
         self.held_schedule.shift(self.held_call)
         self.reschedule()
 
 class AlarmLater(object):
-    def __init__(self, call, minutes, seconds, loop):
+    """Equivalent to reactor.callLater and LoopingCall."""
+    def __init__(self, call, minutes=0, seconds=0, loop=False,
+                 traversal_required = True):
         self.relative_time = minutes * 60.0 + seconds
         self.time = reactor.seconds() + self.relative_time
         self.loop = loop
         self.call = call
-        self.traversed = False
+        self.traversed = not traversal_required
     def advance(self):
         self.traversed = True
         if self.loop:
@@ -68,10 +59,12 @@ class AlarmLater(object):
         return self.time - reactor.seconds()
 
 class AlarmGameTime(object):
-    def __init__(self, call, minutes, seconds):
+    """Calls at the specified number of minutes and seconds before
+    the map cycle ends."""
+    def __init__(self, call, minutes=0, seconds=0, traversal_required=True):
         self.relative_time = minutes * 60.0 + seconds
         self.call = call
-        self.traversed = False
+        self.traversed = not traversal_required
         self.loop = False
     def advance(self):
         self.traversed = True
@@ -79,6 +72,14 @@ class AlarmGameTime(object):
         return timer.game_time - self.relative_time
 
 class Schedule(object):
+    """Specifies some number of Alarm events, which will be called according
+    to these rules:
+        Non-looping alarms are called once at the specified time.
+        Looping alarms are called endlessly.
+        When all alarms have been traversed at least once, the schedule ends.
+        (If you want an alarm that is non-required, e.g. recurring status
+         updates, create it with traversal_required = False)
+        """
     def __init__(self, protocol, calls):
         self.protocol = protocol
         self.calls = calls
@@ -98,4 +99,6 @@ class Schedule(object):
             if not n.traversed:
                 return
         self.protocol.schedule.schedules.remove(self)
-            
+    def destroy(self):            
+        self.protocol.schedule.schedules.remove(self)
+        self.protocol.schedule.reschedule()

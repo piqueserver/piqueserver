@@ -20,33 +20,9 @@ from twisted.internet.task import LoopingCall
 from pyspades.common import prettify_timespan
 from map import check_rotation
 import random
+from schedule import Schedule, AlarmLater, AlarmGameTime
 
-class Vote(object):
-
-    vote_percentage = 0.
-    vote_time = 0.
-    vote_interval = 0.
-    votes = {}
-    vote_call = None
-    vote_update_call = None
-
-    def pre(self):
-        self.vote_call = reactor.callLater(self.vote_time,
-                self.on_timeout)
-        if self.vote_update_call is not None:
-            self.vote_update_call.stop()
-        self.vote_update_call = LoopingCall(self.update)
-        self.vote_update_call.start(30.0, now = False)
-    def post(self):
-        if self.vote_call and self.vote_call.active():
-            self.vote_call.cancel()
-        if self.vote_update_call:
-            self.vote_update_call.stop()
-        self.vote_call = None
-        self.vote_update_call = None
-        self.on_post()
-
-class VoteKick(Vote):
+class VoteKick(object):
     
     public_votes = True
     ban_duration = 0.
@@ -63,12 +39,16 @@ class VoteKick(Vote):
         self.target = player
         self.protocol = connection.protocol
         self.vote_percentage = self.protocol.votekick_percentage
-        self.vote_time = self.protocol.votekick_time
         self.vote_interval = self.protocol.votekick_interval
+        self.schedule = Schedule(self.protocol, [
+            AlarmLater(self.timeout, minutes=self.protocol.votekick_time),
+            AlarmLater(self.update, seconds=30,
+                       loop=True, traversal_required=False)])
         self.ban_duration = self.protocol.votekick_ban_duration
         self.public_votes = self.protocol.votekick_public_votes
         self.reason = reason
         self.kicked = False
+        self.votes = {self.instigator:True}
     def votes_left(self):
         return int(((len(self.protocol.players) - 1) / 100.0
             ) * self.vote_percentage) - len(self.votes)
@@ -81,6 +61,8 @@ class VoteKick(Vote):
             return "You can't votekick yourself."
         elif target.admin:
             return 'Cannot votekick an administrator.'
+        elif (target.rights and 'cancel' in target.rights):
+            return 'Target has vote cancellation rights.'
         last = instigator.last_votekick
         if (last is not None and
         reactor.seconds() - last < self.vote_interval):
@@ -91,7 +73,6 @@ class VoteKick(Vote):
         target = self.target
         reason = self.reason
         protocol = self.protocol
-        self.votes = {self.instigator:True}
         protocol.irc_say(
             '* %s initiated a votekick against player %s.%s' % (instigator.name,
             target.name, ' Reason: %s' % reason if reason else ''))
@@ -102,6 +83,8 @@ class VoteKick(Vote):
         instigator.send_chat('You initiated a VOTEKICK against %s. '
             'Say /cancel to stop it at any time.' % target.name)
         instigator.send_chat('Reason: %s' % reason)
+        self.protocol.schedule.queue(self.schedule)
+        self.protocol.votekick = self
     def vote(self, connection):
         if connection is self.target:
             return "The votekick victim can't vote."
@@ -116,14 +99,14 @@ class VoteKick(Vote):
     def cancel(self, connection = None):
         if connection is None:
             message = 'Cancelled'
-        elif (connection and not connection.admin and 
+        elif (connection and (not connection.admin and 
             connection is not self.instigator and
-            (connection.rights is None or 'cancel' not in connection.rights)):
+            (not connection.rights or 'cancel' not in connection.rights))):
             return 'You did not start the votekick.'
         else:
             message = 'Cancelled by %s' % connection.name
         self.show_result(message)
-        self.post()
+        self.finish()
     def update(self):
         reason = self.reason if self.reason else 'none'
         self.protocol.send_chat(
@@ -139,17 +122,18 @@ class VoteKick(Vote):
             self.show_result("%s left during votekick" % self.target.name)
             if self.protocol.votekick_ban_duration:
                 self.do_kick()
+        self.finish()
     def on_player_banned(self, connection):
         if not self.kicked:
             self.cancel(connection)
-    def on_timeout(self):
+    def timeout(self):
         self.show_result("Votekick timed out")
-        self.post()
+        self.finish()
     def on_majority(self):
         self.show_result("Player kicked")
         self.kicked = True
         self.do_kick()
-        self.post()
+        self.finish()
     def show_result(self, result):
         self.protocol.send_chat(
             'Votekick for %s has ended. %s.' % (self.target.name,
@@ -162,10 +146,11 @@ class VoteKick(Vote):
             self.target.ban(self.reason, self.ban_duration)
         else:
             self.target.kick(silent = True)
-    def on_post(self):
+    def finish(self):
+        self.schedule.destroy()
         self.protocol.votekick = None
 
-class VoteMap(Vote):
+class VoteMap(object):
     
     extension_time = 0.
     public_votes = True
@@ -187,6 +172,10 @@ class VoteMap(Vote):
             final_group.append("extend")
         self.picks = final_group
         self.votes = {}
+        self.schedule = Schedule(protocol, [
+            AlarmLater(self.timeout, minutes=self.vote_time),
+            AlarmLater(self.update, seconds=30, loop=True,
+                       traversal_required=False)])
     def votes_left(self):
         thresh = int((len(self.protocol.players)) *
                      self.vote_percentage / 100.0)
@@ -223,6 +212,8 @@ class VoteMap(Vote):
         else:
             protocol.send_chat(
             '* %s initiated a map vote.' % instigator.name, irc=True)
+        self.protocol.schedule.queue(self.schedule)
+        self.protocol.votemap = self
         self.update()
     def vote(self, connection, mapname):
         mapname = mapname.lower()
@@ -236,8 +227,9 @@ class VoteMap(Vote):
         if self.votes_left()['count'] <= 0:
             self.on_majority()
     def cancel(self, connection = None):
-        if (connection and not connection.admin and 
-            connection is not self.instigator):
+        if (connection and (not connection.admin and 
+            connection is not self.instigator and
+            (not connection.rights or 'cancel' not in connection.rights))):
             return 'You did not start the vote.'
         if connection is None:
             message = 'Cancelled'
@@ -245,19 +237,19 @@ class VoteMap(Vote):
             message = 'Cancelled by %s' % connection.name
         self.protocol.send_chat(message)
         self.set_cooldown()
-        self.protocol.post()
+        self.finish()
     def update(self):
         self.protocol.send_chat(
             'Choose next map. Say /vote <name> to cast vote.')
         names = ' '.join(self.picks)
         self.protocol.send_chat('Maps: %s' % names)
         self.protocol.send_chat('To extend current map: /vote extend')
-    def on_timeout(self):
+    def timeout(self):
         self.show_result()
-        self.post()
+        self.finish()
     def on_majority(self):
         self.show_result()
-        self.post()
+        self.finish()
     def show_result(self):
         result = self.votes_left()['name']
         if result == "extend":
@@ -266,6 +258,12 @@ class VoteMap(Vote):
             self.protocol.send_chat(
             "Mapvote ended. Current map will continue for %s." % span,
                 irc = True)
+            if self.protocol.votemap_autoschedule > 0:
+                vms = Schedule(self.protocol, [
+                AlarmGameTime(self.protocol.start_votemap,
+                              seconds=self.protocol.votemap_autoschedule)])
+                self.protocol.schedule.queue(vms)
+            
         else:
             self.protocol.send_chat(
             "Mapvote ended. Next map will be: %s." % result, irc = True)
@@ -274,7 +272,8 @@ class VoteMap(Vote):
     def set_cooldown(self):
         if self.instigator is not None and not self.instigator.admin:
             self.instigator.last_votemap = reactor.seconds()
-    def on_post(self):
+    def finish(self):
+        self.schedule.destroy()
         self.protocol.votemap = None
 
 # 2nd pass: add map suggest

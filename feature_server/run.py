@@ -85,7 +85,7 @@ from pyspades.server import (ServerProtocol, ServerConnection, position_data,
     grenade_packet, Team)
 from map import Map, MapNotFound, check_rotation
 from vote import VoteMap
-from schedule import ScheduleTimer, schedule_test
+from schedule import *
 from console import create_console
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
@@ -487,7 +487,6 @@ class FeatureProtocol(ServerProtocol):
     
     game_mode = None # default to None so we can check
 
-    call_schedule = None
     schedule = None
     
     server_version = SERVER_VERSION
@@ -547,12 +546,8 @@ class FeatureProtocol(ServerProtocol):
         self.votekick_ban_duration = config.get('votekick_ban_duration', 15)
         self.votekick_percentage = config.get('votekick_percentage', 25)
         self.votekick_public_votes = config.get('votekick_public_votes', True)
-        self.call_schedule = []
         self.planned_map = None
         self.votemap_autoschedule = config.get('votemap_autoschedule', 180)
-        if self.votemap_autoschedule > 0:
-            self.call_schedule.append({'time':self.votemap_autoschedule,
-                                       'call':self.start_votemap})
         self.votemap_public_votes = config.get('votemap_public_votes', True)
         self.votemap_time = config.get(
             'votemap_time', 120)
@@ -626,7 +621,11 @@ class FeatureProtocol(ServerProtocol):
             self.got_external_ip)
         
         self.schedule = ScheduleTimer(self)
-        schedule_test(self)
+        if self.votemap_autoschedule > 0:
+            vms = Schedule(self, [
+                AlarmGameTime(self.start_votemap,
+                seconds=self.votemap_autoschedule)])
+            self.schedule.queue(vms)
     
     def got_external_ip(self, ip):
         self.ip = ip
@@ -664,15 +663,10 @@ class FeatureProtocol(ServerProtocol):
                 self.times_call.append(reactor.callLater(mod_time,
                                                       self._time_warning,
                                                       n))
-        for call in self.call_schedule:
-            n = float(call['time'])
-            mod_time = (time_limit * 60.0 - n)
-            if mod_time > 0:
-                self.times_call.append(reactor.callLater(mod_time,
-                                                         call['call'],
-                                                         None))
         
         self.advance_call = reactor.callLater(time_limit * 60.0, self._time_up)
+        if self.schedule:
+            self.schedule.reschedule()
         return time_limit
     
     def _time_up(self):
@@ -889,8 +883,6 @@ class FeatureProtocol(ServerProtocol):
             return self.votekick.update()
         verify = payload.verify()
         if verify is True:
-            self.votekick = payload
-            payload.pre()
             payload.start()
         else:
             return verify
@@ -902,17 +894,15 @@ class FeatureProtocol(ServerProtocol):
             payload = VoteMap(None, self, self.maps)
         verify = payload.verify()
         if verify is True:
-            self.votemap = payload
-            payload.pre()
             payload.start()
         else:
             return verify
         
     def end_votes(self):
         if self.votekick is not None:
-            self.votekick.post()
+            self.votekick.finish()
         if self.votemap is not None:
-            self.votemap.post()
+            self.votemap.finish()
     
     def send_chat(self, value, global_message = True, sender = None,
                   team = None, irc = False):
