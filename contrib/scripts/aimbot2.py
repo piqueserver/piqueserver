@@ -386,7 +386,8 @@ def apply_script(protocol, connection, config):
                 position_v = (p_targ.x - p_self.x, p_targ.y - p_self.y, p_targ.z - p_self.z)
                 orient = self.world_object.orientation
                 orient_v = (orient.x, orient.y, orient.z)
-                if (dot3d(orient_v, position_v)/magnitude(position_v)) >= NEAR_MISS_COS:
+                position_v_mag = magnitude(position_v)
+                if position_v_mag != 0 and (dot3d(orient_v, position_v)/position_v_mag) >= NEAR_MISS_COS:
                     if self.weapon == RIFLE_WEAPON:
                         self.rifle_count += 1
                     elif self.weapon == SMG_WEAPON:
