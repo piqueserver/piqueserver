@@ -340,7 +340,7 @@ def apply_script(protocol, connection, config):
             green_team = self.green_team
             blue_team = self.blue_team
             for team in (self.green_team, self.blue_team):
-                num = get_team_alive_count(green_team)
+                num = get_team_alive_count(team)
                 team.arena_message = '%i player' % num
                 if num != 1:
                     team.arena_message += 's'
