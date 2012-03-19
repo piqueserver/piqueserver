@@ -39,6 +39,9 @@ class ScheduleTimer(object):
         self.held_call.call()
         self.held_schedule.shift(self.held_call)
         self.reschedule()
+    def _remove(self, schedule):
+        if schedule in self.schedules:
+            self.schedules.remove(schedule)
 
 class AlarmLater(object):
     """Equivalent to reactor.callLater and LoopingCall."""
@@ -80,9 +83,10 @@ class Schedule(object):
         (If you want an alarm that is non-required, e.g. recurring status
          updates, create it with traversal_required = False)
         """
-    def __init__(self, protocol, calls):
+    def __init__(self, protocol, calls, on_destroy=None):
         self.protocol = protocol
         self.calls = calls
+        self.on_destroy = on_destroy
     def first(self):
         min_time = None
         min_call = None
@@ -98,7 +102,24 @@ class Schedule(object):
         for n in self.calls:
             if not n.traversed:
                 return
-        self.protocol.schedule.schedules.remove(self)
+        self.protocol.schedule._remove(self)
     def destroy(self):            
-        self.protocol.schedule.schedules.remove(self)
+        self.protocol.schedule._remove(self)
+        if self.on_destroy:
+            self.on_destroy()
         self.protocol.schedule.reschedule()
+
+class OptimisticSchedule(Schedule):
+    """A Schedule that ignores events that are in the past."""
+    def first(self):
+        min_time = None
+        min_call = None
+        for n in self.calls:
+            if not n.traversed or n.loop:
+                cur_time = n.emit_time(self.protocol.schedule)
+                if cur_time<0:
+                    n.traversed = True
+                elif min_time == None or (min_time>=cur_time):
+                    min_time = cur_time
+                    min_call = n
+        return {'time':min_time,'call':min_call}

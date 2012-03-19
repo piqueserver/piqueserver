@@ -488,6 +488,7 @@ class FeatureProtocol(ServerProtocol):
     game_mode = None # default to None so we can check
 
     schedule = None
+    time_announce_schedule = None
     
     server_version = SERVER_VERSION
     
@@ -508,6 +509,7 @@ class FeatureProtocol(ServerProtocol):
             pass
         self.hard_bans = set() # possible DDoS'ers are added here
         self.player_memory = deque(maxlen = 100)
+        self.schedule = ScheduleTimer(self)
         self.config = config
         if len(self.name) > MAX_SERVER_NAME_SIZE:
             print '(server name too long; it will be truncated to "%s")' % (
@@ -620,7 +622,6 @@ class FeatureProtocol(ServerProtocol):
         get_external_ip(config.get('interface', '')).addCallback(
             self.got_external_ip)
         
-        self.schedule = ScheduleTimer(self)
         if self.votemap_autoschedule > 0:
             vms = Schedule(self, [
                 AlarmGameTime(self.start_votemap,
@@ -643,46 +644,36 @@ class FeatureProtocol(ServerProtocol):
         if time_limit == False:
             return
         
-        # reset old time announcements
-        try:
-            for n in self.times_call:
-                n.cancel()
-        except:
-            pass
-
         if additive:
             time_limit = min(time_limit + add_time, self.default_time_limit)
 
-        # create new time announcements
-        self.times_call = []
-        times = self.time_announcements
-        for baseval in times:
-            n = float(baseval)
-            mod_time = (time_limit * 60.0 - n)
-            if mod_time > 0:
-                self.times_call.append(reactor.callLater(mod_time,
-                                                      self._time_warning,
-                                                      n))
-        
         self.advance_call = reactor.callLater(time_limit * 60.0, self._time_up)
-        if self.schedule:
-            self.schedule.reschedule()
+
+        time_announce_queue = [
+            AlarmGameTime(self._next_time_announce, seconds=n)
+            for n in self.time_announcements]
+        if self.time_announce_schedule is not None:
+            self.time_announce_schedule.destroy()
+            self.time_announce_schedule = None
+        self.time_announce_schedule = OptimisticSchedule(
+            self, time_announce_queue)
+        self.schedule.queue(self.time_announce_schedule)
+        
         return time_limit
+
+    def _next_time_announce(self):
+        remaining = self.advance_call.getTime() - reactor.seconds()
+        if remaining<60.001:
+            if remaining < 10.001:
+                self.send_chat('%s...' % int(round(remaining)))
+            else:
+                self.send_chat('%s seconds remaining.' % int(round(remaining)))
+        else:
+            self.send_chat('%s minutes remaining.' % int(round(remaining/60)))
     
     def _time_up(self):
         self.advance_call = None
         self.advance_rotation('Time up!')
-
-    def _time_warning(self, remaining):
-        if remaining<60.001:
-            if remaining < 1.001:
-                self.send_chat('1...')
-            elif remaining < 10.001:
-                self.send_chat('%s...' % int(remaining))
-            else:
-                self.send_chat('%s seconds remaining.' % int(remaining))
-        else:
-            self.send_chat('%s minutes remaining.' % int(remaining/60))
     
     def advance_rotation(self, message = None):
         self.set_time_limit(False)
