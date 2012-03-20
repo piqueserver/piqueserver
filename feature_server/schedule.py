@@ -18,7 +18,7 @@ class ScheduleTimer(object):
             self.game_time = (self.protocol.advance_call.getTime() -
                           reactor.seconds())
         else:
-            self.game_time = 99999999999
+            self.game_time = 999999999
         if self.call_later is not None and self.call_later.active():
             self.call_later.cancel()
         min_time = None
