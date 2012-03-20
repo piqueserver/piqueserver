@@ -173,7 +173,7 @@ class VoteMap(object):
         self.picks = final_group
         self.votes = {}
         self.schedule = Schedule(protocol, [
-            AlarmLater(self.timeout, minutes=self.vote_time),
+            AlarmLater(self.timeout, seconds=self.vote_time),
             AlarmLater(self.update, seconds=30, loop=True,
                        traversal_required=False)])
     def votes_left(self):
