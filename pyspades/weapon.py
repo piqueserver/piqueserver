@@ -14,14 +14,16 @@ class BaseWeapon(object):
     def __init__(self, reload_callback):
         self.reload_callback = reload_callback
         self.reset()
+        
+    def restock(self):
+        self.current_stock = self.stock
     
-    def reset(self, stock_ammo = True):
+    def reset(self):
         self.shoot = False
         if self.reloading:
             self.reload_call.cancel()
             self.reloading = False
-        if stock_ammo:
-            self.current_ammo = self.ammo
+        self.current_ammo = self.ammo
         self.current_stock = self.stock
     
     def set_shoot(self, value):

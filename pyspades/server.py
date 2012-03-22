@@ -665,12 +665,9 @@ class ServerConnection(BaseConnection):
         self.hp = 100
         self.grenades = 3
         self.blocks = 50
-        reloading = self.weapon_object.reloading
-        self.weapon_object.reset(False)
+        self.weapon_object.restock()
         if not local:
             self.send_contained(restock)
-            if reloading:
-                self._on_reload()
     
     def respawn(self):
         if self.spawn_call is None:
