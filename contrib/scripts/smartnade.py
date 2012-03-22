@@ -18,7 +18,6 @@ def apply_script(protocol, connection, config):
 
 		def on_grenade_thrown(self, grenade):
 			self.smart_nades.append(grenade)
-			grenade.set_location
 			return connection.on_grenade_thrown(self, grenade)
 
 		def grenade_exploded(self, grenade):
