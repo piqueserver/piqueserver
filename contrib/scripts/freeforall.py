@@ -58,11 +58,8 @@ def apply_script(protocol, connection, config):
             if by is not None and by.team is self.team and self is not by:
                 self.score_hack = True
                 pos = self.world_object.position
-                spos = (pos.x, pos.y, pos.z)
                 self.set_team(self.team.other)
-                self.spawn(spos)
-                self.kill(by, type)
-                self.spawn(spos)
+                self.spawn((pos.x, pos.y, pos.z))
                 self.score_hack = False
             return connection.on_kill(self, by, type)
 
