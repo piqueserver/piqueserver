@@ -6,7 +6,7 @@
         "(server powered by pyspades)"
     ],
     "help" : [
-        "/SQUAD    Creates or joins a squad, letting you spawn with friends",
+        "/SQUAD     Creates or joins a squad, letting you spawn with friends",
         "/STREAK    Shows how many kills in a row you got without dying",
         "/AIRSTRIKE Air support!  Try it out just like that for more details",
         "/INTEL     Tells you who's got the enemy intel",
@@ -25,7 +25,8 @@
     "max_connections_per_ip" : 3,
     "game_mode" : "ctf",
     "cap_limit" : 10,
-    "maps" : ["random", "pyspades", "bridgewars", "pinpoint", "anticbridge", "hallway", "pinpoint2", "harbor2"],
+    "maps" : ["random", "pyspades", "bridgewars", "pinpoint", "anticbridge", 
+              "hallway", "pinpoint2", "harbor2"],
     "random_rotation" : false,
     "default_time_limit" : 15,
     "advance_on_win" : false,

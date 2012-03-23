@@ -28,6 +28,9 @@ from map import check_rotation
 class InvalidPlayer(Exception):
     pass
 
+class InvalidSpectator(InvalidPlayer):
+    pass
+
 class InvalidTeam(Exception):
     pass
 
@@ -53,28 +56,31 @@ def alias(name):
         return func
     return dec
 
-def get_player(protocol, value):
+def get_player(protocol, value, spectators = True):
+    ret = None
     try:
         if value.startswith('#'):
             value = int(value[1:])
-            return protocol.players[value]
-        players = protocol.players
-        try:
-            return players[value]
-        except KeyError:
-            value = value.lower()
-            ret = None
-            for player in players.values():
-                name = player.name.lower()
-                if name == value:
-                    return player
-                if name.count(value):
-                    ret = player
-            if ret is not None:
-                return ret
+            ret = protocol.players[value]
+        else:
+            players = protocol.players
+            try:
+                ret = players[value]
+            except KeyError:
+                value = value.lower()
+                for player in players.values():
+                    name = player.name.lower()
+                    if name == value:
+                        return player
+                    if name.count(value):
+                        ret = player
     except (KeyError, IndexError, ValueError):
         pass
-    raise InvalidPlayer()
+    if ret is None:
+        raise InvalidPlayer()
+    elif not spectators and ret.world_object is None:
+        raise InvalidSpectator()
+    return ret
 
 def get_team(connection, value):
     value = value.lower()
@@ -157,7 +163,7 @@ def say(connection, *arg):
 
 @admin
 def kill(connection, value):
-    player = get_player(connection.protocol, value)
+    player = get_player(connection.protocol, value, False)
     player.kill()
     message = '%s killed %s' % (connection.name, player.name)
     connection.protocol.send_chat(message, irc = True)
@@ -165,7 +171,7 @@ def kill(connection, value):
 @admin
 def heal(connection, player = None):
     if player is not None:
-        player = get_player(connection.protocol, player)
+        player = get_player(connection.protocol, player, False)
         message = '%s was healed by %s' % (player.name, connection.name)
     else:
         if connection not in connection.protocol.players:

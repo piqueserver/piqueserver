@@ -544,6 +544,8 @@ class FeatureProtocol(ServerProtocol):
              900, 1200, 1800, 2400, 3000])
         self.balanced_teams = config.get('balanced_teams', None)
         self.login_retries = config.get('login_retries', 1)
+        
+        # voting configuration
         self.default_ban_time = config.get('default_ban_duration', 24*60)
         self.votekick_ban_duration = config.get('votekick_ban_duration', 15)
         self.votekick_percentage = config.get('votekick_percentage', 25)
@@ -551,13 +553,16 @@ class FeatureProtocol(ServerProtocol):
         self.planned_map = None
         self.votemap_autoschedule = config.get('votemap_autoschedule', 180)
         self.votemap_public_votes = config.get('votemap_public_votes', True)
-        self.votemap_time = config.get(
-            'votemap_time', 120)
-        self.votemap_extension_time = config.get(
-            'votemap_extension_time', 15)
-        self.votemap_player_driven = config.get(
-            'votemap_player_driven', False)
+        self.votemap_time = config.get('votemap_time', 120)
+        self.votemap_extension_time = config.get('votemap_extension_time', 15)
+        self.votemap_player_driven = config.get('votemap_player_driven', False)
         self.votemap_percentage = config.get('votemap_percentage', 80)
+        if self.votemap_autoschedule > 0:
+            vms = Schedule(self, [
+                AlarmBeforeEnd(self.start_votemap,
+                seconds=self.votemap_autoschedule)])
+            self.schedule.queue(vms)
+        
         self.speedhack_detect = config.get('speedhack_detect', True)
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
@@ -621,12 +626,6 @@ class FeatureProtocol(ServerProtocol):
         
         get_external_ip(config.get('interface', '')).addCallback(
             self.got_external_ip)
-        
-        if self.votemap_autoschedule > 0:
-            vms = Schedule(self, [
-                AlarmGameTime(self.start_votemap,
-                seconds=self.votemap_autoschedule)])
-            self.schedule.queue(vms)
     
     def got_external_ip(self, ip):
         self.ip = ip
@@ -635,7 +634,7 @@ class FeatureProtocol(ServerProtocol):
     
     def set_time_limit(self, time_limit = None, additive = False):
         advance_call = self.advance_call
-        add_time = 0.
+        add_time = 0.0
         if advance_call is not None:
             add_time = ((advance_call.getTime() - reactor.seconds()) / 60.0)
             advance_call.cancel()
@@ -650,7 +649,7 @@ class FeatureProtocol(ServerProtocol):
         self.advance_call = reactor.callLater(time_limit * 60.0, self._time_up)
 
         time_announce_queue = [
-            AlarmGameTime(self._next_time_announce, seconds=n)
+            AlarmBeforeEnd(self._next_time_announce, seconds=n)
             for n in self.time_announcements]
         if self.time_announce_schedule is not None:
             self.time_announce_schedule.destroy()
@@ -663,7 +662,7 @@ class FeatureProtocol(ServerProtocol):
 
     def _next_time_announce(self):
         remaining = self.advance_call.getTime() - reactor.seconds()
-        if remaining<60.001:
+        if remaining < 60.001:
             if remaining < 10.001:
                 self.send_chat('%s...' % int(round(remaining)))
             else:
@@ -869,23 +868,23 @@ class FeatureProtocol(ServerProtocol):
     
     # voting
 
-    def start_votekick(self, payload):
+    def start_votekick(self, votekick):
         if self.votekick is not None:
             return self.votekick.update()
-        verify = payload.verify()
+        verify = votekick.verify()
         if verify is True:
-            payload.start()
+            votekick.start()
         else:
             return verify
 
-    def start_votemap(self, payload = None):
+    def start_votemap(self, votemap = None):
         if self.votemap is not None:
             return self.votemap.update()
-        if payload is None:
-            payload = VoteMap(None, self, self.maps)
-        verify = payload.verify()
+        if votemap is None:
+            votemap = VoteMap(None, self, self.maps)
+        verify = votemap.verify()
         if verify is True:
-            payload.start()
+            votemap.start()
         else:
             return verify
         
@@ -904,7 +903,6 @@ class FeatureProtocol(ServerProtocol):
     # log high CPU usage
     
     def update_world(self):
-        
         last_time = self.last_time
         current_time = reactor.seconds()
         if last_time is not None:
