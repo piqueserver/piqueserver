@@ -32,8 +32,9 @@ def apply_script(protocol, connection, config):
             return protocol.on_map_change(self, map)
 
     class FreeForAllConnection(connection):
+        score_hack = False
         def on_spawn_location(self, pos):
-            if self.protocol.free_for_all:
+            if not self.score_hack and self.protocol.free_for_all:
                 while True:
                     x = randint(0, 511)
                     y = randint(0, 511)
@@ -45,11 +46,25 @@ def apply_script(protocol, connection, config):
                 x += 0.5
                 y += 0.5
                 return (x, y, z)
-            return self.on_spawn_location(self, pos)
+            return connection.on_spawn_location(self, pos)
 
         def on_flag_take(self):
             if self.protocol.free_for_all:
                 return False
             return connection.on_flag_take(self)
+
+        def on_kill(self, by, type):
+            # Switch teams to add score hack
+            if by is not None and by.team is self.team and self is not by:
+                self.score_hack = True
+                pos = self.world_object.position
+                spos = (pos.x, pos.y, pos.z)
+                self.set_team(self.team.other)
+                self.spawn(spos)
+                self.kill(by, type)
+                self.spawn(spos)
+                self.set_team(self.team.other)
+                self.spawn(spos)
+            return connection.on_kill(self, by, type)
 
     return FreeForAllProtocol, FreeForAllConnection

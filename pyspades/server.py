@@ -867,7 +867,8 @@ class ServerConnection(BaseConnection):
     def kill(self, by = None, type = WEAPON_KILL):
         if self.hp is None:
             return
-        self.on_kill(by, type)
+        if self.on_kill(by, type) is False:
+            return
         self.drop_flag()
         self.hp = None
         self.weapon_object.reset()
