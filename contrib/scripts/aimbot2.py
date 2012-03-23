@@ -302,7 +302,7 @@ def apply_script(protocol, connection, config):
                     self.warn_admin()
 
         def on_hit(self, hit_amount, hit_player, type):
-            if self is not hit_player:
+            if self.team is not hit_player.team:
                 if type == WEAPON_KILL or type == HEADSHOT_KILL:
                     current_time = reactor.seconds()
                     shotgun_use = False
