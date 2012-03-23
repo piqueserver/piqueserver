@@ -63,8 +63,7 @@ def apply_script(protocol, connection, config):
                 self.spawn(spos)
                 self.kill(by, type)
                 self.spawn(spos)
-                self.set_team(self.team.other)
-                self.spawn(spos)
+                self.score_hack = False
             return connection.on_kill(self, by, type)
 
     return FreeForAllProtocol, FreeForAllConnection
