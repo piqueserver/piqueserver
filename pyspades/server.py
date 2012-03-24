@@ -203,6 +203,7 @@ class ServerConnection(BaseConnection):
     last_block = None
     map_data = None
     last_position_update = None
+    local = False
     
     def __init__(self, *arg, **kw):
         BaseConnection.__init__(self, *arg, **kw)
@@ -212,8 +213,10 @@ class ServerConnection(BaseConnection):
         self.respawn_time = protocol.respawn_time
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
         self.pos_table = self.protocol.pos_table
-        
+    
     def on_connect(self):
+        if self.local:
+            return
         if self.peer.eventData != self.protocol.version:
             self.disconnect()
             return
@@ -1700,7 +1703,10 @@ class ServerProtocol(BaseProtocol):
         self.fog_color = color
         fog_color.color = make_color(*color)
         self.send_contained(fog_color, save = True)
-
+    
+    def get_fog_color(self):
+        return self.fog_color
+    
     # events
     
     def on_cp_capture(self, cp):
