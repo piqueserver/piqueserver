@@ -43,10 +43,10 @@ class Map(object):
         self.load_information(rot_info, load_dir)
         
         if self.gen_script:
-            self.name = '%s #%s' % (rot_info.file, rot_info.get_seed())
+            self.name = '%s #%s' % (rot_info.name, rot_info.get_seed())
             print "Generating map '%s'..." % self.name
             random.seed(rot_info.get_seed())
-            self.data = self.gen_script(rot_info.file, rot_info.get_seed())
+            self.data = self.gen_script(rot_info.name, rot_info.get_seed())
         else:
             print "Loading map '%s'..." % self.name
             self.load_vxl(rot_info, load_dir)
@@ -55,7 +55,7 @@ class Map(object):
 
     def load_information(self, rot_info, load_dir):
         try:
-            info = imp.load_source(rot_info.name, rot_info.meta())
+            info = imp.load_source(rot_info.name, rot_info.get_meta_filename())
         except IOError:
             info = None
         self.info = info
@@ -95,12 +95,12 @@ class Map(object):
 class RotationInfo(object):
     seed = None
     def __init__(self, name = "pyspades"):
-        self.full_name = full_name
+        self.full_name = name
         
         splitted = name.split("#")
-        if len(seedsplit) > 1: # user specified a seed
-            name = seedsplit[0].strip()
-            self.seed = int(seedsplit[1])
+        if len(splitted) > 1: # user specified a seed
+            name = splitted[0].strip()
+            self.seed = int(splitted[1])
         self.name = name
     
     def get_seed(self):
@@ -110,10 +110,10 @@ class RotationInfo(object):
         return self.seed
         
     def get_map_filename(self, load_dir = DEFAULT_LOAD_DIR):
-        return os.path.join(load_dir, '%s.vxl' % self.file)
+        return os.path.join(load_dir, '%s.vxl' % self.name)
         
     def get_meta_filename(self, load_dir = DEFAULT_LOAD_DIR):
-        return os.path.join(load_dir, '%s.txt' % self.file)
+        return os.path.join(load_dir, '%s.txt' % self.name)
     
     def __str__(self):
         return self.full_name
