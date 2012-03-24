@@ -9,6 +9,8 @@ ALWAYS_ENABLED = True
 # If WATER_SPANS is True, then players can spawn in water
 WATER_SPAWNS = False
 
+HIDE_POS = (0, 0, 63)
+
 def apply_script(protocol, connection, config):
     class FreeForAllProtocol(protocol):
         free_for_all = False
@@ -31,6 +33,16 @@ def apply_script(protocol, connection, config):
                     self.old_friendly_fire = None
             return protocol.on_map_change(self, map)
 
+        def on_base_spawn(self, x, y, z, base, entity_id):
+            if self.free_for_all:
+                return HIDE_POS
+            return protocol.on_base_spawn(self, x, y, z, base, entity_id)
+
+        def on_flag_spawn(self, x, y, z, flag, entity_id):
+            if self.free_for_all:
+                return HIDE_POS
+            return protocol.on_flag_spawn(self, x, y, z, flag, entity_id)
+
     class FreeForAllConnection(connection):
         score_hack = False
         def on_spawn_location(self, pos):
@@ -47,6 +59,11 @@ def apply_script(protocol, connection, config):
                 y += 0.5
                 return (x, y, z)
             return connection.on_spawn_location(self, pos)
+
+        def on_refill(self):
+            if self.protocol.free_for_all:
+                return False
+            return connection.on_refill(self)
 
         def on_flag_take(self):
             if self.protocol.free_for_all:
