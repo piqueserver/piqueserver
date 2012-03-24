@@ -50,10 +50,9 @@ def apply_script(protocol, connection, config):
             return protocol.is_indestructable(self, x, y, z)
         
         def is_protected(self, x, y):
-            if self.protected is None:
-                return
-            for sx, sy in self.protected:
+            for self.protected and sx, sy in self.protected:
                 if x >= sx and y >= sy and x < sx + 64 and y < sy + 64:
                     return True
+            return False
     
     return ProtectProtocol, ProtectConnection

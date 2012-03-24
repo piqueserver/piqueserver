@@ -124,17 +124,18 @@ def apply_script(protocol, connection, config):
                                       ignore_indestructable):
             surface = {}
             block_action = BlockAction()
-            block_action.player_id = 32
+            block_action.player_id = 31
             set_color = SetColor()
             set_color.value = 0x000000
             set_color.player_id = block_action.player_id
             self.send_contained(set_color, save = True)
             old = cur.copy()
+            check_protected = hasattr(protocol, 'protected')
             for x in xrange(start_x, end_x):
                 block_action.x = x
                 for y in xrange(start_y, end_y):
                     block_action.y = y
-                    if self.protected:
+                    if check_protected:
                         if self.is_protected(x, y):
                             continue
                     for z in xrange(63):
