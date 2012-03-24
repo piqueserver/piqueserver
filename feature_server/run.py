@@ -684,7 +684,7 @@ class FeatureProtocol(ServerProtocol):
         if message is None:
             self.set_map_name(map)
         else:
-            self.send_chat('%s Next map: %s.' % (message, map.text),
+            self.send_chat('%s Next map: %s.' % (message, map.full_name),
                            irc = True)
             reactor.callLater(5, self.set_map_name, map)
     
