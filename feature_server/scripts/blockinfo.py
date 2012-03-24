@@ -94,6 +94,15 @@ def apply_script(protocol, connection, config):
             self.protocol.block_info[(x, y, z)] = (self.name, self.team.id)
             connection.on_block_build(self, x, y, z)
         
+        def on_line_build(self, points):
+            if self.protocol.block_info is None:
+                self.protocol.block_info = {}
+            name_team = (self.name, self.team.id)
+            for point in points:
+                x, y, z = point.x, point.y, point.z
+                self.protocol.block_info[(x, y, z)] = name_team
+            connection.on_line_build(self, points)
+        
         def on_block_removed(self, x, y, z):
             if self.protocol.block_info is None:
                 self.protocol.block_info = {}
