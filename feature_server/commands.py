@@ -706,7 +706,6 @@ def change_planned_map(connection, *pre_maps):
     if maps:
         protocol.planned_map = maps[0]
         protocol.irc_say("* %s changed next map to %s" % (name, maps[0]))
-        connection.send_chat("Type /advance to force map advance.")
     else:
         return 'Invalid map name'
 

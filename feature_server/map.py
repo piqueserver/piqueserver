@@ -107,7 +107,9 @@ class RotationInfo(object):
             seed = random.randint(0, math.pow(2, 31))
         self.file = basename
         self.seed = seed
-        
+    
+    def __str__(self):
+        return self.text
     def map(self, load_dir = DEFAULT_LOAD_DIR):
         return os.path.join(load_dir, '%s.vxl' % self.file)
     def meta(self, load_dir = DEFAULT_LOAD_DIR):
