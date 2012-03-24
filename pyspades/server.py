@@ -899,7 +899,7 @@ class ServerConnection(BaseConnection):
                 continue
             existing_player.name = player.name
             existing_player.player_id = player.player_id
-            existing_player.tool = player.tool
+            existing_player.tool = player.tool or 0
             existing_player.weapon = player.weapon
             existing_player.kills = player.kills
             existing_player.team = player.team.id

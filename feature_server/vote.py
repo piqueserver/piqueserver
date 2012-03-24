@@ -145,9 +145,8 @@ class VoteKick(object):
         self.finish()
         
     def show_result(self, result):
-        self.protocol.send_chat(
-            'Votekick for %s has ended. %s.' % (self.target.name,
-                                                result), irc = True)
+        self.protocol.send_chat('Votekick for %s has ended. %s.' % (
+            self.target.name, result), irc = True)
         if not self.instigator.admin: # set the cooldown
             self.instigator.last_votekick = reactor.seconds()
             
