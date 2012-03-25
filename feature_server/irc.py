@@ -23,10 +23,14 @@ from commands import handle_input, add
 
 import random
 import string
+from itertools import groupby, chain, izip
+from operator import attrgetter
 
 MAX_IRC_CHAT_SIZE = MAX_CHAT_SIZE * 2
 PRINTABLE_CHARACTERS = ('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP'
                         'QRSTUVWXYZ!"#$%&\\\'()*+,-./:;<=>?@[\\]^_`{|}~ \t')
+IRC_TEAM_COLORS = {0 : '\x0302', 1 : '\x0303'}
+SPLIT_WHO_IN_TEAMS = True
 
 def is_printable(value):
     return value in PRINTABLE_CHARACTERS
@@ -197,23 +201,42 @@ def colors(connection):
     else:
         return 'colors off'
 
+def format_name(player):
+    return '%s #%s' % (player.name, player.player_id)
+
+def format_name_color(player):
+    return (IRC_TEAM_COLORS.get(player.team.id, '') +
+        '%s #%s' % (player.name, player.player_id))
+
 def who(connection):
-    if connection in connection.protocol.players:
+    protocol = connection.protocol
+    if connection in protocol.players:
         raise KeyError()
-    if connection.colors:
-        names = [('\x0303' if conn.team.id else '\x0302') + 
-            conn.name + ' #%s' % conn.player_id
-            for conn in connection.protocol.players.values()]
+    player_count = len(protocol.players)
+    if player_count == 0:
+        connection.me('has no players connected')
+        return
+    sorted_players = sorted(protocol.players.values(),
+        key = attrgetter('team.id', 'name'))
+    name_formatter = format_name_color if connection.colors else format_name
+    teams = []
+    formatted_names = []
+    for k, g in groupby(sorted_players, attrgetter('team')):
+        teams.append(k)
+        formatted_names.append(map(name_formatter, g))
+    separator = '\x0f, ' if connection.colors else ', '
+    if not SPLIT_WHO_IN_TEAMS or player_count < 24:
+        noun = 'player' if player_count == 1 else 'players'
+        msg = 'has %s %s connected: ' % (player_count, noun)
+        msg += separator.join(chain.from_iterable(formatted_names))
+        connection.me(msg)
     else:
-        names = [conn.name+' #%s' % conn.player_id 
-            for conn in connection.protocol.players.values()]
-    count = len(names)
-    msg = "has %s player%s connected" % ("no" if not count else count,
-        "" if count == 1 else "s")
-    if count:
-        names.sort()
-        msg += ": %s" % (('\x0f, ' if connection.colors else ', ').join(names))
-    connection.me(msg)
+        for team, names in izip(teams, formatted_names):
+            name_count = len(names)
+            noun = 'player' if name_count == 1 else 'players'
+            msg = 'has %s %s in %s: ' % (name_count, noun, team.name)
+            msg += separator.join(names)
+            connection.me(msg)
 
 def score(connection):
     if connection in connection.protocol.players:
