@@ -30,12 +30,12 @@ def get_server_details(value):
         raise ValueError('invalid server identifier')
     splitted = value[6:].split(':')
     if len(splitted) == 1:
+        host = int(splitted[0])
+        port = 32887
+    else:
         host, port = splitted
         host = int(host)
         port = int(port)
-    else:
-        host = int(splitted[0])
-        port = 32887
     a = host & 0xFF
     b = (host & 0xFF00) >> 8
     c = (host & 0xFF0000) >> 16
