@@ -246,7 +246,7 @@ def apply_script(protocol, connection, config):
             if returned is False:
                 return False
             if self.protocol.arena_running:
-                if self.world_object is not None:
+                if self.world_object is not None and not self.world_object.dead:
                     self.world_object.dead = True
                     self.protocol.check_round_end()
             return returned
