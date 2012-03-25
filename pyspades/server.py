@@ -1655,7 +1655,7 @@ class ServerProtocol(BaseProtocol):
                 entity.update()
     
     def send_contained(self, contained, sequence = False, sender = None,
-                       team = None, save = False):
+                       team = None, save = False, rule = None):
         
         if sequence:
             flags = enet.PACKET_FLAG_UNSEQUENCED
@@ -1675,6 +1675,8 @@ class ServerProtocol(BaseProtocol):
             if player is sender or player.player_id is None:
                 continue
             if team is not None and player.team is not team:
+                continue
+            if rule is not None and rule(player) == False:
                 continue
             if sequence:
                 if check_distance and player.world_object is not None:
