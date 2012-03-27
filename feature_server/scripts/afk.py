@@ -84,10 +84,10 @@ def apply_script(protocol, connection, config):
                 self.afk_kick_call.reset(time_limit)
             return connection.on_chat(self, value, global_message)
         
-        def on_position_update(self):
+        def on_orientation_update(self, x, y, z):
             self.last_activity = reactor.seconds()
             if self.afk_kick_call:
                 self.afk_kick_call.reset(time_limit)
-            return connection.on_position_update(self)
+            return connection.on_orientation_update(self, x, y, z)
     
     return protocol, AFKConnection
