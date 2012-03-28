@@ -9,7 +9,7 @@ from twisted.internet import reactor
 def grief_check(connection, player, time = None):
     player = get_player(connection.protocol, player)
     protocol = connection.protocol
-    color = connection not in connection.protocol.players and connection.colors
+    color = connection not in protocol.players and connection.colors
     minutes = float(time or 2)
     if minutes < 0.0:
         raise ValueError()
@@ -66,10 +66,9 @@ def grief_check(connection, player, time = None):
         message += s + ' %s teammates in the last %s' % (teamkills, minutes_s)
     if switch_sentence or teamkills > 0:
         message += '.'
-    if (not connection.team.spectator and
-        connection.protocol.votekick is not None and
-        connection.protocol.votekick.target is player):
-        vk_instigator = connection.protocol.votekick.instigator
+    if (not player.team.spectator and
+        protocol.votekick is not None and protocol.votekick.target is player):
+        vk_instigator = protocol.votekick.instigator
         dist = distance_3d_vector(player.world_object.position,
             vk_instigator.world_object.position)
         name = ('\x0303' if vk_instigator.team.id
