@@ -608,6 +608,7 @@ class FeatureProtocol(ServerProtocol):
         for password in self.passwords.get('admin', []):
             if password == 'replaceme':
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
+                exit(1)
         
         port = self.port = config.get('port', 32887)
         ServerProtocol.__init__(self, port, interface)
