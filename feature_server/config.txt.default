@@ -118,8 +118,7 @@
         "squad",
         "disco",
         "antijerk",
-        "ratio",
-        "zoc"
+        "ratio"
     ],
     
     "load_saved_map" : false,
