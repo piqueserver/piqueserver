@@ -4,10 +4,16 @@ from twisted.internet import reactor
 from pyspades.common import prettify_timespan
 from commands import name, get_player, add, admin
 
+S_AFK_CHECK = '{player} has been inactive for {time}'
+S_NO_PLAYERS_INACTIVE = 'No players or connections inactive for {time}'
+S_AFK_KICKED = ('{num_players} players kicked, {num_connections} connections '
+    'terminated for {time} inactivity')
+S_AFK_KICK_REASON = 'Inactive for {time}'
+
 def afk(connection, player):
     player = get_player(connection.protocol, player)
-    return '%s has been inactive for %s' % (player.name,
-        prettify_timespan(reactor.seconds() - player.last_activity, True))
+    elapsed = prettify_timespan(reactor.seconds() - player.last_activity, True)
+    return S_AFK_CHECK.format(player = player.name, time = elapsed)
 
 @name('kickafk')
 @admin
@@ -24,7 +30,7 @@ def kick_afk(connection, minutes, amount = None):
         if not conn.admin and conn.last_activity < lower_bound:
             to_kick.append(conn)
     if not to_kick:
-        return 'No players or connections inactive for %s' % minutes_s
+        return S_NO_PLAYERS_INACTIVE.format(minutes = minutes_s)
     to_kick.sort(key = attrgetter('last_activity'))
     to_kick.sort(key = lambda conn: conn.name is None)
     amount = amount or len(to_kick)
@@ -35,8 +41,8 @@ def kick_afk(connection, minutes, amount = None):
             kicks += 1
         else:
             conn.disconnect()
-    message = ('%s players kicked, %s connections terminated for %s '
-        'inactivity' % (kicks, amount - kicks, minutes_s))
+    message = S_AFK_KICKED.format(num_players = kicks,
+        num_connections = amount - kicks, minutes_s)
     protocol.irc_say('* ' + message)
     if connection in protocol.players:
         return message
@@ -56,7 +62,8 @@ def apply_script(protocol, connection, config):
             if self.name:
                 time_inactive = reactor.seconds() - self.last_activity
                 time_inactive = max(1.0, round(time_inactive / 60.0)) * 60.0
-                self.kick('Inactive for %s' % prettify_timespan(time_inactive))
+                elapsed = prettify_timespan(time_inactive)
+                self.kick(S_AFK_KICK_REASON.format(time = elapsed))
             else:
                 self.disconnect()
         
