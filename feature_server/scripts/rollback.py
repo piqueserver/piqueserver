@@ -1,20 +1,31 @@
+from twisted.internet.task import LoopingCall
 from pyspades.vxl import VXLData
-from pyspades.common import coordinates
 from pyspades.contained import BlockAction, SetColor
 from pyspades.constants import *
-from twisted.internet.task import LoopingCall
-from map import Map, MapNotFound
+from pyspades.common import coordinates
+from map import Map, MapNotFound, check_rotation
 from commands import add, admin
 import time
 import operator
 
+S_INVALID_MAP_NAME = 'Invalid map name'
+S_ROLLBACK_IN_PROGRESS = 'Rollback in progress'
+S_ROLLBACK_COMMENCED = '{player} commenced a rollback...'
+S_AUTOMATIC_ROLLBACK_PLAYER_NAME = 'Map'
+S_NO_ROLLBACK_IN_PROGRESS = 'No rollback in progress'
+S_ROLLBACK_CANCELLED = 'Rollback cancelled by {player}'
+S_ROLLBACK_ENDED = 'Rollback ended. {result}'
+S_ROLLBACK_PROGRESS = 'Rollback progress {percent:.0%}'
+S_ROLLBACK_COLOR_PASS = 'Rollback doing color pass...'
+S_ROLLBACK_TIME_TAKEN = 'Time taken: {seconds:.3}s'
+
 @admin
-def rollmap(connection, filename = None, value = None):
+def rollmap(connection, mapname = None, value = None):
     start_x, start_y, end_x, end_y = 0, 0, 512, 512
     if value is not None:
         start_x, start_y = coordinates(value)
         end_x, end_y = start_x + 64, start_y + 64
-    return connection.protocol.start_rollback(connection, filename,
+    return connection.protocol.start_rollback(connection, mapname,
         start_x, start_y, end_x, end_y)
 
 @admin
@@ -51,20 +62,23 @@ def apply_script(protocol, connection, config):
         
         # rollback
         
-        def start_rollback(self, connection, filename,
-                           start_x, start_y, end_x, end_y,
-                           ignore_indestructable = True):
+        def start_rollback(self, connection, mapname, start_x, start_y,
+            end_x, end_y, ignore_indestructable = True):
             if self.rollback_in_progress:
-                return 'Rollback in progress.'
-            if filename is None:
+                return S_ROLLBACK_IN_PROGRESS
+            if mapname is None:
                 map = self.rollback_map
             else:
                 try:
-                    map = Map(filename).data
+                    maps = check_rotation([mapname])
+                    if not maps:
+                        return S_INVALID_MAP_NAME
+                    map = Map(maps[0]).data
                 except MapNotFound as error:
                     return error.message
-            message = ('%s commenced a rollback...' %
-                (connection.name if connection is not None else 'Map'))
+            name = (connection.name if connection is not None
+                else S_AUTOMATIC_ROLLBACK_PLAYER_NAME)
+            message = S_ROLLBACK_COMMENCED.format(player = name)
             self.send_chat(message, irc = True)
             self.packet_generator = self.create_rollback_generator(self.map,
                 map, start_x, start_y, end_x, end_y, ignore_indestructable)
@@ -78,8 +92,9 @@ def apply_script(protocol, connection, config):
         
         def cancel_rollback(self, connection):
             if not self.rollback_in_progress:
-                return 'No rollback in progress.'
-            self.end_rollback('Cancelled by %s' % connection.name)
+                return S_NO_ROLLBACK_IN_PROGRESS
+            result = S_ROLLBACK_CANCELLED.format(player = connection.name)
+            self.end_rollback(result)
         
         def end_rollback(self, result):
             self.rollback_in_progress = False
@@ -87,7 +102,8 @@ def apply_script(protocol, connection, config):
             self.cycle_call = None
             self.packet_generator = None
             self.update_entities()
-            self.send_chat('Rollback ended. %s' % result, irc = True)
+            message = S_ROLLBACK_ENDED.format(result = result)
+            self.send_chat(message, irc = True)
         
         def rollback_cycle(self):
             if not self.rollback_in_progress:
@@ -109,19 +125,19 @@ def apply_script(protocol, connection, config):
                 if (time.time() - self.rollback_last_chat >
                     self.rollback_time_between_progress_updates):
                     self.rollback_last_chat = time.time()
-                    progress = int(float(self.rollback_rows) /
-                        self.rollback_total_rows * 100.0)
-                    if progress < 100:
-                        self.send_chat('Rollback progress %s%%' % progress)
+                    progress = float(self.rollback_rows) / self.rollback_total_rows
+                    if progress < 1.0:
+                        message = S_ROLLBACK_PROGRESS.format(percent = progress)
+                        self.send_chat(message)
                     else:
-                        self.send_chat('Rollback doing color pass...')
+                        self.send_chat(S_ROLLBACK_COLOR_PASS)
             except (StopIteration):
-                self.end_rollback('Time taken: %.2fs' % 
-                    float(time.time() - self.rollback_start_time))
+                elapsed = time.time() - self.rollback_start_time
+                message = S_ROLLBACK_TIME_TAKEN.format(seconds = elapsed)
+                self.end_rollback(message)
         
-        def create_rollback_generator(self, cur, new,
-                                      start_x, start_y, end_x, end_y,
-                                      ignore_indestructable):
+        def create_rollback_generator(self, cur, new, start_x, start_y,
+            end_x, end_y, ignore_indestructable):
             surface = {}
             block_action = BlockAction()
             block_action.player_id = 31
@@ -135,9 +151,8 @@ def apply_script(protocol, connection, config):
                 block_action.x = x
                 for y in xrange(start_y, end_y):
                     block_action.y = y
-                    if check_protected:
-                        if self.is_protected(x, y):
-                            continue
+                    if check_protected and self.is_protected(x, y):
+                        continue
                     for z in xrange(63):
                         action = None
                         cur_solid = cur.get_solid(x, y, z)
