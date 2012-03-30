@@ -212,7 +212,8 @@ def apply_script(protocol, connection, config):
             protocol.on_map_change(self, map)
         
         def on_map_leave(self):
-            self.end_rollback(S_MAP_CHANGED)
+            if self.rollback_in_progress:
+                self.end_rollback(S_MAP_CHANGED)
             protocol.on_map_leave(self)
         
         def on_game_end(self):
