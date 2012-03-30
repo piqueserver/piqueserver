@@ -30,7 +30,7 @@ def kick_afk(connection, minutes, amount = None):
         if not conn.admin and conn.last_activity < lower_bound:
             to_kick.append(conn)
     if not to_kick:
-        return S_NO_PLAYERS_INACTIVE.format(minutes = minutes_s)
+        return S_NO_PLAYERS_INACTIVE.format(time = minutes_s)
     to_kick.sort(key = attrgetter('last_activity'))
     to_kick.sort(key = lambda conn: conn.name is None)
     amount = amount or len(to_kick)
@@ -42,7 +42,7 @@ def kick_afk(connection, minutes, amount = None):
         else:
             conn.disconnect()
     message = S_AFK_KICKED.format(num_players = kicks,
-        num_connections = amount - kicks, minutes_s)
+        num_connections = amount - kicks, time = minutes_s)
     protocol.irc_say('* ' + message)
     if connection in protocol.players:
         return message
