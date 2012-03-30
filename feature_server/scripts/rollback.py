@@ -15,6 +15,7 @@ S_AUTOMATIC_ROLLBACK_PLAYER_NAME = 'Map'
 S_NO_ROLLBACK_IN_PROGRESS = 'No rollback in progress'
 S_ROLLBACK_CANCELLED = 'Rollback cancelled by {player}'
 S_ROLLBACK_ENDED = 'Rollback ended. {result}'
+S_MAP_CHANGED = 'Map was changed'
 S_ROLLBACK_PROGRESS = 'Rollback progress {percent:.0%}'
 S_ROLLBACK_COLOR_PASS = 'Rollback doing color pass...'
 S_ROLLBACK_TIME_TAKEN = 'Time taken: {seconds:.3}s'
@@ -208,11 +209,15 @@ def apply_script(protocol, connection, config):
         
         def on_map_change(self, map):
             self.rollback_map = map.copy()
-            return protocol.on_map_change(self, map)
+            protocol.on_map_change(self, map)
+        
+        def on_map_leave(self):
+            self.end_rollback(S_MAP_CHANGED)
+            protocol.on_map_leave(self)
         
         def on_game_end(self):
             if rollback_on_game_end:
                 self.start_rollback(None, None, 0, 0, 512, 512, False)
-            return protocol.on_game_end(self)
-        
+            protocol.on_game_end(self)
+    
     return RollbackProtocol, RollbackConnection

@@ -693,14 +693,11 @@ class FeatureProtocol(ServerProtocol):
         return self.game_mode_name
     
     def set_map_name(self, rot_info):
-        if self.rollback_in_progress:
-            return 'Rollback in progress.'
         try:
             map_info = self.get_map(rot_info)
         except MapNotFound:
             return False
-        if self.map_info:
-            self.on_map_leave()
+        self.on_map_leave()
         self.map_info = map_info
         self.end_votes()
         self.max_score = self.map_info.cap_limit or self.default_cap_limit
@@ -920,14 +917,16 @@ class FeatureProtocol(ServerProtocol):
     # events
     
     def on_map_change(self, map):
-        map_on_map_change = self.map_info.on_map_change
-        if map_on_map_change is not None:
-            map_on_map_change(self, map)
+        if self.map_info:
+            map_on_map_change = self.map_info.on_map_change
+            if map_on_map_change is not None:
+                map_on_map_change(self, map)
     
     def on_map_leave(self):
-        map_on_map_leave = self.map_info.on_map_leave
-        if map_on_map_leave is not None:
-            map_on_map_leave(self)
+        if self.map_info:
+            map_on_map_leave = self.map_info.on_map_leave
+            if map_on_map_leave is not None:
+                map_on_map_leave(self)
     
     def on_game_end(self):
         if self.advance_on_win <= 0:
