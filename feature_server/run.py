@@ -177,6 +177,7 @@ class FeatureConnection(ServerConnection):
         print '%s (IP %s, ID %s) entered the game!' % (self.printable_name, 
             self.address[0], self.player_id)
         self.protocol.irc_say('* %s entered the game' % self.name)
+        self.admin = self.protocol.everyone_admin
     
     def get_spawn_location(self):
         get_location = self.protocol.map_info.get_spawn_location
@@ -448,6 +449,7 @@ class FeatureProtocol(ServerProtocol):
     bans = None
     ban_publish = None
     ban_manager = None
+    everyone_admin = False
     player_memory = None
     irc_relay = None
     balanced_teams = None
@@ -608,6 +610,8 @@ class FeatureProtocol(ServerProtocol):
         for password in self.passwords.get('admin', []):
             if password == 'replaceme':
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
+            elif password == '':
+                self.everyone_admin = True
         
         port = self.port = config.get('port', 32887)
         ServerProtocol.__init__(self, port, interface)
