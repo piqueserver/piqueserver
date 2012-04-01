@@ -176,7 +176,7 @@ class VoteMap(object):
         self.vote_interval = self.protocol.votemap_interval
         self.public_votes = self.protocol.votemap_public_votes
         self.extension_time = self.protocol.votemap_extension_time
-        rotation = [n.text.lower() for n in rotation]
+        rotation = [n.name.lower() for n in rotation]
         final_rotation = random.sample(rotation, min(len(rotation),5))
         if self.extension_time>0:
             final_rotation.append("extend")

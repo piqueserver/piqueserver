@@ -39,9 +39,6 @@ import textwrap
 import collections
 import zlib
 
-ORIENTATION_DISTANCE = 128.0
-ORIENTATION_DISTANCE_SQUARED = 128.0 ** 2
-
 COMPRESSION_LEVEL = 9
 
 create_player = loaders.CreatePlayer()
@@ -579,18 +576,15 @@ class ServerConnection(BaseConnection):
                         return
                     self.set_team(team)
     
-    def is_valid_position(self, x, y, z, distance = None, z_distance = None):
+    def is_valid_position(self, x, y, z, distance = None):
         if not self.speedhack_detect:
             return True
-        if distance is None and z_distance is None:
+        if distance is None:
             distance = RUBBERBAND_DISTANCE
-            z_distance = RUBBERBAND_DISTANCE_Z
-        if z_distance is None:
-            z_distance = distance
         position = self.world_object.position
         return (math.fabs(x - position.x) < distance and
                 math.fabs(y - position.y) < distance and
-                math.fabs(z - position.z) < z_distance)
+                math.fabs(z - position.z) < distance)
     
     def check_refill(self):
         last_refill = self.last_refill
@@ -662,7 +656,7 @@ class ServerConnection(BaseConnection):
         position_data.x = x
         position_data.y = y
         position_data.z = z
-        self.send_contained(position_data)
+        self.send_contained(position_data, unsequenced = True)
     
     def refill(self, local = False):
         self.hp = 100
@@ -1467,6 +1461,29 @@ class ServerProtocol(BaseProtocol):
                                             abs(vec[1]*1.02) +\
                                             abs(vec[2]*1.01))
     
+    def send_contained(self, contained, unsequenced = False, sender = None,
+                       team = None, save = False, rule = None):
+        if unsequenced:
+            flags = enet.PACKET_FLAG_UNSEQUENCED
+        else:
+            flags = enet.PACKET_FLAG_RELIABLE
+        data = ByteWriter()
+        contained.write(data)
+        data = str(data)
+        packet = enet.Packet(data, flags)
+        for player in self.connections.values():
+            if player is sender or player.player_id is None:
+                continue
+            if team is not None and player.team is not team:
+                continue
+            if rule is not None and rule(player) == False:
+                continue
+            if player.saved_loaders is not None:
+                if save:
+                    player.saved_loaders.append(data)
+            else:
+                player.peer.send(0, packet)
+    
     def reset_tc(self):
         self.entities = self.get_cp_entities()
         for entity in self.entities:
@@ -1534,7 +1551,7 @@ class ServerProtocol(BaseProtocol):
                 orientation = (0.0, 0.0, 0.0)
             items.append((position, orientation))
         world_update.items = items
-        self.send_contained(world_update)
+        self.send_contained(world_update, unsequenced = True)
     
     def set_map(self, map):
         self.map = map
@@ -1653,42 +1670,6 @@ class ServerProtocol(BaseProtocol):
                     entity.z += 1
             if moved or self.on_update_entity(entity):
                 entity.update()
-    
-    def send_contained(self, contained, sequence = False, sender = None,
-                       team = None, save = False, rule = None):
-        
-        if sequence:
-            flags = enet.PACKET_FLAG_UNSEQUENCED
-            check_distance = (sender is not None and 
-                              sender.world_object is not None)
-            if check_distance:
-                position = sender.world_object.position
-                x = position.x
-                y = position.y
-        else:
-            flags = enet.PACKET_FLAG_RELIABLE
-        data = ByteWriter()
-        contained.write(data)
-        data = str(data)
-        packet = enet.Packet(data, flags)
-        for player in self.connections.values():
-            if player is sender or player.player_id is None:
-                continue
-            if team is not None and player.team is not team:
-                continue
-            if rule is not None and rule(player) == False:
-                continue
-            if sequence:
-                if check_distance and player.world_object is not None:
-                    position = player.world_object.position
-                    distance_squared = (position.x - x)**2 + (position.y - y)**2
-                    if distance_squared > ORIENTATION_DISTANCE_SQUARED:
-                        continue
-            if player.saved_loaders is not None:
-                if save:
-                    player.saved_loaders.append(data)
-            else:
-                player.peer.send(0, packet)
     
     def send_chat(self, value, global_message = None, sender = None,
                   team = None):
