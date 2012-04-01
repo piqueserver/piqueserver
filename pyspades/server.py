@@ -656,7 +656,7 @@ class ServerConnection(BaseConnection):
         position_data.x = x
         position_data.y = y
         position_data.z = z
-        self.send_contained(position_data, unsequenced = True)
+        self.send_contained(position_data)
     
     def refill(self, local = False):
         self.hp = 100
