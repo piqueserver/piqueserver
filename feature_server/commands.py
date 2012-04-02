@@ -829,15 +829,11 @@ def fog(connection, r, g, b):
 
 def weapon(connection, value):
     player = get_player(connection.protocol, value)
-    if player.weapon == SEMI_WEAPON:
-        weapon = 'Rifle'
-    elif player.weapon == SMG_WEAPON:
-        weapon = 'SMG'
-    elif player.weapon == SHOTGUN_WEAPON:
-        weapon = 'Shotgun'
+    if player.weapon_object is None:
+        name = '(unknown)'
     else:
-        weapon = '(unknown)'
-    return '%s has a %s' % (player.name, weapon)
+        name = player.weapon_object.name
+    return '%s has a %s' % (player.name, name)
     
 command_list = [
     help,

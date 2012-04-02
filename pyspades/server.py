@@ -1431,7 +1431,6 @@ class ServerProtocol(BaseProtocol):
         self.max_connections = self.max_players + 1
         BaseProtocol.__init__(self, *arg, **kw)
         self.entities = []
-        self.connections = {}
         self.players = MultikeyDict()
         self.connection_ids = IDPool()
         self.player_ids = IDPool()

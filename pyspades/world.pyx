@@ -110,7 +110,7 @@ cdef class Character(Object):
         self.name = 'character'
         self.player = create_player()
         self.fall_callback = fall_callback
-        self.position = create_proxy_vector(&self.player.e)
+        self.position = create_proxy_vector(&self.player.p)
         self.orientation = create_proxy_vector(&self.player.f)
         self.velocity = create_proxy_vector(&self.player.v)
         if position is not None:
@@ -124,15 +124,13 @@ cdef class Character(Object):
         if value:
             if not self.player.airborne:
                 self.player.p.z += 0.9
-                self.player.e.z += 0.9
         else:
             self.player.p.z -= 0.9
-            self.player.e.z -= 0.9
         self.player.crouch = value
     
     def set_animation(self, jump, crouch, sneak, sprint):
         self.player.jump = jump
-        self.player.crouch = crouch
+        self.set_crouch(crouch)
         self.player.sneak = sneak
         self.player.sprint = sprint
     
@@ -147,9 +145,9 @@ cdef class Character(Object):
     
     def set_position(self, x, y, z, reset = False):
         self.position.set(x, y, z)
-        self.player.p.x = x
-        self.player.p.y = y
-        self.player.p.z = z
+        self.player.p.x = self.player.e.x = x
+        self.player.p.y = self.player.e.y = y
+        self.player.p.z = self.player.e.z = z
         if reset:
             self.velocity.set(0.0, 0.0, 0.0)
             self.primary_fire = self.secondary_fire = False 

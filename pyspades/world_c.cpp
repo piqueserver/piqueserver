@@ -116,7 +116,13 @@ int validate_hit(float shooter_x, float shooter_y, float shooter_z,
     cy = ox * o.h.x + oy * o.h.y + oz * o.h.z;
     y = cy * r;
     r *= tolerance;
-    return (x-r < 0 && x+r > 0 && y-r < 0 && y+r > 0);
+    int ret = (x-r < 0 && x+r > 0 && y-r < 0 && y+r > 0);
+#if 0
+    if (!ret) {
+        printf("hit test failed: %f %f %f\n", x, y, r);
+    }
+#endif
+    return ret;
 }
 
 // silly VOXLAP function
