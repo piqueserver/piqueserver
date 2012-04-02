@@ -1428,7 +1428,9 @@ class ServerProtocol(BaseProtocol):
     
     def __init__(self, *arg, **kw):
         # +2 to allow server->master and master->server connection since enet
-        # peers are allocated for both clients and hosts.
+        # allocates peers for both clients and hosts. this is done at 
+        # enet-level, not application-level, so even for masterless-servers,
+        # this should not allow additional players.
         self.max_connections = self.max_players + 2
         BaseProtocol.__init__(self, *arg, **kw)
         self.entities = []
