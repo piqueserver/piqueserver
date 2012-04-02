@@ -208,7 +208,6 @@ class ServerConnection(BaseConnection):
         self.address = (address.host, address.port)
         self.respawn_time = protocol.respawn_time
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
-        self.pos_table = self.protocol.pos_table
     
     def on_connect(self):
         if self.local:
@@ -620,18 +619,19 @@ class ServerConnection(BaseConnection):
             
             # search for valid locations near the specified point
             modpos = 0
-            while modpos<len(self.pos_table) and not\
-                      self.location_free(x + self.pos_table[modpos][0],
-                                         y + self.pos_table[modpos][1], 
-                                         z + self.pos_table[modpos][2]):
+            pos_table = self.protocol.pos_table
+            while modpos<len(pos_table) and not\
+                      self.location_free(x + pos_table[modpos][0],
+                                         y + pos_table[modpos][1], 
+                                         z + pos_table[modpos][2]):
                 modpos+=1
-            if modpos == len(self.pos_table): # nothing nearby
+            if modpos == len(pos_table): # nothing nearby
                 position = self.world_object.position
                 x, y, z = position.x, position.y, position.z
             else:
-                x = x + self.pos_table[modpos][0]
-                y = y + self.pos_table[modpos][1]
-                z = z + self.pos_table[modpos][2]
+                x = x + pos_table[modpos][0]
+                y = y + pos_table[modpos][1]
+                z = z + pos_table[modpos][2]
                 self.world_object.set_position(x, y, z)
                 x += 0.5
                 y += 0.5
