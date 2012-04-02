@@ -154,7 +154,7 @@ class FeatureConnection(ServerConnection):
             else:
                 print 'banned user %s (%s) attempted to join' % (name, 
                     client_ip)
-                self.disconnect()
+                self.disconnect(ERROR_BANNED)
                 return
         except KeyError:
             pass
@@ -164,7 +164,7 @@ class FeatureConnection(ServerConnection):
             if reason is not None:
                 print ('federated banned user (%s) attempted to join, '
                     'banned for %r') % (client_ip, reason)
-                self.disconnect()
+                self.disconnect(ERROR_BANNED)
                 return
         ServerConnection.on_connect(self)
     
@@ -381,7 +381,7 @@ class FeatureConnection(ServerConnection):
             else:
                 message = '%s was kicked' % self.name
             self.protocol.send_chat(message, irc = True)
-        self.disconnect()
+        self.disconnect(ERROR_KICKED)
     
     def ban(self, reason = None, duration = None):
         reason = ': ' + reason if reason is not None else ''

@@ -181,7 +181,6 @@ class ServerConnection(BaseConnection):
     weapon_object = None
     name = None
     kills = 0
-    orientation_sequence = 0
     hp = None
     tool = None
     color = (0x70, 0x70, 0x70)
@@ -215,18 +214,18 @@ class ServerConnection(BaseConnection):
         if self.local:
             return
         if self.peer.eventData != self.protocol.version:
-            self.disconnect()
+            self.disconnect(ERROR_WRONG_VERSION)
             return
         max_players = min(32, self.protocol.max_players)
         if len(self.protocol.connections) > max_players:
-            self.disconnect()
+            self.disconnect(ERROR_FULL)
             return
         if self.protocol.max_connections_per_ip:
             shared = [conn for conn in
                 self.protocol.connections.values()
                 if conn.address[0] == self.address[0]]
             if len(shared) > self.protocol.max_connections_per_ip:
-                self.disconnect()
+                self.disconnect(ERROR_KICKED)
                 return
         if not self.disconnected:
             self._connection_ack()
@@ -1428,7 +1427,8 @@ class ServerProtocol(BaseProtocol):
     respawn_waves = False
     
     def __init__(self, *arg, **kw):
-        self.max_connections = self.max_players
+        # +1 to allow sending of disconnect messages
+        self.max_connections = self.max_players + 1
         BaseProtocol.__init__(self, *arg, **kw)
         self.entities = []
         self.connections = {}

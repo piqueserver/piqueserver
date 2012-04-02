@@ -34,11 +34,11 @@ class BaseConnection(object):
     def timed_out(self):
         self.disconnect()
     
-    def disconnect(self):
+    def disconnect(self, data = 0):
         if self.disconnected:
             return
         self.disconnected = True
-        self.peer.reset()
+        self.peer.disconnect(data);
         self.protocol.remove_peer(self.peer)
         self.on_disconnect()
     
@@ -70,7 +70,7 @@ class BaseConnection(object):
 
 class BaseProtocol(object):
     connection_class = BaseConnection
-    max_connections = 32
+    max_connections = 33
     
     def __init__(self, port = None, interface = 'localhost', 
                  update_interval = 1 / 60.0):
