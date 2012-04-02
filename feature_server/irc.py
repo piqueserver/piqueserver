@@ -50,6 +50,7 @@ class IRCBot(irc.IRCClient):
     ops = None
     voices = None
     colors = True
+    unaliased_name = None
     
     def _get_nickname(self):
         return self.factory.nickname
@@ -103,11 +104,13 @@ class IRCBot(irc.IRCClient):
     
     @channel
     def privmsg(self, user, channel, msg):
-        if (user in self.ops) or (user in self.voices):
-            prefixed_username = ('@' if user in self.ops else '+') + user
+        if user in self.ops or user in self.voices:
+            prefix = '@' if user in self.ops else '+'
+            alias = self.factory.aliases.get(user, user)
             if msg.startswith(self.factory.commandprefix):
                 self.admin = (user in self.ops)
-                self.name = prefixed_username
+                self.unaliased_name = user
+                self.name = prefix + alias
                 input = msg[len(self.factory.commandprefix):]
                 result = handle_input(self, input)
                 if result is not None:
@@ -115,7 +118,7 @@ class IRCBot(irc.IRCClient):
             elif msg.startswith(self.factory.chatprefix):
                 max_len = MAX_IRC_CHAT_SIZE - len(self.protocol.server_prefix) - 1
                 msg = msg[len(self.factory.chatprefix):].strip()
-                message = ("<%s> %s" % (prefixed_username, msg))[:max_len]
+                message = ("<%s> %s" % (prefix + alias, msg))[:max_len]
                 print message.encode('ascii', 'replace')
                 self.factory.server.send_chat(encode(message))
     
@@ -141,8 +144,10 @@ class IRCClientFactory(protocol.ClientFactory):
     lost_reconnect_delay = 20
     failed_reconnect_delay = 60
     bot = None
+    aliases = None
     
     def __init__(self, server, config):
+        self.aliases = {}
         self.server = server
         self.nickname = config.get('nickname', 
             'pyspades%s' % random.randrange(0, 99)).encode('ascii')
@@ -245,5 +250,33 @@ def score(connection):
         connection.protocol.blue_team.score,
         connection.protocol.green_team.score))
 
-for func in (who, score, colors):
+def alias(connection, value = None):
+    if connection in connection.protocol.players:
+        raise KeyError()
+    aliases = connection.factory.aliases
+    unaliased_name = connection.unaliased_name
+    if value is None:
+        alias = aliases.get(unaliased_name)
+        if alias:
+            message = 'aliases %s to %s' % (unaliased_name, alias)
+        else:
+            message = "doesn't have an alias for %s" % unaliased_name
+    else:
+        aliases[unaliased_name] = value
+        message = 'will alias %s to %s' % (unaliased_name, value)
+    connection.me(message)
+
+def unalias(connection):
+    if connection in connection.protocol.players:
+        raise KeyError()
+    aliases = connection.factory.aliases
+    unaliased_name = connection.unaliased_name
+    if unaliased_name in aliases:
+        aliases.pop(unaliased_name)
+        message = 'will no longer alias %s' % unaliased_name
+    else:
+        message = "doesn't have an alias for %s" % unaliased_name
+    connection.me(message)
+
+for func in (who, score, colors, alias, unalias):
     add(func)
