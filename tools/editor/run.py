@@ -100,10 +100,12 @@ class EditWidget(QtGui.QWidget):
         if not self.color_sampling and modifiers & Qt.ShiftModifier:
             self.color_sampling = True
             self.main.app.setOverrideCursor(QtGui.QCursor(Qt.CrossCursor))
-        if key == Qt.Key_A:
-            self.set_z(self.z + 1)
-        elif key == Qt.Key_Q:
+        if key == Qt.Key_Q:
             self.set_z(self.z - 1)
+        elif key == Qt.Key_A:
+            self.set_z(self.z + 1)
+        elif key == Qt.Key_F:
+            self.toggle_freeze()
         elif key in xrange(Qt.Key_1, Qt.Key_9 + 1):
             self.brush_size = key - Qt.Key_0
         elif key == Qt.Key_Plus:
@@ -449,45 +451,45 @@ class MapEditor(QtGui.QMainWindow):
             shortcut=QtGui.QKeySequence.Save, triggered = self.save_selected)
         self.file.addAction(self.save_action)
         
-        self.save_as_action = QtGui.QAction('Save As...', self, 
+        self.save_as_action = QtGui.QAction('Save &As...', self, 
             shortcut = QtGui.QKeySequence('Ctrl+Shift+S'), 
             triggered = self.save_as_selected)
         self.file.addAction(self.save_as_action)
         
         self.export = self.file.addMenu('&Export')
         
-        self.color_map = QtGui.QAction('Colormap...', self, 
+        self.color_map = QtGui.QAction('&Colormap...', self, 
             triggered = self.export_color_map)
         self.export.addAction(self.color_map)
         
-        self.height_map = QtGui.QAction('Heightmap...', self, 
+        self.height_map = QtGui.QAction('&Heightmap...', self, 
             triggered = self.export_height_map)
         self.export.addAction(self.height_map)
         
-        self.image_sequence = QtGui.QAction('Image sequence...', self, 
+        self.image_sequence = QtGui.QAction('Image &sequence...', self, 
             triggered = self.export_image_sequence)
         self.export.addAction(self.image_sequence)
         
         self.file.addSeparator()
         
-        self.voxed_action = QtGui.QAction('Open in VOXED', 
+        self.voxed_action = QtGui.QAction('Open in &VOXED', 
             self, shortcut = QtGui.QKeySequence('F5'), triggered = self.open_voxed)
         self.file.addAction(self.voxed_action)
         
         self.file.addSeparator()
         
-        self.quit_action = QtGui.QAction('&Exit', 
+        self.quit_action = QtGui.QAction('E&xit', 
             self, shortcut = QtGui.QKeySequence('Ctrl+Q'), 
             triggered = self.quit)
         self.file.addAction(self.quit_action)
         
         self.edit = menu.addMenu('&Edit')
         
-        self.copy_action = QtGui.QAction('&Copy', self,
+        self.copy_action = QtGui.QAction('C&opy', self,
             shortcut = QtGui.QKeySequence.Copy, triggered = self.copy_selected)
         self.edit.addAction(self.copy_action)
 
-        self.paste_action = QtGui.QAction('&Paste', self,
+        self.paste_action = QtGui.QAction('P&aste', self,
             shortcut = QtGui.QKeySequence.Paste, 
             triggered = self.paste_selected)
         self.edit.addAction(self.paste_action)
@@ -509,29 +511,29 @@ class MapEditor(QtGui.QMainWindow):
 
         self.transform = menu.addMenu('&Transform')
 
-        self.mirror_horizontal_action = QtGui.QAction('&Mirror horizontal', self,
+        self.mirror_horizontal_action = QtGui.QAction('Mirror &horizontal', self,
             triggered = self.mirror_horizontal)
         self.transform.addAction(self.mirror_horizontal_action)
 
-        self.mirror_vertical_action = QtGui.QAction('&Mirror vertical', self,
+        self.mirror_vertical_action = QtGui.QAction('Mirror &vertical', self,
             triggered = self.mirror_vertical)
         self.transform.addAction(self.mirror_vertical_action)
 
-        self.mirror_both_action = QtGui.QAction('&Mirror both', self,
+        self.mirror_both_action = QtGui.QAction('Mirror &both', self,
             triggered = self.mirror_both)
         self.transform.addAction(self.mirror_both_action)
 
         self.transform.addSeparator()
 
-        self.rotate_90_CW_action = QtGui.QAction('&Rotate 90\xb0 CW', self,
+        self.rotate_90_CW_action = QtGui.QAction('Rotate &90\xb0 CW', self,
             triggered = self.rotate_90_CW)
         self.transform.addAction(self.rotate_90_CW_action)
 
-        self.rotate_90_CCW_action = QtGui.QAction('&Rotate 90\xb0 CCW', self,
+        self.rotate_90_CCW_action = QtGui.QAction('Rotate 9&0\xb0 CCW', self,
             triggered = self.rotate_90_CCW)
         self.transform.addAction(self.rotate_90_CCW_action)
 
-        self.rotate_180_action = QtGui.QAction('&Rotate 180\xb0', self,
+        self.rotate_180_action = QtGui.QAction('Rotate &180\xb0', self,
             triggered = self.rotate_180)
         self.transform.addAction(self.rotate_180_action)
 
