@@ -642,9 +642,6 @@ class MapEditor(QtGui.QMainWindow):
         root, ext = os.path.splitext(name)
         head, tail = os.path.split(root)
         path = os.path.join(root, head, tail[:-2])
-        print root, ext
-        print head, tail
-        print path
         old_z = self.edit_widget.z
         progress = progress_dialog(self.edit_widget, 0, 63, 'Importing images...')
         for z in xrange(0, 64):
