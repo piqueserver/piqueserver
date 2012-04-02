@@ -1427,8 +1427,8 @@ class ServerProtocol(BaseProtocol):
     respawn_waves = False
     
     def __init__(self, *arg, **kw):
-        # +1 to allow sending of disconnect messages
-        self.max_connections = self.max_players + 1
+        # +2 to allow masterserver connection AND disconnect events when full
+        self.max_connections = self.max_players + 2
         BaseProtocol.__init__(self, *arg, **kw)
         self.entities = []
         self.players = MultikeyDict()
