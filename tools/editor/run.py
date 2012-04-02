@@ -456,6 +456,14 @@ class MapEditor(QtGui.QMainWindow):
             triggered = self.save_as_selected)
         self.file.addAction(self.save_as_action)
         
+        self.file.addSeparator()
+        
+        self.import_menu = self.file.addMenu('&Import')
+        
+        self.import_image_sequence_menu = QtGui.QAction('Image &sequence...', self, 
+            triggered = self.import_image_sequence)
+        self.import_menu.addAction(self.import_image_sequence_menu)
+        
         self.export = self.file.addMenu('&Export')
         
         self.color_map = QtGui.QAction('&Colormap...', self, 
@@ -466,9 +474,9 @@ class MapEditor(QtGui.QMainWindow):
             triggered = self.export_height_map)
         self.export.addAction(self.height_map)
         
-        self.image_sequence = QtGui.QAction('Image &sequence...', self, 
+        self.export_image_sequence_menu = QtGui.QAction('Image &sequence...', self, 
             triggered = self.export_image_sequence)
-        self.export.addAction(self.image_sequence)
+        self.export.addAction(self.export_image_sequence_menu)
         
         self.file.addSeparator()
         
@@ -625,6 +633,36 @@ class MapEditor(QtGui.QMainWindow):
                     return
                 self.voxed_filename = name
         subprocess.call([self.voxed_filename, self.filename])
+    
+    def import_image_sequence(self):
+        name = QtGui.QFileDialog.getOpenFileName(self,
+            'Import image sequence (select any file from the sequence)', filter = IMAGE_OPEN_FILTER)[0]
+        if not name:
+            return
+        root, ext = os.path.splitext(name)
+        head, tail = os.path.split(root)
+        path = os.path.join(root, head, tail[:-2])
+        print root, ext
+        print head, tail
+        print path
+        old_z = self.edit_widget.z
+        progress = progress_dialog(self.edit_widget, 0, 63, 'Importing images...')
+        for z in xrange(0, 64):
+            if progress.wasCanceled():
+                break
+            progress.setValue(z)
+            image = QImage(path + format(z, '02d') + ext)
+            width = image.width()
+            height = image.height()
+            for y in xrange(0, height):
+                line = image.scanLine(y)
+                for x in xrange(0, width):
+                    s = x*4
+                    if line[s:s+4] == FUCHSIA_PACKED:
+                        line[s:s+4] = TRANSPARENT_PACKED
+            self.edit_widget.set_z(z, False, False, False)
+            self.edit_widget.set_image(image)
+        self.edit_widget.set_z(old_z, True, False, False)
     
     def export_color_map(self):
         name = QtGui.QFileDialog.getSaveFileName(self,
