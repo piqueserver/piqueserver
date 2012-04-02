@@ -100,10 +100,12 @@ class EditWidget(QtGui.QWidget):
         if not self.color_sampling and modifiers & Qt.ShiftModifier:
             self.color_sampling = True
             self.main.app.setOverrideCursor(QtGui.QCursor(Qt.CrossCursor))
-        if key == Qt.Key_A:
-            self.set_z(self.z + 1)
-        elif key == Qt.Key_Q:
+        if key == Qt.Key_Q:
             self.set_z(self.z - 1)
+        elif key == Qt.Key_A:
+            self.set_z(self.z + 1)
+        elif key == Qt.Key_F:
+            self.toggle_freeze()
         elif key in xrange(Qt.Key_1, Qt.Key_9 + 1):
             self.brush_size = key - Qt.Key_0
         elif key == Qt.Key_Plus:
@@ -438,50 +440,56 @@ class MapEditor(QtGui.QMainWindow):
             triggered = self.new_selected)
         self.file.addAction(self.new_action)
         
-        self.open_action = QtGui.QAction('&Open', self,
+        self.open_action = QtGui.QAction('&Open...', self,
             shortcut = QtGui.QKeySequence('Ctrl+O'), 
             triggered = self.open_selected)
         self.file.addAction(self.open_action)
+        
+        self.file.addSeparator()
         
         self.save_action = QtGui.QAction('&Save', self, 
             shortcut=QtGui.QKeySequence.Save, triggered = self.save_selected)
         self.file.addAction(self.save_action)
         
-        self.save_as_action = QtGui.QAction('Save As', self, 
+        self.save_as_action = QtGui.QAction('Save &As...', self, 
             shortcut = QtGui.QKeySequence('Ctrl+Shift+S'), 
             triggered = self.save_as_selected)
         self.file.addAction(self.save_as_action)
-
+        
         self.export = self.file.addMenu('&Export')
-
-        self.color_map = QtGui.QAction('Colormap', self, 
+        
+        self.color_map = QtGui.QAction('&Colormap...', self, 
             triggered = self.export_color_map)
         self.export.addAction(self.color_map)
-
-        self.height_map = QtGui.QAction('Heightmap', self, 
+        
+        self.height_map = QtGui.QAction('&Heightmap...', self, 
             triggered = self.export_height_map)
         self.export.addAction(self.height_map)
         
+        self.image_sequence = QtGui.QAction('Image &sequence...', self, 
+            triggered = self.export_image_sequence)
+        self.export.addAction(self.image_sequence)
+        
         self.file.addSeparator()
         
-        self.voxed_action = QtGui.QAction('Open in VOXED', 
+        self.voxed_action = QtGui.QAction('Open in &VOXED', 
             self, shortcut = QtGui.QKeySequence('F5'), triggered = self.open_voxed)
         self.file.addAction(self.voxed_action)
         
         self.file.addSeparator()
         
-        self.quit_action = QtGui.QAction('&Exit', 
+        self.quit_action = QtGui.QAction('E&xit', 
             self, shortcut = QtGui.QKeySequence('Ctrl+Q'), 
             triggered = self.quit)
         self.file.addAction(self.quit_action)
         
         self.edit = menu.addMenu('&Edit')
         
-        self.copy_action = QtGui.QAction('&Copy', self,
+        self.copy_action = QtGui.QAction('C&opy', self,
             shortcut = QtGui.QKeySequence.Copy, triggered = self.copy_selected)
         self.edit.addAction(self.copy_action)
 
-        self.paste_action = QtGui.QAction('&Paste', self,
+        self.paste_action = QtGui.QAction('P&aste', self,
             shortcut = QtGui.QKeySequence.Paste, 
             triggered = self.paste_selected)
         self.edit.addAction(self.paste_action)
@@ -503,39 +511,39 @@ class MapEditor(QtGui.QMainWindow):
 
         self.transform = menu.addMenu('&Transform')
 
-        self.mirror_horizontal_action = QtGui.QAction('&Mirror horizontal', self,
+        self.mirror_horizontal_action = QtGui.QAction('Mirror &horizontal', self,
             triggered = self.mirror_horizontal)
         self.transform.addAction(self.mirror_horizontal_action)
 
-        self.mirror_vertical_action = QtGui.QAction('&Mirror vertical', self,
+        self.mirror_vertical_action = QtGui.QAction('Mirror &vertical', self,
             triggered = self.mirror_vertical)
         self.transform.addAction(self.mirror_vertical_action)
 
-        self.mirror_both_action = QtGui.QAction('&Mirror both', self,
+        self.mirror_both_action = QtGui.QAction('Mirror &both', self,
             triggered = self.mirror_both)
         self.transform.addAction(self.mirror_both_action)
 
         self.transform.addSeparator()
 
-        self.rotate_90_CW_action = QtGui.QAction('&Rotate 90\xb0 CW', self,
+        self.rotate_90_CW_action = QtGui.QAction('Rotate &90\xb0 CW', self,
             triggered = self.rotate_90_CW)
         self.transform.addAction(self.rotate_90_CW_action)
 
-        self.rotate_90_CCW_action = QtGui.QAction('&Rotate 90\xb0 CCW', self,
+        self.rotate_90_CCW_action = QtGui.QAction('Rotate 9&0\xb0 CCW', self,
             triggered = self.rotate_90_CCW)
         self.transform.addAction(self.rotate_90_CCW_action)
 
-        self.rotate_180_action = QtGui.QAction('&Rotate 180\xb0', self,
+        self.rotate_180_action = QtGui.QAction('Rotate &180\xb0', self,
             triggered = self.rotate_180)
         self.transform.addAction(self.rotate_180_action)
 
         self.heightmap = menu.addMenu('&Heightmap')
 
-        self.additive_heightmap_action = QtGui.QAction('&Additive', self,
+        self.additive_heightmap_action = QtGui.QAction('&Additive...', self,
             triggered = self.generate_heightmap)
         self.heightmap.addAction(self.additive_heightmap_action)
 
-        self.subtractive_heightmap_action = QtGui.QAction('&Subtractive', self,
+        self.subtractive_heightmap_action = QtGui.QAction('&Subtractive...', self,
             triggered = self.subtractive_heightmap)
         self.heightmap.addAction(self.subtractive_heightmap_action)
         
@@ -575,7 +583,7 @@ class MapEditor(QtGui.QMainWindow):
     
     def open_selected(self):
         name = QtGui.QFileDialog.getOpenFileName(self,
-            'Select map file', filter = '*.vxl')[0]
+            'Open', filter = '*.vxl')[0]
         if not name:
             return
         self.filename = name
@@ -592,7 +600,7 @@ class MapEditor(QtGui.QMainWindow):
     
     def save_as_selected(self):
         name = QtGui.QFileDialog.getSaveFileName(self,
-            'Save map as...', filter = '*.vxl')[0]
+            'Save As', filter = '*.vxl')[0]
         if not name:
             return
         self.filename = name
@@ -617,10 +625,10 @@ class MapEditor(QtGui.QMainWindow):
                     return
                 self.voxed_filename = name
         subprocess.call([self.voxed_filename, self.filename])
-
+    
     def export_color_map(self):
         name = QtGui.QFileDialog.getSaveFileName(self,
-            'Save colormap as...', filter = IMAGE_SAVE_FILTER)[0]
+            'Export Colormap', filter = IMAGE_SAVE_FILTER)[0]
         if not name:
             return
         color_image = QImage(512, 512, QImage.Format_ARGB32)
@@ -632,7 +640,7 @@ class MapEditor(QtGui.QMainWindow):
             for x in xrange(0, 512):
                 height_found[y].append(False)
         old_z = self.edit_widget.z
-        progress = progress_dialog(self.edit_widget, 0, 63, 'Exporting colormap...')
+        progress = progress_dialog(self.edit_widget, 0, 63, 'Exporting Colormap...')
         for z in xrange(0, 64):
             if progress.wasCanceled():
                 break
@@ -650,10 +658,10 @@ class MapEditor(QtGui.QMainWindow):
                             color_line[s:s+4] = image_pixel
         color_image.save(name)
         self.edit_widget.set_z(old_z, False, False, False)
-
+    
     def export_height_map(self):
         name = QtGui.QFileDialog.getSaveFileName(self,
-            'Save heightmap as...', filter = IMAGE_SAVE_FILTER)[0]
+            'Export Heightmap', filter = IMAGE_SAVE_FILTER)[0]
         if not name:
             return
         height_packed = []
@@ -669,7 +677,7 @@ class MapEditor(QtGui.QMainWindow):
             for x in xrange(0, 512):
                 height_found[y].append(False)
         old_z = self.edit_widget.z
-        progress = progress_dialog(self.edit_widget, 0, 63, 'Exporting heightmap...')
+        progress = progress_dialog(self.edit_widget, 0, 63, 'Exporting Heightmap...')
         for z in xrange(0, 64):
             if progress.wasCanceled():
                 break
@@ -687,7 +695,33 @@ class MapEditor(QtGui.QMainWindow):
                             height_line[s:s+4] = packed_value
         height_image.save(name)
         self.edit_widget.set_z(old_z, False, False, False)
-
+    
+    def export_image_sequence(self):
+        name = QtGui.QFileDialog.getSaveFileName(self,
+            'Export image sequence (select base filename)', filter = IMAGE_SAVE_FILTER)[0]
+        if not name:
+            return
+        root, ext = os.path.splitext(name)
+        old_z = self.edit_widget.z
+        progress = progress_dialog(self.edit_widget, 0, 63, 'Exporting images...')
+        for z in xrange(0, 64):
+            if progress.wasCanceled():
+                break
+            progress.setValue(z)
+            self.edit_widget.set_z(z, False, False, False)
+            image = self.edit_widget.image
+            width = image.width()
+            height = image.height()
+            new_image = image.copy(0, 0, width, height)
+            for y in xrange(0, height):
+                line = new_image.scanLine(y)
+                for x in xrange(0, width):
+                    s = x*4
+                    if line[s:s+4] == TRANSPARENT_PACKED:
+                        line[s:s+4] = FUCHSIA_PACKED
+            new_image.save(root + format(z, '02d') + ext)
+        self.edit_widget.set_z(old_z, False, False, False)
+    
     def copy_selected(self):
         self.clipboard.setImage(self.edit_widget.image)
     
@@ -784,7 +818,7 @@ class MapEditor(QtGui.QMainWindow):
         h_image = QImage(h_name)
         if not delete:
             c_name = QtGui.QFileDialog.getOpenFileName(self,
-                'Select color file', filter = IMAGE_OPEN_FILTER)[0]
+                'Select colormap file', filter = IMAGE_OPEN_FILTER)[0]
             if not c_name:
                 return
             c_image = QImage(c_name)
