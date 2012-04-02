@@ -44,6 +44,8 @@ Joint Photographic Experts Group (*.jpg);;Joint Photographic Experts Group (*.jp
 Portable Pixmap (*.ppm);;Tagged Image File Format (*.tiff);;X11 Bitmap (*.xbm);;X11 Pixmap (*.xpm)'
 IMAGE_OPEN_FILTER = 'All Formats (*.bmp *.gif *.jpg *.jpeg *.png *.pbm *.pgm *.ppm *.tiff *.xbm *.xpm);;' + \
     IMAGE_SAVE_FILTER
+DEFAULT_PATH = '../../feature_server/maps'
+DEFAULT_FILENAME = 'Untitled.vxl'
 WATER_PEN = QtGui.QColor(*WATER_COLOR)
 
 class LabeledSpinBox(QtGui.QWidget):
@@ -81,6 +83,7 @@ class EditWidget(QtGui.QWidget):
     current_color = None
     x = y = 0
     color_sampling = False
+    
     def __init__(self, parent):
         self.main = parent
         super(EditWidget, self).__init__(parent)
@@ -424,8 +427,10 @@ def progress_dialog(parent, minn, maxn, text):
     return progress
 
 class MapEditor(QtGui.QMainWindow):
+    path = None
     filename = None
     voxed_filename = None
+    
     def __init__(self, app, *arg, **kw):
         super(MapEditor, self).__init__(*arg, **kw)
         
@@ -496,17 +501,17 @@ class MapEditor(QtGui.QMainWindow):
         self.copy_action = QtGui.QAction('C&opy', self,
             shortcut = QtGui.QKeySequence.Copy, triggered = self.copy_selected)
         self.edit.addAction(self.copy_action)
-
+        
         self.paste_action = QtGui.QAction('P&aste', self,
             shortcut = QtGui.QKeySequence.Paste, 
             triggered = self.paste_selected)
         self.edit.addAction(self.paste_action)
-
+        
         self.copy_action_external = QtGui.QAction('&Copy External', self,
             shortcut = QtGui.QKeySequence('Ctrl+Shift+C'),
             triggered = self.copy_external_selected)
         self.edit.addAction(self.copy_action_external)
-
+        
         self.paste_action_external = QtGui.QAction('&Paste External', self,
             shortcut = QtGui.QKeySequence('Ctrl+Shift+V'), 
             triggered = self.paste_external_selected)
@@ -516,41 +521,41 @@ class MapEditor(QtGui.QMainWindow):
             shortcut = QtGui.QKeySequence.Delete, 
             triggered = self.clear_selected)
         self.edit.addAction(self.clear_action)
-
+        
         self.transform = menu.addMenu('&Transform')
-
+        
         self.mirror_horizontal_action = QtGui.QAction('Mirror &horizontal', self,
             triggered = self.mirror_horizontal)
         self.transform.addAction(self.mirror_horizontal_action)
-
+        
         self.mirror_vertical_action = QtGui.QAction('Mirror &vertical', self,
             triggered = self.mirror_vertical)
         self.transform.addAction(self.mirror_vertical_action)
-
+        
         self.mirror_both_action = QtGui.QAction('Mirror &both', self,
             triggered = self.mirror_both)
         self.transform.addAction(self.mirror_both_action)
-
+        
         self.transform.addSeparator()
-
+        
         self.rotate_90_CW_action = QtGui.QAction('Rotate &90\xb0 CW', self,
             triggered = self.rotate_90_CW)
         self.transform.addAction(self.rotate_90_CW_action)
-
+        
         self.rotate_90_CCW_action = QtGui.QAction('Rotate 9&0\xb0 CCW', self,
             triggered = self.rotate_90_CCW)
         self.transform.addAction(self.rotate_90_CCW_action)
-
+        
         self.rotate_180_action = QtGui.QAction('Rotate &180\xb0', self,
             triggered = self.rotate_180)
         self.transform.addAction(self.rotate_180_action)
-
+        
         self.heightmap = menu.addMenu('&Heightmap')
-
+        
         self.additive_heightmap_action = QtGui.QAction('&Additive...', self,
             triggered = self.generate_heightmap)
         self.heightmap.addAction(self.additive_heightmap_action)
-
+        
         self.subtractive_heightmap_action = QtGui.QAction('&Subtractive...', self,
             triggered = self.subtractive_heightmap)
         self.heightmap.addAction(self.subtractive_heightmap_action)
@@ -562,8 +567,10 @@ class MapEditor(QtGui.QMainWindow):
         self.scroll_view.setWidget(self.edit_widget)
         self.setCentralWidget(self.scroll_view)
         self.scroll_view.setAlignment(Qt.AlignCenter)
-
+        
         self.edit_widget.apply_default()
+        self.path = DEFAULT_PATH
+        self.filename = None
         
         self.settings_dock = QtGui.QDockWidget(self)
         self.settings_dock.setWidget(Settings(self))
@@ -571,7 +578,7 @@ class MapEditor(QtGui.QMainWindow):
         
         for item in (self.settings_dock,):
             self.addDockWidget(Qt.RightDockWidgetArea, item)
-
+        
         self.setWindowTitle('pyspades map editor')
         
         self.clipboard = app.clipboard()
@@ -591,7 +598,7 @@ class MapEditor(QtGui.QMainWindow):
     
     def open_selected(self):
         name = QtGui.QFileDialog.getOpenFileName(self,
-            'Open', filter = '*.vxl')[0]
+            'Open', self.path, filter = '*.vxl')[0]
         if not name:
             return
         self.filename = name
@@ -604,14 +611,15 @@ class MapEditor(QtGui.QMainWindow):
     def save_selected(self):
         if self.filename is None:
             return self.save_as_selected()
-        self.save(self.filename)
+        self.save(os.path.join(self.path, self.filename))
     
     def save_as_selected(self):
+        path = os.path.join(self.path, self.filename or DEFAULT_FILENAME)
         name = QtGui.QFileDialog.getSaveFileName(self,
-            'Save As', filter = '*.vxl')[0]
+            'Save As', path, filter = '*.vxl')[0]
         if not name:
             return
-        self.filename = name
+        self.path, self.filename = os.path.split(name)
         self.save(name)
     
     def save(self, filename):
