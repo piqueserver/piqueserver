@@ -611,7 +611,9 @@ class MapEditor(QtGui.QMainWindow):
     def save_selected(self):
         if self.filename is None:
             return self.save_as_selected()
-        self.save(os.path.join(self.path, self.filename))
+        name = os.path.join(self.path, self.filename)
+        self.save(name)
+        return name
     
     def save_as_selected(self):
         path = os.path.join(self.path, self.filename or DEFAULT_FILENAME)
@@ -621,26 +623,27 @@ class MapEditor(QtGui.QMainWindow):
             return
         self.path, self.filename = os.path.split(name)
         self.save(name)
+        return name
     
     def save(self, filename):
         self.edit_widget.save_overview()
         open(filename, 'wb').write(self.map.generate())
     
     def open_voxed(self):
-        self.save_selected()
-        if self.filename is None:
+        name = self.save_selected()
+        if not name:
             return
         if self.voxed_filename is None:
             default_path = 'C:\\Ace of Spades\\voxed.exe'
             if os.path.exists(default_path):
                 self.voxed_filename = default_path
             else:
-                name = QtGui.QFileDialog.getOpenFileName(self,
+                exename = QtGui.QFileDialog.getOpenFileName(self,
                     'Select voxed.exe', filter = '*.exe')[0]
-                if not name:
+                if not exename:
                     return
-                self.voxed_filename = name
-        subprocess.call([self.voxed_filename, self.filename])
+                self.voxed_filename = exename
+        subprocess.call([self.voxed_filename, name])
     
     def import_image_sequence(self):
         name = QtGui.QFileDialog.getOpenFileName(self,
