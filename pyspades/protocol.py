@@ -125,6 +125,8 @@ class BaseProtocol(object):
                 if event is None:
                     break
                 event_type = event.type
+                if event_type == enet.EVENT_TYPE_NONE:
+                    break
                 peer = event.peer
                 is_client = peer in self.clients
                 if is_client:

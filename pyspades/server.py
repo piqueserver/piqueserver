@@ -1427,7 +1427,8 @@ class ServerProtocol(BaseProtocol):
     respawn_waves = False
     
     def __init__(self, *arg, **kw):
-        # +2 to allow masterserver connection AND disconnect events when full
+        # +2 to allow server->master and master->server connection since enet
+        # peers are allocated for both clients and hosts.
         self.max_connections = self.max_players + 2
         BaseProtocol.__init__(self, *arg, **kw)
         self.entities = []

@@ -920,6 +920,7 @@ cdef class Host:
         """
         global current_host
         current_host = self
+        cdef int result
         if self._enet_host:
             event = Event()
             result = enet_host_service(
