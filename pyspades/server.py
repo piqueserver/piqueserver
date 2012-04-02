@@ -1400,7 +1400,6 @@ class ServerProtocol(BaseProtocol):
     game_mode = CTF_MODE
     max_players = 32
     connections = None
-    connection_ids = None
     player_ids = None
     master = False
     max_score = 10
@@ -1435,7 +1434,6 @@ class ServerProtocol(BaseProtocol):
         BaseProtocol.__init__(self, *arg, **kw)
         self.entities = []
         self.players = MultikeyDict()
-        self.connection_ids = IDPool()
         self.player_ids = IDPool()
         self.spectator_team = self.team_class(-1, self.spectator_name, 
             (0, 0, 0), True, self)
