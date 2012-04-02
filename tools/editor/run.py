@@ -657,6 +657,8 @@ class MapEditor(QtGui.QMainWindow):
                 break
             progress.setValue(z)
             image = QImage(path + format(z, '02d') + ext)
+            if not image:
+                continue
             width = image.width()
             height = image.height()
             for y in xrange(0, height):
@@ -665,7 +667,7 @@ class MapEditor(QtGui.QMainWindow):
                     s = x*4
                     if line[s:s+4] == FUCHSIA_PACKED:
                         line[s:s+4] = TRANSPARENT_PACKED
-            self.edit_widget.set_z(z, False, False, False)
+            self.edit_widget.set_z(63 - z, False, False, False)
             self.edit_widget.set_image(image)
         self.edit_widget.set_z(old_z, True, False, False)
     
@@ -751,7 +753,7 @@ class MapEditor(QtGui.QMainWindow):
             if progress.wasCanceled():
                 break
             progress.setValue(z)
-            self.edit_widget.set_z(z, False, False, False)
+            self.edit_widget.set_z(63 - z, False, False, False)
             image = self.edit_widget.image
             width = image.width()
             height = image.height()
