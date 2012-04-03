@@ -635,6 +635,7 @@ class MapEditor(QtGui.QMainWindow):
         self.map = VXLData(open(name, 'rb'))
         self.slice_map()
         self.edit_widget.map_updated(self.map)
+        self.set_dirty(False)
     
     def apply_default(self):
         self.map = VXLData()
@@ -642,8 +643,8 @@ class MapEditor(QtGui.QMainWindow):
         bottom_layer = self.layers[63]
         bottom_layer.fill(WATER_PEN.rgba())
         bottom_layer.dirty = True
-        self.set_dirty(False)
         self.edit_widget.map_updated(self.map)
+        self.set_dirty(False)
     
     def slice_map(self, show_dialog = True):
         self.layers = []
@@ -717,6 +718,7 @@ class MapEditor(QtGui.QMainWindow):
             interpret_colorkey(image)
             self.layers[63 - z].set_image(image)
         self.edit_widget.repaint()
+        self.set_dirty()
     
     def export_color_map(self):
         name = QtGui.QFileDialog.getSaveFileName(self,
@@ -933,6 +935,7 @@ class MapEditor(QtGui.QMainWindow):
                             image_line[s:s + 4] = color_line[s:s + 4]
                         else:
                             image_line[s:s + 4] = TRANSPARENT_PACKED
+        self.set_dirty()
     
     def subtractive_heightmap(self):
         return self.generate_heightmap(True)
