@@ -48,6 +48,22 @@ DEFAULT_PATH = '../../feature_server/maps'
 DEFAULT_FILENAME = 'Untitled.vxl'
 WATER_PEN = QtGui.QColor(*WATER_COLOR)
 
+def translate_color(image, dest, src):
+    for y in xrange(0, image.height()):
+        line = image.scanLine(y)
+        for x in xrange(0, image.width()):
+            s = x * 4
+            if line[s:s + 4] == src:
+                line[s:s + 4] = dest
+
+def interpret_colorkey(image):
+    translate_color(image, TRANSPARENT_PACKED, FUCHSIA_PACKED)
+
+def make_colorkey(image):
+    new_image = image.copy(0, 0, image.width(), image.height())
+    translate_color(new_image, FUCHSIA_PACKED, TRANSPARENT_PACKED)
+    return new_image
+
 class LabeledSpinBox(QtGui.QWidget):
     def __init__(self, text, *arg, **kw):
         super(LabeledSpinBox, self).__init__(*arg, **kw)
@@ -69,9 +85,21 @@ class LabeledWidget(QtGui.QWidget):
             self.layout.addWidget(item)
 
 class MapImage(QImage):
-    def __init__(self, overview, *arg, **kw):
-        self.overview = overview
-        super(MapImage, self).__init__(overview, *arg, **kw)
+    dirty = False
+    
+    def __init__(self, data, *arg, **kw):
+        self.data = data
+        super(MapImage, self).__init__(data, *arg, **kw)
+    
+    def clear(self):
+        self.dirty = True
+        self.fill(0)
+    
+    def set_image(self, image):
+        self.dirty = True
+        self.fill(0)
+        painter = QPainter(self)
+        painter.drawImage(0, 0, image)
 
 class EditWidget(QtGui.QWidget):
     scale = 1
@@ -82,15 +110,13 @@ class EditWidget(QtGui.QWidget):
     freeze_image = None
     current_color = None
     x = y = 0
+    z = None
     color_sampling = False
     
     def __init__(self, parent):
         self.main = parent
         super(EditWidget, self).__init__(parent)
-        self.z_cache = {}
-        self.map = self.parent().map
         self.tool = Brush(self)
-        self.set_z(63)
         self.update_scale()
         self.set_color(Qt.black)
         self.eraser = Qt.transparent
@@ -103,10 +129,12 @@ class EditWidget(QtGui.QWidget):
         if not self.color_sampling and modifiers & Qt.ShiftModifier:
             self.color_sampling = True
             self.main.app.setOverrideCursor(QtGui.QCursor(Qt.CrossCursor))
-        if key == Qt.Key_Q:
-            self.set_z(self.z - 1)
-        elif key == Qt.Key_A:
-            self.set_z(self.z + 1)
+        if key == Qt.Key_Q or key == Qt.Key_Up:
+            z = 0 if modifiers == Qt.AltModifier else self.z - 1 
+            self.set_z(z)
+        elif key == Qt.Key_A or key == Qt.Key_Down:
+            z = 63 if modifiers == Qt.AltModifier else self.z + 1 
+            self.set_z(z)
         elif key == Qt.Key_F:
             self.toggle_freeze()
         elif key in xrange(Qt.Key_1, Qt.Key_9 + 1):
@@ -140,7 +168,7 @@ class EditWidget(QtGui.QWidget):
     def update_scale(self):
         value = 512 * self.scale
         self.resize(value, value)
-        
+    
     def paintEvent(self, paintEvent):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
@@ -153,15 +181,6 @@ class EditWidget(QtGui.QWidget):
     
     def set_color(self, color):
         self.color = color
-    
-    def apply_default(self):
-        old_z = self.z
-        self.set_z(63)
-        self.image.fill(WATER_PEN.rgba())
-        if old_z != self.z:
-            self.set_z(old_z)
-        else:
-            self.repaint()
     
     def mousePressEvent(self, event):
         self.old_x = self.old_y = None
@@ -206,10 +225,9 @@ class EditWidget(QtGui.QWidget):
         if x in xrange(512) and y in xrange(512):
             old_x = self.old_x or x
             old_y = self.old_y or y
-            map = self.map
-            z = self.z
-            image = self.image
-            painter = QPainter(image)
+            self.main.set_dirty()
+            self.image.dirty = True
+            painter = QPainter(self.image)
             self.tool.draw(painter, old_x, old_y, x, y)
             self.repaint()
         self.old_x = x
@@ -226,47 +244,34 @@ class EditWidget(QtGui.QWidget):
             self.update_scale()
             self.repaint()
     
-    def clear(self, repaint = True):
-        self.image.fill(0)
-        if repaint:
-            self.repaint()
+    def clear(self):
+        self.image.clear()
+        self.repaint()
     
-    def set_z(self, z, repaint = True, update_map = True, update_values = True):
-        map = self.map
-        image = self.image
-        if image is not None and update_map:
-            map.set_overview(image.overview, self.z)
-        self.z = max(0, min(63, z))
-        try:
-            image = self.z_cache[self.z]
-        except KeyError:
-            overview = map.get_overview(self.z)
-            image = MapImage(overview, 512, 512,
-                QImage.Format_ARGB32)
-            self.z_cache[self.z] = image
-        self.image = image
-        if repaint:
-            self.repaint()
-        if self.settings is not None and update_values:
+    def set_z(self, z):
+        new_z = max(0, min(63, z))
+        if self.z == new_z:
+            return
+        self.z = new_z
+        self.image = self.main.layers[self.z]
+        self.repaint()
+        if self.settings is not None:
             self.settings.update_values()
     
-    def set_image(self, image, repaint = True):
-        self.clear(False)
-        painter = QPainter(self.image)
-        painter.drawImage(0, 0, image)
-        if repaint:
-            self.repaint()
+    def set_image(self, image):
+        self.image.set_image(image)
+        self.repaint()
     
-    def save_overview(self):
-        self.map.set_overview(self.image.overview, self.z)
+    def layers_updated(self):
+        self.image = self.main.layers[self.z]
+        self.repaint()
     
-    def map_updated(self):
-        self.image = None
-        self.z_cache = {}
+    def map_updated(self, map):
         self.freeze_image = None
-        self.map = self.parent().parent().parent().map
-        self.set_z(self.z)
-
+        self.map = map
+        self.set_z(63)
+        self.layers_updated()
+    
 class ScrollArea(QtGui.QScrollArea):
     old_x = old_y = None
     settings = None
@@ -331,13 +336,14 @@ class Brush(Tool):
 
 class Texture(Tool):
     image = None
+    
     def initialize(self):
         name = QtGui.QFileDialog.getOpenFileName(self.editor,
             'Select texture file', filter = IMAGE_OPEN_FILTER)[0]
         if not name:
             return
         self.image = QImage(name)
-        
+    
     def draw(self, painter, old_x, old_y, x, y):
         if self.image is None:
             return
@@ -345,7 +351,7 @@ class Texture(Tool):
             x - self.image.width() / 2.0, 
             y - self.image.height() / 2.0, 
             self.image)
-        
+
 TOOLS = {
     'Brush' : Brush,
     'Texture' : Texture
@@ -417,24 +423,33 @@ class Settings(QtGui.QWidget):
     def keyReleaseEvent(self, event):
         self.editor.keyReleaseEvent(event)
 
-def progress_dialog(parent, minn, maxn, text):
+def progress_dialog(parent, minn, maxn, text, can_abort = True):
     progress = QtGui.QProgressDialog(parent)
     progress.setWindowModality(Qt.WindowModal)
     progress.setMinimum(minn)
     progress.setMaximum(maxn)
-    progress.setCancelButtonText('Abort')
     progress.setLabelText(text)
+    if can_abort:
+        progress.setCancelButtonText('Abort')
+    else:
+        progress.setCancelButton(None)
+    progress.show()
     return progress
 
 class MapEditor(QtGui.QMainWindow):
     path = None
     filename = None
     voxed_filename = None
+    layers = None
+    dirty = False
     
     def __init__(self, app, *arg, **kw):
         super(MapEditor, self).__init__(*arg, **kw)
         
         self.app = app
+        self.app.setApplicationName('pyspades map editor')
+        self.setWindowTitle('pyspades map editor')
+        self.clipboard = app.clipboard()
         
         menu = self.menuBar()
         
@@ -453,7 +468,8 @@ class MapEditor(QtGui.QMainWindow):
         self.file.addSeparator()
         
         self.save_action = QtGui.QAction('&Save', self, 
-            shortcut=QtGui.QKeySequence.Save, triggered = self.save_selected)
+            shortcut = QtGui.QKeySequence.Save, triggered = self.save_selected)
+        self.save_action.setEnabled(False)
         self.file.addAction(self.save_action)
         
         self.save_as_action = QtGui.QAction('Save &As...', self, 
@@ -524,6 +540,18 @@ class MapEditor(QtGui.QMainWindow):
         
         self.transform = menu.addMenu('&Transform')
         
+        self.shift_up_action = QtGui.QAction('Shift layers &upward', self,
+            shortcut = QtGui.QKeySequence('Ctrl+Shift+Q'),
+            triggered = self.shift_up)
+        self.transform.addAction(self.shift_up_action)
+        
+        self.shift_down_action = QtGui.QAction('Shift layers &downward', self,
+            shortcut = QtGui.QKeySequence('Ctrl+Shift+A'),
+            triggered = self.shift_down)
+        self.transform.addAction(self.shift_down_action)
+        
+        self.transform.addSeparator()
+        
         self.mirror_horizontal_action = QtGui.QAction('Mirror &horizontal', self,
             triggered = self.mirror_horizontal)
         self.transform.addAction(self.mirror_horizontal_action)
@@ -535,6 +563,10 @@ class MapEditor(QtGui.QMainWindow):
         self.mirror_both_action = QtGui.QAction('Mirror &both', self,
             triggered = self.mirror_both)
         self.transform.addAction(self.mirror_both_action)
+        
+        self.mirror_z_action = QtGui.QAction('Mirror &Z', self,
+            triggered = self.mirror_z)
+        self.transform.addAction(self.mirror_z_action)
         
         self.transform.addSeparator()
         
@@ -560,15 +592,13 @@ class MapEditor(QtGui.QMainWindow):
             triggered = self.subtractive_heightmap)
         self.heightmap.addAction(self.subtractive_heightmap_action)
         
-        self.map = VXLData()
-        
         self.scroll_view = ScrollArea(self)
         self.edit_widget = EditWidget(self)
         self.scroll_view.setWidget(self.edit_widget)
         self.setCentralWidget(self.scroll_view)
         self.scroll_view.setAlignment(Qt.AlignCenter)
         
-        self.edit_widget.apply_default()
+        self.apply_default()
         self.path = DEFAULT_PATH
         self.filename = None
         
@@ -578,10 +608,12 @@ class MapEditor(QtGui.QMainWindow):
         
         for item in (self.settings_dock,):
             self.addDockWidget(Qt.RightDockWidgetArea, item)
-        
-        self.setWindowTitle('pyspades map editor')
-        
-        self.clipboard = app.clipboard()
+    
+    def set_dirty(self, value = True):
+        if self.dirty == value:
+            return
+        self.dirty = value
+        self.save_action.setEnabled(value)
     
     def new_selected(self):
         msgBox = QMessageBox()
@@ -591,10 +623,8 @@ class MapEditor(QtGui.QMainWindow):
         ret = msgBox.exec_()
         if ret == QMessageBox.Cancel:
             return
-        self.map = VXLData()
-        self.map_updated()
-        self.edit_widget.apply_default()
         self.filename = None
+        self.apply_default()
     
     def open_selected(self):
         name = QtGui.QFileDialog.getOpenFileName(self,
@@ -603,10 +633,28 @@ class MapEditor(QtGui.QMainWindow):
             return
         self.filename = name
         self.map = VXLData(open(name, 'rb'))
-        self.map_updated()
+        self.slice_map()
+        self.edit_widget.map_updated(self.map)
+        self.set_dirty(False)
     
-    def map_updated(self):
-        self.edit_widget.map_updated()
+    def apply_default(self):
+        self.map = VXLData()
+        self.slice_map(show_dialog = False)
+        bottom_layer = self.layers[63]
+        bottom_layer.fill(WATER_PEN.rgba())
+        bottom_layer.dirty = True
+        self.edit_widget.map_updated(self.map)
+        self.set_dirty(False)
+    
+    def slice_map(self, show_dialog = True):
+        self.layers = []
+        if show_dialog:
+            progress = progress_dialog(self.edit_widget, 0, 63, 'Slicing...', can_abort = False)
+        for z in xrange(0, 64):
+            if show_dialog:
+                progress.setValue(z)
+            self.layers.append(MapImage(self.map.get_overview(z), 512, 512,
+                QImage.Format_ARGB32))
     
     def save_selected(self):
         if self.filename is None:
@@ -626,8 +674,13 @@ class MapEditor(QtGui.QMainWindow):
         return name
     
     def save(self, filename):
-        self.edit_widget.save_overview()
+        for z in xrange(0, 64):
+            layer = self.layers[z]
+            if layer.dirty:
+                self.map.set_overview(layer.data, z)
+                layer.dirty = False
         open(filename, 'wb').write(self.map.generate())
+        self.set_dirty(False)
     
     def open_voxed(self):
         name = self.save_selected()
@@ -639,7 +692,7 @@ class MapEditor(QtGui.QMainWindow):
                 self.voxed_filename = default_path
             else:
                 exename = QtGui.QFileDialog.getOpenFileName(self,
-                    'Select voxed.exe', filter = '*.exe')[0]
+                    'Select VOXED.EXE', filter = '*.exe')[0]
                 if not exename:
                     return
                 self.voxed_filename = exename
@@ -662,17 +715,10 @@ class MapEditor(QtGui.QMainWindow):
             image = QImage(path + format(z, '02d') + ext)
             if not image:
                 continue
-            width = image.width()
-            height = image.height()
-            for y in xrange(0, height):
-                line = image.scanLine(y)
-                for x in xrange(0, width):
-                    s = x*4
-                    if line[s:s+4] == FUCHSIA_PACKED:
-                        line[s:s+4] = TRANSPARENT_PACKED
-            self.edit_widget.set_z(63 - z, False, False, False)
-            self.edit_widget.set_image(image)
-        self.edit_widget.set_z(old_z, True, False, False)
+            interpret_colorkey(image)
+            self.layers[63 - z].set_image(image)
+        self.edit_widget.repaint()
+        self.set_dirty()
     
     def export_color_map(self):
         name = QtGui.QFileDialog.getSaveFileName(self,
@@ -687,25 +733,23 @@ class MapEditor(QtGui.QMainWindow):
             height_found.append([])
             for x in xrange(0, 512):
                 height_found[y].append(False)
-        old_z = self.edit_widget.z
         progress = progress_dialog(self.edit_widget, 0, 63, 'Exporting Colormap...')
         for z in xrange(0, 64):
             if progress.wasCanceled():
                 break
             progress.setValue(z)
-            self.edit_widget.set_z(z, False, False, False)
+            image = self.layers[z]
             for y in xrange(0, 512):
-                image_line = self.edit_widget.image.scanLine(y)
+                image_line = image.scanLine(y)
                 color_line = color_lines[y]
                 for x in xrange(0, 512):
                     if height_found[y][x] is False:
-                        s = x*4
-                        image_pixel = image_line[s:s+4]
+                        s = x * 4
+                        image_pixel = image_line[s:s + 4]
                         if image_pixel != TRANSPARENT_PACKED:
                             height_found[y][x] = True
-                            color_line[s:s+4] = image_pixel
+                            color_line[s:s + 4] = image_pixel
         color_image.save(name)
-        self.edit_widget.set_z(old_z, False, False, False)
     
     def export_height_map(self):
         name = QtGui.QFileDialog.getSaveFileName(self,
@@ -724,25 +768,23 @@ class MapEditor(QtGui.QMainWindow):
             height_found.append([])
             for x in xrange(0, 512):
                 height_found[y].append(False)
-        old_z = self.edit_widget.z
         progress = progress_dialog(self.edit_widget, 0, 63, 'Exporting Heightmap...')
         for z in xrange(0, 64):
             if progress.wasCanceled():
                 break
             progress.setValue(z)
-            self.edit_widget.set_z(z, False, False, False)
             packed_value = height_packed[z]
+            image = self.layers[z]
             for y in xrange(0, 512):
-                image_line = self.edit_widget.image.scanLine(y)
+                image_line = image.scanLine(y)
                 height_line = height_lines[y]
                 for x in xrange(0, 512):
                     if height_found[y][x] is False:
-                        s = x*4
-                        if image_line[s:s+4] != TRANSPARENT_PACKED:
+                        s = x * 4
+                        if image_line[s:s + 4] != TRANSPARENT_PACKED:
                             height_found[y][x] = True
-                            height_line[s:s+4] = packed_value
+                            height_line[s:s + 4] = packed_value
         height_image.save(name)
-        self.edit_widget.set_z(old_z, False, False, False)
     
     def export_image_sequence(self):
         name = QtGui.QFileDialog.getSaveFileName(self,
@@ -750,25 +792,14 @@ class MapEditor(QtGui.QMainWindow):
         if not name:
             return
         root, ext = os.path.splitext(name)
-        old_z = self.edit_widget.z
         progress = progress_dialog(self.edit_widget, 0, 63, 'Exporting images...')
         for z in xrange(0, 64):
             if progress.wasCanceled():
                 break
             progress.setValue(z)
-            self.edit_widget.set_z(63 - z, False, False, False)
-            image = self.edit_widget.image
-            width = image.width()
-            height = image.height()
-            new_image = image.copy(0, 0, width, height)
-            for y in xrange(0, height):
-                line = new_image.scanLine(y)
-                for x in xrange(0, width):
-                    s = x*4
-                    if line[s:s+4] == TRANSPARENT_PACKED:
-                        line[s:s+4] = FUCHSIA_PACKED
+            image = self.layers[63 - z]
+            new_image = make_colorkey(image)
             new_image.save(root + format(z, '02d') + ext)
-        self.edit_widget.set_z(old_z, False, False, False)
     
     def copy_selected(self):
         self.clipboard.setImage(self.edit_widget.image)
@@ -778,58 +809,50 @@ class MapEditor(QtGui.QMainWindow):
         if not image:
             return
         self.edit_widget.set_image(image)
-            
+        self.set_dirty()
+    
     def copy_external_selected(self):
         image = self.edit_widget.image
-        width = image.width()
-        height = image.height()
-        new_image = image.copy(0, 0, width, height)
-        for y in xrange(0, height):
-            line = new_image.scanLine(y)
-            for x in xrange(0, width):
-                s = x*4
-                if line[s:s+4] == TRANSPARENT_PACKED:
-                    line[s:s+4] = FUCHSIA_PACKED
+        new_image = make_colorkey(image)
         self.clipboard.setImage(new_image)
     
     def paste_external_selected(self):
         image = self.clipboard.image()
         if not image:
             return
-        width = image.width()
-        height = image.height()
         image = image.convertToFormat(QImage.Format_ARGB32)
-        for y in xrange(0, height):
-            line = image.scanLine(y)
-            for x in xrange(0, width):
-                s = x*4
-                if line[s:s+4] == FUCHSIA_PACKED:
-                    line[s:s+4] = TRANSPARENT_PACKED
+        interpret_colorkey(image)
         self.edit_widget.set_image(image)
+        self.set_dirty()
     
     def mirror(self, hor, ver):
-        old_z = self.edit_widget.z
         progress = progress_dialog(self.edit_widget, 0, 63, 'Mirroring...')
         for z in xrange(0, 64):
             if progress.wasCanceled():
                 break
             progress.setValue(z)
-            self.edit_widget.set_z(z, False, True, False)
-            mirrored_image = self.edit_widget.image.mirrored(hor, ver)
-            self.edit_widget.set_image(mirrored_image, False)
-        self.edit_widget.set_z(old_z, True, True, True)
-
+            layer = self.layers[z]
+            layer.set_image(layer.mirrored(hor, ver))
+        self.edit_widget.repaint()
+        self.set_dirty()
+    
     def mirror_horizontal(self):
         self.mirror(True, False)
-
+    
     def mirror_vertical(self):
         self.mirror(False, True)
     
     def mirror_both(self):
         self.mirror(True, True)
     
+    def mirror_z(self):
+        self.layers.reverse()
+        for layer in self.layers:
+            layer.dirty = True
+        self.edit_widget.layers_updated()
+        self.set_dirty()
+    
     def rotate(self, angle):
-        old_z = self.edit_widget.z
         progress = progress_dialog(self.edit_widget, 0, 63, 'Rotating...')
         transform = QtGui.QTransform()
         transform.rotate(angle)
@@ -837,10 +860,10 @@ class MapEditor(QtGui.QMainWindow):
             if progress.wasCanceled():
                 break
             progress.setValue(z)
-            self.edit_widget.set_z(z, False, True, False)
-            rotated_image = self.edit_widget.image.transformed(transform)
-            self.edit_widget.set_image(rotated_image, False)
-        self.edit_widget.set_z(old_z, True, True, True)
+            layer = self.layers[z]
+            layer.set_image(layer.transformed(transform))
+        self.edit_widget.repaint()
+        self.set_dirty()
     
     def rotate_90_CW(self):
         self.rotate(90)
@@ -851,8 +874,22 @@ class MapEditor(QtGui.QMainWindow):
     def rotate_180(self):
         self.rotate(180)
     
+    def cycle_layers(self, n):
+        self.layers = self.layers[n:] + self.layers[:n]
+        for layer in self.layers:
+            layer.dirty = True
+        self.edit_widget.layers_updated()
+        self.set_dirty()
+    
+    def shift_up(self):
+        self.cycle_layers(1)
+    
+    def shift_down(self):
+        self.cycle_layers(-1)
+    
     def clear_selected(self):
         self.edit_widget.clear()
+        self.set_dirty()
     
     def get_height(self, color):
         return int(math.floor((float(QtGui.qRed(color)) + float(QtGui.qGreen(color)) + 
@@ -878,8 +915,7 @@ class MapEditor(QtGui.QMainWindow):
             if not delete:
                 color_lines.append(c_image.scanLine(y))
             for x in xrange(0,512):
-                height_values[y].append(self.get_height(struct.unpack('I', height_line[x*4:x*4+4])[0]))
-        old_z = self.edit_widget.z
+                height_values[y].append(self.get_height(struct.unpack('I', height_line[x * 4:x * 4 + 4])[0]))
         progress = progress_dialog(self.edit_widget, 0, 63, 'Generating from heightmap...')
         for z in xrange(0, 64):
             if progress.wasCanceled():
@@ -887,26 +923,35 @@ class MapEditor(QtGui.QMainWindow):
             progress.setValue(z)
             if z == 0 and delete:
                 continue
-            self.edit_widget.set_z(63 - z, False, False, False)
+            image = self.layers[63 - z]
             for y in xrange(0, 512):
-                image_line = self.edit_widget.image.scanLine(y)
+                image_line = image.scanLine(y)
                 if not delete:
                     color_line = color_lines[y]
                 for x in xrange(0, 512):
                     if z <= height_values[y][x]:
-                        s = x*4
+                        s = x * 4
                         if not delete:
-                            image_line[s:s+4] = color_line[s:s+4]
+                            image_line[s:s + 4] = color_line[s:s + 4]
                         else:
-                            image_line[s:s+4] = TRANSPARENT_PACKED
-        for z in xrange(0, 64):
-            self.edit_widget.set_z(z, False, True, False)
-        self.edit_widget.set_z(old_z, True, False, False)
-
+                            image_line[s:s + 4] = TRANSPARENT_PACKED
+        self.set_dirty()
+    
     def subtractive_heightmap(self):
         return self.generate_heightmap(True)
     
     def quit(self):
+        if self.dirty:
+            text = ('Save changes to ' + (self.filename or DEFAULT_FILENAME) +
+                ' before closing?')
+            reply = QMessageBox.warning(self, self.app.applicationName(), text,
+                QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+                QMessageBox.Yes)
+            if reply == QMessageBox.Yes:
+                if not self.save_selected():
+                    return
+            elif reply == QMessageBox.Cancel:
+                return
         self.app.exit()
 
 def main():
