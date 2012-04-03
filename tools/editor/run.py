@@ -225,11 +225,9 @@ class EditWidget(QtGui.QWidget):
         if x in xrange(512) and y in xrange(512):
             old_x = self.old_x or x
             old_y = self.old_y or y
-            map = self.map
-            z = self.z
-            image = self.image
-            image.dirty = True
-            painter = QPainter(image)
+            self.main.set_dirty()
+            self.image.dirty = True
+            painter = QPainter(self.image)
             self.tool.draw(painter, old_x, old_y, x, y)
             self.repaint()
         self.old_x = x
@@ -260,10 +258,9 @@ class EditWidget(QtGui.QWidget):
         if self.settings is not None:
             self.settings.update_values()
     
-    def set_image(self, image, repaint = True):
+    def set_image(self, image):
         self.image.set_image(image)
-        if repaint:
-            self.repaint()
+        self.repaint()
     
     def layers_updated(self):
         self.image = self.main.layers[self.z]
@@ -444,6 +441,7 @@ class MapEditor(QtGui.QMainWindow):
     filename = None
     voxed_filename = None
     layers = None
+    dirty = False
     
     def __init__(self, app, *arg, **kw):
         super(MapEditor, self).__init__(*arg, **kw)
@@ -470,7 +468,8 @@ class MapEditor(QtGui.QMainWindow):
         self.file.addSeparator()
         
         self.save_action = QtGui.QAction('&Save', self, 
-            shortcut=QtGui.QKeySequence.Save, triggered = self.save_selected)
+            shortcut = QtGui.QKeySequence.Save, triggered = self.save_selected)
+        self.save_action.setEnabled(False)
         self.file.addAction(self.save_action)
         
         self.save_as_action = QtGui.QAction('Save &As...', self, 
@@ -610,6 +609,12 @@ class MapEditor(QtGui.QMainWindow):
         for item in (self.settings_dock,):
             self.addDockWidget(Qt.RightDockWidgetArea, item)
     
+    def set_dirty(self, value = True):
+        if self.dirty == value:
+            return
+        self.dirty = value
+        self.save_action.setEnabled(value)
+    
     def new_selected(self):
         msgBox = QMessageBox()
         msgBox.setText("Do you want to discard your changes?")
@@ -637,6 +642,7 @@ class MapEditor(QtGui.QMainWindow):
         bottom_layer = self.layers[63]
         bottom_layer.fill(WATER_PEN.rgba())
         bottom_layer.dirty = True
+        self.set_dirty(False)
         self.edit_widget.map_updated(self.map)
     
     def slice_map(self, show_dialog = True):
@@ -673,6 +679,7 @@ class MapEditor(QtGui.QMainWindow):
                 self.map.set_overview(layer.data, z)
                 layer.dirty = False
         open(filename, 'wb').write(self.map.generate())
+        self.set_dirty(False)
     
     def open_voxed(self):
         name = self.save_selected()
@@ -800,6 +807,7 @@ class MapEditor(QtGui.QMainWindow):
         if not image:
             return
         self.edit_widget.set_image(image)
+        self.set_dirty()
     
     def copy_external_selected(self):
         image = self.edit_widget.image
@@ -813,6 +821,7 @@ class MapEditor(QtGui.QMainWindow):
         image = image.convertToFormat(QImage.Format_ARGB32)
         interpret_colorkey(image)
         self.edit_widget.set_image(image)
+        self.set_dirty()
     
     def mirror(self, hor, ver):
         progress = progress_dialog(self.edit_widget, 0, 63, 'Mirroring...')
@@ -821,9 +830,9 @@ class MapEditor(QtGui.QMainWindow):
                 break
             progress.setValue(z)
             layer = self.layers[z]
-            mirrored = layer.mirrored(hor, ver)
-            layer.set_image(mirrored)
+            layer.set_image(layer.mirrored(hor, ver))
         self.edit_widget.repaint()
+        self.set_dirty()
     
     def mirror_horizontal(self):
         self.mirror(True, False)
@@ -839,6 +848,7 @@ class MapEditor(QtGui.QMainWindow):
         for layer in self.layers:
             layer.dirty = True
         self.edit_widget.layers_updated()
+        self.set_dirty()
     
     def rotate(self, angle):
         progress = progress_dialog(self.edit_widget, 0, 63, 'Rotating...')
@@ -851,6 +861,7 @@ class MapEditor(QtGui.QMainWindow):
             layer = self.layers[z]
             layer.set_image(layer.transformed(transform))
         self.edit_widget.repaint()
+        self.set_dirty()
     
     def rotate_90_CW(self):
         self.rotate(90)
@@ -861,20 +872,22 @@ class MapEditor(QtGui.QMainWindow):
     def rotate_180(self):
         self.rotate(180)
     
-    def rotate_layers(self, n):
+    def cycle_layers(self, n):
         self.layers = self.layers[n:] + self.layers[:n]
         for layer in self.layers:
             layer.dirty = True
         self.edit_widget.layers_updated()
+        self.set_dirty()
     
     def shift_up(self):
-        self.rotate_layers(-1)
+        self.cycle_layers(-1)
     
     def shift_down(self):
-        self.rotate_layers(1)
+        self.cycle_layers(1)
     
     def clear_selected(self):
         self.edit_widget.clear()
+        self.set_dirty()
     
     def get_height(self, color):
         return int(math.floor((float(QtGui.qRed(color)) + float(QtGui.qGreen(color)) + 
@@ -925,15 +938,17 @@ class MapEditor(QtGui.QMainWindow):
         return self.generate_heightmap(True)
     
     def quit(self):
-        text = ('Save changes to ' + (self.filename or DEFAULT_FILENAME) +
-            ' before closing?')
-        reply = QMessageBox.warning(self, self.app.applicationName(), text,
-            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
-        if reply == QMessageBox.Yes:
-            if not self.save_selected():
+        if self.dirty:
+            text = ('Save changes to ' + (self.filename or DEFAULT_FILENAME) +
+                ' before closing?')
+            reply = QMessageBox.warning(self, self.app.applicationName(), text,
+                QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel,
+                QMessageBox.Yes)
+            if reply == QMessageBox.Yes:
+                if not self.save_selected():
+                    return
+            elif reply == QMessageBox.Cancel:
                 return
-        elif reply == QMessageBox.Cancel:
-            return
         self.app.exit()
 
 def main():
