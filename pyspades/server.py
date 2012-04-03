@@ -596,50 +596,37 @@ class ServerConnection(BaseConnection):
         position = self.world_object.position
         return position.x, position.y, position.z
     
-    def location_free(self, x, y, z):
-        return self.protocol.map.get_solid(x, y, z)==0 and\
-               self.protocol.map.get_solid(x, y, z + 1)==0 and\
-               self.protocol.map.get_solid(x, y, z + 2)==0 and\
-               self.protocol.map.get_solid(x, y, z + 3)==1
+    def is_location_free(self, x, y, z):
+        return (self.protocol.map.get_solid(x, y, z) == 0 and
+                self.protocol.map.get_solid(x, y, z + 1) == 0 and
+                self.protocol.map.get_solid(x, y, z + 2) == 0 and
+                self.protocol.map.get_solid(x, y, z + 3) == 1)
     
-    def set_location_safe(self, location = None, center = True):
-        if location is None:
-            position = self.world_object.position
-            x, y, z = position.x, position.y, position.z
-        else:
-            x, y, z = location
-            
-            if center:
-                x -= 0.5
-                y -= 0.5
-                z += 0.5
-            x = int(x)
-            y = int(y)
-            z = int(z)
-            
-            # search for valid locations near the specified point
-            modpos = 0
-            pos_table = self.protocol.pos_table
-            while modpos<len(pos_table) and not\
-                      self.location_free(x + pos_table[modpos][0],
-                                         y + pos_table[modpos][1], 
-                                         z + pos_table[modpos][2]):
-                modpos+=1
-            if modpos == len(pos_table): # nothing nearby
-                position = self.world_object.position
-                x, y, z = position.x, position.y, position.z
-            else:
-                x = x + pos_table[modpos][0]
-                y = y + pos_table[modpos][1]
-                z = z + pos_table[modpos][2]
-                self.world_object.set_position(x, y, z)
-                x += 0.5
-                y += 0.5
-                z -= 0.5
-        position_data.x = x
-        position_data.y = y
-        position_data.z = z
-        self.send_contained(position_data)
+    def set_location_safe(self, location, center = True):
+        x, y, z = location
+        
+        if center:
+            x -= 0.5
+            y -= 0.5
+            z += 0.5
+        x = int(x)
+        y = int(y)
+        z = int(z)
+        
+        # search for valid locations near the specified point
+        modpos = 0
+        pos_table = self.protocol.pos_table
+        while (modpos<len(pos_table) and not
+               self.is_location_free(x + pos_table[modpos][0],
+                                     y + pos_table[modpos][1], 
+                                     z + pos_table[modpos][2])):
+            modpos+=1
+        if modpos == len(pos_table): # nothing nearby
+            return
+        x = x + pos_table[modpos][0]
+        y = y + pos_table[modpos][1]
+        z = z + pos_table[modpos][2]
+        self.set_location((x, y, z))
         
     def set_location(self, location = None):
         if location is None:
