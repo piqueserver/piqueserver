@@ -880,10 +880,10 @@ class MapEditor(QtGui.QMainWindow):
         self.set_dirty()
     
     def shift_up(self):
-        self.cycle_layers(-1)
+        self.cycle_layers(1)
     
     def shift_down(self):
-        self.cycle_layers(1)
+        self.cycle_layers(-1)
     
     def clear_selected(self):
         self.edit_widget.clear()
