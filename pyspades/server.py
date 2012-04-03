@@ -630,6 +630,7 @@ class ServerConnection(BaseConnection):
         
     def set_location(self, location = None):
         if location is None:
+            # used for rubberbanding
             position = self.world_object.position
             x, y, z = position.x, position.y, position.z
         else:
