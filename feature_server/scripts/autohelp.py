@@ -1,3 +1,9 @@
+"""
+Helps Deuces automagically when they ask in the chat for help.
+
+Maintainer: ?
+"""
+
 from twisted.internet import reactor
 import re
 

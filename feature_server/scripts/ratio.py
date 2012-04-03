@@ -1,4 +1,9 @@
-# KDR script because Enari said so  --GM
+"""
+K/D ratio script.
+
+Author: TheGrandmaster
+Maintainer: mat^2
+"""
 
 import commands
 

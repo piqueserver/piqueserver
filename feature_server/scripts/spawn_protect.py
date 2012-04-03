@@ -1,3 +1,9 @@
+"""
+Protects spawned players for a specified amount of seconds.
+
+Maintainer: ?
+"""
+
 from pyspades.common import prettify_timespan
 from twisted.internet import reactor
 

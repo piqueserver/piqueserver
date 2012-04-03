@@ -1,3 +1,9 @@
+"""
+Extensions to the map metadata (e.g. water damage).
+
+Maintainer: ?
+"""
+
 def apply_script(protocol, connection, config):
     class MapExtensionConnection(connection):
         def on_position_update(self):

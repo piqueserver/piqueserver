@@ -1,3 +1,9 @@
+"""
+Changes the damage values depending on distance.
+
+Maintainer: ?
+"""
+
 from pyspades.constants import *
 from math import sqrt
 
@@ -9,7 +15,6 @@ def point_distance2(c1, c2):
 
 def apply_script(protocol, connection, config):
     class RangeDamageProtocol(protocol):
-
         rifle_pct_per_block = config.get('rifle_pct_per_block', 0)
         shotgun_pct_per_block = config.get('shotgun_pct_per_block', 2.5)
         smg_pct_per_block = config.get('smg_pct_per_block', 1.5)

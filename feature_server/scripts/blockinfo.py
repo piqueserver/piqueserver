@@ -1,3 +1,9 @@
+"""
+A tool for identifying griefers.
+
+Maintainer: hompy
+"""
+
 from pyspades.collision import distance_3d_vector
 from pyspades.common import prettify_timespan
 from commands import add, admin, name, get_player, alias

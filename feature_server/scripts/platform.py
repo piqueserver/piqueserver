@@ -1,3 +1,9 @@
+"""
+Platforms! May be incompatible with 0.75.
+
+Maintainer: hompy
+"""
+
 from commands import add, admin
 from pyspades.server import block_action, set_color
 from pyspades.common import make_color

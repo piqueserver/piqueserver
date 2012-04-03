@@ -1,3 +1,10 @@
+"""
+Match script, useful for public matches. Features verbose announcements
+on IRC and a custom timer.
+
+Maintainer: mat^2
+"""
+
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 

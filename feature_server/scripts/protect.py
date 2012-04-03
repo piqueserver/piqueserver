@@ -1,3 +1,9 @@
+"""
+Protects areas against block destroying/building.
+
+Maintainer: hompy
+"""
+
 from commands import add, admin
 from pyspades.common import coordinates
 

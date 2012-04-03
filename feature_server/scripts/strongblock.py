@@ -1,7 +1,12 @@
+"""
+Makes blocks stronger.
+
+Maintainer: ?
+"""
+
 from pyspades.constants import *
 
 def apply_script(protocol, connection, config):
-    
     class StrongBlockConnection(connection):
         def on_connect(self):
             self.strong_block_hits = 0

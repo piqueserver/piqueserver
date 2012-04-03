@@ -1,3 +1,10 @@
+"""
+Adds the ability to 'trust' certain players, i.e. they cannot be votekicked
+or rubberbanded.
+
+Maintainer: mat^2
+"""
+
 from commands import add, admin, get_player
 
 @admin

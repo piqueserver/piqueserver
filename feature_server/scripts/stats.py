@@ -1,3 +1,10 @@
+"""
+Statistics script to upload scores to aos.mp2.dk (or another machine running
+the site program).
+
+Maintainer: mat^2
+"""
+
 from statistics import DEFAULT_PORT, connect_statistics
 
 import commands

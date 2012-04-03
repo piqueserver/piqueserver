@@ -1,4 +1,9 @@
-# contributed by Booboorocks998, fixed/maintained by mat^2
+"""
+Gives a specified amount of medkits on spawn
+
+Author: Booboorocks998
+Maintainer: mat^2
+"""
 
 import commands
 from pyspades.constants import *

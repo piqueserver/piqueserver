@@ -1,3 +1,9 @@
+"""
+Deprecated TC. Should probably be removed.
+
+Maintainer: ?
+"""
+
 from commands import add
 from array import array
 

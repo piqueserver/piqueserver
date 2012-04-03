@@ -1,3 +1,10 @@
+"""
+Zones of control: Dropped intel and tents exert influence
+over nearby area, restricting player ability to destroy.
+
+Maintainer: ?
+"""
+
 from twisted.internet.task import LoopingCall
 from pyspades.constants import *
 
@@ -6,9 +13,6 @@ BK_FREE, BK_FRIENDLY, BK_ENEMY_FAR, BK_ENEMY_NEAR, BK_UNDO = range(5)
 def apply_script(protocol, connection, config):
     
     class ZOCConnection(connection):
-        """Zones of control: Dropped intel and tents exert influence
-        over nearby area, restricting player ability to destroy."""
-
         block_undo = None
         
         def on_connect(self):

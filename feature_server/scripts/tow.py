@@ -1,3 +1,10 @@
+"""
+Tug of War game mode, where you must progressively capture the enemy CPs in a 
+straight line to win.
+
+Maintainer: mat^2
+"""
+
 from pyspades.constants import *
 from pyspades.server import Territory
 import random

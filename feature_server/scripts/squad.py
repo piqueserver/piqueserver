@@ -1,3 +1,9 @@
+"""
+BF-like squad system.
+
+Maintainer: Triplefox
+"""
+
 from commands import add, rights, admin, name, get_player
 import commands
 import random

@@ -1,3 +1,9 @@
+"""
+Kicks jerks for 'PRESS ALT-F4 FOR AIRSTRIKES' and so on.
+
+Maintainer: ?
+"""
+
 from twisted.internet import reactor
 import re
 

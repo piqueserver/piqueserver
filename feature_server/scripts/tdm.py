@@ -1,3 +1,9 @@
+"""
+Team Deathmatch game mode.
+
+Maintainer: Triplefox
+"""
+
 from pyspades.constants import *
 
 from commands import add

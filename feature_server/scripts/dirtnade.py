@@ -1,3 +1,9 @@
+"""
+Makes grenades create blocks.
+
+Maintainer: hompy
+"""
+
 from pyspades.server import block_action
 from pyspades.constants import *
 

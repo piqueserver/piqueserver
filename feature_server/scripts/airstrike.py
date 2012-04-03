@@ -1,3 +1,9 @@
+"""
+Airstrikes. Boom!
+
+Maintainer: mat^2 / hompy
+"""
+
 from pyspades.server import orientation_data, grenade_packet
 from pyspades.common import coordinates, Vertex3
 from pyspades.collision import distance_3d_vector

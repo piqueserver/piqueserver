@@ -1,3 +1,9 @@
+"""
+A game mode. May not work with 0.75.
+
+Maintainer: hompy
+"""
+
 from pyspades.server import grenade_packet
 from pyspades.collision import distance_3d_vector
 from twisted.internet import reactor
