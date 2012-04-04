@@ -13,7 +13,6 @@ class BaseWeapon(object):
     
     def __init__(self, reload_callback):
         self.reload_callback = reload_callback
-        self.tolerant_delay = self.delay + CLIP_TOLERANCE
         self.reset()
         
     def restock(self):
@@ -33,7 +32,7 @@ class BaseWeapon(object):
         current_time = reactor.seconds()
         if value:
             self.start = current_time
-            if not self.current_ammo:
+            if self.current_ammo <= 0:
                 return
             elif self.reloading and not self.slow_reload:
                 return
@@ -43,8 +42,8 @@ class BaseWeapon(object):
                 self.reload_call.cancel()
         else:
             ammo = self.current_ammo
-            self.current_ammo = self.get_ammo()
-            self.next_shot = self.shoot_time + self.tolerant_delay * (
+            self.current_ammo = self.get_ammo(True)
+            self.next_shot = self.shoot_time + self.delay * (
                 ammo - self.current_ammo)
         self.shoot = value
     
@@ -78,16 +77,15 @@ class BaseWeapon(object):
         if self.shoot:
             dt = reactor.seconds() - self.shoot_time
             ammo = self.current_ammo - max(0, int(
-                math.ceil(dt / self.tolerant_delay)))
+                math.ceil(dt / self.delay)))
         else:
             ammo = self.current_ammo
         if no_max:
             return ammo
         return max(0, ammo)
     
-    def is_empty(self, tolerance = 5):
-        ammo = self.get_ammo(True)
-        return ammo < -tolerance or not self.shoot
+    def is_empty(self, tolerance = CLIP_TOLERANCE):
+        return self.get_ammo(True) < -tolerance or not self.shoot
     
     def get_damage(self, value, position1, position2):
         return self.damage[value]
@@ -109,7 +107,7 @@ class Rifle(BaseWeapon):
 
 class SMG(BaseWeapon):
     name = 'SMG'
-    delay = 0.1
+    delay = 0.11 # actually 0.1, but due to AoS scheduling, it's usually 0.11
     ammo = 30
     stock = 120
     reload_time = 2.5
