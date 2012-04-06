@@ -474,8 +474,14 @@ def teleport(connection, player1, player2 = None, silent = False):
         connection.protocol.send_chat(message, irc = True)
 
 @admin
-def unstick(connection):
-    connection.set_location_safe(connection.get_location())
+def unstick(connection, player = None):
+    if player is not None:
+        player = get_player(connection.protocol, player)
+    else:
+        player = connection
+    connection.protocol.send_chat("%s unstuck %s" %
+        (connection.name, player.name), irc = True)
+    player.set_location_safe(player.get_location())
       
 @alias('tps')
 @admin
