@@ -57,6 +57,7 @@ class BaseWeapon(object):
             return
         self.reloading = True
         self.set_shoot(False)
+        self.current_ammo = ammo
         self.reload_call = reactor.callLater(self.reload_time, self.on_reload)
     
     def on_reload(self):
