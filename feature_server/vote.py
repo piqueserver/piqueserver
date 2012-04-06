@@ -45,7 +45,7 @@ class VoteKick(object):
         self.vote_percentage = self.protocol.votekick_percentage
         self.vote_interval = self.protocol.votekick_interval
         self.schedule = Schedule(self.protocol, [
-            AlarmLater(self.timeout, minutes=self.protocol.votekick_time),
+            AlarmLater(self.timeout, seconds=self.protocol.votekick_time),
             AlarmLater(self.update, seconds=30,
                        loop=True, traversal_required=False)])
         self.ban_duration = self.protocol.votekick_ban_duration
