@@ -705,7 +705,8 @@ def change_planned_map(connection, *pre_maps):
     maps = check_rotation([maps[0]])
     if maps:
         protocol.planned_map = maps[0]
-        protocol.irc_say("* %s changed next map to %s" % (name, maps[0]))
+        protocol.send_chat("* %s changed next map to %s" % (name, maps[0]),
+                           irc = True)
     else:
         return 'Invalid map name'
 
