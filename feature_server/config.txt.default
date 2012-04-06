@@ -41,7 +41,7 @@
     "master" : true,
     "friendly_fire" : false,
     "grief_friendly_fire_time" : 2,
-    "melee_damage" : 100,
+    "melee_damage" : 80,
     "fall_damage" : true,
     "set_god_build" : false,
     "teamswitch_interval" : 0,
