@@ -22,6 +22,11 @@ from map import check_rotation
 import random
 from schedule import Schedule, AlarmLater, AlarmBeforeEnd
 
+def cancel_verify(connection, instigator):
+    return (connection.admin or 
+     connection is instigator or 
+     (connection.rights and 'cancel' in connection.rights))
+
 class VoteKick(object):
     public_votes = True
     ban_duration = 0.0
@@ -103,9 +108,7 @@ class VoteKick(object):
     def cancel(self, connection = None):
         if connection is None:
             message = 'Cancelled'
-        elif (connection and (not connection.admin and 
-            connection is not self.instigator and
-            (not connection.rights or 'cancel' not in connection.rights))):
+        elif not cancel_verify(connection, self.instigator):
             return 'You did not start the votekick.'
         else:
             message = 'Cancelled by %s' % connection.name
@@ -242,12 +245,10 @@ class VoteMap(object):
             self.on_majority()
             
     def cancel(self, connection = None):
-        if (connection and (not connection.admin and 
-            connection is not self.instigator and
-            (not connection.rights or 'cancel' not in connection.rights))):
-            return 'You did not start the vote.'
         if connection is None:
             message = 'Cancelled'
+        elif not cancel_verify(connection, self.instigator):
+            return 'You did not start the vote.'
         else:
             message = 'Cancelled by %s' % connection.name
         self.protocol.send_chat(message)
@@ -297,3 +298,4 @@ class VoteMap(object):
         self.protocol.votemap = None
 
 # 2nd pass: add map suggest
+# consider reworking to generator style
