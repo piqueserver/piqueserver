@@ -95,6 +95,16 @@ def join_arguments(arg, default = None):
         return default
     return ' '.join(arg)
 
+def parse_maps(pre_maps):
+    maps = []
+    for n in pre_maps:
+        if n[0]=="#" and len(maps)>0:
+            maps[-1] += " "+n
+        else:
+            maps.append(n)
+    
+    return maps, ', '.join(maps)
+
 @admin
 def kick(connection, value, *arg):
     reason = join_arguments(arg)
@@ -701,14 +711,8 @@ def change_planned_map(connection, *pre_maps):
     protocol = connection.protocol
 
     # parse seed numbering
-    maps = []
-    for n in pre_maps:
-        if n[0]=="#" and len(maps)>0:
-            maps[-1] += " "+n
-        else:
-            maps.append(n)
-
-    maps = check_rotation([maps[0]])
+    maps, map_list = parse_maps(pre_maps)
+    
     if maps:
         protocol.planned_map = maps[0]
         protocol.send_chat("* %s changed next map to %s" % (name, maps[0]),
@@ -722,19 +726,35 @@ def change_rotation(connection, *pre_maps):
     name = connection.name
     protocol = connection.protocol
 
-    # parse seed numbering
-    maps = []
-    for n in pre_maps:
-        if n[0]=="#" and len(maps)>0:
-            maps[-1] += " "+n
-        else:
-            maps.append(n)
-    
-    map_list = ', '.join(maps)
+    maps, map_list = parse_maps(pre_maps)
+
+    if len(maps)==0:
+        return 'Usage: /rotation <map1> <map2> <map3>...'    
+    if not protocol.set_map_rotation(maps, False):
+        return 'Invalid map in map rotation (%s)' % map_list
+    protocol.send_chat("%s changed map rotation to %s." %
+                            (name, map_list), irc=True)
+
+@name('rotationadd')
+@admin
+def rotation_add(connection, *pre_maps):
+    name = connection.name
+    protocol = connection.protocol
+
+    new_maps, map_list = parse_maps(pre_maps)
+
+    maps = connection.protocol.get_map_rotation()
+    map_list = ", ".join(maps) + map_list
+    maps.extend(new_maps)
     
     if not protocol.set_map_rotation(maps, False):
         return 'Invalid map in map rotation (%s)' % map_list
-    protocol.irc_say("* %s changed map rotation to %s" % (name, map_list))
+    protocol.send_chat("%s added %s to map rotation." %
+                            (name, " ".join(pre_maps)), irc=True)
+
+@name('showrotation')
+def show_rotation(connection):
+    return ", ".join(connection.protocol.get_map_rotation())
 
 @name('revertrotation')
 @admin
@@ -893,6 +913,8 @@ command_list = [
     change_planned_map,
     change_rotation,
     revert_rotation,
+    show_rotation,
+    rotation_add,
     advance,
     set_time_limit,
     get_time_limit,

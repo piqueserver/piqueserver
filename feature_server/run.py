@@ -725,6 +725,9 @@ class FeatureProtocol(ServerProtocol):
         if now:
             self.advance_rotation()
         return True
+
+    def get_map_rotation(self):
+        return [map.full_name for map in self.maps]
     
     def is_indestructable(self, x, y, z):
         if self.user_blocks is not None:
