@@ -49,7 +49,7 @@ def running_man(connection):
 
 @admin
 def relink(connection):
-    if not protocol.running_man:
+    if not connection.protocol.running_man:
         return S_NOT_ENABLED
     connection.protocol.drop_all_links()
     connection.protocol.send_chat(S_UNLINK_ALL, irc = True)
