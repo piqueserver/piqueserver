@@ -787,7 +787,8 @@ def toggle_master(connection):
     message = ("toggled master broadcast %s" % ['OFF', 'ON'][
         int(protocol.master)])
     protocol.irc_say("* %s " % connection.name + message)
-    return ("You " + message)
+    if connection in connection.protocol.players:
+        return ("You " + message)
 
 def ping(connection, value = None):
     if value is None:
