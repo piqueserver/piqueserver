@@ -150,7 +150,7 @@ def apply_script(protocol, connection, config):
         
         def get_new_link(self):
             available = list(ifilter(self.can_be_linked_to,
-                self.team.get_players())
+                self.team.get_players()))
             if not available:
                 return
             self.drop_link(force_message = True)
