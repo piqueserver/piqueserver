@@ -18,7 +18,7 @@ from pyspades.world import Grenade
 from pyspades.server import grenade_packet
 from pyspades.collision import distance_3d_vector
 from pyspades.constants import *
-from commands import add, admin, get_player
+from commands import add, admin, get_player, name
 
 ENABLED_AT_START = False
 
@@ -125,7 +125,7 @@ def apply_script(protocol, connection, config):
         def on_team_leave(self):
             if self.protocol.running_man:
                 self.drop_link()
-            return connection.on_team_join(self, team)
+            return connection.on_team_leave(self)
         
         def on_flag_capture(self):
             if self.protocol.running_man:
