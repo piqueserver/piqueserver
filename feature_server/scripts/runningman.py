@@ -12,18 +12,21 @@ Maintainer: hompy
 """
 
 from random import choice
+from itertools import ifilter
 from twisted.internet.reactor import seconds
 from pyspades.world import Grenade
 from pyspades.server import grenade_packet
 from pyspades.collision import distance_3d_vector
 from pyspades.constants import *
-from commands import add, admin, name, get_player
+from commands import add, admin, get_player
 
 ENABLED_AT_START = False
 
 S_ENABLED = 'Running Man mode ENABLED'
 S_DISABLED = 'Running Man mode DISABLED'
-S_LINK_BREAK = "You strayed too far from {player}... don't go losing your head over it"
+S_NOT_ENABLED = 'Running Man mode is not enabled'
+S_LINK_BREAK = ("You strayed too far from {player}... don't go losing your "
+    "head over it")
 S_LINK_WARNING = 'WARNING! Get back to {player} or you will both die!'
 S_LINKED = "You've been linked to {player}. Stay close to your partner or die!"
 S_FREE = "You're free to roam around... for now"
@@ -46,12 +49,17 @@ def running_man(connection):
 
 @admin
 def relink(connection):
+    if not protocol.running_man:
+        return S_NOT_ENABLED
     connection.protocol.drop_all_links()
     connection.protocol.send_chat(S_UNLINK_ALL, irc = True)
 
 @admin
 def unlink(connection, player = None):
     protocol = connection.protocol
+    if not protocol.running_man:
+        return S_NOT_ENABLED
+    
     if player is not None:
         player = get_player(protocol, player)
     elif connection in protocol.players:
@@ -114,18 +122,17 @@ def apply_script(protocol, connection, config):
                     self.set_location_safe(self.link.world_object.position.get())
             connection.on_spawn(self, pos)
         
-        def on_team_join(self, team):
-            if self.protocol.running_man and self.team is not team:
+        def on_team_leave(self):
+            if self.protocol.running_man:
                 self.drop_link()
             return connection.on_team_join(self, team)
         
         def on_flag_capture(self):
             if self.protocol.running_man:
-                for player in self.protocol.players.values():
-                    if player.team is self.team:
-                        player.drop_link(no_message = True)
-            message = S_FLAG_CAPTURED.format(team = self.team.name)
-            self.protocol.send_chat(message, global_message = None)
+                for player in self.team.get_players():
+                    player.drop_link(no_message = True)
+                message = S_FLAG_CAPTURED.format(team = self.team.name)
+                self.protocol.send_chat(message, global_message = None)
             connection.on_flag_capture(self)
         
         def on_reset(self):
@@ -142,8 +149,8 @@ def apply_script(protocol, connection, config):
             return True
         
         def get_new_link(self):
-            available = [player for player in self.team.get_players() if 
-                self.can_be_linked_to(player)]
+            available = list(ifilter(self.can_be_linked_to,
+                self.team.get_players())
             if not available:
                 return
             self.drop_link(force_message = True)
