@@ -25,7 +25,6 @@
 <td>mode</td>
 <td>map</td>
 <td>server</td>
-<td>address</td>
 
 </tr>
 {% for server in servers %}
@@ -37,7 +36,6 @@
     <td>{{server.map}}</td>
 
     <td><a href="{{make_server_identifier(server.ip, server.port)}}">{{server.name}}</a></td>
-    <td>{{make_server_identifier(server.ip, server.port)}}</td>
     </tr>
 {% endfor %}
 </tbody>
