@@ -130,7 +130,7 @@ class QueryProtocol(DatagramProtocol):
     def got_servers(self, servers):
         self.pyspades_set = set()
         for server in servers:
-            self.transport.write('HELLO', (server.ip, 32887))
+            self.transport.write('HELLO', (server.ip, server.port))
         reactor.callLater(PYSPADES_TIMEOUT, self.save, servers)
     
     def update(self):
