@@ -126,8 +126,7 @@ def apply_script(protocol, connection, config):
                     (GRENADE_KILLS_COUNT or type != GRENADE_KILL)):
                     now = seconds()
                     killer.rampage_kills.append(now)
-                    if (self.protocol.rampage_enabled and
-                        len(killer.rampage_kills) == KILL_REQUIREMENT and
+                    if (len(killer.rampage_kills) == KILL_REQUIREMENT and
                         killer.rampage_kills[0] >= now - TIME_REQUIREMENT):
                         killer.start_rampage()
             connection.on_kill(self, killer, type)
