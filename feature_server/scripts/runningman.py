@@ -94,7 +94,7 @@ def apply_script(protocol, connection, config):
                     if dist > self.protocol.link_distance:
                         self.grenade_suicide()
                         self.link_deaths += 1
-                        self.grenade_suicide()
+                        self.link.grenade_suicide()
                         self.link.link_deaths += 1
                         
                         message = S_LINK_BREAK.format(player = self.link.name)
