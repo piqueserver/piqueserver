@@ -332,11 +332,12 @@ class ServerConnection(BaseConnection):
                         contained.left, contained.right)
                     if returned is not None:
                         up, down, left, right = returned
-                        if (up != contained.up or down != contained.down or
-                            left != contained.left or right != contained.right):
-                            (contained.up, contained.down, contained.left,
-                                contained.right) = returned
-                            self.send_contained(contained)
+                        ## XXX unsupported
+                        #~ if (up != contained.up or down != contained.down or
+                            #~ left != contained.left or right != contained.right):
+                            #~ (contained.up, contained.down, contained.left,
+                                #~ contained.right) = returned
+                            #~ self.send_contained(contained)
                     world_object.set_walk(contained.up, contained.down,
                         contained.left, contained.right)
                     contained.player_id = self.player_id
