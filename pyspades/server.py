@@ -192,6 +192,8 @@ class ServerConnection(BaseConnection):
     last_refill = None
     last_block_destroy = None
     filter_visibility_data = False
+    filter_animation_data = False
+    freeze_animation = False
     speedhack_detect = False
     rapid_hack_detect = False
     timers = None
@@ -338,8 +340,9 @@ class ServerConnection(BaseConnection):
                                 contained.right) = returned
                             ## XXX unsupported
                             #~ self.send_contained(contained)
-                    world_object.set_walk(contained.up, contained.down,
-                        contained.left, contained.right)
+                    if not self.freeze_animation:
+                        world_object.set_walk(contained.up, contained.down,
+                            contained.left, contained.right)
                     contained.player_id = self.player_id
                     z_vel = world_object.velocity.z
                     if contained.jump and not (z_vel >= 0 and z_vel < 0.017):
@@ -357,8 +360,8 @@ class ServerConnection(BaseConnection):
                             # (contained.primary_fire, contained.secondary_fire,
                                 # contained.jump, contained.crouch) = returned
                             # self.send_contained(contained)
-                    returned = self.on_animation_update(contained.jump, contained.crouch,
-                        contained.sneak, contained.sprint)
+                    returned = self.on_animation_update(contained.jump,
+                        contained.crouch, contained.sneak, contained.sprint)
                     if returned is not None:
                         jump, crouch, sneak, sprint = returned
                         if (jump != contained.jump or crouch != contained.crouch or
@@ -366,9 +369,10 @@ class ServerConnection(BaseConnection):
                             (contained.jump, contained.crouch, contained.sneak,
                                 contained.sprint) = returned
                             self.send_contained(contained)
-                    world_object.set_animation(contained.jump, contained.crouch,
-                        contained.sneak, contained.sprint)
-                    if self.filter_visibility_data:
+                    if not self.freeze_animation:
+                        world_object.set_animation(contained.jump,
+                            contained.crouch, contained.sneak, contained.sprint)
+                    if self.filter_visibility_data or self.filter_animation_data:
                         return
                     self.protocol.send_contained(contained, sender = self)
                 elif contained.id == loaders.WeaponReload.id:
