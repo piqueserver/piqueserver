@@ -714,7 +714,7 @@ def change_planned_map(connection, *pre_maps):
     maps, map_list = parse_maps(pre_maps)
     
     if maps:
-        protocol.planned_map = maps[0]
+        protocol.planned_map = check_rotation([maps[0]])[0]
         protocol.send_chat("* %s changed next map to %s" % (name, maps[0]),
                            irc = True)
     else:
