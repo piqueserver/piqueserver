@@ -178,7 +178,7 @@ def apply_script(protocol, connection, config):
             protocol = self.protocol
             position = self.world_object.position
             protocol.world.create_object(Grenade, 0.0, position, None,
-                Vertex3(), protocol.grenade_exploded)
+                Vertex3(), self.grenade_exploded)
             grenade_packet.value = 0.0
             grenade_packet.player_id = self.player_id
             grenade_packet.position = position.get()
