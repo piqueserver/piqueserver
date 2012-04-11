@@ -343,8 +343,9 @@ def switch(connection, player = None):
         player.send_chat("The switch command can't be used on a spectating player.")
         return
     if player.invisible:
-        player.on_team_leave()
+        old_team = player.team
         player.team = player.team.other
+        player.on_team_changed(old_team)
         player.spawn(player.world_object.position.get())
         player.send_chat('Switched to %s team' % player.team.name)
         if connection is not player and connection in protocol.players:
