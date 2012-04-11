@@ -122,7 +122,8 @@ def apply_script(protocol, connection, config):
                     message = S_RAMPAGE_KILLED.format(victim = self.name,
                         killer = killer.name)
                     self.protocol.send_chat(message, global_message = None)
-                if (not killer.rampage and killer.team is not self.team and
+                if (not killer.rampage and killer.hp and
+                    killer.team is not self.team and
                     (GRENADE_KILLS_COUNT or type != GRENADE_KILL)):
                     now = seconds()
                     killer.rampage_kills.append(now)
