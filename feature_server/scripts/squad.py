@@ -212,9 +212,9 @@ def apply_script(protocol, connection, config):
             x, y, z = (follow.world_object.position.get())
             return x, y, z
 
-        def on_team_leave(self):
+        def on_team_changed(self, old_team):
             self.leave_squad()
-            return connection.on_team_leave(self)
+            return connection.on_team_changed(self, old_team)
 
         def on_spawn(self, pos):
             if self.squad:

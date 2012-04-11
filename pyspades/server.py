@@ -797,9 +797,11 @@ class ServerConnection(BaseConnection):
         if self.world_object is not None:
             self.world_object.delete()
         if self.team is not None:
-            self.on_team_leave()
+            old_team = self.team
+            self.team = None
+            self.on_team_changed(old_team)
         self.on_reset()
-        self.name = self.team = self.hp = self.world_object = None
+        self.name = self.hp = self.world_object = None
     
     def hit(self, value, by = None, type = WEAPON_KILL):
         if self.hp is None:
@@ -849,8 +851,9 @@ class ServerConnection(BaseConnection):
         if team is self.team:
             return
         self.drop_flag()
-        self.on_team_leave()
+        old_team = self.team
         self.team = team
+        self.on_team_changed(old_team)
         self.kill(type = TEAM_CHANGE_KILL)
     
     def kill(self, by = None, type = WEAPON_KILL):
@@ -1086,7 +1089,7 @@ class ServerConnection(BaseConnection):
     def on_team_join(self, team):
         pass
 
-    def on_team_leave(self):
+    def on_team_changed(self, old_team):
         pass
     
     def on_tool_set_attempt(self, tool):

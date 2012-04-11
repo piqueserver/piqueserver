@@ -123,10 +123,10 @@ def apply_script(protocol, connection, config):
                     self.set_location_safe(self.link.world_object.position.get())
             connection.on_spawn(self, pos)
         
-        def on_team_leave(self):
+        def on_team_changed(self, old_team):
             if self.protocol.running_man:
                 self.drop_link()
-            return connection.on_team_leave(self)
+            return connection.on_team_changed(self, old_team)
         
         def on_flag_capture(self):
             if self.protocol.running_man:
