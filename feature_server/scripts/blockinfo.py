@@ -125,7 +125,7 @@ def apply_script(protocol, connection, config):
                 if killer.teamkill_times is None:
                     killer.teamkill_times = []
                 killer.teamkill_times.append(reactor.seconds())
-            connection.on_kill(self, killer, type)
+            return connection.on_kill(self, killer, type)
     
     class BlockInfoProtocol(protocol):
         block_info = None
