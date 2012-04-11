@@ -236,6 +236,7 @@ class ServerConnection(BaseConnection):
             contained = load_client_packet(ByteReader(loader.data))
             if contained.id in (loaders.ExistingPlayer.id, 
                                 loaders.ShortPlayerData.id):
+                old_team = self.team
                 team = self.protocol.teams[contained.team]
                 if self.on_team_join(team) == False:
                     if not team.spectator:
@@ -249,6 +250,8 @@ class ServerConnection(BaseConnection):
                     self.name = self.protocol.get_name(name)
                     self.protocol.players[self.name, self.player_id] = self
                     self.on_login(self.name)
+                else:
+                    self.on_team_changed(old_team)
                 self.set_weapon(contained.weapon, True)
                 if self.protocol.speedhack_detect:
                     self.speedhack_detect = True
