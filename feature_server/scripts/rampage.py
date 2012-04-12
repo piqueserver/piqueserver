@@ -14,7 +14,7 @@ Maintainer: hompy
 from collections import deque
 from twisted.internet.reactor import callLater, seconds
 from twisted.internet.task import LoopingCall
-from pyspades.server import set_tool, fog_color
+from pyspades.server import set_tool, fog_color, weapon_reload
 from pyspades.common import make_color
 from pyspades.constants import *
 
@@ -22,6 +22,7 @@ KILL_REQUIREMENT = 3
 TIME_REQUIREMENT = 8.0
 GRENADE_KILLS_COUNT = True
 RAMPAGE_REFILLS = True
+RAMPAGE_RELOADS = True
 RAMPAGE_DURATION = 20.0
 RAPID_INTERVALS = {
     RIFLE_WEAPON : 0.16,
@@ -79,6 +80,15 @@ def apply_script(protocol, connection, config):
                     RAMPAGE_FOG_FUNC)
             if RAMPAGE_REFILLS:
                 self.refill()
+            if RAMPAGE_RELOADS:
+                weapon = self.weapon_object
+                was_shooting = weapon.shoot
+                weapon.reset()
+                weapon_reload.player_id = self.player_id
+                weapon_reload.clip_ammo = weapon.current_ammo
+                weapon_reload.reserve_ammo = weapon.current_stock
+                weapon.set_shoot(was_shooting)
+                self.send_contained(weapon_reload)
             send_fog(self, RAMPAGE_FOG_COLOR)
             if ANNOUNCE_RAMPAGE:
                 message = S_RAMPAGE_START.format(player = self.name)
