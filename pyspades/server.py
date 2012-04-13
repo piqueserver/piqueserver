@@ -501,6 +501,8 @@ class ServerConnection(BaseConnection):
                             return
                         self.on_block_build(x, y, z)
                     else:
+                        if not map.is_solid(x, y, z):
+                            return
                         if self.on_block_destroy(x, y, z, value) == False:
                             return
                         elif value == DESTROY_BLOCK:
