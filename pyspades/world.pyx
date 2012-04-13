@@ -317,6 +317,21 @@ cdef class Grenade(Object):
         return can_see(self.world.map, position.x, position.y, position.z,
                        nade.x, nade.y, nade.z)
     
+    cpdef get_next_collision(self, double dt):
+        if self.velocity.is_zero():
+            return None
+        cdef float eta = 0.0
+        cdef Vertex3 old_position = self.position.copy()
+        cdef Vertex3 old_velocity = self.velocity.copy()
+        while move_grenade(self.grenade) == 0:
+            eta += dt
+            if eta > 5.0:
+                break
+        cdef float x, y, z = self.position.get()
+        self.position.set_vector(old_position)
+        self.velocity.set_vector(old_velocity)
+        return eta, x, y, z
+    
     cpdef double get_damage(self, Vertex3 player_position):
         cdef Vector * position = self.position.value
         cdef double diff_x, diff_y, diff_z

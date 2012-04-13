@@ -628,7 +628,7 @@ GrenadeType * create_grenade(Vector * p, Vector * v)
     return g;
 }
 
-// returns 1 if sound should be played
+// returns 1 if there was a collision, 2 if sound should be played
 int move_grenade(GrenadeType * g)
 {
     Vector fpos = g->p; //old position
@@ -655,11 +655,12 @@ int move_grenade(GrenadeType * g)
     if(clipworld(lp.x, lp.y, lp.z))  //hit a wall
     {
         #define BOUNCE_SOUND_THRESHOLD 0.1f
-
+        
+        ret = 1;
         if(fabs(g->v.x) > BOUNCE_SOUND_THRESHOLD ||
            fabs(g->v.y) > BOUNCE_SOUND_THRESHOLD ||
            fabs(g->v.z) > BOUNCE_SOUND_THRESHOLD)
-            ret = 1; // play sound
+            ret = 2; // play sound
         
         LongVector lp2;
         lp2.x = (long)floor(fpos.x);
