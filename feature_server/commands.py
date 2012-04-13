@@ -1017,7 +1017,8 @@ def handle_command(connection, command, parameters):
 
 def debug_handle_command(connection, command, parameters):
     # use this when regular handle_command eats errors
-    connection.send_chat("Commands are in DEBUG mode")
+    if connection in connection.protocol.players:
+        connection.send_chat("Commands are in DEBUG mode")
     command = command.lower()
     try:
         command = aliases[command]
