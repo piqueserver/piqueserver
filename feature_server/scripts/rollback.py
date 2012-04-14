@@ -158,7 +158,7 @@ def apply_script(protocol, connection, config):
                 block_action.x = x
                 for y in xrange(start_y, end_y):
                     block_action.y = y
-                    if check_protected and self.is_protected(x, y):
+                    if check_protected and self.is_protected(x, y, 0):
                         continue
                     for z in xrange(63):
                         action = None

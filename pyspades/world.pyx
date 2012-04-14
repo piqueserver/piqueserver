@@ -390,20 +390,11 @@ cdef class World(object):
 
 # utility functions
 
-cdef class Int3:
-    cdef public:
-        int x, y, z
-
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
-
-def cube_line(x1, y1, z1, x2, y2, z2):
+cpdef cube_line(x1, y1, z1, x2, y2, z2):
     cdef LongVector array[CUBE_ARRAY_LENGTH]
     cdef size_t size = cube_line_c(x1, y1, z1, x2, y2, z2, array)
-    cdef list point_list = []
-    cdef int i
-    for i in range(size):
-        point_list.append(Int3(array[i].x, array[i].y, array[i].z))
-    return point_list
+    cdef size_t i
+    cdef list points = []
+    for i in xrange(size):
+        points.append((array[i].x, array[i].y, array[i].z))
+    return points

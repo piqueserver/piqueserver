@@ -108,7 +108,7 @@ def apply_script(protocol, connection, config):
 
         def on_line_build_attempt(self, points):
             for point in points:
-                if self.invalid_build_position(point.x, point.y, point.z):
+                if self.invalid_build_position(*point):
                     return False
             return connection.on_line_build_attempt(self, points)
 

@@ -221,6 +221,16 @@ class FeatureConnection(ServerConnection):
     def on_line_build_attempt(self, points):
         return self._can_build()
     
+    def on_line_build(self, points):
+        if self.god:
+            self.refill()
+        if self.god_build:
+            if self.protocol.god_blocks is None:
+                self.protocol.god_blocks = set()
+            self.protocol.god_blocks.update(points)
+        elif self.protocol.user_blocks is not None:
+            self.protocol.user_blocks.update(points)
+    
     def on_block_build(self, x, y, z):
         if self.god:
             self.refill()

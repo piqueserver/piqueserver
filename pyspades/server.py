@@ -540,7 +540,7 @@ class ServerConnection(BaseConnection):
                     if self.on_line_build_attempt(points) == False:
                         return
                     for point in points:
-                        x, y, z = point.x, point.y, point.z
+                        x, y, z = point
                         if not map.set_point(x, y, z, self.color + (255,)):
                             break
                     self.blocks -= len(points)

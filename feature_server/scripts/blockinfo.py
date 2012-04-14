@@ -105,8 +105,7 @@ def apply_script(protocol, connection, config):
                 self.protocol.block_info = {}
             name_team = (self.name, self.team.id)
             for point in points:
-                x, y, z = point.x, point.y, point.z
-                self.protocol.block_info[(x, y, z)] = name_team
+                self.protocol.block_info[point] = name_team
             connection.on_line_build(self, points)
         
         def on_block_removed(self, x, y, z):
