@@ -713,13 +713,12 @@ def change_planned_map(connection, *pre_maps):
 
     # parse seed numbering
     maps, map_list = parse_maps(pre_maps)
-    
-    if maps:
-        protocol.planned_map = check_rotation([maps[0]])[0]
-        protocol.send_chat("* %s changed next map to %s" % (name, maps[0]),
-                           irc = True)
-    else:
+    if not maps:
         return 'Invalid map name'
+    
+    map = maps[0]
+    protocol.planned_map = check_rotation([map])[0]
+    protocol.send_chat('%s changed next map to %s' % (name, map), irc = True)
 
 @name('rotation')
 @admin
