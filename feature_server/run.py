@@ -536,6 +536,8 @@ class FeatureProtocol(ServerProtocol):
         self.team2_color = tuple(team2.get('color', (0, 196, 0)))
         self.friendly_fire = config.get('friendly_fire', True)
         self.friendly_fire_time = config.get('grief_friendly_fire_time', 2.0)
+        self.spade_teamkills_on_grief = config.get('spade_teamkills_on_grief',
+            False)
         self.fall_damage = config.get('fall_damage', True)
         self.teamswitch_interval = config.get('teamswitch_interval', 0)
         self.max_players = config.get('max_players', 20)
