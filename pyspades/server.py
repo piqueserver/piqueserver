@@ -814,7 +814,8 @@ class ServerConnection(BaseConnection):
         if by is not None and self.team is by.team:
             friendly_fire = self.protocol.friendly_fire
             if friendly_fire == 'on_grief':
-                if type == MELEE_KILL and not self.protocol.spade_can_teamkill:
+                if (type == MELEE_KILL and
+                    not self.protocol.spade_teamkills_on_grief):
                     return
                 hit_time = self.protocol.friendly_fire_time
                 if (self.last_block_destroy is None 
