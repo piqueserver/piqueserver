@@ -333,7 +333,7 @@ cdef class HeightMap(object):
             self.cmap[idx] = paint_gradient(zcoldefs[self.cmap[idx]],h)
             idx+=1
     cpdef rgb_noise_colors(self, low, high):
-        """Average the color of each pixel to add smoothness."""
+        """Add noise to the heightmap colors."""
         cdef int idx = 0
         
         patterns = array.array('i', [random.randint(low,high) for n in xrange(101)])
