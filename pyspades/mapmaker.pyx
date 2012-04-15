@@ -332,6 +332,50 @@ cdef class HeightMap(object):
             h = int(self.hmap[idx] * 63)
             self.cmap[idx] = paint_gradient(zcoldefs[self.cmap[idx]],h)
             idx+=1
+    cpdef rgb_noise_colors(self, low, high):
+        """Average the color of each pixel to add smoothness."""
+        cdef int idx = 0
+        
+        patterns = array.array('i', [random.randint(low,high) for n in xrange(101)])
+        
+        while idx<len(self.hmap):
+            mid = self.cmap[idx]
+            
+            r = max(0, min(0xFF,get_r(mid)+patterns[idx%len(patterns)]))
+            g = max(0, min(0xFF,get_g(mid)+patterns[(idx+1)%len(patterns)]))
+            b = max(0, min(0xFF,get_b(mid)+patterns[(idx+2)%len(patterns)]))
+            
+            self.cmap[idx] = make_color(r,g,b)
+            
+            idx+=1
+            
+    cpdef smooth_colors(self):
+        """Average the color of each pixel to add smoothness."""
+        cdef int x = 0
+        cdef int y = 0
+        
+        import copy        
+        
+        swap = copy.deepcopy(self.cmap)
+        
+        while y<self.height:
+            left = swap[((x-1)%self.width)+(y%self.height)*self.width]
+            right = swap[((x+1)%self.width)+(y%self.height)*self.width]
+            up = swap[((x)%self.width)+((y-1)%self.height)*self.width]
+            down = swap[((x)%self.width)+((y+1)%self.height)*self.width]
+            mid = swap[((x)%self.width)+((y)%self.height)*self.width]
+            
+            r = (get_r(left) + get_r(right) + get_r(up) + get_r(down) + get_r(mid))/5
+            g = (get_g(left) + get_g(right) + get_g(up) + get_g(down) + get_g(mid))/5
+            b = (get_b(left) + get_b(right) + get_b(up) + get_b(down) + get_b(mid))/5
+            
+            self.set_col_repeat(x,y,make_color(r,g,b))
+            
+            x += 1
+            if x>=self.width:
+                x = 0
+                y += 1
+        
     cpdef write_vxl(self):
         cdef VXLData vxl = VXLData()
 
@@ -373,6 +417,15 @@ cdef lim_byte(int val):
 
 cpdef inline int make_color(int r, int g, int b):
     return b | (g << 8) | (r << 16) | (<int>128 << 24)
+
+cpdef inline int get_r(int color):
+    return (color>>16) & 0xFF
+
+cpdef inline int get_g(int color):
+    return (color>>8) & 0xFF
+
+cpdef inline int get_b(int color):
+    return (color) & 0xFF
 
 cdef inline int paint_gradient(object zcoltable, int z):
     cdef int zz = z*3

@@ -84,6 +84,8 @@ def gen_script(basename, seed):
     hmap.smoothing()    
     hmap.truncate()
     hmap.rewrite_gradient_fill(gradients)
+    hmap.rgb_noise_colors(-2,2)
+    hmap.smooth_colors()
 
     vxl = hmap.write_vxl()
             
