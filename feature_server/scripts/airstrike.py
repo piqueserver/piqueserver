@@ -4,120 +4,170 @@ Airstrikes. Boom!
 Maintainer: mat^2 / hompy
 """
 
+from math import ceil
+from random import randrange, uniform
+from twisted.internet.reactor import callLater, seconds
 from pyspades.server import orientation_data, grenade_packet
-from pyspades.common import coordinates, Vertex3
+from pyspades.common import coordinates, to_coordinates, Vertex3
 from pyspades.collision import distance_3d_vector
 from pyspades.world import Grenade
-from twisted.internet import reactor
-import random
-import commands
+from pyspades.constants import UPDATE_FREQUENCY
+from commands import alias, add
 
-@commands.alias('a')
-def airstrike(connection, value = None):
-    return connection.start_airstrike(value)
+OLD_AIRSTRIKE = True
+SCORE_REQUIREMENT = 15
+STREAK_REQUIREMENT = 10
+TEAM_COOLDOWN = 20.0
 
-commands.add(airstrike)
+S_READY = 'Airstrike support ready! Launch with e.g. /airstrike B4'
+S_NO_SCORE = 'You need a total score of {score} (kills or intel) to ' \
+    'unlock airstrikes!'
+S_NO_STREAK = 'Every {streak} consecutive kills (without dying) you get an ' \
+    'airstrike. {remaining} kills to go!'
+S_BAD_COORDS = "Bad coordinates: should be like 'A4', 'G5'. Look them up in the map"
+S_COOLDOWN = '{seconds} seconds before your team can launch another airstrike'
+S_ALLIED = 'Ally {player} called in an airstrike on location {coords}'
+S_ENEMY = '[WARNING] Enemy air support heading to {coords}!'
+S_UNLOCKED = 'You have unlocked airstrike support!'
+S_UNLOCKED_TIP = 'Each {streak}-kill streak will clear you for one airstrike'
+
+@alias('a')
+def airstrike(connection, coords = None):
+    protocol = connection.protocol
+    if connection not in protocol.players:
+        raise ValueError()
+    player = connection
+    if not coords and player.airstrike:
+        return S_READY
+    if player.kills < SCORE_REQUIREMENT:
+        return S_NO_SCORE.format(score = SCORE_REQUIREMENT)
+    elif not player.airstrike:
+        kills_left = STREAK_REQUIREMENT - (player.streak % STREAK_REQUIREMENT)
+        return S_NO_STREAK.format(streak = STREAK_REQUIREMENT,
+            remaining = kills_left)
+    try:
+        coord_x, coord_y = coordinates(coords)
+    except (ValueError):
+        return S_BAD_COORDS
+    last_airstrike = getattr(player.team, 'last_airstrike', None)
+    if last_airstrike and seconds() - last_airstrike < TEAM_COOLDOWN:
+        remaining = TEAM_COOLDOWN - (seconds() - last_airstrike)
+        return S_COOLDOWN.format(seconds = int(ceil(remaining)))
+    player.start_airstrike(coord_x, coord_y)
+
+add(airstrike)
 
 def apply_script(protocol, connection, config):
     class AirstrikeConnection(connection):
         airstrike = False
-        def desync_grenade(self, x, y, z, orientation_x, fuse):
-            """Gives the appearance of a grenade appearing from thin air"""
-            if self.name is None:
-                return
-            grenade_packet.value = fuse
-            grenade_packet.player_id = self.player_id
-            grenade_packet.position = (x, y, z)
-            grenade_packet.velocity = (orientation_x, 0.0, 0.5)
-            self.protocol.send_contained(grenade_packet)
-            position = Vertex3(x, y, z)
-            velocity = Vertex3(orientation_x, 0.0, 0.5)
-            airstrike = self.protocol.world.create_object(Grenade, fuse, 
-                position, None, 
-                velocity, self.grenade_exploded)
-            airstrike.name = 'airstrike'
-            
-        # airstrike
+        airstrike_grenade_calls = None
+        airstrike_end_call = None
+        airstrike_ongoing = False
         
-        def start_airstrike(self, value = None):
-            score_req = self.protocol.airstrike_min_score_req
-            streak_req = self.protocol.airstrike_streak_req
-            interval = self.protocol.airstrike_interval
-            if value is None and (self.god or self.airstrike):
-                return 'Airstrike support ready! Use with e.g. /airstrike A1'
-            if self.kills < score_req:
-                return ('You need a total score of %s (kills or intel) to '
-                    'unlock airstrikes!' % score_req)
-            elif not self.airstrike:
-                kills_left = streak_req - (self.streak % streak_req)
-                return ('Every %s consecutive kills (without dying) you '
-                    'get an airstrike. %s kills to go!' %
-                    (streak_req, kills_left))
-            try:
-                x, y = coordinates(value)
-            except (ValueError):
-                return ("Bad coordinates: should be like 'A4', 'G5'. Look "
-                    "them up in the map.")
-            last_airstrike = self.protocol.last_airstrike[self.team.id]
-            if (last_airstrike and reactor.seconds() - last_airstrike < interval):
-                remain = interval - (reactor.seconds() - last_airstrike)
-                return ('%s seconds before your team can launch '
-                    'another airstrike.' % int(remain))
-            self.protocol.last_airstrike[self.team.id] = reactor.seconds()
-            
-            self.airstrike = False
-            self.protocol.send_chat('Ally %s called in an airstrike on '
-                'location %s' % (self.name, value.upper()), global_message = False,
+        def start_airstrike(self, coord_x, coord_y):
+            coords = to_coordinates(coord_x, coord_y)
+            message = S_ALLIED.format(player = self.name, coords = coords)
+            self.protocol.send_chat(message, global_message = False,
                 team = self.team)
-            self.protocol.send_chat('[WARNING] Enemy air support heading to %s!' %
-                value.upper(), global_message = False, team = self.team.other)
-            reactor.callLater(2.5, self.do_airstrike, x, y)
+            message = S_ENEMY.format(coords = coords)
+            self.protocol.send_chat(message, global_message = False,
+                team = self.team.other)
+            
+            self.team.last_airstrike = seconds()
+            self.airstrike = False
+            callLater(2.5, self.do_airstrike, coord_x, coord_y)
         
-        def do_airstrike(self, start_x, start_y):
-            if self.name is None:
-                return
+        def do_airstrike(self, coord_x, coord_y):
+            self.airstrike_grenade_calls = []
+            going_right = self.team.id == 0
+            coord_x += -64 if going_right else 64
+            coord_x = max(0, min(511, coord_x))
+            min_spread = 4.0 if going_right else -5.0
+            max_spread = 5.0 if going_right else -4.0
+            worst_delay = 0.0
             z = 1
-            orientation_x = [1.0, -1.0][self.team.id]
-            start_x = max(0, min(512, start_x + [-64, 64][self.team.id]))
-            range_x = [61, -61][self.team.id]
-            increment_x = [5, -5][self.team.id]
-            for round in xrange(12):
-                x = start_x + random.randrange(64)
-                y = start_y + random.randrange(64)
-                fuse = self.protocol.map.get_height(x + range_x, y) * 0.033
-                for i in xrange(5):
-                    x += increment_x
-                    time = round * 0.9 + i * 0.14
-                    reactor.callLater(time, self.desync_grenade, x, y, z,
-                        orientation_x, fuse)
+            for i in xrange(12):
+                x = coord_x + randrange(64)
+                y = coord_y + randrange(64)
+                for j in xrange(5):
+                    x += uniform(min_spread, max_spread)
+                    delay = i * 0.9 + j * 0.14
+                    worst_delay = max(delay, worst_delay)
+                    call = callLater(delay, self.create_airstrike_grenade,
+                        x, y, z)
+                    self.airstrike_grenade_calls.append(call)
+            callLater(worst_delay, self.end_airstrike)
+        
+        def end_airstrike(self):
+            if self.airstrike_grenade_calls:
+                for grenade_call in self.airstrike_grenade_calls:
+                    if grenade_call and grenade_call.active():
+                        grenade_call.cancel()
+            self.airstrike_grenade_calls = None
+            self.airstrike_ongoing = False
+        
+        def on_team_join(self, team):
+            if self.airstrike_ongoing:
+                return False
+            return connection.on_team_join(self, team)
+        
+        def on_reset(self):
+            self.end_airstrike()
+            connection.on_reset(self)
+        
+        def on_kill(self, killer, type, grenade):
+            self.airstrike = False
+            connection.on_kill(self, killer, type, grenade)
+        
+        def create_airstrike_grenade(self, x, y, z):
+            going_right = self.team.id == 0
+            position = Vertex3(x, y, z)
+            velocity = Vertex3(1.0 if going_right else -1.0, 0.0, 0.5)
+            callback = (self.grenade_exploded if OLD_AIRSTRIKE else
+                self.airstrike_exploded)
+            grenade = self.protocol.world.create_object(Grenade, 0.0,
+                position, None, velocity, callback)
+            grenade.name = 'airstrike'
+            estimate_travel = 61 if going_right else -61
+            eta = self.protocol.map.get_height(x + estimate_travel, y) * 0.033
+            if not OLD_AIRSTRIKE:
+                collision = grenade.get_next_collision(UPDATE_FREQUENCY)
+                if collision:
+                    eta, x, y, z = collision
+            grenade.fuse = eta
+            grenade_packet.value = grenade.fuse
+            grenade_packet.player_id = self.player_id
+            grenade_packet.position = position.get()
+            grenade_packet.velocity = velocity.get()
+            self.protocol.send_contained(grenade_packet)
+        
+        def airstrike_exploded(self, grenade):
+            map = self.protocol.map
+            pos, vel = grenade.position, grenade.velocity
+            vel.normalize()
+            while True:
+                pos += vel
+                solid = map.get_solid(*pos.get())
+                if solid or solid is None:
+                    break
+            self.grenade_exploded(grenade)
         
         def add_score(self, score):
             connection.add_score(self, score)
-            score_req = self.protocol.airstrike_min_score_req
-            streak_req = self.protocol.airstrike_streak_req
-            score_met = (self.kills >= score_req)
-            streak_met = (self.streak >= streak_req)
-            give_strike = False
+            score_met = (self.kills >= SCORE_REQUIREMENT)
+            streak_met = (self.streak >= STREAK_REQUIREMENT)
             if not score_met:
                 return
-            if self.kills - score < score_req:
-                self.send_chat('You have unlocked airstrike support!')
-                self.send_chat('Each %s-kill streak will clear you for one '
-                               'airstrike.' % streak_req)
-                if streak_met:
-                    give_strike = True
+            just_unlocked = False
+            if self.kills - score < SCORE_REQUIREMENT:
+                self.send_chat(S_UNLOCKED)
+                self.send_chat(S_UNLOCKED_TIP.format(STREAK_REQUIREMENT))
+                just_unlocked = True
             if not streak_met:
                 return
-            if (self.streak % streak_req == 0 or give_strike):
-                self.send_chat('Airstrike support ready! Launch with e.g. '
-                               '/airstrike B4')
+            if self.streak % STREAK_REQUIREMENT == 0 or just_unlocked:
+                self.send_chat(S_READY)
                 self.airstrike = True
                 self.refill()
     
-    class AirstrikeProtocol(protocol):
-        last_airstrike = [None, None]
-        airstrike_min_score_req = 15
-        airstrike_streak_req = 6
-        airstrike_interval = 12
-    
-    return AirstrikeProtocol, AirstrikeConnection
+    return protocol, AirstrikeConnection
