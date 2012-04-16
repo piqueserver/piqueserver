@@ -272,7 +272,7 @@ def apply_script(protocol, connection, config):
                 self.kill_times.pop(0)
             return kill_count
 
-        def on_kill(self, by, type):
+        def on_kill(self, by, type, grenade):
             if by is not None and by is not self:
                 if type == WEAPON_KILL or type == HEADSHOT_KILL:
                     by.kill_times.append(reactor.seconds())
@@ -288,7 +288,7 @@ def apply_script(protocol, connection, config):
                             if (current_time - by.kills_in_time_warn_time) > WARN_INTERVAL_MINIMUM:
                                 by.kills_in_time_warn_time = current_time
                                 by.warn_admin()
-            return connection.on_kill(self, by, type)
+            return connection.on_kill(self, by, type, grenade)
         
         def multiple_bullets_eject(self):
             if MULTIPLE_BULLETS == BAN:
@@ -301,7 +301,7 @@ def apply_script(protocol, connection, config):
                     self.multiple_bullets_warn_time = current_time
                     self.warn_admin()
 
-        def on_hit(self, hit_amount, hit_player, type):
+        def on_hit(self, hit_amount, hit_player, type, grenade):
             if self.team is not hit_player.team:
                 if type == WEAPON_KILL or type == HEADSHOT_KILL:
                     current_time = reactor.seconds()
@@ -333,7 +333,7 @@ def apply_script(protocol, connection, config):
                             return False
                         elif shotgun_use:
                             self.shotgun_hits += 1
-            return connection.on_hit(self, hit_amount, hit_player, type)
+            return connection.on_hit(self, hit_amount, hit_player, type, grenade)
         
         def hit_percent_eject(self, accuracy):
             message = 'Aimbot detected - %i%% %s hit accuracy' %\

@@ -63,13 +63,13 @@ def apply_script(protocol, connection, config):
                 (self.printable_name, self.team.other.name.lower()))
             return connection.on_flag_capture(self)
         
-        def on_kill(self, killer, type):
+        def on_kill(self, killer, type, grenade):
             if killer is None:
                 killer = self
             self.add_message("%s was killed by %s!" %
                 (self.printable_name, killer.printable_name))
             self.protocol.add_kill(self, killer)
-            return connection.on_kill(self, killer, type)
+            return connection.on_kill(self, killer, type, grenade)
         
         def add_message(self, value):
             self.protocol.messages.append(value)

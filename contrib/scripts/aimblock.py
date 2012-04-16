@@ -96,9 +96,10 @@ def apply_script(protocol, connection, config):
                     )
             self.protocol.irc_say(aimwarn)
         
-        def on_kill(self, killer, type):
+        def on_kill(self, killer, type, grenade):
             if killer != None and killer != self:
                 killer.aimbot_record_kill()
+            return connection.on_kill(self, killer, type, grenade)
         
         def loader_received(self, loader):
             ret = connection.loader_received(self, loader)

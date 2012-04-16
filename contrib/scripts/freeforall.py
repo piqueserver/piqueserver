@@ -70,7 +70,7 @@ def apply_script(protocol, connection, config):
                 return False
             return connection.on_flag_take(self)
 
-        def on_kill(self, by, type):
+        def on_kill(self, by, type, grenade):
             # Switch teams to add score hack
             if by is not None and by.team is self.team and self is not by:
                 self.score_hack = True
@@ -78,6 +78,6 @@ def apply_script(protocol, connection, config):
                 self.set_team(self.team.other)
                 self.spawn((pos.x, pos.y, pos.z))
                 self.score_hack = False
-            return connection.on_kill(self, by, type)
+            return connection.on_kill(self, by, type, grenade)
 
     return FreeForAllProtocol, FreeForAllConnection

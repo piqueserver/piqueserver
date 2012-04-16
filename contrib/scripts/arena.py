@@ -234,12 +234,12 @@ def apply_script(protocol, connection, config):
                     self.protocol.check_round_end()
             return connection.on_disconnect(self)
 
-        def on_kill(self, killer, type):
+        def on_kill(self, killer, type, grenade):
             if self.protocol.arena_running and type != TEAM_CHANGE_KILL:
                 if self.world_object is not None:
                     self.world_object.dead = True
                     self.protocol.check_round_end(killer)
-            return connection.on_kill(self, killer, type)
+            return connection.on_kill(self, killer, type, grenade)
 
         def on_team_join(self, team):
             returned = connection.on_team_join(self, team)

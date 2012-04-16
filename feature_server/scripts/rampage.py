@@ -123,7 +123,7 @@ def apply_script(protocol, connection, config):
                 self.end_rampage()
             connection.on_reset(self)
         
-        def on_kill(self, killer, type):
+        def on_kill(self, killer, type, grenade):
             was_rampaging = self.rampage
             if self.rampage:
                 self.end_rampage()
@@ -140,7 +140,7 @@ def apply_script(protocol, connection, config):
                     if (len(killer.rampage_kills) == KILL_REQUIREMENT and
                         killer.rampage_kills[0] >= now - TIME_REQUIREMENT):
                         killer.start_rampage()
-            return connection.on_kill(self, killer, type)
+            return connection.on_kill(self, killer, type, grenade)
         
         def on_grenade_thrown(self, grenade):
             if self.rampage:

@@ -411,7 +411,7 @@ class ServerConnection(BaseConnection):
                         type = HEADSHOT_KILL
                     else:
                         type = WEAPON_KILL
-                    returned = self.on_hit(hit_amount, player, type)
+                    returned = self.on_hit(hit_amount, player, type, None)
                     if returned == False:
                         return
                     elif returned is not None:
@@ -826,11 +826,11 @@ class ServerConnection(BaseConnection):
         self.set_hp(self.hp - value, by, type = type)
     
     def set_hp(self, value, hit_by = None, type = WEAPON_KILL, 
-               hit_indicator = None):
+               hit_indicator = None, grenade = None):
         value = int(value)
         self.hp = max(0, min(100, value))
         if self.hp <= 0:
-            self.kill(hit_by, type)
+            self.kill(hit_by, type, grenade)
             return
         set_hp.hp = self.hp
         set_hp.not_fall = int(type != FALL_KILL)
@@ -864,10 +864,10 @@ class ServerConnection(BaseConnection):
         self.on_team_changed(old_team)
         self.kill(type = TEAM_CHANGE_KILL)
     
-    def kill(self, by = None, type = WEAPON_KILL):
+    def kill(self, by = None, type = WEAPON_KILL, grenade = None):
         if self.hp is None:
             return
-        if self.on_kill(by, type) is False:
+        if self.on_kill(by, type, grenade) is False:
             return
         self.drop_flag()
         self.hp = None
@@ -985,13 +985,14 @@ class ServerConnection(BaseConnection):
                 damage = grenade.get_damage(player.world_object.position)
                 if damage == 0:
                     continue
-                returned = self.on_hit(damage, player, GRENADE_KILL)
+                returned = self.on_hit(damage, player, GRENADE_KILL, grenade)
                 if returned == False:
                     continue
                 elif returned is not None:
                     damage = returned
-                player.set_hp(player.hp - damage, self,
-                    hit_indicator = position.get(), type = GRENADE_KILL)
+                player.set_hp(player.hp - damage, self, 
+                    hit_indicator = position.get(), type = GRENADE_KILL,
+                    grenade = grenade)
         if self.on_block_destroy(x, y, z, GRENADE_DESTROY) == False:
             return
         map = self.protocol.map
@@ -1088,10 +1089,10 @@ class ServerConnection(BaseConnection):
     def on_command(self, command, parameters):
         pass
     
-    def on_hit(self, hit_amount, hit_player, type):
+    def on_hit(self, hit_amount, hit_player, type, grenade):
         pass
     
-    def on_kill(self, killer, type):
+    def on_kill(self, killer, type, grenade):
         pass
     
     def on_team_join(self, team):

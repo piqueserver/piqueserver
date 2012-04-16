@@ -29,11 +29,11 @@ def apply_script(protocol, connection, config):
         ratio_kills = 0
         ratio_deaths = 0
         
-        def on_kill(self, killer, type):
+        def on_kill(self, killer, type, grenade):
             if killer is not None and self.team is not killer.team:
                 if self != killer:
                     killer.ratio_kills += 1
             self.ratio_deaths += 1
-            return connection.on_kill(self, killer, type)
+            return connection.on_kill(self, killer, type, grenade)
     
     return protocol, RatioConnection

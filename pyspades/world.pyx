@@ -320,14 +320,15 @@ cdef class Grenade(Object):
     cpdef get_next_collision(self, double dt):
         if self.velocity.is_zero():
             return None
-        cdef float eta = 0.0
+        cdef double eta = 0.0
+        cdef double x, y, z
         cdef Vertex3 old_position = self.position.copy()
         cdef Vertex3 old_velocity = self.velocity.copy()
         while move_grenade(self.grenade) == 0:
             eta += dt
             if eta > 5.0:
                 break
-        cdef float x, y, z = self.position.get()
+        x, y, z = self.position.x, self.position.y, self.position.z
         self.position.set_vector(old_position)
         self.velocity.set_vector(old_velocity)
         return eta, x, y, z

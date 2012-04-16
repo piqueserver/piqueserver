@@ -17,7 +17,7 @@ def apply_script(protocol, connection, config):
             self.spawn_timestamp = reactor.seconds()
             return connection.on_spawn(self, pos)
 
-        def on_hit(self, hit_amount, player, type):
+        def on_hit(self, hit_amount, player, type, grenade):
             cur_timestamp = reactor.seconds() - spawn_protect_time
             if cur_timestamp < hit_player.spawn_timestamp:
                 timespan = -(cur_timestamp - hit_player.spawn_timestamp)
@@ -26,7 +26,6 @@ def apply_script(protocol, connection, config):
                     (player.name,
                      prettify_timespan(timespan, True)))
                 return False
-            else:
-                return connection.on_hit(self, hit_amount, player, type)
+            return connection.on_hit(self, hit_amount, player, type, grenade)
     
     return protocol, SpawnProtectConnection

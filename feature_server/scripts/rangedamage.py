@@ -26,8 +26,9 @@ def apply_script(protocol, connection, config):
         def __init__(self, *arg, **kw):
             connection.__init__(self, *arg, **kw)
 
-        def on_hit(self, hit_amount, hit_player, type):
-            result = connection.on_hit(self, hit_amount, hit_player, type)
+        def on_hit(self, hit_amount, hit_player, type, grenade):
+            result = connection.on_hit(self, hit_amount, hit_player, type,
+                grenade)
             if result == False:
                 return False
             if result is not None:

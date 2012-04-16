@@ -274,7 +274,7 @@ class FeatureConnection(ServerConnection):
         if self.protocol.god_blocks is not None:
             self.protocol.god_blocks.discard((x, y, z))
     
-    def on_hit(self, hit_amount, player, type):
+    def on_hit(self, hit_amount, player, type, grenade):
         if not self.protocol.killing:
             self.send_chat(
                 "You can't kill anyone right now! Damage is turned OFF")
@@ -295,12 +295,11 @@ class FeatureConnection(ServerConnection):
             self.god = False
             self.god_build = False
 
-    def on_kill(self, killer, type):
+    def on_kill(self, killer, type, grenade):
         self.streak = 0
-        self.airstrike = False
         if killer is None or self.team is killer.team:
             return
-        if self.current_grenade is None or self.current_grenade == 'grenade':
+        if not grenade or grenade.name == 'grenade':
             # doesn't give streak kills on airstrikes (or other types of
             # explosions)
             killer.streak += 1
