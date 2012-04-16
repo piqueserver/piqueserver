@@ -1,5 +1,5 @@
 """
-Platforms! May be incompatible with 0.75.
+Platforms!
 
 Maintainer: hompy
 """
@@ -10,6 +10,8 @@ from pyspades.common import make_color
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from pyspades.constants import *
+
+PLATFORM_COLOR = (255, 0, 0, 255)
 
 @admin
 def platform(connection, *args):
@@ -129,8 +131,7 @@ def apply_script(protocol, connection, config):
                     block_action.y = y
                     self.protocol.send_contained(block_action, save = True)
                     if block_action.value == BUILD_BLOCK:
-                        self.protocol.map.set_point(x, y, self.z, (255, 0, 0, 255),
-                            user = False)
+                        self.protocol.map.set_point(x, y, self.z, PLATFORM_COLOR)
                     else:
                         self.protocol.map.remove_point(x, y, self.z)
             if self.z < self.target_z:

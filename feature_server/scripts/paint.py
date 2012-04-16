@@ -9,7 +9,7 @@ Maintainer: hompy
 """
 
 from pyspades.server import block_action
-from pyspades.common import Vertex3, make_color
+from pyspades.common import Vertex3
 from pyspades.constants import *
 from commands import add, admin, get_player
 
@@ -40,8 +40,7 @@ def paint_block(protocol, player, x, y, z, color):
         return False
     if protocol.map.get_color(x, y, z) == color:
         return False
-    protocol.map.remove_point(x, y, z, no_collapse = True)
-    protocol.map.set_point_unsafe_int(x, y, z, color)
+    protocol.map.set_point(x, y, z, color)
     block_action.x = x
     block_action.y = y
     block_action.z = z
@@ -60,8 +59,7 @@ def paint_ray(player):
         x, y, z = location
         if player.on_block_build_attempt(x, y, z) == False:
             return
-        raw_color = make_color(*player.color)
-        paint_block(player.protocol, player, x, y, z, raw_color)
+        paint_block(player.protocol, player, x, y, z, player.color)
 
 def apply_script(protocol, connection, config):
     class PaintConnection(connection):

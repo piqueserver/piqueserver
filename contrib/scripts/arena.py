@@ -178,7 +178,7 @@ class Gate:
             for point in points:
                 x, y, z = point.x, point.y, point.z
                 if not map.get_solid(x, y, z):
-                    map.set_point_unsafe(x, y, z, color_tuple = self.color)
+                    map.set_point(x, y, z, self.color)
             block_line.x1, block_line.y1, block_line.z1 = start_block
             block_line.x2, block_line.y2, block_line.z2 = end_block
             self.protocol_obj.send_contained(block_line, save = True)
@@ -189,7 +189,7 @@ class Gate:
         block_action.value = DESTROY_BLOCK
         for block in self.support_blocks:
             if map.get_solid(*block):
-                map.remove_point(*block, user = False)
+                map.remove_point(*block)
                 block_action.x, block_action.y, block_action.z = block
                 self.protocol_obj.send_contained(block_action, save = True)
 

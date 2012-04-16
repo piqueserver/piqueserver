@@ -497,7 +497,7 @@ class ServerConnection(BaseConnection):
                             return
                         elif self.on_block_build_attempt(x, y, z) == False:
                             return
-                        elif not map.set_point(x, y, z, self.color + (255,)):
+                        elif not map.build_point(x, y, z, self.color):
                             return
                         self.on_block_build(x, y, z)
                     else:
@@ -506,15 +506,15 @@ class ServerConnection(BaseConnection):
                         if self.on_block_destroy(x, y, z, value) == False:
                             return
                         elif value == DESTROY_BLOCK:
-                            if map.remove_point(x, y, z):
+                            if map.destroy_point(x, y, z):
                                 self.blocks = min(50, self.blocks + 1)
                                 self.on_block_removed(x, y, z)
                         elif value == SPADE_DESTROY:
-                            if map.remove_point(x, y, z):
+                            if map.destroy_point(x, y, z):
                                 self.on_block_removed(x, y, z)
-                            if map.remove_point(x, y, z + 1):
+                            if map.destroy_point(x, y, z + 1):
                                 self.on_block_removed(x, y, z + 1)
-                            if map.remove_point(x, y, z - 1):
+                            if map.destroy_point(x, y, z - 1):
                                 self.on_block_removed(x, y, z - 1)
                         self.last_block_destroy = reactor.seconds()
                     block_action.x = x
@@ -541,7 +541,7 @@ class ServerConnection(BaseConnection):
                         return
                     for point in points:
                         x, y, z = point
-                        if not map.set_point(x, y, z, self.color + (255,)):
+                        if not map.build_point(x, y, z, self.color):
                             break
                     self.blocks -= len(points)
                     self.on_line_build(points)
@@ -998,7 +998,7 @@ class ServerConnection(BaseConnection):
         for nade_x in xrange(x - 1, x + 2):
             for nade_y in xrange(y - 1, y + 2):
                 for nade_z in xrange(z - 1, z + 2):
-                    if map.remove_point(nade_x, nade_y, nade_z):
+                    if map.destroy_point(nade_x, nade_y, nade_z):
                         self.on_block_removed(nade_x, nade_y, nade_z)
         block_action.x = x
         block_action.y = y

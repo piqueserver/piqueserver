@@ -32,7 +32,7 @@ from PySide.QtGui import QPainter
 from PySide.QtGui import QMessageBox
 from PySide.QtGui import QImage
 
-from pyspades.vxl import VXLData, get_color_tuple
+from pyspades.vxl import VXLData
 
 WATER_COLOR = (64, 108, 129)
 TRANSPARENT = QtGui.qRgba(0, 0, 0, 0)

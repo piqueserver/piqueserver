@@ -45,7 +45,7 @@ def add_block(prt, x, y, z, color, player_id = 32, mirror_x = False, mirror_y = 
             block_action.y = y
             block_action.z = z
             prt.send_contained(block_action)
-            prt.map.set_point_unsafe(x, y, z, get_color_tuple(color))
+            prt.map.set_point(x, y, z, get_color_tuple(color))
 
 def remove_block(prt, x, y, z, mirror_x = False, mirror_y = False):
     if x >= 0 and x < 512 and y >= 0 and y < 512 and z >= 0 and z < 64:
@@ -64,7 +64,7 @@ def remove_block(prt, x, y, z, mirror_x = False, mirror_y = False):
             block_action.x = x
             block_action.y = y
             block_action.z = z
-            prt.map.remove_point_unsafe(x, y, z)
+            prt.map.remove_point(x, y, z)
             prt.send_contained(block_action)
             return True
     return False

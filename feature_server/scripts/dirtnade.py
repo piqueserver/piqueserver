@@ -31,7 +31,6 @@ def apply_script(protocol, connection, config):
             try_add_node(map, x, y, z, list)
             block_action.value = BUILD_BLOCK
             block_action.player_id = self.player_id
-            color = self.color + (255,)
             while list:
                 x, y, z = list.pop(0)
                 if connection.on_block_build_attempt(self, x, y, z) == False:
@@ -40,7 +39,7 @@ def apply_script(protocol, connection, config):
                 block_action.y = y
                 block_action.z = z
                 self.protocol.send_contained(block_action, save = True)
-                map.set_point(x, y, z, color, user = False)
+                map.set_point(x, y, z, color)
                 blocks -= 1
                 if blocks == 0:
                     break

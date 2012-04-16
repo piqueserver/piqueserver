@@ -20,28 +20,24 @@ cdef extern from "vxl_c.cpp":
     int get_color(int x, int y, int z, MapData * map)
     void set_point(int x, int y, int z, MapData * map, bint solid, int color)
     void set_column_solid(int x, int y, int start_z, int end_z,
-                    MapData * map, bint solid)
+        MapData * map, bint solid)
     void set_column_color(int x, int y, int start_z, int end_z,
-                    MapData * map, int color)
+        MapData * map, int color)
     int get_random_point(int x1, int y1, int x2, int y2, MapData * map, 
-                         float random_1, float random_2,
-                         int * x, int * y)
+        float random_1, float random_2, int * x, int * y)
 
 cdef class VXLData:
     cdef MapData * map
-
-    cpdef int get_solid(self, int x, int y, int z)
+    
+    cpdef get_solid(self, int x, int y, int z)
+    cpdef get_color(self, int x, int y, int z)
     cpdef tuple get_random_point(self, int x1, int y1, int x2, int y2)
-    cpdef int get_color(self, int x, int y, int z)
     cpdef int get_z(self, int x, int y, int start = ?)
     cpdef int get_height(self, int x, int y)
     cpdef bint has_neighbors(self, int x, int y, int z)
     cpdef bint is_surface(self, int x, int y, int z)
     cpdef list get_neighbors(self, int x, int y, int z)
     cpdef bint check_node(self, int x, int y, int z, bint destroy = ?)
-    cpdef bint set_point(self, int x, int y, int z, tuple color_tuple, 
-                         bint user = ?)
-    cpdef bint set_point_unsafe(self, int x, int y, int z, tuple color_tuple)
+    cpdef bint build_point(self, int x, int y, int z, tuple color)
     cpdef bint set_column_fast(self, int x, int y, int start_z,
-                                 int end_z, int end_color_z,
-                                 int color)
+        int end_z, int end_color_z, int color)

@@ -8,7 +8,7 @@ from twisted.internet.task import LoopingCall
 from pyspades.vxl import VXLData
 from pyspades.contained import BlockAction, SetColor
 from pyspades.constants import *
-from pyspades.common import coordinates
+from pyspades.common import coordinates, make_color
 from map import Map, MapNotFound, check_rotation
 from commands import add, admin
 import time
@@ -25,6 +25,8 @@ S_MAP_CHANGED = 'Map was changed'
 S_ROLLBACK_PROGRESS = 'Rollback progress {percent:.0%}'
 S_ROLLBACK_COLOR_PASS = 'Rollback doing color pass...'
 S_ROLLBACK_TIME_TAKEN = 'Time taken: {seconds:.3}s'
+
+NON_SURFACE_COLOR = (0, 0, 0)
 
 @admin
 def rollmap(connection, mapname = None, value = None):
@@ -149,8 +151,8 @@ def apply_script(protocol, connection, config):
             block_action = BlockAction()
             block_action.player_id = 31
             set_color = SetColor()
-            set_color.value = 0x000000
-            set_color.player_id = block_action.player_id
+            set_color.value = make_color(*NON_SURFACE_COLOR)
+            set_color.player_id = 31
             self.send_contained(set_color, save = True)
             old = cur.copy()
             check_protected = hasattr(protocol, 'protected')
@@ -170,7 +172,7 @@ def apply_script(protocol, connection, config):
                                 continue
                             else:
                                 action = DESTROY_BLOCK
-                                cur.remove_point_unsafe(x, y, z)
+                                cur.remove_point(x, y, z)
                         elif new_solid:
                             new_is_surface = new.is_surface(x, y, z)
                             if new_is_surface:
@@ -179,7 +181,7 @@ def apply_script(protocol, connection, config):
                                 surface[(x, y, z)] = new_color
                             elif not cur_solid and not new_is_surface:
                                 action = BUILD_BLOCK
-                                cur.set_point_unsafe_int(x, y, z, 0)
+                                cur.set_point(x, y, z, NON_SURFACE_COLOR)
                             elif cur_solid and new_is_surface:
                                 old_is_surface = old.is_surface(x, y, z)
                                 if old_is_surface:
@@ -187,7 +189,7 @@ def apply_script(protocol, connection, config):
                                 if not old_is_surface or old_color != new_color:
                                     surface[(x, y, z)] = new_color
                                     action = DESTROY_BLOCK
-                                    cur.remove_point_unsafe(x, y, z)
+                                    cur.remove_point(x, y, z)
                         if action is not None:
                             block_action.z = z
                             block_action.value = action
@@ -205,7 +207,7 @@ def apply_script(protocol, connection, config):
                     self.send_contained(set_color, save = True)
                     packets_sent += 1
                     last_color = color
-                cur.set_point_unsafe_int(x, y, z, color)
+                cur.set_point(x, y, z, color)
                 block_action.x = x
                 block_action.y = y
                 block_action.z = z

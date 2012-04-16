@@ -72,7 +72,7 @@ def apply_script(protocol, connection, config):
                 self.map_info.get_spawn_location = get_spawn_location
                 for x in xrange(256 - PLATFORM_WIDTH, 256 + PLATFORM_WIDTH):
                     for y in xrange(256 - PLATFORM_HEIGHT, 256 + PLATFORM_HEIGHT):
-                        map.set_point(x, y, 1, PLATFORM_COLOR, False)
+                        map.set_point(x, y, 1, PLATFORM_COLOR)
             return protocol.on_map_change(self, map)
         
         def is_indestructable(self, x, y, z):
