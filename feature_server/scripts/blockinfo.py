@@ -93,6 +93,7 @@ def apply_script(protocol, connection, config):
         def on_reset(self):
             self.blocks_removed = None
             self.teamkill_times = None
+            connection.on_reset(self)
         
         def on_block_build(self, x, y, z):
             if self.protocol.block_info is None:
