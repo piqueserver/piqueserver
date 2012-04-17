@@ -203,7 +203,7 @@ def apply_script(protocol, connection, config):
                 x, y, z = pos
                 packets_sent = 0
                 if color != last_color:
-                    set_color.value = color & 0xFFFFFF
+                    set_color.value = make_color(*color)
                     self.send_contained(set_color, save = True)
                     packets_sent += 1
                     last_color = color

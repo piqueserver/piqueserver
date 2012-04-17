@@ -161,7 +161,7 @@ def apply_script(protocol, connection, config):
             just_unlocked = False
             if self.kills - score < SCORE_REQUIREMENT:
                 self.send_chat(S_UNLOCKED)
-                self.send_chat(S_UNLOCKED_TIP.format(STREAK_REQUIREMENT))
+                self.send_chat(S_UNLOCKED_TIP.format(streak = STREAK_REQUIREMENT))
                 just_unlocked = True
             if not streak_met:
                 return
