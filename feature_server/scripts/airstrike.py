@@ -61,8 +61,7 @@ def apply_script(protocol, connection, config):
     class AirstrikeConnection(connection):
         airstrike = False
         airstrike_grenade_calls = None
-        airstrike_end_call = None
-        airstrike_ongoing = False
+        last_streak = None
         
         def start_airstrike(self, coord_x, coord_y):
             coords = to_coordinates(coord_x, coord_y)
@@ -78,6 +77,8 @@ def apply_script(protocol, connection, config):
             callLater(2.5, self.do_airstrike, coord_x, coord_y)
         
         def do_airstrike(self, coord_x, coord_y):
+            if self.name is None:
+                return
             self.airstrike_grenade_calls = []
             going_right = self.team.id == 0
             coord_x += -64 if going_right else 64
@@ -96,7 +97,6 @@ def apply_script(protocol, connection, config):
                     call = callLater(delay, self.create_airstrike_grenade,
                         x, y, z)
                     self.airstrike_grenade_calls.append(call)
-            callLater(worst_delay, self.end_airstrike)
         
         def end_airstrike(self):
             if self.airstrike_grenade_calls:
@@ -104,12 +104,10 @@ def apply_script(protocol, connection, config):
                     if grenade_call and grenade_call.active():
                         grenade_call.cancel()
             self.airstrike_grenade_calls = None
-            self.airstrike_ongoing = False
         
-        def on_team_join(self, team):
-            if self.airstrike_ongoing:
-                return False
-            return connection.on_team_join(self, team)
+        def on_team_changed(self, old_team):
+            self.end_airstrike()
+            connection.on_team_join(self, old_team)
         
         def on_reset(self):
             self.end_airstrike()
@@ -142,12 +140,13 @@ def apply_script(protocol, connection, config):
             self.protocol.send_contained(grenade_packet)
         
         def airstrike_exploded(self, grenade):
-            map = self.protocol.map
             pos, vel = grenade.position, grenade.velocity
             vel.normalize()
-            while True:
+            extra_distance = 3
+            while extra_distance:
+                extra_distance -= 1
                 pos += vel
-                solid = map.get_solid(*pos.get())
+                solid = self.protocol.map.get_solid(*pos.get())
                 if solid or solid is None:
                     break
             self.grenade_exploded(grenade)
@@ -165,9 +164,11 @@ def apply_script(protocol, connection, config):
                 just_unlocked = True
             if not streak_met:
                 return
-            if self.streak % STREAK_REQUIREMENT == 0 or just_unlocked:
+            if ((self.streak % STREAK_REQUIREMENT == 0 or just_unlocked) and
+                self.streak != self.last_streak):
                 self.send_chat(S_READY)
                 self.airstrike = True
+                self.last_streak = self.streak
                 self.refill()
     
     return protocol, AirstrikeConnection

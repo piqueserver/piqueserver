@@ -141,7 +141,6 @@ class FeatureConnection(ServerConnection):
     last_chat = None
     chat_time = 0
     chat_count = 0
-    current_grenade = None
     
     def on_connect(self):
         protocol = self.protocol
@@ -314,11 +313,6 @@ class FeatureConnection(ServerConnection):
         if self.fly and crouch and self.world_object.velocity.z != 0.0:
             jump = True
         return jump, crouch, sneak, sprint
-    
-    def grenade_exploded(self, grenade):
-        self.current_grenade = grenade
-        ServerConnection.grenade_exploded(self, grenade)
-        self.current_grenade = None
     
     def on_fall(self, damage):
         if self.god:
