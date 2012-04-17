@@ -575,7 +575,7 @@ class FeatureProtocol(ServerProtocol):
         if self.votemap_autoschedule > 0:
             vms = Schedule(self, [
                 AlarmBeforeEnd(self.start_votemap,
-                seconds=self.votemap_autoschedule)])
+                seconds=self.votemap_autoschedule)], None, "Autovotemap")
             self.schedule.queue(vms)
         
         self.speedhack_detect = config.get('speedhack_detect', True)
@@ -672,7 +672,7 @@ class FeatureProtocol(ServerProtocol):
             self.time_announce_schedule.destroy()
             self.time_announce_schedule = None
         self.time_announce_schedule = OptimisticSchedule(
-            self, time_announce_queue)
+            self, time_announce_queue, None, "Time Announcements")
         self.schedule.queue(self.time_announce_schedule)
         
         return time_limit

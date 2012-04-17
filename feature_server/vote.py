@@ -47,7 +47,8 @@ class VoteKick(object):
         self.schedule = Schedule(self.protocol, [
             AlarmLater(self.timeout, seconds=self.protocol.votekick_time),
             AlarmLater(self.update, seconds=30,
-                       loop=True, traversal_required=False)])
+                       loop=True, traversal_required=False)], None,
+                        "Votekick %s -> %s" % (connection.name, player.name))
         self.ban_duration = self.protocol.votekick_ban_duration
         self.public_votes = self.protocol.votekick_public_votes
         self.reason = reason
@@ -188,7 +189,8 @@ class VoteMap(object):
         self.schedule = Schedule(protocol, [
             AlarmLater(self.timeout, seconds=self.vote_time),
             AlarmLater(self.update, seconds=30, loop=True,
-                       traversal_required=False)])
+                       traversal_required=False)], None,
+                        "Votemap by %s" % connection.name)
 
     def votes_left(self):
         thresh = int((len(self.protocol.players)) *
