@@ -107,7 +107,7 @@ def apply_script(protocol, connection, config):
         
         def on_team_changed(self, old_team):
             self.end_airstrike()
-            connection.on_team_join(self, old_team)
+            connection.on_team_changed(self, old_team)
         
         def on_reset(self):
             self.end_airstrike()
