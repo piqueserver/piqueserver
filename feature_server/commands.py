@@ -598,6 +598,7 @@ from pyspades.server import create_player, set_tool, set_color, input_data, weap
 from pyspades.common import make_color
 
 @alias('invis')
+@alias('inv')
 @admin
 def invisible(connection, player = None):
     protocol = connection.protocol
