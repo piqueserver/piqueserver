@@ -111,10 +111,12 @@ def apply_script(protocol, connection, config):
         
         def on_reset(self):
             self.end_airstrike()
+            self.last_streak = None
             connection.on_reset(self)
         
         def on_kill(self, killer, type, grenade):
             self.airstrike = False
+            self.last_streak = None
             connection.on_kill(self, killer, type, grenade)
         
         def create_airstrike_grenade(self, x, y, z):
