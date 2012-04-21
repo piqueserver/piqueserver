@@ -635,7 +635,7 @@ class FeatureProtocol(ServerProtocol):
         self.master = config.get('master', True)
         self.set_master()
         
-        get_external_ip(config.get('interface', '')).addCallback(
+        get_external_ip(config.get('network_interface', '')).addCallback(
             self.got_external_ip)
     
     def got_external_ip(self, ip):
@@ -953,15 +953,15 @@ class FeatureProtocol(ServerProtocol):
     
     def listenTCP(self, *arg, **kw):
         return reactor.listenTCP(*arg, 
-            interface = self.config.get('interface', ''), **kw)
+            interface = self.config.get('network_interface', ''), **kw)
     
     def connectTCP(self, *arg, **kw):
         return reactor.connectTCP(*arg, 
-            bindAddress = (self.config.get('interface', ''), 0), **kw)
+            bindAddress = (self.config.get('network_interface', ''), 0), **kw)
     
     def getPage(self, *arg, **kw):
         return getPage(*arg, 
-            bindAddress = (self.config.get('interface', ''), 0), **kw)
+            bindAddress = (self.config.get('network_interface', ''), 0), **kw)
     
 PORT = 32887
 

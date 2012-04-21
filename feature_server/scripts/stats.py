@@ -57,7 +57,7 @@ def apply_script(protocol, connection, config):
         def __init__(self, *arg, **kw):
             protocol.__init__(self, *arg, **kw)
             connect_statistics(host, port, server_name, password,
-                self.statistics_connected, config.get('interface', ''))
+                self.statistics_connected, config.get('network_interface', ''))
         
         def statistics_connected(self, stats):
             if self.stats is not None:
