@@ -23,11 +23,15 @@ from commands import add, admin, get_player, name
 
 ENABLED_AT_START = False
 
+LINK_DISTANCE = 40.0
+LINK_WARNING_DISTANCE = LINK_DISTANCE * 0.65
+MAX_LINK_DEATHS = 2
+
 S_ENABLED = 'Running Man mode ENABLED'
 S_DISABLED = 'Running Man mode DISABLED'
 S_NOT_ENABLED = 'Running Man mode is not enabled'
-S_LINK_BREAK = ("You strayed too far from {player}... don't go losing your "
-    "head over it")
+S_LINK_BREAK = "You strayed too far from {player}... don't go losing your " \
+    "head over it"
 S_LINK_WARNING = 'WARNING! Get back to {player} or you will both die!'
 S_LINKED = "You've been linked to {player}. Stay close to your partner or die!"
 S_FREE = "You're free to roam around... for now"
@@ -73,7 +77,7 @@ def unlink(connection, player = None):
     player.send_chat(S_LINKABLE_SELF if player.linkable else S_UNLINKABLE_SELF)
     message = S_LINKABLE if player.linkable else S_UNLINKABLE
     message.format(player = player.name)
-    if connection is not player and connection in protocol.players:
+    if connection is not player:
         return message
     
 for func in (running_man, relink, unlink):
@@ -91,7 +95,7 @@ def apply_script(protocol, connection, config):
                 if self.link is not None and self.link.hp > 0:
                     dist = distance_3d_vector(self.world_object.position,
                         self.link.world_object.position)
-                    if dist > self.protocol.link_distance:
+                    if dist > LINK_DISTANCE:
                         self.grenade_suicide()
                         self.link_deaths += 1
                         self.link.grenade_suicide()
@@ -101,8 +105,8 @@ def apply_script(protocol, connection, config):
                         self.send_chat(message)
                         message = S_LINK_BREAK.format(player = self.name)
                         self.link.send_chat(message)
-                    elif (dist > self.protocol.link_warning_distance and
-                        (self.last_warning is None or
+                    elif (dist > LINK_WARNING_DISTANCE and 
+                        (self.last_warning is None or 
                         seconds() - self.last_warning > 2.0)):
                         
                         self.last_warning = seconds()
@@ -117,7 +121,7 @@ def apply_script(protocol, connection, config):
         def on_spawn(self, pos):
             if self.protocol.running_man:
                 if (self.link is None or
-                    self.link_deaths >= self.protocol.link_death_max):
+                    self.link_deaths >= MAX_LINK_DEATHS):
                     self.get_new_link()
                 if self.link is not None and self.link.hp > 0:
                     self.set_location_safe(self.link.world_object.position.get())
@@ -144,8 +148,7 @@ def apply_script(protocol, connection, config):
         def can_be_linked_to(self, player):
             if self is player or self.link is player:
                 return False
-            if (player.link is not None and
-                player.link_deaths < self.protocol.link_death_max):
+            if player.link is not None and player.link_deaths < MAX_LINK_DEATHS:
                 return False
             return True
         
@@ -188,9 +191,6 @@ def apply_script(protocol, connection, config):
     
     class RunningManProtocol(protocol):
         running_man = ENABLED_AT_START
-        link_distance = 40.0
-        link_warning_distance = link_distance * 0.65
-        link_death_max = 2
         
         def drop_all_links(self):
             for player in self.players.values():
