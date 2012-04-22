@@ -813,8 +813,8 @@ class FeatureProtocol(ServerProtocol):
 
     def add_ban(self, ip, reason, duration, name = None):
         """
-        Ban an ip with an optional reason and
-        duration in minutes. If duration is None, ban is permanent.
+        Ban an ip with an optional reason and duration in minutes. If duration 
+        is None, ban is permanent.
         """
         network = get_network(ip)
         for connection in self.connections.values():

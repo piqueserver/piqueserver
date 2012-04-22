@@ -25,6 +25,7 @@ cdef extern from "vxl_c.cpp":
         MapData * map, int color)
     int get_random_point(int x1, int y1, int x2, int y2, MapData * map, 
         float random_1, float random_2, int * x, int * y)
+    bint is_valid_position(int x, int y, int z)
 
 cdef class VXLData:
     cdef MapData * map

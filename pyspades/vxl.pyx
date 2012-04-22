@@ -17,9 +17,6 @@
 
 from pyspades.common cimport allocate_memory
 
-cdef inline bint is_valid_position(int x, int y, int z):
-    return x >= 0 and x < 512 and y >= 0 and y < 512 and z >= 0 and z < 64
-
 cdef tuple make_color_tuple(int color):
     cdef int r, g, b, a
     b = color & 0xFF

@@ -138,7 +138,7 @@ int clipbox(float x, float y, float z)
 
     if (x < 0 || x >= 512 || y < 0 || y >= 512)
         return 1;
-    if (z < 0)
+    else if (z < 0)
         return 0;
     sz = (int)z;
     if(sz == 63)
@@ -151,6 +151,10 @@ int clipbox(float x, float y, float z)
 //same as isvoxelsolid() but with wrapping
 long isvoxelsolidwrap(long x, long y, long z)
 {
+    if (z < 0)
+        return 0;
+    else if (z >= 64)
+        return 1;
 	return get_solid((int)x & VSIDM, (int)y & VSIDM, z, global_map);
 }
 
@@ -168,6 +172,8 @@ long clipworld(long x, long y, long z)
         sz=62;
     else if (sz >= 63)
         return 1;
+    else if (sz < 0)
+        return 0;
     return get_solid((int)x, (int)y, sz, global_map);
 }
 

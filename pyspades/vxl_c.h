@@ -23,6 +23,11 @@ struct MapData
     map_type<int, int> colors;
 };
 
+int inline is_valid_position(int x, int y, int z)
+{
+    return x >= 0 && x < 512 && y >= 0 && y < 512 && z >= 0 && z < 64;
+}
+
 int inline get_solid(int x, int y, int z, MapData * map)
 {
     return map->geometry[get_pos(x, y, z)];
