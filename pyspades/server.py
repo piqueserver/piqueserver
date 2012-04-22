@@ -864,7 +864,10 @@ class ServerConnection(BaseConnection):
         old_team = self.team
         self.team = team
         self.on_team_changed(old_team)
-        self.kill(type = TEAM_CHANGE_KILL)
+        if old_team.spectator:
+            self.respawn()
+        else:
+            self.kill(type = TEAM_CHANGE_KILL)
     
     def kill(self, by = None, type = WEAPON_KILL, grenade = None):
         if self.hp is None:
@@ -1552,7 +1555,7 @@ class ServerProtocol(BaseProtocol):
                     world_object = player.world_object
                     position = world_object.position.get()
                     orientation = world_object.orientation.get()
-            except (KeyError, TypeError):
+            except (KeyError, TypeError, AttributeError):
                 pass
             if position is None:
                 position = (0.0, 0.0, 0.0)
@@ -1607,7 +1610,7 @@ class ServerProtocol(BaseProtocol):
         for entity in self.entities:
             entity.update()
         for player in self.players.values():
-            player.hp = 0
+            player.hp = None
         for player in self.players.values():
             if player.team is not None:
                 player.spawn()
