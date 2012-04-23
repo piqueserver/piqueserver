@@ -122,8 +122,7 @@ cdef class Character(Object):
         if value == self.player.crouch:
             return
         if value:
-            if not self.player.airborne:
-                self.player.p.z += 0.9
+            self.player.p.z += 0.9
         else:
             self.player.p.z -= 0.9
         self.player.crouch = value
