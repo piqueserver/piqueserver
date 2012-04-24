@@ -14,10 +14,10 @@ from pyspades.world import Grenade
 from pyspades.constants import UPDATE_FREQUENCY
 from commands import alias, add
 
-OLD_AIRSTRIKE = True
+OLD_AIRSTRIKE = False
 SCORE_REQUIREMENT = 15
-STREAK_REQUIREMENT = 10
-TEAM_COOLDOWN = 20.0
+STREAK_REQUIREMENT = 8
+TEAM_COOLDOWN = 25.0
 
 S_READY = 'Airstrike support ready! Launch with e.g. /airstrike B4'
 S_NO_SCORE = 'You need a total score of {score} (kills or intel) to ' \
