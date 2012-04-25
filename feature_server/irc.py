@@ -31,6 +31,7 @@ PRINTABLE_CHARACTERS = ('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP'
                         'QRSTUVWXYZ!"#$%&\\\'()*+,-./:;<=>?@[\\]^_`{|}~ \t')
 IRC_TEAM_COLORS = {0 : '\x0302', 1 : '\x0303'}
 SPLIT_WHO_IN_TEAMS = True
+SPLIT_THRESHOLD = 20 # players
 
 def is_printable(value):
     return value in PRINTABLE_CHARACTERS
@@ -230,7 +231,7 @@ def who(connection):
         teams.append(k)
         formatted_names.append(map(name_formatter, g))
     separator = '\x0f, ' if connection.colors else ', '
-    if not SPLIT_WHO_IN_TEAMS or player_count < 24:
+    if not SPLIT_WHO_IN_TEAMS or player_count < SPLIT_THRESHOLD:
         noun = 'player' if player_count == 1 else 'players'
         msg = 'has %s %s connected: ' % (player_count, noun)
         msg += separator.join(chain.from_iterable(formatted_names))
