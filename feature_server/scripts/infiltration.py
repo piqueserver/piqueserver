@@ -2,8 +2,8 @@
 Attackers get ATTACKER_SCORE_MULTIPLIER points for taking and capturing
 the intel.
 
-Defenders gain 1 point every DEFENDER_SCORE_INTERVAL seconds the intel
-is untouched.
+Defenders gain 1 point for every DEFENDER_SCORE_INTERVAL seconds that the intel
+remains untouched.
 
 To use set game_mode to 'infiltration' in config.txt, do NOT add to script list.
 
@@ -19,15 +19,16 @@ ATTACKER_TEAM = 1 # 0 = blue, 1 = green
 ATTACKER_TO_DEFENDER_RATIO = 2.0
 ATTACKER_SCORE_MULTIPLIER = 10
 DEFENDER_SCORE_INTERVAL = 30 # seconds
-FLAG_TAKE_FLASHES_FOG = True
+ON_FLAG_TAKE_FLASHES_FOG = True
 
-S_TEAM_FULL = 'Team is full'
-S_ATTACKER_DESC = 'ATTACKERS: Infiltrate the enemy base and steal the intel!'
-S_DEFENDER_DESC = 'DEFENDERS: Hold your ground! Earn points by keeping the ' \
-    'intel safe'
-S_DESCS = {
-    ATTACKER_TEAM : S_ATTACKER_DESC,
-    (1 - ATTACKER_TEAM) : S_DEFENDER_DESC
+S_TEAM_FULL = 'Team full! The defending team must have less players'
+S_ATTACKER_OBJECTIVE = '*** ATTACKERS: Infiltrate the enemy base and steal ' \
+    'the intel!'
+S_DEFENDER_OBJECTIVE = '*** DEFENDERS: Hold your ground! Earn points by ' \
+    'keeping the intel safe'
+S_OBJECTIVES = {
+    ATTACKER_TEAM : S_ATTACKER_OBJECTIVE,
+    (1 - ATTACKER_TEAM) : S_DEFENDER_OBJECTIVE
 }
 
 class DummyPlayer():
@@ -38,28 +39,35 @@ class DummyPlayer():
     def __init__(self, protocol, team):
         self.protocol = protocol
         self.team = team
+        self.try_player_id()
+    
+    def try_player_id(self):
         max_players = min(32, self.protocol.max_players)
-        if len(protocol.connections) > max_players:
+        if len(self.protocol.connections) > max_players:
             try:
                 self.player_id = next(self.team.get_players())
             except StopIteration:
                 self.player_id = None
-        else:
-            self.player_id = protocol.player_ids.pop()
-        if self.player_id is None:
-            return
+            return self.player_id is not None
+        self.player_id = self.protocol.player_ids.pop()
+        self.protocol.player_ids.put_back(self.player_id) # just borrowing it!
         create_player.x = 0
         create_player.y = 0
         create_player.z = 63
         create_player.weapon = RIFLE_WEAPON
         create_player.player_id = self.player_id
-        create_player.name = team.name
-        create_player.team = team.id
-        protocol.send_contained(create_player)
+        create_player.name = self.team.name
+        create_player.team = self.team.id
+        self.protocol.send_contained(create_player, save = True)
+        return True
     
     def score(self):
-        if self.player_id is None or self.protocol.game_mode != CTF_MODE:
+        if self.protocol.game_mode != CTF_MODE:
             return
+        if self.player_id is None and not self.try_player_id():
+            return
+        if self.player_id in self.protocol.players:
+            self.try_player_id()
         winning = (self.protocol.max_score not in (0, None) and 
             self.team.score + 1 >= self.protocol.max_score)
         self.team.score += 1
@@ -84,7 +92,7 @@ class DummyPlayer():
         if self.player_id is None or self.player_id in self.protocol.players:
             return
         player_left.player_id = self.player_id
-        self.protocol.send_contained(player_left)
+        self.protocol.send_contained(player_left, save = True)
         self.protocol.player_ids.put_back(self.player_id)
 
 def apply_script(protocol, connection, config):
@@ -103,27 +111,33 @@ def apply_script(protocol, connection, config):
             return connection.on_team_join(self, team)
         
         def on_team_changed(self, old_team):
-            if self.team and self.team.id in S_DESCS:
-                self.send_chat(S_DESCS[self.team.id])
+            if self.team and self.team.id in S_OBJECTIVES:
+                self.send_chat(S_OBJECTIVES[self.team.id])
             connection.on_team_changed(self, old_team)
         
         def on_login(self, name):
-            if self.team and self.team.id in S_DESCS:
-                self.send_chat(S_DESCS[self.team.id])
+            if self.team and self.team.id in S_OBJECTIVES:
+                self.send_chat(S_OBJECTIVES[self.team.id])
             connection.on_login(self, name)
         
         def on_flag_capture(self):
             if ATTACKER_SCORE_MULTIPLIER > 1:
                 dummy = DummyPlayer(self.protocol, self.team)
+                self.protocol.attacker_score_dummy = dummy
+                if self.protocol.attacker_score_dummy_calls is None:
+                    self.protocol.attacker_score_dummy_calls = []
                 for i in xrange(ATTACKER_SCORE_MULTIPLIER - 1):
-                    dummy.score()
+                    delay = i * 0.1
+                    dummy_call = callLater(delay,
+                        self.protocol.attacker_score_dummy_score)
+                    self.protocol.attacker_score_dummy_calls.append(dummy_call)
             self.protocol.start_defender_score_loop()
             connection.on_flag_capture(self)
         
         def on_flag_take(self):
             if self.team is self.protocol.defender:
                 return False
-            if FLAG_TAKE_FLASHES_FOG:
+            if ON_FLAG_TAKE_FLASHES_FOG:
                 self.protocol.fog_flash(self.team.color)
             self.protocol.defender_score_loop.stop()
             return connection.on_flag_take(self)
@@ -134,9 +148,11 @@ def apply_script(protocol, connection, config):
     
     class InfiltrationProtocol(protocol):
         game_mode = CTF_MODE
-        attacker = None
         defender = None
         defender_score_loop = None
+        attacker = None
+        attacker_score_dummy = None
+        attacker_score_dummy_calls = None
         balanced_teams = None
         
         def on_map_change(self, map):
@@ -150,7 +166,17 @@ def apply_script(protocol, connection, config):
             if self.defender_score_loop and self.defender_score_loop.running:
                 self.defender_score_loop.stop()
             self.defender_score_loop = None
+            self.end_attacker_score_dummy_calls()
             protocol.on_map_leave(self)
+        
+        def on_game_end(self):
+            self.end_attacker_score_dummy_calls()
+            protocol.on_game_end(self)
+        
+        def on_flag_spawn(self, x, y, z, flag, entity_id):
+            if flag.team is self.attacker:
+                return 0, 0, 63
+            return protocol.on_flag_spawn(self, x, y, z, flag, entity_id)
         
         def start_defender_score_loop(self):
             self.defender_score_loop.start(DEFENDER_SCORE_INTERVAL, now = False)
@@ -158,15 +184,24 @@ def apply_script(protocol, connection, config):
         def defender_score_cycle(self):
             dummy = DummyPlayer(self, self.defender)
             dummy.score()
-       
+        
+        def attacker_score_dummy_score(self):
+            self.attacker_score_dummy.score()
+            self.attacker_score_dummy_calls.pop(0)
+            if not self.attacker_score_dummy_calls:
+                self.end_attacker_score_dummy_calls()
+        
+        def end_attacker_score_dummy_calls(self):
+            if self.attacker_score_dummy_calls:
+                for dummy_call in self.attacker_score_dummy_calls:
+                    if dummy_call and dummy_call.active():
+                        dummy_call.cancel()
+            self.attacker_score_dummy_calls = None
+            self.attacker_score_dummy = None
+        
         def fog_flash(self, color):
             old_color = self.get_fog_color()
             self.set_fog_color(color)
             callLater(0.2, self.set_fog_color, old_color)
-        
-        def on_flag_spawn(self, x, y, z, flag, entity_id):
-            if flag.team is self.attacker:
-                return 0, 0, 63
-            return protocol.on_flag_spawn(self, x, y, z, flag, entity_id)
     
     return InfiltrationProtocol, InfiltrationConnection
