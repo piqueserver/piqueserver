@@ -123,14 +123,14 @@ def apply_script(protocol, connection, config):
         def on_flag_capture(self):
             if ATTACKER_SCORE_MULTIPLIER > 1:
                 dummy = DummyPlayer(self.protocol, self.team)
-                self.protocol.attacker_score_dummy = dummy
-                if self.protocol.attacker_score_dummy_calls is None:
-                    self.protocol.attacker_score_dummy_calls = []
+                self.protocol.attacker_dummy = dummy
+                if self.protocol.attacker_dummy_calls is None:
+                    self.protocol.attacker_dummy_calls = []
                 for i in xrange(ATTACKER_SCORE_MULTIPLIER - 1):
                     delay = i * 0.1
-                    dummy_call = callLater(delay,
-                        self.protocol.attacker_score_dummy_score)
-                    self.protocol.attacker_score_dummy_calls.append(dummy_call)
+                    dummy_call = callLater(delay, 
+                        self.protocol.attacker_dummy_score)
+                    self.protocol.attacker_dummy_calls.append(dummy_call)
             self.protocol.start_defender_score_loop()
             connection.on_flag_capture(self)
         
@@ -151,8 +151,8 @@ def apply_script(protocol, connection, config):
         defender = None
         defender_score_loop = None
         attacker = None
-        attacker_score_dummy = None
-        attacker_score_dummy_calls = None
+        attacker_dummy = None
+        attacker_dummy_calls = None
         balanced_teams = None
         
         def on_map_change(self, map):
@@ -166,11 +166,11 @@ def apply_script(protocol, connection, config):
             if self.defender_score_loop and self.defender_score_loop.running:
                 self.defender_score_loop.stop()
             self.defender_score_loop = None
-            self.end_attacker_score_dummy_calls()
+            self.end_attacker_dummy_calls()
             protocol.on_map_leave(self)
         
         def on_game_end(self):
-            self.end_attacker_score_dummy_calls()
+            self.end_attacker_dummy_calls()
             protocol.on_game_end(self)
         
         def on_flag_spawn(self, x, y, z, flag, entity_id):
@@ -185,19 +185,19 @@ def apply_script(protocol, connection, config):
             dummy = DummyPlayer(self, self.defender)
             dummy.score()
         
-        def attacker_score_dummy_score(self):
-            self.attacker_score_dummy.score()
-            self.attacker_score_dummy_calls.pop(0)
-            if not self.attacker_score_dummy_calls:
-                self.end_attacker_score_dummy_calls()
+        def attacker_dummy_score(self):
+            self.attacker_dummy.score()
+            self.attacker_dummy_calls.pop(0)
+            if not self.attacker_dummy_calls:
+                self.end_attacker_dummy_calls()
         
-        def end_attacker_score_dummy_calls(self):
-            if self.attacker_score_dummy_calls:
-                for dummy_call in self.attacker_score_dummy_calls:
+        def end_attacker_dummy_calls(self):
+            if self.attacker_dummy_calls:
+                for dummy_call in self.attacker_dummy_calls:
                     if dummy_call and dummy_call.active():
                         dummy_call.cancel()
-            self.attacker_score_dummy_calls = None
-            self.attacker_score_dummy = None
+            self.attacker_dummy_calls = None
+            self.attacker_dummy = None
         
         def fog_flash(self, color):
             old_color = self.get_fog_color()
