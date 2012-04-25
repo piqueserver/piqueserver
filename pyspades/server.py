@@ -1595,7 +1595,7 @@ class ServerProtocol(BaseProtocol):
         green_team = self.green_team
         if self.game_mode == CTF_MODE:
             if player is None:
-                self.players.values()[0]
+                player = self.players.values()[0]
             intel_capture.player_id = player.player_id
             intel_capture.winning = True
             self.send_contained(intel_capture, save = True)

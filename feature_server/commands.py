@@ -34,12 +34,15 @@ class InvalidSpectator(InvalidPlayer):
 class InvalidTeam(Exception):
     pass
 
-def admin(func):
+def restrict(func, user_types):
     def new_func(connection, *arg, **kw):
         return func(connection, *arg, **kw)
     new_func.func_name = func.func_name
-    new_func.admin = True
+    new_func.user_types = set(user_types)
     return new_func
+
+def admin(func):
+    return restrict(func, ('admin',))
 
 def name(name):
     def dec(func):
@@ -254,26 +257,20 @@ def help(connection):
         connection.send_lines(connection.protocol.help)
     else:
         names = [command.func_name for command in command_list
-            if hasattr(command, 'admin') in (connection.admin, False)]
+            if command.func_name in connection.rights]
         return 'Available commands: %s' % (', '.join(names))
 
 def login(connection, password):
     """
-    Login as admin
+    Login as a user type
     """
     if connection not in connection.protocol.players:
         raise KeyError()
     for user_type, passwords in connection.protocol.passwords.iteritems():
         if password in passwords:
-            if connection.user_types is None:
-                connection.user_types = set()
-                connection.rights = set()
             if user_type in connection.user_types:
                 return "You're already logged in as %s" % user_type
-            connection.user_types.update(user_type)
-            if user_type in rights:
-                connection.rights.update(rights[user_type])
-            return connection.on_user_login(user_type)
+            return connection.on_user_login(user_type, True)
     if connection.login_retries is None:
         connection.login_retries = connection.protocol.login_retries - 1
     else:
@@ -438,7 +435,7 @@ def unmute(connection, value):
 
 def deaf(connection, value = None):
     if value is not None:
-        if not connection.admin and 'deaf' not in connection.rights:
+        if not connection.admin and not connection.rights.deaf:
             return 'No administrator rights!'
         connection = get_player(connection.protocol, value)
     message = '%s deaf' % ('now' if not connection.deaf else 'no longer')
@@ -463,7 +460,7 @@ def global_chat(connection):
 def teleport(connection, player1, player2 = None, silent = False):
     player1 = get_player(connection.protocol, player1)
     if player2 is not None:
-        if connection.admin or 'teleport_other' in connection.rights:
+        if connection.admin or connection.rights.teleport_other:
             player, target = player1, get_player(connection.protocol, player2)
             silent = silent or player.invisible
             message = ('%s ' + ('silently ' if silent else '') + 'teleported '
@@ -936,10 +933,7 @@ command_list = [
 
 commands = {}
 aliases = {}
-
-rights = {
-    'builder' : ['god', 'goto']
-}
+rights = {}
 
 def add(func, name = None):
     """
@@ -948,6 +942,12 @@ def add(func, name = None):
     if name is None:
         name = func.func_name
     name = name.lower()
+    user_types = getattr(func, 'user_types', None)
+    if user_types is not None:
+        if name in rights:
+            rights[name].update(user_types)
+        else:
+            rights[name] = user_types.copy()
     commands[name] = func
     try:
         for alias in func.aliases:
@@ -1004,11 +1004,9 @@ def handle_command(connection, command, parameters):
     except KeyError:
         return # 'Invalid command'
     try:
-        if hasattr(command_func, 'admin'):
-            if (not connection.admin and 
-                (connection.rights is None or
-                command_func.func_name not in connection.rights)):
-                return 'No administrator rights!'
+        if (hasattr(command_func, 'rights') and 
+            command_func.func_name not in connection.rights):
+                return 'Insufficient rights!'
         return command_func(connection, *parameters)
     except KeyError:
         return # 'Invalid command'
@@ -1041,7 +1039,7 @@ def debug_handle_command(connection, command, parameters):
             return 'No administrator rights!'
     return command_func(connection, *parameters)
 
-#handle_command = debug_handle_command
+# handle_command = debug_handle_command
 
 def handle_input(connection, input):
     # for IRC and console

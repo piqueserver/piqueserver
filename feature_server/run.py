@@ -119,11 +119,22 @@ def open_create(filename, mode):
 CHAT_WINDOW_SIZE = 5
 CHAT_PER_SECOND = 0.5
 
+class AttributeSet(set):
+    """
+    set with attribute access
+    """
+    def __getattr__(self, name):
+        return name in self
+    
+    def __setattr__(self, name, value):
+        if value:
+            self.add(name)
+        else:
+            self.discard(name)
+
 class FeatureConnection(ServerConnection):
     printable_name = None
     admin = False
-    user_types = None
-    rights = None
     last_votekick = None
     last_votemap = None
     last_switch = None
@@ -176,7 +187,10 @@ class FeatureConnection(ServerConnection):
         print '%s (IP %s, ID %s) entered the game!' % (self.printable_name, 
             self.address[0], self.player_id)
         self.protocol.irc_say('* %s entered the game' % self.name)
-        self.admin = self.protocol.everyone_is_admin
+        self.user_types = AttributeSet()
+        self.rights = AttributeSet()
+        if self.protocol.everyone_is_admin:
+            self.on_user_login('admin', False)
     
     def get_spawn_location(self):
         get_location = self.protocol.map_info.get_spawn_location
@@ -415,12 +429,17 @@ class FeatureConnection(ServerConnection):
             reason)
         self.kick(reason)
     
-    def on_user_login(self, user_type):
-        self.admin = self.admin or (user_type == 'admin')
-        self.speedhack_detect = False
-        message = ' logged in as %s' % (user_type)
-        self.send_chat('You' + message)
-        self.protocol.irc_say("* " + self.name + message)
+    def on_user_login(self, user_type, verbose = True):
+        if user_type == 'admin':
+            self.admin = True
+            self.speedhack_detect = False
+        self.user_types.add(user_type)
+        rights = set(commands.rights.get(user_type, ()))
+        self.rights.update(rights)
+        if verbose:
+            message = ' logged in as %s' % (user_type)
+            self.send_chat('You' + message)
+            self.protocol.irc_say("* " + self.name + message)
     
     def timed_out(self):
         if self.name is not None:
@@ -619,6 +638,7 @@ class FeatureProtocol(ServerProtocol):
                 print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
             elif not password:
                 self.everyone_is_admin = True
+        commands.rights.update(config.get('rights', {}))
         
         port = self.port = config.get('port', 32887)
         ServerProtocol.__init__(self, port, interface)

@@ -24,8 +24,8 @@ from schedule import Schedule, AlarmLater, AlarmBeforeEnd
 
 def cancel_verify(connection, instigator):
     return (connection.admin or 
-     connection is instigator or 
-     (connection.rights and 'cancel' in connection.rights))
+            connection is instigator or 
+            connection.rights.cancel)
 
 class VoteKick(object):
     public_votes = True
@@ -68,7 +68,7 @@ class VoteKick(object):
             return "You can't votekick yourself."
         elif target.admin:
             return 'Cannot votekick an administrator.'
-        elif (target.rights and 'cancel' in target.rights):
+        elif target.rights.cancel:
             return 'Target has vote cancellation rights.'
         last = instigator.last_votekick
         if (last is not None and

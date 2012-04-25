@@ -45,14 +45,14 @@ def apply_script(protocol, connection, config):
             # also, check for the right "specpower" for owners who add additional
             # rights such as guards, mini-mods, etc.
             if self.team.spectator and spectator_no_chat:
-                if not self.admin and (self.rights is None or 'specpower' not in self.rights): # not an admin
+                if not self.admin and not self.rights.specpower): # not an admin
                     self.send_chat('Spectators cannot speak on this server.')
                     return False # deny
             return connection.on_chat(self, value, global_message)
             
         def on_team_join(self, team):
             if team.spectator and spectator_kick and spectator_kick_time > 0:
-                if not self.admin and (self.rights is None or 'specpower' not in self.rights): # not an admin
+                if not self.admin and not self.rights.specpower): # not an admin
                     if self.spec_check is None or not self.spec_check.active(): # this check is necessary as you can join spectator from being a spectator
                         self.send_chat('Warning! Spectators are kicked after %s seconds!' % (spectator_kick_time))
                         time = ceil((spectator_kick_time / 4) * 3)
@@ -73,7 +73,7 @@ def apply_script(protocol, connection, config):
             if not self.team.spectator:
                 print 'WARNING 1. Safety check kept an non-spectator from being spectator-kicked. Report this please!'
                 return
-            if self.admin or (self.rights is not None and 'specpower' in self.rights):
+            if self.admin or self.rights.specpower:
                 print 'WARNING 2. Safety check kept an admin from being spectator-kicked.'
                 return
             if id == 1:

@@ -79,11 +79,11 @@ def apply_script(protocol, connection, config):
             self.afk_kick_call = None
             connection.on_disconnect(self)
         
-        def on_user_login(self, user_type):
+        def on_user_login(self, user_type, verbose = True):
             if user_type == 'admin' and self.afk_kick_call:
                 self.afk_kick_call.cancel()
                 self.afk_kick_call = None
-            return connection.on_user_login(self, user_type)
+            return connection.on_user_login(self, user_type, verbose)
         
         def on_connect(self):
             if time_limit:

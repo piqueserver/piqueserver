@@ -62,7 +62,11 @@
     },
     "passwords" : {
         "admin" : ["replaceme"],
-        "trusted" : []
+        "trusted" : [],
+        "builder" : []
+    },
+    "rights" : {
+        "builder" : ["god", "goto"]
     },
     "ssh" : {
         "enabled" : false,
