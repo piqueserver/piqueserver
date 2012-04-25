@@ -14,7 +14,7 @@ from pyspades.world import Grenade
 from pyspades.constants import UPDATE_FREQUENCY
 from commands import alias, add
 
-SCORE_REQUIREMENT = 15
+SCORE_REQUIREMENT = 0
 STREAK_REQUIREMENT = 8
 TEAM_COOLDOWN = 25.0
 
