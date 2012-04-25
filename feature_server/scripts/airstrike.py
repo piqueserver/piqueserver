@@ -14,7 +14,6 @@ from pyspades.world import Grenade
 from pyspades.constants import UPDATE_FREQUENCY
 from commands import alias, add
 
-OLD_AIRSTRIKE = False
 SCORE_REQUIREMENT = 15
 STREAK_REQUIREMENT = 8
 TEAM_COOLDOWN = 25.0
@@ -123,17 +122,14 @@ def apply_script(protocol, connection, config):
             going_right = self.team.id == 0
             position = Vertex3(x, y, z)
             velocity = Vertex3(1.0 if going_right else -1.0, 0.0, 0.5)
-            callback = (self.grenade_exploded if OLD_AIRSTRIKE else
-                self.airstrike_exploded)
             grenade = self.protocol.world.create_object(Grenade, 0.0,
-                position, None, velocity, callback)
+                position, None, velocity, self.airstrike_exploded)
             grenade.name = 'airstrike'
             estimate_travel = 61 if going_right else -61
             eta = self.protocol.map.get_height(x + estimate_travel, y) * 0.033
-            if not OLD_AIRSTRIKE:
-                collision = grenade.get_next_collision(UPDATE_FREQUENCY)
-                if collision:
-                    eta, x, y, z = collision
+            collision = grenade.get_next_collision(UPDATE_FREQUENCY)
+            if collision:
+                eta, x, y, z = collision
             grenade.fuse = eta
             grenade_packet.value = grenade.fuse
             grenade_packet.player_id = self.player_id
