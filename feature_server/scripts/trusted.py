@@ -39,7 +39,7 @@ def apply_script(protocol, connection, config):
     class TrustedProtocol(protocol):
         def start_votekick(self, payload):
             player = payload.target
-            if player.trusted:
+            if player.user_types.trusted:
                 return S_CANT_VOTEKICK.format(player = player.name)
             return protocol.start_votekick(self, payload)
     

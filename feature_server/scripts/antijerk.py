@@ -15,7 +15,7 @@ admin_pattern = re.compile(".*(admin)",
     re.IGNORECASE)
     
 def antijerk_match(player, msg):
-    if not (player.trusted or player.admin):
+    if not (player.user_types.trusted or player.admin):
         return chat_pattern.match(msg) or chat_pattern_2.match(msg) or\
            admin_pattern.match(player.name)
     
