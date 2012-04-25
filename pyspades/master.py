@@ -38,9 +38,9 @@ if STAGING:
 
 class AddServer(Loader):
     __slots__ = ['count', 'max_players', 'name', 'port', 'game_mode', 'map']
-
+    
     id = 4
-
+    
     def read(self, reader):
         if reader.dataLeft() == 1:
             self.count = reader.readByte(True)
@@ -83,8 +83,8 @@ class MasterConnection(BaseConnection):
         protocol = self.server_protocol
         add_server.count = None
         add_server.name = protocol.name
-        add_server.game_mode = protocol.get_mode_name()
-        add_server.map = protocol.map_info.name
+        add_server.game_mode = protocol.get_mode_name()[:7]
+        add_server.map = protocol.map_info.name[:20]
         add_server.port = protocol.host.address.port
         add_server.max_players = protocol.max_players
         self.send_contained(add_server)
