@@ -145,7 +145,6 @@ def apply_script(protocol, connection, config):
             self.defender_score_loop = LoopingCall(self.defender_score_cycle)
             self.start_defender_score_loop()
             protocol.on_map_change(self, map)
-            print self.teams[0].color
         
         def on_map_leave(self):
             if self.defender_score_loop and self.defender_score_loop.running:
