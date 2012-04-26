@@ -168,7 +168,7 @@ class IRCClientFactory(protocol.ClientFactory):
     def __init__(self, server, config):
         self.aliases = {}
         self.admin = True
-        self.user_types = set(['admin', 'irc'])
+        self.user_types = AttributeSet(['admin', 'irc'])
         self.rights = set()
         for user_type in self.user_types:
             self.rights.update(commands.rights.get(user_type, ()))

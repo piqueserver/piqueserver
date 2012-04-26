@@ -26,7 +26,7 @@ from pyspades.bytes import ByteReader, ByteWriter
 from pyspades.packet import Packet, load_server_packet
 from pyspades.common import *
 from pyspades import contained as loaders
-from pyspades.multidict import MultikeyDict
+from pyspades.types import MultikeyDict
 
 import random
 

@@ -96,6 +96,7 @@ from pyspades.common import encode, decode, prettify_timespan
 from pyspades.constants import *
 from pyspades.master import MAX_SERVER_NAME_SIZE, get_external_ip
 from pyspades.tools import make_server_identifier
+from pyspades.types import AttributeSet
 from networkdict import NetworkDict, get_network
 from pyspades.exceptions import InvalidData
 from pyspades.bytes import NoDataLeft
@@ -118,19 +119,6 @@ def open_create(filename, mode):
 
 CHAT_WINDOW_SIZE = 5
 CHAT_PER_SECOND = 0.5
-
-class AttributeSet(set):
-    """
-    set with attribute access
-    """
-    def __getattr__(self, name):
-        return name in self
-    
-    def __setattr__(self, name, value):
-        if value:
-            self.add(name)
-        else:
-            self.discard(name)
 
 class FeatureConnection(ServerConnection):
     printable_name = None

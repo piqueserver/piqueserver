@@ -23,8 +23,7 @@ from pyspades.packet import load_client_packet
 from pyspades.common import *
 from pyspades.constants import *
 from pyspades import contained as loaders
-from pyspades.multidict import MultikeyDict
-from pyspades.idpool import IDPool
+from pyspades.types import MultikeyDict, IDPool
 from pyspades.master import get_master_connection
 from pyspades.collision import vector_collision, collision_3d
 from pyspades import world
