@@ -43,7 +43,7 @@ class DummyPlayer():
     
     def try_player_id(self):
         max_players = min(32, self.protocol.max_players)
-        if len(self.protocol.connections) > max_players:
+        if len(self.protocol.connections) >= max_players:
             try:
                 self.player_id = next(self.team.get_players())
             except StopIteration:
