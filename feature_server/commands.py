@@ -1004,7 +1004,7 @@ def handle_command(connection, command, parameters):
     except KeyError:
         return # 'Invalid command'
     try:
-        if (hasattr(command_func, 'rights') and 
+        if (hasattr(command_func, 'user_types') and 
             command_func.func_name not in connection.rights):
                 return 'Insufficient rights!'
         return command_func(connection, *parameters)
