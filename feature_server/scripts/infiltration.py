@@ -18,7 +18,7 @@ from pyspades.constants import *
 ATTACKER_TEAM = 1 # 0 = blue, 1 = green
 ATTACKER_TO_DEFENDER_RATIO = 2.0
 ATTACKER_SCORE_MULTIPLIER = 10
-DEFENDER_SCORE_INTERVAL = 30 # seconds
+DEFENDER_SCORE_INTERVAL = 20 # seconds
 ON_FLAG_TAKE_FLASHES_FOG = True
 
 S_TEAM_FULL = 'Team full! The defending team always has less players'
@@ -39,13 +39,13 @@ class DummyPlayer():
     def __init__(self, protocol, team):
         self.protocol = protocol
         self.team = team
-        self.try_player_id()
+        self.acquire_player_id()
     
-    def try_player_id(self):
+    def acquire_player_id(self):
         max_players = min(32, self.protocol.max_players)
         if len(self.protocol.connections) >= max_players:
             try:
-                self.player_id = next(self.team.get_players())
+                self.player_id = next(self.team.get_players()).player_id
             except StopIteration:
                 self.player_id = None
             return self.player_id is not None
@@ -64,10 +64,10 @@ class DummyPlayer():
     def score(self):
         if self.protocol.game_mode != CTF_MODE:
             return
-        if self.player_id is None and not self.try_player_id():
-            return
         if self.player_id in self.protocol.players:
-            self.try_player_id()
+            self.acquire_player_id()
+        if self.player_id is None and not self.acquire_player_id():
+            return
         winning = (self.protocol.max_score not in (0, None) and 
             self.team.score + 1 >= self.protocol.max_score)
         self.team.score += 1
