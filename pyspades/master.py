@@ -66,9 +66,9 @@ add_server = AddServer()
 class MasterConnection(BaseConnection):
     disconnect_callback = None
     connected = False
+    
     def on_connect(self):
         self.connected = True
-            
         self.send_server()
         
         if self.defer is not None:

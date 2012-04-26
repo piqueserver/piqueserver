@@ -19,7 +19,7 @@ from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
 from pyspades.constants import MAX_CHAT_SIZE
 from pyspades.common import encode, decode
-from commands import handle_input, add
+import commands
 
 import random
 import string
@@ -50,12 +50,27 @@ def channel(func):
 class IRCBot(irc.IRCClient):
     ops = None
     voices = None
-    colors = True
     unaliased_name = None
     
     def _get_nickname(self):
         return self.factory.nickname
     nickname = property(_get_nickname)
+    
+    def _get_colors(self):
+        return self.factory.colors
+    colors = property(_get_colors)
+    
+    def _get_admin(self):
+        return self.factory.admin
+    admin = property(_get_admin)
+    
+    def _get_user_types(self):
+        return self.factory.user_types
+    user_types = property(_get_user_types)
+    
+    def _get_rights(self):
+        return self.factory.rights
+    rights = property(_get_rights)
     
     def signedOn(self):
         self.join(self.factory.channel, self.factory.password)
@@ -108,12 +123,11 @@ class IRCBot(irc.IRCClient):
         if user in self.ops or user in self.voices:
             prefix = '@' if user in self.ops else '+'
             alias = self.factory.aliases.get(user, user)
-            if msg.startswith(self.factory.commandprefix):
-                self.admin = (user in self.ops)
+            if msg.startswith(self.factory.commandprefix) and user in self.ops:
                 self.unaliased_name = user
                 self.name = prefix + alias
                 input = msg[len(self.factory.commandprefix):]
-                result = handle_input(self, input)
+                result = commands.handle_input(self, input)
                 if result is not None:
                     self.send("%s: %s" % (user, result))
             elif msg.startswith(self.factory.chatprefix):
@@ -146,9 +160,18 @@ class IRCClientFactory(protocol.ClientFactory):
     failed_reconnect_delay = 60
     bot = None
     aliases = None
+    colors = True
+    admin = None
+    user_types = None
+    rights = None
     
     def __init__(self, server, config):
         self.aliases = {}
+        self.admin = True
+        self.user_types = set(['admin', 'irc'])
+        self.rights = set()
+        for user_type in self.user_types:
+            self.rights.update(commands.rights.get(user_type, ()))
         self.server = server
         self.nickname = config.get('nickname', 
             'pyspades%s' % random.randrange(0, 99)).encode('ascii')
@@ -280,4 +303,4 @@ def unalias(connection):
     connection.me(message)
 
 for func in (who, score, colors, alias, unalias):
-    add(func)
+    commands.add(func)
