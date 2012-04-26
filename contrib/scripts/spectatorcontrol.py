@@ -45,14 +45,14 @@ def apply_script(protocol, connection, config):
             # also, check for the right "specpower" for owners who add additional
             # rights such as guards, mini-mods, etc.
             if self.team.spectator and spectator_no_chat:
-                if not self.admin and not self.rights.specpower): # not an admin
+                if not self.admin and not self.rights.specpower: # not an admin
                     self.send_chat('Spectators cannot speak on this server.')
                     return False # deny
             return connection.on_chat(self, value, global_message)
             
         def on_team_join(self, team):
             if team.spectator and spectator_kick and spectator_kick_time > 0:
-                if not self.admin and not self.rights.specpower): # not an admin
+                if not self.admin and not self.rights.specpower: # not an admin
                     if self.spec_check is None or not self.spec_check.active(): # this check is necessary as you can join spectator from being a spectator
                         self.send_chat('Warning! Spectators are kicked after %s seconds!' % (spectator_kick_time))
                         time = ceil((spectator_kick_time / 4) * 3)
