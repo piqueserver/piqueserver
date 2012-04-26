@@ -82,7 +82,7 @@ class MasterConnection(BaseConnection):
     def send_server(self):
         protocol = self.server_protocol
         add_server.count = None
-        add_server.name = protocol.name
+        add_server.name = protocol.name[:32]
         add_server.game_mode = protocol.get_mode_name()[:7]
         add_server.map = protocol.map_info.name[:20]
         add_server.port = protocol.host.address.port

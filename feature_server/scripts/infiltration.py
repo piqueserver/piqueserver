@@ -21,7 +21,7 @@ ATTACKER_SCORE_MULTIPLIER = 10
 DEFENDER_SCORE_INTERVAL = 30 # seconds
 ON_FLAG_TAKE_FLASHES_FOG = True
 
-S_TEAM_FULL = 'Team full! The defending team must have less players'
+S_TEAM_FULL = 'Team full! The defending team always has less players'
 S_ATTACKER_OBJECTIVE = '*** ATTACKERS: Infiltrate the enemy base and steal ' \
     'the intel!'
 S_DEFENDER_OBJECTIVE = '*** DEFENDERS: Hold your ground! Earn points by ' \
