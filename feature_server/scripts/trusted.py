@@ -29,12 +29,6 @@ def apply_script(protocol, connection, config):
                     self.protocol.votekick.target is self):
                     self.protocol.votekick.cancel()
             return connection.on_user_login(self, user_type, verbose)
-        
-        def make_trusted(self):
-            self.speedhack_detect = False
-            if (self.protocol.votekick is not None and
-                self.protocol.votekick.target is self):
-                self.protocol.votekick.cancel()
     
     class TrustedProtocol(protocol):
         def start_votekick(self, payload):
