@@ -1007,7 +1007,7 @@ def handle_command(connection, command, parameters):
     try:
         if (hasattr(command_func, 'user_types') and 
             command_func.func_name not in connection.rights):
-                return 'Insufficient rights!'
+                return "You can't use this command"
         return command_func(connection, *parameters)
     except KeyError:
         return # 'Invalid command'
@@ -1037,7 +1037,7 @@ def debug_handle_command(connection, command, parameters):
         if (not connection.admin and 
             (connection.rights is None or
             command_func.func_name not in connection.rights)):
-            return 'No administrator rights!'
+            return "You can't use this command"
     return command_func(connection, *parameters)
 
 # handle_command = debug_handle_command

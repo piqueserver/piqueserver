@@ -221,15 +221,6 @@ class IRCRelay(object):
             return
         self.factory.bot.me(*arg, **kw)
 
-def colors(connection):
-    if connection in connection.protocol.players:
-        raise KeyError()
-    connection.colors = not connection.colors
-    if connection.colors:
-        return '\x0312c\x0304o\x0309l\x0308o\x0306r\x0313s \x0f\x16ON!'
-    else:
-        return 'colors off'
-
 def format_name(player):
     return '%s #%s' % (player.name, player.player_id)
 
@@ -237,10 +228,12 @@ def format_name_color(player):
     return (IRC_TEAM_COLORS.get(player.team.id, '') +
         '%s #%s' % (player.name, player.player_id))
 
+def irc(func):
+    return commands.restrict(func, ('irc',))
+
+@irc
 def who(connection):
     protocol = connection.protocol
-    if connection in protocol.players:
-        raise KeyError()
     player_count = len(protocol.players)
     if player_count == 0:
         connection.me('has no players connected')
@@ -267,16 +260,14 @@ def who(connection):
             msg += separator.join(names)
             connection.me(msg)
 
+@irc
 def score(connection):
-    if connection in connection.protocol.players:
-        raise KeyError()
     connection.me("scores: Blue %s - Green %s" % (
         connection.protocol.blue_team.score,
         connection.protocol.green_team.score))
 
+@irc
 def alias(connection, value = None):
-    if connection in connection.protocol.players:
-        raise KeyError()
     aliases = connection.factory.aliases
     unaliased_name = connection.unaliased_name
     if value is None:
@@ -290,9 +281,8 @@ def alias(connection, value = None):
         message = 'will alias %s to %s' % (unaliased_name, value)
     connection.me(message)
 
+@irc
 def unalias(connection):
-    if connection in connection.protocol.players:
-        raise KeyError()
     aliases = connection.factory.aliases
     unaliased_name = connection.unaliased_name
     if unaliased_name in aliases:
@@ -302,5 +292,13 @@ def unalias(connection):
         message = "doesn't have an alias for %s" % unaliased_name
     connection.me(message)
 
-for func in (who, score, colors, alias, unalias):
+@irc
+def colors(connection):
+    connection.colors = not connection.colors
+    if connection.colors:
+        return '\x0312c\x0304o\x0309l\x0308o\x0306r\x0313s \x0f\x16ON!'
+    else:
+        return 'colors off'
+
+for func in (who, score, alias, unalias, colors):
     commands.add(func)
