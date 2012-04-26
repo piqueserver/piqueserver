@@ -944,10 +944,11 @@ def add(func, name = None):
     name = name.lower()
     user_types = getattr(func, 'user_types', None)
     if user_types is not None:
-        if name in rights:
-            rights[name].update(user_types)
-        else:
-            rights[name] = user_types.copy()
+        for user_type in user_types:
+            if user_type in rights:
+                rights[user_type].add(name)
+            else:
+                rights[user_type] = set([name])
     commands[name] = func
     try:
         for alias in func.aliases:
