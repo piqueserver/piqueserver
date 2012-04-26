@@ -19,6 +19,7 @@ from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
 from pyspades.constants import MAX_CHAT_SIZE
 from pyspades.common import encode, decode
+from pyspades.types import AttributeSet
 import commands
 
 import random
