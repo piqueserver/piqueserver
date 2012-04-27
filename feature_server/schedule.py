@@ -41,7 +41,10 @@ class ScheduleTimer(object):
         if min_call is not None:
             self.held_call = min_call
             self.held_schedule = min_schedule
-            self.call_later = reactor.callLater(max(min_time,0), self.do_call)
+            if min_time<=0:
+                self.do_call()
+            else:
+                self.call_later = reactor.callLater(min_time, self.do_call)
             
     def do_call(self):
         self.held_call.call()

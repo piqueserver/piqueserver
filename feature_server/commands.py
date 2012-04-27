@@ -22,7 +22,7 @@ from pyspades.common import prettify_timespan
 from pyspades.server import parse_command
 from twisted.internet import reactor
 
-from vote import VoteKick, VoteMap
+from vote import VoteMap
 from map import check_rotation
 
 class InvalidPlayer(Exception):
@@ -194,18 +194,6 @@ def heal(connection, player = None):
     player.refill()
     connection.protocol.send_chat(message, irc = True)
 
-def votekick(connection, value, *arg):
-    reason = join_arguments(arg)
-    if connection not in connection.protocol.players:
-        raise KeyError()
-    player = None
-    try:
-        player = get_player(connection.protocol, '#' + value)
-    except InvalidPlayer:
-        player = get_player(connection.protocol, value)
-    return connection.protocol.start_votekick(
-        VoteKick(connection, player, reason))
-
 def votemap(connection, *arg):
     if connection not in connection.protocol.players:
         raise KeyError()
@@ -223,23 +211,9 @@ def votemap_vote(connection, value):
     else:
         return 'No map vote in progress.'
 
-@name('y')
-def vote_yes(connection):
-    if connection not in connection.protocol.players:
-        raise KeyError()
-    if connection.protocol.votekick is not None:
-        return connection.protocol.votekick.vote(connection)
-    else:
-        return 'No votekick in progress.'        
-
 @name('cancel')
 def cancel_vote(connection):
-    if connection.protocol.votekick is not None:
-        return connection.protocol.votekick.cancel(connection)
-    elif connection.protocol.votemap is not None:
-        return connection.protocol.votemap.cancel(connection)
-    else:
-        return 'No vote in progress.'
+    return connection.protocol.cancel_vote(connection)
 
 def rules(connection):
     if connection not in connection.protocol.players:
@@ -872,8 +846,6 @@ command_list = [
     to_admin,
     login,
     kick,
-    votekick,
-    vote_yes,
     votemap,
     votemap_vote,
     cancel_vote,
@@ -1033,14 +1005,12 @@ def debug_handle_command(connection, command, parameters):
         command_func = commands[command]
     except KeyError:
         return # 'Invalid command'
-    if hasattr(command_func, 'admin'):
-        if (not connection.admin and 
-            (connection.rights is None or
-            command_func.func_name not in connection.rights)):
+    if (hasattr(command_func, 'user_types') and 
+        command_func.func_name not in connection.rights):
             return "You can't use this command"
     return command_func(connection, *parameters)
 
-# handle_command = debug_handle_command
+#handle_command = debug_handle_command
 
 def handle_input(connection, input):
     # for IRC and console

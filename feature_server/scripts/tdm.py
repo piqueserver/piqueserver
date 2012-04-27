@@ -6,12 +6,12 @@ Maintainer: Triplefox
 
 from pyspades.constants import *
 
-from commands import add
+import commands
 
 def score(connection):
     return connection.protocol.get_kill_count()
 
-add(score)
+commands.add(score)
 
 def apply_script(protocol, connection, config):
     class TDMConnection(connection):

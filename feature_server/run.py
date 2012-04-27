@@ -123,7 +123,6 @@ CHAT_PER_SECOND = 0.5
 class FeatureConnection(ServerConnection):
     printable_name = None
     admin = False
-    last_votekick = None
     last_votemap = None
     last_switch = None
     mute = False
@@ -192,8 +191,6 @@ class FeatureConnection(ServerConnection):
         if self.name is not None:
             print self.printable_name, 'disconnected!'
             self.protocol.irc_say('* %s disconnected' % self.name)
-            if self.protocol.votekick is not None:
-                self.protocol.votekick.on_disconnect(self)
             self.protocol.player_memory.append((self.name, self.address[0]))
         else:
             print '%s disconnected' % self.address[0]
@@ -393,18 +390,19 @@ class FeatureConnection(ServerConnection):
     def ban(self, reason = None, duration = None):
         reason = ': ' + reason if reason is not None else ''
         duration = duration or None
-        if self.protocol.votekick is not None:
-            self.protocol.votekick.on_player_banned(self)
         if duration is None:
             message = '%s permabanned%s' % (self.name, reason)
         else:
             message = '%s banned for %s%s' % (self.name,
                 prettify_timespan(duration * 60), reason)
-        self.protocol.send_chat(message, irc = True)
-        if self.address[0]=="127.0.0.1":
-            self.protocol.send_chat("Ban ignored: localhost")
-        else:
-            self.protocol.add_ban(self.address[0], reason, duration, self.name)
+        if self.protocol.on_ban_attempt(self, reason, duration):
+            self.protocol.send_chat(message, irc = True)
+            self.protocol.on_ban(self, reason, duration)
+            if self.address[0]=="127.0.0.1":
+                self.protocol.send_chat("Ban ignored: localhost")
+            else:
+                self.protocol.add_ban(self.address[0], reason, duration,
+                                      self.name)
 
     def send_lines(self, lines):
         current_time = 0
@@ -478,10 +476,6 @@ class FeatureProtocol(ServerProtocol):
     identifier = None
     
     # voting
-    votekick_time = 120 # 2 minutes
-    votekick_interval = 3 * 60 # 3 minutes
-    votekick_percentage = 25.0
-    votekick = None
     votemap_time = 120
     votemap_interval = 3 * 60
     votemap_percentage = 80.0
@@ -563,9 +557,6 @@ class FeatureProtocol(ServerProtocol):
         
         # voting configuration
         self.default_ban_time = config.get('default_ban_duration', 24*60)
-        self.votekick_ban_duration = config.get('votekick_ban_duration', 15)
-        self.votekick_percentage = config.get('votekick_percentage', 25)
-        self.votekick_public_votes = config.get('votekick_public_votes', True)
         self.planned_map = None
         self.votemap_autoschedule = config.get('votemap_autoschedule', 180)
         self.votemap_public_votes = config.get('votemap_public_votes', True)
@@ -888,14 +879,11 @@ class FeatureProtocol(ServerProtocol):
     
     # voting
 
-    def start_votekick(self, votekick):
-        if self.votekick is not None:
-            return self.votekick.update()
-        verify = votekick.verify()
-        if verify is True:
-            votekick.start()
+    def cancel_vote(self, connection = None):
+        if connection.protocol.votemap is not None:
+            return connection.protocol.votemap.cancel(connection)
         else:
-            return verify
+            return "No vote in progress."
 
     def start_votemap(self, votemap = None):
         if self.votemap is not None:
@@ -909,8 +897,6 @@ class FeatureProtocol(ServerProtocol):
             return verify
         
     def end_votes(self):
-        if self.votekick is not None:
-            self.votekick.finish()
         if self.votemap is not None:
             self.votemap.finish()
     
@@ -957,6 +943,12 @@ class FeatureProtocol(ServerProtocol):
     def on_advance(self, map_name):
         pass
     
+    def on_ban_attempt(self, connection, reason, duration):
+        return True
+    
+    def on_ban(self, connection, reason, duration):
+        pass
+        
     # useful twisted wrappers
     
     def listenTCP(self, *arg, **kw):
