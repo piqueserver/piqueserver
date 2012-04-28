@@ -732,7 +732,8 @@ def show_rotation(connection):
 @admin
 def revert_rotation(connection):
     protocol = connection.protocol
-    protocol.set_map_rotation(protocol.config['maps'], False)
+    maps = protocol.config['maps']
+    protocol.set_map_rotation(maps, False)
     protocol.irc_say("* %s reverted map rotation to %s" % (name, maps))
     
 def mapname(connection):

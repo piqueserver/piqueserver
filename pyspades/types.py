@@ -37,7 +37,15 @@ class IDPool(object):
 
 class AttributeSet(set):
     """
-    set with attribute access
+    set with attribute access, i.e.
+    
+        foo = AttributeSet()
+        foo.bar = True
+        foo.bar == 'bar' in foo == True
+        foo.bar = False
+        foo.bar == 'bar' in foo == False
+    
+    This works as a quick shorthand for membership testing.
     """
     
     def __getattr__(self, name):
@@ -64,6 +72,20 @@ class DictItem(object):
         return repr(self.value)
 
 class MultikeyDict(dict):
+    """
+    dict with multiple keys, i.e.
+        
+        foo = MultikeyDict()
+        foo[(1, 'bar')] = 'hello'
+        foo[1] == foo['bar'] == 'hello'
+    
+    To delete: "del foo[1]" or "del foo['bar']" or "del foo['hello']"
+    
+    This is an alternative to maintaining 2 seperate dicts for e.g. player
+    IDs and their names, so you can do both dict[player_id] and 
+    dict[player_name].
+    """
+
     def __init__(self, *arg, **kw):
         dict.__init__(self, *arg, **kw)
         self.value_set = set()
@@ -81,12 +103,12 @@ class MultikeyDict(dict):
     def __setitem__(self, keys, value):
         keys = list(keys)
         keys.append(value)
-        newItem = DictItem(keys, value)
+        new_item = DictItem(keys, value)
         self.value_set.add(value)
         for key in keys:
             if key in self:
                 raise KeyError('key %s already exists' % key)
-            dict.__setitem__(self, key, newItem)
+            dict.__setitem__(self, key, new_item)
     
     def values(self):
         return self.value_set
