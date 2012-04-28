@@ -25,11 +25,6 @@ import random
 from schedule import Schedule, AlarmLater, AlarmBeforeEnd
 import commands
 
-# cases to cover:
-# vote ended prematurely: (instigator left)
-# also check map voting
-# test commands from irc
-
 def cancel_verify(connection, instigator):
     return (connection.admin or 
             connection is instigator or 
@@ -103,6 +98,7 @@ def apply_script(protocol, connection, config):
             self.votekick_cleanup()
 
         def votekick_cleanup(self):
+            self.on_votekick_end()
             if self.vk_schedule is not None:
                 self.vk_schedule.destroy()
             self.vk_instigator = None
@@ -157,6 +153,12 @@ def apply_script(protocol, connection, config):
                 message = 'Cancelled by %s' % connection.name
             self.votekick_show_result(message)
             self.votekick_cleanup()
+
+        def on_votekick_start(self):
+            pass
+        
+        def on_votekick_end(self):
+            pass
     
     class VotekickConnection(connection):
 
@@ -169,9 +171,10 @@ def apply_script(protocol, connection, config):
             elif not self.protocol.votekick_can_continue():
                 return
             else:
-                self.vk_vote_status = True
-                if self.protocol.votekick_public_votes:
+                if (self.protocol.votekick_public_votes and
+                    self.vk_vote_status is None):
                     self.protocol.send_chat('%s voted YES.' % self.name)
+                self.vk_vote_status = True
             if self.protocol.votekick_votes_left() <= 0:
                 self.protocol.votekick_majority()
             
@@ -179,9 +182,11 @@ def apply_script(protocol, connection, config):
             if self.protocol.vk_target is self:
                 self.protocol.votekick_show_result(
                     "%s left during votekick" % self.name)
+                vk_target = self.protocol.vk_target
                 self.protocol.vk_target = None # mute on_ban message
                 self.ban(self.protocol.vk_reason,
                          self.protocol.votekick_ban_duration)
+                self.protocol.vk_target = vk_target
                 self.protocol.votekick_cleanup()
             elif self.protocol.vk_instigator is self:
                 self.protocol.votekick_show_result(
@@ -237,6 +242,7 @@ def apply_script(protocol, connection, config):
             instigator.send_chat('You initiated a VOTEKICK against %s. '
                 'Say /cancel to stop it at any time.' % target.name)
             instigator.send_chat('Reason: %s' % reason)
+            protocol.on_votekick_start()
             protocol.vk_schedule = Schedule(protocol, [
             AlarmLater(protocol.votekick_timeout,
                        seconds=protocol.votekick_time),

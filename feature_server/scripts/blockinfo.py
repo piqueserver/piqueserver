@@ -132,5 +132,11 @@ def apply_script(protocol, connection, config):
         def on_map_change(self, map):
             self.block_info = None
             protocol.on_map_change(self, map)
+
+        def on_votekick_start(self):
+            self.send_chat(
+                grief_check(self.vk_instigator, self.vk_target.name),
+                irc = True)
+            return protocol.on_votekick_start(self)
     
     return BlockInfoProtocol, BlockInfoConnection
