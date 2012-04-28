@@ -935,6 +935,7 @@ class MapEditor(QtGui.QMainWindow):
                             image_line[s:s + 4] = color_line[s:s + 4]
                         else:
                             image_line[s:s + 4] = TRANSPARENT_PACKED
+            image.dirty = True
         self.set_dirty()
     
     def subtractive_heightmap(self):
