@@ -11,7 +11,6 @@ from twisted.internet import reactor
 
 @name('griefcheck')
 @alias('gc')
-@admin
 def grief_check(connection, player, time = None):
     player = get_player(connection.protocol, player)
     protocol = connection.protocol
