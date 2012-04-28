@@ -67,7 +67,7 @@ def coord(connection):
 
 add(coord)
 
-def make_color(r, g, b, a):
+def make_color(r, g, b, a = 255):
     r = int(r)
     g = int(g)
     b = int(b)
@@ -176,7 +176,7 @@ class Gate:
             if not points:
                 continue
             for point in points:
-                x, y, z = point.x, point.y, point.z
+                x, y, z = point
                 if not map.get_solid(x, y, z):
                     map.set_point(x, y, z, self.color)
             block_line.x1, block_line.y1, block_line.z1 = start_block
