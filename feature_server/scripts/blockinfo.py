@@ -73,8 +73,8 @@ def grief_check(connection, player, time = None):
     if switch_sentence or teamkills > 0:
         message += '.'
     if (not player.team.spectator and
-        protocol.votekick is not None and protocol.votekick.target is player):
-        vk_instigator = protocol.votekick.instigator
+        protocol.vk_target is not None and protocol.vk_target is player):
+        vk_instigator = protocol.vk_instigator
         dist = distance_3d_vector(player.world_object.position,
             vk_instigator.world_object.position)
         name = ('\x0303' if vk_instigator.team.id
