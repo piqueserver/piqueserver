@@ -146,11 +146,12 @@ def apply_script(protocol, connection, config):
             connection.on_flag_capture(self)
         
         def on_flag_take(self):
-            if self.team is self.protocol.defender:
+            if self.team is not self.protocol.attacker:
                 return False
             if ON_FLAG_TAKE_FLASHES_FOG:
                 self.protocol.fog_flash(self.team.color)
-            self.protocol.defender_score_loop.stop()
+            if self.protocol.defender_score_loop.running:
+                self.protocol.defender_score_loop.stop()
             return connection.on_flag_take(self)
         
         def on_flag_drop(self):
@@ -159,13 +160,13 @@ def apply_script(protocol, connection, config):
     
     class InfiltrationProtocol(protocol):
         game_mode = CTF_MODE
+        balanced_teams = None
         defender = None
         defender_score_loop = None
         defender_return_call = None
         attacker = None
         attacker_dummy = None
         attacker_dummy_calls = None
-        balanced_teams = None
         
         def on_map_change(self, map):
             self.attacker = self.teams[ATTACKER_TEAM]
