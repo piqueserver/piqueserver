@@ -90,6 +90,9 @@ class MasterConnection(BaseConnection):
         self.send_contained(add_server)
     
     def on_disconnect(self):
+        if self.defer is not None:
+            self.defer.errback(self)
+            self.defer = None
         callback = self.disconnect_callback
         if callback is not None:
             callback()

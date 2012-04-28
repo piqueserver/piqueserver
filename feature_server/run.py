@@ -779,14 +779,18 @@ class FeatureProtocol(ServerProtocol):
             lines.append(encode(self.format(line, extra)))
         return lines
         
-    def got_master_connection(self, *arg, **kw):
+    def got_master_connection(self, client):
         print 'Master connection established.'
-        ServerProtocol.got_master_connection(self, *arg, **kw)
+        ServerProtocol.got_master_connection(self, client)
     
-    def master_disconnected(self, *arg, **kw):
-        ServerProtocol.master_disconnected(self, *arg, **kw)
+    def master_disconnected(self, client = None):
+        ServerProtocol.master_disconnected(self, client)
         if self.master and self.master_reconnect_call is None:
-            print 'Master connection lost, reconnecting in 20 seconds...'
+            if client:
+                message = 'Master connection could not be established'
+            else:
+                message = 'Master connection lost'
+            print '%s, reconnecting in 20 seconds...' % message
             self.master_reconnect_call = reactor.callLater(20, 
                 self.reconnect_master)
     

@@ -1646,14 +1646,16 @@ class ServerProtocol(BaseProtocol):
     
     def set_master(self):
         if self.master:
-            get_master_connection(self).addCallback(self.got_master_connection)
+            get_master_connection(self).addCallbacks(
+                self.got_master_connection,
+                self.master_disconnected)
         
     def got_master_connection(self, connection):
         self.master_connection = connection
         connection.disconnect_callback = self.master_disconnected
         self.update_master()
     
-    def master_disconnected(self):
+    def master_disconnected(self, client = None):
         self.master_connection = None
     
     def update_master(self):
