@@ -19,6 +19,7 @@ import sys
 from commands import handle_input
 from twisted.internet import reactor
 from twisted.protocols.basic import LineReceiver
+from pyspades.types import AttributeSet
 
 stdout = sys.__stdout__
 
@@ -70,6 +71,10 @@ class ConsoleInput(LineReceiver):
 
     def __init__(self, protocol):
         self.protocol = protocol
+        self.user_types = AttributeSet(['admin', 'console'])
+        self.rights = AttributeSet()
+        for user_type in self.user_types:
+            self.rights.update(commands.rights.get(user_type, ()))
 
     def lineReceived(self, line):
         if line.startswith('/'):
