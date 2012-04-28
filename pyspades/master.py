@@ -26,12 +26,12 @@ from pyspades.constants import MASTER_VERSION
 
 import random
 
-STAGING = 1
+STAGING = 0
 PORT = 32886
 
 MAX_SERVER_NAME_SIZE = 31
 
-HOST = '127.0.0.1'#'ace-spades.com'
+HOST = 'ace-spades.com'
 
 if STAGING:
     PORT = 32885
