@@ -18,7 +18,7 @@ from pyspades.constants import *
 ATTACKER_TEAM = 1 # 0 = blue, 1 = green
 ATTACKER_TO_DEFENDER_RATIO = 2.0
 ATTACKER_SCORE_MULTIPLIER = 10
-DEFENDER_SCORE_INTERVAL = 20 # seconds
+DEFENDER_SCORE_INTERVAL = 30 # seconds
 ON_FLAG_TAKE_FLASHES_FOG = True
 
 S_TEAM_FULL = 'Team full! The defending team always has less players'
@@ -28,8 +28,19 @@ S_DEFENDER_OBJECTIVE = '*** DEFENDERS: Hold your ground! Earn points by ' \
     'keeping the intel safe'
 S_OBJECTIVES = {
     ATTACKER_TEAM : S_ATTACKER_OBJECTIVE,
-    (1 - ATTACKER_TEAM) : S_DEFENDER_OBJECTIVE
+    1 - ATTACKER_TEAM : S_DEFENDER_OBJECTIVE
 }
+
+# mystery debug stuff
+from commands import admin, add
+@admin
+def captime(connection, value):
+    global DEFENDER_SCORE_INTERVAL
+    value = int(value)
+    DEFENDER_SCORE_INTERVAL = value
+    connection.protocol.start_defender_score_loop()
+    return 'defender team will earn a point every %s seconds' % value
+add(captime)
 
 class DummyPlayer():
     protocol = None
@@ -130,6 +141,7 @@ def apply_script(protocol, connection, config):
                     dummy_call = callLater(delay, 
                         self.protocol.attacker_dummy_score)
                     self.protocol.attacker_dummy_calls.append(dummy_call)
+            self.protocol.cancel_defender_return_call()
             self.protocol.start_defender_score_loop()
             connection.on_flag_capture(self)
         
@@ -138,10 +150,7 @@ def apply_script(protocol, connection, config):
                 return False
             if ON_FLAG_TAKE_FLASHES_FOG:
                 self.protocol.fog_flash(self.team.color)
-            if self.protocol.defender_score_loop.running:
-                self.protocol.defender_score_loop.stop()
-            else:
-                print "****** GHOST IN THE MACHINE"
+            self.protocol.defender_score_loop.stop()
             return connection.on_flag_take(self)
         
         def on_flag_drop(self):
@@ -152,6 +161,7 @@ def apply_script(protocol, connection, config):
         game_mode = CTF_MODE
         defender = None
         defender_score_loop = None
+        defender_return_call = None
         attacker = None
         attacker_dummy = None
         attacker_dummy_calls = None
@@ -206,6 +216,11 @@ def apply_script(protocol, connection, config):
                         dummy_call.cancel()
             self.attacker_dummy_calls = None
             self.attacker_dummy = None
+        
+        def cancel_defender_return_call(self):
+            if self.defender_return_call and self.defender_return_call.active():
+                self.defender_return_call.cancel()
+            self.defender_return_call = None
         
         def fog_flash(self, color):
             old_color = self.get_fog_color()
