@@ -138,7 +138,10 @@ def apply_script(protocol, connection, config):
                 return False
             if ON_FLAG_TAKE_FLASHES_FOG:
                 self.protocol.fog_flash(self.team.color)
-            self.protocol.defender_score_loop.stop()
+            if self.protocol.defender_score_loop.running:
+                self.protocol.defender_score_loop.stop()
+            else:
+                print "****** GHOST IN THE MACHINE"
             return connection.on_flag_take(self)
         
         def on_flag_drop(self):
@@ -170,6 +173,7 @@ def apply_script(protocol, connection, config):
         
         def on_game_end(self):
             self.end_attacker_dummy_calls()
+            self.start_defender_score_loop()
             protocol.on_game_end(self)
         
         def on_flag_spawn(self, x, y, z, flag, entity_id):
@@ -178,6 +182,8 @@ def apply_script(protocol, connection, config):
             return protocol.on_flag_spawn(self, x, y, z, flag, entity_id)
         
         def start_defender_score_loop(self):
+            if self.defender_score_loop.running:
+                self.defender_score_loop.stop()
             self.defender_score_loop.start(DEFENDER_SCORE_INTERVAL, now = False)
         
         def defender_score_cycle(self):
@@ -186,6 +192,9 @@ def apply_script(protocol, connection, config):
         
         def attacker_dummy_score(self):
             self.attacker_dummy.score()
+            if self.attacker_dummy is None:
+                # this could happen if the dummy capture caused the game to end
+                return
             self.attacker_dummy_calls.pop(0)
             if not self.attacker_dummy_calls:
                 self.end_attacker_dummy_calls()
