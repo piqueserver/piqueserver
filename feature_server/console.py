@@ -16,7 +16,7 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-from commands import handle_input
+import commands
 from twisted.internet import reactor
 from twisted.protocols.basic import LineReceiver
 from pyspades.types import AttributeSet
@@ -79,7 +79,7 @@ class ConsoleInput(LineReceiver):
     def lineReceived(self, line):
         if line.startswith('/'):
             line = line[1:]
-            result = handle_input(self, line)
+            result = commands.handle_input(self, line)
             if result is not None:
                 print result
         else:
