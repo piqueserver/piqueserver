@@ -19,12 +19,10 @@
 */
 
 #include "vxl_c.h"
+#include "constants_c.h"
 
 // from vxl.h
 #define CHUNK 1023 //zlib buffer size
-#define VSID 512    //Maximum .VXL dimensions in both x & y direction
-#define VSIDM (VSID-1)
-#define VSIDSQ (VSID*VSID)
 #define VSIDSQM (VSIDSQ-1)
 #define MAXSCANDIST 128
 #define MAXSCANSQ (MAXSCANDIST*MAXSCANDIST)
@@ -35,7 +33,6 @@
 #define MAXZDIM 64 //Maximum .VXL dimensions in z direction (height)
 #define MAXZDIMM (MAXZDIM-1)
 #define MAXZDIMMM (MAXZDIM-2)
-#define PI 3.141592653589793f
 #define PORT 32887
 #define GRID_SIZE 64
 #define FALL_SLOW_DOWN 0.24f

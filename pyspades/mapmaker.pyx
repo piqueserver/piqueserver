@@ -15,27 +15,40 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from vxl cimport VXLData, MapData
+
+cdef extern from "classicgen_c.cpp":
+    void genland(unsigned long seed, MapData * map)
+
 import array
 import random
 import math
 import sys
 from collections import deque
-from pyspades.vxl cimport VXLData
+cimport cython
 
-sys.path.append('..')
+def generate_classic(seed):
+    cdef VXLData map = VXLData()
+    genland(seed, map.map)
+    return map
 
 class Biome(object):
     def __init__(self, gradient, height, variation, noise):
-        """Create a biome with a Gradient object,
-            typical height(0.0-1.0), and height variation(0.0-1.0)."""
+        """
+        Create a biome with a Gradient object, typical height(0.0-1.0), and 
+        height variation(0.0-1.0).
+        """
         self.gradient = gradient
         self.height = height
         self.variation = variation
         self.noise = noise
         self.id = -1
 
-cdef class BiomeMap(object):
-    """A tilemap containing biome data for a HeightMap."""
+@cython.final
+cdef class BiomeMap:
+    """
+    A tilemap containing biome data for a HeightMap.
+    """
     cdef public int width
     cdef public int height
     cdef public int twidth
@@ -136,8 +149,8 @@ cdef class BiomeMap(object):
         y_pos = y*self.theight
         return [x_pos, y_pos, x_pos+self.twidth, y_pos+self.theight]
         
-
-cdef class HeightMap(object):
+@cython.final
+cdef class HeightMap:
     cdef public int width
     cdef public int height
     cdef public object hmap
