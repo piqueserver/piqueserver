@@ -688,6 +688,8 @@ class ServerConnection(BaseConnection):
     
     def spawn(self, pos = None):
         self.spawn_call = None
+        if self.team is None:
+            return
         spectator = self.team.spectator
         if not spectator:
             if pos is None:
