@@ -1592,8 +1592,6 @@ class ServerProtocol(BaseProtocol):
         green_team = self.green_team
         blue_team.initialize()
         green_team.initialize()
-        blue_team = self.blue_team
-        green_team = self.green_team
         if self.game_mode == CTF_MODE:
             if player is None:
                 player = self.players.values()[0]
@@ -1610,8 +1608,6 @@ class ServerProtocol(BaseProtocol):
             self.reset_tc()
         for entity in self.entities:
             entity.update()
-        for player in self.players.values():
-            player.hp = None
         for player in self.players.values():
             if player.team is not None:
                 player.spawn()
