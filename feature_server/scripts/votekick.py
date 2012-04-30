@@ -104,8 +104,10 @@ def apply_script(protocol, connection, config):
             text = "%s votekicked" % self.vk_target.name
             print text
             if self.votekick_ban_duration:
-                self.vk_target.ban(self.vk_reason,
-                                   self.votekick_ban_duration)
+                vk_target = self.vk_target
+                self.vk_target = None
+                vk_target.ban(self.vk_reason,
+                              self.votekick_ban_duration)
             else:
                 self.vk_target.kick(silent = True)
             self.votekick_cleanup()
