@@ -25,11 +25,6 @@ import random
 from schedule import Schedule, AlarmLater, AlarmBeforeEnd
 import commands
 
-def cancel_verify(connection, instigator):
-    return (connection.admin or 
-            connection is instigator or 
-            connection.rights.cancel)
-
 def votekick(connection, value, *arg):
     reason = commands.join_arguments(arg)
     if connection not in connection.protocol.players:
@@ -141,13 +136,13 @@ def apply_script(protocol, connection, config):
                 self.vk_target.name, result), irc = True)
             if not self.vk_instigator.admin: # set the cooldown
                 self.vk_instigator.last_votekick = reactor.seconds()
-                
+        
         def cancel_vote(self, connection):
             if self.vk_target is None:
                 return connection.cancel_vote()
             if connection is None: # IRC
                 message = 'Cancelled'
-            elif not cancel_verify(connection, self.vk_instigator):
+            elif not connection.cancel_verify(self.vk_instigator):
                 return 'You did not start the votekick.'
             else: # in-game
                 message = 'Cancelled by %s' % connection.name
@@ -178,6 +173,11 @@ def apply_script(protocol, connection, config):
             if self.protocol.votekick_votes_left() <= 0:
                 self.protocol.votekick_majority()
             
+        def cancel_verify(self, instigator):
+            return (self.admin or 
+                    self is instigator or 
+                    self.rights.cancel)
+
         def on_disconnect(self):
             if self.protocol.vk_target is self:
                 self.protocol.votekick_show_result(
