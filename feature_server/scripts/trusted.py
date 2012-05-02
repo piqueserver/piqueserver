@@ -21,21 +21,23 @@ def trust(connection, player):
 add(trust)
 
 def apply_script(protocol, connection, config):
+    has_votekick = 'votekick' in config.get('scripts', [])
     class TrustedConnection(connection):
         def on_user_login(self, user_type, verbose = True):
             if user_type == 'trusted':
                 self.speedhack_detect = False
-                if (self.protocol.vk_target is self):
+                if (has_votekick and self.protocol.vk_target is self):
                     self.protocol.votekick_show_result("Trusted user")
                     self.protocol.votekick_cleanup()
             return connection.on_user_login(self, user_type, verbose)
-        def start_votekick(self, target, reason = None):
-            if target.user_types.trusted:
-                return S_CANT_VOTEKICK.format(player = target.name)
-            return connection.start_votekick(self, target, reason)
-        def cancel_verify(self, instigator):
-            return (connection.cancel_verify(self, instigator) or
-                    (self.user_types.trusted and
-                     self.protocol.vk_target is self))
+        if has_votekick:
+            def start_votekick(self, target, reason = None):
+                if target.user_types.trusted:
+                    return S_CANT_VOTEKICK.format(player = target.name)
+                return connection.start_votekick(self, target, reason)
+            def cancel_verify(self, instigator):
+                return (connection.cancel_verify(self, instigator) or
+                        (self.user_types.trusted and
+                         self.protocol.vk_target is self))
     
     return protocol, TrustedConnection

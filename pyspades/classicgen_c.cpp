@@ -103,6 +103,29 @@ float noise3d (float fx, float fy, float fz, long mask)
 long buf[VSID*VSID];
 long amb[VSID*VSID];
 
+inline int get_height_pos(int x, int y)
+{
+    return y * VSID + x;
+}
+
+inline int get_height(int x, int y, int def)
+{
+    if (!is_valid_position(x, y, 0))
+        return def;
+    return ((char *)&buf[get_height_pos(x, y)])[3];
+}
+
+inline int get_lowest_height(int x, int y)
+{
+    int z = get_height(x, y, 63);
+    z = max(get_height(x - 1, y, z),
+        max(get_height(x + 1, y, z),
+        max(get_height(x, y - 1, z),
+        max(get_height(x, y + 1, z),
+            z))));
+    return z;
+}
+
 void genland(unsigned long seed, MapData * map)
 {
     float dx, dy, d, g, g2, river, amplut[OCTMAX], samp[3], csamp[3];
@@ -186,8 +209,8 @@ void genland(unsigned long seed, MapData * map)
         }
     }
     
-    int height, z;
-    
+    int height, z, lowest_z;
+
     for (y = 0, k = 0; y < VSID; y++) {
     for (x = 0; x < VSID; x++, k++) {
         height = ((char *)&buf[k])[3];
@@ -195,7 +218,11 @@ void genland(unsigned long seed, MapData * map)
             map->geometry[get_pos(x, y, z)] = true;
         }
         map->geometry[get_pos(x, y, z)] = true;
-        map->colors[get_pos(x, y, z)] = buf[k];
+        lowest_z = get_lowest_height(x, y) + 1;
+        // printf("%d %d\n", z, lowest_z);
+        for (; z < lowest_z; z++) {
+            map->colors[get_pos(x, y, z)] = buf[k];
+        }
     }}
 
     return;

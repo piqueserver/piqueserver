@@ -50,11 +50,15 @@ class VoteMap(object):
             final_rotation.append("extend")
         self.picks = final_rotation
         self.votes = {}
+        if connection is None:
+            name = 'server'
+        else:
+            name = connection.name
         self.schedule = Schedule(protocol, [
             AlarmLater(self.timeout, seconds=self.vote_time),
             AlarmLater(self.update, seconds=30, loop=True,
                        traversal_required=False)], None,
-                        "Votemap by %s" % connection.name)
+                        "Votemap by %s" % name)
 
     def votes_left(self):
         thresh = int((len(self.protocol.players)) *
