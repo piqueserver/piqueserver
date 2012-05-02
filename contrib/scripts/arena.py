@@ -187,11 +187,20 @@ class Gate:
         map = self.protocol_obj.map
         block_action.player_id = 32
         block_action.value = DESTROY_BLOCK
-        for block in self.support_blocks:
+        for block in self.support_blocks: # optimize wire traffic
             if map.get_solid(*block):
                 map.remove_point(*block)
                 block_action.x, block_action.y, block_action.z = block
                 self.protocol_obj.send_contained(block_action, save = True)
+        for block_line_ in self.blocks: # avoid desyncs
+            start_block, end_block = block_line_
+            points = world.cube_line(*(start_block + end_block))
+            if not points:
+                continue
+            for point in points:
+                x, y, z = point
+                if map.get_solid(x, y, z):
+                    map.remove_point(x, y, z)
 
     def record_gate(self, x, y, z):
         if x < 0 or x > 511 or y < 0 or x > 511 or z < 0 or z > 63:
