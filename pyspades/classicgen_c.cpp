@@ -217,7 +217,6 @@ void genland(unsigned int seed, MapData * map)
 		}
     
     int height, z, lowest_z;
-    printf("out\n");
     for (y = 0, k = 0; y < VSID; y++) {
     for (x = 0; x < VSID; x++, k++) {
         height = buf[k].a;
