@@ -69,13 +69,28 @@ static inline float fgrad (int h, float x, float y, float z)
 	return(0);
 }
 
+#if RAND_MAX==32767 
+#define compatrand rand
+#else
+// compatrand compatible with both 32bit and 64bit machines
+inline int compatrand()
+{
+    return (rand() * 32767) / RAND_MAX;
+}
+#endif
+
 static unsigned char noisep[512], noisep15[512];
 static void noiseinit ()
 {
 	int i, j, k;
 
 	for(i=256-1;i>=0;i--) noisep[i] = i;
-	for(i=256-1;i> 0;i--) { j = ((rand()*(i+1))>>15); k = noisep[i]; noisep[i] = noisep[j]; noisep[j] = k; }
+	for(i=256-1;i> 0;i--) {
+        j = ((compatrand()*(i+1))>>15); 
+        k = noisep[i]; 
+        noisep[i] = noisep[j]; 
+        noisep[j] = k; 
+    }
 	for(i=256-1;i>=0;i--) noisep[i+256] = noisep[i];
 	for(i=512-1;i>=0;i--) noisep15[i] = noisep[i]&15;
 }
