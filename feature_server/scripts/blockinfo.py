@@ -87,6 +87,9 @@ def grief_check(connection, player, time = None):
 add(grief_check)
 
 def apply_script(protocol, connection, config):
+
+    has_votekick = 'votekick' in config.get('scripts', [])
+    
     class BlockInfoConnection(connection):
         blocks_removed = None
         teamkill_times = None
@@ -131,14 +134,19 @@ def apply_script(protocol, connection, config):
     class BlockInfoProtocol(protocol):
         block_info = None
         
+        
         def on_map_change(self, map):
             self.block_info = None
             protocol.on_map_change(self, map)
 
-        def on_votekick_start(self):
-            self.send_chat(
-                grief_check(self.vk_instigator, self.vk_target.name),
-                irc = True)
-            return protocol.on_votekick_start(self)
+        if has_votekick:
+            def on_votekick_start(self):
+                self.send_chat(
+                    grief_check(self.vk_instigator, self.vk_target.name),
+                    irc = True)
+                return protocol.on_votekick_start(self)
+        else:
+            protocol.vk_target = None
+            protocol.vk_instigator = None
     
     return BlockInfoProtocol, BlockInfoConnection
