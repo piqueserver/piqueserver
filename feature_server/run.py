@@ -383,9 +383,9 @@ class FeatureConnection(ServerConnection):
             else:
                 message = '%s was kicked' % self.name
             self.protocol.send_chat(message, irc = True)
-        self.disconnect(ERROR_KICKED + 8) # FIXME: Client should handle disco
-                                          # events the same way in both main and
-                                          # initial loading network loops
+        # FIXME: Client should handle disconnect events the same way in both
+        # main and initial loading network loops
+        self.disconnect(ERROR_KICKED + 8)
     
     def ban(self, reason = None, duration = None):
         reason = ': ' + reason if reason is not None else ''

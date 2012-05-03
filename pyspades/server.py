@@ -91,7 +91,7 @@ def parse_command(input):
     else:
         command = ''
     splitted = [decode(value) for value in splitted]
-    return command, splitted
+    return decode(command), splitted
 
 class SlidingWindow(object):
     def __init__(self, entries):

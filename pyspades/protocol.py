@@ -121,7 +121,10 @@ class BaseProtocol(object):
     def update(self):
         try:
             while 1:
-                event = self.host.service(0)
+                try:
+                    event = self.host.service(0)
+                except IOError:
+                    break
                 if event is None:
                     break
                 event_type = event.type
