@@ -69,15 +69,19 @@ static inline float fgrad (int h, float x, float y, float z)
 	return(0);
 }
 
-#if RAND_MAX==32767 
-#define compatrand rand
-#else
-// compatrand compatible with both 32bit and 64bit machines
-inline int compatrand()
+// portable rand functions
+
+static unsigned int seed = 0;
+inline void set_seed(unsigned int value)
 {
-    return (rand() * 32767) / RAND_MAX;
+    seed = value;
 }
-#endif
+
+inline unsigned int get_random()
+{
+    seed = seed * 214013 + 2531011;
+    return (seed >> 16) & 0x7FFF;
+}
 
 static unsigned char noisep[512], noisep15[512];
 static void noiseinit ()
@@ -86,7 +90,7 @@ static void noiseinit ()
 
 	for(i=256-1;i>=0;i--) noisep[i] = i;
 	for(i=256-1;i> 0;i--) {
-        j = ((compatrand()*(i+1))>>15); 
+        j = ((get_random()*(i+1))>>15); 
         k = noisep[i]; 
         noisep[i] = noisep[j]; 
         noisep[j] = k; 
@@ -158,7 +162,7 @@ void genland(unsigned int seed, MapData * map)
 	double nx, ny, nz, gr, gg, gb;
 	int i, x, y, k, o, maxa, msklut[OCTMAX];
     
-    srand(seed);
+    set_seed(seed);
     
 	noiseinit();
 
