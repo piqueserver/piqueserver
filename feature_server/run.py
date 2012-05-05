@@ -139,6 +139,7 @@ class FeatureConnection(ServerConnection):
     last_chat = None
     chat_time = 0
     chat_count = 0
+    user_types = None
     
     def on_connect(self):
         protocol = self.protocol
@@ -174,10 +175,11 @@ class FeatureConnection(ServerConnection):
         print '%s (IP %s, ID %s) entered the game!' % (self.printable_name, 
             self.address[0], self.player_id)
         self.protocol.irc_say('* %s entered the game' % self.name)
-        self.user_types = AttributeSet()
-        self.rights = AttributeSet()
-        if self.protocol.everyone_is_admin:
-            self.on_user_login('admin', False)
+        if self.user_types is None:
+            self.user_types = AttributeSet()
+            self.rights = AttributeSet()
+            if self.protocol.everyone_is_admin:
+                self.on_user_login('admin', False)
     
     def get_spawn_location(self):
         get_location = self.protocol.map_info.get_spawn_location
