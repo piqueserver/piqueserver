@@ -437,7 +437,10 @@ class ServerConnection(BaseConnection):
                 elif contained.id == loaders.SetTool.id:
                     if self.on_tool_set_attempt(contained.value) == False:
                         return
+                    old_tool = self.tool
                     self.tool = contained.value
+                    if old_tool == WEAPON_TOOL:
+                        self.weapon_object.set_shoot(False)
                     if self.tool == WEAPON_TOOL:
                         self.on_shoot_set(self.world_object.primary_fire)
                         self.weapon_object.set_shoot(
