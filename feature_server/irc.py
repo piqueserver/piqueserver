@@ -135,6 +135,7 @@ class IRCBot(irc.IRCClient):
                 max_len = MAX_IRC_CHAT_SIZE - len(self.protocol.server_prefix) - 1
                 msg = msg[len(self.factory.chatprefix):].strip()
                 message = ("<%s> %s" % (prefix + alias, msg))[:max_len]
+                message = message.decode('cp1252')
                 print message.encode('ascii', 'replace')
                 self.factory.server.send_chat(encode(message))
     
