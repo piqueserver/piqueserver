@@ -428,6 +428,7 @@ class ServerConnection(BaseConnection):
                         world.Grenade, contained.value,
                         Vertex3(*contained.position), None,
                         Vertex3(*contained.velocity), self.grenade_exploded)
+                    grenade.team = self.team
                     self.on_grenade_thrown(grenade)
                     if self.filter_visibility_data:
                         return
@@ -977,6 +978,9 @@ class ServerConnection(BaseConnection):
         
     def grenade_exploded(self, grenade):
         if self.name is None or self.team.spectator:
+            return
+        if grenade.team is not None and grenade.team is not self.team:
+            # could happen if the player changed team
             return
         position = grenade.position
         x = position.x

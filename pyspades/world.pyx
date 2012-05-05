@@ -157,11 +157,6 @@ cdef class Character(Object):
         cdef Vertex3 v = Vertex3(x, y, z)
         reorient_player(self.player, v.value)
     
-    def throw_grenade(self, time_left, callback = None):
-        item = self.world.create_object(Grenade, time_left, self.position, 
-            self.orientation, self.velocity, callback)
-        return item
-    
     cpdef int can_see(self, float x, float y, float z):
         cdef Vertex3 position = self.position
         return can_see(self.world.map, position.x, position.y, position.z, 
@@ -298,6 +293,7 @@ cdef class Grenade(Object):
         Vertex3 position, velocity
         float fuse
         object callback
+        object team
     cdef GrenadeType * grenade
     
     def initialize(self, double fuse, Vertex3 position, Vertex3 orientation, 
