@@ -208,8 +208,8 @@ def apply_script(protocol, connection, config):
         
         def autoschedule_votemap(self):
             if self.votemap_autoschedule > 0 and self.autoschedule_call is None:
-                self.autoschedule_call = self.call_before_end(
-                    self.start_votemap, self.votemap_autoschedule)
+                self.autoschedule_call = self.call_end(
+                    self.votemap_autoschedule, self.start_votemap)
 
         def cancel_vote(self, connection = None):
             if self.votemap is not None:
@@ -238,3 +238,5 @@ def apply_script(protocol, connection, config):
         
     class VoteConnection(connection):
         last_votemap = None
+
+    return VoteProtocol, VoteConnection

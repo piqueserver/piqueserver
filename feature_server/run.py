@@ -98,8 +98,8 @@ from pyspades.types import AttributeSet
 from networkdict import NetworkDict, get_network
 from pyspades.exceptions import InvalidData
 from pyspades.bytes import NoDataLeft
+from scheduler import Scheduler
 import commands
-import weakref
 
 def create_path(path):
     if path:
@@ -453,6 +453,44 @@ class FeatureTeam(Team):
                 return result
         return Team.get_entity_location(self, entity_id)
 
+class EndCall(object):
+    active = True
+    def __init__(self, protocol, delay, func, *arg, **kw):
+        self.protocol = protocol
+        protocol.end_calls.append(self)
+        self.delay = delay
+        self.func = func
+        self.arg = arg
+        self.kw = kw
+        self.call = None
+    
+    def set(self, value):
+        if value is None:
+            if self.call is not None:
+                self.call.cancel()
+                self.call = None
+        elif value is not None:
+            value = value - self.delay
+            if value <= 0.0:
+                self.cancel()
+            elif self.call:
+                self.call.reset(value)
+            else:
+                self.call = reactor.callLater(value, self.fire)
+    
+    def fire(self):
+        self.call = None
+        self.cancel()
+        self.func(*self.arg, **self.kw)
+    
+    def cancel(self):
+        self.set(None)
+        self.protocol.end_calls.remove(self)
+        self.active = False
+    
+    def active(self):
+        return self.active and (self.call and self.call.active())
+            
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
     bans = None
@@ -487,6 +525,7 @@ class FeatureProtocol(ServerProtocol):
     team_class = FeatureTeam
     
     game_mode = None # default to None so we can check
+    time_announce_schedule = None
     
     server_version = SERVER_VERSION
     
@@ -586,8 +625,7 @@ class FeatureProtocol(ServerProtocol):
         log.startLogging(sys.stdout) # force twisted logging
         
         self.start_time = reactor.seconds()
-        self.before_end_calls = weakref.WeakSet()
-        self.pending_end_calls = []
+        self.end_calls = []
         self.console = create_console(self)
         
         for password in self.passwords.get('admin', []):
@@ -629,38 +667,37 @@ class FeatureProtocol(ServerProtocol):
             self.advance_call = None
         time_limit = time_limit or self.default_time_limit
         if time_limit == False:
+            for call in self.end_calls:
+                call.set(None)
             return
         
         if additive:
             time_limit = min(time_limit + add_time, self.default_time_limit)
         
         seconds = time_limit * 60.0
-        self.advance_call = reactor.callLater(time_limit * 60.0, self._time_up)
+        self.advance_call = reactor.callLater(seconds, self._time_up)
         
-        for call in self.before_end_calls:
-            call.reset(seconds)
+        for call in self.end_calls:
+            call.set(seconds)
 
-        # time_announce_queue = [
-            # AlarmBeforeEnd(self._next_time_announce, seconds=n)
-            # for n in self.time_announcements]
-        # if self.time_announce_schedule is not None:
-            # self.time_announce_schedule.destroy()
-            # self.time_announce_schedule = None
-        # self.time_announce_schedule = OptimisticSchedule(
-            # self, time_announce_queue, None, "Time Announcements")
-        # self.schedule.queue(self.time_announce_schedule)
+        if self.time_announce_schedule is not None:
+            self.time_announce_schedule.reset()
+        self.time_announce_schedule = Scheduler(self)
+        for seconds in self.time_announcements:
+            self.time_announce_schedule.call_end(seconds,
+                self._next_time_announce)
         
-        # return time_limit
+        return time_limit
 
-    # def _next_time_announce(self):
-        # remaining = self.advance_call.getTime() - reactor.seconds()
-        # if remaining < 60.001:
-            # if remaining < 10.001:
-                # self.send_chat('%s...' % int(round(remaining)))
-            # else:
-                # self.send_chat('%s seconds remaining.' % int(round(remaining)))
-        # else:
-            # self.send_chat('%s minutes remaining.' % int(round(remaining/60)))
+    def _next_time_announce(self):
+        remaining = self.advance_call.getTime() - reactor.seconds()
+        if remaining < 60.001:
+            if remaining < 10.001:
+                self.send_chat('%s...' % int(round(remaining)))
+            else:
+                self.send_chat('%s seconds remaining.' % int(round(remaining)))
+        else:
+            self.send_chat('%s minutes remaining.' % int(round(remaining/60)))
     
     def _time_up(self):
         self.advance_call = None
@@ -927,8 +964,15 @@ class FeatureProtocol(ServerProtocol):
         
     # before-end calls
     
-    def call_before_end(self, delay, func, *arg, **kw):
-        return
+    def call_end(self, delay, func, *arg, **kw):
+        call = EndCall(self, delay, func, *arg, **kw)
+        call.set(self.get_advance_time())
+        return call
+        
+    def get_advance_time(self):
+        if not self.advance_call:
+            return None
+        return self.advance_call.getTime() - self.advance_call.seconds()
     
 PORT = 32887
 

@@ -49,7 +49,6 @@ commands.add(vote_yes)
 
 def apply_script(protocol, connection, config):
     class VotekickProtocol(protocol):
-
         vk_instigator = None
         vk_target = None
         vk_reason = None

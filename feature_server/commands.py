@@ -813,11 +813,6 @@ def weapon(connection, value):
     else:
         name = player.weapon_object.name
     return '%s has a %s' % (player.name, name)
-
-@admin
-def debugschedule(connection):
-    message = str(connection.protocol.schedule)
-    return message
     
 command_list = [
     help,
@@ -875,8 +870,7 @@ command_list = [
     server_info,
     scripts,
     weapon,
-    mapname,
-    debugschedule
+    mapname
 ]
 
 commands = {}
