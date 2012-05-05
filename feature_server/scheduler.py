@@ -21,9 +21,10 @@ try:
     from weakref import WeakSet
 except ImportError:
     # python 2.6 support (sigh)
+    from weakref import WeakKeyDictionary
     class WeakSet(object):
         def __init__(self):
-            self._dict = weakref.WeakKeyDictionary()
+            self._dict = WeakKeyDictionary()
 
         def add(self, value):
             self._dict[value] = True
