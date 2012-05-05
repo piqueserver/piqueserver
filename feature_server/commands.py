@@ -816,6 +816,8 @@ def weapon(connection, value):
 
 @name('cancel')
 def cancel_vote(connection):
+    if connection not in connection.protocol.players:
+        connection = None
     return connection.protocol.cancel_vote(connection)
     
 command_list = [

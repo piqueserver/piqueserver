@@ -17,13 +17,35 @@
 
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
-import weakref
+try:
+    from weakref import WeakSet
+except ImportError:
+    # python 2.6 support (sigh)
+    class WeakSet(object):
+        def __init__(self):
+            self._dict = weakref.WeakKeyDictionary()
+
+        def add(self, value):
+            self._dict[value] = True
+
+        def remove(self, value):
+            del self._dict[value]
+
+        def __iter__(self):
+            for key in self._dict.keys():
+                yield key
+
+        def __contains__(self, other):
+            return other in self._dict
+
+        def __len__(self):
+            return len(self._dict)
 
 class Scheduler(object):
     def __init__(self, protocol):
         self.protocol = protocol
-        self.calls = weakref.WeakSet()
-        self.loops = weakref.WeakSet()
+        self.calls = WeakSet()
+        self.loops = WeakSet()
     
     def call_later(self, *arg, **kw):
         call = reactor.callLater(*arg, **kw)
@@ -48,5 +70,5 @@ class Scheduler(object):
         for loop in self.loops:
             if loop.running:
                 loop.stop()
-        self.calls = weakref.WeakSet()
-        self.loops = weakref.WeakSet()
+        self.calls = WeakSet()
+        self.loops = WeakSet()

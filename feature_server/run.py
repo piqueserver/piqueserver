@@ -61,10 +61,13 @@ def get_hg_rev():
 if frozen:
     path = os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding()))
     sys.path.append(path)
-    SERVER_VERSION = 'win32 build' # most likely
+    try:
+        SERVER_VERSION = 'win32 bin - rev %s' % (open('version', 'rb').read())
+    except IOError:
+        SERVER_VERSION = 'win32 bin'
 else:
     sys.path.append('..')
-    SERVER_VERSION = get_hg_rev()
+    SERVER_VERSION = '%s - rev %s' % (sys.platform, get_hg_rev())
 
 if sys.platform == 'linux2':
     try:
