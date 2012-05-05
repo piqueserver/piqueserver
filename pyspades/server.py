@@ -277,10 +277,13 @@ class ServerConnection(BaseConnection):
                         return
                 elif contained.id == loaders.PositionData.id:
                     current_time = reactor.seconds()
-                    if (self.last_position_update is not None and current_time -
-                    self.last_position_update < MAX_POSITION_RATE):
-                        return
+                    last_update = self.last_position_update
                     self.last_position_update = current_time
+                    if last_update is not None:
+                        dt = current_time - last_update
+                        if dt < MAX_POSITION_RATE or dt > MIN_POSITION_RATE:
+                            self.set_location()
+                            return
                     x, y, z = contained.x, contained.y, contained.z
                     if check_nan(x, y, z):
                         self.on_hack_attempt(
