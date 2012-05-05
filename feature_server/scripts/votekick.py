@@ -137,9 +137,9 @@ def apply_script(protocol, connection, config):
             if not self.vk_instigator.admin: # set the cooldown
                 self.vk_instigator.last_votekick = reactor.seconds()
         
-        def cancel_vote(self, connection):
+        def cancel_vote(self, connection = None):
             if self.vk_target is None:
-                return connection.cancel_vote()
+                return protocol.cancel_vote(self, connection)
             if connection is None: # IRC
                 message = 'Cancelled'
             elif not connection.cancel_verify(self.vk_instigator):

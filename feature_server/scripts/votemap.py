@@ -45,13 +45,8 @@ def votemap_vote(connection, value):
     else:
         return 'No map vote in progress.'
 
-@commands.name('cancel')
-def cancel_vote(connection):
-    return connection.protocol.cancel_vote(connection)
-
 commands.add(votemap)
 commands.add(votemap_vote)
-commands.add(cancel_vote)
 
 def apply_script(protocol, connection, config):
     class VoteMap(object):
@@ -215,7 +210,7 @@ def apply_script(protocol, connection, config):
             if self.votemap is not None:
                 return self.votemap.cancel(connection)
             else:
-                return "No vote in progress."
+                return protocol.cancel_vote(self, connection)
 
         def start_votemap(self, votemap = None):
             if self.votemap is not None:

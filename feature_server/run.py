@@ -947,6 +947,11 @@ class FeatureProtocol(ServerProtocol):
     
     def on_ban(self, connection, reason, duration):
         pass
+    
+    # voting
+    
+    def cancel_vote(self, connection = None):
+        return 'No vote in progress.'
         
     # useful twisted wrappers
     

@@ -813,6 +813,10 @@ def weapon(connection, value):
     else:
         name = player.weapon_object.name
     return '%s has a %s' % (player.name, name)
+
+@name('cancel')
+def cancel_vote(connection):
+    return connection.protocol.cancel_vote(connection)
     
 command_list = [
     help,
@@ -870,7 +874,8 @@ command_list = [
     server_info,
     scripts,
     weapon,
-    mapname
+    mapname,
+    cancel_vote
 ]
 
 commands = {}
@@ -980,7 +985,7 @@ def debug_handle_command(connection, command, parameters):
             return "You can't use this command"
     return command_func(connection, *parameters)
 
-#handle_command = debug_handle_command
+# handle_command = debug_handle_command
 
 def handle_input(connection, input):
     # for IRC and console
