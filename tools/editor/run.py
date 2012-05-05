@@ -649,7 +649,8 @@ class MapEditor(QtGui.QMainWindow):
     def slice_map(self, show_dialog = True):
         self.layers = []
         if show_dialog:
-            progress = progress_dialog(self.edit_widget, 0, 63, 'Slicing...', can_abort = False)
+            progress = progress_dialog(self.edit_widget, 0, 63, 'Slicing...', 
+                can_abort = False)
         for z in xrange(0, 64):
             if show_dialog:
                 progress.setValue(z)

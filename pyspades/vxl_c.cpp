@@ -97,15 +97,28 @@ struct Position {
     int x; 
     int y;
     int z;
-    
-    bool operator == (Position const& pos) const
-        {
-        return (x == pos.x && y == pos.y && z == pos.z);
-    }
 };
 
-inline void add_node(int x, int y, int z, MapData * map,
-                     vector<Position> & nodes)
+#define NODE_RESERVE_SIZE 250000
+static Position * nodes = NULL;
+static int node_pos;
+static int nodes_size;
+static set_type<int> marked;
+
+inline void push_back_node(int x, int y, int z)
+{
+    nodes[node_pos].x = x;
+    nodes[node_pos].y = y;
+    nodes[node_pos].z = z;
+    node_pos++;
+}
+
+inline const Position * pop_back_node()
+{
+    return &nodes[--node_pos];
+}
+
+inline void add_node(int x, int y, int z, MapData * map)
 {
     if (x < 0 || x > 511 ||
         y < 0 || y > 511 ||
@@ -113,62 +126,61 @@ inline void add_node(int x, int y, int z, MapData * map,
         return;
     if (!map->geometry[get_pos(x, y, z)])
         return;
-    Position new_pos;
-    new_pos.x = x;
-    new_pos.y = y;
-    new_pos.z = z;
-    nodes.push_back(new_pos);
+    push_back_node(x, y, z);
 }
 
 int check_node(int x, int y, int z, MapData * map, int destroy)
 {
-    vector<Position> nodes;
+    if (nodes == NULL) {
+        nodes = (Position*)malloc(sizeof(Position) * NODE_RESERVE_SIZE);
+        nodes_size = NODE_RESERVE_SIZE;
+    }
+    node_pos = 0;
     
-    map_type<int, bool> marked;
-    Position new_pos;
-    new_pos.x = x;
-    new_pos.y = y;
-    new_pos.z = z;
-    nodes.push_back(new_pos);
+    push_back_node(x, y, z);
     
-    while (!nodes.empty()) {
-        Position node = nodes.back();
-        nodes.pop_back();
-        
-        if (node.z >= 62) {
+    while (node_pos > 0) {
+        if (node_pos >= nodes_size - 6) {
+            nodes_size += NODE_RESERVE_SIZE;
+            nodes = (Position*)realloc((void*)nodes, 
+                sizeof(Position) * nodes_size);
+        }
+        const Position * current_node = pop_back_node();
+        z = current_node->z;
+        if (z >= 62) {
+            marked.clear();
             return 1;
         }
-        
-        x = node.x;
-        y = node.y;
-        z = node.z;
+        x = current_node->x;
+        y = current_node->y;
         
         int i = get_pos(x, y, z);
 	
         // already visited?
-        if (!marked[i]) {
-            marked[i] = true;
-            
-            add_node(x, y, z - 1, map, nodes);
-            add_node(x, y - 1, z, map, nodes);
-            add_node(x, y + 1, z, map, nodes);
-            add_node(x - 1, y, z, map, nodes);
-            add_node(x + 1, y, z, map, nodes);
-            add_node(x, y, z + 1, map, nodes);
+        pair<set_type<int>::iterator, bool> ret;
+        ret = marked.insert(i);
+        if (ret.second) {
+            add_node(x, y, z - 1, map);
+            add_node(x, y - 1, z, map);
+            add_node(x, y + 1, z, map);
+            add_node(x - 1, y, z, map);
+            add_node(x + 1, y, z, map);
+            add_node(x, y, z + 1, map);
         }
     }
 
     // destroy the node's path!
     
     if (destroy) {
-        for (map_type<int, bool>::const_iterator iter = marked.begin(); 
+        for (set_type<int>::const_iterator iter = marked.begin(); 
              iter != marked.end(); ++iter)
         {
-            map->geometry[iter->first] = 0;
-            map->colors.erase(iter->first);
+            map->geometry[*iter] = 0;
+            map->colors.erase(*iter);
         }
     }
     
+    marked.clear();
     return 0;
 }
 

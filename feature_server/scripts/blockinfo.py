@@ -87,7 +87,6 @@ def grief_check(connection, player, time = None):
 add(grief_check)
 
 def apply_script(protocol, connection, config):
-
     has_votekick = 'votekick' in config.get('scripts', [])
     
     class BlockInfoConnection(connection):

@@ -2,14 +2,11 @@
 #define VXL_C_H
 
 #include <bitset>
+#include <boost/unordered_map.hpp>
+#include <boost/unordered_set.hpp>
 
-#ifdef _MSC_VER
-#include <hash_map>
-#define map_type stdext::hash_map
-#else
-#include <tr1/unordered_map>
-#define map_type std::tr1::unordered_map
-#endif
+#define map_type boost::unordered_map
+#define set_type boost::unordered_set
 
 #define MAP_X 512
 #define MAP_Y 512
@@ -20,6 +17,7 @@
 struct MapData
 {
     std::bitset<MAP_X * MAP_Y * MAP_Z> geometry;
+    // char geometry[MAP_X * MAP_Y * MAP_Z];
     map_type<int, int> colors;
 };
 
