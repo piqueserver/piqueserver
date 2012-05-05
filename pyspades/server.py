@@ -907,25 +907,25 @@ class ServerConnection(BaseConnection):
     
     def _send_connection_data(self):
         saved_loaders = self.saved_loaders = []
-        for player in self.protocol.players.values():
-            if player.name is None:
-                continue
-            existing_player.name = player.name
-            existing_player.player_id = player.player_id
-            existing_player.tool = player.tool or 0
-            existing_player.weapon = player.weapon
-            existing_player.kills = player.kills
-            existing_player.team = player.team.id
-            existing_player.color = make_color(*player.color)
-            saved_loaders.append(existing_player.generate())
-    
+        if self.player_id is None:
+            for player in self.protocol.players.values():
+                if player.name is None:
+                    continue
+                existing_player.name = player.name
+                existing_player.player_id = player.player_id
+                existing_player.tool = player.tool or 0
+                existing_player.weapon = player.weapon
+                existing_player.kills = player.kills
+                existing_player.team = player.team.id
+                existing_player.color = make_color(*player.color)
+                saved_loaders.append(existing_player.generate())
+
+            self.player_id = self.protocol.player_ids.pop()
+            self.protocol.update_master()
+            
         # send initial data
         blue = self.protocol.blue_team
         green = self.protocol.green_team
-        
-        if self.player_id is None:
-            self.player_id = self.protocol.player_ids.pop()
-            self.protocol.update_master()
 
         state_data.player_id = self.player_id
         state_data.fog_color = self.protocol.fog_color
