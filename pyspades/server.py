@@ -281,7 +281,7 @@ class ServerConnection(BaseConnection):
                     self.last_position_update = current_time
                     if last_update is not None:
                         dt = current_time - last_update
-                        if dt < MAX_POSITION_RATE or dt > MIN_POSITION_RATE:
+                        if dt < MAX_POSITION_RATE:
                             self.set_location()
                             return
                     x, y, z = contained.x, contained.y, contained.z
