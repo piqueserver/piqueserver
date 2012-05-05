@@ -192,6 +192,8 @@ def apply_script(protocol, connection, config):
                     "Instigator %s left during votekick" % self.name)
                 self.protocol.votekick_cleanup()
             connection.on_disconnect(self)
+            if self.protocol.vk_instigator:
+                self.protocol.votekick_can_continue()
 
         def kick(self, reason = None, silent = False):
             if self.protocol.vk_target is self:
