@@ -84,8 +84,6 @@ import pyspades.debug
 from pyspades.server import (ServerProtocol, ServerConnection, position_data,
     grenade_packet, Team)
 from map import Map, MapNotFound, check_rotation
-from vote import VoteMap
-from schedule import *
 from console import create_console
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
@@ -100,8 +98,8 @@ from pyspades.types import AttributeSet
 from networkdict import NetworkDict, get_network
 from pyspades.exceptions import InvalidData
 from pyspades.bytes import NoDataLeft
-
 import commands
+import weakref
 
 def create_path(path):
     if path:
@@ -123,7 +121,6 @@ CHAT_PER_SECOND = 0.5
 class FeatureConnection(ServerConnection):
     printable_name = None
     admin = False
-    last_votemap = None
     last_switch = None
     mute = False
     deaf = False
@@ -476,12 +473,6 @@ class FeatureProtocol(ServerProtocol):
     master = False
     ip = None
     identifier = None
-    
-    # voting
-    votemap_time = 120
-    votemap_interval = 3 * 60
-    votemap_percentage = 80.0
-    votemap = None
 
     planned_map = None
     
@@ -496,9 +487,6 @@ class FeatureProtocol(ServerProtocol):
     team_class = FeatureTeam
     
     game_mode = None # default to None so we can check
-
-    schedule = None
-    time_announce_schedule = None
     
     server_version = SERVER_VERSION
     
@@ -519,7 +507,6 @@ class FeatureProtocol(ServerProtocol):
             pass
         self.hard_bans = set() # possible DDoS'ers are added here
         self.player_memory = deque(maxlen = 100)
-        self.schedule = ScheduleTimer(self)
         self.config = config
         if len(self.name) > MAX_SERVER_NAME_SIZE:
             print '(server name too long; it will be truncated to "%s")' % (
@@ -559,18 +546,6 @@ class FeatureProtocol(ServerProtocol):
         
         # voting configuration
         self.default_ban_time = config.get('default_ban_duration', 24*60)
-        self.planned_map = None
-        self.votemap_autoschedule = config.get('votemap_autoschedule', 180)
-        self.votemap_public_votes = config.get('votemap_public_votes', True)
-        self.votemap_time = config.get('votemap_time', 120)
-        self.votemap_extension_time = config.get('votemap_extension_time', 15)
-        self.votemap_player_driven = config.get('votemap_player_driven', False)
-        self.votemap_percentage = config.get('votemap_percentage', 80)
-        if self.votemap_autoschedule > 0:
-            vms = Schedule(self, [
-                AlarmBeforeEnd(self.start_votemap,
-                seconds=self.votemap_autoschedule)], None, "Autovotemap")
-            self.schedule.queue(vms)
         
         self.speedhack_detect = config.get('speedhack_detect', True)
         if config.get('user_blocks_only', False):
@@ -611,7 +586,8 @@ class FeatureProtocol(ServerProtocol):
         log.startLogging(sys.stdout) # force twisted logging
         
         self.start_time = reactor.seconds()
-        
+        self.before_end_calls = weakref.WeakSet()
+        self.pending_end_calls = []
         self.console = create_console(self)
         
         for password in self.passwords.get('admin', []):
@@ -657,30 +633,34 @@ class FeatureProtocol(ServerProtocol):
         
         if additive:
             time_limit = min(time_limit + add_time, self.default_time_limit)
-
-        self.advance_call = reactor.callLater(time_limit * 60.0, self._time_up)
-
-        time_announce_queue = [
-            AlarmBeforeEnd(self._next_time_announce, seconds=n)
-            for n in self.time_announcements]
-        if self.time_announce_schedule is not None:
-            self.time_announce_schedule.destroy()
-            self.time_announce_schedule = None
-        self.time_announce_schedule = OptimisticSchedule(
-            self, time_announce_queue, None, "Time Announcements")
-        self.schedule.queue(self.time_announce_schedule)
         
-        return time_limit
+        seconds = time_limit * 60.0
+        self.advance_call = reactor.callLater(time_limit * 60.0, self._time_up)
+        
+        for call in self.before_end_calls:
+            call.reset(seconds)
 
-    def _next_time_announce(self):
-        remaining = self.advance_call.getTime() - reactor.seconds()
-        if remaining < 60.001:
-            if remaining < 10.001:
-                self.send_chat('%s...' % int(round(remaining)))
-            else:
-                self.send_chat('%s seconds remaining.' % int(round(remaining)))
-        else:
-            self.send_chat('%s minutes remaining.' % int(round(remaining/60)))
+        # time_announce_queue = [
+            # AlarmBeforeEnd(self._next_time_announce, seconds=n)
+            # for n in self.time_announcements]
+        # if self.time_announce_schedule is not None:
+            # self.time_announce_schedule.destroy()
+            # self.time_announce_schedule = None
+        # self.time_announce_schedule = OptimisticSchedule(
+            # self, time_announce_queue, None, "Time Announcements")
+        # self.schedule.queue(self.time_announce_schedule)
+        
+        # return time_limit
+
+    # def _next_time_announce(self):
+        # remaining = self.advance_call.getTime() - reactor.seconds()
+        # if remaining < 60.001:
+            # if remaining < 10.001:
+                # self.send_chat('%s...' % int(round(remaining)))
+            # else:
+                # self.send_chat('%s seconds remaining.' % int(round(remaining)))
+        # else:
+            # self.send_chat('%s minutes remaining.' % int(round(remaining/60)))
     
     def _time_up(self):
         self.advance_call = None
@@ -711,7 +691,6 @@ class FeatureProtocol(ServerProtocol):
         if self.map_info:
             self.on_map_leave()
         self.map_info = map_info
-        self.end_votes()
         self.max_score = self.map_info.cap_limit or self.default_cap_limit
         self.set_map(self.map_info.data)
         self.set_time_limit(self.map_info.time_limit)
@@ -883,29 +862,6 @@ class FeatureProtocol(ServerProtocol):
         self.send_chat(line)
         reactor.callLater(self.tip_frequency * 60, self.send_tip)
     
-    # voting
-
-    def cancel_vote(self, connection = None):
-        if connection.protocol.votemap is not None:
-            return connection.protocol.votemap.cancel(connection)
-        else:
-            return "No vote in progress."
-
-    def start_votemap(self, votemap = None):
-        if self.votemap is not None:
-            return self.votemap.update()
-        if votemap is None:
-            votemap = VoteMap(None, self, self.maps)
-        verify = votemap.verify()
-        if verify is True:
-            votemap.start()
-        else:
-            return verify
-        
-    def end_votes(self):
-        if self.votemap is not None:
-            self.votemap.finish()
-    
     def send_chat(self, value, global_message = True, sender = None,
                   team = None, irc = False):
         if irc:
@@ -968,6 +924,11 @@ class FeatureProtocol(ServerProtocol):
     def getPage(self, *arg, **kw):
         return getPage(*arg, 
             bindAddress = (self.config.get('network_interface', ''), 0), **kw)
+        
+    # before-end calls
+    
+    def call_before_end(self, delay, func, *arg, **kw):
+        return
     
 PORT = 32887
 

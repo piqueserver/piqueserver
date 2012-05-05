@@ -22,7 +22,6 @@ from pyspades.common import prettify_timespan
 from pyspades.server import parse_command
 from twisted.internet import reactor
 
-from vote import VoteMap
 from map import check_rotation
 
 class InvalidPlayer(Exception):
@@ -193,27 +192,6 @@ def heal(connection, player = None):
         message = '%s was healed' % (connection.name)
     player.refill()
     connection.protocol.send_chat(message, irc = True)
-
-def votemap(connection, *arg):
-    if connection not in connection.protocol.players:
-        raise KeyError()
-    if not connection.protocol.votemap_player_driven and not connection.admin:
-        return "Player-initiated mapvotes are disabled on this server."
-    return connection.protocol.start_votemap(
-        VoteMap(connection, connection.protocol, connection.protocol.maps))
-
-@name('vote')
-def votemap_vote(connection, value):
-    if connection not in connection.protocol.players:
-        raise KeyError()
-    if connection.protocol.votemap is not None:
-        return connection.protocol.votemap.vote(connection, value)
-    else:
-        return 'No map vote in progress.'
-
-@name('cancel')
-def cancel_vote(connection):
-    return connection.protocol.cancel_vote(connection)
 
 def rules(connection):
     if connection not in connection.protocol.players:
@@ -847,9 +825,6 @@ command_list = [
     to_admin,
     login,
     kick,
-    votemap,
-    votemap_vote,
-    cancel_vote,
     intel,
     ip,
     who_was,

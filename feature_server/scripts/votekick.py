@@ -18,11 +18,10 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from twisted.internet import reactor
-from twisted.internet.task import LoopingCall
 from pyspades.common import prettify_timespan
 from map import check_rotation
 import random
-from schedule import Schedule, AlarmLater, AlarmBeforeEnd
+from scheduler import Scheduler
 import commands
 
 def votekick(connection, value, *arg):
@@ -95,7 +94,7 @@ def apply_script(protocol, connection, config):
         def votekick_cleanup(self):
             self.on_votekick_end()
             if self.vk_schedule is not None:
-                self.vk_schedule.destroy()
+                self.vk_schedule.reset()
             self.vk_instigator = None
             self.vk_target = None
         
@@ -158,7 +157,6 @@ def apply_script(protocol, connection, config):
             pass
     
     class VotekickConnection(connection):
-
         vk_vote_status = None
         last_votekick = None
 
@@ -205,11 +203,11 @@ def apply_script(protocol, connection, config):
                 self.protocol.votekick_cleanup()
             connection.kick(self)
         
-        def start_votekick(instigator, target, reason = None):
-            protocol = instigator.protocol
+        def start_votekick(self, target, reason = None):
+            protocol = self.protocol
             if protocol.votekick_votes_available() <= 0:
                 return 'Not enough players on server.'
-            elif target is instigator:
+            elif target is self:
                 return "You can't votekick yourself."
             elif target.admin:
                 return 'Cannot votekick an administrator.'
@@ -217,7 +215,7 @@ def apply_script(protocol, connection, config):
                 return 'Target has vote cancellation rights.'
             elif protocol.vk_target is not None:
                 return 'Votekick already in progress.'
-            last = instigator.last_votekick
+            last = self.last_votekick
             if (last is not None and not connection.admin and
             reactor.seconds() - last < protocol.votekick_interval):
                 return "You can't start a votekick now."
@@ -226,32 +224,28 @@ def apply_script(protocol, connection, config):
             for player in protocol.players.values():
                 player.vk_vote_status = None
             
-            instigator.vk_vote_status = True
-            protocol.vk_instigator = instigator
+            self.vk_vote_status = True
+            protocol.vk_instigator = self
             protocol.vk_target = target
             protocol.vk_reason = reason
             if reason is None:
                 reason = 'NO REASON GIVEN'
             protocol.irc_say(
                 '* %s initiated a votekick against player %s.%s' % (
-                instigator.name, target.name,
+                self.name, target.name,
                 ' Reason: %s' % reason if reason else ''))
             protocol.send_chat(
                 '%s initiated a VOTEKICK against player %s. Say /y to '
-                'agree.' % (instigator.name, target.name),
-                    sender = instigator)
-            protocol.send_chat('Reason: %s' % reason, sender = instigator)
-            instigator.send_chat('You initiated a VOTEKICK against %s. '
+                'agree.' % (self.name, target.name),
+                    sender = self)
+            protocol.send_chat('Reason: %s' % reason, sender = self)
+            self.send_chat('You initiated a VOTEKICK against %s. '
                 'Say /cancel to stop it at any time.' % target.name)
-            instigator.send_chat('Reason: %s' % reason)
+            self.send_chat('Reason: %s' % reason)
             protocol.on_votekick_start()
-            protocol.vk_schedule = Schedule(protocol, [
-            AlarmLater(protocol.votekick_timeout,
-                       seconds=protocol.votekick_time),
-            AlarmLater(protocol.votekick_update, seconds=30,
-                       loop=True, traversal_required=False)], None,
-                        "Votekick %s -> %s" % (instigator.name,
-                                               target.name))
-            protocol.schedule.queue(protocol.vk_schedule)
+            protocol.vk_schedule = schedule = Scheduler(protocol)
+            schedule.call_later(protocol.votekick_time, 
+                                protocol.votekick_timeout)
+            schedule.loop_call(30.0, protocol.votekick_update)
 
     return VotekickProtocol, VotekickConnection
