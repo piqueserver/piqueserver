@@ -202,7 +202,7 @@ def apply_script(protocol, connection, config):
             if self.protocol.vk_instigator is self:
                 self.protocol.votekick_show_result("Instigator kicked by admin")
                 self.protocol.votekick_cleanup()
-            connection.kick(self)
+            connection.kick(self, reason, silent)
         
         def start_votekick(self, target, reason = None):
             protocol = self.protocol

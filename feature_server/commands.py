@@ -111,6 +111,7 @@ def parse_maps(pre_maps):
 def kick(connection, value, *arg):
     reason = join_arguments(arg)
     player = get_player(connection.protocol, value)
+    print 'reason:', reason
     player.kick(reason)
 
 def get_ban_arguments(connection, arg):
