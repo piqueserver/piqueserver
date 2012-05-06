@@ -379,7 +379,6 @@ class FeatureConnection(ServerConnection):
         return value
     
     def kick(self, reason = None, silent = False):
-        print 'reason2:', reason
         if not silent:
             if reason is not None:
                 message = '%s was kicked: %s' % (self.name, reason)
