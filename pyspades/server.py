@@ -793,7 +793,6 @@ class ServerConnection(BaseConnection):
                     entity.remove_player(self)
     
     def on_disconnect(self):
-        print_top_100()
         if self.name is not None:
             self.drop_flag()
             player_left.player_id = self.player_id
