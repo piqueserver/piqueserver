@@ -670,7 +670,7 @@ class FeatureProtocol(ServerProtocol):
             self.advance_call = None
         time_limit = time_limit or self.default_time_limit
         if time_limit == False:
-            for call in self.end_calls:
+            for call in self.end_calls[:]:
                 call.set(None)
             return
         
@@ -680,7 +680,7 @@ class FeatureProtocol(ServerProtocol):
         seconds = time_limit * 60.0
         self.advance_call = reactor.callLater(seconds, self._time_up)
         
-        for call in self.end_calls:
+        for call in self.end_calls[:]:
             call.set(seconds)
 
         if self.time_announce_schedule is not None:
