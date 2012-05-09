@@ -31,17 +31,6 @@ S_OBJECTIVES = {
     1 - ATTACKER_TEAM : S_DEFENDER_OBJECTIVE
 }
 
-# mystery debug stuff
-from commands import admin, add
-@admin
-def captime(connection, value):
-    global DEFENDER_SCORE_INTERVAL
-    value = int(value)
-    DEFENDER_SCORE_INTERVAL = value
-    connection.protocol.start_defender_score_loop()
-    return 'defender team will earn a point every %s seconds' % value
-add(captime)
-
 class DummyPlayer():
     protocol = None
     team = None

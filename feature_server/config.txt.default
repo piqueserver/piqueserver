@@ -67,7 +67,6 @@
     "rotate_daily" : true,
     "debug_log" : false,
     "profile" : false,
-    "load_saved_map" : false,
     
     "team1" : {
         "name" : "Blue",
@@ -135,6 +134,7 @@
     "squad_respawn_time" : 45,
     "squad_size" : 4,
     "auto_squad" : false,    
+    "load_saved_map" : false,
     "statistics" : {
         "host" : "localhost",
         "server_name" : "stats server",
