@@ -9,7 +9,7 @@
         "/SQUAD     Creates or joins a squad, letting you spawn with friends",
         "/STREAK    Shows how many kills in a row you got without dying",
         "/AIRSTRIKE Air support!  Try it out just like that for more details",
-        "/INTEL     Tells you who's got the enemy intel",
+        "/INTEL     Tells you who's got the enemy intel"
     ],
     "tips" : [
         "Here you can deploy airstrikes, form squads and more!  Type /help for info",
@@ -143,5 +143,5 @@
     },
     "welcomes" : {
         "mat^2" : "The very likeable mat^2 has entered!"
-    },
+    }
 }
