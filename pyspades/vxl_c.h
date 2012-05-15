@@ -28,6 +28,8 @@ int inline is_valid_position(int x, int y, int z)
 
 int inline get_solid(int x, int y, int z, MapData * map)
 {
+    if (!is_valid_position(x, y, z))
+        return 0;
     return map->geometry[get_pos(x, y, z)];
 }
 
