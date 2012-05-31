@@ -110,8 +110,18 @@ class MultikeyDict(dict):
                 raise KeyError('key %s already exists' % key)
             dict.__setitem__(self, key, new_item)
     
+    def get(self, key, default = None):
+        return self[key] if key in self else default
+    
+    def clear(self):
+        dict.clear()
+        self.value_set.clear()
+    
     def values(self):
         return self.value_set
+    
+    def itervalues(self):
+        return iter(self.value_set)
     
     def __len__(self):
         return len(self.value_set)
