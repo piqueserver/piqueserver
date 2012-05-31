@@ -1575,7 +1575,8 @@ def apply_script(protocol, connection, config):
         previous_platform = None
         
         def on_reset(self):
-            self.states.stack = []
+            if self.states:
+                self.states.stack = []
             self.where_location = None
             self.where_orientation = None
             self.last_action = None
@@ -1586,6 +1587,10 @@ def apply_script(protocol, connection, config):
         def on_login(self, name):
             self.states = StateStack(self)
             connection.on_login(self, name)
+        
+        def on_disconnect(self):
+            self.states = None
+            connection.on_disconnect(self)
         
         def on_block_build(self, x, y, z):
             state = self.states.top()
