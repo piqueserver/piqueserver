@@ -10,7 +10,7 @@ as the parameter lists are provided when you try them.
     two blocks in opposite corners is sufficient.
     
     Press the SNEAK key (V) while in any platform mode to get information
-    about the platform you're looking at.
+    about the platform you're looking at.  Must be holding spade tool.
     
     command:
         new <label>
@@ -34,7 +34,7 @@ as the parameter lists are provided when you try them.
     to make it do something with /action.
     
     Press the SNEAK key (V) while in any button mode to get information
-    about the button you're looking at.
+    about the button you're looking at.  Must be holding spade tool.
     
     command:
         new <label>
@@ -1746,7 +1746,6 @@ def apply_script(protocol, connection, config):
                 button.trigger_check()
         
         def dump_platform_json(self):
-            print 'a'
             if not self.platforms and not self.buttons:
                 return
             platform_data = []
