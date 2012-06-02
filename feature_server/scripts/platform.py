@@ -214,6 +214,7 @@ S_BUTTON_COOLDOWN_USAGE = 'Usage: /button cooldown <seconds>'
 S_BUTTON_PLACEMENT = 'Put down a block where you want the new button to be'
 S_BUTTON_CREATED = "Button '{label}' created"
 S_BUTTON_CANCEL = 'Aborting button placement'
+S_BUTTON_OVERLAPS = 'There is already another button here!'
 S_BUTTON_RENAMED = "Button '{old_label}' renamed to '{label}'"
 S_BUTTON_DESTROYED = "Button '{label}' removed"
 S_BUTTON_COOLDOWN = "Cooldown for button '{label}' set to {cooldown:.2f} seconds"
@@ -738,11 +739,14 @@ class DistanceTrigger(Trigger):
                 self.tracked_player = None
                 if self.type in shared:
                     shared[self.type].pop(player, None)
+                return
         else:
             if self.type in shared and player in shared[self.type]:
                 # another trigger has already claimed this player
                 return
         
+        if not player.world_object:
+            return
         x1, y1, z1 = parent.x, parent.y, parent.z
         x2, y2, z2 = player.world_object.position.get()
         status = collision_3d(x1, y1, z1, x2, y2, z2, self.radius)
@@ -1036,8 +1040,8 @@ class Platform(BaseObject):
         self.cycle_loop = None
         # clear last platform memory from players
         for player in self.protocol.players.itervalues():
-            if player.last_platform is self:
-                player.last_platform = None
+            if player.previous_platform is self:
+                player.previous_platform = None
     
     def start(self, height, mode, speed, delay, wait = None, force = False):
         if self.busy and not force:
@@ -1271,6 +1275,8 @@ class NewButtonState(State):
     def on_exit(self, protocol, player):
         if not self.location:
             return S_BUTTON_CANCEL
+        if self.location in protocol.buttons:
+            return S_BUTTON_OVERLAPS
         
         x, y, z = self.location
         id = protocol.object_id_pool.pop()
