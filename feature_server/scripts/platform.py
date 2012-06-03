@@ -184,7 +184,7 @@ from commands import add, admin, name, alias, join_arguments
 from map import DEFAULT_LOAD_DIR
 
 SAVE_ON_MAP_CHANGE = True
-AUTOSAVE_EVERY = 15.0 # minutes
+AUTOSAVE_EVERY = 0.0 # minutes, 0 = disabled
 
 S_SAVED = 'Platforms saved'
 S_EXIT_BLOCKING_STATE = "You must first leave {state} mode!"
@@ -917,8 +917,8 @@ class Button(BaseObject):
         self.cooldown_call = None
         # clear last button memory from players
         for player in self.protocol.players.itervalues():
-            if player.last_button is self:
-                player.last_button = None
+            if player.previous_button is self:
+                player.previous_button = None
     
     def destroy(self):
         self.release()
@@ -1670,6 +1670,7 @@ def apply_script(protocol, connection, config):
         platforms = None
         buttons = None
         position_triggers = None
+        autosave_loop = None
         
         def on_map_change(self, map):
             self.object_id_pool = IDPool()
