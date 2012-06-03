@@ -1668,6 +1668,7 @@ def apply_script(protocol, connection, config):
     class PlatformProtocol(protocol):
         object_id_pool = None
         platforms = None
+        platform_json_dirty = False
         buttons = None
         position_triggers = None
         autosave_loop = None
@@ -1677,6 +1678,7 @@ def apply_script(protocol, connection, config):
             self.platforms = {}
             self.buttons = MultikeyDict()
             self.position_triggers = []
+            self.platform_json_dirty = False
             self.load_platform_json()
             if AUTOSAVE_EVERY:
                 self.autosave_loop = LoopingCall(self.dump_platform_json)
@@ -1711,11 +1713,9 @@ def apply_script(protocol, connection, config):
         def load_platform_json(self):
             path = self.get_platform_json_path()
             if not os.path.isfile(path):
-                return False
+                return
             with open(path, 'r') as file:
                 data = json.load(file)
-            if not data:
-                return False
             ids = []
             for platform_data in data['platforms']:
                 x1, y1, z1 = platform_data['start']
@@ -1754,11 +1754,13 @@ def apply_script(protocol, connection, config):
             self.object_id_pool = IDPool(highest_id + 1)
             self.object_id_pool.free_ids = [i for i in xrange(highest_id)
                 if i not in ids]
+            self.platform_json_dirty = True
             for button in self.buttons.itervalues():
                 button.trigger_check()
         
         def dump_platform_json(self):
-            if not self.platforms and not self.buttons:
+            if (not self.platforms and not self.buttons and
+                not self.platform_json_dirty):
                 return
             platform_data = []
             button_data = []
@@ -1770,6 +1772,7 @@ def apply_script(protocol, connection, config):
             path = self.get_platform_json_path()
             with open(path, 'w') as file:
                 json.dump(data, file, indent = 4)
+            self.platform_json_dirty = True
         
         def get_platform(self, x, y, z):
             for platform in self.platforms.itervalues():
