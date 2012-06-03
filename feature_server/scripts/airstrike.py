@@ -17,6 +17,7 @@ from commands import alias, add
 SCORE_REQUIREMENT = 0
 STREAK_REQUIREMENT = 8
 TEAM_COOLDOWN = 25.0
+REFILL_ON_AIRSTRIKE = True # set to False if you don't want to be healed
 
 S_READY = 'Airstrike support ready! Launch with e.g. /airstrike B4'
 S_NO_SCORE = 'You need a total score of {score} (kills or intel) to ' \
@@ -167,6 +168,7 @@ def apply_script(protocol, connection, config):
                 self.send_chat(S_READY)
                 self.airstrike = True
                 self.last_streak = self.streak
-                self.refill()
+                if REFILL_ON_AIRSTRIKE:
+                    self.refill()
     
     return protocol, AirstrikeConnection
