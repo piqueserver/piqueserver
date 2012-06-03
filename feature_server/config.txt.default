@@ -22,7 +22,7 @@
     
     "master" : true,
     "max_players" : 32,
-    "max_connections_per_ip" : 3,
+    "max_connections_per_ip" : 7,
     "port" : 32887,
     "network_interface" : "",
     
