@@ -75,7 +75,7 @@ def apply_script(protocol, connection, config):
         
         def reset_afk_kick_call(self):
             self.last_activity = reactor.seconds()
-            if self.afk_kick_call:
+            if self.afk_kick_call and self.afk_kick_call.active():
                 self.afk_kick_call.reset(time_limit)
         
         def on_disconnect(self):
@@ -85,8 +85,9 @@ def apply_script(protocol, connection, config):
             connection.on_disconnect(self)
         
         def on_user_login(self, user_type, verbose = True):
-            if user_type in ('admin', 'trusted') and self.afk_kick_call:
-                self.afk_kick_call.cancel()
+            if user_type in ('admin', 'trusted'):
+                if self.afk_kick_call and self.afk_kick_call.active():
+                    self.afk_kick_call.cancel()
                 self.afk_kick_call = None
             return connection.on_user_login(self, user_type, verbose)
         
