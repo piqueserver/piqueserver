@@ -97,6 +97,7 @@ add(markers)
 class BaseMarker():
     name = 'Marker'
     triggers = []
+    background = None
     background_class = None
     duration = 0.0
     color = None
@@ -144,7 +145,7 @@ class BaseMarker():
         team.marker_count[self.__class__] += 1
         protocol.markers.append(self)
         if self.background_class:
-            bg_marker = self.background_class(protocol, team, x, y)
+            self.background = self.background_class(protocol, team, x, y)
     
     def release(self):
         if self.expire_call and self.expire_call.active():
@@ -154,6 +155,8 @@ class BaseMarker():
         self.protocol.markers.remove(self)
     
     def expire(self):
+        if self.background:
+            self.background.expire()
         self.destroy()
         self.release()
     
