@@ -59,7 +59,7 @@ S_HELP = [
     '* (other markers: !build !tunnel !here)'
 ]
 
-COOLDOWN = 1.0
+COOLDOWN = 10.0
 VV_TIMEFRAME = 0.5
 THERE_RAY_LENGTH = 160.0
 ENEMY_EXPIRE_DISTANCE_SQUARED = 18.0 ** 2
@@ -272,7 +272,7 @@ class EnemyBackground(BaseMarker):
 class Enemy(BaseMarker):
     name = 'Point'
     background_class = EnemyBackground
-    duration = 15.0
+    duration = 40.0
     always_there = True
     color = make_color(255, 0, 0)
     s = """
