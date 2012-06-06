@@ -59,7 +59,7 @@ S_HELP = [
     '* (other markers: !build !tunnel !here)'
 ]
 
-COOLDOWN = 10.0
+COOLDOWN = 1.0
 VV_TIMEFRAME = 0.5
 THERE_RAY_LENGTH = 160.0
 ENEMY_EXPIRE_DISTANCE_SQUARED = 18.0 ** 2
@@ -99,7 +99,7 @@ class BaseMarker():
     triggers = []
     background = None
     background_class = None
-    duration = 0.0
+    duration = None
     color = None
     random_colors = None
     team_color = False
@@ -127,20 +127,21 @@ class BaseMarker():
         for point in base_points:
             self.make_block(*point)
         # find markers we're colliding with
+        has_timer = self.duration is not None
         collisions = []
         current_time = seconds()
-        worst_time = current_time + self.duration
+        worst_time = current_time + self.duration if has_timer else None
         for marker in protocol.markers:
             intersect = marker.blocks & self.blocks
             if intersect:
                 self.blocks -= intersect
                 collisions.append(marker)
-                worst_time = max(worst_time, marker.expire_call.getTime())
-        # push back their timers so that they all vanish at once
-        delay = worst_time - current_time
-        for marker in collisions:
-            marker.expire_call.reset(delay)
-        self.expire_call = callLater(delay, self.expire)
+                if has_timer and marker.expire_call:
+                    worst_time = min(worst_time, marker.expire_call.getTime())
+        # forward expiration time so that colliding markers vanish all at once
+        if has_timer:
+            delay = worst_time - current_time
+            self.expire_call = callLater(delay, self.expire)
         self.build()
         team.marker_count[self.__class__] += 1
         protocol.markers.append(self)
@@ -155,10 +156,10 @@ class BaseMarker():
         self.protocol.markers.remove(self)
     
     def expire(self):
-        if self.background:
-            self.background.expire()
         self.destroy()
         self.release()
+        if self.background:
+            self.background.expire()
     
     @classmethod
     def is_triggered(cls, chat):
@@ -271,7 +272,7 @@ class EnemyBackground(BaseMarker):
 class Enemy(BaseMarker):
     name = 'Point'
     background_class = EnemyBackground
-    duration = 40.0
+    duration = 15.0
     always_there = True
     color = make_color(255, 0, 0)
     s = """
