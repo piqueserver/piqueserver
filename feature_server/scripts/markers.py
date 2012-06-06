@@ -745,6 +745,9 @@ def apply_script(protocol, connection, config):
             protocol.on_map_change(self, map)
         
         def on_map_leave(self):
+            for marker in self.markers[:]:
+                marker.release()
+            self.markers = None
             for team in (self.blue_team, self.green_team):
                 team.intel_marker = None
                 for call in team.marker_calls:
@@ -752,9 +755,6 @@ def apply_script(protocol, connection, config):
                         call.cancel()
                 team.marker_calls = None
                 team.marker_count = None
-            for marker in self.markers[:]:
-                marker.release()
-            self.markers = None
             protocol.on_map_leave(self)
     
     return MarkerProtocol, MarkerConnection
