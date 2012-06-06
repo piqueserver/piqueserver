@@ -708,9 +708,16 @@ def apply_script(protocol, connection, config):
                 enemy_team.intel_marker.expire()
                 enemy_team.intel_marker = None
             if REVEAL_ENEMIES and self.protocol.allow_markers:
+                delay = 0.25
+                for call in self.team.marker_calls:
+                    if call.active():
+                        call.cancel()
+                self.team.marker_calls = []
                 for player in enemy_team.get_players():
                     x, y, z = player.get_location()
-                    marker = Enemy(self.protocol, self.team, x, y)
+                    delay += 0.15
+                    call = callLater(delay, Enemy, self.protocol, self.team, x, y)
+                    self.team.marker_calls.append(call)
             connection.on_flag_capture(self)
         
         def on_flag_drop(self):
@@ -731,6 +738,7 @@ def apply_script(protocol, connection, config):
         def on_map_change(self, map):
             for team in (self.blue_team, self.green_team):
                 team.intel_marker = None
+                team.marker_calls = []
                 team.marker_count = defaultdict(int)
             self.markers = []
             protocol.on_map_change(self, map)
@@ -738,6 +746,11 @@ def apply_script(protocol, connection, config):
         def on_map_leave(self):
             for team in (self.blue_team, self.green_team):
                 team.intel_marker = None
+                for call in team.marker_calls:
+                    if call.active():
+                        call.cancel()
+                team.marker_calls = None
+                team.marker_count = None
             for marker in self.markers[:]:
                 marker.release()
             self.markers = None
