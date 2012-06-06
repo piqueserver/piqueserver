@@ -330,6 +330,8 @@ class ServerConnection(BaseConnection):
                             self.weapon_object.set_shoot(primary)
                         if self.tool == WEAPON_TOOL or self.tool == SPADE_TOOL:
                             self.on_shoot_set(primary)
+                    if world_object.secondary_fire != secondary:
+                        self.on_secondary_fire_set(secondary)
                     contained.player_id = self.player_id
                     self.protocol.send_contained(contained, sender = self)
                     world_object.primary_fire = primary
@@ -1183,6 +1185,9 @@ class ServerConnection(BaseConnection):
         pass
     
     def on_shoot_set(self, fire):
+        pass
+    
+    def on_secondary_fire_set(self, secondary):
         pass
     
     def on_walk_update(self, up, down, left, right):
