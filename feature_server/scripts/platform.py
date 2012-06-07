@@ -1691,9 +1691,9 @@ def apply_script(protocol, connection, config):
             if self.autosave_loop and self.autosave_loop.running:
                 self.autosave_loop.stop()
             self.autosave_loop = None
-            for platform in self.platforms:
+            for platform in self.platforms.itervalues():
                 platform.release()
-            for button in self.buttons:
+            for button in self.buttons.itervalues():
                 button.release()
             self.platforms = None
             self.buttons = None
