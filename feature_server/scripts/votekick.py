@@ -182,10 +182,13 @@ def apply_script(protocol, connection, config):
                 self.protocol.votekick_show_result(
                     "%s left during votekick" % self.name)
                 vk_target = self.protocol.vk_target
-                self.protocol.vk_target = None # mute on_ban message
+                vk_instigator = self.protocol.vk_instigator
+                # mute on_ban message
+                self.protocol.vk_target = self.protocol.vk_instigator = None
                 self.ban(self.protocol.vk_reason,
                          self.protocol.votekick_ban_duration)
                 self.protocol.vk_target = vk_target
+                self.protocol.vk_instigator = vk_instigator
                 self.protocol.votekick_cleanup()
             elif self.protocol.vk_instigator is self:
                 self.protocol.votekick_show_result(
