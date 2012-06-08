@@ -143,6 +143,12 @@ class IRCBot(irc.IRCClient):
     def userLeft(self, user, channel):
         self.ops.discard(user)
         self.voices.discard(user)
+
+    def userQuit(self, user, message):
+        self.userLeft(user, self.factory.channel)
+
+    def userKicked(self, kickee, channel, kicker, message):
+        self.userLeft(kickee, channel)
     
     def send(self, msg, filter = False):
         msg = msg.encode('cp1252', 'replace')
