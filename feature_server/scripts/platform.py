@@ -159,13 +159,22 @@ Maintainer: hompy
 """
 
 # TODO
+# Platforms 'freeze' when people spam the button
+# Sane limits for parameters
 # Really fast platforms still get you stuck
+# Shoot trigger or destroy trigger (both?)
+# Direct damage action
+# Grenade launching action
+# Catch-all distance trigger?
 # Prevent platforms from being hidden forever
 # Negative heights
 # Nicer way of having invisible buttons?
-# Trigger 'invisibility' mode to get in range of annoying distance buttons
-# Grenade launching action
+# 'invisibility' mode to get in range of annoying distance buttons
 # Platforms crushing players
+
+# Stop platform action
+# Height < <= > >= !=
+# Button NOT? how?
 
 import __builtin__
 import json
