@@ -81,6 +81,9 @@ as the parameter lists are provided when you try them.
                     Sends text to the activating players.
                     You can put text between quotation marks to allow right
                     justifying with spaces, for example: "           Hello!"
+                damage <amount>
+                    Hits the activating players for that many hitpoints.
+                    Use negative numbers to heal.
         list
             Lists the actions present in the button you select.
             
@@ -104,10 +107,14 @@ as the parameter lists are provided when you try them.
     Triggers are what makes a button know when to act and when not to.
     
     command:
-        add <action>
-        set <action>
+        add [not] <action>
+        set [not] <action>
             Adds a trigger to the button. Set deletes all previous triggers first,
             making the new trigger the only one.
+            
+            Putting 'not' before the action makes it NEGATE the output.
+            If you want to make a button that activates when a player *leaves*
+            a zone, you could use "/trigger set not distance 5"
             
             action:
                 press
@@ -115,13 +122,11 @@ as the parameter lists are provided when you try them.
                 distance [radius=3]
                     True when a player gets within <radius> blocks of the
                     button (note: box distance, not sphere).
+                track [radius=3]
+                    Same as distance, but tracks one player and only one player.
                     
-                    A trigger of this kind only tracks a single player, meaning
-                    you could make a button require an arbitrary number of
-                    nearby players to work.
-                    
-                    The tracked player becomes a target for teleport and chat
-                    actions present in the button when it activates.
+                    Useful for creating a button that requires a specific number
+                    of nearby players.                
                 height <height>
                     True when the platform is exactly the specified height.
         list
@@ -147,8 +152,8 @@ as the parameter lists are provided when you try them.
         logic <and|or>
             "AND" will make the button activate when ALL its triggers yield true.
             "OR" will make the button activate when ANY of its triggers fire.
-        silent
-            Makes a button either become quiet or resume playing animation and
+        quiet
+            Makes a button either become silent or resume playing animation and
             sound when it activates.
 
 /save
@@ -160,26 +165,20 @@ Maintainer: hompy
 
 # TODO
 # Platforms 'freeze' when people spam the button
-# Sane limits for parameters
-# Really fast platforms still get you stuck
 # Shoot trigger or destroy trigger (both?)
-# Direct damage action
 # Grenade launching action
-# Catch-all distance trigger?
 # Prevent platforms from being hidden forever
 # Negative heights
 # Nicer way of having invisible buttons?
 # 'invisibility' mode to get in range of annoying distance buttons
 # Platforms crushing players
-
-# Stop platform action
-# Height < <= > >= !=
-# Button NOT? how?
+# Stop platform action?
 
 import __builtin__
 import json
 import os
 import operator
+from collections import defaultdict
 from itertools import product, imap, chain
 from twisted.internet.reactor import callLater, seconds
 from twisted.internet.task import LoopingCall
@@ -194,6 +193,8 @@ from map import DEFAULT_LOAD_DIR
 
 SAVE_ON_MAP_CHANGE = True
 AUTOSAVE_EVERY = 0.0 # minutes, 0 = disabled
+MAX_DISTANCE = 64.0
+MIN_COOLDOWN = 0.1 # seconds
 
 S_SAVED = 'Platforms saved'
 S_EXIT_BLOCKING_STATE = "You must first leave {state} mode!"
@@ -237,16 +238,14 @@ S_NOISY = "Button '{label}' will animate when activated"
 S_ACTION_USAGE = 'Usage: /action <{commands}>'
 S_ACTION_ADD_USAGE = 'Usage: /action add <{actions}>'
 S_ACTION_DELETE_USAGE = 'Usage: /action delete <#|all>'
-S_ACTION_HEIGHT_USAGE = 'Usage: /action add height <height> [speed=0.25] ' \
-    '[delay=speed]'
-S_ACTION_RAISE_USAGE = 'Usage: /action add raise <amount> [speed=0.25] ' \
-    '[delay=speed]'
-S_ACTION_LOWER_USAGE = 'Usage: /action add lower <amount> [speed=0.25] ' \
-    '[delay=speed]'
+S_ACTION_HEIGHT_USAGE = 'Usage: /action add height <height> [speed=0.25] [delay]'
+S_ACTION_RAISE_USAGE = 'Usage: /action add raise <amount> [speed=0.25] [delay]'
+S_ACTION_LOWER_USAGE = 'Usage: /action add lower <amount> [speed=0.25] [delay]'
 S_ACTION_ELEVATOR_USAGE = 'Usage: /action add elevator <height> [speed=0.75] ' \
-    '[delay=speed] [wait=3.0]'
+    '[delay] [wait=3.0]'
 S_ACTION_TELEPORT_USAGE = 'Usage: /action add teleport <x y z|where>'
 S_ACTION_CHAT_USAGE = 'Usage: /action add chat <text>'
+S_ACTION_DAMAGE_USAGE = 'Usage: /action add damage <amount>'
 S_ACTION_ADDED = "Added {action} action to button '{label}'"
 S_ACTION_LIST_EMPTY = "Button '{label}' has no actions"
 S_ACTION_LIST_HEADER = "Actions in '{label}': "
@@ -254,17 +253,19 @@ S_ACTION_DELETED = "{action} action {number} deleted from button '{label}'"
 S_ACTION_DELETED_ALL = "Deleted all actions in button '{label}'"
 S_ACTION_INVALID_NUMBER = "Invalid action number! Use '/action list' to check"
 S_TRIGGER_USAGE = 'Usage: /trigger <{commands}>'
-S_TRIGGER_ADD_USAGE = 'Usage: /trigger add <{triggers}>'
+S_TRIGGER_ADD_USAGE = 'Usage: /trigger add [not] <{triggers}>'
 S_TRIGGER_DELETE_USAGE = 'Usage: /trigger delete <#|all>'
 S_TRIGGER_LOGIC_USAGE = 'Usage: /trigger logic <and|or>'
-S_TRIGGER_DISTANCE_USAGE = 'Usage: /trigger add distance [radius=3]'
-S_TRIGGER_HEIGHT_USAGE = 'Usage: /trigger add height <height>'
+S_TRIGGER_DISTANCE_USAGE = 'Usage: /trigger add [not] distance [radius=3]'
+S_TRIGGER_TRACK_USAGE = 'Usage: /trigger add [not] track [radius=3]'
+S_TRIGGER_HEIGHT_USAGE = 'Usage: /trigger add [not] height <height>'
 S_TRIGGER_ADDED = "Added {trigger} trigger to button '{label}'"
 S_TRIGGER_LIST_EMPTY = "Button '{label}' has no triggers"
 S_TRIGGER_LIST_HEADER = "Triggers in '{label}': "
 S_TRIGGER_LIST_ITEM_IS_TRUE = ' [CHECK]'
 S_TRIGGER_LIST_AND = ' AND '
 S_TRIGGER_LIST_OR = ' OR '
+S_TRIGGER_LIST_NOT = 'NOT '
 S_TRIGGER_DELETED = "{trigger} trigger {number} deleted from button '{label}'"
 S_TRIGGER_DELETED_ALL = "Deleted all triggers in button '{label}'"
 S_TRIGGER_INVALID_NUMBER = "Invalid trigger number! Use '/trigger list' to check"
@@ -277,6 +278,8 @@ S_NOT_POSITIVE = 'ERROR: {parameter} must be a positive number'
 S_OUT_OF_BOUNDS = 'ERROR: {parameter} must be in the range [0..512)'
 S_OUT_OF_BOUNDS_Z = 'ERROR: {parameter} must be in the range [0..62]'
 S_WHERE_FIRST = 'ERROR: use /where first to remember your position'
+S_MINIMUM = 'ERROR: Minimum {parameter} is {value}'
+S_MAXIMUM = 'ERROR: Maximum {parameter} is {value}'
 S_NICE_LOCATION = '{:.4g}, {:.4g}, {:.4g}'
 PLATFORM_COMMANDS = ('new', 'name', 'height', 'freeze', 'destroy',  'last')
 PLATFORM_COMMAND_USAGES = {
@@ -296,29 +299,31 @@ ACTION_COMMAND_USAGES = {
     'delete' : S_ACTION_DELETE_USAGE
 }
 ACTION_ADD_ACTIONS = ('height', 'raise', 'lower', 'elevator',
-    'teleport', 'chat')
+    'teleport', 'chat', 'damage')
 ACTION_ADD_USAGES = {
     'height' : S_ACTION_HEIGHT_USAGE,
     'raise' : S_ACTION_RAISE_USAGE,
     'lower' : S_ACTION_LOWER_USAGE,
     'elevator' : S_ACTION_ELEVATOR_USAGE,
     'teleport' : S_ACTION_TELEPORT_USAGE,
-    'chat' : S_ACTION_CHAT_USAGE
+    'chat' : S_ACTION_CHAT_USAGE,
+    'damage' : S_ACTION_DAMAGE_USAGE
 }
-TRIGGER_COMMANDS = ('add', 'set', 'list', 'delete', 'logic', 'silent')
+TRIGGER_COMMANDS = ('add', 'set', 'list', 'delete', 'logic', 'quiet')
 TRIGGER_COMMAND_USAGES = {
     'add' : S_TRIGGER_ADD_USAGE,
     'delete' : S_TRIGGER_DELETE_USAGE,
     'logic' : S_TRIGGER_LOGIC_USAGE
 }
-TRIGGER_ADD_TRIGGERS = ('press', 'distance', 'height')
+TRIGGER_ADD_TRIGGERS = ('press', 'distance', 'track', 'height')
 TRIGGER_ADD_USAGES = {
     'distance' : S_TRIGGER_DISTANCE_USAGE,
+    'track' : S_TRIGGER_TRACK_USAGE,
     'height' : S_TRIGGER_HEIGHT_USAGE,
 }
 
 ACTION_RAY_LENGTH = 8.0
-ACTION_COOLDOWN = 0.5
+ACTION_COOLDOWN = 0.25
 
 def parseargs(signature, args):
     signature = signature.split()
@@ -449,6 +454,10 @@ def button_command(connection, *args):
                 if new_state.cooldown < 0.0:
                     message = S_NOT_POSITIVE.format(parameter = 'cooldown')
                     raise ValueError(message)
+                if new_state.cooldown < MIN_COOLDOWN:
+                    message = S_MINIMUM.format(parameter = 'cooldown',
+                        value = MIN_COOLDOWN)
+                    raise ValueError(message)
             elif command == 'last':
                 if state.name == 'select button' and player.previous_button:
                     state.button = player.previous_button
@@ -526,10 +535,10 @@ def action_command(connection, *args):
                     signature = 'int [float float]'
                     value, speed, delay = parseargs(signature, args[2:])
                     speed = 0.25 if speed is None else speed
-                kwargs['speed'] = speed
-                kwargs['delay'] = speed if delay is None else speed
                 kwargs['mode'] = action
                 kwargs['height'] = value
+                kwargs['speed'] = speed
+                kwargs['delay'] = delay or 0.0
                 # validate parameters
                 for parameter, value in kwargs.iteritems():
                     if type(value) in (int, float) and value < 0:
@@ -561,6 +570,9 @@ def action_command(connection, *args):
                 if not text:
                     return usage
                 new_state.kwargs = {'value' : text}
+            elif action == 'damage':
+                amount, = parseargs('int', args[2:])
+                new_state.kwargs = {'value' : amount}
         else:
             usage = ACTION_COMMAND_USAGES.get(command, usage)
             new_state = ActionCommandState(command)
@@ -613,6 +625,10 @@ def trigger_command(connection, *args):
             if not add:
                 usage = usage.replace('add', 'set')
             
+            negate = args[1].lower() == 'not'
+            if negate:
+                args = args[:1] + args[2:]
+            
             trigger = args[1].lower()
             if trigger not in TRIGGER_ADD_TRIGGERS:
                 return usage
@@ -621,14 +637,18 @@ def trigger_command(connection, *args):
             if not add:
                 usage = usage.replace('add', 'set')
             
-            new_state = TriggerAddState(trigger, add)
+            new_state = TriggerAddState(trigger, negate, add)
             new_states = [new_state, SelectButtonState(new_state)]
-            if trigger == 'distance':
+            if trigger in ('distance', 'track'):
                 new_state.radius, = parseargs('[float]', args[2:])
                 if new_state.radius is None:
                     new_state.radius = 3.0
                 if new_state.radius < 0.0:
                     message = S_NOT_POSITIVE.format(parameter = 'radius')
+                    raise ValueError(message)
+                if new_state.radius > MAX_DISTANCE:
+                    message = S_MAXIMUM.format(parameter = 'radius',
+                        value = MAX_DISTANCE)
                     raise ValueError(message)
             elif trigger == 'height':
                 new_state.height, = parseargs('int', args[2:])
@@ -695,82 +715,118 @@ class Trigger:
     parent = None
     status = False
     unique = False
+    negate = False
     
-    def __init__(self, protocol):
+    def __init__(self, protocol, negate = False):
         self.protocol = protocol
+        self.negate = negate
     
     def unbind(self):
         self.parent.triggers.remove(self)
     
+    def get_status(self):
+        return self.status ^ self.negate
+    
     def serialize(self):
-        return {'type' : self.type}
+        return {'type' : self.type, 'negate' : self.negate}
 
 class PressTrigger(Trigger):
     type = 'press'
     unique = True
     
     def callback(self, player):
-        shared = self.parent.shared_trigger_objects
-        shared[self.type] = (player,)
+        shared = self.parent.shared_trigger_objects[self.type]
+        shared.add(player)
         self.status = True
         self.parent.trigger_check()
         self.status = False
-        del shared[self.type]
+        shared.discard(player)
     
     def __str__(self):
-        return 'player press'
+        s = 'player press'
+        return S_TRIGGER_LIST_NOT + s if self.negate else s
 
 class DistanceTrigger(Trigger):
     type = 'distance'
-    tracked_player = None
     
-    def __init__(self, protocol, radius):
-        Trigger.__init__(self, protocol)
+    def __init__(self, protocol, radius, negate = False):
+        Trigger.__init__(self, protocol, negate)
         self.radius = radius
         protocol.position_triggers.append(self)
     
     def unbind(self):
         Trigger.unbind(self)
-        shared = self.parent.shared_trigger_objects
-        if self.type in shared:
-            shared[self.type].discard(self.tracked_player)
+        shared = self.parent.shared_trigger_objects[self.type]
+        shared.discard(self.tracked_player)
         self.protocol.position_triggers.remove(self)
     
     def callback(self, player):
         parent = self.parent
-        shared = parent.shared_trigger_objects
+        shared = parent.shared_trigger_objects[self.type]
+        status = False
+        if not player.disconnected and player.world_object:
+            x1, y1, z1 = parent.x, parent.y, parent.z
+            x2, y2, z2 = player.world_object.position.get()
+            status = collision_3d(x1, y1, z1, x2, y2, z2, self.radius)
+        if status:
+            shared.add(player)
+        else:
+            shared.discard(player)
+        status = bool(shared)
+        if self.status != status:
+            self.status = status
+            if self.parent:
+                parent.trigger_check()
+    
+    def serialize(self):
+        return {
+            'type' : self.type,
+            'negate' : self.negate,
+            'radius' : self.radius
+        }
+    
+    def __str__(self):
+        s = 'player distance=%s' % self.radius
+        return S_TRIGGER_LIST_NOT + s if self.negate else s
+
+class TrackTrigger(Trigger):
+    type = 'track'
+    tracked_player = None
+    
+    def __init__(self, protocol, radius, negate = False):
+        Trigger.__init__(self, protocol, negate)
+        self.radius = radius
+        protocol.position_triggers.append(self)
+    
+    def unbind(self):
+        Trigger.unbind(self)
+        shared = self.parent.shared_trigger_objects[self.type]
+        shared.discard(self.tracked_player)
+        self.protocol.position_triggers.remove(self)
+    
+    def callback(self, player):
+        parent = self.parent
+        shared = parent.shared_trigger_objects[self.type]
         if self.status:
             if self.tracked_player is not player:
                 # we're already locked on a different player
                 return
-            elif player.disconnected:
-                # player is gone, clean up
-                self.tracked_player = None
-                if self.type in shared:
-                    shared[self.type].pop(player, None)
-                return
-        else:
-            if self.type in shared and player in shared[self.type]:
-                # another trigger has already claimed this player
-                return
-        
-        if not player.world_object:
+        elif player in shared:
+            # another trigger has already claimed this player
             return
-        x1, y1, z1 = parent.x, parent.y, parent.z
-        x2, y2, z2 = player.world_object.position.get()
-        status = collision_3d(x1, y1, z1, x2, y2, z2, self.radius)
+        status = False
+        if not player.disconnected and player.world_object:
+            x1, y1, z1 = parent.x, parent.y, parent.z
+            x2, y2, z2 = player.world_object.position.get()
+            status = collision_3d(x1, y1, z1, x2, y2, z2, self.radius)
         if self.status != status:
             # keep track of the player to avoid tripping other distance triggers
             # in the same button
-            try: player_set = shared[self.type]
-            except KeyError:
-                player_set = set()
-                shared[self.type] = player_set
             if status:
-                player_set.add(player)
+                shared.add(player)
                 self.tracked_player = player
             else:
-                player_set.discard(player)
+                shared.discard(player)
                 self.tracked_player = None
             
             self.status = status
@@ -778,16 +834,21 @@ class DistanceTrigger(Trigger):
                 parent.trigger_check()
     
     def serialize(self):
-        return {'type' : self.type, 'radius' : self.radius}
+        return {
+            'type' : self.type,
+            'negate' : self.negate,
+            'radius' : self.radius
+        }
     
     def __str__(self):
-        return 'player distance=%s' % self.radius
+        s = 'track distance=%s' % self.radius
+        return S_TRIGGER_LIST_NOT + s if self.negate else s
 
 class HeightTrigger(Trigger):
     type = 'height'
     
-    def __init__(self, protocol, platform_id, height):
-        Trigger.__init__(self, protocol)
+    def __init__(self, protocol, platform_id, height, negate = False):
+        Trigger.__init__(self, protocol, negate)
         platform = protocol.platforms[platform_id]
         self.platform = platform
         self.target_height = height
@@ -810,16 +871,18 @@ class HeightTrigger(Trigger):
     def serialize(self):
         return {
             'type' : self.type,
+            'negate' : self.negate,
             'platform_id' : self.platform.id,
             'height' : self.target_height
         }
     
     def __str__(self):
-        return "platform '%s' height=%s" % (self.platform.label,
+        s = "platform '%s' height=%s" % (self.platform.label, 
             self.target_height)
+        return S_TRIGGER_LIST_NOT + s if self.negate else s
 
 TRIGGER_CLASSES = {}
-for cls in (PressTrigger, DistanceTrigger, HeightTrigger):
+for cls in (PressTrigger, TrackTrigger, DistanceTrigger, HeightTrigger):
     TRIGGER_CLASSES[cls.type] = cls
 
 PLATFORM_ACTION_FUNCTIONS = {
@@ -842,18 +905,20 @@ class PlatformAction:
     def serialize(self):
         return {
             'type' : self.type,
+            'negate' : self.negate,
             'platform_id' : self.platform.id,
             'action' : self.action,
             'kwargs' : self.kwargs
         }
     
     def __str__(self):
-        return "platform '%s' %s(%s)" % (self.platform.label,
+        return "platform '%s' %s(%s)" % (self.platform.label, 
             self.kwargs['mode'], self.kwargs['height'])
 
 PLAYER_ACTION_FUNCTIONS = {
     'teleport' : 'set_location',
-    'chat' : 'send_chat'
+    'chat' : 'send_chat',
+    'damage' : 'hit'
 }
 
 class PlayerAction:
@@ -881,6 +946,8 @@ class PlayerAction:
             info = S_NICE_LOCATION.format(*self.kwargs['location'])
         elif self.action == 'chat':
             info = '"%s"' % self.kwargs['value'].strip()
+        elif self.action == 'damage':
+            info = self.kwargs['value']
         return "player %s(%s)" % (self.action, info)
 
 ACTION_CLASSES = {}
@@ -913,7 +980,7 @@ class Button(BaseObject):
         self.color_triggered = tuple(int(c * 0.2) for c in color)
         self.actions = []
         self.triggers = []
-        self.shared_trigger_objects = {}
+        self.shared_trigger_objects = defaultdict(set)
         self.logic = 'and'
         self.cooldown = 0.5
         protocol.map.set_point(x, y, z, self.color)
@@ -952,7 +1019,7 @@ class Button(BaseObject):
     def trigger_check(self):
         self.action_pending = False
         check = all if self.logic == 'and' else any
-        if check(trigger.status for trigger in self.triggers):
+        if check(trigger.get_status() for trigger in self.triggers):
             if self.cooldown_call:
                 # schedule action for after the button resets
                 self.action_pending = True
@@ -1093,7 +1160,7 @@ class Platform(BaseObject):
                     continue
                 x, y, z = player.world_object.position.get()
                 if aabb(x, y, z, self.x1, self.y1, self.z - 2,
-                    self.x2, self.y2, self.z):
+                    self.x2, self.y2, self.start_z):
                     z -= 1.0
                     position_data.x = x
                     position_data.y = y
@@ -1382,7 +1449,7 @@ class ActionAddState(State):
                 return S_COMMAND_CANCEL.format(command = self.name)
             new_action = PlatformAction(protocol, self.platform.id,
                 self.function, self.kwargs)
-        elif self.action in ('teleport', 'chat'):
+        elif self.action in ('teleport', 'chat', 'damage'):
             new_action = PlayerAction(protocol, self.action, self.kwargs)
         
         if not self.add:
@@ -1429,8 +1496,9 @@ class TriggerAddState(State):
     platform = None
     button = None
     
-    def __init__(self, trigger, add = True):
+    def __init__(self, trigger, negate, add = True):
         self.trigger = trigger
+        self.negate = negate
         self.add = add
     
     def on_exit(self, protocol, player):
@@ -1442,10 +1510,13 @@ class TriggerAddState(State):
             new_trigger = PressTrigger(protocol)
         elif self.trigger == 'distance':
             new_trigger = DistanceTrigger(protocol, self.radius)
+        elif self.trigger == 'track':
+            new_trigger = TrackTrigger(protocol, self.radius)
         elif self.trigger == 'height':
             if not self.platform:
                 return S_COMMAND_CANCEL.format(command = self.name)
             new_trigger = HeightTrigger(protocol, self.platform.id, self.height)
+        new_trigger.negate = self.negate
         
         if not self.add:
             button.clear_triggers()
@@ -1500,7 +1571,7 @@ class TriggerCommandState(State):
             button.trigger_check()
             result = S_LOGIC_AND if self.logic == 'and' else S_LOGIC_OR
             return result.format(label = button.label)
-        elif self.command == 'silent':
+        elif self.command == 'quiet':
             button.silent = not button.silent
             result = S_SILENT if button.silent else S_NOISY
             return result.format(label = button.label)
@@ -1605,6 +1676,8 @@ def apply_script(protocol, connection, config):
         
         def on_disconnect(self):
             self.states = None
+            for trigger in self.protocol.position_triggers:
+                trigger.callback(self)
             connection.on_disconnect(self)
         
         def on_block_build(self, x, y, z):
