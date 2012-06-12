@@ -572,8 +572,8 @@ def action_command(connection, *args):
                 new_state.kwargs = {'value' : text}
             elif action == 'damage':
                 amount, = parseargs('int', args[2:])
-                type = WEAPON_KILL if amount > 0 else FALL_KILL
-                new_state.kwargs = {'value' : amount, 'type' : type}
+                damage_type = WEAPON_KILL if amount > 0 else FALL_KILL
+                new_state.kwargs = {'value' : amount, 'type' : damage_type}
         else:
             usage = ACTION_COMMAND_USAGES.get(command, usage)
             new_state = ActionCommandState(command)
@@ -1826,13 +1826,13 @@ def apply_script(protocol, connection, config):
                 button.disabled = button_data['disabled']
                 button.silent = button_data['silent']
                 for trigger_data in button_data['triggers']:
-                    type = trigger_data.pop('type')
-                    new_trigger = TRIGGER_CLASSES[type](self, **trigger_data)
+                    cls = trigger_data.pop('type')
+                    new_trigger = TRIGGER_CLASSES[cls](self, **trigger_data)
                     new_trigger.parent = button
                     button.triggers.append(new_trigger)
                 for action_data in button_data['actions']:
-                    type = action_data.pop('type')
-                    new_action = ACTION_CLASSES[type](self, **action_data)
+                    cls = action_data.pop('type')
+                    new_action = ACTION_CLASSES[cls](self, **action_data)
                     button.actions.append(new_action)
                 self.buttons[(id, (x, y, z))] = button
             ids.sort()

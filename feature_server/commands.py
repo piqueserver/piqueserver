@@ -988,7 +988,7 @@ def debug_handle_command(connection, command, parameters):
             return "You can't use this command"
     return command_func(connection, *parameters)
 
-# handle_command = debug_handle_command
+handle_command = debug_handle_command
 
 def handle_input(connection, input):
     # for IRC and console
