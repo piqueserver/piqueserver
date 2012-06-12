@@ -758,11 +758,13 @@ class DistanceTrigger(Trigger):
     def unbind(self):
         Trigger.unbind(self)
         shared = self.parent.shared_trigger_objects[self.type]
-        shared.discard(self.tracked_player)
+        shared.clear()
         self.protocol.position_triggers.remove(self)
     
     def callback(self, player):
         parent = self.parent
+        if not parent:
+            return
         shared = parent.shared_trigger_objects[self.type]
         status = False
         if not player.disconnected and player.world_object:
@@ -807,6 +809,8 @@ class TrackTrigger(Trigger):
     
     def callback(self, player):
         parent = self.parent
+        if not parent:
+            return
         shared = parent.shared_trigger_objects[self.type]
         if self.status:
             if self.tracked_player is not player:
