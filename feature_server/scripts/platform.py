@@ -572,7 +572,8 @@ def action_command(connection, *args):
                 new_state.kwargs = {'value' : text}
             elif action == 'damage':
                 amount, = parseargs('int', args[2:])
-                new_state.kwargs = {'value' : amount}
+                type = WEAPON_KILL if amount > 0 else FALL_KILL
+                new_state.kwargs = {'value' : amount, 'type' : type}
         else:
             usage = ACTION_COMMAND_USAGES.get(command, usage)
             new_state = ActionCommandState(command)
