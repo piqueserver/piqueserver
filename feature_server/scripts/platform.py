@@ -910,7 +910,6 @@ class PlatformAction:
     def serialize(self):
         return {
             'type' : self.type,
-            'negate' : self.negate,
             'platform_id' : self.platform.id,
             'action' : self.action,
             'kwargs' : self.kwargs
