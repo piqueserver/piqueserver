@@ -348,7 +348,6 @@ class Backup(BaseMarker):
 
 class Intel(BaseMarker):
     name = 'Intel'
-    duration = 5 * 60.0
     color = make_color(255, 255, 255)
     s = """
     . . . X X X X X X . . .
