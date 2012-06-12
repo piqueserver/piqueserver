@@ -73,6 +73,7 @@ as the parameter lists are provided when you try them.
                     actually starts to move.
                     Elevators can wait an amount of time at the end of the journey,
                     before heading back.
+                output
                 teleport <x y z|where>
                     Moves the activating players to the specified coordinates.
                     Using 'where' instead takes the last location where you stood
@@ -91,10 +92,10 @@ as the parameter lists are provided when you try them.
             "Actions in 'mybutton': #0 platform 'myplat' height(5) --
                 #1 player teleport(16, 16, 32)"
             
-            #0 and #1 are the action indexes to be used with /action delete.
+            #0 and #1 are the action indexes to be used with /action del.
             'myplat' is the name of the platform the height action is affecting,
             in this case making it 5 blocks tall.
-        delete <#|all>
+        del <#|all>
             Delete a single action in a button by specifying its index. Action
             indexes can be looked up by using /action list.
             
@@ -135,13 +136,13 @@ as the parameter lists are provided when you try them.
             Example:
             "Triggers in 'mybutton': #0 player press OR #1 player distance=5 [CHECK]"
             
-            #0 and #1 are the trigger indexes to be used with /trigger delete.
+            #0 and #1 are the trigger indexes to be used with /trigger del.
             [CHECK] means the trigger currently yields true. The player in this
             case is near the button, but hasn't pressed it.
             
             This button uses OR logic, meaning that EITHER of these triggers
             firing is enough to activate the button.
-        delete <#|all>
+        del <#|all>
             Delete a single trigger in a button by specifying its index. Trigger
             indexes can be looked up by using /trigger list.
             
@@ -237,12 +238,13 @@ S_SILENT = "Button '{label}' will activate quietly"
 S_NOISY = "Button '{label}' will animate when activated"
 S_ACTION_USAGE = 'Usage: /action <{commands}>'
 S_ACTION_ADD_USAGE = 'Usage: /action add <{actions}>'
-S_ACTION_DELETE_USAGE = 'Usage: /action delete <#|all>'
+S_ACTION_DELETE_USAGE = 'Usage: /action del <#|all>'
 S_ACTION_HEIGHT_USAGE = 'Usage: /action add height <height> [speed=0.25] [delay]'
 S_ACTION_RAISE_USAGE = 'Usage: /action add raise <amount> [speed=0.25] [delay]'
 S_ACTION_LOWER_USAGE = 'Usage: /action add lower <amount> [speed=0.25] [delay]'
 S_ACTION_ELEVATOR_USAGE = 'Usage: /action add elevator <height> [speed=0.75] ' \
     '[delay] [wait=3.0]'
+S_ACTION_OUTPUT_USAGE = 'Usage: /action add output [delay]'
 S_ACTION_TELEPORT_USAGE = 'Usage: /action add teleport <x y z|where>'
 S_ACTION_CHAT_USAGE = 'Usage: /action add chat <text>'
 S_ACTION_DAMAGE_USAGE = 'Usage: /action add damage <amount>'
@@ -254,7 +256,7 @@ S_ACTION_DELETED_ALL = "Deleted all actions in button '{label}'"
 S_ACTION_INVALID_NUMBER = "Invalid action number! Use '/action list' to check"
 S_TRIGGER_USAGE = 'Usage: /trigger <{commands}>'
 S_TRIGGER_ADD_USAGE = 'Usage: /trigger add [not] <{triggers}>'
-S_TRIGGER_DELETE_USAGE = 'Usage: /trigger delete <#|all>'
+S_TRIGGER_DELETE_USAGE = 'Usage: /trigger del <#|all>'
 S_TRIGGER_LOGIC_USAGE = 'Usage: /trigger logic <and|or>'
 S_TRIGGER_DISTANCE_USAGE = 'Usage: /trigger add [not] distance [radius=3]'
 S_TRIGGER_TRACK_USAGE = 'Usage: /trigger add [not] track [radius=3]'
@@ -293,26 +295,27 @@ BUTTON_COMMAND_USAGES = {
     'name' : S_BUTTON_NAME_USAGE,
     'cooldown' : S_BUTTON_COOLDOWN_USAGE
 }
-ACTION_COMMANDS = ('add', 'set', 'list', 'delete')
+ACTION_COMMANDS = ('add', 'set', 'list', 'del')
 ACTION_COMMAND_USAGES = {
     'add' : S_ACTION_ADD_USAGE,
-    'delete' : S_ACTION_DELETE_USAGE
+    'del' : S_ACTION_DELETE_USAGE
 }
-ACTION_ADD_ACTIONS = ('height', 'raise', 'lower', 'elevator',
+ACTION_ADD_ACTIONS = ('height', 'raise', 'lower', 'elevator', 'output',
     'teleport', 'chat', 'damage')
 ACTION_ADD_USAGES = {
     'height' : S_ACTION_HEIGHT_USAGE,
     'raise' : S_ACTION_RAISE_USAGE,
     'lower' : S_ACTION_LOWER_USAGE,
     'elevator' : S_ACTION_ELEVATOR_USAGE,
+    'output' : S_ACTION_OUTPUT_USAGE,
     'teleport' : S_ACTION_TELEPORT_USAGE,
     'chat' : S_ACTION_CHAT_USAGE,
-    'damage' : S_ACTION_DAMAGE_USAGE
+    'damage' : S_ACTION_DAMAGE_USAGE,
 }
-TRIGGER_COMMANDS = ('add', 'set', 'list', 'delete', 'logic', 'quiet')
+TRIGGER_COMMANDS = ('add', 'set', 'list', 'del', 'logic', 'quiet')
 TRIGGER_COMMAND_USAGES = {
     'add' : S_TRIGGER_ADD_USAGE,
-    'delete' : S_TRIGGER_DELETE_USAGE,
+    'del' : S_TRIGGER_DELETE_USAGE,
     'logic' : S_TRIGGER_LOGIC_USAGE
 }
 TRIGGER_ADD_TRIGGERS = ('press', 'distance', 'track', 'height')
@@ -392,7 +395,7 @@ def platform_command(connection, *args):
                 new_state.label = join_arguments(args[1:], '').strip()
                 if not new_state.label:
                     return usage
-            elif command == 'last':
+            elif command == 'last' and state:
                 if state.name == 'select platform' and player.previous_platform:
                     state.platform = player.previous_platform
                     player.states.pop()
@@ -458,7 +461,7 @@ def button_command(connection, *args):
                     message = S_MINIMUM.format(parameter = 'cooldown',
                         value = MIN_COOLDOWN)
                     raise ValueError(message)
-            elif command == 'last':
+            elif command == 'last' and state:
                 if state.name == 'select button' and player.previous_button:
                     state.button = player.previous_button
                     player.states.pop()
@@ -544,8 +547,16 @@ def action_command(connection, *args):
                     if type(value) in (int, float) and value < 0:
                         message = S_NOT_POSITIVE.format(parameter = parameter)
                         raise ValueError(message)
-                new_state.function = 'start'
                 new_state.kwargs = kwargs
+                new_states.append(SelectPlatformState(new_state))
+            elif action == 'output':
+                delay, = parseargs('[float]', args[2:])
+                new_state.kwargs = {
+                    'mode' : 'height',
+                    'speed' : 0.0,
+                    'delay' : delay or 0.0,
+                    'force' : True
+                }
                 new_states.append(SelectPlatformState(new_state))
             elif action == 'teleport':
                 if join_arguments(args[2:]) == 'where':
@@ -578,7 +589,7 @@ def action_command(connection, *args):
             usage = ACTION_COMMAND_USAGES.get(command, usage)
             new_state = ActionCommandState(command)
             new_states = [new_state, SelectButtonState(new_state)]
-            if command == 'delete':
+            if command == 'del':
                 new_state.number, = parseargs('str', args[1:])
                 if new_state.number != 'all':
                     new_state.number, = parseargs('int', args[1:])
@@ -661,7 +672,7 @@ def trigger_command(connection, *args):
             usage = TRIGGER_COMMAND_USAGES.get(command, usage)
             new_state = TriggerCommandState(command)
             new_states = [new_state, SelectButtonState(new_state)]
-            if command == 'delete':
+            if command == 'del':
                 new_state.number, = parseargs('str', args[1:])
                 if new_state.number != 'all':
                     new_state.number, = parseargs('int', args[1:])
@@ -768,7 +779,7 @@ class DistanceTrigger(Trigger):
         shared = parent.shared_trigger_objects[self.type]
         status = False
         if not player.disconnected and player.world_object:
-            x1, y1, z1 = parent.x, parent.y, parent.z
+            x1, y1, z1 = parent.x + 0.5, parent.y + 0.5, parent.z + 0.5
             x2, y2, z2 = player.world_object.position.get()
             status = collision_3d(x1, y1, z1, x2, y2, z2, self.radius)
         if status:
@@ -821,7 +832,7 @@ class TrackTrigger(Trigger):
             return
         status = False
         if not player.disconnected and player.world_object:
-            x1, y1, z1 = parent.x, parent.y, parent.z
+            x1, y1, z1 = parent.x + 0.5, parent.y + 0.5, parent.z + 0.5
             x2, y2, z2 = player.world_object.position.get()
             status = collision_3d(x1, y1, z1, x2, y2, z2, self.radius)
         if self.status != status:
@@ -891,7 +902,12 @@ for cls in (PressTrigger, TrackTrigger, DistanceTrigger, HeightTrigger):
     TRIGGER_CLASSES[cls.type] = cls
 
 PLATFORM_ACTION_FUNCTIONS = {
-    'start' : 'start'
+    'start' : 'start',
+    'height' : 'start',
+    'raise' : 'start',
+    'lower' : 'start',
+    'elevator' : 'start',
+    'output' : 'start'
 }
 
 class PlatformAction:
@@ -904,8 +920,11 @@ class PlatformAction:
         self.callback = getattr(self.platform, func_name)
         self.kwargs = kwargs
     
-    def run(self, objects):
-        self.callback(**self.kwargs)
+    def run(self, value, objects):
+        if self.action == 'output':
+            self.callback(height = int(value), **self.kwargs)
+        elif value:
+            self.callback(**self.kwargs)
     
     def serialize(self):
         return {
@@ -934,7 +953,9 @@ class PlayerAction:
         self.callback = getattr(protocol.connection_class, func_name)
         self.kwargs = kwargs
     
-    def run(self, objects):
+    def run(self, value, objects):
+        if not value:
+            return
         for player in objects:
             self.callback(player, **self.kwargs)
     
@@ -995,10 +1016,6 @@ class Button(BaseObject):
         if self.cooldown_call and self.cooldown_call.active():
             self.cooldown_call.cancel()
         self.cooldown_call = None
-        # clear last button memory from players
-        for player in self.protocol.players.itervalues():
-            if player.previous_button is self:
-                player.previous_button = None
     
     def destroy(self):
         self.release()
@@ -1029,6 +1046,9 @@ class Button(BaseObject):
                 self.action_pending = True
             else:
                 self.action()
+        else:
+            for action in self.actions:
+                action.run(False, None)
     
     def action(self):
         self.cooldown_call = callLater(self.cooldown, self.reset)
@@ -1039,7 +1059,7 @@ class Button(BaseObject):
                     player.send_chat(S_NOT_WORKING)
             return
         for action in self.actions:
-            action.run(objects)
+            action.run(True, objects)
         if not self.silent:
             self.build_block(self.color_triggered)
     
@@ -1105,8 +1125,8 @@ class Platform(BaseObject):
     
     def release(self):
         BaseObject.release(self)
-        bound_buttons = set()
         if self.bound_triggers:
+            bound_buttons = set()
             for trigger in self.bound_triggers[:]:
                 bound_buttons.add(trigger.parent)
                 trigger.unbind()
@@ -1114,14 +1134,10 @@ class Platform(BaseObject):
                 button.trigger_check()
         if self.delay_call and self.delay_call.active():
             self.delay_call.cancel()
+        self.delay_call = None
         if self.cycle_loop.running:
             self.cycle_loop.stop()
-        self.delay_call = None
         self.cycle_loop = None
-        # clear last platform memory from players
-        for player in self.protocol.players.itervalues():
-            if player.previous_platform is self:
-                player.previous_platform = None
     
     def start(self, height, mode, speed, delay, wait = None, force = False):
         if self.busy and not force:
@@ -1143,8 +1159,10 @@ class Platform(BaseObject):
     def start_cycle_later(self, delay):
         if self.delay_call and self.delay_call.active():
             self.delay_call.cancel()
-        if self.cycle_loop.running:
+        self.delay_call = None
+        if self.cycle_loop and self.cycle_loop.running:
             self.cycle_loop.stop()
+        self.cycle_loop = LoopingCall(self.cycle)
         if delay > 0.0:
             self.delay_call = callLater(delay, self.cycle_loop.start, self.speed)
         else:
@@ -1156,16 +1174,20 @@ class Platform(BaseObject):
         if self.z > self.target_z:
             self.z -= 1
             self.build_plane(self.z)
+            self.protocol.update_entities()
             # unstuck players
             for player in self.protocol.players.itervalues():
-                ori_z = player.world_object.orientation.get()[2]
-                if ori_z < 0.5:
-                    # player is looking up, no need to readjust
-                    continue
-                x, y, z = player.world_object.position.get()
+                obj = player.world_object
+                looking_up = obj.orientation.get()[2] < 0.4 # 0.5 (allow lag)
+                x, y, z = obj.position.get()
                 if aabb(x, y, z, self.x1, self.y1, self.z - 2,
                     self.x2, self.y2, self.start_z):
-                    z -= 1.0
+                    if looking_up and not obj.crouch and not z > self.z:
+                        # player is looking up, no need to readjust
+                        continue
+                    z = self.z - 2.4
+                    if player.world_object.crouch:
+                        z += 1.0
                     position_data.x = x
                     position_data.y = y
                     position_data.z = z
@@ -1173,17 +1195,18 @@ class Platform(BaseObject):
                     player.world_object.position.z = z
         elif self.z < self.target_z:
             self.destroy_z(self.z)
+            self.protocol.update_entities()
             self.z += 1
         self.height = self.start_z - self.z
-        self.protocol.update_entities()
         if self.z == self.target_z:
-            self.busy = False
             self.cycle_loop.stop()
+            self.cycle_loop = None
             if self.mode == 'elevator':
-                self.busy = True
                 self.mode = 'return'
                 self.target_z = self.last_z
                 self.start_cycle_later(self.wait)
+            else:
+                self.busy = False
         if self.bound_triggers:
             for trigger in self.bound_triggers:
                 trigger.callback(self)
@@ -1403,6 +1426,10 @@ class PlatformCommandState(State):
                     continue
                 if getattr(state.get_parent(), 'platform', None) is platform:
                     player.states.exit()
+            # clear last platform memory from players
+            for player in protocol.players.itervalues():
+                if player.previous_platform is platform:
+                    player.previous_platform = None
             return S_PLATFORM_DESTROYED.format(label = platform.label)
 
 class ButtonCommandState(State):
@@ -1424,6 +1451,10 @@ class ButtonCommandState(State):
         elif command == 'destroy':
             button.destroy()
             del protocol.buttons[button]
+            # clear last button memory from players
+            for player in protocol.players.itervalues():
+                if player.previous_button is button:
+                    player.previous_button = None
             return S_BUTTON_DESTROYED.format(label = button.label)
         elif command == 'toggle':
             button.disabled = not button.disabled
@@ -1448,12 +1479,12 @@ class ActionAddState(State):
         if not button:
             return S_COMMAND_CANCEL.format(command = self.name)
         
-        if self.action in ('height', 'raise', 'lower', 'elevator'):
+        if self.action in PLATFORM_ACTION_FUNCTIONS:
             if not self.platform:
                 return S_COMMAND_CANCEL.format(command = self.name)
             new_action = PlatformAction(protocol, self.platform.id,
-                self.function, self.kwargs)
-        elif self.action in ('teleport', 'chat', 'damage'):
+                self.action, self.kwargs)
+        elif self.action in PLAYER_ACTION_FUNCTIONS:
             new_action = PlayerAction(protocol, self.action, self.kwargs)
         
         if not self.add:
@@ -1480,7 +1511,7 @@ class ActionCommandState(State):
             items = ' -- '.join('#%s %s' % (i, action) for i, action in
                 enumerate(button.actions))
             return S_ACTION_LIST_HEADER.format(label = button.label) + items
-        elif self.command == 'delete':
+        elif self.command == 'del':
             if self.number == 'all':
                 button.actions = []
                 return S_ACTION_DELETED_ALL.format(label = button.label)
@@ -1554,7 +1585,7 @@ class TriggerCommandState(State):
                 S_TRIGGER_LIST_OR)
             items = separator.join(items)
             return S_TRIGGER_LIST_HEADER.format(label = button.label) + items
-        elif self.command == 'delete':
+        elif self.command == 'del':
             if self.number == 'all':
                 button.clear_triggers()
                 return S_TRIGGER_DELETED_ALL.format(label = button.label)
@@ -1593,7 +1624,7 @@ class SelectPlatformState(State):
     
     def on_exit(self, protocol, player):
         self.parent_state.platform = self.platform
-        player.previous_platform = player.previous_platform or self.platform
+        player.previous_platform = self.platform or player.previous_platform
         if player.states.top() is self.parent_state:
             player.states.pop()
         elif self.platform:
@@ -1612,7 +1643,7 @@ class SelectButtonState(State):
     
     def on_exit(self, protocol, player):
         self.parent_state.button = self.button
-        player.previous_button = player.previous_button or self.button
+        player.previous_button = self.button or player.previous_button
         if player.states.top() is self.parent_state:
             player.states.pop()
         elif self.button:
