@@ -1878,13 +1878,12 @@ def apply_script(protocol, connection, config):
             if (not self.platforms and not self.buttons and
                 not self.platform_json_dirty):
                 return
-            platform_data = []
-            button_data = []
-            data = {'platforms' : platform_data, 'buttons' : button_data}
-            for platform in self.platforms.itervalues():
-                platform_data.append(platform.serialize())
-            for button in self.buttons.itervalues():
-                button_data.append(button.serialize())
+            data = {
+                'platforms' : [platform.serialize() for platform in
+                    self.platforms.values()],
+                'buttons' : [button.serialize() for button in
+                    self.buttons.values()]
+            }
             path = self.get_platform_json_path()
             with open(path, 'w') as file:
                 json.dump(data, file, indent = 4)
