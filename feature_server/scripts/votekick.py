@@ -30,6 +30,7 @@ S_SELF_VOTEKICK = "You can't votekick yourself"
 S_NOT_ENOUGH_PLAYERS = "There aren't enough players to vote"
 S_VOTEKICK_IMMUNE = "You can't votekick this player"
 S_NOT_YET = "You can't start another votekick yet!"
+S_NEED_REASON = 'You must provide a reason for the votekick'
 S_CANT_CANCEL = "You didn't start the votekick!"
 S_YES = '{player} voted YES'
 S_ENDED = 'Votekick for {victim} has ended. {result}'
