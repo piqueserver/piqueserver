@@ -10,7 +10,8 @@ from pyspades.common import prettify_timespan
 from commands import add, admin, name, get_player, alias
 
 # "blockinfo" must be AFTER "votekick" in the config.txt script list
-GRIEFCHECK_ON_VOTEKICK = False
+GRIEFCHECK_ON_VOTEKICK = True
+IRC_ONLY = True
 
 @name('griefcheck')
 @alias('gc')
@@ -139,12 +140,13 @@ def apply_script(protocol, connection, config):
             protocol.on_map_change(self, map)
         
         def on_votekick_start(self, instigator, victim, reason):
-            print 'b1'
             result = protocol.on_votekick_start(self, instigator, victim, reason)
-            print 'b2'
             if result is None and GRIEFCHECK_ON_VOTEKICK:
                 message = grief_check(instigator, victim.name)
-                self.send_chat(message, irc = True)
+                if IRC_ONLY:
+                    self.irc_say('* ' + message)
+                else:
+                    self.send_chat(message, irc = True)
             return result
     
     return BlockInfoProtocol, BlockInfoConnection

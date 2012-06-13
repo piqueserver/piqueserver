@@ -39,9 +39,11 @@ S_RESULT_INSTIGATOR_KICKED = 'Instigator kicked by admin'
 S_RESULT_LEFT = '{victim} left during votekick'
 S_RESULT_INSTIGATOR_LEFT = 'Instigator {instigator} left'
 S_RESULT_PASSED = 'Player kicked'
-S_ANNOUNCE_IRC = '* {instigator} started a votekick against player {victim}. Reason: {reason}'
+S_ANNOUNCE_IRC = '* {instigator} started a votekick against player {victim}. ' \
+    'Reason: {reason}'
 S_ANNOUNCE = '{instigator} started a VOTEKICK against {victim}. Say /Y to agree'
-S_ANNOUNCE_SELF = 'You started a votekick against {victim}. Say /CANCEL to stop it'
+S_ANNOUNCE_SELF = 'You started a votekick against {victim}. Say /CANCEL to ' \
+    'stop it'
 S_UPDATE = '{instigator} is votekicking {victim}. /Y to vote ({needed} left)'
 S_REASON = 'Reason: {reason}'
 

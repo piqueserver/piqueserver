@@ -34,7 +34,6 @@ def apply_script(protocol, connection, config):
     
     class TrustedProtocol(protocol):        
         def on_votekick_start(self, instigator, victim, reason):
-            print 'c'
             if victim.user_types.trusted:
                 return S_CANT_VOTEKICK.format(player = victim.name)
             return protocol.on_votekick_start(self, instigator, victim, reason)

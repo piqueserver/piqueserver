@@ -9,6 +9,7 @@ from commands import get_player, add
 
 # "ratio" must be AFTER "votekick" in the config.txt script list
 RATIO_ON_VOTEKICK = True
+IRC_ONLY = False
 
 def ratio(connection, user=None):
     has_msg = "You have"
@@ -41,12 +42,13 @@ def apply_script(protocol, connection, config):
     
     class RatioProtocol(protocol):
         def on_votekick_start(self, instigator, victim, reason):
-            print 'a1'
             result = protocol.on_votekick_start(self, instigator, victim, reason)
-            print 'a2'
             if result is None and RATIO_ON_VOTEKICK:
                 message = ratio(instigator, victim.name)
-                self.send_chat(message, irc = True)
+                if IRC_ONLY:
+                    self.irc_say('* ' + message)
+                else:
+                    self.send_chat(message, irc = True)
             return result
     
     return RatioProtocol, RatioConnection
