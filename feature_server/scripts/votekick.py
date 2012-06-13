@@ -91,8 +91,7 @@ def cancel_votekick(connection):
             not player.rights.cancel):
             return S_CANT_CANCEL
     
-    votekick.end(S_RESULT_CANCELLED)
-    protocol.votekick = None
+    protocol.end_votekick(S_RESULT_CANCELLED)
 
 @name('y')
 def vote_yes(connection):
@@ -232,9 +231,12 @@ def apply_script(protocol, connection, config):
         def on_ban(self, banee, reason, duration):
             votekick = self.votekick
             if votekick and votekick.victim is self:
-                votekick.end(S_RESULT_BANNED)
-                self.votekick = None
+                self.end_votekick(S_RESULT_BANNED)
             protocol.on_ban(self, connection, reason, duration)
+        
+        def end_votekick(self, result):
+            self.votekick, votekick = None, self.votekick
+            votekick.end(result)
         
         def on_votekick_start(self, instigator, victim, reason):
             pass
@@ -251,31 +253,27 @@ def apply_script(protocol, connection, config):
                 if votekick.victim is self:
                     # victim leaves, gets votekick ban
                     reason = votekick.reason
-                    votekick.end(S_RESULT_LEFT.format(victim = self.name))
-                    self.protocol.votekick = None
+                    result = S_RESULT_LEFT.format(victim = self.name)
+                    self.protocol.end_votekick(result)
                     self.ban(reason, Votekick.ban_duration)
                 elif votekick.instigator is self:
                     # instigator leaves, votekick is called off
-                    votekick.end(S_RESULT_INSTIGATOR_LEFT.format(
-                        instigator = self.name))
-                    self.protocol.votekick = None
+                    s = S_RESULT_INSTIGATOR_LEFT.format(instigator = self.name)
+                    self.protocol.end_votekick(s)
                 else:
                     # make sure we still have enough players
                     votekick.votes.pop(self, None)
                     if votekick.votes_remaining <= 0:
-                        votekick.end(S_NOT_ENOUGH_PLAYERS)
-                        self.protocol.votekick = None
+                        self.protocol.end_votekick(S_NOT_ENOUGH_PLAYERS)
             connection.on_disconnect(self)
         
         def kick(self, reason = None, silent = False):
             votekick = self.protocol.votekick
             if votekick:
                 if votekick.victim is self:
-                    votekick.end(S_RESULT_KICKED)
-                    self.protocol.votekick = None
+                    self.protocol.end_votekick(S_RESULT_KICKED)
                 elif votekick.instigator is self:
-                    votekick.end(S_RESULT_INSTIGATOR_KICKED)
-                    self.protocol.votekick = None
+                    self.protocol.end_votekick(S_RESULT_INSTIGATOR_KICKED)
             connection.kick(self, reason, silent)
     
     return VotekickProtocol, VotekickConnection

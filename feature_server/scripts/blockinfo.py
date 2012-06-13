@@ -78,7 +78,7 @@ def grief_check(connection, player, time = None):
     votekick = getattr(protocol, 'votekick', None)
     if (votekick and votekick.victim is player and
         votekick.victim.world_object and votekick.instigator.world_object):
-        instigator = votekick.vk_instigator
+        instigator = votekick.instigator
         tiles = int(distance_3d_vector(player.world_object.position,
             instigator.world_object.position))
         instigator_name = (('\x0303' if instigator.team.id else '\x0302') +
