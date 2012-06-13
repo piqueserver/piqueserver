@@ -187,7 +187,7 @@ from pyspades.world import cube_line
 from pyspades.server import block_action, block_line, set_color, position_data
 from pyspades.collision import collision_3d
 from pyspades.common import make_color
-from pyspades.types import MultikeyDict, IDPool
+from pyspades.types import MultikeyDict
 from pyspades.constants import *
 from commands import add, admin, name, alias, join_arguments
 from map import DEFAULT_LOAD_DIR
@@ -988,7 +988,7 @@ class BaseObject:
         self.id = id
     
     def release(self):
-        self.protocol.object_id_pool.put_back(self.id)
+        pass
 
 class Button(BaseObject):
     label = None
@@ -1135,7 +1135,7 @@ class Platform(BaseObject):
         if self.delay_call and self.delay_call.active():
             self.delay_call.cancel()
         self.delay_call = None
-        if self.cycle_loop.running:
+        if self.cycle_loop and self.cycle_loop.running:
             self.cycle_loop.stop()
         self.cycle_loop = None
     
@@ -1356,7 +1356,8 @@ class NewPlatformState(State):
             color_sum = tuple(imap(operator.add, color_sum, color))
         color_avg = tuple(n / len(self.blocks) for n in color_sum)
         
-        id = protocol.object_id_pool.pop()
+        protocol.highest_id += 1
+        id = protocol.highest_id
         platform = Platform(protocol, id, x1, y1, z1, x2, y2, z2, color_avg)
         platform.label = self.label or platform.label
         platform.build_plane(z1)
@@ -1381,8 +1382,9 @@ class NewButtonState(State):
         if self.location in protocol.buttons:
             return S_BUTTON_OVERLAPS
         
+        protocol.highest_id += 1
+        id = protocol.highest_id
         x, y, z = self.location
-        id = protocol.object_id_pool.pop()
         button = Button(protocol, id, x, y, z, self.color)
         button.label = self.label or button.label
         button.add_trigger(PressTrigger(protocol))
@@ -1783,7 +1785,7 @@ def apply_script(protocol, connection, config):
             connection.on_command(self, command, parameters)
     
     class PlatformProtocol(protocol):
-        object_id_pool = None
+        highest_id = None
         platforms = None
         platform_json_dirty = False
         buttons = None
@@ -1791,7 +1793,7 @@ def apply_script(protocol, connection, config):
         autosave_loop = None
         
         def on_map_change(self, map):
-            self.object_id_pool = IDPool()
+            self.highest_id = -1
             self.platforms = {}
             self.buttons = MultikeyDict()
             self.position_triggers = []
@@ -1867,10 +1869,7 @@ def apply_script(protocol, connection, config):
                     button.actions.append(new_action)
                 self.buttons[(id, (x, y, z))] = button
             ids.sort()
-            highest_id = ids[-1] if ids else -1
-            self.object_id_pool = IDPool(highest_id + 1)
-            self.object_id_pool.free_ids = [i for i in xrange(highest_id)
-                if i not in ids]
+            self.highest_id = ids[-1] if ids else -1
             self.platform_json_dirty = True
             for button in self.buttons.itervalues():
                 button.trigger_check()
