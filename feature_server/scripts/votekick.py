@@ -21,6 +21,8 @@ from twisted.internet.reactor import seconds
 from scheduler import Scheduler
 from commands import name, add, get_player, join_arguments, InvalidPlayer
 
+REQUIRE_REASON = False
+
 S_NO_VOTEKICK = 'No votekick in progress'
 S_DEFAULT_REASON = 'NO REASON GIVEN'
 S_IN_PROGRESS = 'Votekick already in progress'
@@ -127,6 +129,7 @@ class Votekick(object):
     def start(cls, instigator, victim, reason = None):
         protocol = instigator.protocol
         last_votekick = instigator.last_votekick
+        reason = reason.strip() if reason else None
         if protocol.votekick:
             raise VotekickFailure(S_IN_PROGRESS)
         elif instigator is victim:
@@ -138,18 +141,21 @@ class Votekick(object):
         elif not instigator.admin and (last_votekick is not None and
             seconds() - last_votekick < self.interval):
             raise VotekickFailure(S_NOT_YET)
+        elif REQUIRE_REASON and not reason:
+            raise VotekickFailure(S_NEED_REASON)
         
         result = protocol.on_votekick_start(instigator, victim, reason)
         if result is not None:
             raise VotekickFailure(result)
         
+        reason = reason or S_DEFAULT_REASON
         return cls(instigator, victim, reason)
     
-    def __init__(self, instigator, victim, reason = None):
+    def __init__(self, instigator, victim, reason):
         self.protocol = protocol = instigator.protocol
         self.instigator = instigator
         self.victim = victim
-        self.reason = (reason.strip() if reason else None) or S_DEFAULT_REASON
+        self.reason = reason
         self.votes = {instigator : True}
         self.ended = False
         
@@ -161,8 +167,9 @@ class Votekick(object):
             sender = instigator)
         instigator.send_chat(S_ANNOUNCE_SELF.format(victim = victim.name))
         
+        timeout_callback = protocol.end_votekick
         schedule = Scheduler(protocol)
-        schedule.call_later(self.duration, self.end, S_RESULT_TIMED_OUT)
+        schedule.call_later(self.duration, timeout_callback, S_RESULT_TIMED_OUT)
         schedule.loop_call(30.0, self.send_chat_update)
         self.schedule = schedule
     
