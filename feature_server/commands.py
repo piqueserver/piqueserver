@@ -813,13 +813,6 @@ def weapon(connection, value):
     else:
         name = player.weapon_object.name
     return '%s has a %s' % (player.name, name)
-
-@name('cancel')
-def cancel_vote(connection):
-    protocol = connection.protocol
-    if connection not in protocol.players:
-        connection = None
-    return protocol.cancel_vote(connection)
     
 command_list = [
     help,
@@ -877,8 +870,7 @@ command_list = [
     server_info,
     scripts,
     weapon,
-    mapname,
-    cancel_vote
+    mapname
 ]
 
 commands = {}

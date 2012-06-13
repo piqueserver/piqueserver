@@ -17,239 +17,263 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from twisted.internet import reactor
-from pyspades.common import prettify_timespan
-from map import check_rotation
-import random
+from twisted.internet.reactor import seconds
 from scheduler import Scheduler
-import commands
+from commands import name, add, get_player, join_arguments, InvalidPlayer
 
-def votekick(connection, value, *arg):
-    reason = commands.join_arguments(arg)
-    if connection not in connection.protocol.players:
+S_NO_VOTEKICK = 'No votekick in progress'
+S_DEFAULT_REASON = 'NO REASON GIVEN'
+S_IN_PROGRESS = 'Votekick already in progress'
+S_SELF_VOTEKICK = "You can't votekick yourself"
+S_NOT_ENOUGH_PLAYERS = "There aren't enough players to vote"
+S_VOTEKICK_IMMUNE = "You can't votekick this player"
+S_NOT_YET = "You can't start another votekick yet!"
+S_CANT_CANCEL = "You didn't start the votekick!"
+S_YES = '{player} voted YES'
+S_ENDED = 'Votekick for {victim} has ended. {result}'
+S_RESULT_TIMED_OUT = 'Votekick timed out'
+S_RESULT_CANCELLED = 'Cancelled'
+S_RESULT_BANNED = 'Banned by admin'
+S_RESULT_KICKED = 'Kicked by admin'
+S_RESULT_INSTIGATOR_KICKED = 'Instigator kicked by admin'
+S_RESULT_LEFT = '{victim} left during votekick'
+S_RESULT_INSTIGATOR_LEFT = 'Instigator {instigator} left'
+S_RESULT_PASSED = 'Player kicked'
+S_ANNOUNCE_IRC = '* {instigator} started a votekick against player {victim}. Reason: {reason}'
+S_ANNOUNCE = '{instigator} started a VOTEKICK against {victim}. Say /Y to agree'
+S_ANNOUNCE_SELF = 'You started a votekick against {victim}. Say /CANCEL to stop it'
+S_UPDATE = '{instigator} is votekicking {victim}. /Y to vote ({needed} left)'
+S_REASON = 'Reason: {reason}'
+
+class VotekickFailure(Exception):
+    pass
+
+@name('votekick')
+def start_votekick(connection, *args):
+    protocol = connection.protocol
+    if connection not in protocol.players:
         raise KeyError()
-    player = None
+    player = connection
+    
+    if not args:
+        if protocol.votekick:
+            # player requested votekick info
+            protocol.votekick.send_chat_update(player)
+            return
+        raise ValueError()
+    
+    value = args[0]
     try:
-        player = commands.get_player(connection.protocol, '#' + value)
-    except commands.InvalidPlayer:
-        player = commands.get_player(connection.protocol, value)
-    return connection.start_votekick(player, reason)
+        # vanilla aos behavior
+        victim = get_player(protocol, '#' + value)
+    except InvalidPlayer:
+        victim = get_player(protocol, value)
+    reason = join_arguments(args[1:])
+    
+    try:
+        # attempt to start votekick
+        votekick = Votekick.start(player, victim, reason)
+        protocol.votekick = votekick
+    except VotekickFailure as err:
+        return str(err)
 
-@commands.name('y')
+@name('cancel')
+def cancel_votekick(connection):
+    protocol = connection.protocol
+    votekick = protocol.votekick
+    if not votekick:
+        return S_NO_VOTEKICK
+    if connection not in protocol.players:
+        player = connection
+        if (player is not votekick.instigator and not player.admin and
+            not player.rights.cancel):
+            return S_CANT_CANCEL
+    
+    votekick.end(S_RESULT_CANCELLED)
+    protocol.votekick = None
+
+@name('y')
 def vote_yes(connection):
-    if connection not in connection.protocol.players:
+    protocol = connection.protocol
+    if connection not in protocol.players:
         raise KeyError()
-    if connection.protocol.vk_target is not None:
-        return connection.votekick_vote()
-    else:
-        return 'No votekick in progress.'        
+    player = connection
+    
+    votekick = protocol.votekick
+    if not votekick:
+        return S_NO_VOTEKICK
+    
+    votekick.vote(player)
+    if votekick.ended:
+        protocol.votekick = None
 
-commands.add(votekick)
-commands.add(vote_yes)
+add(start_votekick)
+add(cancel_votekick)
+add(vote_yes)
+
+class Votekick(object):
+    duration = 120.0 # 2 minutes
+    interval = 3 * 60.0 # 3 minutes
+    ban_duration = 15.0
+    public_votes = True
+    schedule = None
+    
+    def _get_votes_remaining(self):
+        return self.protocol.get_required_votes() - len(self.votes) + 1
+    votes_remaining = property(_get_votes_remaining)
+    
+    @classmethod
+    def start(cls, instigator, victim, reason = None):
+        protocol = instigator.protocol
+        last_votekick = instigator.last_votekick
+        if protocol.votekick:
+            raise VotekickFailure(S_IN_PROGRESS)
+        elif instigator is victim:
+            raise VotekickFailure(S_SELF_VOTEKICK)
+        elif protocol.get_required_votes() <= 0:
+            raise VotekickFailure(S_NOT_ENOUGH_PLAYERS)
+        elif victim.admin or victim.rights.cancel:
+            raise VotekickFailure(S_VOTEKICK_IMMUNE)
+        elif not instigator.admin and (last_votekick is not None and
+            seconds() - last_votekick < self.interval):
+            raise VotekickFailure(S_NOT_YET)
+        
+        result = protocol.on_votekick_start(instigator, victim, reason)
+        if result is not None:
+            raise VotekickFailure(result)
+        
+        return cls(instigator, victim, reason)
+    
+    def __init__(self, instigator, victim, reason = None):
+        self.protocol = protocol = instigator.protocol
+        self.instigator = instigator
+        self.victim = victim
+        self.reason = (reason.strip() if reason else None) or S_DEFAULT_REASON
+        self.votes = {instigator : True}
+        self.ended = False
+        
+        protocol.irc_say(S_ANNOUNCE_IRC.format(instigator = instigator.name,
+            victim = victim.name, reason = self.reason))
+        protocol.send_chat(S_ANNOUNCE.format(instigator = instigator.name,
+            victim = victim.name), sender = instigator)
+        protocol.send_chat(S_REASON.format(reason = self.reason),
+            sender = instigator)
+        instigator.send_chat(S_ANNOUNCE_SELF.format(victim = victim.name))
+        
+        schedule = Scheduler(protocol)
+        schedule.call_later(self.duration, self.end, S_RESULT_TIMED_OUT)
+        schedule.loop_call(30.0, self.send_chat_update)
+        self.schedule = schedule
+    
+    def vote(self, player):
+        if self.victim is player:
+            return
+        elif player in self.votes:
+            return
+        if self.public_votes:
+            self.protocol.send_chat(S_YES.format(player = player.name))
+        self.votes[player] = True
+        if self.votes_remaining <= 0:
+            # vote passed, ban or kick accordingly
+            victim = self.victim
+            self.end(S_RESULT_PASSED)
+            print '%s votekicked' % victim.name
+            if self.ban_duration > 0.0:
+                victim.ban(self.reason, self.ban_duration)
+            else:
+                victim.kick(silent = True)
+    
+    def release(self):
+        self.instigator = None
+        self.victim = None
+        self.votes = None
+        if self.schedule:
+            self.schedule.reset()
+        self.schedule = None
+    
+    def end(self, result):
+        self.ended = True
+        message = S_ENDED.format(victim = self.victim.name, result = result)
+        self.protocol.send_chat(message, irc = True)
+        if not self.instigator.admin:
+            self.instigator.last_votekick = seconds()
+        self.protocol.on_votekick_end()
+        self.release()
+    
+    def send_chat_update(self, target = None):
+        # send only to target player if provided, otherwise broadcast to server
+        target = target or self.protocol
+        target.send_chat(S_UPDATE.format(instigator = self.instigator.name,
+            victim = self.victim.name, needed = self.votes_remaining))
+        target.send_chat(S_REASON.format(reason = self.reason))
 
 def apply_script(protocol, connection, config):
-    class VotekickProtocol(protocol):
-        vk_instigator = None
-        vk_target = None
-        vk_reason = None
-        vk_schedule = None
-        
-        votekick_time = 120 # 2 minutes
-        votekick_interval = 3 * 60 # 3 minutes
-        votekick_percentage = 25.0
-        
-        votekick_ban_duration = config.get('votekick_ban_duration', 15)
-        votekick_percentage = config.get('votekick_percentage', 25)
-        votekick_public_votes = config.get('votekick_public_votes', True)
+    Votekick.ban_duration = config.get('votekick_ban_duration', 15.0)
+    Votekick.public_votes = config.get('votekick_public_votes', True)
+    required_percentage = config.get('votekick_percentage', 25.0)
     
-        def votekick_votes_available(self):
-            return int(((len(self.players) - 1) / 100.0) *
-                       self.votekick_percentage)
+    class VotekickProtocol(protocol):
+        votekick = None
         
-        def votekick_votes(self):
-            count = 0
-            for player in self.connections.values():
-                if player.vk_vote_status is not None:
-                    count += 1
-            return count
-            
-        def votekick_votes_left(self):
-            return self.votekick_votes_available() - self.votekick_votes()
+        def get_required_votes(self):
+            # votekicks are invalid if this returns <= 0
+            player_count = sum(not player.disconnected for player in
+                self.players.itervalues()) - 1
+            return int(player_count / 100.0 * required_percentage)
         
-        def on_map_change(self, map):
-            self.votekick_cleanup()
-            protocol.on_map_change(self, map)
-
+        def on_map_leave(self):
+            if self.votekick:
+                self.votekick.release()
+            self.votekick = None
+            protocol.on_map_leave(self)
+        
         def on_ban(self, banee, reason, duration):
-            if banee is self.vk_target:
-                self.votekick_show_result("Banned by admin")
-                self.votekick_cleanup()
+            votekick = self.votekick
+            if votekick and votekick.victim is self:
+                votekick.end(S_RESULT_BANNED)
+                self.votekick = None
             protocol.on_ban(self, connection, reason, duration)
-
-        def votekick_timeout(self):
-            self.votekick_show_result("Votekick timed out")
-            self.votekick_cleanup()
-
-        def votekick_cleanup(self):
-            self.on_votekick_end()
-            if self.vk_schedule is not None:
-                self.vk_schedule.reset()
-            self.vk_instigator = None
-            self.vk_target = None
         
-        def votekick_majority(self):
-            self.votekick_show_result("Player kicked")
-            text = "%s votekicked" % self.vk_target.name
-            print text
-            if self.votekick_ban_duration:
-                vk_target = self.vk_target
-                self.vk_target = None
-                vk_target.ban(self.vk_reason,
-                              self.votekick_ban_duration)
-            else:
-                self.vk_target.kick(silent = True)
-            self.votekick_cleanup()
-
-        def votekick_can_continue(self):
-            if self.votekick_votes_available() <= 0:
-                self.votekick_show_result(
-                    "Not enough players to continue vote.")
-                self.votekick_cleanup()
-                return False
-            else:
-                return True
-
-        def votekick_update(self):
-            if not self.votekick_can_continue():
-                return
-            if self.vk_reason is None:
-                reason = 'none'
-            else:
-                reason = self.vk_reason
-            self.send_chat(
-                '%s is votekicking %s for reason: %s. Say /y to vote '
-                '(%s needed)' % (self.vk_instigator.name,
-                self.vk_target.name, reason, self.votekick_votes_left()))
-
-        def votekick_show_result(self, result):
-            self.send_chat('Votekick for %s has ended. %s.' % (
-                self.vk_target.name, result), irc = True)
-            if not self.vk_instigator.admin: # set the cooldown
-                self.vk_instigator.last_votekick = reactor.seconds()
-        
-        def cancel_vote(self, connection = None):
-            if self.vk_target is None:
-                return protocol.cancel_vote(self, connection)
-            if connection is None: # IRC
-                message = 'Cancelled'
-            elif not connection.cancel_verify(self.vk_instigator):
-                return 'You did not start the votekick.'
-            else: # in-game
-                message = 'Cancelled by %s' % connection.name
-            self.votekick_show_result(message)
-            self.votekick_cleanup()
-
-        def on_votekick_start(self):
+        def on_votekick_start(self, instigator, victim, reason):
             pass
         
         def on_votekick_end(self):
             pass
     
     class VotekickConnection(connection):
-        vk_vote_status = None
         last_votekick = None
-
-        def votekick_vote(self):
-            if self is self.protocol.vk_target:
-                return "The votekick victim can't vote."
-            elif not self.protocol.votekick_can_continue():
-                return
-            else:
-                if (self.protocol.votekick_public_votes and
-                    self.vk_vote_status is None):
-                    self.protocol.send_chat('%s voted YES.' % self.name)
-                self.vk_vote_status = True
-            if self.protocol.votekick_votes_left() <= 0:
-                self.protocol.votekick_majority()
-            
-        def cancel_verify(self, instigator):
-            return (self.admin or 
-                    self is instigator or 
-                    self.rights.cancel)
-
-        def on_disconnect(self):
-            if self.protocol.vk_target is self:
-                self.protocol.votekick_show_result(
-                    "%s left during votekick" % self.name)
-                vk_target = self.protocol.vk_target
-                vk_instigator = self.protocol.vk_instigator
-                # mute on_ban message
-                self.protocol.vk_target = self.protocol.vk_instigator = None
-                self.ban(self.protocol.vk_reason,
-                         self.protocol.votekick_ban_duration)
-                self.protocol.vk_target = vk_target
-                self.protocol.vk_instigator = vk_instigator
-                self.protocol.votekick_cleanup()
-            elif self.protocol.vk_instigator is self:
-                self.protocol.votekick_show_result(
-                    "Instigator %s left during votekick" % self.name)
-                self.protocol.votekick_cleanup()
-            connection.on_disconnect(self)
-            if self.protocol.vk_instigator:
-                self.protocol.votekick_can_continue()
-
-        def kick(self, reason = None, silent = False):
-            if self.protocol.vk_target is self:
-                self.protocol.votekick_show_result("Kicked by admin")
-                self.protocol.votekick_cleanup()
-            if self.protocol.vk_instigator is self:
-                self.protocol.votekick_show_result("Instigator kicked by admin")
-                self.protocol.votekick_cleanup()
-            connection.kick(self, reason, silent)
         
-        def start_votekick(self, target, reason = None):
-            protocol = self.protocol
-            if protocol.votekick_votes_available() <= 0:
-                return 'Not enough players on server.'
-            elif target is self:
-                return "You can't votekick yourself."
-            elif target.admin:
-                return 'Cannot votekick an administrator.'
-            elif (target.rights and 'cancel' in target.rights):
-                return 'Target has vote cancellation rights.'
-            elif protocol.vk_target is not None:
-                return 'Votekick already in progress.'
-            last = self.last_votekick
-            if (last is not None and not connection.admin and
-            reactor.seconds() - last < protocol.votekick_interval):
-                return "You can't start a votekick now."
-            # begin votekick
-
-            for player in protocol.players.values():
-                player.vk_vote_status = None
-            
-            self.vk_vote_status = True
-            protocol.vk_instigator = self
-            protocol.vk_target = target
-            protocol.vk_reason = reason
-            if reason is None:
-                reason = 'NO REASON GIVEN'
-            protocol.irc_say(
-                '* %s initiated a votekick against player %s.%s' % (
-                self.name, target.name,
-                ' Reason: %s' % reason if reason else ''))
-            protocol.send_chat(
-                '%s initiated a VOTEKICK against player %s. Say /y to '
-                'agree.' % (self.name, target.name),
-                    sender = self)
-            protocol.send_chat('Reason: %s' % reason, sender = self)
-            self.send_chat('You initiated a VOTEKICK against %s. '
-                'Say /cancel to stop it at any time.' % target.name)
-            self.send_chat('Reason: %s' % reason)
-            protocol.on_votekick_start()
-            protocol.vk_schedule = schedule = Scheduler(protocol)
-            schedule.call_later(protocol.votekick_time, 
-                                protocol.votekick_timeout)
-            schedule.loop_call(30.0, protocol.votekick_update)
-
+        def on_disconnect(self):
+            votekick = self.protocol.votekick
+            if votekick:
+                if votekick.victim is self:
+                    # victim leaves, gets votekick ban
+                    reason = votekick.reason
+                    votekick.end(S_RESULT_LEFT.format(victim = self.name))
+                    self.protocol.votekick = None
+                    self.ban(reason, Votekick.ban_duration)
+                elif votekick.instigator is self:
+                    # instigator leaves, votekick is called off
+                    votekick.end(S_RESULT_INSTIGATOR_LEFT.format(
+                        instigator = self.name))
+                    self.protocol.votekick = None
+                else:
+                    # make sure we still have enough players
+                    votekick.votes.pop(self, None)
+                    if votekick.votes_remaining <= 0:
+                        votekick.end(S_NOT_ENOUGH_PLAYERS)
+                        self.protocol.votekick = None
+            connection.on_disconnect(self)
+        
+        def kick(self, reason = None, silent = False):
+            votekick = self.protocol.votekick
+            if votekick:
+                if votekick.victim is self:
+                    votekick.end(S_RESULT_KICKED)
+                    self.protocol.votekick = None
+                elif votekick.instigator is self:
+                    votekick.end(S_RESULT_INSTIGATOR_KICKED)
+                    self.protocol.votekick = None
+            connection.kick(self, reason, silent)
+    
     return VotekickProtocol, VotekickConnection

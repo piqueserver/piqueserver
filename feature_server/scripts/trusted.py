@@ -10,6 +10,7 @@ from commands import add, admin, get_player
 S_GRANTED = '{player} is now trusted'
 S_GRANTED_SELF = "You've been granted trust, and can't be votekicked"
 S_CANT_VOTEKICK = "{player} is trusted and can't be votekicked"
+S_RESULT_TRUSTED = 'Trusted user'
 
 @admin
 def trust(connection, player):
@@ -21,23 +22,21 @@ def trust(connection, player):
 add(trust)
 
 def apply_script(protocol, connection, config):
-    has_votekick = 'votekick' in config.get('scripts', [])
     class TrustedConnection(connection):
         def on_user_login(self, user_type, verbose = True):
             if user_type == 'trusted':
                 self.speedhack_detect = False
-                if (has_votekick and self.protocol.vk_target is self):
-                    self.protocol.votekick_show_result("Trusted user")
-                    self.protocol.votekick_cleanup()
+                votekick = getattr(self.protocol, 'votekick', None)
+                if votekick and votekick.victim is self:
+                    votekick.end(S_RESULT_TRUSTED)
+                    self.protocol.votekick = None
             return connection.on_user_login(self, user_type, verbose)
-        if has_votekick:
-            def start_votekick(self, target, reason = None):
-                if target.user_types.trusted:
-                    return S_CANT_VOTEKICK.format(player = target.name)
-                return connection.start_votekick(self, target, reason)
-            def cancel_verify(self, instigator):
-                return (connection.cancel_verify(self, instigator) or
-                        (self.user_types.trusted and
-                         self.protocol.vk_target is self))
     
-    return protocol, TrustedConnection
+    class TrustedProtocol(protocol):        
+        def on_votekick_start(self, instigator, victim, reason):
+            print 'c'
+            if victim.user_types.trusted:
+                return S_CANT_VOTEKICK.format(player = victim.name)
+            return protocol.on_votekick_start(self, instigator, victim, reason)
+    
+    return TrustedProtocol, TrustedConnection

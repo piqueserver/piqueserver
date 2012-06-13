@@ -4,10 +4,13 @@ A tool for identifying griefers.
 Maintainer: hompy
 """
 
+from twisted.internet.reactor import seconds
 from pyspades.collision import distance_3d_vector
 from pyspades.common import prettify_timespan
 from commands import add, admin, name, get_player, alias
-from twisted.internet import reactor
+
+# "blockinfo" must be AFTER "votekick" in the config.txt script list
+GRIEFCHECK_ON_VOTEKICK = False
 
 @name('griefcheck')
 @alias('gc')
@@ -18,7 +21,7 @@ def grief_check(connection, player, time = None):
     minutes = float(time or 2)
     if minutes < 0.0:
         raise ValueError()
-    time = reactor.seconds() - minutes * 60.0
+    time = seconds() - minutes * 60.0
     blocks_removed = player.blocks_removed or []
     blocks = [b[1] for b in blocks_removed if b[0] >= time]
     player_name = player.name
@@ -47,7 +50,7 @@ def grief_check(connection, player, time = None):
         else:
             message += ' All of them were map blocks.'
         last = blocks_removed[-1]
-        time_s = prettify_timespan(reactor.seconds() - last[0], get_seconds = True)
+        time_s = prettify_timespan(seconds() - last[0], get_seconds = True)
         message += ' Last one was destroyed %s ago' % time_s
         whom = last[1]
         if whom is None and len(names) > 0:
@@ -60,7 +63,7 @@ def grief_check(connection, player, time = None):
         message += '.'
     switch_sentence = False
     if player.last_switch is not None and player.last_switch >= time:
-        time_s = prettify_timespan(reactor.seconds() - player.last_switch,
+        time_s = prettify_timespan(seconds() - player.last_switch,
             get_seconds = True)
         message += ' %s joined %s team %s ago' % (player_name,
             player.team.name, time_s)
@@ -71,17 +74,16 @@ def grief_check(connection, player, time = None):
         message += s + ' %s teammates in the last %s' % (teamkills, minutes_s)
     if switch_sentence or teamkills > 0:
         message += '.'
-    if (not player.team.spectator and
-        protocol.vk_target is not None and protocol.vk_target is player and
-        protocol.vk_instigator.world_object is not None and
-        protocol.vk_target.world_object is not None):
-        vk_instigator = protocol.vk_instigator
-        dist = distance_3d_vector(player.world_object.position,
-            vk_instigator.world_object.position)
-        name = ('\x0303' if vk_instigator.team.id
-            else '\x0302') + vk_instigator.name + '\x0f'
+    votekick = getattr(protocol, 'votekick', None)
+    if (votekick and votekick.victim is player and
+        votekick.victim.world_object and votekick.instigator.world_object):
+        instigator = votekick.vk_instigator
+        tiles = int(distance_3d_vector(player.world_object.position,
+            instigator.world_object.position))
+        instigator_name = (('\x0303' if instigator.team.id else '\x0302') +
+            instigator.name + '\x0f')
         message += (' %s is %d tiles away from %s, who started the votekick.' %
-            (player_name, int(dist), name))
+            (player_name, tiles, name))
     return message
 
 add(grief_check)
@@ -118,8 +120,7 @@ def apply_script(protocol, connection, config):
             if self.blocks_removed is None:
                 self.blocks_removed = []
             pos = (x, y, z)
-            info = (reactor.seconds(),
-                self.protocol.block_info.pop(pos, None))
+            info = (seconds(), self.protocol.block_info.pop(pos, None))
             self.blocks_removed.append(info)
             connection.on_block_removed(self, x, y, z)
         
@@ -127,25 +128,23 @@ def apply_script(protocol, connection, config):
             if killer and killer.team is self.team:
                 if killer.teamkill_times is None:
                     killer.teamkill_times = []
-                killer.teamkill_times.append(reactor.seconds())
+                killer.teamkill_times.append(seconds())
             return connection.on_kill(self, killer, type, grenade)
     
     class BlockInfoProtocol(protocol):
         block_info = None
         
-        
         def on_map_change(self, map):
             self.block_info = None
             protocol.on_map_change(self, map)
-
-        if has_votekick:
-            def on_votekick_start(self):
-                self.send_chat(
-                    grief_check(self.vk_instigator, self.vk_target.name),
-                    irc = True)
-                return protocol.on_votekick_start(self)
-        else:
-            protocol.vk_target = None
-            protocol.vk_instigator = None
+        
+        def on_votekick_start(self, instigator, victim, reason):
+            print 'b1'
+            result = protocol.on_votekick_start(self, instigator, victim, reason)
+            print 'b2'
+            if result is None and GRIEFCHECK_ON_VOTEKICK:
+                message = grief_check(instigator, victim.name)
+                self.send_chat(message, irc = True)
+            return result
     
     return BlockInfoProtocol, BlockInfoConnection
