@@ -84,7 +84,7 @@ def grief_check(connection, player, time = None):
         instigator_name = (('\x0303' if instigator.team.id else '\x0302') +
             instigator.name + '\x0f')
         message += (' %s is %d tiles away from %s, who started the votekick.' %
-            (player_name, tiles, name))
+            (player_name, tiles, instigator_name))
     return message
 
 add(grief_check)
