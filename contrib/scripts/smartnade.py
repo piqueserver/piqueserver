@@ -8,7 +8,7 @@ def apply_script(protocol, connection, config):
                     if nade.fuse > SMARTNADE_DELAY:
                         for enemy in player.team.other.get_players():
                             if nade.get_damage(enemy.world_object.position) != 0:
-                                nade.fuse = SMARTNADE_DELAY
+                                nade.fuse = min(nade.fuse, SMARTNADE_DELAY)
             return protocol.on_world_update(self)
 
     class SmartNadeConnection(connection):
