@@ -138,7 +138,7 @@ class Votekick(object):
         elif victim.admin or victim.rights.cancel:
             raise VotekickFailure(S_VOTEKICK_IMMUNE)
         elif not instigator.admin and (last_votekick is not None and
-            seconds() - last_votekick < self.interval):
+            seconds() - last_votekick < cls.interval):
             raise VotekickFailure(S_NOT_YET)
         elif REQUIRE_REASON and not reason:
             raise VotekickFailure(S_NEED_REASON)
