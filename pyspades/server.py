@@ -193,6 +193,7 @@ class ServerConnection(BaseConnection):
     filter_visibility_data = False
     filter_animation_data = False
     freeze_animation = False
+    filter_weapon_input = False
     speedhack_detect = False
     rapid_hack_detect = False
     timers = None
@@ -270,11 +271,11 @@ class ServerConnection(BaseConnection):
                             'Invalid orientation data received')
                         return
                     returned = self.on_orientation_update(x, y, z)
+                    if returned == False:
+                        return
                     if returned is not None:
                         x, y, z = returned
                     world_object.set_orientation(x, y, z)
-                    if self.filter_visibility_data:
-                        return
                 elif contained.id == loaders.PositionData.id:
                     current_time = reactor.seconds()
                     last_update = self.last_position_update
@@ -294,8 +295,9 @@ class ServerConnection(BaseConnection):
                         # vanilla behaviour
                         self.set_location()
                         return
-                    world_object.set_position(x, y, z)
-                    self.on_position_update()
+                    if not self.freeze_animation:
+                        world_object.set_position(x, y, z)
+                        self.on_position_update()
                     if self.filter_visibility_data:
                         return
                     game_mode = self.protocol.game_mode
@@ -332,10 +334,12 @@ class ServerConnection(BaseConnection):
                             self.on_shoot_set(primary)
                     if world_object.secondary_fire != secondary:
                         self.on_secondary_fire_set(secondary)
-                    contained.player_id = self.player_id
-                    self.protocol.send_contained(contained, sender = self)
                     world_object.primary_fire = primary
                     world_object.secondary_fire = secondary
+                    if self.filter_weapon_input:
+                        return
+                    contained.player_id = self.player_id
+                    self.protocol.send_contained(contained, sender = self)
                 elif contained.id == loaders.InputData.id:
                     returned = self.on_walk_update(contained.up, contained.down, 
                         contained.left, contained.right)
@@ -384,6 +388,8 @@ class ServerConnection(BaseConnection):
                     self.protocol.send_contained(contained, sender = self)
                 elif contained.id == loaders.WeaponReload.id:
                     self.weapon_object.reload()
+                    if self.filter_animation_data:
+                        return
                     contained.player_id = self.player_id
                     self.protocol.send_contained(contained, sender = self)
                 elif contained.id == loaders.HitPacket.id:
@@ -453,7 +459,7 @@ class ServerConnection(BaseConnection):
                             self.world_object.primary_fire)
                     self.world_object.set_weapon(self.tool == WEAPON_TOOL)
                     self.on_tool_changed(self.tool)
-                    if self.filter_visibility_data:
+                    if self.filter_visibility_data or self.filter_animation_data:
                         return
                     set_tool.player_id = self.player_id
                     set_tool.value = contained.value
@@ -464,6 +470,8 @@ class ServerConnection(BaseConnection):
                         return
                     self.color = color
                     self.on_color_set(color)
+                    if self.filter_animation_data:
+                        return
                     contained.player_id = self.player_id
                     self.protocol.send_contained(contained, sender = self,
                         save = True)
@@ -812,6 +820,7 @@ class ServerConnection(BaseConnection):
             self.spawn_call = None
         if self.world_object is not None:
             self.world_object.delete()
+            self.world_object = None
         if self.team is not None:
             old_team = self.team
             self.team = None
