@@ -17,7 +17,7 @@ from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
 from pyspades.server import set_tool
 from pyspades.constants import *
-from commands import add, admin, get_player
+from commands import add, admin, get_player, name
 
 ALWAYS_RAPID = False
 RAPID_INTERVAL = 0.08
@@ -37,7 +37,7 @@ def toggle_rapid(connection, player = None):
     player.rapid = rapid = not player.rapid
     player.rapid_hack_detect = not rapid
     if rapid:
-        player.rapid_loop = LoopingCall(resend_tool, self)
+        player.rapid_loop = LoopingCall(resend_tool, player)
     else:
         if player.rapid_loop and player.rapid_loop.running:
             player.rapid_loop.stop()
@@ -68,6 +68,11 @@ def apply_script(protocol, connection, config):
             self.rapid = ALWAYS_RAPID
             self.rapid_hack_detect = not self.rapid
             connection.on_login(self, name)
+        
+        def on_reset(self):
+            if self.rapid_loop and self.rapid_loop.running:
+                self.rapid_loop.stop()
+            connection.on_reset(self)
         
         def on_disconnect(self):
             self.rapid = False
