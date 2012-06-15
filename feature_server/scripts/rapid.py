@@ -2,14 +2,13 @@
 /rapid [player] will put the player in rapid mode, speeding up all tools
 including weapons.
 
-If any of DEFAULT_RAPID_BLOCKS, DEFAULT_RAPID_WEAPONS or DEFAULT_RAPID_SPADE
-are set to True, rapid hack detection will be disabled for everyone.
-
 RAPID_BLOCK_DELAY determines how fast block placement should be.
 Lowering this value is not recommended except for local use. Ping to the server
 is the effective lower limit: if this value is set to 0.1 (0.1 seconds = 100ms),
 users with ping above that won't have the same advantage as the rest of the
 players.
+
+Set ALWAYS_RAPID to TRUE to automatically get rapid when you login.
 
 Mantainer: hompy
 """
@@ -20,14 +19,13 @@ from pyspades.server import set_tool
 from pyspades.constants import *
 from commands import add, admin, get_player
 
+ALWAYS_RAPID = False
 RAPID_INTERVAL = 0.08
 RAPID_BLOCK_DELAY = 0.26
-DEFAULT_RAPID_BLOCKS = False
-DEFAULT_RAPID_WEAPONS = False
-DEFAULT_RAPID_SPADE = False
 
+@name('rapid')
 @admin
-def rapid(connection, player = None):
+def toggle_rapid(connection, player = None):
     protocol = connection.protocol
     if player is not None:
         player = get_player(protocol, player)
@@ -36,17 +34,16 @@ def rapid(connection, player = None):
     else:
         raise ValueError()
     
-    player.rapid = not player.rapid
-    if player.rapid:
-        player.rapid_blocks = player.rapid_weapons = player.rapid_spade = True
+    player.rapid = rapid = not player.rapid
+    player.rapid_hack_detect = not rapid
+    if rapid:
+        player.rapid_loop = LoopingCall(resend_tool, self)
     else:
-        player.rapid_blocks = DEFAULT_RAPID_BLOCKS
-        player.rapid_weapons = DEFAULT_RAPID_WEAPONS
-        player.rapid_spade = DEFAULT_RAPID_SPADE
-    player.rapid_hack_detect = not (player.rapid_blocks or
-        player.rapid_weapons or player.rapid_spade)
+        if player.rapid_loop and player.rapid_loop.running:
+            player.rapid_loop.stop()
+        player.rapid_loop = None
     
-    message = 'now rapid' if player.rapid else 'no longer rapid'
+    message = 'now rapid' if rapid else 'no longer rapid'
     player.send_chat("You're %s" % message)
     if connection is not player and connection in protocol.players:
         connection.send_chat('%s is %s' % (player.name, message))
@@ -60,44 +57,27 @@ def resend_tool(player):
     else:
         player.send_contained(set_tool)
 
-add(rapid)
+add(toggle_rapid)
 
 def apply_script(protocol, connection, config):
     class RapidConnection(connection):
         rapid = False
         rapid_loop = None
-        rapid_blocks = False
-        rapid_weapons = False
-        rapid_spade = False
-        
-        def reset_rapid(self):
-            self.rapid = False
-            self.rapid_blocks = DEFAULT_RAPID_BLOCKS
-            self.rapid_weapons = DEFAULT_RAPID_WEAPONS
-            self.rapid_spade = DEFAULT_RAPID_SPADE
-            self.rapid_hack_detect = not (self.rapid_blocks or
-                self.rapid_weapons or self.rapid_spade)
-        
-        def on_connect(self):
-            self.rapid_loop = LoopingCall(resend_tool, self)
-            connection.on_connect(self)
-        
-        def on_reset(self):
-            self.reset_rapid()
-            connection.on_reset(self)
         
         def on_login(self, name):
-            self.reset_rapid()
+            self.rapid = ALWAYS_RAPID
+            self.rapid_hack_detect = not self.rapid
             connection.on_login(self, name)
         
         def on_disconnect(self):
+            self.rapid = False
             if self.rapid_loop and self.rapid_loop.running:
                 self.rapid_loop.stop()
             self.rapid_loop = None
             connection.on_disconnect(self)
         
         def on_block_build(self, x, y, z):
-            if self.rapid_blocks:
+            if self.rapid:
                 delay = max(0.0, RAPID_BLOCK_DELAY - self.latency / 1000.0)
                 if delay > 0.0:
                     callLater(delay, resend_tool, self)
@@ -106,14 +86,12 @@ def apply_script(protocol, connection, config):
             connection.on_block_build(self, x, y, z)
         
         def on_grenade_thrown(self, grenade):
-            if self.rapid_weapons:
+            if self.rapid:
                 resend_tool(self)
             connection.on_grenade_thrown(self, grenade)
         
         def on_shoot_set(self, fire):
-            if self.rapid_loop and (
-                (self.rapid_spade and self.tool == SPADE_TOOL) or
-                (self.rapid_weapons and self.tool == WEAPON_TOOL)):
+            if self.rapid and self.rapid_loop:
                 if not self.rapid_loop.running and fire:
                     self.rapid_loop.start(RAPID_INTERVAL)
                 elif self.rapid_loop.running and not fire:
