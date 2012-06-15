@@ -586,6 +586,7 @@ class ServerConnection(BaseConnection):
                         else:
                             team = self.team
                         self.protocol.send_contained(contained, team = team)
+                        self.on_chat_sent(value, global_message)
                 elif contained.id == loaders.FogColor.id:
                     color = get_color(contained.color)
                     self.on_command('fog', [str(item) for item in color])
@@ -1111,7 +1112,10 @@ class ServerConnection(BaseConnection):
     
     def on_chat(self, value, global_message):
         pass
-        
+    
+    def on_chat_sent(self, value, global_message):
+        pass
+    
     def on_command(self, command, parameters):
         pass
     
