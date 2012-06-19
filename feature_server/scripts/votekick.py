@@ -88,7 +88,7 @@ def cancel_votekick(connection):
     votekick = protocol.votekick
     if not votekick:
         return S_NO_VOTEKICK
-    if connection not in protocol.players:
+    if connection in protocol.players:
         player = connection
         if (player is not votekick.instigator and not player.admin and
             not player.rights.cancel):
