@@ -563,6 +563,7 @@ class ServerConnection(BaseConnection):
                     self.on_line_build(points)
                     contained.player_id = self.player_id
                     self.protocol.send_contained(contained, save = True)
+                    self.protocol.update_entities()
             if self.name:
                 if contained.id == loaders.ChatMessage.id:
                     if not self.name:
