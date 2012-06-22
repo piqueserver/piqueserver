@@ -62,9 +62,11 @@ class Map(object):
         self.rot_info = rot_info
         self.gen_script = getattr(info, 'gen_script', None)
         if self.gen_script:
+            self.short_name = rot_info.name
             self.name = rot_info.full_name
         else:
             self.name = getattr(info, 'name', self.rot_info.name)
+            self.short_name = self.name
         self.author = getattr(info, 'author', '(unknown)')
         self.version = getattr(info, 'version', '1.0')
         self.description = getattr(info, 'description', '')

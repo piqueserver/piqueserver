@@ -42,10 +42,10 @@ class BaseConnection(object):
         self.protocol.remove_peer(self.peer)
         self.on_disconnect()
     
-    def packet_received(self, loader):
-        raise NotImplementedError('packet_received() not implemented')
+    def loader_received(self, loader):
+        raise NotImplementedError('loader_received() not implemented')
     
-    def send_packet(self, packet, sequence = False):
+    def send_contained(self, contained, sequence = False):
         if self.disconnected:
             return
         if sequence:
@@ -53,7 +53,7 @@ class BaseConnection(object):
         else:
             flags = enet.PACKET_FLAG_RELIABLE
         data = ByteWriter()
-        packet.write(data)
+        contained.write(data)
         packet = enet.Packet(str(data), flags)
         self.peer.send(0, packet)
     
@@ -114,7 +114,7 @@ class BaseProtocol(object):
     
     def data_received(self, peer, packet):
         connection = self.connections[peer]
-        connection.packet_received(packet)
+        connection.loader_received(packet)
 
     def remove_peer(self, peer):
         if peer in self.connections:
@@ -153,7 +153,7 @@ class BaseProtocol(object):
                         del self.clients[peer]
                         self.check_client()
                     elif event.type == enet.EVENT_TYPE_RECEIVE:
-                        connection.packet_received(event.packet)
+                        connection.loader_received(event.packet)
                 else:
                     if event_type == enet.EVENT_TYPE_CONNECT:
                         self.on_connect(peer)
