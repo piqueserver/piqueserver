@@ -42,10 +42,10 @@ class BaseConnection(object):
         self.protocol.remove_peer(self.peer)
         self.on_disconnect()
     
-    def loader_received(self, loader):
-        raise NotImplementedError('loader_received() not implemented')
+    def packet_received(self, loader):
+        raise NotImplementedError('packet_received() not implemented')
     
-    def send_contained(self, contained, sequence = False):
+    def send_packet(self, packet, sequence = False):
         if self.disconnected:
             return
         if sequence:
@@ -53,11 +53,14 @@ class BaseConnection(object):
         else:
             flags = enet.PACKET_FLAG_RELIABLE
         data = ByteWriter()
-        contained.write(data)
+        packet.write(data)
         packet = enet.Packet(str(data), flags)
         self.peer.send(0, packet)
     
     # events
+
+    def on_connect(self):
+        pass
     
     def on_disconnect(self):
         pass
@@ -71,6 +74,7 @@ class BaseConnection(object):
 class BaseProtocol(object):
     connection_class = BaseConnection
     max_connections = 33
+    is_client = False
     
     def __init__(self, port = None, interface = 'localhost', 
                  update_interval = 1 / 60.0):
@@ -110,13 +114,20 @@ class BaseProtocol(object):
     
     def data_received(self, peer, packet):
         connection = self.connections[peer]
-        connection.loader_received(packet)
+        connection.packet_received(packet)
 
     def remove_peer(self, peer):
         if peer in self.connections:
             del self.connections[peer]
         elif peer in self.clients:
             del self.clients[peer]
+            self.check_client()
+
+    def check_client(self):
+        if self.is_client and not self.clients:
+            self.update_loop.stop()
+            self.update_loop = None
+            self.host = None # important for GC
     
     def update(self):
         try:
@@ -140,8 +151,9 @@ class BaseProtocol(object):
                     elif event_type == enet.EVENT_TYPE_DISCONNECT:
                         connection.on_disconnect()
                         del self.clients[peer]
+                        self.check_client()
                     elif event.type == enet.EVENT_TYPE_RECEIVE:
-                        connection.loader_received(event.packet)
+                        connection.packet_received(event.packet)
                 else:
                     if event_type == enet.EVENT_TYPE_CONNECT:
                         self.on_connect(peer)
@@ -156,4 +168,5 @@ class BaseProtocol(object):
 
 def make_client(*arg, **kw):
     protocol = BaseProtocol()
+    protocol.is_client = True
     return protocol.connect(*arg, **kw)
