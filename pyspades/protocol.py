@@ -132,6 +132,8 @@ class BaseProtocol(object):
     def update(self):
         try:
             while 1:
+                if self.host is None:
+                    return
                 try:
                     event = self.host.service(0)
                 except IOError:
