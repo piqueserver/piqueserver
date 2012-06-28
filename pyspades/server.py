@@ -201,7 +201,6 @@ class ServerConnection(BaseConnection):
     last_block = None
     map_data = None
     last_position_update = None
-    local = False
     
     def __init__(self, *arg, **kw):
         BaseConnection.__init__(self, *arg, **kw)
@@ -212,8 +211,6 @@ class ServerConnection(BaseConnection):
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
     
     def on_connect(self):
-        if self.local:
-            return
         if self.peer.eventData != self.protocol.version:
             self.disconnect(ERROR_WRONG_VERSION)
             return
