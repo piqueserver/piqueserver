@@ -24,8 +24,13 @@ import random
 
 DEFAULT_LOAD_DIR = './maps'
 
-class MapNotFound(IOError):
-    pass
+class MapNotFound(Exception):
+    def __init__(self, map):
+        self.map = map
+        Exception.__init__(self, 'map %s does not exist' % map)
+
+    def __nonzero__(self):
+        return False
 
 def check_rotation(maps, load_dir = DEFAULT_LOAD_DIR):
     infos = []
@@ -35,7 +40,7 @@ def check_rotation(maps, load_dir = DEFAULT_LOAD_DIR):
         infos.append(map)
         if (not os.path.isfile(map.get_map_filename(load_dir))
         and not os.path.isfile(map.get_meta_filename(load_dir))):
-            raise MapNotFound('map %s does not exist' % map)
+            raise MapNotFound(map)
     return infos
 
 class Map(object):
@@ -90,7 +95,7 @@ class Map(object):
         try:
             fp = open(rot_info.get_map_filename(load_dir), 'rb')
         except OSError:
-            raise MapNotFound('map %s does not exist' % rot_info.name)
+            raise MapNotFound(rot_info.name)
         self.data = VXLData(fp)
         fp.close()
 

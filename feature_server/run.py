@@ -641,9 +641,10 @@ class FeatureProtocol(ServerProtocol):
         port = self.port = config.get('port', 32887)
         ServerProtocol.__init__(self, port, interface)
         self.host.receiveCallback = self.receive_callback
-        if not self.set_map_rotation(config['maps']):
-            print 'Invalid map in map rotation, exiting.'
-            raise SystemExit()
+        ret = self.set_map_rotation(config['maps'])
+        if not ret:
+            print 'Invalid map in map rotation (%s), exiting.' % ret.map
+            raise SystemExit
 
         self.update_format()
         self.tip_frequency = config.get('tip_frequency', 0)
@@ -726,8 +727,8 @@ class FeatureProtocol(ServerProtocol):
     def set_map_name(self, rot_info):
         try:
             map_info = self.get_map(rot_info)
-        except MapNotFound:
-            return False
+        except MapNotFound, e:
+            return e
         if self.map_info:
             self.on_map_leave()
         self.map_info = map_info
@@ -743,8 +744,8 @@ class FeatureProtocol(ServerProtocol):
     def set_map_rotation(self, maps, now = True):
         try:
             maps = check_rotation(maps)
-        except MapNotFound:
-            return False
+        except MapNotFound, e:
+            return e
         self.maps = maps
         self.map_rotator = self.map_rotator_type(maps)
         if now:

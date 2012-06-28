@@ -678,10 +678,11 @@ def change_rotation(connection, *pre_maps):
 
     maps, map_list = parse_maps(pre_maps)
 
-    if len(maps)==0:
-        return 'Usage: /rotation <map1> <map2> <map3>...'    
-    if not protocol.set_map_rotation(maps, False):
-        return 'Invalid map in map rotation (%s)' % map_list
+    if len(maps) == 0:
+        return 'Usage: /rotation <map1> <map2> <map3>...'
+    ret = protocol.set_map_rotation(maps, False)
+    if not ret:
+        return 'Invalid map in map rotation (%s)' % ret.map
     protocol.send_chat("%s changed map rotation to %s." %
                             (name, map_list), irc=True)
 
@@ -697,8 +698,9 @@ def rotation_add(connection, *pre_maps):
     map_list = ", ".join(maps) + map_list
     maps.extend(new_maps)
     
-    if not protocol.set_map_rotation(maps, False):
-        return 'Invalid map in map rotation (%s)' % map_list
+    ret = protocol.set_map_rotation(maps, False)
+    if not ret:
+        return 'Invalid map in map rotation (%s)' % ret.map
     protocol.send_chat("%s added %s to map rotation." %
                             (name, " ".join(pre_maps)), irc=True)
 
