@@ -52,6 +52,7 @@ def apply_script(protocol, connection, config):
             for xyz, strong_block in strong_blocks.iteritems():
                 if strong_block.owner is self:
                     strong_blocks[xyz] = strong_block._replace(owner = None)
+            connection.on_disconnect(self)
         
         def on_block_build(self, x, y, z):
             if not is_color_dirt(self.color):
