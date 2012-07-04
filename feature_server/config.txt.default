@@ -37,7 +37,7 @@
     "respawn_time" : 30,
     "respawn_waves" : true,
     "friendly_fire" : false,
-    "grief_friendly_fire_time" : 2,
+    "grief_friendly_fire_time" : 5,
     "spade_teamkills_on_grief" : false,
     "balanced_teams" : 1,
     "teamswitch_interval" : 0,

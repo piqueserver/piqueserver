@@ -115,7 +115,7 @@ add(vote_yes)
 
 class Votekick(object):
     duration = 120.0 # 2 minutes
-    interval = 3 * 60.0 # 3 minutes
+    interval = 2 * 60.0 # 3 minutes
     ban_duration = 15.0
     public_votes = True
     schedule = None
