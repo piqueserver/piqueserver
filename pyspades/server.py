@@ -506,7 +506,7 @@ class ServerConnection(BaseConnection):
                         if self.blocks < -BUILD_TOLERANCE:
                             return
                         elif not collision_3d(pos.x, pos.y, pos.z, x, y, z,
-                                              MAX_BLOCK_DISTANCE):
+                            MAX_BLOCK_DISTANCE):
                             return
                         elif self.on_block_build_attempt(x, y, z) == False:
                             return
@@ -515,6 +515,9 @@ class ServerConnection(BaseConnection):
                         self.on_block_build(x, y, z)
                     else:
                         if not map.get_solid(x, y, z):
+                            return
+                        if not collision_3d(pos.x, pos.y, pos.z, x, y, z,
+                            MAX_DIG_DISTANCE):
                             return
                         if self.on_block_destroy(x, y, z, value) == False:
                             return
