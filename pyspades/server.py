@@ -516,6 +516,7 @@ class ServerConnection(BaseConnection):
                     else:
                         if not map.get_solid(x, y, z):
                             return
+                        pos = world_object.position
                         if not collision_3d(pos.x, pos.y, pos.z, x, y, z,
                             MAX_DIG_DISTANCE):
                             return
