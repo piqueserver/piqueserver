@@ -517,7 +517,7 @@ class ServerConnection(BaseConnection):
                         if not map.get_solid(x, y, z):
                             return
                         pos = world_object.position
-                        if self.weapon == SPADE_TOOL and not collision_3d(
+                        if self.tool == SPADE_TOOL and not collision_3d(
                             pos.x, pos.y, pos.z, x, y, z, MAX_DIG_DISTANCE):
                             return
                         if self.on_block_destroy(x, y, z, value) == False:
