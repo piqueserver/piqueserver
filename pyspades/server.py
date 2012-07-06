@@ -1642,16 +1642,13 @@ class ServerProtocol(BaseProtocol):
                 player.spawn()
     
     def get_name(self, name):
-        name = name.replace('%', '')
-        i = 0
+        name = name.replace('%', '').encode('ascii', 'ignore')
         new_name = name
         names = [p.name.lower() for p in self.players.values()]
-        while 1:
-            if new_name.lower() in names:
-                i += 1
-                new_name = name + str(i)
-            else:
-                break
+        i = 0
+        while new_name.lower() in names:
+            i += 1
+            new_name = name + str(i)
         return new_name
     
     def get_mode_mode(self):
