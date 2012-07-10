@@ -36,6 +36,7 @@ from pyspades.constants import *
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from piqueserver.commands import add, admin
+import random
 
 # If ALWAYS_ENABLED is False, then the 'arena' key must be set to True in
 # the 'extensions' dictionary in the map metadata
@@ -261,10 +262,12 @@ def apply_script(protocol, connection, config):
             return returned
 
         def get_respawn_time(self):
+            if self.protocol.arena_enabled:
             if self.protocol.arena_running:
                 return -1
             else:
                 return 1
+            return connection.get_respawn_time(self);
 
         def respawn(self):
             if self.protocol.arena_running:
@@ -272,6 +275,8 @@ def apply_script(protocol, connection, config):
             return connection.respawn(self)
 
         def on_spawn(self, pos):
+            print self.team.color
+            self.protocol.set_fog_color(self.team.color)
             returned = connection.on_spawn(self, pos)
             if self.protocol.arena_running:
                 self.kill()
