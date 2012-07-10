@@ -45,6 +45,9 @@ ALWAYS_ENABLED = True
 # How long should be spent between rounds in arena (seconds)
 SPAWN_ZONE_TIME = 20.0
 
+# How many seconds a team color should be shown after they win a round
+TEAM_COLOR_TIME = 4.0
+
 # Maximum duration that a round can last. Time is in seconds. Set to 0 to
 # disable the time limit
 MAX_ROUND_TIME = 180
@@ -275,8 +278,6 @@ def apply_script(protocol, connection, config):
             return connection.respawn(self)
 
         def on_spawn(self, pos):
-            print self.team.color
-            self.protocol.set_fog_color(self.team.color)
             returned = connection.on_spawn(self, pos)
             if self.protocol.arena_running:
                 self.kill()
@@ -309,6 +310,7 @@ def apply_script(protocol, connection, config):
         arena_take_flag = False
         arena_countdown_timers = None
         arena_limit_timer = None
+        arena_old_fog_color = None
 
         def check_round_end(self, killer = None, message = True):
             if not self.arena_running:
@@ -345,8 +347,15 @@ def apply_script(protocol, connection, config):
                 self.arena_take_flag = True
                 killer.take_flag()
                 killer.capture_flag()
+            self.arena_old_fog_color = self.fog_color
+            self.set_fog_color(team.color)
+            reactor.callLater(TEAM_COLOR_TIME, self.arena_reset_fog_color)
             self.send_chat(team.name + ' team wins the round!')
             self.begin_arena_countdown()
+
+        def arena_reset_fog_color(self):
+            if self.arena_old_fog_color is not None:
+                self.set_fog_color(self.arena_old_fog_color)
 
         def arena_remaining_message(self):
             if not self.arena_running:
@@ -401,6 +410,7 @@ def apply_script(protocol, connection, config):
                 self.arena_running = False
                 self.arena_counting_down = False
                 self.arena_limit_timer = None
+                self.arena_old_fog_color = None
                 self.old_respawn_time = None
                 self.old_building = None
                 self.old_killing = None
