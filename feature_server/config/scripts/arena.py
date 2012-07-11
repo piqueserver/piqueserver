@@ -48,7 +48,7 @@ import random
 ALWAYS_ENABLED = True
 
 # How long should be spent between rounds in arena (seconds)
-SPAWN_ZONE_TIME = 20.0
+SPAWN_ZONE_TIME = 15.0
 
 # How many seconds a team color should be shown after they win a round
 # Set to 0 to disable this feature.
@@ -58,7 +58,9 @@ TEAM_COLOR_TIME = 4.0
 # disable the time limit
 MAX_ROUND_TIME = 180
 
-MAP_CHANGE_DELAY = 30.0
+# Additional delay that is used while changing maps to allow players time
+# to load the new map
+MAP_CHANGE_DELAY = 25.0
 
 # Coordinates to hide the tent and the intel
 HIDE_COORD = (0, 0, 63)
