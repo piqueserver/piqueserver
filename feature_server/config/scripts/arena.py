@@ -21,6 +21,9 @@
 # NOTE THAT THE SCRIPT RETAINS BACKWARDS COMPATIBILITY with the old 'arena_green_spawn' and
 # 'arena_blue_spawn'
 
+# The 'arena_max_spawn_distance' can be used to set MAX_SPAWN_DISTANCE on a map by map
+# basis. See the comment by MAX_SPAWN_DISTANCE for more information
+
 # The locations of gates is also determined in the map metadata. 'arena_gates' is a
 # tuple of coordinates in the extension dictionary. Each gate needs only one block
 # to be specified (since each gate is made of a uniform color)
@@ -287,7 +290,7 @@ def apply_script(protocol, connection, config):
                     distance = math.sqrt(xd ** 2 + yd ** 2 + zd ** 2)
                     if min_distance is None or distance < min_distance:
                         min_distance = distance
-                if min_distance > MAX_SPAWN_DISTANCE:
+                if min_distance > self.protocol.arena_max_spawn_distance:
                     self.set_location(random.choice(self.team.arena_spawns))
                     self.refill()
             return connection.on_position_update(self)
@@ -339,6 +342,7 @@ def apply_script(protocol, connection, config):
         arena_countdown_timers = None
         arena_limit_timer = None
         arena_old_fog_color = None
+        arena_max_spawn_distance = MAX_SPAWN_DISTANCE
 
         def check_round_end(self, killer = None, message = True):
             if not self.arena_running:
@@ -409,6 +413,7 @@ def apply_script(protocol, connection, config):
                     self.arena_enabled = extensions['arena']
                 else:
                     self.arena_enabled = False
+            self.arena_max_spawn_distance = MAX_SPAWN_DISTANCE
             if self.arena_enabled:
                 self.old_respawn_time = self.respawn_time
                 self.respawn_time = 0
@@ -430,6 +435,8 @@ def apply_script(protocol, connection, config):
                     self.blue_team.arena_spawns = (extensions['arena_blue_spawn'],)
                 else:
                     raise CustomException('No arena_blue_spawns given in map metadata.')
+                if extensions.has_key('arena_max_spawn_distance'):
+                    self.arena_max_spawn_distance = extensions['arena_max_spawn_distance']
                 self.delay_arena_countdown(MAP_CHANGE_DELAY)
                 self.begin_arena_countdown()
             else:
