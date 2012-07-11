@@ -42,13 +42,14 @@ from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from piqueserver.commands import add, admin
 import random
+import math
 
 # If ALWAYS_ENABLED is False, then the 'arena' key must be set to True in
 # the 'extensions' dictionary in the map metadata
 ALWAYS_ENABLED = True
 
 # How long should be spent between rounds in arena (seconds)
-SPAWN_ZONE_TIME = 15.0
+SPAWN_ZONE_TIME = 20.0
 
 # How many seconds a team color should be shown after they win a round
 # Set to 0 to disable this feature.
@@ -56,21 +57,25 @@ TEAM_COLOR_TIME = 4.0
 
 # Maximum duration that a round can last. Time is in seconds. Set to 0 to
 # disable the time limit
-MAX_ROUND_TIME = 180
+#MAX_ROUND_TIME = 180
+MAX_ROUND_TIME = 30
 
-# Additional delay that is used while changing maps to allow players time
-# to load the new map
-MAP_CHANGE_DELAY = 25.0
+MAP_CHANGE_DELAY = 30.0
 
 # Coordinates to hide the tent and the intel
 HIDE_COORD = (0, 0, 63)
+
+# Max distance a player can be from a spawn while the players are held within
+# the gates. If they get outside this they are teleported to a spawn.
+# Used to teleport players who glitch through the map back into the spawns.
+MAX_SPAWN_DISTANCE = 15.0
 
 BUILDING_ENABLED = False
 
 if MAX_ROUND_TIME >= 60:
     MAX_ROUND_TIME_TEXT = '%.2f minutes' % (float(MAX_ROUND_TIME)/60.0)
 else:
-    MAX_ROUND_TIME_TEXT = MAX_ROUND_TIME + ' seconds'
+    MAX_ROUND_TIME_TEXT = str(MAX_ROUND_TIME) + ' seconds'
 
 @admin
 def coord(connection):
@@ -272,6 +277,22 @@ def apply_script(protocol, connection, config):
                     self.protocol.check_round_end()
             return returned
 
+        def on_position_update(self):
+            if not self.protocol.arena_running:
+                min_distance = None
+                pos = self.world_object.position
+                for spawn in self.team.arena_spawns:
+                    xd = spawn[0] - pos.x
+                    yd = spawn[1] - pos.y
+                    zd = spawn[2] - pos.z
+                    distance = math.sqrt(xd ** 2 + yd ** 2 + zd ** 2)
+                    if min_distance is None or distance < min_distance:
+                        min_distance = distance
+                if min_distance > MAX_SPAWN_DISTANCE:
+                    self.set_location(random.choice(self.team.arena_spawns))
+                    self.refill()
+            return connection.on_position_update(self)
+        
         def get_respawn_time(self):
             if self.protocol.arena_enabled:
             if self.protocol.arena_running:
@@ -349,6 +370,7 @@ def apply_script(protocol, connection, config):
                 return
             if killer is None or killer.team is not team:
                 for player in team.get_players():
+                    if not player.world_object.dead:
                     killer = player
                     break
             if killer is not None:
