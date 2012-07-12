@@ -371,6 +371,11 @@ def apply_script(protocol, connection, config):
         def arena_win(self, team, killer = None):
             if not self.arena_running:
                 return
+            if self.arena_old_fog_color is None:
+                self.arena_old_fog_color = self.fog_color
+                if TEAM_COLOR_TIME > 0:
+                    self.set_fog_color(team.color)
+                    reactor.callLater(TEAM_COLOR_TIME, self.arena_reset_fog_color)
             if killer is None or killer.team is not team:
                 for player in team.get_players():
                     if not player.world_object.dead:
@@ -380,16 +385,15 @@ def apply_script(protocol, connection, config):
                 self.arena_take_flag = True
                 killer.take_flag()
                 killer.capture_flag()
-            self.arena_old_fog_color = self.fog_color
-            if TEAM_COLOR_TIME > 0:
-            self.set_fog_color(team.color)
-            reactor.callLater(TEAM_COLOR_TIME, self.arena_reset_fog_color)
             self.send_chat(team.name + ' team wins the round!')
             self.begin_arena_countdown()
 
         def arena_reset_fog_color(self):
             if self.arena_old_fog_color is not None:
+                # Shitty fix for disco on game end
+                self.old_fog_color = self.arena_old_fog_color
                 self.set_fog_color(self.arena_old_fog_color)
+                self.arena_old_fog_color = None
 
         def arena_remaining_message(self):
             if not self.arena_running:
