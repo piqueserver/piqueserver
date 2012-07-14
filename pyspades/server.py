@@ -237,7 +237,7 @@ class ServerConnection(BaseConnection):
                 team = self.protocol.teams[contained.team]
 
                 if self.on_team_join(team) == False:
-                    team = team.spectator
+                    team = self.protocol.spectator_team
 
                 self.team = team
                 if self.name is None:
