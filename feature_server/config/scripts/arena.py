@@ -371,9 +371,8 @@ def apply_script(protocol, connection, config):
         def arena_win(self, team, killer = None):
             if not self.arena_running:
                 return
-            if self.arena_old_fog_color is None:
+            if self.arena_old_fog_color is None and TEAM_COLOR_TIME > 0:
                 self.arena_old_fog_color = self.fog_color
-                if TEAM_COLOR_TIME > 0:
                     self.set_fog_color(team.color)
                     reactor.callLater(TEAM_COLOR_TIME, self.arena_reset_fog_color)
             if killer is None or killer.team is not team:
