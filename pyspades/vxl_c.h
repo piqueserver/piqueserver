@@ -12,7 +12,7 @@
 #define MAP_X 512
 #define MAP_Y 512
 #define MAP_Z 64
-#define get_pos(x, y, z) (x + (y) * MAP_Y + (z) * MAP_X * MAP_Y)
+#define get_pos(x, y, z) ((x) + (y) * MAP_Y + (z) * MAP_X * MAP_Y)
 #define DEFAULT_COLOR 0xFF674028
 
 struct MapData
@@ -21,6 +21,13 @@ struct MapData
     // char geometry[MAP_X * MAP_Y * MAP_Z];
     map_type<int, int> colors;
 };
+
+void inline get_xyz(int pos, int* x, int* y, int* z)
+{
+    *x = pos % MAP_Y;
+    *y = (pos / MAP_Y) % MAP_X;
+    *z = pos / (MAP_X * MAP_Y);
+}
 
 int inline is_valid_position(int x, int y, int z)
 {
@@ -32,6 +39,15 @@ int inline get_solid(int x, int y, int z, MapData * map)
     if (!is_valid_position(x, y, z))
         return 0;
     return map->geometry[get_pos(x, y, z)];
+}
+
+int inline get_solid_wrap(int x, int y, int z, MapData * map)
+{
+    if (z < 0)
+        return 0;
+    else if (z >= 64)
+        return 1;
+    return map->geometry[get_pos(x & 511, y & 511, z)];
 }
 
 int inline get_color(int x, int y, int z, MapData * map)

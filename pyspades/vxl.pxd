@@ -26,6 +26,7 @@ cdef extern from "vxl_c.cpp":
     int get_random_point(int x1, int y1, int x2, int y2, MapData * map, 
         float random_1, float random_2, int * x, int * y)
     bint is_valid_position(int x, int y, int z)
+    void update_shadows(MapData * map)
 
 cdef class VXLData:
     cdef MapData * map
@@ -42,3 +43,4 @@ cdef class VXLData:
     cpdef bint build_point(self, int x, int y, int z, tuple color)
     cpdef bint set_column_fast(self, int x, int y, int start_z,
         int end_z, int end_color_z, int color)
+    cpdef update_shadows(self)

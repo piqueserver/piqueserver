@@ -373,6 +373,37 @@ inline void get_random_point(int x1, int y1, int x2, int y2, MapData * map,
     }
 }
 
+#define SHADOW_DISTANCE 18
+#define SHADOW_STEP 2
+
+int sunblock(MapData * map, int x, int y, int z)
+{
+    int dec = SHADOW_DISTANCE;
+    int i = 127;
+
+    while (dec && z)
+    {
+        if (get_solid_wrap(x, --y, --z, map))
+            i -= dec;
+        dec -= SHADOW_STEP;
+    }
+    return i;
+}
+
+void update_shadows(MapData * map)
+{
+    int x, y, z;
+    int a;
+    unsigned int color;
+    for (map_type<int, int>::iterator iter = map->colors.begin();
+        iter != map->colors.end(); ++iter) {
+        get_xyz(iter->first, &x, &y, &z);
+        color = iter->second;
+        a = sunblock(map, x, y, z);
+        iter->second = (color & 0x00FFFFFF) | (a << 24);
+    }
+}
+
 struct MapGenerator
 {
     MapData * map;
