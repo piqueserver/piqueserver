@@ -22,10 +22,12 @@ from pyspades.constants import *
 from pyspades.common import prettify_timespan
 from pyspades.server import parse_command
 from twisted.internet import reactor
-
 from map import check_rotation
 
 import cfg
+commands = {}
+aliases = {}
+rights = {}
 
 class InvalidPlayer(Exception):
     pass
@@ -36,15 +38,27 @@ class InvalidSpectator(InvalidPlayer):
 class InvalidTeam(Exception):
     pass
 
-def restrict(func, user_types):
+def add_rights(func_name, *user_types):
+    for user_type in user_types:
+        if user_type in rights:
+            rights[user_type].add(func_name)
+        else:
+            rights[user_type] = set([func_name])
+
+def restrict(func, *user_types):
     def new_func(connection, *arg, **kw):
         return func(connection, *arg, **kw)
     new_func.func_name = func.func_name
-    new_func.user_types = set(user_types)
+    new_func.is_restricted = True
+    add_rights(func.func_name, *user_types)
     return new_func
 
+def has_rights(f, connection):
+    is_restricted = getattr(f, 'is_restricted', False)
+    return not is_restricted or f.func_name in connection.rights
+
 def admin(func):
-    return restrict(func, ('admin',))
+    return restrict(func, 'admin')
 
 def name(name):
     def dec(func):
@@ -199,10 +213,18 @@ def say(connection, *arg):
     connection.protocol.send_chat(value)
     connection.protocol.irc_say(value)
 
-@admin
-def kill(connection, value):
+add_rights('kill', 'admin')
+def kill(connection, value = None):
+    if value is None:
+        player = connection
+    else:
+        if not connection.rights.kill:
+            return "You can't use this command"
     player = get_player(connection.protocol, value, False)
     player.kill()
+    if connection is player:
+        message = '%s committed suicide!' % connection.name
+    else:
     message = '%s killed %s' % (connection.name, player.name)
     connection.protocol.send_chat(message, irc = True)
 
@@ -910,10 +932,6 @@ command_list = [
     mapname
 ]
 
-commands = {}
-aliases = {}
-rights = {}
-
 def add(func, name = None):
     """
     Function to add a command from scripts
@@ -921,13 +939,6 @@ def add(func, name = None):
     if name is None:
         name = func.func_name
     name = name.lower()
-    user_types = getattr(func, 'user_types', None)
-    if user_types is not None:
-        for user_type in user_types:
-            if user_type in rights:
-                rights[user_type].add(name)
-            else:
-                rights[user_type] = set([name])
     commands[name] = func
     try:
         for alias in func.aliases:
@@ -986,8 +997,7 @@ def handle_command(connection, command, parameters):
     except KeyError:
         return # 'Invalid command'
     try:
-        if (hasattr(command_func, 'user_types') and
-            command_func.func_name not in connection.rights):
+        if not has_rights(command_func, connection):
                 return "You can't use this command"
         return command_func(connection, *parameters)
     except KeyError:
@@ -1014,8 +1024,7 @@ def debug_handle_command(connection, command, parameters):
         command_func = commands[command]
     except KeyError:
         return # 'Invalid command'
-    if (hasattr(command_func, 'user_types') and
-        command_func.func_name not in connection.rights):
+    if not has_rights(command_func, connection):
             return "You can't use this command"
     return command_func(connection, *parameters)
 

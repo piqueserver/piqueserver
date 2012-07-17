@@ -236,8 +236,11 @@ class ServerConnection(BaseConnection):
                 old_team = self.team
                 team = self.protocol.teams[contained.team]
 
-                if self.on_team_join(team) == False:
+                ret = self.on_team_join(team)
+                if ret is False:
                     team = self.protocol.spectator_team
+                elif ret is not None:
+                    team = ret
 
                 self.team = team
                 if self.name is None:
@@ -603,8 +606,10 @@ class ServerConnection(BaseConnection):
                     self.set_weapon(self.weapon)
                 elif contained.id == loaders.ChangeTeam.id:
                     team = self.protocol.teams[contained.team]
-                    if self.on_team_join(team) == False:
+                    ret = self.on_team_join(team)
+                    if ret is False:
                         return
+                    team = ret or team
                     self.set_team(team)
     
     def is_valid_position(self, x, y, z, distance = None):
