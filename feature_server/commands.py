@@ -49,13 +49,11 @@ def restrict(func, *user_types):
     def new_func(connection, *arg, **kw):
         return func(connection, *arg, **kw)
     new_func.func_name = func.func_name
-    new_func.is_restricted = True
-    add_rights(func.func_name, *user_types)
+    new_func.user_types = user_types
     return new_func
 
 def has_rights(f, connection):
-    is_restricted = getattr(f, 'is_restricted', False)
-    return not is_restricted or f.func_name in connection.rights
+    return not hasattr(f, 'user_types') or f.func_name in connection.rights
 
 def admin(func):
     return restrict(func, 'admin')
@@ -222,9 +220,7 @@ def kill(connection, value = None):
             return "You can't use this command"
     player = get_player(connection.protocol, value, False)
     player.kill()
-    if connection is player:
-        message = '%s committed suicide!' % connection.name
-    else:
+    if connection is not player:
     message = '%s killed %s' % (connection.name, player.name)
     connection.protocol.send_chat(message, irc = True)
 
@@ -939,6 +935,7 @@ def add(func, name = None):
     if name is None:
         name = func.func_name
     name = name.lower()
+    add_rights(name, *getattr(func, 'user_types', ()))
     commands[name] = func
     try:
         for alias in func.aliases:

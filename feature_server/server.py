@@ -631,7 +631,10 @@ class FeatureProtocol(ServerProtocol):
         for password in self.passwords.get('admin', []):
             if not password:
                 self.everyone_is_admin = True
-        commands.rights.update(config.get('rights', {}))
+
+        for user_type, func_names in config.get('rights', {}).iteritems():
+            for func_name in func_names:
+                commands.add_rights(func_name, user_type)
 
         port = self.port = config.get('port', 32887)
         ServerProtocol.__init__(self, port, interface)
