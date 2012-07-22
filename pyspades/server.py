@@ -1013,9 +1013,9 @@ class ServerConnection(BaseConnection):
         z = position.z
         if x < 0 or x > 512 or y < 0 or y > 512 or z < 0 or z > 63:
             return
-        x = int(x)
-        y = int(y)
-        z = int(z)
+        x = int(math.floor(x))
+        y = int(math.floor(y))
+        z = int(math.floor(z))
         for player_list in (self.team.other.get_players(), (self,)):
             for player in player_list:
                 if not player.hp:
