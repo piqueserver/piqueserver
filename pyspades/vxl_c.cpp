@@ -189,8 +189,8 @@ int check_node(int x, int y, int z, MapData * map, int destroy)
 
 inline int is_surface(MapData * map, int x, int y, int z)
 {
-   if (z == 0) return 1;
    if (map->geometry[get_pos(x, y, z)]==0) return 0;
+   if (z == 0) return 1;
    if (x   >   0 && map->geometry[get_pos(x-1, y, z)]==0) return 1;
    if (x+1 < 512 && map->geometry[get_pos(x+1, y, z)]==0) return 1;
    if (y   >   0 && map->geometry[get_pos(x, y-1, z)]==0) return 1;
