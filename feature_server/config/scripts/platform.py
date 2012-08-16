@@ -177,7 +177,6 @@ Maintainer: hompy
 # Prevent platforms from being hidden forever
 # Negative heights
 # Nicer way of having invisible buttons?
-# 'invisibility' mode to get in range of annoying distance buttons
 # Platforms crushing players
 # Stop platform action?
 
@@ -368,6 +367,8 @@ def save(connection):
 
 @admin
 def reach(connection):
+    if connection not in connection.protocol.players:
+        raise ValueError()
     long = connection.reach == ACTION_RAY_LENGTH_LONG
     connection.reach = ACTION_RAY_LENGTH if long else ACTION_RAY_LENGTH_LONG
     return S_REACH if not long else S_NO_REACH
