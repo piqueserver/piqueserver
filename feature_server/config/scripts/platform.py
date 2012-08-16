@@ -161,6 +161,12 @@ as the parameter lists are provided when you try them.
     Saves all platform and button data to mapname_platform.txt
     Use SAVE_ON_MAP_CHANGE and AUTOSAVE_EVERY to avoid having to manually save.
 
+/reach
+    Increases your button activation reach. Meant to be used for getting rid
+    of distance triggering buttons from a safe distance.
+    
+    Use again to revert to normal.
+
 Maintainer: hompy
 """
 
@@ -199,6 +205,8 @@ MAX_DISTANCE = 64.0
 MIN_COOLDOWN = 0.1 # seconds
 
 S_SAVED = 'Platforms saved'
+S_REACH = 'You can now reach to buttons from from far away'
+S_NO_REACH = 'Button reach reverted to normal'
 S_EXIT_BLOCKING_STATE = "You must first leave {state} mode!"
 S_NOT_WORKING = 'This button is disabled'
 S_COMMAND_CANCEL = "Aborting {command} command"
@@ -327,6 +335,7 @@ TRIGGER_ADD_USAGES = {
 }
 
 ACTION_RAY_LENGTH = 8.0
+ACTION_RAY_LENGTH_LONG = 32.0
 ACTION_COOLDOWN = 0.25
 
 def parseargs(signature, args):
@@ -356,6 +365,12 @@ def flatten(iterables):
 def save(connection):
     connection.protocol.dump_platform_json()
     return S_SAVED
+
+@admin
+def reach(connection):
+    long = connection.reach == ACTION_RAY_LENGTH_LONG
+    connection.reach = ACTION_RAY_LENGTH if long else ACTION_RAY_LENGTH_LONG
+    return S_REACH if not long else S_NO_REACH
 
 @alias('p')
 @name('platform')
@@ -693,7 +708,7 @@ def trigger_command(connection, *args):
         return usage
 
 for func in (platform_command, button_command, action_command,
-    trigger_command, save):
+    trigger_command, save, reach):
     add(func)
 
 def aabb(x, y, z, x1, y1, z1, x2, y2, z2):
@@ -1098,6 +1113,7 @@ class Platform(BaseObject):
     frozen = False
     mode = None
     busy = False
+    running = False
     delay_call = None
     bound_triggers = None
 
@@ -1108,7 +1124,6 @@ class Platform(BaseObject):
         self.z, self.start_z = z1, z2
         self.height = self.start_z - self.z
         self.color = color
-        self.cycle_loop = LoopingCall(self.cycle)
         for x, y, z in prism(x1, y1, z1, x2, y2, z2):
             protocol.map.set_point(x, y, z, color)
 
@@ -1136,9 +1151,6 @@ class Platform(BaseObject):
         if self.delay_call and self.delay_call.active():
             self.delay_call.cancel()
         self.delay_call = None
-        if self.cycle_loop and self.cycle_loop.running:
-            self.cycle_loop.stop()
-        self.cycle_loop = None
 
     def start(self, height, mode, speed, delay, wait = None, force = False):
         if self.busy and not force:
@@ -1155,19 +1167,22 @@ class Platform(BaseObject):
         if self.z == self.target_z:
             return
         self.busy = True
+        self.ticks_per_cycle = int(speed / UPDATE_FREQUENCY)
+        self.ticks_left = self.ticks_per_cycle
         self.start_cycle_later(delay)
 
     def start_cycle_later(self, delay):
+        self.running = False
         if self.delay_call and self.delay_call.active():
             self.delay_call.cancel()
         self.delay_call = None
-        if self.cycle_loop and self.cycle_loop.running:
-            self.cycle_loop.stop()
-        self.cycle_loop = LoopingCall(self.cycle)
         if delay > 0.0:
-            self.delay_call = callLater(delay, self.cycle_loop.start, self.speed)
+            self.delay_call = callLater(delay, self.run)
         else:
-            self.cycle_loop.start(self.speed)
+            self.run()
+    
+    def run(self):
+        self.running = True
 
     def cycle(self):
         if self.frozen:
@@ -1179,6 +1194,8 @@ class Platform(BaseObject):
             # unstuck players
             for player in self.protocol.players.itervalues():
                 obj = player.world_object
+                if obj is None:
+                    continue
                 looking_up = obj.orientation.get()[2] < 0.4 # 0.5 (allow lag)
                 x, y, z = obj.position.get()
                 if aabb(x, y, z, self.x1, self.y1, self.z - 2,
@@ -1200,14 +1217,12 @@ class Platform(BaseObject):
             self.z += 1
         self.height = self.start_z - self.z
         if self.z == self.target_z:
-            self.cycle_loop.stop()
-            self.cycle_loop = None
             if self.mode == 'elevator':
                 self.mode = 'return'
                 self.target_z = self.last_z
                 self.start_cycle_later(self.wait)
             else:
-                self.busy = False
+                self.busy = self.running = False
         if self.bound_triggers:
             for trigger in self.bound_triggers:
                 trigger.callback(self)
@@ -1268,7 +1283,7 @@ def player_action(player, select, inspect):
     if last_action is not None and seconds() - last_action <= ACTION_COOLDOWN:
         return
     player.last_action = seconds()
-    location = player.world_object.cast_ray(ACTION_RAY_LENGTH)
+    location = player.world_object.cast_ray(player.reach)
     if location is None:
         return
     x, y, z = location
@@ -1697,6 +1712,7 @@ def apply_script(protocol, connection, config):
         last_action = None
         previous_button = None
         previous_platform = None
+        reach = ACTION_RAY_LENGTH
 
         def on_reset(self):
             if self.states:
@@ -1824,6 +1840,12 @@ def apply_script(protocol, connection, config):
             for player in self.players.itervalues():
                 for trigger in self.position_triggers:
                     trigger.callback(player)
+            for platform in self.platforms.itervalues():
+                if platform.running:
+                    platform.ticks_left -= 1
+                    if platform.ticks_left <= 0:
+                        platform.ticks_left = platform.ticks_per_cycle
+                        platform.cycle()
             protocol.on_world_update(self)
 
         def get_platform_json_path(self):
