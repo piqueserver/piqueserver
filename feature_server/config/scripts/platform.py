@@ -1168,7 +1168,6 @@ class Platform(BaseObject):
         if self.z == self.target_z:
             return
         self.busy = True
-        self.protocol.running_platforms.add(self)
         self.ticks_per_cycle = int(speed / UPDATE_FREQUENCY)
         self.ticks_left = self.ticks_per_cycle
         self.start_cycle_later(delay)
