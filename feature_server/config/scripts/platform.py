@@ -1226,6 +1226,7 @@ class Platform(BaseObject):
                 self.start_cycle_later(self.wait)
             else:
                 self.busy = self.running = False
+                self.protocol.running_platforms.discard(self)
         if self.bound_triggers:
             for trigger in self.bound_triggers:
                 trigger.callback(self)
@@ -1846,15 +1847,11 @@ def apply_script(protocol, connection, config):
             for player in self.players.itervalues():
                 for trigger in self.position_triggers:
                     trigger.callback(player)
-            not_running = set()
-            for platform in self.running_platforms:
+            for platform in list(self.running_platforms):
                     platform.ticks_left -= 1
                     if platform.ticks_left <= 0:
                         platform.ticks_left = platform.ticks_per_cycle
                         platform.cycle()
-                    if not platform.running:
-                        not_running.add(platform)
-            self.running_platforms -= not_running
             protocol.on_world_update(self)
 
         def get_platform_json_path(self):
