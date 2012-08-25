@@ -64,10 +64,10 @@ as the parameter lists are provided when you try them.
             See /trigger for more information on who the "activating players" are.
 
             action:
-                height   <height> [speed=0.25] [delay]
-                raise    <amount> [speed=0.25] [delay]
-                lower    <amount> [speed=0.25] [delay]
-                elevator <height> [speed=0.75] [delay] [wait=3.0]
+                height   <height> [speed=0.15] [delay]
+                raise    <amount> [speed=0.15] [delay]
+                lower    <amount> [speed=0.15] [delay]
+                elevator <height> [speed=0.25] [delay] [wait=3.0]
                     Speed determines how fast the platform moves, in seconds.
                     Delay is the amount of time spent waiting before the platform
                     actually starts to move.
@@ -247,10 +247,10 @@ S_NOISY = "Button '{label}' will animate when activated"
 S_ACTION_USAGE = 'Usage: /action <{commands}>'
 S_ACTION_ADD_USAGE = 'Usage: /action add <{actions}>'
 S_ACTION_DELETE_USAGE = 'Usage: /action del <#|all>'
-S_ACTION_HEIGHT_USAGE = 'Usage: /action add height <height> [speed=0.25] [delay]'
-S_ACTION_RAISE_USAGE = 'Usage: /action add raise <amount> [speed=0.25] [delay]'
-S_ACTION_LOWER_USAGE = 'Usage: /action add lower <amount> [speed=0.25] [delay]'
-S_ACTION_ELEVATOR_USAGE = 'Usage: /action add elevator <height> [speed=0.75] ' \
+S_ACTION_HEIGHT_USAGE = 'Usage: /action add height <height> [speed=0.15] [delay]'
+S_ACTION_RAISE_USAGE = 'Usage: /action add raise <amount> [speed=0.15] [delay]'
+S_ACTION_LOWER_USAGE = 'Usage: /action add lower <amount> [speed=0.15] [delay]'
+S_ACTION_ELEVATOR_USAGE = 'Usage: /action add elevator <height> [speed=0.25] ' \
     '[delay] [wait=3.0]'
 S_ACTION_OUTPUT_USAGE = 'Usage: /action add output [delay]'
 S_ACTION_TELEPORT_USAGE = 'Usage: /action add teleport <x y z|where>'
@@ -549,12 +549,12 @@ def action_command(connection, *args):
                 if action == 'elevator':
                     signature = 'int [float float float]'
                     value, speed, delay, wait = parseargs(signature, args[2:])
-                    speed = 0.75 if speed is None else speed
+                    speed = 0.25 if speed is None else speed
                     kwargs['wait'] = 3.0 if wait is None else wait
                 else:
                     signature = 'int [float float]'
                     value, speed, delay = parseargs(signature, args[2:])
-                    speed = 0.25 if speed is None else speed
+                    speed = 0.15 if speed is None else speed
                 kwargs['mode'] = action
                 kwargs['height'] = value
                 kwargs['speed'] = speed
@@ -1168,6 +1168,7 @@ class Platform(BaseObject):
         if self.z == self.target_z:
             return
         self.busy = True
+        self.protocol.running_platforms.add(self)
         self.ticks_per_cycle = int(speed / UPDATE_FREQUENCY)
         self.ticks_left = self.ticks_per_cycle
         self.start_cycle_later(delay)
@@ -1184,6 +1185,7 @@ class Platform(BaseObject):
     
     def run(self):
         self.running = True
+        self.protocol.running_platforms.add(self)
 
     def cycle(self):
         if self.frozen:
@@ -1806,6 +1808,7 @@ def apply_script(protocol, connection, config):
         highest_id = None
         platforms = None
         platform_json_dirty = False
+        running_platforms = None
         buttons = None
         position_triggers = None
         autosave_loop = None
@@ -1813,6 +1816,7 @@ def apply_script(protocol, connection, config):
         def on_map_change(self, map):
             self.highest_id = -1
             self.platforms = {}
+            self.running_platforms = set()
             self.buttons = MultikeyDict()
             self.position_triggers = []
             self.platform_json_dirty = False
@@ -1833,6 +1837,7 @@ def apply_script(protocol, connection, config):
             for button in self.buttons.itervalues():
                 button.release()
             self.platforms = None
+            self.running_platforms = None
             self.buttons = None
             self.position_triggers = None
             protocol.on_map_leave(self)
@@ -1841,12 +1846,15 @@ def apply_script(protocol, connection, config):
             for player in self.players.itervalues():
                 for trigger in self.position_triggers:
                     trigger.callback(player)
-            for platform in self.platforms.itervalues():
-                if platform.running:
+            not_running = set()
+            for platform in self.running_platforms:
                     platform.ticks_left -= 1
                     if platform.ticks_left <= 0:
                         platform.ticks_left = platform.ticks_per_cycle
                         platform.cycle()
+                    if not platform.running:
+                        not_running.add(platform)
+            self.running_platforms -= not_running
             protocol.on_world_update(self)
 
         def get_platform_json_path(self):
