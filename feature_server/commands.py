@@ -23,6 +23,7 @@ from pyspades.common import prettify_timespan
 from pyspades.server import parse_command
 from twisted.internet import reactor
 from map import check_rotation
+import inspect
 
 import cfg
 commands = {}
@@ -50,6 +51,7 @@ def restrict(func, *user_types):
         return func(connection, *arg, **kw)
     new_func.func_name = func.func_name
     new_func.user_types = user_types
+    new_func.argspec = inspect.getargspec(func)
     return new_func
 
 def has_rights(f, connection):
@@ -935,6 +937,8 @@ def add(func, name = None):
     if name is None:
         name = func.func_name
     name = name.lower()
+    if not hasattr(func, 'argspec'):
+        func.argspec = inspect.getargspec(func)
     add_rights(name, *getattr(func, 'user_types', ()))
     commands[name] = func
     try:
@@ -993,14 +997,21 @@ def handle_command(connection, command, parameters):
         command_func = commands[command]
     except KeyError:
         return # 'Invalid command'
+    mn = len(command_func.argspec.args) - 1 - len(command_func.argspec.defaults or ())
+    mx = len(command_func.argspec.args) - 1 if command_func.argspec.varargs is None else None
+    lp = len(parameters)
+    if lp < mn or mx is not None and lp > mx:
+        return 'Invalid number of arguments for %s' % command
     try:
         if not has_rights(command_func, connection):
                 return "You can't use this command"
         return command_func(connection, *parameters)
     except KeyError:
         return # 'Invalid command'
-    except TypeError:
-        return 'Invalid number of arguments for %s' % command
+    except TypeError, t:
+        print 'Command', command, 'failed with args:', parameters
+        print t
+        return 'Command failed'
     except InvalidPlayer:
         return 'No such player'
     except InvalidTeam:
