@@ -1037,25 +1037,6 @@ def handle_command(connection, command, parameters):
     except ValueError:
         return 'Invalid parameters'
 
-def debug_handle_command(connection, command, parameters):
-    # use this when regular handle_command eats errors
-    if connection in connection.protocol.players:
-        connection.send_chat("Commands are in DEBUG mode")
-    command = command.lower()
-    try:
-        command = aliases[command]
-    except KeyError:
-        pass
-    try:
-        command_func = commands[command]
-    except KeyError:
-        return # 'Invalid command'
-    if not has_rights(command_func, connection):
-            return "You can't use this command"
-    return command_func(connection, *parameters)
-
-# handle_command = debug_handle_command
-
 def handle_input(connection, input):
     # for IRC and console
     return handle_command(connection, *parse_command(input))
