@@ -1013,10 +1013,12 @@ def handle_command(connection, command, parameters):
         command_func = commands[command]
     except KeyError:
         return # 'Invalid command'
-    mn = len(command_func.argspec.args) - 1 - len(command_func.argspec.defaults or ())
-    mx = len(command_func.argspec.args) - 1 if command_func.argspec.varargs is None else None
-    lp = len(parameters)
-    if lp < mn or mx is not None and lp > mx:
+    aspec = command_func.argspec
+    min_params = len(aspec.args) - 1 - len(aspec.defaults or ())
+    max_params = len(aspec.args) - 1 if aspec.varargs is None else None
+    len_params = len(parameters)
+    if (len_params < min_params
+            or max_params is not None and len_params > max_params):
         return 'Invalid number of arguments for %s' % command
     try:
         if not has_rights(command_func, connection):
@@ -1024,7 +1026,7 @@ def handle_command(connection, command, parameters):
         return command_func(connection, *parameters)
     except KeyError:
         return # 'Invalid command'
-    except TypeError, t:
+    except TypeError as t:
         print 'Command', command, 'failed with args:', parameters
         print t
         return 'Command failed'
