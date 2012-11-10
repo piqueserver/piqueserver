@@ -547,8 +547,9 @@ def where(connection, value = None):
     return '%s is in %s (%s, %s, %s)' % (connection.name,
         to_coordinates(x, y), int(x), int(y), int(z))
 
+@alias('gods')
 @admin
-def god(connection, value = None):
+def godsilent(connection, value = None):
     if value is not None:
         connection = get_player(connection.protocol, value)
     elif connection not in connection.protocol.players:
@@ -558,6 +559,11 @@ def god(connection, value = None):
         connection.god_build = connection.god
     else:
         connection.god_build = False
+    return 'You have entered god mode.'
+
+@admin
+def god(connection, value = None):
+    godsilent(connection, value)
     if connection.god:
         message = '%s entered GOD MODE!' % connection.name
     else:
@@ -916,6 +922,7 @@ command_list = [
     unstick,
     where,
     god,
+    godsilent,
     god_build,
     fly,
     invisible,
