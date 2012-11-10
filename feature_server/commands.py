@@ -479,7 +479,8 @@ def teleport(connection, player1, player2 = None, silent = False):
         silent = silent or player.invisible
         message = '%s ' + ('silently ' if silent else '') + 'teleported to %s'
         message = message % (player.name, target.name)
-    player.set_location(target.get_location())
+    x, y, z = target.get_location()
+    player.set_location(((x-0.5), (y-0.5), (z+0.5)))
     if silent:
         connection.protocol.irc_say('* ' + message)
     else:
