@@ -510,6 +510,13 @@ def go_to(connection, value):
         raise KeyError()
     move(connection, connection.name, value, silent = connection.invisible)
 
+@name('gotos')
+@admin
+def go_to_silent(connection, value):
+    if connection not in connection.protocol.players:
+        raise KeyError()
+    move(connection, connection.name, value, True)
+
 @admin
 def move(connection, player, value, silent = False):
     player = get_player(connection.protocol, player)
@@ -904,6 +911,7 @@ command_list = [
     teleport,
     tpsilent,
     go_to,
+    go_to_silent,
     move,
     unstick,
     where,
