@@ -39,7 +39,7 @@ cdef class VXLData:
     cpdef bint has_neighbors(self, int x, int y, int z)
     cpdef bint is_surface(self, int x, int y, int z)
     cpdef list get_neighbors(self, int x, int y, int z)
-    cpdef bint check_node(self, int x, int y, int z, bint destroy = ?)
+    cpdef int check_node(self, int x, int y, int z, bint destroy = ?)
     cpdef bint build_point(self, int x, int y, int z, tuple color)
     cpdef bint set_column_fast(self, int x, int y, int start_z,
         int end_z, int end_color_z, int color)

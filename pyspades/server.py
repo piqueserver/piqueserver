@@ -206,6 +206,7 @@ class ServerConnection(BaseConnection):
         BaseConnection.__init__(self, *arg, **kw)
         protocol = self.protocol
         address = self.peer.address
+        self.total_blocks_removed = 0
         self.address = (address.host, address.port)
         self.respawn_time = protocol.respawn_time
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
@@ -530,16 +531,17 @@ class ServerConnection(BaseConnection):
                         if self.on_block_destroy(x, y, z, value) == False:
                             return
                         elif value == DESTROY_BLOCK:
-                            if map.destroy_point(x, y, z):
+                            count = map.destroy_point(x, y, z)
+                            if count:
+                                self.total_blocks_removed += count
                                 self.blocks = min(50, self.blocks + 1)
                                 self.on_block_removed(x, y, z)
                         elif value == SPADE_DESTROY:
-                            if map.destroy_point(x, y, z):
-                                self.on_block_removed(x, y, z)
-                            if map.destroy_point(x, y, z + 1):
-                                self.on_block_removed(x, y, z + 1)
-                            if map.destroy_point(x, y, z - 1):
-                                self.on_block_removed(x, y, z - 1)
+                            for xyz in ((x, y, z), (x, y, z + 1), (x, y, z - 1)):
+                                count = map.destroy_point(*xyz)
+                                if count:
+                                    self.total_blocks_removed += count
+                                    self.on_block_removed(*xyz)
                         self.last_block_destroy = reactor.seconds()
                     block_action.x = x
                     block_action.y = y
@@ -629,7 +631,7 @@ class ServerConnection(BaseConnection):
             self.last_refill = reactor.seconds()
             if self.on_refill() != False:
                 self.refill()
-
+    
     def get_location(self):
         position = self.world_object.position
         return position.x, position.y, position.z
@@ -665,7 +667,7 @@ class ServerConnection(BaseConnection):
         y = y + pos_table[modpos][1]
         z = z + pos_table[modpos][2]
         self.set_location((x, y, z))
-        
+    
     def set_location(self, location = None):
         if location is None:
             # used for rubberbanding
@@ -1037,7 +1039,9 @@ class ServerConnection(BaseConnection):
         for nade_x in xrange(x - 1, x + 2):
             for nade_y in xrange(y - 1, y + 2):
                 for nade_z in xrange(z - 1, z + 2):
-                    if map.destroy_point(nade_x, nade_y, nade_z):
+                    count = map.destroy_point(nade_x, nade_y, nade_z)
+                    if count:
+                        self.total_blocks_removed += count
                         self.on_block_removed(nade_x, nade_y, nade_z)
         block_action.x = x
         block_action.y = y
