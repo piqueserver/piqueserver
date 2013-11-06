@@ -174,7 +174,8 @@ class FeatureConnection(ServerConnection):
         self.printable_name = name.encode('ascii', 'replace')
         print '%s (IP %s, ID %s) entered the game!' % (self.printable_name, 
             self.address[0], self.player_id)
-        self.protocol.irc_say('* %s entered the game' % self.name)
+		self.protocol.irc_say('* %s (IP %s, ID %s) entered the game!' % 
+			(self.name, self.address[0], self.player_id))
         if self.user_types is None:
             self.user_types = AttributeSet()
             self.rights = AttributeSet()
@@ -192,7 +193,8 @@ class FeatureConnection(ServerConnection):
     def on_disconnect(self):
         if self.name is not None:
             print self.printable_name, 'disconnected!'
-            self.protocol.irc_say('* %s disconnected' % self.name)
+			self.protocol.irc_say('* %s (IP %s) disconnected' % 
+				(self.name, self.address[0]))
             self.protocol.player_memory.append((self.name, self.address[0]))
         else:
             print '%s disconnected' % self.address[0]
