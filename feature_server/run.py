@@ -721,7 +721,7 @@ class FeatureProtocol(ServerProtocol):
         else:
             self.send_chat('%s Next map: %s.' % (message, map.full_name),
                            irc = True)
-            reactor.callLater(5, self.set_map_name, map)
+            reactor.callLater(10, self.set_map_name, map)
     
     def get_mode_name(self):
         return self.game_mode_name
