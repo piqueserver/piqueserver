@@ -812,8 +812,8 @@ class FeatureProtocol(ServerProtocol):
                 message = 'Master connection could not be established'
             else:
                 message = 'Master connection lost'
-            print '%s, reconnecting in 20 seconds...' % message
-            self.master_reconnect_call = reactor.callLater(20, 
+            print '%s, reconnecting in 60 seconds...' % message
+            self.master_reconnect_call = reactor.callLater(60, 
                 self.reconnect_master)
     
     def reconnect_master(self):
