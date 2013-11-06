@@ -1,9 +1,9 @@
 {
-    "name" : "pyspades server",
+    "name" : "PySnip server",
     "motd" : [
         "Welcome to %(server_name)s! See /help for commands",
         "Map is %(map_name)s by %(map_author)s",
-        "(server powered by pyspades)"
+        "(server powered by PySnip)"
     ],
     "help" : [
         "/SQUAD     Creates or joins a squad, letting you spawn with friends",
@@ -106,12 +106,12 @@
     },
     "irc" : {
         "enabled" : false,
-        "nickname" : "pyspades",
-        "username" : "pyspades",
-        "realname" : "pyspades server bot",
+        "nickname" : "PySnip",
+        "username" : "PySnip",
+        "realname" : "PySnip server bot",
         "server" : "irc.quakenet.org",
         "port" : 6667,
-        "channel" : "#pyspades.bots",
+        "channel" : "#PySnip.bots",
         "password" : "",
         "commandprefix" : ".",
         "chatprefix" : ""
