@@ -1,5 +1,0 @@
-name = 'Normandie'
-version = '1.3'
-author = 'Influx'
-description = ('A Normandy-themed map, containing a small town in the centre '
-               'with outlying farmlands and rural areas')

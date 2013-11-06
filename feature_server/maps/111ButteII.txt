@@ -1,4 +1,0 @@
-name = '111ButteII'
-version = '1.0'
-author = 'W. Carrera, 111INFORMATIQUE'
-description = 'Nouvelle version de la Butte, encore mieu pour butter vos adversaires. Si vous faites des modifs me contacter opensim@free.fr'

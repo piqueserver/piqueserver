@@ -30,8 +30,7 @@
     "cap_limit" : 10,
     "default_time_limit" : 15,
     "advance_on_win" : false,
-    "maps" : ["random", "pyspades", "bridgewars", "pinpoint", "anticbridge", 
-              "hallway", "pinpoint2", "harbor2"],
+    "maps" : ["random", "classicgen"],
     "random_rotation" : false,
     
     "respawn_time" : 30,

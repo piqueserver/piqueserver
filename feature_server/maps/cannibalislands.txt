@@ -1,5 +1,0 @@
-name = 'Cannibal Islands'
-version = '1.5'
-author = 'Sasquatch'
-description = ('Desolate and kinda creepy islands connected like circuitry. '
-               'Provides an interesting battle front.')

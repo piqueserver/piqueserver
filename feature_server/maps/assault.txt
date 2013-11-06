@@ -1,4 +1,0 @@
-name = 'Assault'
-version = '1.0'
-author = 'Chrispin'
-description = 'Map by Chrispin for QFC3'

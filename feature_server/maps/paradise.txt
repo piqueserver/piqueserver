@@ -1,4 +1,0 @@
-name = 'Paradise'
-version = '1.0'
-author = 'Pet'
-description = 'Fight with the trees of a tropical paradise'

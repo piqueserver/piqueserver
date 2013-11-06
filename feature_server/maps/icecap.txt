@@ -1,5 +1,0 @@
-name = 'Icecap'
-version = '2.0'
-author = 'Triplefox'
-description = 'Battle through the difficult arctic terrain and freezing water.'
-extensions = { 'water_damage' : 5 }

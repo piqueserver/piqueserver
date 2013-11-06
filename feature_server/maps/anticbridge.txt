@@ -1,5 +1,0 @@
-name = 'Anticbridge'
-version = '1.0'
-author = 'FAT_IDIOT'
-description = ("It's some kind of bridge with a tunnel in the roof and in the "
-               "floor. I think it will encourage tunneling.")
