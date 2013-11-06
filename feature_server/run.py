@@ -789,7 +789,8 @@ class FeatureProtocol(ServerProtocol):
         format_dict = {
             'map_name' : map.name,
             'map_author' : map.author,
-            'map_description' : map.description
+            'map_description' : map.description,
+            'game_mode' : self.game_mode
         }
         format_dict.update(extra)
         return value % format_dict
