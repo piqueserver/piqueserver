@@ -21,7 +21,7 @@ from twisted.internet.reactor import seconds
 from scheduler import Scheduler
 from commands import name, add, get_player, join_arguments, InvalidPlayer
 
-REQUIRE_REASON = False
+REQUIRE_REASON = True
 
 S_NO_VOTEKICK = 'No votekick in progress'
 S_DEFAULT_REASON = 'NO REASON GIVEN'
