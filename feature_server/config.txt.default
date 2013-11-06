@@ -1,72 +1,75 @@
 {
     "name" : "PySnip server",
     "motd" : [
-        "Welcome to %(server_name)s! See /help for commands",
-        "Map is %(map_name)s by %(map_author)s",
-        "(server powered by PySnip)"
+        "Welcome to %(server_name)s",
+        "Map: %(map_name)s by %(map_author)s",
+        "Game mode: Capture The Flag",
+        "Server powered by PySnip and BuildAndShoot.com"
     ],
     "help" : [
-        "/SQUAD     Creates or joins a squad, letting you spawn with friends",
+        "Server name: %(server_name)s",
+        "Map: %(map_name)s by %(map_author)s",
+        "Game mode: Capture The Flag",
         "/STREAK    Shows how many kills in a row you got without dying",
-        "/AIRSTRIKE Air support!  Try it out just like that for more details",
-        "/INTEL     Tells you who's got the enemy intel"
+        "/INTEL     Tells you who's got the enemy intel",
+        "/VOTEKICK  Start a vote to temporarily ban a disruptive player",
+        "/TIME      Remaining time until forced map reset"
     ],
     "tips" : [
-        "Here you can deploy airstrikes, form squads and more!  Type /help for info",
-        "The spade does melee damage!  Use it wisely"
+        "You are playing Capture The Flag on %(server_name)s",
+        "Type /help for info & commands"
     ],
     "tip_frequency" : 5,
     "rules" : [
-        "No griefing, no cheating"
+        "Cheating isn't welcome. Griefing is frowned upon. Have fun!"
     ],
-    
     "master" : true,
     "max_players" : 32,
-    "max_connections_per_ip" : 7,
+    "max_connections_per_ip" : 3,
     "port" : 32887,
     "network_interface" : "",
-    
+
     "game_mode" : "ctf",
     "cap_limit" : 10,
-    "default_time_limit" : 15,
-    "advance_on_win" : false,
-    "maps" : ["random", "classicgen"],
+    "default_time_limit" : 120,
+    "advance_on_win" : true,
+    "maps" : ["classicgen", "random"],
     "random_rotation" : false,
-    
-    "respawn_time" : 30,
+
+    "respawn_time" : 16,
     "respawn_waves" : true,
-    "friendly_fire" : false,
+    "friendly_fire" : "on_grief",
     "grief_friendly_fire_time" : 5,
     "spade_teamkills_on_grief" : false,
-    "balanced_teams" : 1,
+    "balanced_teams" : 2,
     "teamswitch_interval" : 0,
-    
-    "speedhack_detect" : true,
-    "votekick_percentage" : 25,
-    "votekick_ban_duration" : 15,
+
+    "speedhack_detect" : false,
+    "votekick_percentage" : 35,
+    "votekick_ban_duration" : 30,
     "votekick_public_votes" : true,
     "votemap_public_votes" : true,
     "votemap_extension_time" : 15,
     "votemap_player_driven" : false,
-    "votemap_autoschedule" : 180,
+    "votemap_autoschedule" : false,
     "votemap_time" : 120,
     "votemap_percentage" : 80,
-    
+
     "melee_damage" : 80,
     "fall_damage" : true,
     "user_blocks_only" : false,
     "set_god_build" : false,
-    "server_prefix" : "[*]",
+    "server_prefix" : "",
     "time_announcements" : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30, 60, 120, 180,
                             240, 300, 600, 900, 1200, 1800, 2400, 3000],
     "login_retries" : 3,
     "default_ban_duration" : 1440,
-    
+
     "logfile" : "./logs/log.txt",
     "rotate_daily" : true,
     "debug_log" : false,
     "profile" : false,
-    
+
     "team1" : {
         "name" : "Blue",
         "color" : [0, 0, 255]
@@ -75,19 +78,21 @@
         "name" : "Green",
         "color" : [0, 255, 0]
     },
-    "passwords" : {
-        "admin" : ["replaceme"],
-        "trusted" : [],
-        "builder" : []
+   "passwords" : {
+        "admin" : ["adminpass1", "adminpass2", "adminpass3"],
+        "moderator" : ["modpass"],
+        "guard" : ["guardpass"],
+        "trusted" : ["trustedpass"]
     },
     "rights" : {
-        "builder" : ["god", "goto"]
+        "moderator" : ["advance", "cancel", "dban", "fog", "from", "goto", "hackinfo", "hban", "invisible", "ip", "kick", "kickafk", "kill", "map", "master", "move", "mute", "resetgame", "switch", "teleport", "teleport_other", "tpsilent", "togglebuild", "togglekill", "togglevotekick", "trust", "undoban", "unmute", "unstick", "where", "whowas"],
+        "guard" : ["cancel", "fog", "from", "goto", "hackinfo", "hban", "ip", "kick", "kickafk", "kill", "move", "mute", "switch", "teleport", "teleport_other", "togglebuild", "togglekill", "togglevotekick", "trust", "unmute", "unstick", "where", "whowas"]
     },
     "ssh" : {
         "enabled" : false,
         "port" : 32887,
         "users" : {
-            "user" : "pass"
+            "user" : "ssh_pass_change_this"
         }
     },
     "status_server" : {
@@ -108,39 +113,31 @@
         "enabled" : false,
         "nickname" : "PySnip",
         "username" : "PySnip",
-        "realname" : "PySnip server bot",
+        "realname" : "PySnip",
         "server" : "irc.quakenet.org",
         "port" : 6667,
-        "channel" : "#PySnip.bots",
+        "channel" : "#MyServerChannel",
         "password" : "",
-        "commandprefix" : ".",
-        "chatprefix" : ""
+        "commandprefix" : "!",
+        "chatprefix" : "."
     },
     "scripts" : [
-        "welcome",
         "rollback",
-        "trusted",
         "protect",
         "map_extensions",
-        "airstrike",
-        "squad",
         "disco",
         "votekick",
+        "trusted",
         "ratio",
-        "memcheck"
+        "passreload",
+        "blockinfo",
+        "afk"
     ],
-    
-    "squad_respawn_time" : 45,
+
+    "squad_respawn_time" : 32,
     "squad_size" : 4,
-    "auto_squad" : false,    
+    "auto_squad" : false,
     "load_saved_map" : false,
-    "statistics" : {
-        "host" : "localhost",
-        "server_name" : "stats server",
-        "port" : 32880,
-        "password" : "marmelade"
-    },
-    "welcomes" : {
-        "mat^2" : "The very likeable mat^2 has entered!"
-    }
+    "rollback_on_game_end" : false,
+    "afk_time_limit" : 30
 }
