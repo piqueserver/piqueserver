@@ -102,7 +102,7 @@ class MasterConnection(BaseConnection):
 
 from pyspades.web import getPage
 
-IP_GETTER = 'http://automation.whatismyip.com/n09230945.asp'
+IP_GETTER = 'http://services.buildandshoot.com/getip'
 
 def get_external_ip(interface = ''):
     return getPage(IP_GETTER, bindAddress = (interface, 0))
