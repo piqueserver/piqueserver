@@ -1,9 +1,21 @@
 from twisted.internet import reactor
-from twisted.web.client import HTTPClientFactory, _parse
+from twisted.web import client
+from twisted.web.client import HTTPClientFactory
 
 def getPage(url, bindAddress = None, *arg, **kw):
     # reimplemented here to insert bindAddress
-    scheme, host, port, path = _parse(url)
+
+    # _parse() deprecated in twisted 13.1.0 in favor of the _URI class
+    if hasattr(client, '_parse'):
+        scheme, host, port, path = client._parse(url)
+    else:
+        from twisted.web.client import _URI
+        uri = _URI.fromBytes(url)
+        scheme = uri.scheme
+        host = uri.host
+        port = uri.port
+        path = uri.path
+
     factory = HTTPClientFactory(url, *arg, **kw)
     if scheme == 'https':
         from twisted.internet import ssl
