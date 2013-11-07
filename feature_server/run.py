@@ -790,7 +790,7 @@ class FeatureProtocol(ServerProtocol):
             'map_name' : map.name,
             'map_author' : map.author,
             'map_description' : map.description,
-            'game_mode' : self.game_mode
+            'game_mode' : self.get_mode_name()
         }
         format_dict.update(extra)
         return value % format_dict

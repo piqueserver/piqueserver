@@ -3,20 +3,20 @@
     "motd" : [
         "Welcome to %(server_name)s",
         "Map: %(map_name)s by %(map_author)s",
-        "Game mode: %(game_mode)",
+        "Game mode: %(game_mode)s",
         "Server powered by PySnip and BuildAndShoot.com"
     ],
     "help" : [
         "Server name: %(server_name)s",
         "Map: %(map_name)s by %(map_author)s",
-        "Game mode: %(game_mode)",
+        "Game mode: %(game_mode)s",
         "/STREAK    Shows how many kills in a row you got without dying",
         "/INTEL     Tells you who's got the enemy intel",
         "/VOTEKICK  Start a vote to temporarily ban a disruptive player",
         "/TIME      Remaining time until forced map reset"
     ],
     "tips" : [
-        "You are playing %(game_mode) on %(server_name)s",
+        "You are playing %(game_mode)s on %(server_name)s",
         "Type /help for info & commands"
     ],
     "tip_frequency" : 5,
