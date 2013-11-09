@@ -17,6 +17,8 @@ def getPage(url, bindAddress = None, *arg, **kw):
         path = uri.path
 
     factory = HTTPClientFactory(url, *arg, **kw)
+    factory.noisy = False
+	
     if scheme == 'https':
         from twisted.internet import ssl
         context = ssl.ClientContextFactory()
