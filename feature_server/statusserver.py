@@ -19,7 +19,7 @@ from twisted.internet import reactor
 from twisted.web import server
 from twisted.web.resource import Resource
 from string import Template
-import Image
+from PIL import Image
 from jinja2 import Environment, PackageLoader
 import json
 from cStringIO import StringIO
