@@ -131,6 +131,8 @@
         "ratio",
         "passreload",
         "blockinfo",
+        "bugfix",
+        "fbpatch",
         "afk"
     ],
 
