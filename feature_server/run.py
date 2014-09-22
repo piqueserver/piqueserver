@@ -171,9 +171,6 @@ class FeatureConnection(ServerConnection):
             self.send_lines(self.protocol.motd)
     
     def on_login(self, name):
-        if len(name) > 15:
-            self.kick(silent=True)
-        
         self.printable_name = name.encode('ascii', 'replace')
         print '%s (IP %s, ID %s) entered the game!' % (self.printable_name, 
             self.address[0], self.player_id)
