@@ -28,21 +28,50 @@ import time
 import shutil
 from collections import deque
 
-for index, name in enumerate(('config.txt', 'config.txt.default')):
+import argparse
+
+arg_parser = argparse.ArgumentParser(prog="pysnip",
+                                     description="PySnip is an open-source Python server implementation for the voxel-based game \"Ace of Spades\".")
+
+arg_parser.add_argument("-c","--config-file", default="config.txt", 
+        help="Specify alternate config file (default is feature_server/config.txt).")
+arg_parser.add_argument("-j","--json-parameters", 
+        help="Add extra json parameters, overwriting that in config file.")
+arg_parser.add_argument("-r","--resource-dir", default=".",
+        help="The directory which contains maps,scripts,etc (in correctly named subdirs). - default is in directory of run.py, in feature_server.")
+
+args = arg_parser.parse_args()
+
+
+def choose_path(base,top):
+    "helper function to choose the right path/file for the config, etc."
+    if not os.path.isabs(top):
+        return os.path.join(base,top)
+    return top
+
+# ok, so we use the resource directory to search for maps, etc. (alternative to the feature_server dir)
+RESOURCE_DIR = args.resource_dir
+# fix the path for the config file - handles differering directories and relative or absolute paths
+CONFIG_FILE = choose_path(RESOURCE_DIR,args.config_file)
+
+
+for index, name in enumerate((CONFIG_FILE, 'config.txt.default')):
     try:
         config = json.load(open(name, 'rb'))
         if index != 0:
             print '(creating config.txt from %s)' % name
-            shutil.copy(name, 'config.txt')
+            shutil.copy(name, CONFIG_FILE)
         break
     except IOError, e:
         pass
 else:
-    raise SystemExit('no config.txt file found')
+    raise SystemExit('no config file found')
 
-if len(sys.argv) > 1:
-    json_parameter = ' '.join(sys.argv[1:])
+# update with parameters from args
+if args.json_parameters:
+    json_parameter = args.json_parameters
     config.update(eval(json_parameter))
+
 
 profile = config.get('profile', False)
 
@@ -546,7 +575,7 @@ class FeatureProtocol(ServerProtocol):
         self.win_count = itertools.count(1)
         self.bans = NetworkDict()
         try:
-            self.bans.read_list(json.load(open('bans.txt', 'rb')))
+            self.bans.read_list(json.load(open(os.path.join(RESOURCE_DIR,'bans.txt'), 'rb')))
         except IOError:
             pass
         self.hard_bans = set() # possible DDoS'ers are added here
@@ -597,7 +626,7 @@ class FeatureProtocol(ServerProtocol):
         self.set_god_build = config.get('set_god_build', False)
         self.debug_log = config.get('debug_log', False)
         if self.debug_log:
-            pyspades.debug.open_debug_log()
+            pyspades.debug.open_debug_log(os.path.join(RESOURCE_DIR,'debug.log'))
         ssh = config.get('ssh', {})
         if ssh.get('enabled', False):
             from ssh import RemoteConsole
@@ -618,7 +647,8 @@ class FeatureProtocol(ServerProtocol):
         if ban_subscribe.get('enabled', True):
             import bansubscribe
             self.ban_manager = bansubscribe.BanManager(self, ban_subscribe)
-        logfile = config.get('logfile', None)
+        # logfile location in resource dir if not abs path given
+        logfile = choose_path(RESOURCE_DIR,config.get('logfile', None))
         if logfile is not None and logfile.strip():
             if config.get('rotate_daily', False):
                 create_filename_path(logfile)
@@ -741,11 +771,11 @@ class FeatureProtocol(ServerProtocol):
         return True
     
     def get_map(self, rot_info):
-        return Map(rot_info)
+        return Map(rot_info, os.path.join(RESOURCE_DIR,'maps'))
     
     def set_map_rotation(self, maps, now = True):
         try:
-            maps = check_rotation(maps)
+            maps = check_rotation(maps, os.path.join(RESOURCE_DIR,'maps'))
         except MapNotFound, e:
             return e
         self.maps = maps
@@ -867,7 +897,7 @@ class FeatureProtocol(ServerProtocol):
         return result
     
     def save_bans(self):
-        json.dump(self.bans.make_list(), open_create('bans.txt', 'wb'))
+        json.dump(self.bans.make_list(), open_create(os.path.join(RESOURCE_DIR,'bans.txt'), 'wb'))
         if self.ban_publish is not None:
             self.ban_publish.update()
     

@@ -22,6 +22,7 @@ import imp
 import math
 import random
 
+#TODO: update this to use resource dir
 DEFAULT_LOAD_DIR = './maps'
 
 class MapNotFound(Exception):
