@@ -1032,6 +1032,10 @@ if game_mode not in ('ctf', 'tc'):
 
 script_names = config.get('scripts', [])
 
+# temporarily allow loading from the scripts folder in the resource directory
+ORIG_PATH = sys.path
+sys.path = [RESOURCE_DIR] + ORIG_PATH
+
 for script in script_names[:]:
     try:
         module = __import__('scripts.%s' % script, globals(), locals(), 
@@ -1040,6 +1044,10 @@ for script in script_names[:]:
     except ImportError, e:
         print "(script '%s' not found: %r)" % (script, e)
         script_names.remove(script)
+
+# change back to original path
+sys.path = ORIG_PATH
+
 
 for script in script_objects:
     protocol_class, connection_class = script.apply_script(protocol_class,
