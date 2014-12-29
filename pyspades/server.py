@@ -425,6 +425,9 @@ class ServerConnection(BaseConnection):
                         hit_amount = returned
                     player.hit(hit_amount, self, type)
                 elif contained.id == loaders.GrenadePacket.id:
+                    if check_nan(contained.value) or check_nan(*contained.position) or check_nan(*contained.velocity):
+                        self.on_hack_attempt("Invalid grenade data")
+                        return
                     if not self.grenades:
                         return
                     self.grenades -= 1
