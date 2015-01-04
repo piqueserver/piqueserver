@@ -22,7 +22,7 @@ import imp
 import math
 import random
 
-#TODO: update this to use resource dir
+# load dir is overridden to use resource directory in run.py
 DEFAULT_LOAD_DIR = './maps'
 
 class MapNotFound(Exception):
