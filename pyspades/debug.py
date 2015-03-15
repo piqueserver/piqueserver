@@ -34,8 +34,8 @@ def write_packet(data):
     open('packets/%s.dat' % current_id, 'wb').write(str(data))
     current_id += 1
 
-def open_debug_log():
-    DebugLog.filehandle = open('debug.log','w')
+def open_debug_log(file_name='debug.log'):
+    DebugLog.filehandle = open(file_name,'w')
 
 def get_refcounts():
     d = {}
