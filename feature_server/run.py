@@ -1000,7 +1000,6 @@ if game_mode not in ('ctf', 'tc'):
     # must be a script with this game mode
     script_names.append(game_mode)
 
-script_names = config.get('scripts', [])
 
 for script in script_names[:]:
     try:
