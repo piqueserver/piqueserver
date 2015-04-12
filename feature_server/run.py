@@ -77,12 +77,12 @@ profile = config.get('profile', False)
 
 frozen = hasattr(sys, 'frozen')
 
-def get_hg_rev():
+def get_git_rev():
     import subprocess
     pipe = subprocess.Popen(
-        ["hg", "log", "-l", "1", "--template", "{node}"],
+        ["git", "rev-parse", "HEAD"],
         stdout=subprocess.PIPE, stderr = subprocess.PIPE)
-    ret = pipe.stdout.read()[:12]
+    ret = pipe.stdout.read()[:40]
     if not ret:
         return '?'
     return ret
@@ -96,7 +96,7 @@ if frozen:
         SERVER_VERSION = 'win32 bin'
 else:
     sys.path.append('..')
-    SERVER_VERSION = '%s - rev %s' % (sys.platform, get_hg_rev())
+    SERVER_VERSION = '%s - rev %s' % (sys.platform, get_git_rev())
 
 if sys.platform == 'linux2':
     try:
