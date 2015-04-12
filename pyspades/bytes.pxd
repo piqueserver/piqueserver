@@ -16,7 +16,7 @@ cdef class ByteReader:
                         except INT_ERROR
     cpdef long long readInt(self, bint unsigned = ?, bint big_endian = ?) \
                             except LONG_LONG_ERROR
-    cpdef float readFloat(self, bint big_endian = ?) except FLOAT_ERROR
+    cpdef float readFloat(self, bint big_endian = ?) except? FLOAT_ERROR
     cpdef readString(self, int size = ?)
     cpdef ByteReader readReader(self, int size = ?)
     cpdef int dataLeft(self)
