@@ -1,4 +1,4 @@
-# PySnip #
+![PySnip](http://i.imgur.com/QFgqcRM.png)
 
 PySnip is an robust, open-source and cross-platform server implementation for [Ace of Spades](http://buildandshoot.com). It is fully customizable with extensions and scripts.
 
