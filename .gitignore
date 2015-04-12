@@ -1,22 +1,9 @@
-syntax: glob
+*.py[cod]
 
+# C extensions
+*.so
 
-# for python
-
-*.pyc
-*.pyo
-*.pyd
-
-*.txtc
-
-*.egg
-*.egg-info
-
-pip-log.txt
-__pycache__
-
-
-# for c++
+# C++ extension
 
 *.slo
 *.lo
