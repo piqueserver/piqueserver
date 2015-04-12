@@ -956,6 +956,8 @@ try:
                 continue
             except ValueError:
                 pass
+            if type(value) is not type(''):
+                continue
             items.append(value)
         return '%s is from %s' % (player.name, ', '.join(items))
     add(where_from)
