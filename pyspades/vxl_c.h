@@ -2,11 +2,12 @@
 #define VXL_C_H
 
 #include <bitset>
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
+#include <unordered_map>
+#include <unordered_set>
 
-#define map_type boost::unordered_map
-#define set_type boost::unordered_set
+#define map_type std::unordered_map
+#define set_type std::unordered_set
+
 
 #define MAP_X 512
 #define MAP_Y 512
