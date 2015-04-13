@@ -97,7 +97,8 @@
     },
     "status_server" : {
         "enabled" : false,
-        "port" : 32886
+        "port" : 32886,
+        "logging" : false
     },
     "ban_publish" : {
         "enabled" : false,
