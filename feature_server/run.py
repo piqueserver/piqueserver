@@ -54,6 +54,13 @@ RESOURCE_DIR = args.resource_dir
 # fix the path for the config file - handles differering directories and relative or absolute paths
 CONFIG_FILE = choose_path(RESOURCE_DIR,args.config_file)
 
+# default passwords hardcoded in config
+DEFAULT_PASSWORDS = {
+    'admin' : ['adminpass1', 'adminpass2', 'adminpass3'],
+    'moderator' : ['modpass'],
+    'guard' : ['guardpass'],
+    'trusted' : ['trustedpass']
+}
 
 for index, name in enumerate((CONFIG_FILE, 'config.txt.default')):
     try:
@@ -662,11 +669,17 @@ class FeatureProtocol(ServerProtocol):
         self.start_time = reactor.seconds()
         self.end_calls = []
         self.console = create_console(self)
+
+        # check for default password usage
+        for group, passwords in self.passwords.iteritems():
+            if group in DEFAULT_PASSWORDS:
+                for password in passwords:
+                    if password in DEFAULT_PASSWORDS[group]:
+                        print ("WARNING: FOUND DEFAULT PASSWORD '%s'" \
+                               " IN GROUP '%s'" % (password, group))
         
         for password in self.passwords.get('admin', []):
-            if password == 'replaceme':
-                print 'REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!'
-            elif not password:
+            if not password:
                 self.everyone_is_admin = True
         commands.rights.update(config.get('rights', {}))
         
