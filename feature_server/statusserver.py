@@ -98,6 +98,12 @@ class StatusServerFactory(object):
         root.putChild('', StatusPage(self))
         root.putChild('overview', MapOverview(self))
         site = server.Site(root)
+
+        logging = config.get('logging', False)
+        site.noisy = logging
+        if not logging:
+            site.log = lambda _: None
+
         protocol.listenTCP(config.get('port', 32886), site)
     
     def get_overview(self):
