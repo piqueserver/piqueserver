@@ -139,7 +139,11 @@ cdef class Vertex3:
         return create_vertex3(self.value.x, self.value.y, self.value.z)
     
     def get(self):
-        return self.value.x, self.value.y, self.value.z
+        # temp vars are needed to disable cython tuple optimization
+        tmp_x = self.value.x
+        tmp_y = self.value.y
+        tmp_z = self.value.z
+        return tmp_x, tmp_y, tmp_z
     
     def set(self, float x, float y, float z):
         self.value.x = x
@@ -258,8 +262,14 @@ cdef class Vertex3:
     def normalize(self):
         cdef float k = self.length()
         cdef Vector * a = self.value
-        a.x, a.y, a.z = (k and (a.x / k, a.y / k, a.z / k) or
-            (0.0, 0.0, 0.0))
+        if k:
+            a.x /= k
+            a.y /= k
+            a.z /= k
+        else:
+            a.x = 0
+            a.y = 0
+            a.z = 0
         return k
     
     cpdef Quaternion get_rotation_to(self, Vertex3 A):
