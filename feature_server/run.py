@@ -85,13 +85,20 @@ profile = config.get('profile', False)
 frozen = hasattr(sys, 'frozen')
 
 def get_git_rev():
+    if not os.path.exists(".git"):
+        return 'snapshot'
+
+    from distutils.spawn import find_executable
+    if find_executable("git") is None:
+        return 'gitless'
+
     import subprocess
     pipe = subprocess.Popen(
         ["git", "rev-parse", "HEAD"],
         stdout=subprocess.PIPE, stderr = subprocess.PIPE)
     ret = pipe.stdout.read()[:40]
     if not ret:
-        return '?'
+        return 'unknown'
     return ret
 
 if frozen:
