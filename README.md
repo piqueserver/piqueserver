@@ -27,6 +27,34 @@ Win32 builds can be found on the Downloads page.
 * Ban subscribe service
 * A ton of other features 
 
+### Installing ###
+#### For windows ####
+Go to [releases](https://github.com/NateShoffner/PySnip/releases) and download desired version.
+
+#### For linux ####
+Grab it from repo.
+```bash
+git clone https://github.com/NateShoffner/PySnip
+cd PySnip
+```
+Create virtualenv
+```bash
+virtualenv -p python2 venv
+source ./venv/bin/activate
+```
+Install dependencies
+```bash
+pip install cython twisted jinja2 pillow pygeoip pycrypto pyasn1
+```
+Compile
+```bash
+./build.sh
+```
+Run
+```bash
+./run_server.sh
+```
+
 ### Support ###
 
 Feel free to post a question on the [forums](http://buildandshoot.com/viewforum.php?f=19) if you need any help or hop onto [IRC](http://webchat.quakenet.org/?channels=%23buildandshoot) to to chat.
