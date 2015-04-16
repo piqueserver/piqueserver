@@ -15,6 +15,6 @@ setup(
             'optimize' : 2,
             'bundle_files' : 1,
             'includes' : ['zope.interface', 'twisted.web.resource', 'six'],
-            'packages' : ['pyspades', 'win32com', 'pygeoip', 'pyasn1']
+            'packages' : ['pyspades', 'win32com', 'pygeoip', 'pyasn1', 'jinja2', 'PIL']
         }}
 )
