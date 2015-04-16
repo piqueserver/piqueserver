@@ -2,8 +2,6 @@
 
 PySnip is an robust, open-source and cross-platform server implementation for [Ace of Spades](http://buildandshoot.com). It is fully customizable with extensions and scripts.
 
-Win32 builds can be found on the Downloads page.
-
 ### Features ###
 
 * Many administrator features
