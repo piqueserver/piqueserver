@@ -14,6 +14,7 @@ setup(
             'compressed' : 1,
             'optimize' : 2,
             'bundle_files' : 1,
+            'dll_excludes' : ['mswsock.dll', 'powrprof.dll'],
             'includes' : ['zope.interface', 'twisted.web.resource', 'six'],
             'packages' : ['pyspades', 'win32com', 'pygeoip', 'pyasn1', 'jinja2', 'PIL']
         }}
