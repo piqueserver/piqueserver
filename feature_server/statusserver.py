@@ -39,14 +39,19 @@ class CommonResource(Resource):
 class JSONPage(CommonResource):
     def render_GET(self, request):
         protocol = self.protocol
-        blues = []
-        greens = []
+
+        players = []
     
         for player in protocol.players.values():
-            if player.team is protocol.blue_team:
-                blues.append(player.name)
-            else:
-                greens.append(player.name)
+            player_data = {}
+            player_data['name'] = player.name
+            player_data['latency'] = player.latency
+            player_data['kills'] = player.kills
+            player_data['team'] = player.team.name
+
+            players.append(player_data)
+
+        players.append(player_data)
                                 
         dictionary = {
             "serverName" : protocol.name,
@@ -59,11 +64,8 @@ class JSONPage(CommonResource):
                 "author": protocol.map_info.author
             },
             "scripts" : protocol.config.get("scripts", []),
-            "players" : {
-                "blue": blues,
-                "green": greens,
-                "maxPlayers": protocol.max_players,
-            },
+            "players" : players,
+            "maxPlayers": protocol.max_players,
             "scores" : {
                 "currentBlueScore": protocol.blue_team.score,
                 "currentGreenScore": protocol.green_team.score,
