@@ -24,7 +24,6 @@ from jinja2 import Environment, PackageLoader
 import json
 from cStringIO import StringIO
 
-STATUS_NAME = 'status.html'
 OVERVIEW_UPDATE_INTERVAL = 1 * 60 # 1 minute
 
 class CommonResource(Resource):
@@ -53,6 +52,7 @@ class JSONPage(CommonResource):
             "serverName" : protocol.name,
             "serverVersion": protocol.version,
             "serverUptime" : reactor.seconds() - protocol.start_time,
+            "gameMode" : protocol.game_mode_name,
             "map" : {
                 "name": protocol.map_info.name,
                 "version": protocol.map_info.version,
