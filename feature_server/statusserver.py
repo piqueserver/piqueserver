@@ -50,8 +50,6 @@ class JSONPage(CommonResource):
             player_data['team'] = player.team.name
 
             players.append(player_data)
-
-        players.append(player_data)
                                 
         dictionary = {
             "serverName" : protocol.name,
