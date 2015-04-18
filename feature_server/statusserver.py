@@ -92,6 +92,7 @@ class MapOverview(CommonResource):
 
 class StatusServerFactory(object):
     last_overview = None
+    last_map_name = None
     overview = None
     def __init__(self, protocol, config):
         self.env = Environment(loader = PackageLoader('web'))
@@ -112,6 +113,7 @@ class StatusServerFactory(object):
     def get_overview(self):
         current_time = reactor.seconds()
         if (self.last_overview is None or 
+        self.last_map_name != self.protocol.map_info.name or
         current_time - self.last_overview > OVERVIEW_UPDATE_INTERVAL):
             overview = self.protocol.map.get_overview(rgba = True)
             image = Image.fromstring('RGBA', (512, 512), overview)
@@ -119,4 +121,5 @@ class StatusServerFactory(object):
             image.save(data, 'png')
             self.overview = data.getvalue()
             self.last_overview = current_time
+            self.last_map_name = self.protocol.map_info.name
         return self.overview
