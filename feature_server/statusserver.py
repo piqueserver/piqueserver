@@ -57,6 +57,7 @@ class JSONPage(CommonResource):
                 "version": protocol.map_info.version,
                 "author": protocol.map_info.author
             },
+            "scripts" : protocol.config.get("scripts", []),
             "players" : {
                 "blue": blues,
                 "green": greens,
