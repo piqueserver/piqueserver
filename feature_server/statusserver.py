@@ -52,6 +52,7 @@ class JSONPage(CommonResource):
         dictionary = {
             "serverName" : protocol.name,
             "serverVersion": protocol.version,
+            "serverUptime" : reactor.seconds() - protocol.start_time,
             "map" : {
                 "name": protocol.map_info.name,
                 "version": protocol.map_info.version,
