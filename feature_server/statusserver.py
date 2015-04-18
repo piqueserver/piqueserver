@@ -54,7 +54,8 @@ class JSONPage(CommonResource):
             "serverVersion": protocol.version,
             "map" : {
                 "name": protocol.map_info.name,
-                "version": protocol.map_info.version
+                "version": protocol.map_info.version,
+                "author": protocol.map_info.author
             },
             "players" : {
                 "blue": blues,
