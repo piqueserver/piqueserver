@@ -1,0 +1,131 @@
+name = 'Random'
+version = '1.0'
+author = 'Triplefox'
+description = ('Random generated map.')
+
+def gen_script(basename, seed):
+
+    from pyspades import mapmaker
+
+    # define the gradients
+    
+    grass = mapmaker.Gradient()
+    grass.set_step_rgb(0, (2,100,86))
+    grass.hsb(1, (102,73,58), 32, (106,78,71))
+    grass.hsb(32, (106,78,71), 64, (106,48,86))
+
+    snow = mapmaker.Gradient()
+    snow.set_step_rgb(0, (101,193,214))
+    snow.hsb(1, (221,55,48), 16, (184,30,84))
+    snow.hsb(16, (184,30,84), 48, (160,20,87))
+    snow.hsb(48, (160,20,87), 56, (140,18,98))
+    snow.hsb(56, (140,18,98), 64, (142,13,100))
+
+    hill = mapmaker.Gradient()
+    hill.set_step_rgb(0, (2,100,86))
+    hill.hsb(1, (102,73,58), 64, (17,36,87))
+    
+    water = mapmaker.Gradient()
+    water.set_step_rgb(0, (2,100,86))
+    water.hsb(1, (64,26,70), 16, (119,65,40))
+    water.hsb(16, (119,65,40), 64, (125,153,61))
+
+    # define biomes (gradient + avg. height infos)
+    
+    grass_biome = mapmaker.Biome(grass, 0.97, -0.1, 0.02)
+    snow_biome = mapmaker.Biome(snow, 0.5, -0.4, 0.11)
+    hill_biome = mapmaker.Biome(hill, 0.9, -0.3, 0.07)
+    water_biome = mapmaker.Biome(water, 1.2, -0.16, 0.04)
+    tundra_biome = mapmaker.Biome(snow, 1.14, -0.19, 0.1)
+
+    # biome map - tiled biome instances
+
+    bmap = mapmaker.BiomeMap([grass_biome,snow_biome,
+                              hill_biome,water_biome,
+                              tundra_biome],32,32)
+
+    # predefined points to force a similar general character of map
+    points = [(15,7,snow_biome),(15,15,grass_biome),(15,22,hill_biome),
+              (0,24,water_biome),(31,24,water_biome),
+              (0,8,water_biome),(31,8,water_biome)]
+    for n in xrange(0,31,8):
+        points.append((n,0,tundra_biome))
+        points.append((n,31,water_biome))
+
+    # additional randomized points
+    points.extend(bmap.random_points(2,grass_biome,0,8,32,16))
+    points.extend(bmap.random_points(1,hill_biome,0,8,32,16))
+    points.extend(bmap.random_points(1,water_biome,8,8,16,16))
+    
+    bmap.point_flood(points)
+    bmap.jitter()
+
+    # transform the biome map into a heightmap
+    
+    hmap, gradients = bmap.create_heightmap()
+    hmap.midpoint_displace(0.3,0.68,4)
+    hmap.jitter_colors(10)
+
+    # draw the river
+    
+    import random
+    YINCREMENT = 8
+    XINCREMENT = 12
+    XMIN = 256-64
+    XMAX = 256+64
+    x = random.randint(XMIN,XMAX)
+    for y in xrange(YINCREMENT,513,YINCREMENT):
+        nx = max(XMIN,min(XMAX,random.randint(x-XINCREMENT,
+                                                    x+XINCREMENT)))
+        hmap.line_add(x,y-YINCREMENT,nx,y,8,0.005)
+        hmap.line_set(x,y-YINCREMENT,nx,y,2,2.0)
+        x = nx
+    
+    hmap.smoothing()    
+    hmap.truncate()
+    hmap.rewrite_gradient_fill(gradients)
+    hmap.rgb_noise_colors(-2,2)
+    hmap.smooth_colors()
+
+    vxl = hmap.write_vxl()
+            
+    def tree(x,y):
+        # space the trees into a "x" pattern
+        x = ((x>>1)<<1) + y % 2
+        green_set = [mapmaker.make_color(98,193,69),
+                 mapmaker.make_color(96,229,55),
+                 mapmaker.make_color(94,242,48),
+                 mapmaker.make_color(93,209,57),
+                 mapmaker.make_color(92,219,57),
+                 mapmaker.make_color(88,210,66)]
+        brown = mapmaker.make_color(189,124,67)
+        trunk_h = random.randint(4,5)
+        if x > 1 and y > 1 and x < 510 and y < 510: 
+            z = int(hmap.get(x,y)*63 - 3 - trunk_h)
+            if z >= 0 and z + 3 + trunk_h < 62:
+                green = random.choice(green_set)
+                for n in [[x,y,z,z+3,z+3,green],
+                [x+1,y,z,z+3,z+3,green],
+                [x-1,y,z,z+3,z+3,green],
+                [x,y+1,z,z+3,z+3,green],
+                [x,y-1,z,z+3,z+3,green],
+                [x,y,z+3,z+3+trunk_h,z+3+trunk_h-1,brown],
+                [x+1,y+1,z+1,z+2,z+2,green],
+                [x-1,y+1,z+1,z+2,z+2,green],
+                [x+1,y-1,z+1,z+2,z+2,green],
+                [x-1,y-1,z+1,z+2,z+2,green],
+                [x+2,y,z+1,z+2,z+2,green],
+                [x-2,y,z+1,z+2,z+2,green],
+                [x,y-2,z+1,z+2,z+2,green],
+                [x,y+2,z+1,z+2,z+2,green]]:
+                    vxl.set_column_fast(*n)
+
+    for x in xrange(0, bmap.width):
+        for y in xrange(0, bmap.height):
+            if bmap.get_repeat(x, y) is hill_biome:
+                left, top, right, bottom = bmap.rect_of_point(x,y)
+                for ct in xrange(random.randint(1,17)):
+                    tree(random.randint(left,right),\
+                     random.randint(top,bottom))
+    
+    return vxl
