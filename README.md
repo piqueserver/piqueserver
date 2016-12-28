@@ -1,4 +1,4 @@
-# spades-server
+# spades-server [![Build Status](https://travis-ci.org/NateShoffner/PySnip.svg?branch=master)](https://travis-ci.org/NateShoffner/PySnip)
 A Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/PySnip).
 
 ## FAQ
