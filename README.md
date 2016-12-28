@@ -26,5 +26,5 @@ A Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/Py
 
 > **Is that everything?**
 >
-> Please see also the [original README](OLD_REDAME.md) from PySnip and
+> Please see also the [original README](OLD_README.md) from PySnip and
 > the [Wiki](https://github.com/feikname/spades-server/wiki) for more information.
