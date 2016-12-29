@@ -17,7 +17,7 @@ names = [
     'pyspades.loaders',
     'pyspades.mapmaker'
 ]
-static = os.environ['STDCPP_STATIC'] == "1"
+static = os.environ.get('STDCPP_STATIC') == "1"
 
 if static:
     print "Linking the build statically."
