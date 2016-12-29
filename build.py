@@ -18,7 +18,7 @@ names = [
 ]
 
 for name in names:
-    extra = {'extra_compile_args' : ['-std=c++11']} if name in ['pyspades.vxl', 'pyspades.world', 'pyspades.mapmaker'] else {}
+    extra = {'extra_compile_args' : ['-std=c++11', '-static-libstdc++', '-static-libgcc']} if name in ['pyspades.vxl', 'pyspades.world', 'pyspades.mapmaker'] else {}
 
     ext_modules.append(Extension(name, ['./%s.pyx' % name.replace('.', '/')],
         language = 'c++', include_dirs=['./pyspades'], **extra))
