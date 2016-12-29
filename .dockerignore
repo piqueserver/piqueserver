@@ -94,6 +94,22 @@ env/
 */*/*.swp
 */*/*/*.swp
 
+# pyspades specific
+pyspades/bytes.cpp
+pyspades/common.cpp
+pyspades/contained.cpp
+pyspades/loaders.cpp
+pyspades/mapmaker.cpp
+pyspades/packet.cpp
+pyspades/vxl.cpp
+pyspades/world.cpp
+enet/enet.c
+
+# native binaries directories
+build/
+enet/build/
+
+
 # Misc
 .github
 .gitattributes
