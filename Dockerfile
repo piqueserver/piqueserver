@@ -23,10 +23,10 @@ RUN apk add --no-cache --virtual .build-deps-cython gcc musl-dev \
 # TODO: while this behaviour suits production envs perfectly, make a dev env option
 COPY pyspades/ /usr/src/app/pyspades/
 COPY enet/ /usr/src/app/enet/
-COPY build.py build.sh COPYING.txt CREDITS.txt LICENSE /usr/src/app/
+COPY build.py build.sh build_all.sh COPYING.txt CREDITS.txt LICENSE /usr/src/app/
 
 RUN apk add --no-cache --virtual .build-deps-server gcc musl-dev g++ \
-    && STDCPP_STATIC=1 ./build.sh \
+    && STDCPP_STATIC=1 ./build_all.sh \
     && apk del .build-deps-server 
 
 # Copy over the rest and default to launching the server

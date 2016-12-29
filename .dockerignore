@@ -105,6 +105,27 @@ pyspades/vxl.cpp
 pyspades/world.cpp
 enet/enet.c
 
+# C extensions
+*.so
+
+# C++ extension
+
+*.slo
+*.lo
+*.o
+
+*.so
+*.dylib
+
+*.lai
+*.la
+*.a
+
+# py2exe
+py2exe/dist/
+py2exe/*.zip
+
+
 # native binaries directories
 build/
 enet/build/
