@@ -1,6 +1,9 @@
+### A general python module specific ###
 # Git
 .git
 .gitignore
+.github
+.gitattributes
 
 # CI
 .codeclimate.yml
@@ -11,17 +14,8 @@ docker-compose.yml
 .docker
 
 # Byte-compiled / optimized / DLL files
-__pycache__/
-*/__pycache__/
-*/*/__pycache__/
-*/*/*/__pycache__/
-*.py[cod]
-*/*.py[cod]
-*/*/*.py[cod]
-*/*/*/*.py[cod]
-
-# C extensions
-*.so
+**/__pycache__/
+**/.py[cod]
 
 # Distribution / packaging
 .Python
@@ -61,11 +55,11 @@ coverage.xml
 *,cover
 
 # Translations
-*.mo
-*.pot
+**/*.mo
+**/*.pot
 
 # Django stuff:
-*.log
+**/*.log
 
 # Sphinx documentation
 docs/_build/
@@ -75,26 +69,21 @@ target/
 
 # Virtual environment
 .env/
+env/
 .venv/
 venv/
-env/
 
 # PyCharm
 .idea
 
 # Python mode for VIM
-.ropeproject
-*/.ropeproject
-*/*/.ropeproject
-*/*/*/.ropeproject
+**/.ropeproject
 
 # Vim swap files
-*.swp
-*/*.swp
-*/*/*.swp
-*/*/*/*.swp
+**/*.swp
 
-# pyspades specific
+
+### pyspades specific ###
 pyspades/bytes.cpp
 pyspades/common.cpp
 pyspades/contained.cpp
@@ -106,34 +95,30 @@ pyspades/world.cpp
 enet/enet.c
 
 # C extensions
-*.so
+**/*.so
 
 # C++ extension
+**/*.slo
+**/*.lo
+**/*.o
 
-*.slo
-*.lo
-*.o
+**/*.so
+**/*.dylib
 
-*.so
-*.dylib
-
-*.lai
-*.la
-*.a
+**/*.lai
+**/*.la
+**/*.a
 
 # py2exe
 py2exe/dist/
 py2exe/*.zip
-
 
 # native binaries directories
 build/
 enet/build/
 
 
-# Misc
-.github
-.gitattributes
+### Misc ###
 README.md
 Dockerfile
 db.sqlite3
