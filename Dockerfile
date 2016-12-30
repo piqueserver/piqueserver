@@ -1,8 +1,6 @@
 FROM python:2.7-alpine
 
-RUN mkdir -p /usr/src/app
-RUN mkdir -p /usr/src/app/enet
-RUN mkdir -p /usr/src/app/pyspades
+RUN mkdir -p /usr/src/app && mkdir -p /usr/src/app/enet && mkdir -p /usr/src/app/pyspades
 WORKDIR /usr/src/app
 
 # Installing dependencies.
