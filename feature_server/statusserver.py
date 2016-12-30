@@ -41,7 +41,7 @@ class JSONPage(CommonResource):
         protocol = self.protocol
 
         players = []
-    
+
         for player in protocol.players.values():
             player_data = {}
             player_data['name'] = player.name
@@ -50,7 +50,7 @@ class JSONPage(CommonResource):
             player_data['team'] = player.team.name
 
             players.append(player_data)
-                                
+
         dictionary = {
             "serverName" : protocol.name,
             "serverVersion": protocol.version,
@@ -78,7 +78,7 @@ class StatusPage(CommonResource):
         status = self.env.get_template('status.html')
         return status.render(server = self.protocol, reactor = reactor).encode(
             'utf-8', 'replace')
-            
+
 
 class MapOverview(CommonResource):
     def render_GET(self, request):
@@ -109,10 +109,10 @@ class StatusServerFactory(object):
             site.log = lambda _: None
 
         protocol.listenTCP(config.get('port', 32886), site)
-    
+
     def get_overview(self):
         current_time = reactor.seconds()
-        if (self.last_overview is None or 
+        if (self.last_overview is None or
         self.last_map_name != self.protocol.map_info.name or
         current_time - self.last_overview > OVERVIEW_UPDATE_INTERVAL):
             overview = self.protocol.map.get_overview(rgba = True)

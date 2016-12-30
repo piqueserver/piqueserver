@@ -11,10 +11,10 @@ from pyspades.constants import *
 BK_FREE, BK_FRIENDLY, BK_ENEMY_FAR, BK_ENEMY_NEAR, BK_UNDO = range(5)
 
 def apply_script(protocol, connection, config):
-    
+
     class ZOCConnection(connection):
         block_undo = None
-        
+
         def on_connect(self):
             self.block_undo = []
             self.zoc_destruction_points = 0
@@ -23,7 +23,7 @@ def apply_script(protocol, connection, config):
         def on_spawn(self, pos):
             self.zoc_destruction_points = 0
             return connection.on_spawn(self, pos)
-        
+
         def on_block_destroy(self, x, y, z, mode):
             """Restrict destruction of blocks that are on your own team and
             in a zone of control, or blocks that are on the other team and
@@ -45,7 +45,7 @@ def apply_script(protocol, connection, config):
                                        "Go fight the enemy!")
                         return False
                     else:
-                        self.zoc_destruction_points -= cost                    
+                        self.zoc_destruction_points -= cost
             return connection.on_block_destroy(self, x, y, z, mode)
 
         def own_block(self, x, y, z):
@@ -86,7 +86,7 @@ def apply_script(protocol, connection, config):
                         else:
                             return BK_ENEMY_NEAR
             return BK_FREE
-    
+
     class ZOCProtocol(protocol):
 
         zone_cache = None
@@ -95,7 +95,7 @@ def apply_script(protocol, connection, config):
         zoc_attack_distance = config.get('zoc_attack_distance', 64)
         zoc_attack_distance = zoc_attack_distance * zoc_attack_distance
         zoc_block_undo = config.get('zoc_block_undo', 10)
-        
+
         zoc_block_cost = config.get('zoc_block_cost', 5)
         zoc_points_per_tick = config.get('zoc_points_per_tick', 1)
         zoc_point_cap = config.get('zoc_point_cap', 6 * zoc_block_cost)
@@ -108,7 +108,7 @@ def apply_script(protocol, connection, config):
             self.zoc_loop = LoopingCall(self.zoc_tick)
             if not self.zoc_loop.running:
                 self.zoc_loop.start(5.0)
-        
+
         def _build_zoc(self, x, y, team):
             return {'team':team,
                     'left':x - self.zoc_radius,
@@ -143,5 +143,5 @@ def apply_script(protocol, connection, config):
                 entity.z = desired_z
                 return True
             return protocol.on_update_entity(self, entity)
-    
+
     return ZOCProtocol, ZOCConnection

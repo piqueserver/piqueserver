@@ -46,7 +46,7 @@ def squad(self, squadkey = None):
         result.append(('To join squads: /squad <squad name>. ' +
                        '/squad none to spawn normally.'))
         self.send_lines(result)
-        return 
+        return
 
     if squadkey.lower() == 'none':
         squad = None
@@ -61,11 +61,11 @@ for func in (squad, follow):
     add(func)
 
 def apply_script(protocol, connection, config):
-    protocol.squad_respawn_time = config.get('squad_respawn_time', 
+    protocol.squad_respawn_time = config.get('squad_respawn_time',
         protocol.respawn_time)
     protocol.squad_size = config.get('squad_size', 0)
     protocol.auto_squad = config.get('auto_squad', True)
-    
+
     class SquadConnection(connection):
         squad = None
         squad_pref = None
@@ -74,7 +74,7 @@ def apply_script(protocol, connection, config):
             if self.protocol.auto_squad:
                 self.join_squad(self.find_auto_squad(),None)
             return connection.on_login(self, name)
-        
+
         def get_squad(self, team, squadkey):
             result = {'name' : squadkey, 'players' : []}
             if squadkey is None:
@@ -131,7 +131,7 @@ def apply_script(protocol, connection, config):
             if self.team is None or \
                self.team is self.protocol.spectator_team:
                 return
-            
+
             # same-squad check
 
             if squad is None or self.squad is None:
@@ -139,7 +139,7 @@ def apply_script(protocol, connection, config):
             else:
                 newsquad = self.squad.lower() != squad.lower()
             newpref = self.squad_pref is not squad_pref
-            
+
             if not newsquad and not newpref:
                 return 'Squad unchanged.'
 
@@ -147,27 +147,27 @@ def apply_script(protocol, connection, config):
 
             existing = self.get_squad(self.team, squad)
             squad = existing['name'] # fixes the case
-            
+
             if squad and (self.protocol.squad_size
                 <= len(existing['players'])):
                 return ('Squad %s is full. (limit %s)' %
                         (squad, self.protocol.squad_size))
-            
+
             # assign to unique squad
 
             oldsquad = self.squad
             oldpref = self.squad_pref
-            
+
             if newsquad and self.squad:
                 self.leave_squad()
 
             self.squad = squad
             self.squad_pref = squad_pref
-            
+
             if newsquad and squad:
                 self.squad_broadcast('%s joined your squad.' %
                                            self.name)
-            
+
             if squad is None:
                 self.respawn_time = self.protocol.respawn_time
                 self.squad_pref = None
@@ -207,7 +207,7 @@ def apply_script(protocol, connection, config):
                 for player in squad['players']:
                     if player is not self:
                         player.send_chat(msg)
-                    
+
         def get_follow_location(self, follow):
             x, y, z = (follow.world_object.position.get())
             return x, y, z
@@ -219,7 +219,7 @@ def apply_script(protocol, connection, config):
         def on_spawn(self, pos):
             if self.squad:
                 all_members = ([n for n in self.get_squad(self.team,
-                            self.squad)['players'] if 
+                            self.squad)['players'] if
                             n is not self])
                 live_members = [n for n in all_members if n.hp]
                 membernames = [m.name for m in all_members]
@@ -259,10 +259,10 @@ def apply_script(protocol, connection, config):
                 self.squad_broadcast('Squadmate %s was killed by %s' %
                              (self.name, killer.name))
             return connection.on_kill(self, killer, type, grenade)
-        
+
         def on_chat(self, value, global_message):
             if self.squad is not None and not global_message:
                 value = '%s : %s' % (self.squad, value)
             return connection.on_chat(self, value, global_message)
-    
+
     return protocol, SquadConnection

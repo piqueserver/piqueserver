@@ -56,7 +56,7 @@ def coord_on_platform(x, y, z):
 
 def apply_script(protocol, connection, config):
     class BabelProtocol(protocol):
-        babel = False 
+        babel = False
         def on_map_change(self, map):
             extensions = self.map_info.extensions
             if ALWAYS_ENABLED:
@@ -74,14 +74,14 @@ def apply_script(protocol, connection, config):
                     for y in xrange(256 - PLATFORM_HEIGHT, 256 + PLATFORM_HEIGHT):
                         map.set_point(x, y, 1, PLATFORM_COLOR)
             return protocol.on_map_change(self, map)
-        
+
         def is_indestructable(self, x, y, z):
             if self.babel:
                 if coord_on_platform(x, y, z):
                     protocol.is_indestructable(self, x, y, z)
                     return True
             return protocol.is_indestructable(self, x, y, z)
-    
+
     class BabelConnection(connection):
         def invalid_build_position(self, x, y, z):
             if not self.god and self.protocol.babel:
@@ -139,5 +139,5 @@ def apply_script(protocol, connection, config):
                         self.send_chat('You must be closer to the enemy\'s base to grenade blocks!')
                         return False
             return connection.on_block_destroy(self, x, y, z, mode)
-   
+
     return BabelProtocol, BabelConnection

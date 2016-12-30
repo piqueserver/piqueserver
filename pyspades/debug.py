@@ -65,6 +65,6 @@ def debug_csv_line(listdata):
         DebugLog.filehandle.write(','.join(map(str, listdata)) )
         DebugLog.filehandle.write('\n')
         DebugLog.filehandle.flush()
-    
+
 class DebugLog:
     filehandle = None

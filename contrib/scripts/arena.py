@@ -4,8 +4,8 @@
 # A game of team survival. The last team standing scores a point.
 
 # A map that uses arena needs to be modified to have a starting area for
-# each team. A starting area is enclosed and has a gate on it. Each block of a 
-# gate must have the EXACT same color to work properly. Between each rounds, 
+# each team. A starting area is enclosed and has a gate on it. Each block of a
+# gate must have the EXACT same color to work properly. Between each rounds,
 # the gate is rebuilt. The gates are destroyed simultaneously at the start of each
 # round, releasing the players onto the map. Players are free to switch weapons
 # between rounds.
@@ -164,7 +164,7 @@ class Gate:
             raise CustomException('The gate coordinate (%i, %i, %i) is not solid.' % (x, y, z))
         self.record_gate(x, y, z)
         self.blocks = minimize_block_line(self.blocks)
-    
+
     def build_gate(self):
         map = self.protocol_obj.map
         set_color.value = make_color(*self.color)
@@ -259,7 +259,7 @@ def apply_script(protocol, connection, config):
                     self.world_object.dead = True
                     self.protocol.check_round_end()
             return returned
-        
+
         def get_respawn_time(self):
             if self.protocol.arena_running:
                 return -1
@@ -400,7 +400,7 @@ def apply_script(protocol, connection, config):
                 self.old_building = None
                 self.old_killing = None
             return protocol.on_map_change(self, map)
-        
+
         def build_gates(self):
             for gate in self.gates:
                 gate.build_gate()

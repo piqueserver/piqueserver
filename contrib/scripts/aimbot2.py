@@ -40,7 +40,7 @@ MULTIPLE_BULLETS_BAN_DURATION = 10080
 RIFLE_MULTIPLE_BULLETS_MAX = 8
 SMG_MULTIPLE_BULLETS_MAX = 8
 
-# The minimum number of near misses + hits that are fired before kicking, 
+# The minimum number of near misses + hits that are fired before kicking,
 # banning, or warning an admin about someone using the hit percentage check
 RIFLE_KICK_MINIMUM = 45
 SMG_KICK_MINIMUM = 90
@@ -190,7 +190,7 @@ def apply_script(protocol, connection, config):
                 if irc_relay.factory.bot and irc_relay.factory.bot.colors:
                     prefix = '\x0304' + prefix + '\x0f'
                 irc_relay.send(prefix + message)
-        
+
         def on_spawn(self, pos):
             self.first_orientation = True
             return connection.on_spawn(self, pos)
@@ -198,11 +198,11 @@ def apply_script(protocol, connection, config):
         def bullet_loop_start(self, interval):
             if not self.bullet_loop.running:
                 self.bullet_loop.start(interval)
-        
+
         def bullet_loop_stop(self):
             if self.bullet_loop.running:
                 self.bullet_loop.stop()
-        
+
         def get_headshot_snap_count(self):
             pop_count = 0
             headshot_snap_count = 0
@@ -246,7 +246,7 @@ def apply_script(protocol, connection, config):
             else:
                 self.first_orientation = False
             return connection.on_orientation_update(self, x, y, z)
-        
+
         def on_shoot_set(self, shoot):
             if self.tool == WEAPON_TOOL:
                 if shoot and not self.bullet_loop.running:
@@ -258,7 +258,7 @@ def apply_script(protocol, connection, config):
                 elif not shoot:
                     self.bullet_loop_stop()
             return connection.on_shoot_set(self, shoot)
-        
+
         def get_kill_count(self):
             current_time = reactor.seconds()
             kill_count = 0
@@ -289,7 +289,7 @@ def apply_script(protocol, connection, config):
                                 by.kills_in_time_warn_time = current_time
                                 by.warn_admin()
             return connection.on_kill(self, by, type, grenade)
-        
+
         def multiple_bullets_eject(self):
             if MULTIPLE_BULLETS == BAN:
                 self.ban('Aimbot detected - multiple bullets', MULTIPLE_BULLETS_BAN_DURATION)
@@ -334,7 +334,7 @@ def apply_script(protocol, connection, config):
                         elif shotgun_use:
                             self.shotgun_hits += 1
             return connection.on_hit(self, hit_amount, hit_player, type, grenade)
-        
+
         def hit_percent_eject(self, accuracy):
             message = 'Aimbot detected - %i%% %s hit accuracy' %\
                       (100.0 * accuracy, self.weapon_object.name)
@@ -396,7 +396,7 @@ def apply_script(protocol, connection, config):
                         self.shotgun_count += 1
                     return True
             return False
-        
+
         # Data collection stuff
         def on_disconnect(self):
             self.bullet_loop_stop()
@@ -410,5 +410,5 @@ def apply_script(protocol, connection, config):
                         myfile.write(output)
                         myfile.close()
             return connection.on_disconnect(self)
-    
+
     return Aimbot2Protocol, Aimbot2Connection

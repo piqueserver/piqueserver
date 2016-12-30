@@ -30,10 +30,10 @@ class BaseConnection(object):
     def __init__(self, protocol, peer):
         self.protocol = protocol
         self.peer = peer
-    
+
     def timed_out(self):
         self.disconnect()
-    
+
     def disconnect(self, data = 0):
         if self.disconnected:
             return
@@ -41,10 +41,10 @@ class BaseConnection(object):
         self.peer.disconnect(data);
         self.protocol.remove_peer(self.peer)
         self.on_disconnect()
-    
+
     def loader_received(self, loader):
         raise NotImplementedError('loader_received() not implemented')
-    
+
     def send_contained(self, contained, sequence = False):
         if self.disconnected:
             return
@@ -56,17 +56,17 @@ class BaseConnection(object):
         contained.write(data)
         packet = enet.Packet(str(data), flags)
         self.peer.send(0, packet)
-    
+
     # events
 
     def on_connect(self):
         pass
-    
+
     def on_disconnect(self):
         pass
-    
+
     # properties
-        
+
     @property
     def latency(self):
         return self.peer.roundTripTime
@@ -75,8 +75,8 @@ class BaseProtocol(object):
     connection_class = BaseConnection
     max_connections = 33
     is_client = False
-    
-    def __init__(self, port = None, interface = 'localhost', 
+
+    def __init__(self, port = None, interface = 'localhost',
                  update_interval = 1 / 60.0):
         if port is not None and interface is not None:
             address = enet.Address(interface, port)
@@ -88,22 +88,22 @@ class BaseProtocol(object):
         self.update_loop.start(update_interval, False)
         self.connections = {}
         self.clients = {}
-    
+
     def connect(self, connection_class, host, port, version, channel_count = 1,
                 timeout = 5.0):
-        peer = self.host.connect(enet.Address(host, port), channel_count, 
+        peer = self.host.connect(enet.Address(host, port), channel_count,
             version)
         connection = connection_class(self, peer)
-        connection.timeout_call = reactor.callLater(timeout, 
+        connection.timeout_call = reactor.callLater(timeout,
             connection.timed_out)
         self.clients[peer] = connection
         return connection
-    
+
     def on_connect(self, peer):
         connection = self.connection_class(self, peer)
         self.connections[peer] = connection
         connection.on_connect()
-    
+
     def on_disconnect(self, peer):
         try:
             connection = self.connections.pop(peer)
@@ -111,7 +111,7 @@ class BaseProtocol(object):
             connection.on_disconnect()
         except KeyError:
             return
-    
+
     def data_received(self, peer, packet):
         connection = self.connections[peer]
         connection.loader_received(packet)
@@ -128,7 +128,7 @@ class BaseProtocol(object):
             self.update_loop.stop()
             self.update_loop = None
             self.host = None # important for GC
-    
+
     def update(self):
         try:
             while 1:

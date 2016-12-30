@@ -47,23 +47,23 @@ class Scheduler(object):
         self.protocol = protocol
         self.calls = WeakSet()
         self.loops = WeakSet()
-    
+
     def call_later(self, *arg, **kw):
         call = reactor.callLater(*arg, **kw)
         self.calls.add(call)
         return call
-    
+
     def call_end(self, *arg, **kw):
         call = self.protocol.call_end(*arg, **kw)
         self.calls.add(call)
         return call
-    
+
     def loop_call(self, delay, func, *arg, **kw):
         loop = LoopingCall(func, *arg, **kw)
         loop.start(delay, False)
         self.loops.add(loop)
         return loop
-    
+
     def reset(self):
         for call in self.calls:
             if call.active():

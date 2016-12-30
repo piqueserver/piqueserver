@@ -252,7 +252,7 @@ def apply_script(protocol, connection, config):
             self.arguments = None
             self.select = False
             self.points = None
-        
+
         def get_direction(self):
             orientation = self.world_object.orientation
             angle = atan2(orientation.y, orientation.x)
@@ -299,7 +299,7 @@ def apply_script(protocol, connection, config):
                     y2 = 511 - y
                 remove_block(self.protocol, x2, y2, z)
             connection.on_block_destroy(self, x, y, z, value)
-        
+
         def on_block_build(self, x, y, z):
             if self.mirror_x == True or self.mirror_y == True:
                 x2 = x

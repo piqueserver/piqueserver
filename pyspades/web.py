@@ -14,7 +14,7 @@ def getPage(url, bindAddress = None, *arg, **kw):
             from twisted.web.client import _URI as URI
         except ImportError:
             from twisted.web.client import URI
-        
+
         uri = URI.fromBytes(url)
         scheme = uri.scheme
         host = uri.host
@@ -23,11 +23,11 @@ def getPage(url, bindAddress = None, *arg, **kw):
 
     factory = HTTPClientFactory(url, *arg, **kw)
     factory.noisy = False
-	
+
     if scheme == 'https':
         from twisted.internet import ssl
         context = ssl.ClientContextFactory()
-        reactor.connectSSL(host, port, factory, context, 
+        reactor.connectSSL(host, port, factory, context,
             bindAddress = bindAddress)
     else:
         reactor.connectTCP(host, port, factory, bindAddress = bindAddress)

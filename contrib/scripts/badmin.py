@@ -51,8 +51,8 @@ def aimbot_match(player, msg):
 def badmin(connection, var=None):
     if var == None:
         return ("@Badmin (r%s): Language Filter(LF) [%s], Blank Votekick Blocker(BV) "
-        "[%s], Grief Votekick Protection(GV) [%s], Aimbot Votekick Protection(AV) [%s]" 
-        % (BADMIN_VERSION, LANGUAGE_FILTER_ENABLED, BLANK_VOTEKICK_ENABLED, 
+        "[%s], Grief Votekick Protection(GV) [%s], Aimbot Votekick Protection(AV) [%s]"
+        % (BADMIN_VERSION, LANGUAGE_FILTER_ENABLED, BLANK_VOTEKICK_ENABLED,
         SCORE_GRIEF_ENABLED, SCORE_AIMBOT_ENABLED))
 add(badmin)
 
@@ -232,5 +232,5 @@ def apply_script(protocol, connection, config):
                     connection.protocol.irc_say("* @Badmin: I've cancelled a griefing votekick! Kicker: %s, Kickee: %s, Score: %s" % (connection.name, player.name, score))
                     return "@Badmin: This player has not been griefing."
             return protocol.start_votekick(self, connection, player, reason)
-    
+
     return BadminProtocol, BadminConnection

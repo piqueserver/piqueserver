@@ -25,7 +25,7 @@ def apply_script(protocol, connection, config):
             self.team.kills += self.protocol.intel_points
             self.protocol.check_end_game(self)
             return result
-        
+
         def on_kill(self, killer, type, grenade):
             result = connection.on_kill(self, killer, type, grenade)
             self.protocol.check_end_game(killer)
@@ -34,12 +34,12 @@ def apply_script(protocol, connection, config):
         def explain_game_mode(self):
             return ('Team Deathmatch: Kill the opposing team. Intel is worth %s kills.'
                     % self.protocol.intel_points)
-            
+
     class TDMProtocol(protocol):
         game_mode = CTF_MODE
         kill_limit = config.get('kill_limit', 100)
         intel_points = config.get('intel_points', 10)
-    
+
         def get_kill_count(self):
             green_kills = self.green_team.kills
             blue_kills = self.blue_team.kills
@@ -62,7 +62,7 @@ def apply_script(protocol, connection, config):
                          blue_kills,
                         self.kill_limit - green_kills,
                         self.kill_limit))
-        
+
         def check_end_game(self, player):
             if self.green_team.kills>=self.kill_limit:
                 self.send_chat("Green Team Wins, %s - %s" %
@@ -72,7 +72,7 @@ def apply_script(protocol, connection, config):
             elif self.blue_team.kills>=self.kill_limit:
                 self.send_chat("Blue Team Wins, %s - %s" %
                                (self.blue_team.kills, self.green_team.kills))
-                self.reset_game(player)        
+                self.reset_game(player)
                 protocol.on_game_end(self)
-    
+
     return TDMProtocol, TDMConnection

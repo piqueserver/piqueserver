@@ -59,11 +59,11 @@ add(kick_afk)
 def apply_script(protocol, connection, config):
     time_limit = config.get('afk_time_limit', None)
     time_limit = time_limit and time_limit * 60.0
-    
+
     class AFKConnection(connection):
         afk_kick_call = None
         last_activity = None
-        
+
         def afk_kick(self):
             if self.name:
                 time_inactive = reactor.seconds() - self.last_activity
@@ -72,37 +72,37 @@ def apply_script(protocol, connection, config):
                 self.kick(S_AFK_KICK_REASON.format(time = elapsed))
             else:
                 self.disconnect()
-        
+
         def reset_afk_kick_call(self):
             self.last_activity = reactor.seconds()
             if self.afk_kick_call and self.afk_kick_call.active():
                 self.afk_kick_call.reset(time_limit)
-        
+
         def on_disconnect(self):
             if self.afk_kick_call and self.afk_kick_call.active():
                 self.afk_kick_call.cancel()
             self.afk_kick_call = None
             connection.on_disconnect(self)
-        
+
         def on_user_login(self, user_type, verbose = True):
             if user_type in ('admin', 'trusted'):
                 if self.afk_kick_call and self.afk_kick_call.active():
                     self.afk_kick_call.cancel()
                 self.afk_kick_call = None
             return connection.on_user_login(self, user_type, verbose)
-        
+
         def on_connect(self):
             if time_limit:
                 self.afk_kick_call = reactor.callLater(time_limit, self.afk_kick)
             self.last_activity = reactor.seconds()
             return connection.on_connect(self)
-        
+
         def on_chat(self, value, global_message):
             self.reset_afk_kick_call()
             return connection.on_chat(self, value, global_message)
-        
+
         def on_orientation_update(self, x, y, z):
             self.reset_afk_kick_call()
             return connection.on_orientation_update(self, x, y, z)
-    
+
     return protocol, AFKConnection

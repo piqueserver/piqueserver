@@ -23,9 +23,9 @@ def distance(a, b):                                                             
 
 def apply_script(protocol, connection, config):
     class fbpatchConnection(connection):
-    
+
         line_build = True
-        
+
         def on_secondary_fire_set(self, secondary):
             if secondary == True:                                                  #if right mouse button has been clicked to initiate drag building; distinguishes from the right click release that marks the end point.
                 if self.tool == 1:                                                 #1 refers to block tool; if the tool in hand is a block
@@ -42,11 +42,11 @@ def apply_script(protocol, connection, config):
                     else:                                                        #if the remote point is distant, or it isn't a valid point, no line build will be considered
                         self.line_build = False
             return connection.on_secondary_fire_set(self, secondary)
-            
+
         def on_line_build_attempt(self, points):
             if self.line_build:                                                 #allow build if other scripts also allow it.
                 return connection.on_line_build_attempt(self, points)
             else:                                                                  #Deny build
                 return False
-                
+
     return protocol, fbpatchConnection

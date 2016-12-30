@@ -22,14 +22,14 @@ commands.add(medkit)
 def apply_script(protocol, connection, config):
     default_medkits = config.get('medkits', 1)
     medkit_heal_amount = config.get('medkit_heal_amount', 40)
-    
+
     class MedkitConnection(connection):
         medkits = 0
         def on_spawn(self, pos):
             self.medkits = default_medkits
             self.send_chat('You have %s medkit!' % self.medkits)
             return connection.on_spawn(self, pos)
-    
+
     class MedkitProtocol(protocol):
         heal_amount = medkit_heal_amount
 

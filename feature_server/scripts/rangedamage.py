@@ -41,10 +41,10 @@ def apply_script(protocol, connection, config):
                 pct = (100 * self.protocol.smg_multiplier
                        - self.protocol.smg_pct_per_block * dist)
             elif self.weapon == SHOTGUN_WEAPON:
-                pct = (100 * self.protocol.shotgun_multiplier                
+                pct = (100 * self.protocol.shotgun_multiplier
                        - self.protocol.shotgun_pct_per_block * dist)
             pct = max(0,pct)/100.0
             hit_amount = int(hit_amount * pct)
             return hit_amount
-    
+
     return RangeDamageProtocol, RangeDamageConnection

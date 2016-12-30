@@ -109,7 +109,7 @@ class BaseMarker():
     maximum_instances = None
     expire_call = None
     z = 0
-    
+
     def __init__(self, protocol, team, x, y):
         self.protocol = protocol
         self.team = team
@@ -147,24 +147,24 @@ class BaseMarker():
         protocol.markers.append(self)
         if self.background_class:
             self.background = self.background_class(protocol, team, x, y)
-    
+
     def release(self):
         if self.expire_call and self.expire_call.active():
             self.expire_call.cancel()
         self.expire_call = None
         self.team.marker_count[self.__class__] -= 1
         self.protocol.markers.remove(self)
-    
+
     def expire(self):
         self.destroy()
         self.release()
         if self.background:
             self.background.expire()
-    
+
     @classmethod
     def is_triggered(cls, chat):
         return any(word in chat for word in cls.triggers)
-    
+
     def make_block(self, x, y):
         x += self.x
         y += self.y
@@ -173,7 +173,7 @@ class BaseMarker():
         block = (x, y, self.z)
         self.blocks.add(block)
         self.points.append(block)
-    
+
     def make_line(self, x1, y1, x2, y2):
         x1 = max(0, min(511, self.x + x1))
         y1 = max(0, min(511, self.y + y1))
@@ -183,7 +183,7 @@ class BaseMarker():
         line = (x1, y1, z, x2, y2, z)
         self.blocks.update(cube_line(*line))
         self.lines.append(line)
-    
+
     def build(self, sender = None):
         sender = sender or self.protocol.send_contained
         self.send_color(sender)
@@ -191,19 +191,19 @@ class BaseMarker():
             self.send_line(sender, *line)
         for point in self.points:
             self.send_block(sender, *point)
-    
+
     def destroy(self, sender = None):
         # breaking a single block would make it come tumbling down, so we have
         # to destroy them all at once
         sender = sender or self.protocol.send_contained
         for block in self.blocks:
             self.send_block_remove(sender, *block)
-    
+
     def send_color(self, sender):
         set_color.value = self.color
         set_color.player_id = 32
         sender(set_color, team = self.team)
-    
+
     def send_block(self, sender, x, y, z, value = BUILD_BLOCK):
         block_action.value = value
         block_action.player_id = 32
@@ -211,7 +211,7 @@ class BaseMarker():
         block_action.y = y
         block_action.z = z
         sender(block_action, team = self.team)
-    
+
     def send_line(self, sender, x1, y1, z1, x2, y2, z2):
         block_line.player_id = 32
         block_line.x1 = x1
@@ -221,7 +221,7 @@ class BaseMarker():
         block_line.y2 = y2
         block_line.z2 = z2
         sender(block_line, team = self.team)
-    
+
     def send_block_remove(self, sender, x, y, z):
         self.send_block(sender, x, y, z, DESTROY_BLOCK)
 
@@ -233,7 +233,7 @@ def parse_string_map(xs_and_dots):
     lines, points = [], []
     if not rows:
         return lines, points
-    
+
     width, height = len(rows[0]), len(rows)
     off_x, off_y = -width // 2, -height // 2
     for y, row in enumerate(rows):
@@ -593,19 +593,19 @@ def apply_script(protocol, connection, config):
         allow_markers = True
         last_marker = None
         sneak_presses = None
-        
+
         def send_markers(self):
             is_self = lambda player: player is self
             send_me = partial(self.protocol.send_contained, rule = is_self)
             for marker in self.protocol.markers:
                 marker.build(send_me)
-        
+
         def destroy_markers(self):
             is_self = lambda player: player is self
             send_me = partial(self.protocol.send_contained, rule = is_self)
             for marker in self.protocol.markers:
                 marker.destroy(send_me)
-        
+
         def make_marker(self, marker_class, location):
             marker_max = marker_class.maximum_instances
             if (marker_max is not None and
@@ -614,7 +614,7 @@ def apply_script(protocol, connection, config):
                 return
             new_marker = marker_class(self.protocol, self.team, *location)
             self.last_marker = seconds()
-        
+
         def on_animation_update(self, jump, crouch, sneak, sprint):
             markers_allowed = (VV_ENABLED and self.allow_markers and
                 self.protocol.allow_markers)
@@ -636,7 +636,7 @@ def apply_script(protocol, connection, config):
                             presses.clear()
             return connection.on_animation_update(self, jump, crouch, sneak,
                 sprint)
-        
+
         def on_chat(self, value, global_message):
             markers_allowed = self.allow_markers and self.protocol.allow_markers
             if CHAT_MARKERS and markers_allowed and not self.team.spectator:
@@ -664,12 +664,12 @@ def apply_script(protocol, connection, config):
                         if location:
                             self.make_marker(marker_class, location)
             return connection.on_chat(self, value, global_message)
-        
+
         def on_login(self, name):
             self.send_markers()
             self.sneak_presses = deque(maxlen = 2)
             connection.on_login(self, name)
-        
+
         def on_team_changed(self, old_team):
             if old_team and not old_team.spectator:
                 new_team, self.team = self.team, old_team
@@ -678,7 +678,7 @@ def apply_script(protocol, connection, config):
             if self.team and not self.team.spectator:
                 self.send_markers()
             connection.on_team_changed(self, old_team)
-        
+
         def on_kill(self, killer, type, grenade):
             x1, y1, z1 = self.get_location()
             closest, best_distance = None, None
@@ -693,7 +693,7 @@ def apply_script(protocol, connection, config):
             if closest:
                 closest.expire()
             return connection.on_kill(self, killer, type, grenade)
-        
+
         def on_flag_take(self):
             if SHADOW_INTEL and self.protocol.allow_markers:
                 enemy_team = self.team.other
@@ -701,7 +701,7 @@ def apply_script(protocol, connection, config):
                 marker = Intel(self.protocol, enemy_team, x, y)
                 enemy_team.intel_marker = marker
             return connection.on_flag_take(self)
-        
+
         def on_flag_capture(self):
             enemy_team = self.team.other
             if SHADOW_INTEL and enemy_team.intel_marker:
@@ -719,22 +719,22 @@ def apply_script(protocol, connection, config):
                     call = callLater(delay, Enemy, self.protocol, self.team, x, y)
                     self.team.marker_calls.append(call)
             connection.on_flag_capture(self)
-        
+
         def on_flag_drop(self):
             enemy_team = self.team.other
             if SHADOW_INTEL and enemy_team.intel_marker:
                 enemy_team.intel_marker.expire()
                 enemy_team.intel_marker = None
             connection.on_flag_drop(self)
-        
+
         def get_there_location(self):
             location = self.world_object.cast_ray(THERE_RAY_LENGTH)
             return location[:2] if location else None
-    
+
     class MarkerProtocol(protocol):
         allow_markers = True
         markers = None
-        
+
         def on_map_change(self, map):
             for team in (self.blue_team, self.green_team):
                 team.intel_marker = None
@@ -742,7 +742,7 @@ def apply_script(protocol, connection, config):
                 team.marker_count = defaultdict(int)
             self.markers = []
             protocol.on_map_change(self, map)
-        
+
         def on_map_leave(self):
             for marker in self.markers[:]:
                 marker.release()
@@ -755,5 +755,5 @@ def apply_script(protocol, connection, config):
                 team.marker_calls = None
                 team.marker_count = None
             protocol.on_map_leave(self)
-    
+
     return MarkerProtocol, MarkerConnection

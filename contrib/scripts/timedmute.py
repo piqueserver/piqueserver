@@ -9,12 +9,12 @@ from commands import add, admin, get_player, join_arguments, name
 @admin
 def timed_mute(connection, *args):
   protocol = connection.protocol
-  
+
   nick = args[0]
   time = int(args[1])
   reason = join_arguments(args[2:])
   player = get_player(protocol, nick)
-  
+
   if time < 0:
     raise ValueError()
 
@@ -51,7 +51,7 @@ class TimedMute(object):
     self.player.mute = False
     message = '%s was unmuted after %s seconds' % (self.player.name, self.time)
     self.player.protocol.send_chat(message, irc = True)
-  
+
 def apply_script(protocol, connection, config):
   class TimedMuteConnection(connection):
     mute_schedule = None
@@ -60,5 +60,5 @@ def apply_script(protocol, connection, config):
       if self.mute_schedule:
         del self.mute_schedule
       connection.on_disconnect(self)
-    
+
   return protocol, TimedMuteConnection

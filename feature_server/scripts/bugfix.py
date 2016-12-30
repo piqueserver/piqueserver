@@ -8,7 +8,7 @@ def apply_script(protocol, connection, config):
             return connection.on_login(self, name)
         def on_line_build_attempt(self, points):
             # prevent "unlimited tower" crash, fix by Danko
-            value = connection.on_line_build_attempt(self, points) 
+            value = connection.on_line_build_attempt(self, points)
             if value is False:
                 return value
             for point in points:

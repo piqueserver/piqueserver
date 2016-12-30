@@ -52,36 +52,36 @@ class IRCBot(irc.IRCClient):
     ops = None
     voices = None
     unaliased_name = None
-    
+
     def _get_nickname(self):
         return self.factory.nickname
     nickname = property(_get_nickname)
-    
+
     def _get_colors(self):
         return self.factory.colors
     colors = property(_get_colors)
-    
+
     def _get_admin(self):
         return self.factory.admin
     admin = property(_get_admin)
-    
+
     def _get_user_types(self):
         return self.factory.user_types
     user_types = property(_get_user_types)
-    
+
     def _get_rights(self):
         return self.factory.rights
     rights = property(_get_rights)
-    
+
     def signedOn(self):
         self.join(self.factory.channel, self.factory.password)
-    
+
     def joined(self, channel):
         if channel.lower() == self.factory.channel:
             self.ops = set()
             self.voices = set()
         print "Joined channel %s" % channel
-    
+
     def irc_NICK(self, prefix, params):
         user = prefix.split('!', 1)[0]
         new_user = params[0]
@@ -91,21 +91,21 @@ class IRCBot(irc.IRCClient):
         if user in self.voices:
             self.voices.discard(user)
             self.voices.add(new_user)
-    
+
     def irc_RPL_NAMREPLY(self, *arg):
         if not arg[1][2].lower() == self.factory.channel:
             return
         for name in arg[1][3].split():
             mode = name[0]
             l = {'@': self.ops, '+': self.voices}
-            if mode in l: 
+            if mode in l:
                 l[mode].add(name[1:])
-    
+
     def left(self, channel):
         if channel.lower() == self.factory.channel:
             self.ops = None
             self.voices = None
-    
+
     @channel
     def modeChanged(self, user, channel, set, modes, args):
         ll = {'o' : self.ops, 'v' : self.voices}
@@ -118,7 +118,7 @@ class IRCBot(irc.IRCClient):
                 l.add(name)
             elif not set:
                 l.discard(name)
-    
+
     @channel
     def privmsg(self, user, channel, msg):
         if user in self.ops or user in self.voices:
@@ -138,7 +138,7 @@ class IRCBot(irc.IRCClient):
                 message = message.decode('cp1252')
                 print message.encode('ascii', 'replace')
                 self.factory.server.send_chat(encode(message))
-    
+
     @channel
     def userLeft(self, user, channel):
         self.ops.discard(user)
@@ -149,13 +149,13 @@ class IRCBot(irc.IRCClient):
 
     def userKicked(self, kickee, channel, kicker, message):
         self.userLeft(kickee, channel)
-    
+
     def send(self, msg, filter = False):
         msg = msg.encode('cp1252', 'replace')
         if filter:
             msg = filter_printable(msg)
         self.msg(self.factory.channel, msg)
-    
+
     def me(self, msg, filter = False):
         msg = msg.encode('cp1252', 'replace')
         if filter:
@@ -172,7 +172,7 @@ class IRCClientFactory(protocol.ClientFactory):
     admin = None
     user_types = None
     rights = None
-    
+
     def __init__(self, server, config):
         self.aliases = {}
         self.admin = True
@@ -181,7 +181,7 @@ class IRCClientFactory(protocol.ClientFactory):
         for user_type in self.user_types:
             self.rights.update(commands.rights.get(user_type, ()))
         self.server = server
-        self.nickname = config.get('nickname', 
+        self.nickname = config.get('nickname',
             'pyspades%s' % random.randrange(0, 99)).encode('ascii')
         self.username = config.get('username', 'pyspades').encode('ascii')
         self.realname = config.get('realname', server.name).encode('ascii')
@@ -190,20 +190,20 @@ class IRCClientFactory(protocol.ClientFactory):
         self.commandprefix = config.get('commandprefix', '.').encode('ascii')
         self.chatprefix = config.get('chatprefix', '').encode('ascii')
         self.password = config.get('password', '').encode('ascii') or None
-    
+
     def startedConnecting(self, connector):
         print "Connecting to IRC server..."
-    
+
     def clientConnectionLost(self, connector, reason):
         print "Lost connection to IRC server (%s), reconnecting in %s seconds" % (
             reason, self.lost_reconnect_delay)
         reactor.callLater(self.lost_reconnect_delay, connector.connect)
-    
+
     def clientConnectionFailed(self, connector, reason):
         print "Could not connect to IRC server (%s), retrying in %s seconds" % (
             reason, self.failed_reconnect_delay)
         reactor.callLater(self.failed_reconnect_delay, connector.connect)
-    
+
     def buildProtocol(self, address):
         p = self.protocol()
         p.factory = self
@@ -213,17 +213,17 @@ class IRCClientFactory(protocol.ClientFactory):
 
 class IRCRelay(object):
     factory = None
-    
+
     def __init__(self, protocol, config):
         self.factory = IRCClientFactory(protocol, config)
         protocol.connectTCP(config.get('server'), config.get('port', 6667),
             self.factory)
-    
+
     def send(self, *arg, **kw):
         if self.factory.bot is None:
             return
         self.factory.bot.send(*arg, **kw)
-    
+
     def me(self, *arg, **kw):
         if self.factory.bot is None:
             return

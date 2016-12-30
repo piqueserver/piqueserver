@@ -68,9 +68,9 @@ def apply_script(protocol, connection, config):
         rollback_last_chat = None
         rollback_rows = None
         rollback_total_rows = None
-        
+
         # rollback
-        
+
         def start_rollback(self, connection, mapname, start_x, start_y,
             end_x, end_y, ignore_indestructable = True):
             if self.rollback_in_progress:
@@ -98,13 +98,13 @@ def apply_script(protocol, connection, config):
             self.rollback_total_rows = end_x - start_x
             self.cycle_call = LoopingCall(self.rollback_cycle)
             self.cycle_call.start(self.rollback_time_between_cycles)
-        
+
         def cancel_rollback(self, connection):
             if not self.rollback_in_progress:
                 return S_NO_ROLLBACK_IN_PROGRESS
             result = S_ROLLBACK_CANCELLED.format(player = connection.name)
             self.end_rollback(result)
-        
+
         def end_rollback(self, result):
             self.rollback_in_progress = False
             self.cycle_call.stop()
@@ -113,7 +113,7 @@ def apply_script(protocol, connection, config):
             self.update_entities()
             message = S_ROLLBACK_ENDED.format(result = result)
             self.send_chat(message, irc = True)
-        
+
         def rollback_cycle(self):
             if not self.rollback_in_progress:
                 return
@@ -144,7 +144,7 @@ def apply_script(protocol, connection, config):
                 elapsed = time.time() - self.rollback_start_time
                 message = S_ROLLBACK_TIME_TAKEN.format(seconds = elapsed)
                 self.end_rollback(message)
-        
+
         def create_rollback_generator(self, cur, new, start_x, start_y,
             end_x, end_y, ignore_indestructable):
             surface = {}
@@ -214,19 +214,19 @@ def apply_script(protocol, connection, config):
                 self.send_contained(block_action, save = True)
                 packets_sent += 1
                 yield packets_sent
-        
+
         def on_map_change(self, map):
             self.rollback_map = map.copy()
             protocol.on_map_change(self, map)
-        
+
         def on_map_leave(self):
             if self.rollback_in_progress:
                 self.end_rollback(S_MAP_CHANGED)
             protocol.on_map_leave(self)
-        
+
         def on_game_end(self):
             if rollback_on_game_end:
                 self.start_rollback(None, None, 0, 0, 512, 512, False)
             protocol.on_game_end(self)
-    
+
     return RollbackProtocol, RollbackConnection

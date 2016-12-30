@@ -26,7 +26,7 @@ stdout = sys.__stdout__
 if sys.platform == 'win32':
     # StandardIO on Windows does not work, so we create a silly replacement
     import msvcrt
-    
+
     class StandardIO(object):
         disconnecting = False
         interval = 0.01
@@ -55,7 +55,7 @@ if sys.platform == 'win32':
                     self.input += c
                     stdout.write(c)
             reactor.callLater(self.interval, self.get_input)
-    
+
         def write(self, data):
             stdout.write(data)
 

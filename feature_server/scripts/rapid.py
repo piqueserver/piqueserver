@@ -33,7 +33,7 @@ def toggle_rapid(connection, player = None):
         player = connection
     else:
         raise ValueError()
-    
+
     player.rapid = rapid = not player.rapid
     player.rapid_hack_detect = not rapid
     if rapid:
@@ -42,7 +42,7 @@ def toggle_rapid(connection, player = None):
         if player.rapid_loop and player.rapid_loop.running:
             player.rapid_loop.stop()
         player.rapid_loop = None
-    
+
     message = 'now rapid' if rapid else 'no longer rapid'
     player.send_chat("You're %s" % message)
     if connection is not player and connection in protocol.players:
@@ -63,24 +63,24 @@ def apply_script(protocol, connection, config):
     class RapidConnection(connection):
         rapid = False
         rapid_loop = None
-        
+
         def on_login(self, name):
             self.rapid = ALWAYS_RAPID
             self.rapid_hack_detect = not self.rapid
             connection.on_login(self, name)
-        
+
         def on_reset(self):
             if self.rapid_loop and self.rapid_loop.running:
                 self.rapid_loop.stop()
             connection.on_reset(self)
-        
+
         def on_disconnect(self):
             self.rapid = False
             if self.rapid_loop and self.rapid_loop.running:
                 self.rapid_loop.stop()
             self.rapid_loop = None
             connection.on_disconnect(self)
-        
+
         def on_block_build(self, x, y, z):
             if self.rapid:
                 delay = max(0.0, RAPID_BLOCK_DELAY - self.latency / 1000.0)
@@ -89,12 +89,12 @@ def apply_script(protocol, connection, config):
                 else:
                     resend_tool(self)
             connection.on_block_build(self, x, y, z)
-        
+
         def on_grenade_thrown(self, grenade):
             if self.rapid:
                 resend_tool(self)
             connection.on_grenade_thrown(self, grenade)
-        
+
         def on_shoot_set(self, fire):
             if self.rapid and self.rapid_loop:
                 if not self.rapid_loop.running and fire:
@@ -102,5 +102,5 @@ def apply_script(protocol, connection, config):
                 elif self.rapid_loop.running and not fire:
                     self.rapid_loop.stop()
             connection.on_shoot_set(self, fire)
-    
+
     return protocol, RapidConnection

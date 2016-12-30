@@ -31,11 +31,11 @@ def apply_script(protocol, connection, config):
                     votekick.end(S_RESULT_TRUSTED)
                     self.protocol.votekick = None
             return connection.on_user_login(self, user_type, verbose)
-    
-    class TrustedProtocol(protocol):        
+
+    class TrustedProtocol(protocol):
         def on_votekick_start(self, instigator, victim, reason):
             if victim.user_types.trusted:
                 return S_CANT_VOTEKICK.format(player = victim.name)
             return protocol.on_votekick_start(self, instigator, victim, reason)
-    
+
     return TrustedProtocol, TrustedConnection

@@ -18,10 +18,10 @@
 from twisted.cred import portal, checkers
 from twisted.conch import manhole, manhole_ssh
 from twisted.internet import reactor
- 
+
 def create_remote_factory(namespace, users):
     realm = manhole_ssh.TerminalRealm()
-    def create_remote_protocol(_): 
+    def create_remote_protocol(_):
         return manhole.Manhole(namespace)
     realm.chainedProtocolFactory.protocolFactory = create_remote_protocol
     p = portal.Portal(realm)

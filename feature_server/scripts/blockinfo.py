@@ -91,22 +91,22 @@ add(grief_check)
 
 def apply_script(protocol, connection, config):
     has_votekick = 'votekick' in config.get('scripts', [])
-    
+
     class BlockInfoConnection(connection):
         blocks_removed = None
         teamkill_times = None
-        
+
         def on_reset(self):
             self.blocks_removed = None
             self.teamkill_times = None
             connection.on_reset(self)
-        
+
         def on_block_build(self, x, y, z):
             if self.protocol.block_info is None:
                 self.protocol.block_info = {}
             self.protocol.block_info[(x, y, z)] = (self.name, self.team.id)
             connection.on_block_build(self, x, y, z)
-        
+
         def on_line_build(self, points):
             if self.protocol.block_info is None:
                 self.protocol.block_info = {}
@@ -114,7 +114,7 @@ def apply_script(protocol, connection, config):
             for point in points:
                 self.protocol.block_info[point] = name_team
             connection.on_line_build(self, points)
-        
+
         def on_block_removed(self, x, y, z):
             if self.protocol.block_info is None:
                 self.protocol.block_info = {}
@@ -124,21 +124,21 @@ def apply_script(protocol, connection, config):
             info = (seconds(), self.protocol.block_info.pop(pos, None))
             self.blocks_removed.append(info)
             connection.on_block_removed(self, x, y, z)
-        
+
         def on_kill(self, killer, type, grenade):
             if killer and killer.team is self.team:
                 if killer.teamkill_times is None:
                     killer.teamkill_times = []
                 killer.teamkill_times.append(seconds())
             return connection.on_kill(self, killer, type, grenade)
-    
+
     class BlockInfoProtocol(protocol):
         block_info = None
-        
+
         def on_map_change(self, map):
             self.block_info = None
             protocol.on_map_change(self, map)
-        
+
         def on_votekick_start(self, instigator, victim, reason):
             result = protocol.on_votekick_start(self, instigator, victim, reason)
             if result is None and GRIEFCHECK_ON_VOTEKICK:
@@ -148,5 +148,5 @@ def apply_script(protocol, connection, config):
                 else:
                     self.send_chat(message, irc = True)
             return result
-    
+
     return BlockInfoProtocol, BlockInfoConnection

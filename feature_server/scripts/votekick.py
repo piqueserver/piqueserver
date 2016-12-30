@@ -59,14 +59,14 @@ def start_votekick(connection, *args):
     if connection not in protocol.players:
         raise KeyError()
     player = connection
-    
+
     if not args:
         if protocol.votekick:
             # player requested votekick info
             protocol.votekick.send_chat_update(player)
             return
         raise ValueError()
-    
+
     value = args[0]
     try:
         # vanilla aos behavior
@@ -74,7 +74,7 @@ def start_votekick(connection, *args):
     except InvalidPlayer:
         victim = get_player(protocol, value)
     reason = join_arguments(args[1:])
-    
+
     try:
         # attempt to start votekick
         votekick = Votekick.start(player, victim, reason)
@@ -93,7 +93,7 @@ def cancel_votekick(connection):
         if (player is not votekick.instigator and not player.admin and
             not player.rights.cancel):
             return S_CANT_CANCEL
-    
+
     votekick.end(S_RESULT_CANCELLED)
 
 @name('y')
@@ -102,11 +102,11 @@ def vote_yes(connection):
     if connection not in protocol.players:
         raise KeyError()
     player = connection
-    
+
     votekick = protocol.votekick
     if not votekick:
         return S_NO_VOTEKICK
-    
+
     votekick.vote(player)
 
 add(start_votekick)
@@ -119,11 +119,11 @@ class Votekick(object):
     ban_duration = 15.0
     public_votes = True
     schedule = None
-    
+
     def _get_votes_remaining(self):
         return self.protocol.get_required_votes() - len(self.votes) + 1
     votes_remaining = property(_get_votes_remaining)
-    
+
     @classmethod
     def start(cls, instigator, victim, reason = None):
         protocol = instigator.protocol
@@ -142,14 +142,14 @@ class Votekick(object):
             raise VotekickFailure(S_NOT_YET)
         elif REQUIRE_REASON and not reason:
             raise VotekickFailure(S_NEED_REASON)
-        
+
         result = protocol.on_votekick_start(instigator, victim, reason)
         if result is not None:
             raise VotekickFailure(result)
-        
+
         reason = reason or S_DEFAULT_REASON
         return cls(instigator, victim, reason)
-    
+
     def __init__(self, instigator, victim, reason):
         self.protocol = protocol = instigator.protocol
         self.instigator = instigator
@@ -157,7 +157,7 @@ class Votekick(object):
         self.reason = reason
         self.votes = {instigator : True}
         self.ended = False
-        
+
         protocol.irc_say(S_ANNOUNCE_IRC.format(instigator = instigator.name,
             victim = victim.name, reason = self.reason))
         protocol.send_chat(S_ANNOUNCE.format(instigator = instigator.name,
@@ -165,12 +165,12 @@ class Votekick(object):
         protocol.send_chat(S_REASON.format(reason = self.reason),
             sender = instigator)
         instigator.send_chat(S_ANNOUNCE_SELF.format(victim = victim.name))
-        
+
         schedule = Scheduler(protocol)
         schedule.call_later(self.duration, self.end, S_RESULT_TIMED_OUT)
         schedule.loop_call(30.0, self.send_chat_update)
         self.schedule = schedule
-    
+
     def vote(self, player):
         if self.victim is player:
             return
@@ -188,7 +188,7 @@ class Votekick(object):
                 victim.ban(self.reason, self.ban_duration)
             else:
                 victim.kick(silent = True)
-    
+
     def release(self):
         self.instigator = None
         self.victim = None
@@ -197,7 +197,7 @@ class Votekick(object):
             self.schedule.reset()
         self.schedule = None
         self.protocol.votekick = None
-    
+
     def end(self, result):
         self.ended = True
         message = S_ENDED.format(victim = self.victim.name, result = result)
@@ -206,7 +206,7 @@ class Votekick(object):
             self.instigator.last_votekick = seconds()
         self.protocol.on_votekick_end()
         self.release()
-    
+
     def send_chat_update(self, target = None):
         # send only to target player if provided, otherwise broadcast to server
         target = target or self.protocol
@@ -218,36 +218,36 @@ def apply_script(protocol, connection, config):
     Votekick.ban_duration = config.get('votekick_ban_duration', 15.0)
     Votekick.public_votes = config.get('votekick_public_votes', True)
     required_percentage = config.get('votekick_percentage', 25.0)
-    
+
     class VotekickProtocol(protocol):
         votekick = None
-        
+
         def get_required_votes(self):
             # votekicks are invalid if this returns <= 0
             player_count = sum(not player.disconnected for player in
                 self.players.itervalues()) - 1
             return int(player_count / 100.0 * required_percentage)
-        
+
         def on_map_leave(self):
             if self.votekick:
                 self.votekick.release()
             protocol.on_map_leave(self)
-        
+
         def on_ban(self, banee, reason, duration):
             votekick = self.votekick
             if votekick and votekick.victim is self:
                 votekick.end(S_RESULT_BANNED)
             protocol.on_ban(self, connection, reason, duration)
-        
+
         def on_votekick_start(self, instigator, victim, reason):
             pass
-        
+
         def on_votekick_end(self):
             pass
-    
+
     class VotekickConnection(connection):
         last_votekick = None
-        
+
         def on_disconnect(self):
             votekick = self.protocol.votekick
             if votekick:
@@ -266,7 +266,7 @@ def apply_script(protocol, connection, config):
                     if votekick.votes_remaining <= 0:
                         votekick.end(S_NOT_ENOUGH_PLAYERS)
             connection.on_disconnect(self)
-        
+
         def kick(self, reason = None, silent = False):
             votekick = self.protocol.votekick
             if votekick:
@@ -275,5 +275,5 @@ def apply_script(protocol, connection, config):
                 elif votekick.instigator is self:
                     votekick.end(S_RESULT_INSTIGATOR_KICKED)
             connection.kick(self, reason, silent)
-    
+
     return VotekickProtocol, VotekickConnection

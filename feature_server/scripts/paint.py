@@ -24,9 +24,9 @@ def paint(connection, player = None):
         player = connection
     else:
         raise ValueError()
-    
+
     player.painting = not player.painting
-    
+
     message = 'now painting' if player.painting else 'no longer painting'
     player.send_chat("You're %s" % message)
     if connection is not player and connection in protocol.players:
@@ -64,24 +64,24 @@ def paint_ray(player):
 def apply_script(protocol, connection, config):
     class PaintConnection(connection):
         painting = False
-        
+
         def on_reset(self):
             self.painting = False
             connection.on_reset(self)
-        
+
         def on_position_update(self):
             if self.painting and self.world_object.sneak:
                 paint_ray(self)
             connection.on_position_update(self)
-        
+
         def on_orientation_update(self, x, y, z):
             if self.painting and self.world_object.sneak:
                 paint_ray(self)
             connection.on_orientation_update(self, x, y, z)
-        
+
         def on_animation_update(self, jump, crouch, sneak, sprint):
             if self.painting and sneak:
                 paint_ray(self)
             return connection.on_animation_update(self, jump, crouch, sneak, sprint)
-    
+
     return protocol, PaintConnection

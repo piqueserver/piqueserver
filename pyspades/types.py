@@ -21,7 +21,7 @@ class IDPool(object):
     """
     Manage pool of IDs
     """
-    
+
     def __init__(self, start = 0):
         self.free_ids = []
         self.new_ids = itertools.count(start)
@@ -38,19 +38,19 @@ class IDPool(object):
 class AttributeSet(set):
     """
     set with attribute access, i.e.
-    
+
         foo = AttributeSet()
         foo.bar = True
         foo.bar == 'bar' in foo == True
         foo.bar = False
         foo.bar == 'bar' in foo == False
-    
+
     This works as a quick shorthand for membership testing.
     """
-    
+
     def __getattr__(self, name):
         return name in self
-    
+
     def __setattr__(self, name, value):
         if value:
             self.add(name)
@@ -60,7 +60,7 @@ class AttributeSet(set):
 class DictItem(object):
     keys = None
     value = None
-    
+
     def __init__(self, keys, value):
         self.keys = keys
         self.value = value
@@ -74,32 +74,32 @@ class DictItem(object):
 class MultikeyDict(dict):
     """
     dict with multiple keys, i.e.
-        
+
         foo = MultikeyDict()
         foo[(1, 'bar')] = 'hello'
         foo[1] == foo['bar'] == 'hello'
-    
+
     To delete: "del foo[1]" or "del foo['bar']" or "del foo['hello']"
-    
+
     This is an alternative to maintaining 2 seperate dicts for e.g. player
-    IDs and their names, so you can do both dict[player_id] and 
+    IDs and their names, so you can do both dict[player_id] and
     dict[player_name].
     """
 
     def __init__(self, *arg, **kw):
         dict.__init__(self, *arg, **kw)
         self.value_set = set()
-    
+
     def __getitem__(self, key):
         item = dict.__getitem__(self, key)
         return item.value
-    
+
     def __delitem__(self, key):
         item = dict.__getitem__(self, key)
         for key in item.keys:
             dict.__delitem__(self, key)
         self.value_set.remove(item.value)
-    
+
     def __setitem__(self, keys, value):
         keys = list(keys)
         keys.append(value)
@@ -109,19 +109,19 @@ class MultikeyDict(dict):
             if key in self:
                 raise KeyError('key %s already exists' % key)
             dict.__setitem__(self, key, new_item)
-    
+
     def get(self, key, default = None):
         return self[key] if key in self else default
-    
+
     def clear(self):
         dict.clear()
         self.value_set.clear()
-    
+
     def values(self):
         return self.value_set
-    
+
     def itervalues(self):
         return iter(self.value_set)
-    
+
     def __len__(self):
         return len(self.value_set)

@@ -14,7 +14,7 @@ def apply_script(protocol, connection, config):
         if map.get_solid(x, y, z):
             return
         list.append((x, y, z))
-    
+
     class DirtGrenadeConnection(connection):
         def grenade_exploded(self, grenade):
             if self.name is None:
@@ -50,5 +50,5 @@ def apply_script(protocol, connection, config):
                 try_add_node(map, x + 1, y, z, list)
                 try_add_node(map, x, y, z + 1, list)
             self.protocol.update_entities()
-    
+
     return protocol, DirtGrenadeConnection

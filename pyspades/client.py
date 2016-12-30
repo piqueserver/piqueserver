@@ -39,26 +39,26 @@ class OtherClient(object):
 class ClientConnection(BaseConnection):
     protocol = None
     displayed_id = False
-    
+
     def __init__(self, protocol):
         BaseConnection.__init__(self)
         self.protocol = protocol
         self.auth_val = random.randint(0, 0xFFFF)
         self.map = ByteWriter()
         self.connections = MultikeyDict()
-        self.spammy = {Ping : 0, loaders.MapChunk : 0, 
+        self.spammy = {Ping : 0, loaders.MapChunk : 0,
             loaders.OrientationData : 0,
             loaders.PositionData : 0, loaders.InputData : 0}
-        
+
         connect_request = ConnectionRequest()
         connect_request.auth_val = self.auth_val
         connect_request.client = True
         connect_request.version = self.get_version()
         self.send_loader(connect_request, False, 255)
-    
+
     def get_version(self):
         return crc32(open('../data/client.exe', 'rb').read())
-    
+
     def send_join(self, team = -1, weapon = -1):
         print 'joining team %s' % team
         loader = SizedData()
@@ -70,13 +70,13 @@ class ClientConnection(BaseConnection):
         join.write(data)
         loader.data = data
         self.send_loader(loader, True)
-    
+
     def packet_received(self, packet):
         if not self.displayed_id:
             print 'server id:', packet.connection_id
             self.displayed_id = True
         BaseConnection.packet_received(self, packet)
-    
+
     def loader_received(self, packet):
         is_contained = hasattr(packet, 'data') and packet.id != MapData.id
         if is_contained:
@@ -94,7 +94,7 @@ class ClientConnection(BaseConnection):
                 message = 'received ' + ', '.join(spammed)
                 print message
                 for spam in self.spammy:
-                    self.spammy[spam] = 0            
+                    self.spammy[spam] = 0
             if is_contained:
                 print contained
                 print '    ', hexify(data)
@@ -137,7 +137,7 @@ class ClientConnection(BaseConnection):
         else:
             print 'received:', packet
             raw_input('unknown packet')
-    
+
     def send_data(self, data):
         self.protocol.transport.write(data)
 
@@ -145,11 +145,11 @@ class ClientProtocol(DatagramProtocol):
     connection_class = ClientConnection
     def __init__(self, host, port):
         self.host, self.port = host, port
-    
+
     def startProtocol(self):
         self.transport.connect(self.host, self.port)
         self.connection = self.connection_class(self)
-    
+
     def datagramReceived(self, data, address):
         in_packet.read(data)
         self.connection.packet_received(in_packet)

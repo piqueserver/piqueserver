@@ -1,5 +1,5 @@
 """
-Tug of War game mode, where you must progressively capture the enemy CPs in a 
+Tug of War game mode, where you must progressively capture the enemy CPs in a
 straight line to win.
 
 Maintainer: mat^2
@@ -25,15 +25,15 @@ HELP = [
 
 class TugTerritory(Territory):
     disabled = True
-    
+
     def add_player(self, player):
         if self.disabled:
             return
         Territory.add_player(self, player)
-    
+
     def enable(self):
         self.disabled = False
-    
+
     def disable(self):
         for player in self.players.copy():
             self.remove_player(player)
@@ -67,18 +67,18 @@ def apply_script(protocol, connection, config):
             else:
                 base = self.team.spawn_cp
             return base.get_spawn_location()
-            
+
         def on_spawn(self, pos):
             for line in HELP:
                 self.send_chat(line)
             return connection.on_spawn(self, pos)
-            
+
     class TugProtocol(protocol):
         game_mode = TC_MODE
-        
+
         def get_cp_entities(self):
             # generate positions
-            
+
             map = self.map
             blue_cp = []
             green_cp = []
@@ -86,12 +86,12 @@ def apply_script(protocol, connection, config):
             magnitude = 10
             angle = random.uniform(START_ANGLE, END_ANGLE)
             x, y = (0, random.randrange(64, 512 - 64))
-            
+
             points = []
-            
+
             square_1 = xrange(128)
             square_2 = xrange(512 - 128, 512)
-            
+
             while 1:
                 top = int(y) in square_1
                 bottom = int(y) in square_2
@@ -108,10 +108,10 @@ def apply_script(protocol, connection, config):
                     break
                 x, y = x2, y2
                 points.append((int(x), int(y)))
-            
+
             move = 512 / CP_EXTRA_COUNT
             offset = move / 2
-            
+
             for i in xrange(CP_EXTRA_COUNT):
                 index = 0
                 while 1:
@@ -124,12 +124,12 @@ def apply_script(protocol, connection, config):
                 else:
                     green_cp.append((p_x, p_y))
                 offset += move
-            
+
             # make entities
-            
+
             index = 0
             entities = []
-            
+
             for i, (x, y) in enumerate(blue_cp):
                 entity = TugTerritory(index, self, *(x, y, map.get_z(x, y)))
                 entity.team = self.blue_team
@@ -139,11 +139,11 @@ def apply_script(protocol, connection, config):
                 else:
                     entities.append(entity)
                     index += 1
-            
+
             self.blue_team.cp = entities[-1]
             self.blue_team.cp.disabled = False
             self.blue_team.spawn_cp = entities[-2]
-                
+
             for i, (x, y) in enumerate(green_cp):
                 entity = TugTerritory(index, self, *(x, y, map.get_z(x, y)))
                 entity.team = self.green_team
@@ -157,9 +157,9 @@ def apply_script(protocol, connection, config):
             self.green_team.cp = entities[-CP_COUNT/2]
             self.green_team.cp.disabled = False
             self.green_team.spawn_cp = entities[-CP_COUNT/2 + 1]
-            
+
             return entities
-    
+
         def on_cp_capture(self, territory):
             team = territory.team
             if team.id:

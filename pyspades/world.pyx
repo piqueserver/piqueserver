@@ -49,20 +49,20 @@ cdef extern from "world_c.cpp":
         int jump, crouch, sneak
         int airborne, wade, alive, sprint
         int primary_fire, secondary_fire, weapon
-        
+
     struct GrenadeType:
         Vector p, v
     PlayerType * create_player()
     void destroy_player(PlayerType * player)
     void destroy_grenade(GrenadeType * player)
     void update_timer(float value, float dt)
-    void reorient_player(PlayerType * p, Vector * vector) 
+    void reorient_player(PlayerType * p, Vector * vector)
     int move_player(PlayerType * p)
     void set_globals(MapData * map)
     int try_uncrouch(PlayerType * p)
     GrenadeType * create_grenade(Vector * p, Vector * v)
     int move_grenade(GrenadeType * grenade)
-    
+
 from libc.math cimport sqrt
 
 cdef inline bint can_see(VXLData map, float x1, float y1, float z1,
@@ -79,7 +79,7 @@ cdef class Grenade
 cdef class Character
 
 cdef class Object:
-    cdef public: 
+    cdef public:
         object name
         World world
 
@@ -88,24 +88,24 @@ cdef class Object:
         self.initialize(*arg, **kw)
         if self.name is None:
             self.name = 'object'
-    
+
     def initialize(self, *arg, **kw):
         pass
-    
+
     cdef int update(self, double dt) except -1:
         return 0
-    
+
     def delete(self):
         self.world.delete_object(self)
-        
+
 cdef class Character(Object):
     cdef:
         PlayerType * player
     cdef public:
         Vertex3 position, orientation, velocity
         object fall_callback
-    
-    def initialize(self, Vertex3 position, Vertex3 orientation, 
+
+    def initialize(self, Vertex3 position, Vertex3 orientation,
                    fall_callback = None):
         self.name = 'character'
         self.player = create_player()
@@ -126,22 +126,22 @@ cdef class Character(Object):
         else:
             self.player.p.z -= 0.9
         self.player.crouch = value
-    
+
     def set_animation(self, jump, crouch, sneak, sprint):
         self.player.jump = jump
         self.set_crouch(crouch)
         self.player.sneak = sneak
         self.player.sprint = sprint
-    
+
     def set_weapon(self, is_primary):
         self.player.weapon = is_primary
-    
+
     def set_walk(self, up, down, left, right):
         self.player.mf = up
         self.player.mb = down
         self.player.ml = left
         self.player.mr = right
-    
+
     def set_position(self, x, y, z, reset = False):
         self.position.set(x, y, z)
         self.player.p.x = self.player.e.x = x
@@ -149,28 +149,28 @@ cdef class Character(Object):
         self.player.p.z = self.player.e.z = z
         if reset:
             self.velocity.set(0.0, 0.0, 0.0)
-            self.primary_fire = self.secondary_fire = False 
+            self.primary_fire = self.secondary_fire = False
             self.jump = self.crouch = False
             self.up = self.down = self.left = self.right = False
-        
+
     def set_orientation(self, x, y, z):
         cdef Vertex3 v = Vertex3(x, y, z)
         reorient_player(self.player, v.value)
-    
+
     cpdef int can_see(self, float x, float y, float z):
         cdef Vertex3 position = self.position
-        return can_see(self.world.map, position.x, position.y, position.z, 
+        return can_see(self.world.map, position.x, position.y, position.z,
             x, y, z)
-    
+
     cpdef cast_ray(self, length = 32.0):
         cdef Vertex3 position = self.position
         cdef Vertex3 direction = self.orientation.copy().normal()
         cdef long x, y, z
-        if cast_ray(self.world.map, position.x, position.y, position.z, 
+        if cast_ray(self.world.map, position.x, position.y, position.z,
             direction.x, direction.y, direction.z, length, &x, &y, &z):
             return x, y, z
         return None
-    
+
     def validate_hit(self, Character other, part, float tolerance):
         cdef Vertex3 position1 = self.position
         cdef Vertex3 orientation = self.orientation
@@ -194,7 +194,7 @@ cdef class Character(Object):
                               x, y, z, tolerance):
             return False
         return True
-        
+
     def set_dead(self, value):
         self.player.alive = not value
         self.player.mf = False
@@ -206,76 +206,76 @@ cdef class Character(Object):
         self.player.primary_fire = False
         self.player.secondary_fire = False
         self.player.sprint = False
-        
+
     cdef int update(self, double dt) except -1:
         cdef long ret = move_player(self.player)
         if ret > 0:
             self.fall_callback(ret)
         return 0
-    
+
     # properties
     property up:
         def __get__(self):
             return self.player.mf
         def __set__(self, value):
             self.player.mf = value
-            
+
     property down:
         def __get__(self):
             return self.player.mb
         def __set__(self, value):
             self.player.mb = value
-            
+
     property left:
         def __get__(self):
             return self.player.ml
         def __set__(self, value):
             self.player.ml = value
-            
+
     property right:
         def __get__(self):
             return self.player.mr
         def __set__(self, value):
             self.player.mr = value
-    
+
     property dead:
         def __get__(self):
             return not self.player.alive
         def __set__(self, bint value):
             self.set_dead(value)
-            
+
     property jump:
         def __get__(self):
             return self.player.jump
         def __set__(self, value):
             self.player.jump = value
-            
+
     property airborne:
         def __get__(self):
             return self.player.airborne
-            
+
     property crouch:
         def __get__(self):
             return self.player.crouch
         def __set__(self, value):
             self.player.crouch = value
-            
+
     property sneak:
         def __get__(self):
             return self.player.sneak
         def __set__(self, value):
             self.player.sneak = value
-            
+
     property wade:
         def __get__(self):
             return self.player.wade
-    
+
     property sprint:
         def __get__(self):
             return self.player.sprint
         def __set__(self, value):
             self.player.sprint = value
-    
+
     property primary_fire:
         def __get__(self):
             return self.player.primary_fire
@@ -295,8 +295,8 @@ cdef class Grenade(Object):
         object callback
         object team
     cdef GrenadeType * grenade
-    
-    def initialize(self, double fuse, Vertex3 position, Vertex3 orientation, 
+
+    def initialize(self, double fuse, Vertex3 position, Vertex3 orientation,
                    Vertex3 velocity, callback = None):
         self.name = 'grenade'
         self.grenade = create_grenade(position.value, velocity.value)
@@ -311,7 +311,7 @@ cdef class Grenade(Object):
         cdef Vector * nade = self.position.value
         return can_see(self.world.map, position.x, position.y, position.z,
                        nade.x, nade.y, nade.z)
-    
+
     cpdef get_next_collision(self, double dt):
         if self.velocity.is_zero():
             return None
@@ -327,7 +327,7 @@ cdef class Grenade(Object):
         self.position.set_vector(old_position)
         self.velocity.set_vector(old_velocity)
         return eta, x, y, z
-    
+
     cpdef double get_damage(self, Vertex3 player_position):
         cdef Vector * position = self.position.value
         cdef double diff_x, diff_y, diff_z
@@ -344,7 +344,7 @@ cdef class Grenade(Object):
                 return 100.0
             return 4096.0 / value
         return 0
-        
+
     cdef int update(self, double dt) except -1:
         self.fuse -= dt
         if self.fuse <= 0:
@@ -353,7 +353,7 @@ cdef class Grenade(Object):
             self.delete()
             return 0
         move_grenade(self.grenade)
-    
+
     def __dealloc__(self):
         destroy_grenade(self.grenade)
 
@@ -366,7 +366,7 @@ cdef class World(object):
     def __init__(self):
         self.objects = []
         self.time = 0
-    
+
     def update(self, double dt):
         if self.map is None:
             return
@@ -375,10 +375,10 @@ cdef class World(object):
         cdef Object instance
         for instance in self.objects[:]:
             instance.update(dt)
-    
+
     cpdef delete_object(self, Object item):
         self.objects.remove(item)
-        
+
     def create_object(self, klass, *arg, **kw):
         new_object = klass(self, *arg, **kw)
         self.objects.append(new_object)

@@ -104,7 +104,7 @@ def parse_maps(pre_maps):
             maps[-1] += " "+n
         else:
             maps.append(n)
-    
+
     return maps, ', '.join(maps)
 
 @admin
@@ -155,7 +155,7 @@ def wban(connection, value, *arg):
     reason = join_arguments(arg)
     player = get_player(connection.protocol, value)
     player.ban(reason, duration)
-	
+
 @admin
 def banip(connection, ip, *arg):
     duration, reason = get_ban_arguments(connection, arg)
@@ -274,7 +274,7 @@ def to_admin(connection, *arg):
         irc_relay.send(prefix + ' <%s> %s' % (connection.name, message))
     for player in protocol.players.values():
         if player.admin and player is not connection:
-            player.send_chat('To ADMINS from %s: %s' % 
+            player.send_chat('To ADMINS from %s: %s' %
                 (connection.name, message))
     return 'Message sent to admins'
 
@@ -289,7 +289,7 @@ def lock(connection, value):
     team = get_team(connection, value)
     team.locked = True
     connection.protocol.send_chat('%s team is now locked' % team.name)
-    connection.protocol.irc_say('* %s locked %s team' % (connection.name, 
+    connection.protocol.irc_say('* %s locked %s team' % (connection.name,
         team.name))
 
 @admin
@@ -297,7 +297,7 @@ def unlock(connection, value):
     team = get_team(connection, value)
     team.locked = False
     connection.protocol.send_chat('%s team is now unlocked' % team.name)
-    connection.protocol.irc_say('* %s unlocked %s team' % (connection.name, 
+    connection.protocol.irc_say('* %s unlocked %s team' % (connection.name,
         team.name))
 
 @admin
@@ -357,9 +357,9 @@ def toggle_build(connection, player = None):
     connection.protocol.building = value
     on_off = ['OFF', 'ON'][int(value)]
     connection.protocol.send_chat('Building has been toggled %s!' % on_off)
-    connection.protocol.irc_say('* %s toggled building %s' % (connection.name, 
+    connection.protocol.irc_say('* %s toggled building %s' % (connection.name,
         on_off))
-    
+
 @name('togglekill')
 @alias('tk')
 @admin
@@ -377,7 +377,7 @@ def toggle_kill(connection, player = None):
     connection.protocol.killing = value
     on_off = ['OFF', 'ON'][int(value)]
     connection.protocol.send_chat('Killing has been toggled %s!' % on_off)
-    connection.protocol.irc_say('* %s toggled killing %s' % (connection.name, 
+    connection.protocol.irc_say('* %s toggled killing %s' % (connection.name,
         on_off))
 
 @name('toggleteamkill')
@@ -465,7 +465,7 @@ def unstick(connection, player = None):
     connection.protocol.send_chat("%s unstuck %s" %
         (connection.name, player.name), irc = True)
     player.set_location_safe(player.get_location())
-      
+
 @alias('tps')
 @admin
 def tpsilent(connection, player1, player2 = None):
@@ -498,7 +498,7 @@ def move(connection, player, value, silent = False):
     if silent:
         connection.protocol.irc_say('* ' + message)
     else:
-        connection.protocol.send_chat(message, irc = True)    
+        connection.protocol.send_chat(message, irc = True)
 
 @admin
 def where(connection, value = None):
@@ -540,7 +540,7 @@ def god_build(connection, player = None):
     if not player.god:
         return 'Placing god blocks is only allowed in god mode'
     player.god_build = not player.god_build
-    
+
     message = ('now placing god blocks' if player.god_build else
         'no longer placing god blocks')
     player.send_chat("You're %s" % message)
@@ -558,7 +558,7 @@ def fly(connection, player = None):
     else:
         raise ValueError()
     player.fly = not player.fly
-    
+
     message = 'now flying' if player.fly else 'no longer flying'
     player.send_chat("You're %s" % message)
     if connection is not player and connection in protocol.players:
@@ -688,7 +688,7 @@ def change_planned_map(connection, *pre_maps):
     maps, map_list = parse_maps(pre_maps)
     if not maps:
         return 'Invalid map name'
-    
+
     map = maps[0]
     protocol.planned_map = check_rotation([map])[0]
     protocol.send_chat('%s changed next map to %s' % (name, map), irc = True)
@@ -720,7 +720,7 @@ def rotation_add(connection, *pre_maps):
     maps = connection.protocol.get_map_rotation()
     map_list = ", ".join(maps) + map_list
     maps.extend(new_maps)
-    
+
     ret = protocol.set_map_rotation(maps, False)
     if not ret:
         return 'Invalid map in map rotation (%s)' % ret.map
@@ -738,7 +738,7 @@ def revert_rotation(connection):
     maps = protocol.config['maps']
     protocol.set_map_rotation(maps, False)
     protocol.irc_say("* %s reverted map rotation to %s" % (name, maps))
-    
+
 def mapname(connection):
     return 'Current map: ' + connection.protocol.map_info.name
 
@@ -838,7 +838,7 @@ def weapon(connection, value):
     else:
         name = player.weapon_object.name
     return '%s has a %s' % (player.name, name)
-    
+
 command_list = [
     help,
     pm,
@@ -933,7 +933,7 @@ for command_func in command_list:
 try:
     import pygeoip
     database = pygeoip.GeoIP('./data/GeoLiteCity.dat')
-    
+
     @name('from')
     def where_from(connection, value = None):
         if value is None:
@@ -977,7 +977,7 @@ def handle_command(connection, command, parameters):
     except KeyError:
         return # 'Invalid command'
     try:
-        if (hasattr(command_func, 'user_types') and 
+        if (hasattr(command_func, 'user_types') and
             command_func.func_name not in connection.rights):
                 return "You can't use this command"
         return command_func(connection, *parameters)
@@ -1005,7 +1005,7 @@ def debug_handle_command(connection, command, parameters):
         command_func = commands[command]
     except KeyError:
         return # 'Invalid command'
-    if (hasattr(command_func, 'user_types') and 
+    if (hasattr(command_func, 'user_types') and
         command_func.func_name not in connection.rights):
             return "You can't use this command"
     return command_func(connection, *parameters)

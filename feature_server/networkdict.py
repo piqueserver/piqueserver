@@ -18,17 +18,17 @@ def get_cidr(network):
 class NetworkDict(object):
     def __init__(self):
         self.networks = []
-    
+
     def read_list(self, values):
         for item in values:
             self[item[1]] = [item[0]] + item[2:]
-        
+
     def make_list(self):
         values = []
         for network, value in self.iteritems():
             values.append([value[0]] + [network] + list(value[1:]))
         return values
-    
+
     def remove(self, key):
         ip = get_network(key)
         networks = []
@@ -41,13 +41,13 @@ class NetworkDict(object):
                 networks.append(item)
         self.networks = networks
         return results
-    
+
     def __setitem__(self, key, value):
         self.networks.append((get_network(key), value))
-    
+
     def __getitem__(self, key):
         return self.get_entry(key)[1]
-    
+
     def get_entry(self, key):
         ip = get_network(key)
         for entry in self.networks:
@@ -55,22 +55,22 @@ class NetworkDict(object):
             if ip in network:
                 return entry
         raise KeyError()
-    
+
     def __len__(self):
         return len(self.networks)
-    
+
     def __delitem__(self, key, value):
         ip = get_network(key)
         self.networks = [item for item in self.networks if ip not in item]
-    
+
     def pop(self, *arg, **kw):
         network, value = self.networks.pop(*arg, **kw)
         return get_cidr(network), value
-    
+
     def iteritems(self):
         for network, value in self.networks:
             yield get_cidr(network), value
-    
+
     def __contains__(self, key):
         try:
             self.get_entry(key)

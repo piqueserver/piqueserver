@@ -47,7 +47,7 @@ def check_rotation(maps, load_dir = DEFAULT_LOAD_DIR):
 class Map(object):
     def __init__(self, rot_info, load_dir = DEFAULT_LOAD_DIR):
         self.load_information(rot_info, load_dir)
-        
+
         if self.gen_script:
             self.name = '%s #%s' % (rot_info.name, rot_info.get_seed())
             print "Generating map '%s'..." % self.name
@@ -86,7 +86,7 @@ class Map(object):
         self.on_map_leave = getattr(info, 'on_map_leave', None)
         self.on_block_destroy = getattr(info, 'on_block_destroy', None)
         self.is_indestructable = getattr(info, 'is_indestructable', None)
-        
+
     def apply_script(self, protocol, connection, config):
         if self.script is not None:
             protocol, connection = self.script(protocol, connection, config)
@@ -104,24 +104,24 @@ class RotationInfo(object):
     seed = None
     def __init__(self, name = "pyspades"):
         self.full_name = name
-        
+
         splitted = name.split("#")
         if len(splitted) > 1: # user specified a seed
             name = splitted[0].strip()
             self.seed = int(splitted[1])
         self.name = name
-    
+
     def get_seed(self):
         if self.seed is None:
             random.seed()
             self.seed = random.randint(0, math.pow(2, 31))
         return self.seed
-        
+
     def get_map_filename(self, load_dir = DEFAULT_LOAD_DIR):
         return os.path.join(load_dir, '%s.vxl' % self.name)
-        
+
     def get_meta_filename(self, load_dir = DEFAULT_LOAD_DIR):
         return os.path.join(load_dir, '%s.txt' % self.name)
-    
+
     def __str__(self):
         return self.full_name

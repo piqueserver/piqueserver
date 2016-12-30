@@ -35,7 +35,7 @@ def generate_classic(seed):
 class Biome(object):
     def __init__(self, gradient, height, variation, noise):
         """
-        Create a biome with a Gradient object, typical height(0.0-1.0), and 
+        Create a biome with a Gradient object, typical height(0.0-1.0), and
         height variation(0.0-1.0).
         """
         self.gradient = gradient
@@ -114,7 +114,7 @@ cdef class BiomeMap:
                 plist.append((p[0],p[1]+1,p[2]))
             if len(plist)>0:
                 openp.append(plist)
-        
+
     cpdef jitter(self):
         cdef int x
         cdef int y
@@ -130,7 +130,7 @@ cdef class BiomeMap:
         cdef HeightMap hmap = HeightMap(0.)
 
         # paste a rectangle into each biome's area
-        
+
         for idx in xrange(len(self.tmap)):
             x = idx % self.width
             y = idx // self.height
@@ -142,13 +142,13 @@ cdef class BiomeMap:
             hmap.rect_color(x*self.twidth,y*self.theight,
                             self.twidth,self.theight,
                             biome.id)
-            
+
         return hmap, self.gradients
     cpdef rect_of_point(self, x, y):
         x_pos = x*self.twidth
         y_pos = y*self.theight
         return [x_pos, y_pos, x_pos+self.twidth, y_pos+self.theight]
-        
+
 @cython.final
 cdef class HeightMap:
     cdef public int width
@@ -186,7 +186,7 @@ cdef class HeightMap:
     cpdef mult_repeat(self, int x, int y, double mult):
         cdef int idx = (x%self.width)+(y%self.height)*self.width
         self.hmap[idx] *= mult
-    cpdef seed(self, double jitter, double midpoint):        
+    cpdef seed(self, double jitter, double midpoint):
         cdef double halfjitter = jitter * 0.5
         for idx in xrange(len(self.hmap)):
             self.hmap[idx] = midpoint + (random.random()*jitter -
@@ -217,7 +217,7 @@ cdef class HeightMap:
                           double spanscalingmultiplier, \
                             int skip=0):
         """Midpoint displacement with the diamond-square algorithm."""
-        
+
         cdef int span = self.width+1
         cdef float spanscaling = 1.
         cdef float jitterrange
@@ -228,7 +228,7 @@ cdef class HeightMap:
         cdef float botleft
         cdef float botright
         cdef float center
-        
+
         for iterations in xrange(9): # hardcoded for 512x512
             if skip>0:
                 skip-=1
@@ -246,7 +246,7 @@ cdef class HeightMap:
                     botright = self.get_repeat((x+span),(y+span))
                     center = (topleft+topright+botleft+botright) * 0.25\
                              + (random.random() * jitterrange + jitteroffset)
-                    
+
                     self.set_repeat(x+halfspan,y,(topleft+topright+center)*0.33)
                     self.set_repeat(x,y+halfspan,(topleft+botleft+center)*0.33)
                     self.set_repeat(x+halfspan,y+span,
@@ -265,7 +265,7 @@ cdef class HeightMap:
         while idx<len(self.hmap):
             nx = int((idx % self.width) + (random.random()-0.5)*amount)
             ny = int((idx // self.width) + (random.random()-0.5)*amount)
-            self.hmap[idx] = self.get_repeat(nx, ny)            
+            self.hmap[idx] = self.get_repeat(nx, ny)
             idx+=1
     cpdef jitter_colors(self, double amount):
         """Image jittering filter. Amount is max pixels distance to jitter."""
@@ -276,9 +276,9 @@ cdef class HeightMap:
         while idx<len(self.hmap):
             nx = int((idx % self.width) + (random.random()-0.5)*amount)
             ny = int((idx // self.width) + (random.random()-0.5)*amount)
-            self.cmap[idx] = self.get_col_repeat(nx, ny)            
+            self.cmap[idx] = self.get_col_repeat(nx, ny)
             idx+=1
-        
+
     cpdef level_against_heightmap(self, HeightMap other, double height):
         """Use another HeightMap as an alpha-mask to force values to a
             specific height"""
@@ -300,16 +300,16 @@ cdef class HeightMap:
             for yy in xrange(y, y+h):
                 self.set_repeat(xx,yy,z)
     cpdef rect_noise(self, int x, int y, int w, int h,
-                     double jitter, double midpoint):        
+                     double jitter, double midpoint):
         cdef double halfjitter = jitter * 0.5
         for xx in xrange(x,x+w):
-            for yy in xrange(y,y+h):            
+            for yy in xrange(y,y+h):
                 self.set(xx,yy, midpoint + (random.random()*jitter -
                                          halfjitter))
     cpdef rect_color(self, int x, int y, int w, int h, int col):
         for xx in xrange(x, x+w):
             for yy in xrange(y, y+h):
-                self.set_col_repeat(xx,yy,col)        
+                self.set_col_repeat(xx,yy,col)
     cpdef truncate(self):
         """Truncates the HeightMap to a valid (0-1) range.
         Do this before painting or writing to voxels to avoid crashing."""
@@ -323,10 +323,10 @@ cdef class HeightMap:
             self.hmap[idx] = self.hmap[idx]*multiple
     cpdef paint_gradient_fill(self, gradient):
         """Surface the map with a single gradient."""
-        cdef zcoldef = gradient.array()        
+        cdef zcoldef = gradient.array()
 
         cdef int idx = 0
-        
+
         while idx<len(self.hmap):
             h = int(self.hmap[idx] * 63)
             self.cmap[idx] = paint_gradient(zcoldef,h)
@@ -340,7 +340,7 @@ cdef class HeightMap:
             zcoldefs.append(n.array())
 
         cdef int idx = 0
-        
+
         while idx<len(self.hmap):
             h = int(self.hmap[idx] * 63)
             self.cmap[idx] = paint_gradient(zcoldefs[self.cmap[idx]],h)
@@ -348,47 +348,47 @@ cdef class HeightMap:
     cpdef rgb_noise_colors(self, low, high):
         """Add noise to the heightmap colors."""
         cdef int idx = 0
-        
+
         patterns = array.array('i', [random.randint(low,high) for n in xrange(101)])
-        
+
         while idx<len(self.hmap):
             mid = self.cmap[idx]
-            
+
             r = max(0, min(0xFF,get_r(mid)+patterns[idx%len(patterns)]))
             g = max(0, min(0xFF,get_g(mid)+patterns[(idx+1)%len(patterns)]))
             b = max(0, min(0xFF,get_b(mid)+patterns[(idx+2)%len(patterns)]))
-            
+
             self.cmap[idx] = make_color(r,g,b)
-            
+
             idx+=1
-            
+
     cpdef smooth_colors(self):
         """Average the color of each pixel to add smoothness."""
         cdef int x = 0
         cdef int y = 0
-        
-        import copy        
-        
+
+        import copy
+
         swap = copy.deepcopy(self.cmap)
-        
+
         while y<self.height:
             left = swap[((x-1)%self.width)+(y%self.height)*self.width]
             right = swap[((x+1)%self.width)+(y%self.height)*self.width]
             up = swap[((x)%self.width)+((y-1)%self.height)*self.width]
             down = swap[((x)%self.width)+((y+1)%self.height)*self.width]
             mid = swap[((x)%self.width)+((y)%self.height)*self.width]
-            
+
             r = (get_r(left) + get_r(right) + get_r(up) + get_r(down) + get_r(mid))/5
             g = (get_g(left) + get_g(right) + get_g(up) + get_g(down) + get_g(mid))/5
             b = (get_b(left) + get_b(right) + get_b(up) + get_b(down) + get_b(mid))/5
-            
+
             self.set_col_repeat(x,y,make_color(r,g,b))
-            
+
             x += 1
             if x>=self.width:
                 x = 0
                 y += 1
-        
+
     cpdef write_vxl(self):
         cdef VXLData vxl = VXLData()
 
@@ -473,7 +473,7 @@ cdef inline list bresenham_line(int x, int y, int x2, int y2):
         x = x + sx
         d = d + (2 * dy)
     coords.append((x2,y2))
-    return coords    
+    return coords
 
 from color import *
 

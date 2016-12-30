@@ -67,7 +67,7 @@ def apply_script(protocol, connection, config):
         rampage_warning_call = None
         rampage_kills = None
         rampage_reenable_rapid_hack_detect = None
-        
+
         def start_rampage(self):
             self.rampage = True
             self.rampage_kills.clear()
@@ -93,7 +93,7 @@ def apply_script(protocol, connection, config):
             if ANNOUNCE_RAMPAGE:
                 message = S_RAMPAGE_START.format(player = self.name)
                 self.protocol.send_chat(message, global_message = None)
-        
+
         def end_rampage(self):
             self.rampage = False
             self.rapid_hack_detect = self.rampage_reenable_rapid_hack_detect
@@ -106,23 +106,23 @@ def apply_script(protocol, connection, config):
             if self.rampage_rapid_loop and self.rampage_rapid_loop.running:
                 self.rampage_rapid_loop.stop()
             send_fog(self, self.protocol.fog_color)
-        
+
         def on_connect(self):
             self.rampage_rapid_loop = LoopingCall(rapid_cycle, self)
             self.rampage_kills = deque(maxlen = KILL_REQUIREMENT)
             connection.on_connect(self)
-        
+
         def on_disconnect(self):
             if self.rampage:
                 self.end_rampage()
             self.rampage_rapid_loop = None
             connection.on_disconnect(self)
-        
+
         def on_reset(self):
             if self.rampage:
                 self.end_rampage()
             connection.on_reset(self)
-        
+
         def on_kill(self, killer, type, grenade):
             was_rampaging = self.rampage
             if self.rampage:
@@ -141,26 +141,26 @@ def apply_script(protocol, connection, config):
                         killer.rampage_kills[0] >= now - TIME_REQUIREMENT):
                         killer.start_rampage()
             return connection.on_kill(self, killer, type, grenade)
-        
+
         def on_grenade_thrown(self, grenade):
             if self.rampage:
                 resend_tool(self)
             connection.on_grenade_thrown(self, grenade)
-        
+
         def on_shoot_set(self, fire):
             if (self.rampage and fire and
                 self.rampage_rapid_loop and not self.rampage_rapid_loop.running):
                 interval = RAPID_INTERVALS[self.weapon]
                 self.rampage_rapid_loop.start(interval, now = False)
             connection.on_shoot_set(self, fire)
-    
+
     send_fog_rule = lambda player: not player.rampage
-    
+
     class RampageProtocol(protocol):
         def set_fog_color(self, color):
             self.fog_color = color
             fog_color.color = make_color(*color)
-            
+
             self.send_contained(fog_color, save = True, rule = send_fog_rule)
-    
+
     return RampageProtocol, RampageConnection

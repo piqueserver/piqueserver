@@ -21,7 +21,7 @@ cdef class Loader:
     def __init__(self, ByteReader reader = None):
         if reader is not None:
             self.read(reader)
-    
+
     cpdef read(self, ByteReader reader):
         read_python = getattr(self, 'read', None)
         if read_python is None:
@@ -33,7 +33,7 @@ cdef class Loader:
         if read_python is None:
             raise NotImplementedError('write() not implemented')
         write_python(reader)
-    
+
     cpdef ByteWriter generate(self):
         cdef ByteWriter reader = ByteWriter()
         self.write(reader)

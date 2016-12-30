@@ -35,12 +35,12 @@ class DummyPlayer():
     protocol = None
     team = None
     player_id = None
-    
+
     def __init__(self, protocol, team):
         self.protocol = protocol
         self.team = team
         self.acquire_player_id()
-    
+
     def acquire_player_id(self):
         max_players = min(32, self.protocol.max_players)
         if len(self.protocol.connections) >= max_players:
@@ -60,7 +60,7 @@ class DummyPlayer():
         create_player.team = self.team.id
         self.protocol.send_contained(create_player, save = True)
         return True
-    
+
     def score(self):
         if self.protocol.game_mode != CTF_MODE:
             return
@@ -68,7 +68,7 @@ class DummyPlayer():
             self.acquire_player_id()
         if self.player_id is None and not self.acquire_player_id():
             return
-        winning = (self.protocol.max_score not in (0, None) and 
+        winning = (self.protocol.max_score not in (0, None) and
             self.team.score + 1 >= self.protocol.max_score)
         self.team.score += 1
         intel_capture.player_id = self.player_id
@@ -87,7 +87,7 @@ class DummyPlayer():
         else:
             flag = self.team.other.set_flag()
             flag.update()
-    
+
     def __del__(self):
         if self.player_id is None or self.player_id in self.protocol.players:
             return
@@ -108,17 +108,17 @@ def apply_script(protocol, connection, config):
                 self.send_chat(S_TEAM_FULL)
                 return False
             return connection.on_team_join(self, team)
-        
+
         def on_team_changed(self, old_team):
             if self.team and self.team.id in S_OBJECTIVES:
                 self.send_chat(S_OBJECTIVES[self.team.id])
             connection.on_team_changed(self, old_team)
-        
+
         def on_login(self, name):
             if self.team and self.team.id in S_OBJECTIVES:
                 self.send_chat(S_OBJECTIVES[self.team.id])
             connection.on_login(self, name)
-        
+
         def on_flag_capture(self):
             if ATTACKER_SCORE_MULTIPLIER > 1:
                 dummy = DummyPlayer(self.protocol, self.team)
@@ -127,13 +127,13 @@ def apply_script(protocol, connection, config):
                     self.protocol.attacker_dummy_calls = []
                 for i in xrange(ATTACKER_SCORE_MULTIPLIER - 1):
                     delay = i * 0.1
-                    dummy_call = callLater(delay, 
+                    dummy_call = callLater(delay,
                         self.protocol.attacker_dummy_score)
                     self.protocol.attacker_dummy_calls.append(dummy_call)
             self.protocol.cancel_defender_return_call()
             self.protocol.start_defender_score_loop()
             connection.on_flag_capture(self)
-        
+
         def on_flag_take(self):
             if self.team is not self.protocol.attacker:
                 return False
@@ -142,11 +142,11 @@ def apply_script(protocol, connection, config):
             if self.protocol.defender_score_loop.running:
                 self.protocol.defender_score_loop.stop()
             return connection.on_flag_take(self)
-        
+
         def on_flag_drop(self):
             self.protocol.start_defender_score_loop()
             connection.on_flag_drop(self)
-    
+
     class InfiltrationProtocol(protocol):
         game_mode = CTF_MODE
         balanced_teams = None
@@ -156,40 +156,40 @@ def apply_script(protocol, connection, config):
         attacker = None
         attacker_dummy = None
         attacker_dummy_calls = None
-        
+
         def on_map_change(self, map):
             self.attacker = self.teams[ATTACKER_TEAM]
             self.defender = self.attacker.other
             self.defender_score_loop = LoopingCall(self.defender_score_cycle)
             self.start_defender_score_loop()
             protocol.on_map_change(self, map)
-        
+
         def on_map_leave(self):
             if self.defender_score_loop and self.defender_score_loop.running:
                 self.defender_score_loop.stop()
             self.defender_score_loop = None
             self.end_attacker_dummy_calls()
             protocol.on_map_leave(self)
-        
+
         def on_game_end(self):
             self.end_attacker_dummy_calls()
             self.start_defender_score_loop()
             protocol.on_game_end(self)
-        
+
         def on_flag_spawn(self, x, y, z, flag, entity_id):
             if flag.team is self.attacker:
                 return 0, 0, 63
             return protocol.on_flag_spawn(self, x, y, z, flag, entity_id)
-        
+
         def start_defender_score_loop(self):
             if self.defender_score_loop.running:
                 self.defender_score_loop.stop()
             self.defender_score_loop.start(DEFENDER_SCORE_INTERVAL, now = False)
-        
+
         def defender_score_cycle(self):
             dummy = DummyPlayer(self, self.defender)
             dummy.score()
-        
+
         def attacker_dummy_score(self):
             self.attacker_dummy.score()
             if self.attacker_dummy is None:
@@ -198,7 +198,7 @@ def apply_script(protocol, connection, config):
             self.attacker_dummy_calls.pop(0)
             if not self.attacker_dummy_calls:
                 self.end_attacker_dummy_calls()
-        
+
         def end_attacker_dummy_calls(self):
             if self.attacker_dummy_calls:
                 for dummy_call in self.attacker_dummy_calls:
@@ -206,15 +206,15 @@ def apply_script(protocol, connection, config):
                         dummy_call.cancel()
             self.attacker_dummy_calls = None
             self.attacker_dummy = None
-        
+
         def cancel_defender_return_call(self):
             if self.defender_return_call and self.defender_return_call.active():
                 self.defender_return_call.cancel()
             self.defender_return_call = None
-        
+
         def fog_flash(self, color):
             old_color = self.get_fog_color()
             self.set_fog_color(color)
             callLater(0.2, self.set_fog_color, old_color)
-    
+
     return InfiltrationProtocol, InfiltrationConnection

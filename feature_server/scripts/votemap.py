@@ -24,8 +24,8 @@ from scheduler import Scheduler
 import commands
 
 def cancel_verify(connection, instigator):
-    return (connection.admin or 
-            connection is instigator or 
+    return (connection.admin or
+            connection is instigator or
             connection.rights.cancel)
 
 class VoteMap(object):
@@ -33,7 +33,7 @@ class VoteMap(object):
     public_votes = True
     instigator = None
     protocol = None
-    
+
     def __init__(self, connection, protocol, rotation):
         self.instigator = connection
         self.rotation = rotation
@@ -72,7 +72,7 @@ class VoteMap(object):
                 mv = n
         mv['count'] = thresh - mv['count']
         return mv
-        
+
     def verify(self):
         instigator = self.instigator
         if instigator is None:
@@ -82,7 +82,7 @@ class VoteMap(object):
         reactor.seconds() - last < self.vote_interval):
             return "You can't start a vote now."
         return True
-        
+
     def start(self):
         instigator = self.instigator
         protocol = self.protocol
@@ -96,7 +96,7 @@ class VoteMap(object):
         schedule.loop_call(30.0, self.update)
         self.protocol.votemap = self
         self.update()
-        
+
     def vote(self, connection, mapname):
         mapname = mapname.lower()
         if not mapname in self.picks:
@@ -108,7 +108,7 @@ class VoteMap(object):
                                                           mapname))
         if self.votes_left()['count'] <= 0:
             self.on_majority()
-            
+
     def cancel(self, connection = None):
         if connection is None:
             message = 'Cancelled'
@@ -119,22 +119,22 @@ class VoteMap(object):
         self.protocol.send_chat(message)
         self.set_cooldown()
         self.finish()
-        
+
     def update(self):
         self.protocol.send_chat(
             'Choose next map. Say /vote <name> to cast vote.')
         names = ' '.join(self.picks)
         self.protocol.send_chat('Maps: %s' % names)
         self.protocol.send_chat('To extend current map: /vote extend')
-        
+
     def timeout(self):
         self.show_result()
         self.finish()
-        
+
     def on_majority(self):
         self.show_result()
         self.finish()
-        
+
     def show_result(self):
         result = self.votes_left()['name']
         if result == "extend":
@@ -144,15 +144,15 @@ class VoteMap(object):
                 'continue for %s.' % span, irc = True)
             self.protocol.autoschedule_votemap()
         else:
-            self.protocol.send_chat('Mapvote ended. Next map will be: %s.' % 
+            self.protocol.send_chat('Mapvote ended. Next map will be: %s.' %
                 result, irc = True)
             self.protocol.planned_map = check_rotation([result])[0]
         self.set_cooldown()
-        
+
     def set_cooldown(self):
         if self.instigator is not None and not self.instigator.admin:
             self.instigator.last_votemap = reactor.seconds()
-            
+
     def finish(self):
         self.schedule.reset()
         self.protocol.votemap = None
@@ -188,7 +188,7 @@ def apply_script(protocol, connection, config):
         autoschedule_call = None
 
         # voting
-        
+
         def __init__(self, interface, config):
             protocol.__init__(self, interface, config)
             self.votemap_autoschedule = config.get('votemap_autoschedule', 180)
@@ -196,11 +196,11 @@ def apply_script(protocol, connection, config):
             self.votemap_time = config.get('votemap_time', 120)
             self.votemap_extension_time = config.get('votemap_extension_time',
                 15)
-            self.votemap_player_driven = config.get('votemap_player_driven', 
+            self.votemap_player_driven = config.get('votemap_player_driven',
                 False)
             self.votemap_percentage = config.get('votemap_percentage', 80)
             self.autoschedule_votemap()
-        
+
         def autoschedule_votemap(self):
             if self.votemap_autoschedule > 0 and self.autoschedule_call is None:
                 self.autoschedule_call = self.call_end(
@@ -222,15 +222,15 @@ def apply_script(protocol, connection, config):
                 votemap.start()
             else:
                 return verify
-        
+
         def set_map_name(self, *arg, **kw):
             protocol.set_map_name(self, *arg, **kw)
             self.end_votes()
-            
+
         def end_votes(self):
             if self.votemap is not None:
                 self.votemap.finish()
-        
+
     class VoteConnection(connection):
         last_votemap = None
 

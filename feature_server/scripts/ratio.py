@@ -32,14 +32,14 @@ def apply_script(protocol, connection, config):
     class RatioConnection(connection):
         ratio_kills = 0
         ratio_deaths = 0
-        
+
         def on_kill(self, killer, type, grenade):
             if killer is not None and self.team is not killer.team:
                 if self != killer:
                     killer.ratio_kills += 1
             self.ratio_deaths += 1
             return connection.on_kill(self, killer, type, grenade)
-    
+
     class RatioProtocol(protocol):
         def on_votekick_start(self, instigator, victim, reason):
             result = protocol.on_votekick_start(self, instigator, victim, reason)
@@ -50,5 +50,5 @@ def apply_script(protocol, connection, config):
                 else:
                     self.send_chat(message, irc = True)
             return result
-    
+
     return RatioProtocol, RatioConnection

@@ -1,13 +1,13 @@
 # Script by Tocksman made for Goon Haven
 # Short bit of documentation:
-# 
+#
 # This script will hopefully give server owners some control over what
-# spectators do on there server. As of now since the release of v0.75, 
+# spectators do on there server. As of now since the release of v0.75,
 # Goon Haven has had issues with spectators idling and using global chat
 # to send information to a team so that they may know enemy positions
 # or what the enemy is doing, etc. This script can block spectator chat
 # as well as kick spectators after so much time as passed.
-# 
+#
 # Add these lines to your config:
 # spectator_no_chat - This determines whether spectators can chat or not
 #                     in your server. True disables chat. [True/False]
@@ -16,16 +16,16 @@
 # spectator_kick_time - How long a spectator may remain before he is kicked.
 #                       Time is in seconds. Note that setting time to 0
 #                       will cause the script to deactivate or malfunction.
-# 
-# Additionally, server owners who also give out "guard" or "mini-mod" 
+#
+# Additionally, server owners who also give out "guard" or "mini-mod"
 # positions can add the right "specpower" to the group rights in commands.py
-# to have the guards/minimods be immune to the spectator kick and chat 
+# to have the guards/minimods be immune to the spectator kick and chat
 # restrictions.
-# 
-# 
+#
+#
 # Oh, and admins are also automatically immune to spectator kick and chat
 # restrictions.
-# 
+#
 # Hope you enjoy!
 # Tocksman
 
@@ -36,7 +36,7 @@ def apply_script(protocol, connection, config):
     spectator_no_chat = config.get('spectator_no_chat', False);
     spectator_kick = config.get('spectator_kick', False);
     spectator_kick_time = config.get('spectator_kick_time', 300); # in seconds
-    
+
     class SpectatorControlConnection(connection):
         spec_check = None
 
@@ -49,7 +49,7 @@ def apply_script(protocol, connection, config):
                     self.send_chat('Spectators cannot speak on this server.')
                     return False # deny
             return connection.on_chat(self, value, global_message)
-            
+
         def on_team_join(self, team):
             if team.spectator and spectator_kick and spectator_kick_time > 0:
                 if not self.admin and not self.rights.specpower: # not an admin
@@ -62,13 +62,13 @@ def apply_script(protocol, connection, config):
                         self.spec_check.cancel()
                         self.spec_check = None
             return connection.on_team_join(self, team)
-            
+
         def on_disconnect(self):
             if self.spec_check is not None and self.spec_check.active():
                 self.spec_check.cancel()
             self.spec_check = None
             return connection.on_disconnect(self)
-            
+
         def check_spec_time(self, id):
             if not self.team.spectator:
                 print 'WARNING 1. Safety check kept an non-spectator from being spectator-kicked. Report this please!'

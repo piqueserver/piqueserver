@@ -9,7 +9,7 @@ from twisted.internet import reactor
 
 def apply_script(protocol, connection, config):
     spawn_protect_time = config.get('spawn_protect_time', 3.0)
-    
+
     class SpawnProtectConnection(connection):
         spawn_timestamp = None
 
@@ -27,5 +27,5 @@ def apply_script(protocol, connection, config):
                      prettify_timespan(timespan, True)))
                 return False
             return connection.on_hit(self, hit_amount, player, type, grenade)
-    
+
     return protocol, SpawnProtectConnection

@@ -33,9 +33,9 @@ import argparse
 arg_parser = argparse.ArgumentParser(prog="pysnip",
                                      description="PySnip is an open-source Python server implementation for the voxel-based game \"Ace of Spades\".")
 
-arg_parser.add_argument("-c","--config-file", default="config.txt", 
+arg_parser.add_argument("-c","--config-file", default="config.txt",
         help="Specify alternate config file (default is feature_server/config.txt).")
-arg_parser.add_argument("-j","--json-parameters", 
+arg_parser.add_argument("-j","--json-parameters",
         help="Add extra json parameters, overwriting that in config file.")
 arg_parser.add_argument("-r","--resource-dir", default=".",
         help="The directory which contains maps,scripts,etc (in correctly named subdirs). - default is in directory of run.py, in feature_server.")
@@ -183,7 +183,7 @@ class FeatureConnection(ServerConnection):
     chat_time = 0
     chat_count = 0
     user_types = None
-    
+
     def on_connect(self):
         protocol = self.protocol
         client_ip = self.address[0]
@@ -193,7 +193,7 @@ class FeatureConnection(ServerConnection):
                 protocol.remove_ban(client_ip)
                 protocol.save_bans()
             else:
-                print 'banned user %s (%s) attempted to join' % (name, 
+                print 'banned user %s (%s) attempted to join' % (name,
                     client_ip)
                 self.disconnect(ERROR_BANNED)
                 return
@@ -208,23 +208,23 @@ class FeatureConnection(ServerConnection):
                 self.disconnect(ERROR_BANNED)
                 return
         ServerConnection.on_connect(self)
-    
+
     def on_join(self):
         if self.protocol.motd is not None:
             self.send_lines(self.protocol.motd)
-    
+
     def on_login(self, name):
         self.printable_name = name.encode('ascii', 'replace')
-        print '%s (IP %s, ID %s) entered the game!' % (self.printable_name, 
+        print '%s (IP %s, ID %s) entered the game!' % (self.printable_name,
             self.address[0], self.player_id)
-        self.protocol.irc_say('* %s (IP %s, ID %s) entered the game!' % 
+        self.protocol.irc_say('* %s (IP %s, ID %s) entered the game!' %
             (self.name, self.address[0], self.player_id))
         if self.user_types is None:
             self.user_types = AttributeSet()
             self.rights = AttributeSet()
             if self.protocol.everyone_is_admin:
                 self.on_user_login('admin', False)
-    
+
     def get_spawn_location(self):
         get_location = self.protocol.map_info.get_spawn_location
         if get_location is not None:
@@ -232,40 +232,40 @@ class FeatureConnection(ServerConnection):
             if result is not None:
                 return result
         return ServerConnection.get_spawn_location(self)
-    
+
     def on_disconnect(self):
         if self.name is not None:
             print self.printable_name, 'disconnected!'
-            self.protocol.irc_say('* %s (IP %s) disconnected' % 
+            self.protocol.irc_say('* %s (IP %s) disconnected' %
                 (self.name, self.address[0]))
             self.protocol.player_memory.append((self.name, self.address[0]))
         else:
             print '%s disconnected' % self.address[0]
         ServerConnection.on_disconnect(self)
-    
+
     def on_command(self, command, parameters):
         result = commands.handle_command(self, command, parameters)
         if result == False:
             parameters = ['***'] * len(parameters)
-        log_message = '<%s> /%s %s' % (self.name, command, 
+        log_message = '<%s> /%s %s' % (self.name, command,
             ' '.join(parameters))
         if result:
             log_message += ' -> %s' % result
             self.send_chat(result)
         print log_message.encode('ascii', 'replace')
-    
+
     def _can_build(self):
         if not self.building:
             return False
         if not self.god and not self.protocol.building:
             return False
-    
+
     def on_block_build_attempt(self, x, y, z):
         return self._can_build()
-    
+
     def on_line_build_attempt(self, points):
         return self._can_build()
-    
+
     def on_line_build(self, points):
         if self.god:
             self.refill()
@@ -275,7 +275,7 @@ class FeatureConnection(ServerConnection):
             self.protocol.god_blocks.update(points)
         elif self.protocol.user_blocks is not None:
             self.protocol.user_blocks.update(points)
-    
+
     def on_block_build(self, x, y, z):
         if self.god:
             self.refill()
@@ -285,7 +285,7 @@ class FeatureConnection(ServerConnection):
             self.protocol.god_blocks.add((x, y, z))
         elif self.protocol.user_blocks is not None:
             self.protocol.user_blocks.add((x, y, z))
-    
+
     def on_block_destroy(self, x, y, z, mode):
         map_on_block_destroy = self.protocol.map_info.on_block_destroy
         if map_on_block_destroy is not None:
@@ -312,13 +312,13 @@ class FeatureConnection(ServerConnection):
                         for nade_z in xrange(z - 1, z + 2):
                             if is_indestructable(nade_x, nade_y, nade_z):
                                 return False
-    
+
     def on_block_removed(self, x, y, z):
         if self.protocol.user_blocks is not None:
             self.protocol.user_blocks.discard((x, y, z))
         if self.protocol.god_blocks is not None:
             self.protocol.god_blocks.discard((x, y, z))
-    
+
     def on_hit(self, hit_amount, player, type, grenade):
         if not self.protocol.killing:
             self.send_chat(
@@ -350,26 +350,26 @@ class FeatureConnection(ServerConnection):
             killer.streak += 1
             killer.best_streak = max(killer.streak, killer.best_streak)
         killer.team.kills += 1
-    
+
     def on_reset(self):
         self.streak = 0
         self.best_streak = 0
-    
+
     def on_animation_update(self, jump, crouch, sneak, sprint):
         if self.fly and crouch and self.world_object.velocity.z != 0.0:
             jump = True
         return jump, crouch, sneak, sprint
-    
+
     def on_fall(self, damage):
         if self.god:
             return False
         if not self.protocol.fall_damage:
             return False
-    
+
     def on_grenade(self, time_left):
         if self.god:
             self.refill()
-    
+
     def on_team_join(self, team):
         if self.team is not None:
             if self.protocol.teamswitch_interval:
@@ -377,7 +377,7 @@ class FeatureConnection(ServerConnection):
                 if teamswitch_interval == 'never':
                     self.send_chat('Switching teams is not allowed')
                     return False
-                if (self.last_switch is not None and 
+                if (self.last_switch is not None and
                     reactor.seconds() - self.last_switch < teamswitch_interval * 60):
                     self.send_chat('You must wait before switching teams again')
                     return False
@@ -391,7 +391,7 @@ class FeatureConnection(ServerConnection):
                 self.send_chat('Team is full')
                 return False
         self.last_switch = reactor.seconds()
-    
+
     def on_chat(self, value, global_message):
         if not self.mute:
             current_time = reactor.seconds()
@@ -403,7 +403,7 @@ class FeatureConnection(ServerConnection):
                     if self.chat_count / self.chat_time > CHAT_PER_SECOND:
                         self.mute = True
                         self.protocol.send_chat(
-                            '%s has been muted for excessive spam' % (self.name), 
+                            '%s has been muted for excessive spam' % (self.name),
                             irc = True)
                     self.chat_time = self.chat_count = 0
                 else:
@@ -422,7 +422,7 @@ class FeatureConnection(ServerConnection):
             self.send_chat('(Chat not sent - global chat disabled)')
             return False
         return value
-    
+
     def kick(self, reason = None, silent = False):
         if not silent:
             if reason is not None:
@@ -433,7 +433,7 @@ class FeatureConnection(ServerConnection):
         # FIXME: Client should handle disconnect events the same way in both
         # main and initial loading network loops
         self.disconnect(ERROR_KICKED + 8)
-    
+
     def ban(self, reason = None, duration = None):
         reason = ': ' + reason if reason is not None else ''
         duration = duration or None
@@ -456,12 +456,12 @@ class FeatureConnection(ServerConnection):
         for line in lines:
             reactor.callLater(current_time, self.send_chat, line)
             current_time += 2
-    
+
     def on_hack_attempt(self, reason):
-        print 'Hack attempt detected from %s: %s' % (self.printable_name, 
+        print 'Hack attempt detected from %s: %s' % (self.printable_name,
             reason)
         self.kick(reason)
-    
+
     def on_user_login(self, user_type, verbose = True):
         if user_type == 'admin':
             self.admin = True
@@ -473,7 +473,7 @@ class FeatureConnection(ServerConnection):
             message = ' logged in as %s' % (user_type)
             self.send_chat('You' + message)
             self.protocol.irc_say("* " + self.name + message)
-    
+
     def timed_out(self):
         if self.name is not None:
             print '%s timed out' % self.printable_name
@@ -492,7 +492,7 @@ def random_choice_cycle(choices):
 
 class FeatureTeam(Team):
     locked = False
-    
+
     def get_entity_location(self, entity_id):
         get_location = self.protocol.map_info.get_entity_location
         if get_location is not None:
@@ -511,7 +511,7 @@ class EndCall(object):
         self.arg = arg
         self.kw = kw
         self.call = None
-    
+
     def set(self, value):
         if value is None:
             if self.call is not None:
@@ -525,20 +525,20 @@ class EndCall(object):
                 self.call.reset(value)
             else:
                 self.call = reactor.callLater(value, self.fire)
-    
+
     def fire(self):
         self.call = None
         self.cancel()
         self.func(*self.arg, **self.kw)
-    
+
     def cancel(self):
         self.set(None)
         self.protocol.end_calls.remove(self)
         self.active = False
-    
+
     def active(self):
         return self.active and (self.call and self.call.active())
-            
+
 class FeatureProtocol(ServerProtocol):
     connection_class = FeatureConnection
     bans = None
@@ -561,22 +561,22 @@ class FeatureProtocol(ServerProtocol):
     identifier = None
 
     planned_map = None
-    
+
     map_info = None
     spawns = None
     user_blocks = None
     god_blocks = None
-    
+
     last_time = None
     interface = None
-    
+
     team_class = FeatureTeam
-    
+
     game_mode = None # default to None so we can check
     time_announce_schedule = None
-    
+
     server_version = SERVER_VERSION
-    
+
     def __init__(self, interface, config):
         self.config = config
         if config.get('random_rotation', False):
@@ -630,10 +630,10 @@ class FeatureProtocol(ServerProtocol):
              900, 1200, 1800, 2400, 3000])
         self.balanced_teams = config.get('balanced_teams', None)
         self.login_retries = config.get('login_retries', 1)
-        
+
         # voting configuration
         self.default_ban_time = config.get('default_ban_duration', 24*60)
-        
+
         self.speedhack_detect = config.get('speedhack_detect', True)
         if config.get('user_blocks_only', False):
             self.user_blocks = set()
@@ -672,7 +672,7 @@ class FeatureProtocol(ServerProtocol):
             log.addObserver(log.FileLogObserver(logging_file).emit)
             log.msg('pyspades server started on %s' % time.strftime('%c'))
         log.startLogging(sys.stdout) # force twisted logging
-        
+
         self.start_time = reactor.seconds()
         self.end_calls = []
         self.console = create_console(self)
@@ -684,12 +684,12 @@ class FeatureProtocol(ServerProtocol):
                     if password in DEFAULT_PASSWORDS[group]:
                         print ("WARNING: FOUND DEFAULT PASSWORD '%s'" \
                                " IN GROUP '%s'" % (password, group))
-        
+
         for password in self.passwords.get('admin', []):
             if not password:
                 self.everyone_is_admin = True
         commands.rights.update(config.get('rights', {}))
-        
+
         port = self.port = config.get('port', 32887)
         ServerProtocol.__init__(self, port, interface)
         self.host.receiveCallback = self.receive_callback
@@ -705,15 +705,15 @@ class FeatureProtocol(ServerProtocol):
 
         self.master = config.get('master', True)
         self.set_master()
-        
+
         get_external_ip(config.get('network_interface', '')).addCallback(
             self.got_external_ip)
-    
+
     def got_external_ip(self, ip):
         self.ip = ip
         self.identifier = make_server_identifier(ip, self.port)
         print 'Server identifier is %s' % self.identifier
-    
+
     def set_time_limit(self, time_limit = None, additive = False):
         advance_call = self.advance_call
         add_time = 0.0
@@ -726,13 +726,13 @@ class FeatureProtocol(ServerProtocol):
             for call in self.end_calls[:]:
                 call.set(None)
             return
-        
+
         if additive:
             time_limit = min(time_limit + add_time, self.default_time_limit)
-        
+
         seconds = time_limit * 60.0
         self.advance_call = reactor.callLater(seconds, self._time_up)
-        
+
         for call in self.end_calls[:]:
             call.set(seconds)
 
@@ -742,7 +742,7 @@ class FeatureProtocol(ServerProtocol):
         for seconds in self.time_announcements:
             self.time_announce_schedule.call_end(seconds,
                 self._next_time_announce)
-        
+
         return time_limit
 
     def _next_time_announce(self):
@@ -754,11 +754,11 @@ class FeatureProtocol(ServerProtocol):
                 self.send_chat('%s seconds remaining.' % int(round(remaining)))
         else:
             self.send_chat('%s minutes remaining.' % int(round(remaining/60)))
-    
+
     def _time_up(self):
         self.advance_call = None
         self.advance_rotation('Time up!')
-    
+
     def advance_rotation(self, message = None):
         self.set_time_limit(False)
         if self.planned_map is None:
@@ -772,10 +772,10 @@ class FeatureProtocol(ServerProtocol):
             self.send_chat('%s Next map: %s.' % (message, map.full_name),
                            irc = True)
             reactor.callLater(10, self.set_map_name, map)
-    
+
     def get_mode_name(self):
         return self.game_mode_name
-    
+
     def set_map_name(self, rot_info):
         try:
             map_info = self.get_map(rot_info)
@@ -789,10 +789,10 @@ class FeatureProtocol(ServerProtocol):
         self.set_time_limit(self.map_info.time_limit)
         self.update_format()
         return True
-    
+
     def get_map(self, rot_info):
         return Map(rot_info, os.path.join(RESOURCE_DIR,'maps'))
-    
+
     def set_map_rotation(self, maps, now = True):
         try:
             maps = check_rotation(maps, os.path.join(RESOURCE_DIR,'maps'))
@@ -806,7 +806,7 @@ class FeatureProtocol(ServerProtocol):
 
     def get_map_rotation(self):
         return [map.full_name for map in self.maps]
-    
+
     def is_indestructable(self, x, y, z):
         if self.user_blocks is not None:
             if (x, y, z) not in self.user_blocks:
@@ -819,13 +819,13 @@ class FeatureProtocol(ServerProtocol):
             if map_is_indestructable(self, x, y, z) == True:
                 return True
         return False
-    
+
     def update_format(self):
         """
         Called when the map (or other variables) have been updated
         """
         config = self.config
-        self.name = encode(self.format(config.get('name', 
+        self.name = encode(self.format(config.get('name',
             'pyspades server %s' % random.randrange(0, 2000))))
         self.motd = self.format_lines(config.get('motd', None))
         self.help = self.format_lines(config.get('help', None))
@@ -833,7 +833,7 @@ class FeatureProtocol(ServerProtocol):
         self.rules = self.format_lines(config.get('rules', None))
         if self.master_connection is not None:
             self.master_connection.send_server()
-    
+
     def format(self, value, extra = {}):
         map = self.map_info
         format_dict = {
@@ -844,7 +844,7 @@ class FeatureProtocol(ServerProtocol):
         }
         format_dict.update(extra)
         return value % format_dict
-    
+
     def format_lines(self, value):
         if value is None:
             return
@@ -853,11 +853,11 @@ class FeatureProtocol(ServerProtocol):
         for line in value:
             lines.append(encode(self.format(line, extra)))
         return lines
-        
+
     def got_master_connection(self, client):
         print 'Master connection established.'
         ServerProtocol.got_master_connection(self, client)
-    
+
     def master_disconnected(self, client = None):
         ServerProtocol.master_disconnected(self, client)
         if self.master and self.master_reconnect_call is None:
@@ -866,13 +866,13 @@ class FeatureProtocol(ServerProtocol):
             else:
                 message = 'Master connection lost'
             print '%s, reconnecting in 60 seconds...' % message
-            self.master_reconnect_call = reactor.callLater(60, 
+            self.master_reconnect_call = reactor.callLater(60,
                 self.reconnect_master)
-    
+
     def reconnect_master(self):
         self.master_reconnect_call = None
         self.set_master()
-    
+
     def set_master_state(self, value):
         if value == self.master:
             return
@@ -891,7 +891,7 @@ class FeatureProtocol(ServerProtocol):
 
     def add_ban(self, ip, reason, duration, name = None):
         """
-        Ban an ip with an optional reason and duration in minutes. If duration 
+        Ban an ip with an optional reason and duration in minutes. If duration
         is None, ban is permanent.
         """
         network = get_network(ip)
@@ -905,7 +905,7 @@ class FeatureProtocol(ServerProtocol):
             duration = None
         self.bans[ip] = (name or '(unknown)', reason, duration)
         self.save_bans()
-    
+
     def remove_ban(self, ip):
         results = self.bans.remove(ip)
         print 'Removing ban:', ip, results
@@ -915,19 +915,19 @@ class FeatureProtocol(ServerProtocol):
         result = self.bans.pop()
         self.save_bans()
         return result
-    
+
     def save_bans(self):
         json.dump(self.bans.make_list(), open_create(os.path.join(RESOURCE_DIR,'bans.txt'), 'wb'))
         if self.ban_publish is not None:
             self.ban_publish.update()
-    
+
     def receive_callback(self, address, data):
         if data == 'HELLO':
             self.host.socket.send(address, 'HI')
             return 1
         if address.host in self.hard_bans:
             return 1
-    
+
     def data_received(self, peer, packet):
         ip = peer.address.host
         current_time = reactor.seconds()
@@ -943,19 +943,19 @@ class FeatureProtocol(ServerProtocol):
         if dt > 1.0:
             print '(warning: processing %r from %s took %s)' % (
                 packet.data, ip, dt)
-    
+
     def irc_say(self, msg, me = False):
         if self.irc_relay:
             if me:
                 self.irc_relay.me(msg, filter = True)
             else:
                 self.irc_relay.send(msg, filter = True)
-    
+
     def send_tip(self):
         line = self.tips[random.randrange(len(self.tips))]
         self.send_chat(line)
         reactor.callLater(self.tip_frequency * 60, self.send_tip)
-    
+
     def send_chat(self, value, global_message = True, sender = None,
                   team = None, irc = False):
         if irc:
@@ -963,7 +963,7 @@ class FeatureProtocol(ServerProtocol):
         ServerProtocol.send_chat(self, value, global_message, sender, team)
 
     # log high CPU usage
-    
+
     def update_world(self):
         last_time = self.last_time
         current_time = reactor.seconds()
@@ -977,65 +977,65 @@ class FeatureProtocol(ServerProtocol):
         if time_taken > 1.0:
             print 'World update iteration took %s, objects: %s' % (time_taken,
                 self.world.objects)
-    
+
     # events
-    
+
     def on_map_change(self, map):
         map_on_map_change = self.map_info.on_map_change
         if map_on_map_change is not None:
             map_on_map_change(self, map)
-    
+
     def on_map_leave(self):
         map_on_map_leave = self.map_info.on_map_leave
         if map_on_map_leave is not None:
             map_on_map_leave(self)
-    
+
     def on_game_end(self):
         if self.advance_on_win <= 0:
             self.irc_say('Round ended!', me = True)
         elif self.win_count.next() % self.advance_on_win == 0:
             self.advance_rotation('Game finished!')
-    
+
     def on_advance(self, map_name):
         pass
-    
+
     def on_ban_attempt(self, connection, reason, duration):
         return True
-    
+
     def on_ban(self, connection, reason, duration):
         pass
-    
+
     # voting
-    
+
     def cancel_vote(self, connection = None):
         return 'No vote in progress.'
-        
+
     # useful twisted wrappers
-    
+
     def listenTCP(self, *arg, **kw):
-        return reactor.listenTCP(*arg, 
+        return reactor.listenTCP(*arg,
             interface = self.config.get('network_interface', ''), **kw)
-    
+
     def connectTCP(self, *arg, **kw):
-        return reactor.connectTCP(*arg, 
+        return reactor.connectTCP(*arg,
             bindAddress = (self.config.get('network_interface', ''), 0), **kw)
-    
+
     def getPage(self, *arg, **kw):
-        return getPage(*arg, 
+        return getPage(*arg,
             bindAddress = (self.config.get('network_interface', ''), 0), **kw)
-        
+
     # before-end calls
-    
+
     def call_end(self, delay, func, *arg, **kw):
         call = EndCall(self, delay, func, *arg, **kw)
         call.set(self.get_advance_time())
         return call
-        
+
     def get_advance_time(self):
         if not self.advance_call:
             return None
         return self.advance_call.getTime() - self.advance_call.seconds()
-    
+
 PORT = 32887
 
 # apply scripts
@@ -1057,7 +1057,7 @@ sys.path = [RESOURCE_DIR] + ORIG_PATH
 
 for script in script_names[:]:
     try:
-        module = __import__('scripts.%s' % script, globals(), locals(), 
+        module = __import__('scripts.%s' % script, globals(), locals(),
             [script])
         script_objects.append(module)
     except ImportError, e:

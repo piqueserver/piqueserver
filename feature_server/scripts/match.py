@@ -52,17 +52,17 @@ def apply_script(protocol, connection, config):
             self.add_message("%s took %s's flag!" %
                 (self.printable_name, self.team.other.name.lower()))
             return connection.on_flag_take(self)
-        
+
         def on_flag_drop(self):
             self.add_message("%s dropped %s's flag!" %
                 (self.printable_name, self.team.other.name.lower()))
             return connection.on_flag_drop(self)
-                
+
         def on_flag_capture(self):
             self.add_message("%s captured %s's flag!" %
                 (self.printable_name, self.team.other.name.lower()))
             return connection.on_flag_capture(self)
-        
+
         def on_kill(self, killer, type, grenade):
             if killer is None:
                 killer = self
@@ -70,10 +70,10 @@ def apply_script(protocol, connection, config):
                 (self.printable_name, killer.printable_name))
             self.protocol.add_kill(self, killer)
             return connection.on_kill(self, killer, type, grenade)
-        
+
         def add_message(self, value):
             self.protocol.messages.append(value)
-    
+
     class MatchProtocol(protocol):
         timer_left = None
         timer_call = None
@@ -84,7 +84,7 @@ def apply_script(protocol, connection, config):
             self.messages = []
             self.send_message_loop = LoopingCall(self.display_messages)
             self.send_message_loop.start(3)
-            
+
         def start_timer(self, end):
             if self.timer_end is not None:
                 return 'Timer is running already.'
@@ -92,7 +92,7 @@ def apply_script(protocol, connection, config):
             self.send_chat('Timer started, ending in %s minutes' % (end / 60),
                 irc = True)
             self.display_timer(True)
-        
+
         def stop_timer(self):
             if self.timer_call is not None:
                 self.timer_call.cancel()
@@ -100,7 +100,7 @@ def apply_script(protocol, connection, config):
                 self.timer_call = None
             else:
                 return 'No timer in progress.'
-        
+
         def display_timer(self, silent = False):
             time_left = self.timer_end - reactor.seconds()
             minutes_left = time_left / 60.0
@@ -111,28 +111,28 @@ def apply_script(protocol, connection, config):
                     self.timer_end = None
                     return
                 elif minutes_left <= 1:
-                    self.send_chat('%s seconds left' % int(time_left), 
+                    self.send_chat('%s seconds left' % int(time_left),
                         irc = True)
                     next_call = max(1, int(time_left / 2.0))
                 else:
-                    self.send_chat('%s minutes left' % int(minutes_left), 
+                    self.send_chat('%s minutes left' % int(minutes_left),
                         irc = True)
             self.timer_call = reactor.callLater(next_call, self.display_timer)
-        
+
         def display_messages(self):
             if not self.messages:
                 return
             message = self.messages.pop(0)
             self.irc_say(message)
-        
+
         # recording
-        
+
         def add_kill(self, player, killing_player):
             if self.record is None:
                 return
             self.get_record(player.name)['deaths'] += 1
             self.get_record(killing_player.name)['kills'] += 1
-        
+
         def get_record(self, name):
             try:
                 return self.record[name]
@@ -140,17 +140,17 @@ def apply_script(protocol, connection, config):
                 record = {'deaths' : 0, 'kills' : 0}
                 self.record[name] = record
                 return record
-        
+
         def start_record(self):
             self.record = {}
-        
+
         def stop_record(self):
             self.record = None
-        
+
         def save_record(self, value):
             if self.record is None:
                 return False
             json.dump(self.record, open(value, 'wb'))
             return True
-        
+
     return MatchProtocol, MatchConnection

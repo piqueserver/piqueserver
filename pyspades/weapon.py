@@ -10,14 +10,14 @@ class BaseWeapon(object):
     shoot_time = None
     next_shot = None
     start = None
-    
+
     def __init__(self, reload_callback):
         self.reload_callback = reload_callback
         self.reset()
-        
+
     def restock(self):
         self.current_stock = self.stock
-    
+
     def reset(self):
         self.shoot = False
         if self.reloading:
@@ -25,7 +25,7 @@ class BaseWeapon(object):
             self.reloading = False
         self.current_ammo = self.ammo
         self.current_stock = self.stock
-    
+
     def set_shoot(self, value):
         if value == self.shoot:
             return
@@ -46,7 +46,7 @@ class BaseWeapon(object):
             self.next_shot = self.shoot_time + self.delay * (
                 ammo - self.current_ammo)
         self.shoot = value
-    
+
     def reload(self):
         if self.reloading:
             return
@@ -59,7 +59,7 @@ class BaseWeapon(object):
         self.set_shoot(False)
         self.current_ammo = ammo
         self.reload_call = reactor.callLater(self.reload_time, self.on_reload)
-    
+
     def on_reload(self):
         self.reloading = False
         if self.slow_reload:
@@ -73,7 +73,7 @@ class BaseWeapon(object):
             self.current_ammo += self.current_stock - new_stock
             self.current_stock = new_stock
             self.reload_callback()
-    
+
     def get_ammo(self, no_max = False):
         if self.shoot:
             dt = reactor.seconds() - self.shoot_time
@@ -84,10 +84,10 @@ class BaseWeapon(object):
         if no_max:
             return ammo
         return max(0, ammo)
-    
+
     def is_empty(self, tolerance = CLIP_TOLERANCE):
         return self.get_ammo(True) < -tolerance or not self.shoot
-    
+
     def get_damage(self, value, position1, position2):
         return self.damage[value]
 
@@ -98,7 +98,7 @@ class Rifle(BaseWeapon):
     stock = 50
     reload_time = 2.5
     slow_reload = False
-    
+
     damage = {
         TORSO : 49,
         HEAD : 100,
@@ -113,7 +113,7 @@ class SMG(BaseWeapon):
     stock = 120
     reload_time = 2.5
     slow_reload = False
-    
+
     damage = {
         TORSO : 29,
         HEAD : 75,
@@ -128,7 +128,7 @@ class Shotgun(BaseWeapon):
     stock = 48
     reload_time = 0.5
     slow_reload = True
-    
+
     damage = {
         TORSO : 27,
         HEAD : 37,

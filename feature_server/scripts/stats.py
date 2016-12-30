@@ -13,7 +13,7 @@ def sitelogin(connection, name, password):
     value = connection.site_login(name, password)
     connection.send_chat(value) # so it doesn't appear in the log
     return False
-        
+
 commands.add(sitelogin)
 
 def apply_script(protocol, connection, config):
@@ -26,7 +26,7 @@ def apply_script(protocol, connection, config):
     class StatisticsConnection(connection):
         login_defer = None
         stats_name = None
-        
+
         def on_kill(self, killer, type, grenade):
             if killer not in (self, None):
                 if killer.stats_name is not None:
@@ -34,7 +34,7 @@ def apply_script(protocol, connection, config):
                 if self.stats_name is not None:
                     self.protocol.stats.add_death(self.stats_name)
             return connection.on_kill(self, killer, type, grenade)
-        
+
         def site_login(self, name, password):
             if self.stats_name is not None:
                 return 'Already logged in.'
@@ -43,7 +43,7 @@ def apply_script(protocol, connection, config):
             self.login_defer = self.protocol.stats.login_user(name, password
                 ).addCallback(self.on_site_login, name)
             return 'Attempting to login...'
-        
+
         def on_site_login(self, result, name):
             if result:
                 self.stats_name = name
@@ -58,7 +58,7 @@ def apply_script(protocol, connection, config):
             protocol.__init__(self, *arg, **kw)
             connect_statistics(host, port, server_name, password,
                 self.statistics_connected, config.get('network_interface', ''))
-        
+
         def statistics_connected(self, stats):
             if self.stats is not None:
                 print 'Statistics server authenticated.'
@@ -67,5 +67,5 @@ def apply_script(protocol, connection, config):
             else:
                 print 'Statistics reconnection successful.'
             self.stats = stats
-    
+
     return StatisticsProtocol, StatisticsConnection

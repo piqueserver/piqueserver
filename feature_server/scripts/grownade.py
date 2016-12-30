@@ -75,7 +75,7 @@ def model_grenades(connection, expression = None):
     if connection not in protocol.players:
         raise ValueError()
     player = connection
-    
+
     result = None
     if expression:
         if not os.path.isdir(KV6_DIR):
@@ -86,7 +86,7 @@ def model_grenades(connection, expression = None):
         paths = glob(os.path.join(KV6_DIR, expression))
         if not paths:
             return S_NO_MATCHES.format(expression = expression)
-        
+
         # attempt to load models, discard invalid ones
         models, loaded, failed = [], [], []
         for path in paths:
@@ -104,7 +104,7 @@ def model_grenades(connection, expression = None):
         if failed:
             player.send_chat(S_FAILED.format(filenames = ', '.join(failed)))
             player.send_chat(S_PIVOT_TIP)
-        
+
         if models:
             player.grenade_models = models
     elif player.grenade_models:
@@ -125,27 +125,27 @@ class KV6Model:
     Custom implementation that also generates non-surface voxels.
     Not suitable for general purpose.
     """
-    
+
     size = None
     pivot = None
     voxels = None
-    
+
     def __init__(self, path):
         with open(path, 'rb') as file:
             file.read(4) # 'Kvxl'
-            
+
             self.size = unpack('III', file.read(4 * 3))
             self.pivot = tuple(int(n) for n in unpack('fff', file.read(4 * 3)))
-            
+
             voxel_count, = unpack('I', file.read(4))
             voxels = []
             for i in xrange(voxel_count):
                 voxel = KV6Voxel._make(unpack('BBBBHBB', file.read(8)))
                 voxels.append(voxel)
-            
+
             size_x, size_y, size_z = self.size
             file.read(4 * size_x) # discard extra information
-            
+
             voxel_map = {}
             voxel_iter = iter(voxels)
             for x, y in product(xrange(size_x), xrange(size_y)):
@@ -159,7 +159,7 @@ class KV6Model:
                             inside_voxel = NonSurfaceKV6Voxel._replace(z = z)
                             voxel_map[(x, y, z)] = inside_voxel
                     last_z = voxel.z
-            
+
             if self.pivot not in voxel_map:
                 return
             self.voxels = voxel_map
@@ -170,14 +170,14 @@ class BuildQueue:
     blocks = None
     loop = None
     call_on_exhaustion = None
-    
+
     def __init__(self, protocol, call_on_exhaustion = None):
         self.protocol = protocol
         self.blocks = deque()
         self.loop = LoopingCall(self.cycle)
         self.loop.start(self.interval)
         self.call_on_exhaustion = call_on_exhaustion
-    
+
     def cycle(self):
         if not self.blocks:
             self.loop.stop()
@@ -203,7 +203,7 @@ class BuildQueue:
                 self.protocol.map.set_point(x, y, z, color)
                 blocks_left -= 1
         self.protocol.update_entities()
-    
+
     def push_block(self, x, y, z, color):
         if not self.loop.running:
             self.loop.start(self.interval)
@@ -215,7 +215,7 @@ class GrowModel:
     open, closed = None, None
     build_queue = None
     grow_loop = None
-    
+
     def __init__(self, protocol, model, x, y, z):
         self.protocol = protocol
         self.model = model
@@ -225,7 +225,7 @@ class GrowModel:
         self.build_queue = BuildQueue(protocol, self.queue_exhausted)
         self.grow_loop = LoopingCall(self.grow_cycle)
         self.grow_loop.start(GROW_INTERVAL)
-    
+
     def grow_cycle(self):
         new_nodes = set()
         for xyz in self.open:
@@ -248,11 +248,11 @@ class GrowModel:
         self.open = new_nodes
         if not new_nodes:
             self.grow_loop.stop()
-    
+
     def queue_exhausted(self):
         if not self.open:
             self.release()
-    
+
     def release(self):
         if self.build_queue.loop.running:
             self.build_queue.loop.stop()
@@ -265,17 +265,17 @@ class GrowModel:
 def apply_script(protocol, connection, config):
     class SeedyConnection(connection):
         grenade_models = None
-        
+
         def on_reset(self):
             self.grenade_models = None
             connection.on_reset(self)
-        
+
         def on_grenade_thrown(self, grenade):
             if self.grenade_models:
                 grenade.name = 'seed'
                 grenade.callback = self.seed_exploded
             connection.on_grenade_thrown(self, grenade)
-        
+
         def seed_exploded(self, grenade):
             if not self.grenade_models:
                 return
@@ -287,18 +287,18 @@ def apply_script(protocol, connection, config):
             model = choice(self.grenade_models)
             grower = GrowModel(self.protocol, model, x, y, z)
             self.protocol.growers.append(grower)
-    
+
     class SeedyProtocol(protocol):
         growers = None
-        
+
         def on_map_change(self, map):
             self.growers = []
             protocol.on_map_change(self, map)
-        
+
         def on_map_leave(self):
             for grower in self.growers[:]:
                 grower.release()
             self.growers = None
             protocol.on_map_leave(self)
-    
+
     return SeedyProtocol, SeedyConnection

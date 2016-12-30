@@ -28,7 +28,7 @@ cdef extern from "bytes_c.cpp":
     unsigned int read_uint(char * data, int big_endian)
     double read_float(char * data, int big_endian)
     char * read_string(char * data)
-    
+
     void * create_stream()
     void delete_stream(void * stream)
     void write_byte(void * stream, char value)
@@ -47,11 +47,11 @@ cdef extern from "bytes_c.cpp":
 
 class NoDataLeft(Exception):
     pass
-    
+
 DEF INT_ERROR = -0xFFFFFFFF >> 1
 DEF LONG_LONG_ERROR = -0xFFFFFFFFFFFFFFFF >> 1
 DEF FLOAT_ERROR = float('nan')
-    
+
 cdef class ByteReader:
     def __init__(self, input, int start = 0, int size = -1):
         self.input = input
@@ -63,14 +63,14 @@ cdef class ByteReader:
         self.size = size
         self.end = self.data + size
         self.start = start
-    
+
     cdef char * check_available(self, int size) except NULL:
         cdef char * data = self.pos
         if data + size > self.end:
             raise NoDataLeft('not enough data')
         self.pos += size
         return data
-    
+
     cpdef read(self, int bytes = -1):
         cdef int left = self.dataLeft()
         if bytes == -1 or bytes > left:
@@ -78,14 +78,14 @@ cdef class ByteReader:
         ret = self.pos[:bytes]
         self.pos += bytes
         return ret
-    
+
     cpdef int readByte(self, bint unsigned = False) except INT_ERROR:
         cdef char * pos = self.check_available(1)
         if unsigned:
             return read_ubyte(pos)
         else:
             return read_byte(pos)
-    
+
     cpdef int readShort(self, bint unsigned = False, bint big_endian = True) \
                         except INT_ERROR:
         cdef char * pos = self.check_available(2)
@@ -94,7 +94,7 @@ cdef class ByteReader:
         else:
             return read_short(pos, big_endian)
 
-    cpdef long long readInt(self, bint unsigned = False, 
+    cpdef long long readInt(self, bint unsigned = False,
                             bint big_endian = True) except LONG_LONG_ERROR:
         cdef char * pos = self.check_available(4)
         if unsigned:
@@ -105,7 +105,7 @@ cdef class ByteReader:
     cpdef float readFloat(self, bint big_endian = True) except? FLOAT_ERROR:
         cdef char * pos = self.check_available(4)
         return read_float(pos, big_endian)
-    
+
     cpdef readString(self, int size = -1):
         value = self.pos
         if size == -1:
@@ -115,72 +115,72 @@ cdef class ByteReader:
             value = value[:size]
         self.pos += size
         return value
-        
+
     cpdef ByteReader readReader(self, int size = -1):
         cdef int left = self.dataLeft()
         if size == -1 or size > left:
             size = left
-        cdef ByteReader reader = ByteReader(self.input, 
+        cdef ByteReader reader = ByteReader(self.input,
             (self.pos - self.data) + self.start, size)
         self.pos += size
         return reader
-    
+
     cpdef size_t tell(self):
         return self.pos - self.data
-    
+
     cpdef int dataLeft(self):
         return self.end - self.pos
-    
+
     cpdef seek(self, size_t pos):
         self.pos = self.data + pos
         if self.pos > self.end:
             self.pos = self.end
         if self.pos < self.data:
             self.pos = self.data
-    
+
     cdef void _skip(self, int bytes):
         self.pos += bytes
         if self.pos > self.end:
             self.pos = self.end
         if self.pos < self.data:
             self.pos = self.data
-    
+
     cpdef skipBytes(self, int bytes):
         self._skip(bytes)
-        
+
     cpdef rewind(self, int value):
         self._skip(-value)
-    
+
     def __len__(self):
         return self.size
-    
+
     def __str__(self):
         return self.data[:self.size]
 
 cdef class ByteWriter:
     def __init__(self):
         self.stream = create_stream()
-    
+
     cdef void writeSize(self, char * data, int size):
         write(self.stream, data, size)
-    
+
     cpdef write(self, data):
         write(self.stream, data, len(data))
-    
+
     cpdef writeByte(self, int value, bint unsigned = False):
         if unsigned:
             write_ubyte(self.stream, value)
         else:
             write_byte(self.stream, value)
 
-    cpdef writeShort(self, int value, bint unsigned = False, 
+    cpdef writeShort(self, int value, bint unsigned = False,
                      bint big_endian = True):
         if unsigned:
             write_ushort(self.stream, value, big_endian)
         else:
             write_short(self.stream, value, big_endian)
 
-    cpdef writeInt(self, long long value, bint unsigned = False, 
+    cpdef writeInt(self, long long value, bint unsigned = False,
                    bint big_endian = True):
         if unsigned:
             write_uint(self.stream, value, big_endian)
@@ -189,31 +189,31 @@ cdef class ByteWriter:
 
     cpdef writeFloat(self, float value, bint big_endian = True):
         write_float(self.stream, value, big_endian)
-    
+
     cpdef writeStringSize(self, char * value, int size):
         write_string(self.stream, value, size)
-    
+
     cpdef writeString(self, value, int size = -1):
         write_string(self.stream, value, len(value))
         if size != -1:
             self.pad(size - (len(value) + 1))
-    
+
     cpdef pad(self, int bytes):
         cdef int i
         for i in range(bytes):
             write_ubyte(self.stream, 0)
-    
+
     cpdef rewind(self, int bytes):
         rewind_stream(self.stream, bytes)
-    
+
     cpdef size_t tell(self):
         return get_stream_pos(self.stream)
-    
+
     def __str__(self):
         return get_stream(self.stream)
-    
+
     def __dealloc__(self):
         delete_stream(self.stream)
-    
+
     def __len__(self):
         return get_stream_size(self.stream)

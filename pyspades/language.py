@@ -43,7 +43,7 @@ class Entry(object):
     def __init__(self, value, type):
         self.value = value
         self.type = type
-    
+
     def format(self, *arg):
         return self.value % arg
 
@@ -65,7 +65,7 @@ class LanguageFile(object):
             value = reader.readString()
             reader.seek(end)
             self.items.append(Entry(value, type))
-    
+
     def write(self, reader):
         reader.write(MAGIC)
         size = len(self.items)
@@ -78,7 +78,7 @@ class LanguageFile(object):
             offset = value_offset + start
             reader.writeInt(offset | (item.type << 24), True, False)
         reader.write(str(values))
-    
+
     def generate(self):
         reader = ByteWriter()
         self.write(reader)

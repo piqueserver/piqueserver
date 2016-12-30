@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from twisted.internet.protocol import (Protocol, ReconnectingClientFactory, 
+from twisted.internet.protocol import (Protocol, ReconnectingClientFactory,
     ServerFactory)
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred, succeed
@@ -32,23 +32,23 @@ def hash_password(value):
 class StatsProtocol(Int16StringReceiver):
     def stringReceived(self, data):
         self.object_received(json.loads(data))
-    
+
     def send_object(self, obj):
         if self.transport is not None:
             self.sendString(json.dumps(obj))
-    
+
     def object_received(self, obj):
         pass
 
 class StatsServer(StatsProtocol):
     def connectionMade(self):
-        self.timeout_call = reactor.callLater(CONNECTION_TIMEOUT, 
+        self.timeout_call = reactor.callLater(CONNECTION_TIMEOUT,
             self.timed_out)
-    
+
     def connectionLost(self, reason):
         if self in self.factory.connections:
             self.factory.connections.remove(self)
-        
+
     def object_received(self, obj):
         type = obj.get('type', None)
         if self.timeout_call is not None:
@@ -73,29 +73,29 @@ class StatsServer(StatsProtocol):
         elif type == 'login':
             result = self.check_user(obj['name'], obj['password']).addCallback(
                 self.send_login_result)
-    
+
     def send_login_result(self, result):
         self.send_object({'type' : 'login', 'result' : result})
-        
+
     def add_kill(self, name):
         pass
-    
+
     def add_death(self, name):
         pass
-    
+
     def check_user(self, name, password):
         pass
-    
+
     def connection_accepted(self):
         pass
-        
+
     def timed_out(self):
         self.timeout_call = None
         self.transport.loseConnection()
 
 class StatsFactory(ServerFactory):
     protocol = StatsServer
-    
+
     def __init__(self, password):
         self.password = hash_password(password)
         self.connections = []
@@ -103,12 +103,12 @@ class StatsFactory(ServerFactory):
 class StatsClient(StatsProtocol):
     server = None
     login_defers = None
-    
+
     def connectionMade(self):
         self.login_defers = []
-        self.send_object({'type' : 'auth', 'name' : self.factory.name, 
+        self.send_object({'type' : 'auth', 'name' : self.factory.name,
             'password' : self.factory.password})
-    
+
     def object_received(self, obj):
         type = obj['type']
         if type == 'authed':
@@ -116,17 +116,17 @@ class StatsClient(StatsProtocol):
         elif type == 'login':
             defer = self.login_defers.pop(0)
             defer.callback(obj['result'])
-    
+
     def add_kill(self, name):
         self.send_object({'type' : 'kill', 'name' : name})
-    
+
     def add_death(self, name):
         self.send_object({'type' : 'death', 'name' : name})
-        
+
     def login_user(self, name, password):
         defer = Deferred()
         password = hash_password(password)
-        self.send_object({'type' : 'login', 'name' : name, 
+        self.send_object({'type' : 'login', 'name' : name,
             'password' : password})
         self.login_defers.append(defer)
         return defer
@@ -134,7 +134,7 @@ class StatsClient(StatsProtocol):
 class StatsClientFactory(ReconnectingClientFactory):
     protocol = StatsClient
     maxDelay = 20
-    
+
     def __init__(self, name, password, callback):
         self.name = name
         self.password = hash_password(password)
@@ -148,16 +148,16 @@ if __name__ == '__main__':
     class TestServer(StatsServer):
         def add_kill(self, name):
             print 'Adding kill to', name
-        
+
         def add_death(self, name):
             print 'Adding death to', name
-        
+
         def check_user(self, name, password):
             print 'Checking user name/pass (%s, %s)' % (name, password)
             return succeed()
-    
+
     class TestFactory(StatsFactory):
         protocol = TestServer
-    
+
     reactor.listenTCP(DEFAULT_PORT, TestFactory('marmelade'))
     reactor.run()

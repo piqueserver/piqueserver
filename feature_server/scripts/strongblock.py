@@ -53,14 +53,14 @@ def apply_script(protocol, connection, config):
                 if strong_block.owner is self:
                     strong_blocks[xyz] = strong_block._replace(owner = None)
             connection.on_disconnect(self)
-        
+
         def on_block_build(self, x, y, z):
             if not is_color_dirt(self.color):
                 strong_block = StrongBlock(self.color, self)
                 self.protocol.strong_blocks[(x, y, z)] = strong_block
                 bury_adjacent(self.protocol, x, y, z)
             connection.on_block_build(self, x, y, z)
-        
+
         def on_line_build(self, points):
             if not is_color_dirt(self.color):
                 strong_block = StrongBlock(self.color, self)
@@ -68,7 +68,7 @@ def apply_script(protocol, connection, config):
                     self.protocol.strong_blocks[xyz] = strong_block
                     bury_adjacent(self.protocol, *xyz)
             connection.on_line_build(self, points)
-        
+
         def on_block_destroy(self, x, y, z, value):
             can_destroy = connection.on_block_destroy(self, x, y, z, value)
             if can_destroy != False:
@@ -80,12 +80,12 @@ def apply_script(protocol, connection, config):
                         rebuild_block(self, x, y, z, strong_block.color)
                         return False
             return can_destroy
-    
+
     class StrongBlockProtocol(protocol):
         strong_blocks = None
-        
+
         def on_map_change(self, map):
             self.strong_blocks = {}
             protocol.on_map_change(self, map)
-    
+
     return StrongBlockProtocol, StrongBlockConnection

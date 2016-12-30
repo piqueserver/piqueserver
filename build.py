@@ -24,7 +24,7 @@ if static:
 
 for name in names:
     if static:
-        extra = {'extra_link_args' : ['-static-libstdc++', '-static-libgcc']}  
+        extra = {'extra_link_args' : ['-static-libstdc++', '-static-libgcc']}
     else:
         extra = {}
 

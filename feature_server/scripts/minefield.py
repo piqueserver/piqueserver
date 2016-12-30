@@ -186,7 +186,7 @@ def apply_script(protocol, connection, config):
 				if collision_3d(x, y, z, pos.x, pos.y, pos.z, 10):
 					self.protocol.check_mine(self, x, y, z)
 			return connection.on_block_destroy(self, x, y, z, mode)
-		
+
 		def on_kill(self, killer, type, grenade):
 			if grenade and grenade.name == MINEFIELD_MINE_ENT:
 				self.protocol.mine_kills += 1

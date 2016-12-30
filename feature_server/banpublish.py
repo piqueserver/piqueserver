@@ -39,7 +39,7 @@ class PublishServer(object):
         site = server.Site(publish_resource)
         protocol.listenTCP(config.get('port', 32885), site)
         self.update()
-    
+
     def update(self):
         bans = []
         for network, (name, reason, timestamp) in self.protocol.bans.iteritems():

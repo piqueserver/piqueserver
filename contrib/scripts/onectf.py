@@ -42,7 +42,7 @@ def apply_script(protocol, connection, config):
             if self.one_ctf or self.reverse_one_ctf:
                 self.onectf_reset_flag(self.blue_team.flag)
                 self.onectf_reset_flag(self.green_team.flag)
-        
+
         def on_game_end(self):
             if self.one_ctf or self.reverse_one_ctf:
                 self.onectf_reset_flags()
@@ -81,7 +81,7 @@ def apply_script(protocol, connection, config):
                 else:
                     return False
             return connection.on_flag_take(self)
-        
+
         def on_flag_drop(self):
             if self.protocol.one_ctf or self.protocol.reverse_one_ctf:
                 flag = self.team.flag
@@ -91,7 +91,7 @@ def apply_script(protocol, connection, config):
                 flag.set(x, y, z)
                 flag.update()
             return connection.on_flag_drop(self)
-        
+
         def on_position_update(self):
             if self.protocol.reverse_one_ctf:
                 if vector_collision(self.world_object.position, self.team.other.base):
@@ -110,5 +110,5 @@ def apply_script(protocol, connection, config):
             if self.protocol.one_ctf or self.protocol.reverse_one_ctf:
                 self.protocol.onectf_reset_flags()
             return connection.on_flag_capture(self)
-    
+
     return OneCTFProtocol, OneCTFConnection
