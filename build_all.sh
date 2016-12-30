@@ -7,7 +7,7 @@ if [ -d "venv/" ] && [ ! "x$(command -v python)" == "x$VIRTUAL_ENV/bin/python" ]
 fi
 
 # any compiled file whatsoever
-# TODO: exclude rules are complicated. Invert to make includes more excplicit and defined by directory.
+# TODO: exclude rules are complicated. Invert to make includes more explicit and defined by directory.
 find . -type f \( \
 	-name '*.py[cod]' -o -name '*.slo' -o -name '*.lo' -o -name '*.o' \
 	-o -name '*.so' -o -name '*.dylib' -o -name '*.lai' -o -name '*.la' \
