@@ -16,7 +16,7 @@ cdef extern from "enet/enet.h":
     # forward declaration
     ctypedef struct ENetPeer
     ctypedef struct ENetHost
-
+    
     cdef enum:
         ENET_HOST_ANY = 0
         ENET_HOST_BROADCAST = 0xFFFFFFFF
@@ -141,28 +141,22 @@ cdef extern from "enet/enet.h":
 
     # Address functions
     int enet_address_set_host(ENetAddress *address, char *hostName)
-    int enet_address_get_host_ip(ENetAddress *address, char *hostName,
-        size_t nameLength)
-    int enet_address_get_host(ENetAddress *address, char *hostName,
-        size_t nameLength)
+    int enet_address_get_host_ip(ENetAddress *address, char *hostName, size_t nameLength)
+    int enet_address_get_host(ENetAddress *address, char *hostName, size_t nameLength)
 
     # Packet functions
-    ENetPacket* enet_packet_create(char *dataContents, size_t dataLength,
-        enet_uint32 flags)
+    ENetPacket* enet_packet_create(char *dataContents, size_t dataLength, enet_uint32 flags)
     void enet_packet_destroy(ENetPacket *packet)
     int enet_packet_resize(ENetPacket *packet, size_t dataLength)
 
     # Host functions
     int enet_host_compress_with_range_coder(ENetHost *host)
-    ENetHost* enet_host_create(ENetAddress *address, size_t peerCount,
-        size_t channelLimit, enet_uint32 incomingBandwidth, enet_uint32 outgoingBandwidth)
+    ENetHost* enet_host_create(ENetAddress *address, size_t peerCount, size_t channelLimit, enet_uint32 incomingBandwidth, enet_uint32 outgoingBandwidth)
     void enet_host_destroy(ENetHost *host)
-    ENetPeer* enet_host_connect(ENetHost *host, ENetAddress *address,
-        size_t channelCount, enet_uint32 data)
+    ENetPeer* enet_host_connect(ENetHost *host, ENetAddress *address, size_t channelCount, enet_uint32 data)
     void enet_host_broadcast(ENetHost *host, enet_uint8 channelID, ENetPacket *packet)
     void enet_host_channel_limit(ENetHost *host, size_t channelLimit)
-    void enet_host_bandwidth_limit(ENetHost *host, enet_uint32 incomingBandwidth,
-        enet_uint32 outgoingBandwidth)
+    void enet_host_bandwidth_limit(ENetHost *host, enet_uint32 incomingBandwidth, enet_uint32 outgoingBandwidth)
     void enet_host_flush(ENetHost *host)
     int enet_host_check_events(ENetHost *host, ENetEvent *event)
     int enet_host_service(ENetHost *host, ENetEvent *event, enet_uint32 timeout)
@@ -448,8 +442,7 @@ cdef class Peer:
 
         if self.check_valid():
             packet = Packet()
-            (<Packet> packet)._enet_packet = enet_peer_receive(self._enet_peer,
-                &channelID)
+            (<Packet> packet)._enet_packet = enet_peer_receive(self._enet_peer, &channelID)
 
             if packet._enet_packet:
                 return packet
@@ -856,14 +849,12 @@ cdef class Host:
     cdef object _receiveCallback
 
     def __init__ (self, Address address=None, peerCount=0, channelLimit=0,
-            incomingBandwidth=0, outgoingBandwidth=0):
+        incomingBandwidth=0, outgoingBandwidth=0):
 
         if address:
-            self._enet_host = enet_host_create(&address._enet_address, peerCount,
-                channelLimit, incomingBandwidth, outgoingBandwidth)
+            self._enet_host = enet_host_create(&address._enet_address, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth)
         else:
-            self._enet_host = enet_host_create(NULL, peerCount, channelLimit,
-                incomingBandwidth, outgoingBandwidth)
+            self._enet_host = enet_host_create(NULL, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth)
 
         if not self._enet_host:
             raise MemoryError("Unable to create host structure!")
