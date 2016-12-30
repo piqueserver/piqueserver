@@ -2,6 +2,19 @@
 A Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/PySnip).
 
 ## FAQ
+> **What's the purpose?**
+>
+> The purpose of this repo is to be a continuation of PySnip.
+
+<br>
+
+> **What if PySnip development returns?**
+>
+> Then they would merge our changes and development would be continued
+> there, I guess. The important thing is to keep AoS servers alive.
+
+<br>
+
 > **How long will it take for the first release?**
 >
 > March 2016 probably. 
