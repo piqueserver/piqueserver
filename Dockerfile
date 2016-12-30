@@ -5,12 +5,12 @@ WORKDIR /usr/src/app
 
 # Installing dependencies.
 # In order to keep layers lean we instantly remove the build essentials 
-COPY docker_requirements.txt /usr/src/app/
+COPY requirements.txt /usr/src/app/
 
 RUN apk add --no-cache --virtual .build-deps-cython gcc musl-dev \
     && apk add --no-cache --virtual .build-deps-pillow zlib-dev jpeg-dev \
     \
-    && pip install --no-cache-dir -r docker_requirements.txt \
+    && pip install --no-cache-dir -r requirements.txt \
     && apk del .build-deps-cython \
     && apk del .build-deps-pillow
 
