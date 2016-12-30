@@ -1,1 +1,0 @@
-This contrib sub-directory contains user-made scripts.

@@ -22,9 +22,6 @@ import imp
 import math
 import random
 
-# load dir is overridden to use resource directory in run.py
-DEFAULT_LOAD_DIR = './maps'
-
 class MapNotFound(Exception):
     def __init__(self, map):
         self.map = map
@@ -33,7 +30,7 @@ class MapNotFound(Exception):
     def __nonzero__(self):
         return False
 
-def check_rotation(maps, load_dir = DEFAULT_LOAD_DIR):
+def check_rotation(maps, load_dir):
     infos = []
     for map in maps:
         if type(map) is not RotationInfo:
@@ -45,7 +42,7 @@ def check_rotation(maps, load_dir = DEFAULT_LOAD_DIR):
     return infos
 
 class Map(object):
-    def __init__(self, rot_info, load_dir = DEFAULT_LOAD_DIR):
+    def __init__(self, rot_info, load_dir):
         self.load_information(rot_info, load_dir)
 
         if self.gen_script:
@@ -61,7 +58,7 @@ class Map(object):
 
     def load_information(self, rot_info, load_dir):
         try:
-            info = imp.load_source(rot_info.name, rot_info.get_meta_filename())
+            info = imp.load_source(rot_info.name, rot_info.get_meta_filename(load_dir))
         except IOError:
             info = None
         self.info = info
@@ -92,9 +89,9 @@ class Map(object):
             protocol, connection = self.script(protocol, connection, config)
         return protocol, connection
 
-    def load_vxl(self, rot_info, load_dir):
+    def load_vxl(self, rot_info):
         try:
-            fp = open(rot_info.get_map_filename(load_dir), 'rb')
+            fp = open(rot_info.get_map_filename(self.load_dir), 'rb')
         except OSError:
             raise MapNotFound(rot_info.name)
         self.data = VXLData(fp)
@@ -117,10 +114,10 @@ class RotationInfo(object):
             self.seed = random.randint(0, math.pow(2, 31))
         return self.seed
 
-    def get_map_filename(self, load_dir = DEFAULT_LOAD_DIR):
+    def get_map_filename(self, load_dir):
         return os.path.join(load_dir, '%s.vxl' % self.name)
 
-    def get_meta_filename(self, load_dir = DEFAULT_LOAD_DIR):
+    def get_meta_filename(self, load_dir):
         return os.path.join(load_dir, '%s.txt' % self.name)
 
     def __str__(self):
