@@ -1,4 +1,5 @@
 import sys
+import os
 from distutils.core import setup
 from distutils.extension import Extension
 from Cython.Distutils import build_ext
@@ -16,9 +17,19 @@ names = [
     'pyspades.loaders',
     'pyspades.mapmaker'
 ]
+static = os.environ.get('STDCPP_STATIC') == "1"
+
+if static:
+    print "Linking the build statically."
 
 for name in names:
-    extra = {'extra_compile_args' : ['-std=c++11']} if name in ['pyspades.vxl', 'pyspades.world', 'pyspades.mapmaker'] else {}
+    if static:
+        extra = {'extra_link_args' : ['-static-libstdc++', '-static-libgcc']}  
+    else:
+        extra = {}
+
+    if name in ['pyspades.vxl', 'pyspades.world', 'pyspades.mapmaker']:
+        extra["extra_compile_args"] = ['-std=c++11']
 
     ext_modules.append(Extension(name, ['./%s.pyx' % name.replace('.', '/')],
         language = 'c++', include_dirs=['./pyspades'], **extra))
