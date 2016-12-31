@@ -1171,7 +1171,7 @@ enet_protocol_receive_incoming_commands (ENetHost * host, ENetEvent * event)
       
        host -> totalReceivedData += receivedLength;
        host -> totalReceivedPackets ++;
-       
+
        if (host -> receiveCallback != NULL && host -> receiveCallback() == 1)
           return 1;
  
