@@ -43,7 +43,7 @@
 
 // common.h
 #define CUBE_ARRAY_LENGTH 64
-#include <math.h>
+#include <cmath>
 #include "common_c.h"
 
 enum damage_index {BODY_TORSO, BODY_HEAD, BODY_ARMS, BODY_LEGS, BODY_MELEE};
@@ -324,28 +324,29 @@ size_t cube_line(int x1, int y1, int z1, int x2, int y2, int z2,
 	if (d.z < 0) izi = -1;
 	else izi = 1;
 
-	if ((abs(d.x) >= abs(d.y)) && (abs(d.x) >= abs(d.z)))
+	// LongVector is a vector of `long` ints so we use `labs` explicitly
+	if ((labs(d.x) >= labs(d.y)) && (labs(d.x) >= labs(d.z)))
 	{
 		dxi = 1024; dx = 512;
-		dyi = (long)(!d.y ? 0x3fffffff/VSID : abs(d.x*1024/d.y));
+		dyi = (long)(!d.y ? 0x3fffffff/VSID : labs(d.x*1024/d.y));
 		dy = dyi/2;
-		dzi = (long)(!d.z ? 0x3fffffff/VSID : abs(d.x*1024/d.z));
+		dzi = (long)(!d.z ? 0x3fffffff/VSID : labs(d.x*1024/d.z));
 		dz = dzi/2;
 	}
-	else if (abs(d.y) >= abs(d.z))
+	else if (labs(d.y) >= labs(d.z))
 	{
 		dyi = 1024; dy = 512;
-		dxi = (long)(!d.x ? 0x3fffffff/VSID : abs(d.y*1024/d.x));
+		dxi = (long)(!d.x ? 0x3fffffff/VSID : labs(d.y*1024/d.x));
 		dx = dxi/2;
-		dzi = (long)(!d.z ? 0x3fffffff/VSID : abs(d.y*1024/d.z));
+		dzi = (long)(!d.z ? 0x3fffffff/VSID : labs(d.y*1024/d.z));
 		dz = dzi/2;
 	}
 	else
 	{
 		dzi = 1024; dz = 512;
-		dxi = (long)(!d.x ? 0x3fffffff/VSID : abs(d.z*1024/d.x));
+		dxi = (long)(!d.x ? 0x3fffffff/VSID : labs(d.z*1024/d.x));
 		dx = dxi/2;
-		dyi = (long)(!d.y ? 0x3fffffff/VSID : abs(d.z*1024/d.y));
+		dyi = (long)(!d.y ? 0x3fffffff/VSID : labs(d.z*1024/d.y));
 		dy = dyi/2;
 	}
 	if (ixi >= 0) dx = dxi-dx;
