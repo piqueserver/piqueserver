@@ -2,6 +2,7 @@ import sys
 import os
 import distutils
 import subprocess
+import shutil
 from setuptools import setup, find_packages, Extension
 from distutils.command.build import build as _build
 from distutils.core import run_setup
@@ -35,7 +36,13 @@ class build(_build):
         subprocess.Popen(["./prebuild.sh"]).communicate()
 
         os.chdir("pyenet")
+
+        shutil.move("enet.pyx", "enet-bak.pyx")
+        shutil.move("enet-pyspades.pyx", "enet.pyx")
         run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_ext', '--inplace'])
+        shutil.move("enet.pyx", "enet-pyspades.pyx")
+        shutil.move("enet-bak.pyx", "enet.pyx")
+        
         os.chdir(previousDir)
 
         _build.run(self)
