@@ -40,7 +40,7 @@ arg_parser.add_argument("-c","--config-file", default="config.json",
 arg_parser.add_argument("-j","--json-parameters", 
         help="add extra json parameters, overwriting that in config file")
 arg_parser.add_argument("-d","--config-dir", default=os.path.join(os.path.expanduser("~"), ".pysnip"),
-        help="he directory which contains maps,scripts,etc (in correctly named subdirs) - default is ~/.pysnip/")
+        help="the directory which contains maps,scripts,etc (in correctly named subdirs) - default is ~/.pysnip/")
 
 args = arg_parser.parse_args()
 
