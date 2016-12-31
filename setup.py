@@ -1,6 +1,7 @@
 import sys
 import os
 import distutils
+import subprocess
 from setuptools import setup, find_packages, Extension
 from distutils.command.build import build as _build
 from distutils.core import run_setup
@@ -31,7 +32,10 @@ class build(_build):
 
         previousDir = os.getcwd()
         os.chdir("enet")
-        run_setup(os.path.join(sys.path[0], "enet/setup.py"), ['build_ext', '--inplace'])
+        subprocess.Popen(["./prebuild.sh"]).communicate()
+
+        os.chdir("pyenet")
+        run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_ext', '--inplace'])
         os.chdir(previousDir)
 
         _build.run(self)
@@ -59,7 +63,7 @@ setup(
             'pysnip=pysnip.__main__:main'
     	],
     },
-    package_dir = {'pysnip': 'feature_server', 'pysnip.web': 'feature_server/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet'}, # some kind of find_packages?
+    package_dir = {'pysnip': 'feature_server', 'pysnip.web': 'feature_server/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet/pyenet'}, # some kind of find_packages?
     package_data = {"pyspades.enet": ["enet.so"], "pysnip.web": ["templates/status.html"]},
     ext_modules = cythonize(ext_modules),
     cmdclass = {'build': build},
