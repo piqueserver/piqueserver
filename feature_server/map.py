@@ -52,7 +52,7 @@ class Map(object):
             self.data = self.gen_script(rot_info.name, rot_info.get_seed())
         else:
             print "Loading map '%s'..." % self.name
-            self.load_vxl(rot_info, load_dir)
+            self.load_vxl(rot_info)
 
         print 'Map loaded successfully.'
 
