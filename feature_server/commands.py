@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import math
 from random import choice
 from pyspades.constants import *
@@ -23,6 +24,8 @@ from pyspades.server import parse_command
 from twisted.internet import reactor
 
 from map import check_rotation
+
+import cfg
 
 class InvalidPlayer(Exception):
     pass
@@ -932,8 +935,8 @@ for command_func in command_list:
 # optional commands
 try:
     import pygeoip
-    database = pygeoip.GeoIP('./data/GeoLiteCity.dat')
-
+    database = pygeoip.GeoIP(os.path.join(cfg.config_dir, 'data/GeoLiteCity.dat'))
+    
     @name('from')
     def where_from(connection, value = None):
         if value is None:
