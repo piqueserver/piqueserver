@@ -1,7 +1,7 @@
-diff --git a/enet-pyspades.pyx b/enet-pyspades.pyx
+diff --git a/pyenet/enet-pyspades.pyx b/pyenet/enet-pyspades.pyx
 index 0dda8ff..ce2983b 100644
---- a/enet-pyspades.pyx
-+++ b/enet-pyspades.pyx
+--- a/pyenet/enet-pyspades.pyx
++++ b/pyenet/enet-pyspades.pyx
 @@ -2,6 +2,8 @@ import atexit
  
  from cpython cimport bool

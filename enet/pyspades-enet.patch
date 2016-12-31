@@ -1,7 +1,7 @@
-diff --git a/enet-1.3.3/host.c b/enet-1.3.3/host.c
+diff --git a/pyenet/enet/host.c b/pyenet/enet/host.c
 index c44f2ed..f7d384f 100644
---- a/enet-1.3.3/host.c
-+++ b/enet-1.3.3/host.c
+--- a/pyenet/enet/host.c
++++ b/pyenet/enet/host.c
 @@ -90,6 +90,7 @@ enet_host_create (const ENetAddress * address, size_t peerCount, size_t channelL
      host -> receivedAddress.port = 0;
      host -> receivedData = NULL;
@@ -10,10 +10,10 @@ index c44f2ed..f7d384f 100644
       
      host -> totalSentData = 0;
      host -> totalSentPackets = 0;
-diff --git a/enet-1.3.3/include/enet-1.3.3/enet.h b/enet-1.3.3/include/enet-1.3.3/enet.h
+diff --git a/pyenet/enet/include/enet/enet.h b/pyenet/enet/include/enet/enet.h
 index 716635b..673d8fc 100644
---- a/enet-1.3.3/include/enet/enet.h
-+++ b/enet-1.3.3/include/enet/enet.h
+--- a/pyenet/enet/include/enet/enet.h
++++ b/pyenet/enet/include/enet/enet.h
 @@ -355,6 +355,7 @@ typedef struct _ENetHost
     enet_uint32          totalSentPackets;            /**< total UDP packets sent, user should reset to 0 as needed to prevent overflow */
     enet_uint32          totalReceivedData;           /**< total data received, user should reset to 0 as needed to prevent overflow */
@@ -22,10 +22,10 @@ index 716635b..673d8fc 100644
  } ENetHost;
  
  /**
-diff --git a/enet-1.3.3/protocol.c b/enet-1.3.3/protocol.c
+diff --git a/pyenet/enet/protocol.c b/pyenet/enet/protocol.c
 index da64e91..9f246fe 100644
---- a/enet-1.3.3/protocol.c
-+++ b/enet-1.3.3/protocol.c
+--- a/pyenet/enet/protocol.c
++++ b/pyenet/enet/protocol.c
 @@ -1171,6 +1171,9 @@ enet_protocol_receive_incoming_commands (ENetHost * host, ENetEvent * event)
        
         host -> totalReceivedData += receivedLength;
