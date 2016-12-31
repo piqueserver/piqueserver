@@ -2,6 +2,8 @@ import sys
 import os
 import distutils
 from setuptools import setup, find_packages, Extension
+from distutils.command.build import build as _build
+from distutils.core import run_setup
 from Cython.Distutils import build_ext
 from Cython.Build import cythonize
 
@@ -24,24 +26,15 @@ for name in names:
     ext_modules.append(Extension(name, ['%s.pyx' % name.replace('.', '/')],
         language = 'c++', include_dirs=['pyspades'], **extra))
 
-from distutils.command.build import build as _build
-
-
 class build(_build):
     def run(self):
-        print "** running enet"
-        distutils.core.run_setup(os.path.join(sys.path[0], "enet/setup.py"), ['build_ext', '--inplace'])
-        print "** ran enet"
+
+        previousDir = os.getcwd()
+        os.chdir("enet")
+        run_setup(os.path.join(sys.path[0], "enet/setup.py"), ['build_ext', '--inplace'])
+        os.chdir(previousDir)
+
         _build.run(self)
-        # self.execute(_run_build_tables, (self.install_lib,),
-        #              msg="Build the lexing/parsing tables")
-
-pyspades_ext_modules = cythonize(ext_modules) 
-
-from pprint import pprint
-print "-- ext modules"
-print pyspades_ext_modules
-pprint(pyspades_ext_modules[0].__dict__)
 
 setup(
     name = 'pysnip',
@@ -68,7 +61,6 @@ setup(
     },
     package_dir = {'pysnip': 'feature_server', 'pysnip.web': 'feature_server/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet'}, # some kind of find_packages?
     package_data = {"pyspades.enet": ["enet.so"], "pysnip.web": ["templates/status.html"]},
-
     ext_modules = cythonize(ext_modules),
     cmdclass = {'build': build},
 )
