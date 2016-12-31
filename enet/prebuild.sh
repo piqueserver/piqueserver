@@ -1,15 +1,15 @@
 #!/bin/bash
 set -e
+set -x
 
 LIB_VERSION=1.3.3
 
-rm -f enet-pyspades.pyx
-rm -f enet
-rm -f enet.so
 rm -f "enet-${LIB_VERSION}.tar.gz"
-rm -rf "enet-${LIB_VERSION}"
+rm -f pyenet/enet-pyspades.pyx
+rm -f pyenet/enet.so
+rm -rf pyenet/enet
 
-cp enet.pyx enet-pyspades.pyx
+cp pyenet/enet.pyx pyenet/enet-pyspades.pyx
 git apply pyspades-pyenet.patch
 
 # If dies, use "https://github.com/noway421/enet/archive/${LIB_VERSION}.tar.gz"
@@ -20,7 +20,7 @@ git apply pyspades-pyenet.patch
 # https://github.com/lsalzman/enet/tree/ee869ab08a
 wget "http://enet.bespin.org/download/enet-${LIB_VERSION}.tar.gz"
 
-tar -xzvf "enet-${LIB_VERSION}.tar.gz"
-ln -s "enet-${LIB_VERSION}" enet
+tar -xzvf "enet-${LIB_VERSION}.tar.gz" -C pyenet "enet-${LIB_VERSION}" && mv pyenet/enet-1.3.3 pyenet/enet
+cp __init__.py-tpl pyenet/__init__.py
 
 git apply pyspades-enet.patch
