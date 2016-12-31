@@ -1,0 +1,26 @@
+==== pyenet 1.3 (In Development) ====
+  * Rewrote to build with Cython instead of Pyrex
+  * Fixed bug where a double-free would happen because the Event object would
+    create a new Packet object every time the packet attribute was accessed.
+  * Add some unit testing
+  * Add test_server and test_client
+  * Builds against enet 1.3
+
+==== pyenet 1.2 (In Development) ====
+
+  * Fix build against current enet CVS trunk
+
+
+==== pyenet from enet cvs ====
+Sat Nov  1 00:36:02 PST 2003  Scott Robinson <scott@tranzoa.com>
+    Began developing test interface after a day of coding...
+
+Mon Nov  3 08:46:33 PST 2003  Scott Robinson <scott@tranzoa.com>
+    Added documentation to all classes, functions, and attributes.
+    While adding documentation, added accessors to a few more attributes.
+    Cleaned up a few methods to match proper pyrex behavior.
+    Removed a few, and added a couple of obvious todos for the future.
+    Fixed Address.__getattr__ extra \0s in the case .host.
+
+Fri Feb 13 18:18:04 PST 2004  Scott Robinson <scott@tranzoa.com>
+    Added Socket class for use with select and poll.
