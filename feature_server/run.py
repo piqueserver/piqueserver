@@ -57,6 +57,10 @@ cfg.config_dir = config_dir
 
 # add it to the path so we can import scripts
 sys.path.append(config_dir)
+# add our package to path too so scripts can import `feauture_server/`
+sys.path.insert(1, os.path.dirname(os.path.abspath(__file__))) # a better way instead of abs path?
+
+
 
 # fix the path for the config file - handles differering directories and relative or absolute paths
 config_file = choose_path(config_dir,args.config_file)
