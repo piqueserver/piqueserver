@@ -25,7 +25,7 @@ for name in names:
 
 setup(
     name = 'pysnip',
-    packages = ['pysnip', 'pyspades', 'pysnip.feature_server'],
+    packages = ['pysnip', 'pyspades', 'pyspades.enet'],
     version = '0.0.0',
     description = 'Open-source server implementation for Ace of Spades',
     author = 'Matpow2, Stackoverflow',
@@ -37,7 +37,7 @@ setup(
 	setup_requires = ['cython'],
 	install_requires = ['twisted'],
 	extras_require = {
-		'from': ['pygeoip'], 
+		'from': ['pygeoip'],
 		'statusserver': ['jinja2', 'pillow'],
 		'ssh': ['pycrypto', 'pyasn1']
 	},
@@ -46,6 +46,8 @@ setup(
         	'pysnip=pysnip.feature_server.run:main'
     	],
     },
-    package_dir = {'pysnip': '', 'pyspades': 'pyspades'},
+    package_dir = {'pysnip': 'feature_server', 'pyspades': 'pyspades', 'pyspades.enet': 'enet'},
+    package_data = {"pyspades.enet": ["enet.so"]},
+
     ext_modules = cythonize(ext_modules)
 )
