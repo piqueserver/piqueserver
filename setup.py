@@ -25,7 +25,7 @@ for name in names:
 
 setup(
     name = 'pysnip',
-    packages = ['pysnip', 'pyspades', 'pyspades.enet'],
+    packages = ['pysnip', 'pysnip.web', 'pyspades', 'pyspades.enet'],
     version = '0.0.0',
     description = 'Open-source server implementation for Ace of Spades',
     author = 'Matpow2, Stackoverflow',
@@ -43,11 +43,11 @@ setup(
 	},
     entry_points = {
         'console_scripts': [
-        	'pysnip=pysnip.feature_server.run:main'
+            'pysnip=pysnip.__main__:main'
     	],
     },
-    package_dir = {'pysnip': 'feature_server', 'pyspades': 'pyspades', 'pyspades.enet': 'enet'},
-    package_data = {"pyspades.enet": ["enet.so"]},
+    package_dir = {'pysnip': 'feature_server', 'pysnip.web': 'feature_server/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet'}, # some kind of find_packages?
+    package_data = {"pyspades.enet": ["enet.so"], "pysnip.web": ["templates/status.html"]},
 
     ext_modules = cythonize(ext_modules)
 )
