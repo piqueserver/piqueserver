@@ -23,6 +23,8 @@ build/
 enet/build/
 venv/
 env/
+dist/
+pysnip.egg-info/
 
 # config/userdata
 configs/maps/*.txtc
