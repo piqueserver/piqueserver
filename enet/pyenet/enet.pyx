@@ -2,8 +2,6 @@ import atexit
 
 from cpython cimport bool
 
-from libc.stddef cimport ptrdiff_t
-
 cdef extern from "enet/types.h":
     ctypedef unsigned char enet_uint8
     ctypedef unsigned short enet_uint16
@@ -16,17 +14,13 @@ cdef extern from "enet/enet.h":
     # forward declaration
     ctypedef struct ENetPeer
     ctypedef struct ENetHost
-
+    
     cdef enum:
         ENET_HOST_ANY = 0
         ENET_HOST_BROADCAST = 0xFFFFFFFF
         ENET_PORT_ANY = 0
 
     ctypedef int ENetSocket
-
-    ctypedef struct ENetBuffer:
-        void * data
-        size_t dataLength
 
     ctypedef struct ENetAddress:
         enet_uint32 host
@@ -113,14 +107,10 @@ cdef extern from "enet/enet.h":
         ENetPeer *peers
         size_t peerCount
         size_t channelLimit
-        enet_uint8 *receivedData
-        size_t receivedDataLength
-        ENetAddress receivedAddress
         enet_uint32 totalSentData
         enet_uint32 totalSentPackets
         enet_uint32 totalReceivedData
         enet_uint32 totalReceivedPackets
-        int (*receiveCallback)()
 
     ctypedef enum ENetEventType:
         ENET_EVENT_TYPE_NONE = 0
@@ -141,28 +131,22 @@ cdef extern from "enet/enet.h":
 
     # Address functions
     int enet_address_set_host(ENetAddress *address, char *hostName)
-    int enet_address_get_host_ip(ENetAddress *address, char *hostName,
-        size_t nameLength)
-    int enet_address_get_host(ENetAddress *address, char *hostName,
-        size_t nameLength)
+    int enet_address_get_host_ip(ENetAddress *address, char *hostName, size_t nameLength)
+    int enet_address_get_host(ENetAddress *address, char *hostName, size_t nameLength)
 
     # Packet functions
-    ENetPacket* enet_packet_create(char *dataContents, size_t dataLength,
-        enet_uint32 flags)
+    ENetPacket* enet_packet_create(char *dataContents, size_t dataLength, enet_uint32 flags)
     void enet_packet_destroy(ENetPacket *packet)
     int enet_packet_resize(ENetPacket *packet, size_t dataLength)
 
     # Host functions
     int enet_host_compress_with_range_coder(ENetHost *host)
-    ENetHost* enet_host_create(ENetAddress *address, size_t peerCount,
-        size_t channelLimit, enet_uint32 incomingBandwidth, enet_uint32 outgoingBandwidth)
+    ENetHost* enet_host_create(ENetAddress *address, size_t peerCount, size_t channelLimit, enet_uint32 incomingBandwidth, enet_uint32 outgoingBandwidth)
     void enet_host_destroy(ENetHost *host)
-    ENetPeer* enet_host_connect(ENetHost *host, ENetAddress *address,
-        size_t channelCount, enet_uint32 data)
+    ENetPeer* enet_host_connect(ENetHost *host, ENetAddress *address, size_t channelCount, enet_uint32 data)
     void enet_host_broadcast(ENetHost *host, enet_uint8 channelID, ENetPacket *packet)
     void enet_host_channel_limit(ENetHost *host, size_t channelLimit)
-    void enet_host_bandwidth_limit(ENetHost *host, enet_uint32 incomingBandwidth,
-        enet_uint32 outgoingBandwidth)
+    void enet_host_bandwidth_limit(ENetHost *host, enet_uint32 incomingBandwidth, enet_uint32 outgoingBandwidth)
     void enet_host_flush(ENetHost *host)
     int enet_host_check_events(ENetHost *host, ENetEvent *event)
     int enet_host_service(ENetHost *host, ENetEvent *event, enet_uint32 timeout)
@@ -176,10 +160,6 @@ cdef extern from "enet/enet.h":
     void enet_peer_disconnect(ENetPeer *peer, enet_uint32 data)
     void enet_peer_disconnect_now(ENetPeer *peer, enet_uint32 data)
     void enet_peer_disconnect_later(ENetPeer *peer, enet_uint32 data)
-
-    # Socket functions
-    int enet_socket_send(ENetSocket socket, ENetAddress * address,
-        ENetBuffer * buffer, size_t size)
 
 cdef enum:
     MAXHOSTNAME = 257
@@ -205,8 +185,6 @@ PEER_STATE_DISCONNECTING = ENET_PEER_STATE_DISCONNECTING
 PEER_STATE_ACKNOWLEDGING_DISCONNECT = ENET_PEER_STATE_ACKNOWLEDGING_DISCONNECT
 PEER_STATE_ZOMBIE = ENET_PEER_STATE_ZOMBIE
 
-cdef class Address
-
 cdef class Socket:
     """
     Socket (int socket)
@@ -220,12 +198,8 @@ cdef class Socket:
 
     cdef ENetSocket _enet_socket
 
-    def send(self, Address address, data):
-        cdef ENetBuffer buffer
-        buffer.data = <void*>(<char*>data)
-        buffer.dataLength = len(data)
-        cdef int result = enet_socket_send(self._enet_socket,
-            &address._enet_address, &buffer, 1)
+    def fileno(self):
+        return self._enet_socket
 
 cdef class Address:
     """
@@ -249,7 +223,7 @@ cdef class Address:
     def __init__(self, host, port):
         if host is not None:
             # Convert the hostname to a byte string if needed
-            self.host = host
+            self.host = host if isinstance(host, bytes) else bytes(host, "ascii")
         else:
             self.host = None
         self.port = port
@@ -423,9 +397,6 @@ cdef class Peer:
                 return self.address != obj.address
         raise NotImplementedError
 
-    def __hash__(self):
-        return <ptrdiff_t>self._enet_peer
-
     def send(self, channelID, Packet packet):
         """
         send (int channelID, Packet packet)
@@ -448,8 +419,7 @@ cdef class Peer:
 
         if self.check_valid():
             packet = Packet()
-            (<Packet> packet)._enet_packet = enet_peer_receive(self._enet_peer,
-                &channelID)
+            (<Packet> packet)._enet_packet = enet_peer_receive(self._enet_peer, &channelID)
 
             if packet._enet_packet:
                 return packet
@@ -828,10 +798,6 @@ cdef class Event:
                 (<Packet> self._packet)._enet_packet = self._enet_event.packet
             return self._packet
 
-cdef class Host
-
-cdef Host current_host = None
-
 cdef class Host:
     """
     Host (Address address, int peerCount, int channelLimit,
@@ -853,17 +819,14 @@ cdef class Host:
 
     cdef ENetHost *_enet_host
     cdef bool dealloc
-    cdef object _receiveCallback
 
     def __init__ (self, Address address=None, peerCount=0, channelLimit=0,
-            incomingBandwidth=0, outgoingBandwidth=0):
+        incomingBandwidth=0, outgoingBandwidth=0):
 
         if address:
-            self._enet_host = enet_host_create(&address._enet_address, peerCount,
-                channelLimit, incomingBandwidth, outgoingBandwidth)
+            self._enet_host = enet_host_create(&address._enet_address, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth)
         else:
-            self._enet_host = enet_host_create(NULL, peerCount, channelLimit,
-                incomingBandwidth, outgoingBandwidth)
+            self._enet_host = enet_host_create(NULL, peerCount, channelLimit, incomingBandwidth, outgoingBandwidth)
 
         if not self._enet_host:
             raise MemoryError("Unable to create host structure!")
@@ -918,9 +881,7 @@ cdef class Host:
         Waits for events on the host specified and shuttles packets between
         the host and its peers. The timeout is in milliseconds.
         """
-        global current_host
-        current_host = self
-        cdef int result
+
         if self._enet_host:
             event = Event()
             result = enet_host_service(
@@ -928,8 +889,6 @@ cdef class Host:
 
             if result < 0:
                 raise IOError("Servicing error - probably disconnected.")
-            elif result == 0:
-                return None
             else:
                 return event
 
@@ -1040,25 +999,6 @@ cdef class Host:
 
         def __set__(self, value):
             self._enet_host.totalReceivedPackets = value
-
-    property receiveCallback:
-        def __get__(self):
-            return self._receiveCallback
-
-        def __set__(self, value):
-            if value is None:
-                self._enet_host.receiveCallback = NULL
-            else:
-                self._enet_host.receiveCallback = receive_callback
-            self._receiveCallback = value
-
-cdef int receive_callback():
-    cdef ENetHost * host = current_host._enet_host
-    cdef Address address = Address(None, 0)
-    address._enet_address = host.receivedAddress
-    cdef object ret = current_host._receiveCallback(address,
-        (<char*>host.receivedData)[:host.receivedDataLength])
-    return int(bool(ret))
 
 def _enet_atexit():
     enet_deinitialize()

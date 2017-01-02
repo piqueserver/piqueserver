@@ -1,5 +1,11 @@
 import sys
+import os
+import distutils
+import subprocess
+import shutil
 from setuptools import setup, find_packages, Extension
+from distutils.command.build import build as _build
+from distutils.core import run_setup
 from Cython.Distutils import build_ext
 from Cython.Build import cythonize
 
@@ -22,6 +28,24 @@ for name in names:
     ext_modules.append(Extension(name, ['%s.pyx' % name.replace('.', '/')],
         language = 'c++', include_dirs=['pyspades'], **extra))
 
+class build(_build):
+    def run(self):
+
+        previousDir = os.getcwd()
+        os.chdir("enet")
+        subprocess.Popen(["./prebuild.sh"]).communicate()
+
+        os.chdir("pyenet")
+
+        shutil.move("enet.pyx", "enet-bak.pyx")
+        shutil.move("enet-pyspades.pyx", "enet.pyx")
+        run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_ext', '--inplace'])
+        shutil.move("enet.pyx", "enet-pyspades.pyx")
+        shutil.move("enet-bak.pyx", "enet.pyx")
+        
+        os.chdir(previousDir)
+
+        _build.run(self)
 
 setup(
     name = 'pysnip',
@@ -46,8 +70,8 @@ setup(
             'pysnip=pysnip.__main__:main'
     	],
     },
-    package_dir = {'pysnip': 'feature_server', 'pysnip.web': 'feature_server/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet'}, # some kind of find_packages?
+    package_dir = {'pysnip': 'feature_server', 'pysnip.web': 'feature_server/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet/pyenet'}, # some kind of find_packages?
     package_data = {"pyspades.enet": ["enet.so"], "pysnip.web": ["templates/status.html"]},
-
-    ext_modules = cythonize(ext_modules)
+    ext_modules = cythonize(ext_modules),
+    cmdclass = {'build': build},
 )
