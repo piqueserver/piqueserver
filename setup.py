@@ -26,11 +26,15 @@ if activated_venv is not None:
     os.environ['_'] = sys.argv[0]
 ### Virtualenv autoload end ###
 
+import distutils
 import subprocess
 import shutil
 from setuptools import setup, find_packages, Extension
+from distutils.command.build import build as _build
 from distutils.core import run_setup
-from Cython.Build import build_ext as _build_ext
+from Cython.Distutils import build_ext as _build_ext
+from Cython.Build import cythonize
+
 
 def compile_enet():
     previousDir = os.getcwd()
