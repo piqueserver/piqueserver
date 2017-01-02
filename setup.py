@@ -1,18 +1,31 @@
+#!/usr/bin/env python2
+
+### Virtualenv autoload ###
+# Not really sure whether it's worth it... Looks like reinveting virtualenv .
+# Consider making users to load virtualenv on their own.
 from os import path as __p
 venv_dirs = [__p.join(__p.dirname(__p.realpath(__file__)), i) for i in ('venv', '.venv')]
+activated_venv = None
 for venv_dir in venv_dirs:
     try:
-        activate_venv = __p.join(venv_dir, 'bin/activate_this.py')
-        execfile(activate_venv, dict(__file__=activate_venv))
+        activate_this = __p.join(venv_dir, 'bin', 'activate_this.py')
+        execfile(activate_this, dict(__file__=activate_this))
+        activated_venv = venv_dir
     except IOError:
         pass
     else:
         break
-print "Using virtualenv from %s" % venv_dir
+print "Using virtualenv from %s" % activated_venv
 
 import sys
 import os
-import distutils
+
+if activated_venv is not None:
+    sys.argv[0] = __p.join(activated_venv, 'bin', 'python2')
+    sys.executable = sys.argv[0]
+    os.environ['_'] = sys.argv[0]
+### Virtualenv autoload end ###
+
 import subprocess
 import shutil
 from setuptools import setup, find_packages, Extension
