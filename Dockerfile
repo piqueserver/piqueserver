@@ -24,7 +24,7 @@ COPY enet/ /usr/src/app/enet/
 COPY build.py build.sh build_all.sh COPYING.txt CREDITS.txt LICENSE /usr/src/app/
 
 RUN apk add --no-cache --virtual .build-deps-server gcc musl-dev g++ \
-    && STDCPP_STATIC=1 ./build_all.sh \
+    && python setup.py clean --all && STDCPP_STATIC=1 python setup.py install \
     && apk del .build-deps-server 
 
 # Copy over the rest and default to launching the server

@@ -1,13 +1,53 @@
+#!/usr/bin/env python2
+
+### Virtualenv autoload ###
+# Not really sure whether it's worth it... Looks like reinveting virtualenv .
+# Consider making users to load virtualenv on their own.
+from os import path as __p
+venv_dirs = [__p.join(__p.dirname(__p.realpath(__file__)), i) for i in ('venv', '.venv')]
+activated_venv = None
+for venv_dir in venv_dirs:
+    try:
+        activate_this = __p.join(venv_dir, 'bin', 'activate_this.py')
+        execfile(activate_this, dict(__file__=activate_this))
+        activated_venv = venv_dir
+    except IOError:
+        pass
+    else:
+        break
+print "Using virtualenv %s" % activated_venv
+
 import sys
 import os
-import distutils
+
+if activated_venv is not None:
+    sys.argv[0] = __p.join(activated_venv, 'bin', 'python2')
+    sys.executable = sys.argv[0]
+    os.environ['_'] = sys.argv[0]
+    sys.prefix = activated_venv
+    sys.exec_prefix = activated_venv
+### Virtualenv autoload end ###
+
 import subprocess
 import shutil
 from setuptools import setup, find_packages, Extension
-from distutils.command.build import build as _build
 from distutils.core import run_setup
-from Cython.Distutils import build_ext
-from Cython.Build import cythonize
+from Cython.Distutils import build_ext as _build_ext
+
+def compile_enet():
+    previousDir = os.getcwd()
+    os.chdir("enet")
+    subprocess.Popen(["./prebuild.sh"]).communicate()
+
+    os.chdir("pyenet")
+
+    shutil.move("enet.pyx", "enet-bak.pyx")
+    shutil.move("enet-pyspades.pyx", "enet.pyx")
+    run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_ext', '--inplace'])
+    shutil.move("enet.pyx", "enet-pyspades.pyx")
+    shutil.move("enet-bak.pyx", "enet.pyx")
+
+    os.chdir(previousDir)
 
 ext_modules = []
 
@@ -22,30 +62,28 @@ names = [
     'pyspades.mapmaker'
 ]
 
+static = os.environ.get('STDCPP_STATIC') == "1"
+
+if static:
+    print "Linking the build statically."
+
 for name in names:
-    extra = {'extra_compile_args' : ['-std=c++11']} if name in ['pyspades.vxl', 'pyspades.world', 'pyspades.mapmaker'] else {}
+    if static:
+        extra = {'extra_link_args' : ['-static-libstdc++', '-static-libgcc']}
+    else:
+        extra = {}
 
-    ext_modules.append(Extension(name, ['%s.pyx' % name.replace('.', '/')],
-        language = 'c++', include_dirs=['pyspades'], **extra))
+    if name in ['pyspades.vxl', 'pyspades.world', 'pyspades.mapmaker']:
+        extra["extra_compile_args"] = ['-std=c++11']
 
-class build(_build):
+    ext_modules.append(Extension(name, ['./%s.pyx' % name.replace('.', '/')],
+        language = 'c++', include_dirs=['./pyspades'], **extra))
+
+
+class build_ext(_build_ext):
     def run(self):
-
-        previousDir = os.getcwd()
-        os.chdir("enet")
-        subprocess.Popen(["./prebuild.sh"]).communicate()
-
-        os.chdir("pyenet")
-
-        shutil.move("enet.pyx", "enet-bak.pyx")
-        shutil.move("enet-pyspades.pyx", "enet.pyx")
-        run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_ext', '--inplace'])
-        shutil.move("enet.pyx", "enet-pyspades.pyx")
-        shutil.move("enet-bak.pyx", "enet.pyx")
-        
-        os.chdir(previousDir)
-
-        _build.run(self)
+        compile_enet()
+        _build_ext.run(self)
 
 setup(
     name = 'pysnip',
@@ -72,6 +110,7 @@ setup(
     },
     package_dir = {'pysnip': 'feature_server', 'pysnip.web': 'feature_server/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet/pyenet'}, # some kind of find_packages?
     package_data = {"pyspades.enet": ["enet.so"], "pysnip.web": ["templates/status.html"]},
-    ext_modules = cythonize(ext_modules),
-    cmdclass = {'build': build},
+
+    ext_modules = ext_modules,
+    cmdclass = {'build_ext': build_ext},
 )
