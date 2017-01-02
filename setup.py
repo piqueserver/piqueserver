@@ -16,10 +16,8 @@ import distutils
 import subprocess
 import shutil
 from setuptools import setup, find_packages, Extension
-# from distutils.command.build_ext import build_ext as _build_ext
 from distutils.core import run_setup
 from Cython.Distutils import build_ext as _build_ext
-# from Cython.Build import cythonize
 
 def compile_enet():
     previousDir = os.getcwd()
@@ -70,7 +68,6 @@ for name in names:
 class build_ext(_build_ext):
     def run(self):
         compile_enet()
-        # Cython.Build.build_ext
         _build_ext.run(self)
 
 setup(
