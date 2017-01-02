@@ -15,7 +15,7 @@ for venv_dir in venv_dirs:
         pass
     else:
         break
-print "Using virtualenv from %s" % activated_venv
+print "Using virtualenv %s" % activated_venv
 
 import sys
 import os
@@ -30,7 +30,7 @@ import subprocess
 import shutil
 from setuptools import setup, find_packages, Extension
 from distutils.core import run_setup
-from Cython.Distutils import build_ext as _build_ext
+from Cython.Build import build_ext as _build_ext
 
 def compile_enet():
     previousDir = os.getcwd()
