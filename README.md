@@ -1,4 +1,4 @@
-# spades-server [![Build Status](https://travis-ci.org/piqueserver/piqueserver.svg?branch=master)](https://travis-ci.org/piqueserver/piqueserver)
+# piqueserver [![Build Status](https://travis-ci.org/piqueserver/piqueserver.svg?branch=master)](https://travis-ci.org/piqueserver/piqueserver)
 A Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/PySnip).
 
 ## FAQ
@@ -21,7 +21,7 @@ A Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/Py
 
 <br>
 
-> **Why should I use spades-server instead of PySnip/PySpades?**
+> **Why should I use piqueserver instead of PySnip/PySpades?**
 > 
 > * bug fixes
 > * improvements
@@ -40,4 +40,4 @@ A Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/Py
 > **Is that everything?**
 >
 > Please see also the [original README](OLD_README.md) from PySnip and
-> the [Wiki](https://github.com/feikname/spades-server/wiki) for more information.
+> the [Wiki](https://github.com/piqueserver/piqueserver/wiki) for more information.
