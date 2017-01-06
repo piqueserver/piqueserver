@@ -704,7 +704,7 @@ class FeatureProtocol(ServerProtocol):
 
         port = self.port = config.get('port', 32887)
         ServerProtocol.__init__(self, port, interface)
-        self.host.receiveCallback = self.receive_callback
+        self.host.intercept = self.receive_callback
         ret = self.set_map_rotation(config['maps'])
         if not ret:
             print 'Invalid map in map rotation (%s), exiting.' % ret.map
