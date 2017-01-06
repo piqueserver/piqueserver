@@ -3,7 +3,7 @@ set -e
 set -x
 pwd
 
-LIB_VERSION=1.3.6
+LIB_VERSION=1.3.13
 
 rm -f "enet-${LIB_VERSION}.tar.gz"
 rm -f pyenet/enet-pyspades.pyx
