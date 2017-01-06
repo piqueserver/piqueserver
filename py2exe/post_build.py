@@ -27,6 +27,7 @@ SERVER_FILES = ['maps', 'scripts', 'web', 'data']
 COPY_FILES = {'config.txt.default' : 'config.txt'}
 REMOVE_EXTENSIONS = ['txtc', 'pyc', 'saved.vxl', 'txto', 'pyo']
 REMOVE_FILES = ['w9xpopen.exe', 'dummy']
+PKG_NAME="piqueserver"
 
 open('./dist/run.bat', 'wb').write('run.exe\npause\n')
 open('./dist/version', 'wb').write(git_rev)
@@ -51,7 +52,7 @@ for root, sub, files in os.walk('./dist'):
                     os.remove(path)
                     break
 
-filename = 'pysnip-feature_server-%s.zip' % git_rev
+filename = '%s-feature_server-%s.zip' % (PKG_NAME, git_rev)
 
 try:
     os.remove(filename)

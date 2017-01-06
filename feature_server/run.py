@@ -32,15 +32,15 @@ import argparse
 
 import cfg
 
-arg_parser = argparse.ArgumentParser(prog="pysnip",
-                                     description="PySnip is an open-source Python server implementation for the voxel-based game \"Ace of Spades\".")
+arg_parser = argparse.ArgumentParser(prog=cfg.pkg_name,
+                                     description='%s is an open-source Python server implementation for the voxel-based game "Ace of Spades".' % cfg.pkg_name)
 
 arg_parser.add_argument("-c","--config-file", default="config.json", 
         help="specify alternate config file (relative to config dir if relative path)")
 arg_parser.add_argument("-j","--json-parameters", 
         help="add extra json parameters, overwriting that in config file")
-arg_parser.add_argument("-d","--config-dir", default=os.path.join(os.path.expanduser("~"), ".pysnip"),
-        help="the directory which contains maps,scripts,etc (in correctly named subdirs) - default is ~/.pysnip/")
+arg_parser.add_argument("-d","--config-dir", default=cfg.config_dir,
+        help="the directory which contains maps, scripts, etc (in correctly named subdirs) - default is %s" % cfg.config_path)
 
 args = arg_parser.parse_args()
 

@@ -5,6 +5,9 @@
 import os
 
 config = {}
-config_dir = os.path.join(os.path.expanduser("~"), ".pysnip")
+pkg_name = "piqueserver"
+config_path = "~/.piqueserver"
 config_file = 'config.json'
+
+config_dir = os.path.expanduser(config_path)
 
