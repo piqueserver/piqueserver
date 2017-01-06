@@ -1,10 +1,10 @@
 {
-    "name" : "PySnip server",
+    "name" : "piqueserver instance",
     "motd" : [
         "Welcome to %(server_name)s",
         "Map: %(map_name)s by %(map_author)s",
         "Game mode: %(game_mode)s",
-        "Server powered by PySnip and BuildAndShoot.com"
+        "Server powered by piqueserver and buildandshoot.com"
     ],
     "help" : [
         "Server name: %(server_name)s",
@@ -112,9 +112,9 @@
     },
     "irc" : {
         "enabled" : false,
-        "nickname" : "PySnip",
-        "username" : "PySnip",
-        "realname" : "PySnip",
+        "nickname" : "piqueserver",
+        "username" : "piqueserver",
+        "realname" : "piqueserver",
         "server" : "irc.quakenet.org",
         "port" : 6667,
         "channel" : "#MyServerChannel",

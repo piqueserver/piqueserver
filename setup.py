@@ -28,6 +28,10 @@ if activated_venv is not None:
     sys.exec_prefix = activated_venv
 ### Virtualenv autoload end ###
 
+PKG_NAME="piqueserver"
+PKG_URL="https://github.com/piqueserver/piqueserver"
+PKG_DOWNLOAD_URL="https://github.com/piqueserver/piqueserver/archive/master.tar.gz"
+
 import subprocess
 import shutil
 from setuptools import setup, find_packages, Extension
@@ -86,14 +90,14 @@ class build_ext(_build_ext):
         _build_ext.run(self)
 
 setup(
-    name = 'pysnip',
-    packages = ['pysnip', 'pysnip.web', 'pyspades', 'pyspades.enet'],
-    version = '0.0.0',
-    description = 'Open-source server implementation for Ace of Spades',
-    author = 'Matpow2, Stackoverflow',
+    name = PKG_NAME,
+    packages = [PKG_NAME, '%s.web' % PKG_NAME, 'pyspades', 'pyspades.enet'],
+    version = '0.0.1',
+    description = 'Open-Source server implementation for Ace of Spades',
+    author = 'MatPow2, StackOverflow, piqueserver authors',
     author_email = 'nate.shoffner@gmail.com',
-    url = 'https://github.com/NateShoffner/PySnip',
-    download_url = 'https://github.com/NateShoffner/PySnip/archive/master.tar.gz',
+    url = PKG_URL,
+    download_url = PKG_DOWNLOAD_URL,
     keywords = ['ace of spades', 'aos', 'server'],
     classifiers = [],
 	setup_requires = ['cython'],
@@ -105,11 +109,11 @@ setup(
 	},
     entry_points = {
         'console_scripts': [
-            'pysnip=pysnip.__main__:main'
+            '%s=%s.__main__:main' % (PKG_NAME, PKG_NAME)
     	],
     },
-    package_dir = {'pysnip': 'feature_server', 'pysnip.web': 'feature_server/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet/pyenet'}, # some kind of find_packages?
-    package_data = {"pyspades.enet": ["enet.so"], "pysnip.web": ["templates/status.html"]},
+    package_dir = {PKG_NAME: 'feature_server', '%s.web' % PKG_NAME: 'feature_server/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet/pyenet'}, # some kind of find_packages?
+    package_data = {"pyspades.enet": ["enet.so"], "%s.web" % PKG_NAME: ["templates/status.html"]},
 
     ext_modules = ext_modules,
     cmdclass = {'build_ext': build_ext},
