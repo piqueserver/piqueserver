@@ -3,7 +3,7 @@ set -e
 set -x
 pwd
 
-LIB_VERSION=1.3.3
+LIB_VERSION=1.3.6
 
 rm -f "enet-${LIB_VERSION}.tar.gz"
 rm -f pyenet/enet-pyspades.pyx
@@ -21,7 +21,7 @@ patch -p1 < pyspades-pyenet.patch
 # https://github.com/lsalzman/enet/tree/ee869ab08a
 wget "http://enet.bespin.org/download/enet-${LIB_VERSION}.tar.gz"
 
-tar -xzvf "enet-${LIB_VERSION}.tar.gz" -C pyenet "enet-${LIB_VERSION}" && mv pyenet/enet-1.3.3 pyenet/enet
+tar -xzvf "enet-${LIB_VERSION}.tar.gz" -C pyenet "enet-${LIB_VERSION}" && mv pyenet/enet-${LIB_VERSION} pyenet/enet
 cp __init__.py-tpl pyenet/__init__.py
 
-patch -p1 < pyspades-enet.patch
+# patch -p1 < pyspades-enet.patch
