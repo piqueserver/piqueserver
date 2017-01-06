@@ -92,7 +92,7 @@ class build_ext(_build_ext):
 setup(
     name = PKG_NAME,
     packages = [PKG_NAME, '%s.web' % PKG_NAME, 'pyspades', 'pyspades.enet'],
-    version = '0.0.0',
+    version = '0.0.1',
     description = 'Open-Source server implementation for Ace of Spades',
     author = 'MatPow2, StackOverflow, piqueserver authors',
     author_email = 'nate.shoffner@gmail.com',
