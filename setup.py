@@ -32,6 +32,8 @@ PKG_NAME="piqueserver"
 PKG_URL="https://github.com/piqueserver/piqueserver"
 PKG_DOWNLOAD_URL="https://github.com/piqueserver/piqueserver/archive/master.tar.gz"
 
+extra_args = sys.argv[2:]
+
 import subprocess
 import shutil
 from setuptools import setup, find_packages, Extension
@@ -88,6 +90,7 @@ class build_ext(_build_ext):
     def run(self):
         compile_enet()
         _build_ext.run(self)
+        run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_py'] + extra_args)
 
 setup(
     name = PKG_NAME,
