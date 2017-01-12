@@ -1,4 +1,5 @@
 FROM python:2.7-alpine
+VOLUME /config
 
 RUN mkdir -p /usr/src/app && mkdir -p /usr/src/app/enet && mkdir -p /usr/src/app/pyspades
 WORKDIR /usr/src/app
@@ -21,14 +22,15 @@ RUN apk add --no-cache --virtual .build-deps-cython gcc musl-dev \
 # TODO: while this behaviour suits production envs perfectly, make a dev env option
 COPY pyspades/ /usr/src/app/pyspades/
 COPY enet/ /usr/src/app/enet/
-COPY build.py build.sh build_all.sh COPYING.txt CREDITS.txt LICENSE /usr/src/app/
+COPY feature_server/ /usr/src/app/feature_server/
+COPY setup.py COPYING.txt CREDITS.txt LICENSE /usr/src/app/
 
-RUN apk add --no-cache --virtual .build-deps-server gcc musl-dev g++ \
-    && python setup.py clean --all && STDCPP_STATIC=1 python setup.py install \
+RUN apk add --no-cache --virtual .build-deps-server gcc musl-dev g++ jpeg-dev \
+    && STDCPP_STATIC=1 ./setup.py install \
     && apk del .build-deps-server 
 
 # Copy over the rest and default to launching the server
 COPY . /usr/src/app
-CMD ./run_server.sh
+CMD piqueserver -d /config
 
 EXPOSE 32887/udp 32887 32886 32885
