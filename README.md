@@ -26,7 +26,7 @@ there, I guess. The important thing is to keep AoS servers alive.
 
 #### How long will it take for the first release?
 
-March 2016 probably. 
+March 2017 probably. 
 
 
 #### Why should I use piqueserver instead of PySnip/PySpades?
