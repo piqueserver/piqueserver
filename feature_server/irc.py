@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import, division, print_function
+
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
 from pyspades.constants import MAX_CHAT_SIZE
@@ -80,7 +82,7 @@ class IRCBot(irc.IRCClient):
         if channel.lower() == self.factory.channel:
             self.ops = set()
             self.voices = set()
-        print "Joined channel %s" % channel
+        print("Joined channel %s" % channel)
 
     def irc_NICK(self, prefix, params):
         user = prefix.split('!', 1)[0]
@@ -136,7 +138,7 @@ class IRCBot(irc.IRCClient):
                 msg = msg[len(self.factory.chatprefix):].strip()
                 message = ("<%s> %s" % (prefix + alias, msg))[:max_len]
                 message = message.decode('cp1252')
-                print message.encode('ascii', 'replace')
+                print(message.encode('ascii', 'replace'))
                 self.factory.server.send_chat(encode(message))
 
     @channel
@@ -192,16 +194,16 @@ class IRCClientFactory(protocol.ClientFactory):
         self.password = config.get('password', '').encode('ascii') or None
 
     def startedConnecting(self, connector):
-        print "Connecting to IRC server..."
+        print("Connecting to IRC server...")
 
     def clientConnectionLost(self, connector, reason):
-        print "Lost connection to IRC server (%s), reconnecting in %s seconds" % (
-            reason, self.lost_reconnect_delay)
+        print("Lost connection to IRC server (%s), reconnecting in %s seconds" % (
+            reason, self.lost_reconnect_delay))
         reactor.callLater(self.lost_reconnect_delay, connector.connect)
 
     def clientConnectionFailed(self, connector, reason):
-        print "Could not connect to IRC server (%s), retrying in %s seconds" % (
-            reason, self.failed_reconnect_delay)
+        print("Could not connect to IRC server (%s), retrying in %s seconds" % (
+            reason, self.failed_reconnect_delay))
         reactor.callLater(self.failed_reconnect_delay, connector.connect)
 
     def buildProtocol(self, address):

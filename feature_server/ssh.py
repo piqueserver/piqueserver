@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import, division, print_function
+
 from twisted.cred import portal, checkers
 from twisted.conch import manhole, manhole_ssh
 from twisted.internet import reactor

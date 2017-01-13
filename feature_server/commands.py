@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import, division, print_function
+
 import os
 import math
 from random import choice
@@ -773,7 +775,7 @@ def server_name(connection, *arg):
     protocol.config['name'] = name
     protocol.update_format()
     message = "%s changed servername to to '%s'" % (connection.name, name)
-    print message
+    print(message)
     connection.protocol.irc_say("* " + message)
     if connection in connection.protocol.players:
         return message
@@ -936,7 +938,7 @@ for command_func in command_list:
 try:
     import pygeoip
     database = pygeoip.GeoIP(os.path.join(cfg.config_dir, 'data/GeoLiteCity.dat'))
-    
+
     @name('from')
     def where_from(connection, value = None):
         if value is None:
@@ -965,9 +967,9 @@ try:
         return '%s is from %s' % (player.name, ', '.join(items))
     add(where_from)
 except ImportError:
-    print "('from' command disabled - missing pygeoip)"
+    print("('from' command disabled - missing pygeoip)")
 except (IOError, OSError):
-    print "('from' command disabled - missing data/GeoLiteCity.dat)"
+    print("('from' command disabled - missing data/GeoLiteCity.dat)")
 
 def handle_command(connection, command, parameters):
     command = command.lower()

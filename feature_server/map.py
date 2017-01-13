@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import, division, print_function
+
 from pyspades.vxl import VXLData
 
 import os
@@ -47,14 +49,14 @@ class Map(object):
 
         if self.gen_script:
             self.name = '%s #%s' % (rot_info.name, rot_info.get_seed())
-            print "Generating map '%s'..." % self.name
+            print("Generating map '%s'..." % self.name)
             random.seed(rot_info.get_seed())
             self.data = self.gen_script(rot_info.name, rot_info.get_seed())
         else:
-            print "Loading map '%s'..." % self.name
+            print("Loading map '%s'..." % self.name)
             self.load_vxl(rot_info)
 
-        print 'Map loaded successfully.'
+        print('Map loaded successfully.')
 
     def load_information(self, rot_info, load_dir):
         self.load_dir = load_dir

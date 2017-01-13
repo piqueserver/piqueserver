@@ -19,6 +19,8 @@
 pyspades - default/featured server
 """
 
+from __future__ import absolute_import, division, print_function
+
 import sys
 import os
 import json
@@ -129,14 +131,14 @@ if sys.platform == 'linux2':
         from twisted.internet import epollreactor
         epollreactor.install()
     except ImportError:
-        print '(dependencies missing for epoll, using normal reactor)'
+        print('(dependencies missing for epoll, using normal reactor)')
 
 if sys.version_info < (2, 7):
     try:
         import psyco
         psyco.full()
     except ImportError:
-        print '(optional: install psyco for optimizations)'
+        print('(optional: install psyco for optimizations)')
 
 import pyspades.debug
 from pyspades.server import (ServerProtocol, ServerConnection, position_data,
@@ -205,8 +207,8 @@ class FeatureConnection(ServerConnection):
                 protocol.remove_ban(client_ip)
                 protocol.save_bans()
             else:
-                print 'banned user %s (%s) attempted to join' % (name,
-                    client_ip)
+                print('banned user %s (%s) attempted to join' % (name,
+                    client_ip))
                 self.disconnect(ERROR_BANNED)
                 return
         except KeyError:
@@ -227,8 +229,8 @@ class FeatureConnection(ServerConnection):
 
     def on_login(self, name):
         self.printable_name = name.encode('ascii', 'replace')
-        print '%s (IP %s, ID %s) entered the game!' % (self.printable_name,
-            self.address[0], self.player_id)
+        print('%s (IP %s, ID %s) entered the game!' % (self.printable_name,
+            self.address[0], self.player_id))
         self.protocol.irc_say('* %s (IP %s, ID %s) entered the game!' %
             (self.name, self.address[0], self.player_id))
         if self.user_types is None:
@@ -247,12 +249,12 @@ class FeatureConnection(ServerConnection):
 
     def on_disconnect(self):
         if self.name is not None:
-            print self.printable_name, 'disconnected!'
+            print(self.printable_name, 'disconnected!')
             self.protocol.irc_say('* %s (IP %s) disconnected' %
                 (self.name, self.address[0]))
             self.protocol.player_memory.append((self.name, self.address[0]))
         else:
-            print '%s disconnected' % self.address[0]
+            print('%s disconnected' % self.address[0])
         ServerConnection.on_disconnect(self)
 
     def on_command(self, command, parameters):
@@ -264,7 +266,7 @@ class FeatureConnection(ServerConnection):
         if result:
             log_message += ' -> %s' % result
             self.send_chat(result)
-        print log_message.encode('ascii', 'replace')
+        print(log_message.encode('ascii', 'replace'))
 
     def _can_build(self):
         if not self.building:
@@ -426,7 +428,7 @@ class FeatureConnection(ServerConnection):
             message = '(MUTED) %s' % message
         elif global_message and self.protocol.global_chat:
             self.protocol.irc_say('<%s> %s' % (self.name, value))
-        print message.encode('ascii', 'replace')
+        print(message.encode('ascii', 'replace'))
         if self.mute:
             self.send_chat('(Chat not sent - you are muted)')
             return False
@@ -470,8 +472,8 @@ class FeatureConnection(ServerConnection):
             current_time += 2
 
     def on_hack_attempt(self, reason):
-        print 'Hack attempt detected from %s: %s' % (self.printable_name,
-            reason)
+        print('Hack attempt detected from %s: %s' % (self.printable_name,
+            reason))
         self.kick(reason)
 
     def on_user_login(self, user_type, verbose = True):
@@ -488,7 +490,7 @@ class FeatureConnection(ServerConnection):
 
     def timed_out(self):
         if self.name is not None:
-            print '%s timed out' % self.printable_name
+            print('%s timed out' % self.printable_name)
         ServerConnection.timed_out(self)
 
 def encode_lines(value):
@@ -608,8 +610,8 @@ class FeatureProtocol(ServerProtocol):
         self.player_memory = deque(maxlen = 100)
         self.config = config
         if len(self.name) > MAX_SERVER_NAME_SIZE:
-            print '(server name too long; it will be truncated to "%s")' % (
-                self.name[:MAX_SERVER_NAME_SIZE])
+            print('(server name too long; it will be truncated to "%s")' % (
+                self.name[:MAX_SERVER_NAME_SIZE]))
         self.respawn_time = config.get('respawn_time', 8)
         self.respawn_waves = config.get('respawn_waves', False)
         game_mode = config.get('game_mode', 'ctf')
@@ -707,7 +709,7 @@ class FeatureProtocol(ServerProtocol):
         self.host.intercept = self.receive_callback
         ret = self.set_map_rotation(config['maps'])
         if not ret:
-            print 'Invalid map in map rotation (%s), exiting.' % ret.map
+            print('Invalid map in map rotation (%s), exiting.' % ret.map)
             raise SystemExit
 
         self.update_format()
@@ -724,7 +726,7 @@ class FeatureProtocol(ServerProtocol):
     def got_external_ip(self, ip):
         self.ip = ip
         self.identifier = make_server_identifier(ip, self.port)
-        print 'Server identifier is %s' % self.identifier
+        print('Server identifier is %s' % self.identifier)
 
     def set_time_limit(self, time_limit = None, additive = False):
         advance_call = self.advance_call
@@ -804,7 +806,7 @@ class FeatureProtocol(ServerProtocol):
 
     def get_map(self, rot_info):
         return Map(rot_info, os.path.join(config_dir,'maps'))
-    
+
     def set_map_rotation(self, maps, now = True):
         try:
             maps = check_rotation(maps, os.path.join(config_dir,'maps'))
@@ -867,7 +869,7 @@ class FeatureProtocol(ServerProtocol):
         return lines
 
     def got_master_connection(self, client):
-        print 'Master connection established.'
+        print('Master connection established.')
         ServerProtocol.got_master_connection(self, client)
 
     def master_disconnected(self, client = None):
@@ -877,7 +879,7 @@ class FeatureProtocol(ServerProtocol):
                 message = 'Master connection could not be established'
             else:
                 message = 'Master connection lost'
-            print '%s, reconnecting in 60 seconds...' % message
+            print('%s, reconnecting in 60 seconds...' % message)
             self.master_reconnect_call = reactor.callLater(60,
                 self.reconnect_master)
 
@@ -920,7 +922,7 @@ class FeatureProtocol(ServerProtocol):
 
     def remove_ban(self, ip):
         results = self.bans.remove(ip)
-        print 'Removing ban:', ip, results
+        print('Removing ban:', ip, results)
         self.save_bans()
 
     def undo_last_ban(self):
@@ -948,13 +950,13 @@ class FeatureProtocol(ServerProtocol):
         except (NoDataLeft, InvalidData):
             import traceback
             traceback.print_exc()
-            print 'IP %s was hardbanned for invalid data or possibly DDoS.' % ip
+            print('IP %s was hardbanned for invalid data or possibly DDoS.' % ip)
             self.hard_bans.add(ip)
             return
         dt = reactor.seconds() - current_time
         if dt > 1.0:
-            print '(warning: processing %r from %s took %s)' % (
-                packet.data, ip, dt)
+            print('(warning: processing %r from %s took %s)' % (
+                packet.data, ip, dt))
 
     def irc_say(self, msg, me = False):
         if self.irc_relay:
@@ -982,13 +984,13 @@ class FeatureProtocol(ServerProtocol):
         if last_time is not None:
             dt = current_time - last_time
             if dt > 1.0:
-                print '(warning: high CPU usage detected - %s)' % dt
+                print('(warning: high CPU usage detected - %s)' % dt)
         self.last_time = current_time
         ServerProtocol.update_world(self)
         time_taken = reactor.seconds() - current_time
         if time_taken > 1.0:
-            print 'World update iteration took %s, objects: %s' % (time_taken,
-                self.world.objects)
+            print('World update iteration took %s, objects: %s' % (time_taken,
+                self.world.objects))
 
     # events
 
@@ -1069,7 +1071,7 @@ for script in script_names[:]:
             [script])
         script_objects.append(module)
     except ImportError, e:
-        print "(script '%s' not found: %r)" % (script, e)
+        print("(script '%s' not found: %r)" % (script, e))
         script_names.remove(script)
 
 
@@ -1084,7 +1086,7 @@ if interface == '':
     interface = '*'
 
 protocol_instance = protocol_class(interface, config)
-print 'Started server...'
+print('Started server...')
 
 if profile:
     import cProfile

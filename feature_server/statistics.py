@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import, division, print_function
+
 from twisted.internet.protocol import (Protocol, ReconnectingClientFactory,
     ServerFactory)
 from twisted.internet import reactor
@@ -147,13 +149,13 @@ def connect_statistics(host, port, name, password, callback, interface = ''):
 if __name__ == '__main__':
     class TestServer(StatsServer):
         def add_kill(self, name):
-            print 'Adding kill to', name
+            print('Adding kill to', name)
 
         def add_death(self, name):
-            print 'Adding death to', name
+            print('Adding death to', name)
 
         def check_user(self, name, password):
-            print 'Checking user name/pass (%s, %s)' % (name, password)
+            print('Checking user name/pass (%s, %s)' % (name, password))
             return succeed()
 
     class TestFactory(StatsFactory):
