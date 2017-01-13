@@ -31,6 +31,6 @@ RUN apk add --no-cache --virtual .build-deps-server gcc musl-dev g++ jpeg-dev \
 
 # Copy over the rest and default to launching the server
 COPY . /usr/src/app
-CMD piqueserver -d /config
+CMD piqueserver -d /configs
 
 EXPOSE 32887/udp 32887 32886 32885
