@@ -1,5 +1,5 @@
 FROM python:2.7-alpine
-VOLUME /config
+VOLUME /configs
 
 RUN mkdir -p /usr/src/app && mkdir -p /usr/src/app/enet && mkdir -p /usr/src/app/pyspades
 WORKDIR /usr/src/app
@@ -10,8 +10,10 @@ COPY requirements.txt /usr/src/app/
 
 RUN apk add --no-cache --virtual .build-deps-cython gcc musl-dev \
     && apk add --no-cache --virtual .build-deps-pillow zlib-dev jpeg-dev \
+    && apk add --no-cache zlib jpeg \
     \
     && pip install --no-cache-dir -r requirements.txt \
+    \
     && apk del .build-deps-cython \
     && apk del .build-deps-pillow
 
@@ -25,12 +27,11 @@ COPY enet/ /usr/src/app/enet/
 COPY feature_server/ /usr/src/app/feature_server/
 COPY setup.py COPYING.txt CREDITS.txt LICENSE /usr/src/app/
 
-RUN apk add --no-cache --virtual .build-deps-server gcc musl-dev g++ jpeg-dev \
+RUN apk add --no-cache --virtual .build-deps-server gcc musl-dev g++ \
     && STDCPP_STATIC=1 ./setup.py install \
     && apk del .build-deps-server 
 
 # Copy over the rest and default to launching the server
-COPY . /usr/src/app
-CMD piqueserver -d /config
+CMD piqueserver -d /configs
 
 EXPOSE 32887/udp 32887 32886 32885
