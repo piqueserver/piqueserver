@@ -20,7 +20,8 @@ from pyspades.bytes import ByteReader, ByteWriter
 from twisted.internet.defer import Deferred
 from twisted.internet.task import LoopingCall
 from pyspades.common import hexify, stringify, binify
-import enet
+
+from pyspades.enet import enet
 
 import math
 
@@ -54,7 +55,7 @@ class BaseConnection(object):
             flags = enet.PACKET_FLAG_RELIABLE
         data = ByteWriter()
         contained.write(data)
-        packet = enet.Packet(str(data), flags)
+        packet = enet.Packet(bytes(data), flags)
         self.peer.send(0, packet)
 
     # events

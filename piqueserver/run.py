@@ -21,6 +21,10 @@ pyspades - default/featured server
 
 from __future__ import absolute_import, division, print_function
 
+from six.moves import range
+from six import next
+import six
+
 import sys
 import os
 import json
@@ -77,7 +81,7 @@ DEFAULT_PASSWORDS = {
 }
 
 try:
-    with open(config_file, 'rb') as f:
+    with open(config_file) as f:
         config = json.load(f)
         cfg.config = config
 except IOError as e:
@@ -321,9 +325,9 @@ class FeatureConnection(ServerConnection):
                 is_indestructable(x, y, z - 1)):
                     return False
             elif mode == GRENADE_DESTROY:
-                for nade_x in xrange(x - 1, x + 2):
-                    for nade_y in xrange(y - 1, y + 2):
-                        for nade_z in xrange(z - 1, z + 2):
+                for nade_x in range(x - 1, x + 2):
+                    for nade_y in range(y - 1, y + 2):
+                        for nade_z in range(z - 1, z + 2):
                             if is_indestructable(nade_x, nade_y, nade_z):
                                 return False
 
@@ -692,7 +696,7 @@ class FeatureProtocol(ServerProtocol):
         self.console = create_console(self)
 
         # check for default password usage
-        for group, passwords in self.passwords.iteritems():
+        for group, passwords in six.iteritems(self.passwords):
             if group in DEFAULT_PASSWORDS:
                 for password in passwords:
                     if password in DEFAULT_PASSWORDS[group]:
@@ -776,7 +780,7 @@ class FeatureProtocol(ServerProtocol):
     def advance_rotation(self, message = None):
         self.set_time_limit(False)
         if self.planned_map is None:
-            self.planned_map = self.map_rotator.next()
+            self.planned_map = next(self.map_rotator)
         map = self.planned_map
         self.planned_map = None
         self.on_advance(map)
@@ -793,7 +797,7 @@ class FeatureProtocol(ServerProtocol):
     def set_map_name(self, rot_info):
         try:
             map_info = self.get_map(rot_info)
-        except MapNotFound, e:
+        except MapNotFound as e:
             return e
         if self.map_info:
             self.on_map_leave()
@@ -810,7 +814,7 @@ class FeatureProtocol(ServerProtocol):
     def set_map_rotation(self, maps, now = True):
         try:
             maps = check_rotation(maps, os.path.join(config_dir,'maps'))
-        except MapNotFound, e:
+        except MapNotFound as e:
             return e
         self.maps = maps
         self.map_rotator = self.map_rotator_type(maps)
@@ -1007,7 +1011,7 @@ class FeatureProtocol(ServerProtocol):
     def on_game_end(self):
         if self.advance_on_win <= 0:
             self.irc_say('Round ended!', me = True)
-        elif self.win_count.next() % self.advance_on_win == 0:
+        elif next(self.win_count.next) % self.advance_on_win == 0:
             self.advance_rotation('Game finished!')
 
     def on_advance(self, map_name):
@@ -1070,7 +1074,7 @@ for script in script_names[:]:
         module = __import__('scripts.%s' % script, globals(), locals(),
             [script])
         script_objects.append(module)
-    except ImportError, e:
+    except ImportError as e:
         print("(script '%s' not found: %r)" % (script, e))
         script_names.remove(script)
 

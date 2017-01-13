@@ -24,7 +24,7 @@ from string import Template
 from PIL import Image
 from jinja2 import Environment, PackageLoader
 import json
-from cStringIO import StringIO
+from io import StringIO
 
 OVERVIEW_UPDATE_INTERVAL = 1 * 60 # 1 minute
 

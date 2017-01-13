@@ -16,14 +16,14 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 cdef extern from "Python.h":
-    object PyString_FromStringAndSize(char*,Py_ssize_t)
-    char* PyString_AS_STRING(object)
+    object PyUnicode_FromStringAndSize(char*,Py_ssize_t)
+    Py_UNICODE* PyUnicode_AS_UNICODE(object)
 
-cdef inline object allocate_memory(int size, char ** i):
+cdef inline object allocate_memory(int size, Py_UNICODE ** i):
     if size < 0: 
         size = 0
-    cdef object ob = PyString_FromStringAndSize(NULL, size)
-    i[0] = PyString_AS_STRING(ob)
+    cdef object ob = PyUnicode_FromStringAndSize(NULL, size)
+    i[0] = PyUnicode_AS_UNICODE(ob)
     return ob
 
 cdef extern from "common_c.h":

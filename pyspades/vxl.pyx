@@ -196,7 +196,7 @@ cdef class VXLData:
     def get_overview(self, int z = -1, bint rgba = False):
         cdef unsigned int * data
         cdef unsigned int i, r, g, b, a, color
-        data_python = allocate_memory(sizeof(int[512][512]), <char**>&data)
+        data_python = allocate_memory(sizeof(int[512][512]), <Py_UNICODE**>&data)
         i = 0
         cdef int current_z
         if z == -1:

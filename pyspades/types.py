@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import, division, print_function
+
+from six import next
+
 import itertools
 
 class IDPool(object):
@@ -30,7 +34,7 @@ class IDPool(object):
         if self.free_ids:
             return self.free_ids.pop()
         else:
-            return self.new_ids.next()
+            return next(self.new_ids)
 
     def put_back(self, id):
         self.free_ids.append(id)

@@ -19,6 +19,8 @@
 Oh-so-messy debugging stuff. Beware of the inferior code quality.
 """
 
+from __future__ import absolute_import, division, print_function
+
 isClient = None
 mapBytes = 0
 packets = 0

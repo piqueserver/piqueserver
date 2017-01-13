@@ -47,6 +47,7 @@ class BanManager(object):
         DeferredList(defers).addCallback(self.bans_finished)
 
     def got_bans(self, data, filter):
+        data = data.decode()
         bans = json.loads(data)
         for entry in bans:
             name = entry.get('name', None)

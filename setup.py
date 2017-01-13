@@ -3,6 +3,7 @@
 ### Virtualenv autoload ###
 # Not really sure whether it's worth it... Looks like reinveting virtualenv .
 # Consider making users to load virtualenv on their own.
+"""
 from os import path as __p
 venv_dirs = [__p.join(__p.dirname(__p.realpath(__file__)), i) for i in ('venv', '.venv')]
 activated_venv = None
@@ -15,10 +16,8 @@ for venv_dir in venv_dirs:
         pass
     else:
         break
-print "Using virtualenv %s" % activated_venv
+print("Using virtualenv %s" % activated_venv)
 
-import sys
-import os
 
 if activated_venv is not None:
     sys.argv[0] = __p.join(activated_venv, 'bin', 'python2')
@@ -27,6 +26,9 @@ if activated_venv is not None:
     sys.prefix = activated_venv
     sys.exec_prefix = activated_venv
 ### Virtualenv autoload end ###
+"""
+import sys
+import os
 
 PKG_NAME="piqueserver"
 PKG_URL="https://github.com/piqueserver/piqueserver"
@@ -71,7 +73,7 @@ names = [
 static = os.environ.get('STDCPP_STATIC') == "1"
 
 if static:
-    print "Linking the build statically."
+    print("Linking the build statically.")
 
 for name in names:
     if static:
@@ -115,7 +117,7 @@ setup(
             '%s=%s.__main__:main' % (PKG_NAME, PKG_NAME)
     	],
     },
-    package_dir = {PKG_NAME: 'feature_server', '%s.web' % PKG_NAME: 'feature_server/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet/pyenet'}, # some kind of find_packages?
+    package_dir = {PKG_NAME: 'piqueserver', '%s.web' % PKG_NAME: 'piqueserver/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet/pyenet'}, # some kind of find_packages?
     package_data = {"pyspades.enet": ["enet.so"], "%s.web" % PKG_NAME: ["templates/status.html"]},
     include_package_data=True,
 

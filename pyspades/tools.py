@@ -15,10 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import, division, print_function
+
 import struct
 
 def make_server_identifier(ip, port = 32887):
-    a, b, c, d = ip.split('.')
+    a, b, c, d = ip.split(b'.')
     a = int(a)
     b = int(b)
     c = int(c)
@@ -50,4 +52,4 @@ if __name__ == '__main__':
         from pyspades.packet import Packet
         new_packet = Packet()
         new_packet.read(eval(' '.join(args[1:])))
-        print new_packet.items
+        print(new_packet.items)

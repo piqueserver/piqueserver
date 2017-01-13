@@ -1,9 +1,18 @@
+from __future__ import absolute_import, division, print_function
+
+import six
+
 from twisted.internet import reactor
 from twisted.web import client
 from twisted.web.client import HTTPClientFactory
 
 def getPage(url, bindAddress = None, *arg, **kw):
+    # with python3, we need to convert the url to bytes
+    if six.PY3 and isinstance(url, str):
+        url = url.encode()
+
     # reimplemented here to insert bindAddress
+
 
     # _parse() deprecated in twisted 13.1.0 in favor of the _URI class
     if hasattr(client, '_parse'):
@@ -27,8 +36,8 @@ def getPage(url, bindAddress = None, *arg, **kw):
     if scheme == 'https':
         from twisted.internet import ssl
         context = ssl.ClientContextFactory()
-        reactor.connectSSL(host, port, factory, context,
+        reactor.connectSSL(host.decode(), port, factory, context,
             bindAddress = bindAddress)
     else:
-        reactor.connectTCP(host, port, factory, bindAddress = bindAddress)
+        reactor.connectTCP(host.decode(), port, factory, bindAddress = bindAddress)
     return factory.deferred
