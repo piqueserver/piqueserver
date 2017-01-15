@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
 
+from __future__ import print_function
+
 ### Virtualenv autoload ###
 # Not really sure whether it's worth it... Looks like reinveting virtualenv .
 # Consider making users to load virtualenv on their own.
@@ -15,7 +17,7 @@ for venv_dir in venv_dirs:
         pass
     else:
         break
-print "Using virtualenv %s" % activated_venv
+print("Using virtualenv %s" % activated_venv)
 
 import sys
 import os
@@ -28,6 +30,7 @@ if activated_venv is not None:
     sys.exec_prefix = activated_venv
 ### Virtualenv autoload end ###
 
+
 PKG_NAME="piqueserver"
 PKG_URL="https://github.com/piqueserver/piqueserver"
 PKG_DOWNLOAD_URL="https://github.com/piqueserver/piqueserver/archive/master.tar.gz"
@@ -38,12 +41,51 @@ import subprocess
 import shutil
 from setuptools import setup, find_packages, Extension
 from distutils.core import run_setup
-from Cython.Distutils import build_ext as _build_ext
 
 def compile_enet():
     previousDir = os.getcwd()
     os.chdir("enet")
-    subprocess.Popen(["./prebuild.sh"]).communicate()
+
+    ###
+    ### Prebuild.py start
+    ###
+    import tarfile
+    try:
+      import urllib as urllib_request
+    except ImportError:
+      import urllib.request as urllib_request
+
+    lib_version = "1.3.13"
+    enet_dir = "enet-%s" % lib_version
+    enet_file = "%s.tar.gz" % enet_dir
+    enet_url = "http://enet.bespin.org/download/%s" % enet_file
+
+    if os.path.isfile("pyenet/enet-pyspades.pyx"):
+        os.remove("pyenet/enet-pyspades.pyx")
+    if os.path.isfile("pyenet/enet.so"):
+        os.remove("pyenet/enet.so")
+    if os.path.isdir("pyenet/enet"):
+        shutil.rmtree("pyenet/enet")
+
+    shutil.copyfile("pyenet/enet.pyx", "pyenet/enet-pyspades.pyx")
+    subprocess.Popen(['patch', '-p1', 'pyenet/enet-pyspades.pyx', 'pyspades-pyenet.patch']).communicate()
+
+    if not os.path.isfile(enet_file):
+        print("Downloading enet")
+        urllib_request.urlretrieve(enet_url, enet_file)
+        print("Finished downloading enet")
+
+    print("Unpacking enet")
+    tar = tarfile.open(enet_file)
+    tar.extractall()
+    tar.close()
+    print("Finished unpacking enet")
+
+    shutil.move(enet_dir, "pyenet/enet")
+    shutil.copyfile("__init__.py-tpl", "pyenet/__init__.py")
+    ###
+    ### Prebuild.py end
+    ###
 
     os.chdir("pyenet")
 
@@ -71,7 +113,7 @@ names = [
 static = os.environ.get('STDCPP_STATIC') == "1"
 
 if static:
-    print "Linking the build statically."
+    print("Linking the build statically.")
 
 for name in names:
     if static:
@@ -85,12 +127,19 @@ for name in names:
     ext_modules.append(Extension(name, ['./%s.pyx' % name.replace('.', '/')],
         language = 'c++', include_dirs=['./pyspades'], **extra))
 
+try:
+    from Cython.Distutils import build_ext as _build_ext
+    class build_ext(_build_ext):
+        def run(self):
+            compile_enet()
+            _build_ext.run(self)
+            run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_py'] + extra_args)
+except ImportError as e:
+    class build_ext(object):
+        pass
 
-class build_ext(_build_ext):
-    def run(self):
-        compile_enet()
-        _build_ext.run(self)
-        run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_py'] + extra_args)
+    pass
+
 
 setup(
     name = PKG_NAME,
@@ -101,14 +150,14 @@ setup(
     author_email = 'nate.shoffner@gmail.com',
     url = PKG_URL,
     download_url = PKG_DOWNLOAD_URL,
-    keywords = ['ace of spades', 'aos', 'server'],
+    keywords = ['ace of spades', 'aos', 'server', 'pyspades', 'pysnip', 'piqueserver'],
     classifiers = [],
-	setup_requires = ['cython'],
-	install_requires = ['twisted'],
+	setup_requires = ['Cython>=0.25.2,<0.26'],
+	install_requires = ['Twisted>=16.6.0,<16.7'],
 	extras_require = {
-		'from': ['pygeoip'],
-		'statusserver': ['jinja2', 'pillow'],
-		'ssh': ['pycrypto', 'pyasn1']
+		'from': ['pygeoip>=0.3.2,<0.4'],
+		'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
+		'ssh': ['pycrypto>=2.6.1,<2.7', 'pyasn1>=0.1.9,<0.2']
 	},
     entry_points = {
         'console_scripts': [
@@ -120,5 +169,5 @@ setup(
     include_package_data=True,
 
     ext_modules = ext_modules,
-    cmdclass = {'build_ext': build_ext},
+    cmdclass = { 'build_ext': build_ext },
 )
