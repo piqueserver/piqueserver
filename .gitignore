@@ -25,6 +25,7 @@ venv/
 env/
 dist/
 *.egg-info/
+.eggs
 
 # config/userdata
 configs/maps/*.txtc

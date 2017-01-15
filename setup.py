@@ -38,7 +38,6 @@ import subprocess
 import shutil
 from setuptools import setup, find_packages, Extension
 from distutils.core import run_setup
-from Cython.Distutils import build_ext as _build_ext
 
 def compile_enet():
     previousDir = os.getcwd()
@@ -85,12 +84,19 @@ for name in names:
     ext_modules.append(Extension(name, ['./%s.pyx' % name.replace('.', '/')],
         language = 'c++', include_dirs=['./pyspades'], **extra))
 
+try:
+    from Cython.Distutils import build_ext as _build_ext
+    class build_ext(_build_ext):
+        def run(self):
+            compile_enet()
+            _build_ext.run(self)
+            run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_py'] + extra_args)
+except ImportError as e:
+    class build_ext(object):
+        pass
 
-class build_ext(_build_ext):
-    def run(self):
-        compile_enet()
-        _build_ext.run(self)
-        run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_py'] + extra_args)
+    pass
+
 
 setup(
     name = PKG_NAME,
@@ -101,14 +107,14 @@ setup(
     author_email = 'nate.shoffner@gmail.com',
     url = PKG_URL,
     download_url = PKG_DOWNLOAD_URL,
-    keywords = ['ace of spades', 'aos', 'server'],
+    keywords = ['ace of spades', 'aos', 'server', 'pyspades', 'pysnip', 'piqueserver'],
     classifiers = [],
-	setup_requires = ['cython'],
-	install_requires = ['twisted'],
+	setup_requires = ['Cython>=0.25.2,<0.26'],
+	install_requires = ['Twisted>=16.6.0,<16.7'],
 	extras_require = {
-		'from': ['pygeoip'],
-		'statusserver': ['jinja2', 'pillow'],
-		'ssh': ['pycrypto', 'pyasn1']
+		'from': ['pygeoip>=0.3.2,<0.4'],
+		'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
+		'ssh': ['pycrypto>=2.6.1,<2.7', 'pyasn1>=0.1.9,<0.2']
 	},
     entry_points = {
         'console_scripts': [
@@ -120,5 +126,5 @@ setup(
     include_package_data=True,
 
     ext_modules = ext_modules,
-    cmdclass = {'build_ext': build_ext},
+    cmdclass = { 'build_ext': build_ext },
 )
