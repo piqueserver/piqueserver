@@ -79,7 +79,7 @@ def compile_enet():
     tar = tarfile.open(enet_file)
     tar.extractall()
     tar.close()
-    print("Finished unpacing enet")
+    print("Finished unpacking enet")
 
     shutil.move(enet_dir, "pyenet/enet")
     shutil.copyfile("__init__.py-tpl", "pyenet/__init__.py")
