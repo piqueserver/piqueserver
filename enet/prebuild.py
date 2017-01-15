@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+
+from __future__ import print_function
 import subprocess
 import tarfile
 import shutil
@@ -23,11 +25,16 @@ if os.path.isdir("pyenet/enet"):
 shutil.copyfile("pyenet/enet.pyx", "pyenet/enet-pyspades.pyx")
 subprocess.Popen(['patch', '-p1', 'pyenet/enet-pyspades.pyx', 'pyspades-pyenet.patch']).communicate()
 
-urllib_request.urlretrieve(enet_url, enet_file)
+if not os.path.isfile(enet_file):
+	print("Downloading enet")
+	urllib_request.urlretrieve(enet_url, enet_file)
+	print("Finished downloading enet")
 
+print("Unpacking enet")
 tar = tarfile.open(enet_file)
 tar.extractall()
 tar.close()
+print("Finished unpacing enet")
 
 shutil.move(enet_dir, "pyenet/enet")
 shutil.copyfile("__init__.py-tpl", "pyenet/__init__.py")

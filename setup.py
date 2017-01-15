@@ -42,7 +42,7 @@ from distutils.core import run_setup
 def compile_enet():
     previousDir = os.getcwd()
     os.chdir("enet")
-    subprocess.Popen(["./prebuild.sh"]).communicate()
+    subprocess.Popen(["./prebuild.py"]).communicate()
 
     os.chdir("pyenet")
 
