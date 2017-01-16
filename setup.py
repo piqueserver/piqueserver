@@ -2,34 +2,37 @@
 
 from __future__ import print_function
 
-### Virtualenv autoload ###
-# Not really sure whether it's worth it... Looks like reinveting virtualenv .
-# Consider making users to load virtualenv on their own.
-from os import path as __p
-venv_dirs = [__p.join(__p.dirname(__p.realpath(__file__)), i) for i in ('venv', '.venv')]
-activated_venv = None
-for venv_dir in venv_dirs:
-    try:
-        activate_this = __p.join(venv_dir, 'bin', 'activate_this.py')
-        execfile(activate_this, dict(__file__=activate_this))
-        activated_venv = venv_dir
-    except IOError:
-        pass
-    else:
-        break
-print("Using virtualenv %s" % activated_venv)
+# ### Virtualenv autoload ###
+# # Not really sure whether it's worth it... Looks like reinveting virtualenv .
+# # Consider making users to load virtualenv on their own.
+# from os import path as __p
+# venv_dirs = [__p.join(__p.dirname(__p.realpath(__file__)), i) for i in ('venv', '.venv')]
+# activated_venv = None
+# for venv_dir in venv_dirs:
+#     try:
+#         activate_this = __p.join(venv_dir, 'bin', 'activate_this.py')
+#         execfile(activate_this, dict(__file__=activate_this))
+#         activated_venv = venv_dir
+#     except IOError:
+#         pass
+#     else:
+#         break
+# print("Using virtualenv %s" % activated_venv)
+
+# import sys
+# import os
+
+# if activated_venv is not None:
+#     sys.argv[0] = __p.join(activated_venv, 'bin', 'python2')
+#     sys.executable = sys.argv[0]
+#     os.environ['_'] = sys.argv[0]
+#     sys.prefix = activated_venv
+#     sys.exec_prefix = activated_venv
+# ### Virtualenv autoload end ###
+
 
 import sys
 import os
-
-if activated_venv is not None:
-    sys.argv[0] = __p.join(activated_venv, 'bin', 'python2')
-    sys.executable = sys.argv[0]
-    os.environ['_'] = sys.argv[0]
-    sys.prefix = activated_venv
-    sys.exec_prefix = activated_venv
-### Virtualenv autoload end ###
-
 
 PKG_NAME="piqueserver"
 PKG_URL="https://github.com/piqueserver/piqueserver"
@@ -39,7 +42,7 @@ extra_args = sys.argv[2:]
 
 import subprocess
 import shutil
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, find_packages, Extension, dist
 from distutils.core import run_setup
 
 def compile_enet():
@@ -127,24 +130,40 @@ for name in names:
     ext_modules.append(Extension(name, ['./%s.pyx' % name.replace('.', '/')],
         language = 'c++', include_dirs=['./pyspades'], **extra))
 
-try:
-    from Cython.Distutils import build_ext as _build_ext
-    class build_ext(_build_ext):
-        def run(self):
-            compile_enet()
-            _build_ext.run(self)
-            run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_py'] + extra_args)
-except ImportError as e:
-    class build_ext(object):
-        pass
 
-    pass
+from distutils.command.build_ext import build_ext as _build_ext
+# from distutils.command.old_build_ext import build_ext as _build_ext
+from distutils.dist import Distribution
+class build_ext(_build_ext):
+    # def __init__()
+    def run(self):
+        # super(C, self).run()
+        # from Cython.Distutils import build_ext as _cy_build_ext
+        # from Cython.Distutils.old_build_ext import old_build_ext
+        compile_enet()
 
+        # class cy_build_ext(_cy_build_ext):
+        #     def run(self):
+        # new_self = _cy_build_ext(self.distribution)
+        # new_self.initialize_options()
+        # _cy_build_ext.run(new_self)
+
+        from Cython.Build import cythonize
+        print (self.distribution.ext_modules)
+        global ext_modules
+        self.distribution.ext_modules = cythonize(self.distribution.ext_modules)
+        ext_modules = cythonize(ext_modules)
+        print (self.distribution.ext_modules)
+
+        _build_ext.run(self)
+
+
+        run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_py'] + extra_args)
 
 setup(
     name = PKG_NAME,
     packages = [PKG_NAME, '%s.web' % PKG_NAME, 'pyspades', 'pyspades.enet'],
-    version = '0.0.1',
+    version = '0.0.18',
     description = 'Open-Source server implementation for Ace of Spades',
     author = 'MatPow2, StackOverflow, piqueserver authors',
     author_email = 'nate.shoffner@gmail.com',
@@ -152,11 +171,11 @@ setup(
     download_url = PKG_DOWNLOAD_URL,
     keywords = ['ace of spades', 'aos', 'server', 'pyspades', 'pysnip', 'piqueserver'],
     classifiers = [],
-	setup_requires = ['Cython>=0.25.2,<0.26'],
-	install_requires = ['Twisted>=16.6.0,<16.7'],
+	setup_requires = ['Cython>=0.25.2,<0.26'], # at least for now when we have to cythonize enet
+	install_requires = ['Cython>=0.25.2,<0.26', 'Twisted>=16.6.0,<16.7', 'Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'], # status server is part of our 'vanila' package
 	extras_require = {
 		'from': ['pygeoip>=0.3.2,<0.4'],
-		'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
+		# 'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
 		'ssh': ['pycrypto>=2.6.1,<2.7', 'pyasn1>=0.1.9,<0.2']
 	},
     entry_points = {
