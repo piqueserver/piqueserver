@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import, division, print_function
+
 import json
 from twisted.web.client import getPage
 from twisted.internet.task import LoopingCall
@@ -45,6 +47,7 @@ class BanManager(object):
         DeferredList(defers).addCallback(self.bans_finished)
 
     def got_bans(self, data, filter):
+        data = data.decode()
         bans = json.loads(data)
         for entry in bans:
             name = entry.get('name', None)

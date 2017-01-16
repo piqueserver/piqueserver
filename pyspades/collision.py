@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import, division, print_function
+
 import math
 
 def vector_collision(vec1, vec2, distance = 3):
@@ -33,8 +35,9 @@ def distance_3d_vector(vector1, vector2):
     zd = vector1.z - vector2.z
     return math.sqrt(xd**2 + yd**2 + zd**2)
 
-def distance_3d((x1, y1, z1), (x2, y2, z2)):
-    xd = x1 - x2
-    yd = y1 - y2
-    zd = z2 - z2
+def distance_3d(coord1, coord2):
+    """returns distance between two points given as (x, y, z)"""
+    xd = coord1[0] - coord2[0]
+    yd = coord1[1] - coord2[1]
+    zd = coord1[2] - coord2[2]
     return math.sqrt(xd**2 + yd**2 + zd**2)

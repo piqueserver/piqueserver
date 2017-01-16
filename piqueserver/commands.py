@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import, division, print_function
+
 import os
 import math
 from random import choice
@@ -39,7 +41,7 @@ class InvalidTeam(Exception):
 def restrict(func, user_types):
     def new_func(connection, *arg, **kw):
         return func(connection, *arg, **kw)
-    new_func.func_name = func.func_name
+    new_func.__name__ = func.__name__
     new_func.user_types = set(user_types)
     return new_func
 
@@ -48,7 +50,7 @@ def admin(func):
 
 def name(name):
     def dec(func):
-        func.func_name = name
+        func.__name__ = name
         return func
     return dec
 
@@ -232,8 +234,8 @@ def help(connection):
     if connection.protocol.help is not None and not connection.admin:
         connection.send_lines(connection.protocol.help)
     else:
-        names = [command.func_name for command in command_list
-            if command.func_name in connection.rights]
+        names = [command.__name__ for command in command_list
+            if command.__name__ in connection.rights]
         return 'Available commands: %s' % (', '.join(names))
 
 def login(connection, password):
@@ -773,7 +775,7 @@ def server_name(connection, *arg):
     protocol.config['name'] = name
     protocol.update_format()
     message = "%s changed servername to to '%s'" % (connection.name, name)
-    print message
+    print(message)
     connection.protocol.irc_say("* " + message)
     if connection in connection.protocol.players:
         return message
@@ -913,7 +915,7 @@ def add(func, name = None):
     Function to add a command from scripts
     """
     if name is None:
-        name = func.func_name
+        name = func.__name__
     name = name.lower()
     user_types = getattr(func, 'user_types', None)
     if user_types is not None:
@@ -936,7 +938,7 @@ for command_func in command_list:
 try:
     import pygeoip
     database = pygeoip.GeoIP(os.path.join(cfg.config_dir, 'data/GeoLiteCity.dat'))
-    
+
     @name('from')
     def where_from(connection, value = None):
         if value is None:
@@ -965,9 +967,9 @@ try:
         return '%s is from %s' % (player.name, ', '.join(items))
     add(where_from)
 except ImportError:
-    print "('from' command disabled - missing pygeoip)"
+    print("('from' command disabled - missing pygeoip)")
 except (IOError, OSError):
-    print "('from' command disabled - missing data/GeoLiteCity.dat)"
+    print("('from' command disabled - missing data/GeoLiteCity.dat)")
 
 def handle_command(connection, command, parameters):
     command = command.lower()
@@ -981,7 +983,7 @@ def handle_command(connection, command, parameters):
         return # 'Invalid command'
     try:
         if (hasattr(command_func, 'user_types') and
-            command_func.func_name not in connection.rights):
+            command_func.__name__ not in connection.rights):
                 return "You can't use this command"
         return command_func(connection, *parameters)
     except KeyError:
@@ -1009,7 +1011,7 @@ def debug_handle_command(connection, command, parameters):
     except KeyError:
         return # 'Invalid command'
     if (hasattr(command_func, 'user_types') and
-        command_func.func_name not in connection.rights):
+        command_func.__name__ not in connection.rights):
             return "You can't use this command"
     return command_func(connection, *parameters)
 

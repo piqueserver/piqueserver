@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
 
+from __future__ import absolute_import, division, print_function
+
 import os
 import urllib
 import gzip
@@ -28,16 +30,16 @@ if __name__ == '__main__':
     if not os.path.exists(WORKING_DIRECTORY):
         os.makedirs(WORKING_DIRECTORY)
 
-    print "Downloading %s" % MAXMIND_DOWNLOAD
+    print("Downloading %s" % MAXMIND_DOWNLOAD)
 
     download_geoip_db()
 
-    print "Download Complete"
-    print "Unpacking..."
+    print("Download Complete")
+    print("Unpacking...")
 
     extract_geoip_db()
 
-    print "Unpacking Complete"
-    print "Cleaning up..."
+    print("Unpacking Complete")
+    print("Cleaning up...")
 
     os.remove(ZIPPED_PATH)

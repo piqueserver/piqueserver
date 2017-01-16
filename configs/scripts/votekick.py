@@ -16,6 +16,7 @@
 
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
+from __future__ import absolute_import, division, print_function
 
 from twisted.internet.reactor import seconds
 from scheduler import Scheduler
@@ -183,7 +184,7 @@ class Votekick(object):
             # vote passed, ban or kick accordingly
             victim = self.victim
             self.end(S_RESULT_PASSED)
-            print '%s votekicked' % victim.name
+            print('%s votekicked' % victim.name)
             if self.ban_duration > 0.0:
                 victim.ban(self.reason, self.ban_duration)
             else:

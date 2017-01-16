@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import, division, print_function
+
 from pyspades.loaders import Loader
 from pyspades.protocol import BaseConnection
 from pyspades.loaders import *
@@ -105,7 +107,7 @@ from pyspades.web import getPage
 IP_GETTER = 'http://services.buildandshoot.com/getip'
 
 def get_external_ip(interface = ''):
-    return getPage(IP_GETTER, bindAddress = (interface, 0))
+    return getPage(IP_GETTER, bindAddress=(interface, 0))
 
 def get_master_connection(protocol):
     defer = Deferred()

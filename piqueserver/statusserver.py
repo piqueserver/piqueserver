@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import, division, print_function
+
 from twisted.internet import reactor
 from twisted.web import server
 from twisted.web.resource import Resource
@@ -22,7 +24,7 @@ from string import Template
 from PIL import Image
 from jinja2 import Environment, PackageLoader
 import json
-from cStringIO import StringIO
+from io import StringIO
 
 OVERVIEW_UPDATE_INTERVAL = 1 * 60 # 1 minute
 

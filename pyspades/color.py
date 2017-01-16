@@ -1,3 +1,5 @@
+from __future__ import absolute_import, division, print_function
+
 from math import floor
 
 def wrap(min, max, value):
@@ -6,8 +8,8 @@ def wrap(min, max, value):
 def hsb_to_rgb(hue, sat, bri):
     bri_n = bri * 255.0
     if sat == 0.0:
-	# greyscale
-	r, g, b = bri_n, bri_n, bri_n
+        # greyscale
+        r, g, b = bri_n, bri_n, bri_n
     else:
         hue_n = wrap(0.0, 1.0, hue) * 6 # wrap hue
         hue_i = floor(hue_n) # get integer part
@@ -30,13 +32,19 @@ def hsb_to_rgb(hue, sat, bri):
             r, g, b = bri_n, m, n
     return int(r), int(g), int(b)
 
-def interpolate_rgb((r1, g1, b1), (r2, g2, b2), t):
+def interpolate_rgb(rgb1, rgb2, t):
+    (r1, g1, b1) = rgb1
+    (r2, g2, b2) = rgb2
     return (int(r1 + (r2 - r1) * t),
         int(g1 + (g2 - g1) * t),
         int(b1 + (b2 - b1) * t))
 
-def interpolate_hsb((h1, s1, b1), (h2, s2, b2), t):
+def interpolate_hsb(hsb1, hsb2, t):
+    (h1, s1, b1) = hsb1
+    (h2, s2, b2) = hsb2
     return (h1 + (h2 - h1) * t, s1 + (s2 - s1) * t, b1 + (b2 - b1) * t)
 
-def rgb_distance((r1, g1, b1), (r2, g2, b2)):
+def rgb_distance(rgb1, rgb2):
+    (r1, g1, b1) = rgb1
+    (r2, g2, b2) = rgb2
     return int(abs(r1 - r2) + abs(g1 - g2) + abs(b1 - b2))

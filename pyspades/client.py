@@ -19,6 +19,8 @@
 Client implementation - WIP
 """
 
+from __future__ import absolute_import, division, print_function
+
 from twisted.internet.protocol import DatagramProtocol
 from twisted.internet import reactor
 from pyspades.protocol import BaseConnection, in_packet
@@ -60,7 +62,7 @@ class ClientConnection(BaseConnection):
         return crc32(open('../data/client.exe', 'rb').read())
 
     def send_join(self, team = -1, weapon = -1):
-        print 'joining team %s' % team
+        print('joining team %s' % team)
         loader = SizedData()
         data = ByteWriter()
         join = loaders.JoinTeam()
@@ -73,7 +75,7 @@ class ClientConnection(BaseConnection):
 
     def packet_received(self, packet):
         if not self.displayed_id:
-            print 'server id:', packet.connection_id
+            print('server id:', packet.connection_id)
             self.displayed_id = True
         BaseConnection.packet_received(self, packet)
 
@@ -92,17 +94,17 @@ class ClientConnection(BaseConnection):
                 for spam, recv in self.spammy.items() if recv]
             if len(spammed):
                 message = 'received ' + ', '.join(spammed)
-                print message
+                print(message)
                 for spam in self.spammy:
                     self.spammy[spam] = 0
             if is_contained:
-                print contained
-                print '    ', hexify(data)
+                print(contained)
+                print('    ', hexify(data))
         if packet.id == ConnectionResponse.id:
             self.connection_id = packet.connection_id
             self.unique = packet.unique
             self.connected = True
-            print 'connected', self.connection_id, self.unique
+            print('connected', self.connection_id, self.unique)
         elif is_contained:
             if packet.id == SizedData.id:
                 pass
@@ -114,13 +116,13 @@ class ClientConnection(BaseConnection):
                 # raw_input('not completely parsed')
             # print contained.id
             if contained.id == loaders.MapStart.id:
-                print 'map size:', contained.size
+                print('map size:', contained.size)
                 self.map_size = contained.size
                 self.map = ByteWriter()
             elif contained.id == loaders.MapChunk.id:
                 self.map.write(contained.data)
                 if len(self.map) == self.map_size:
-                    print 'done!', len(self.map)
+                    print('done!', len(self.map))
             # newdata = ByteWriter()
             # contained.write(newdata)
             # if contained.id != loaders.PlayerData.id:
@@ -133,10 +135,10 @@ class ClientConnection(BaseConnection):
         elif packet.id == Ping.id:
             pass
         elif packet.id == Packet10.id:
-            print 'received packet10'
+            print('received packet10')
         else:
-            print 'received:', packet
-            raw_input('unknown packet')
+            print('received:', packet)
+            input('unknown packet')
 
     def send_data(self, data):
         self.protocol.transport.write(data)

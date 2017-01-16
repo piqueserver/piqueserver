@@ -20,6 +20,8 @@ Reads the AoSLang-En.bin file and allows you to manipulate it.
 Thanks to learn_more for file format specs
 """
 
+from __future__ import absolute_import, division, print_function
+
 from pyspades.bytes import ByteReader, ByteWriter
 
 MAGIC = 'STR0'
