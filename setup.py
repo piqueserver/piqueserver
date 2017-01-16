@@ -132,38 +132,21 @@ for name in names:
 
 
 from distutils.command.build_ext import build_ext as _build_ext
-# from distutils.command.old_build_ext import build_ext as _build_ext
-from distutils.dist import Distribution
 class build_ext(_build_ext):
-    # def __init__()
     def run(self):
-        # super(C, self).run()
-        # from Cython.Distutils import build_ext as _cy_build_ext
-        # from Cython.Distutils.old_build_ext import old_build_ext
         compile_enet()
 
-        # class cy_build_ext(_cy_build_ext):
-        #     def run(self):
-        # new_self = _cy_build_ext(self.distribution)
-        # new_self.initialize_options()
-        # _cy_build_ext.run(new_self)
-
         from Cython.Build import cythonize
-        print (self.distribution.ext_modules)
-        global ext_modules
-        self.distribution.ext_modules = cythonize(self.distribution.ext_modules)
-        ext_modules = cythonize(ext_modules)
-        print (self.distribution.ext_modules)
+        self.extensions = cythonize(self.extensions)
 
         _build_ext.run(self)
-
 
         run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_py'] + extra_args)
 
 setup(
     name = PKG_NAME,
     packages = [PKG_NAME, '%s.web' % PKG_NAME, 'pyspades', 'pyspades.enet'],
-    version = '0.0.18',
+    version = '0.0.19',
     description = 'Open-Source server implementation for Ace of Spades',
     author = 'MatPow2, StackOverflow, piqueserver authors',
     author_email = 'nate.shoffner@gmail.com',
