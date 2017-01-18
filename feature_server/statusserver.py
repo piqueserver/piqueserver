@@ -116,7 +116,7 @@ class StatusServerFactory(object):
         self.last_map_name != self.protocol.map_info.name or
         current_time - self.last_overview > OVERVIEW_UPDATE_INTERVAL):
             overview = self.protocol.map.get_overview(rgba = True)
-            image = Image.fromstring('RGBA', (512, 512), overview)
+            image = Image.frombytes('RGBA', (512, 512), overview)
             data = StringIO()
             image.save(data, 'png')
             self.overview = data.getvalue()
