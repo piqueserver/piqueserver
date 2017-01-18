@@ -13,7 +13,7 @@ pip install piqueserver
 ```
 And lift off! 
 ```bash
-piqueserver -d configs
+piqueserver -d piqueserver/configs
 ```
 ## :speech_balloon: FAQ
 
@@ -65,5 +65,5 @@ Use virtualenv to install it
 virtualenv -p python2 venv && . venv/bin/activate && pip install -r requirements.txt
 ./setup.py install
 ```
-
+-------
 Brought to you with :heart: by the [piqueserver team](https://github.com/orgs/piqueserver/people).
