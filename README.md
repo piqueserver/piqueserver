@@ -3,17 +3,17 @@
 An Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/PySnip).
 
 ## :rocket: Installation
-Clone the repo:
+Clone the repo to get example config files:
 ```bash
 git clone https://github.com/piqueserver/piqueserver
 ```
-Install using pip:
+Then install using pip:
 ```bash
 pip install piqueserver
 ```
-And lift off! 
+A-a-and lift off! 
 ```bash
-piqueserver -d piqueserver/configs
+piqueserver -d ./piqueserver/configs
 ```
 ## :speech_balloon: FAQ
 
