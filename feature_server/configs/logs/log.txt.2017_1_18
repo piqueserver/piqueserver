@@ -1,0 +1,1007 @@
+2017-01-18 12:08:53+1030 [-] pyspades server started on Wed Jan 18 12:08:53 2017
+2017-01-18 12:08:53+1030 [-] Log opened.
+2017-01-18 12:08:53+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass1' IN GROUP 'admin'
+2017-01-18 12:08:53+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass2' IN GROUP 'admin'
+2017-01-18 12:08:53+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass3' IN GROUP 'admin'
+2017-01-18 12:08:53+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'modpass' IN GROUP 'moderator'
+2017-01-18 12:08:53+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'guardpass' IN GROUP 'guard'
+2017-01-18 12:08:53+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'trustedpass' IN GROUP 'trusted'
+2017-01-18 12:08:53+1030 [-] Generating map 'classicgen #431183632'...
+2017-01-18 12:08:54+1030 [-] Map loaded successfully.
+2017-01-18 12:08:54+1030 [-] Traceback (most recent call last):
+2017-01-18 12:08:54+1030 [-]   File "/home/samuel/projects/piqueserver/venv/bin/piqueserver", line 11, in <module>
+2017-01-18 12:08:54+1030 [-]     load_entry_point('piqueserver==0.0.19', 'console_scripts', 'piqueserver')()
+2017-01-18 12:08:54+1030 [-]   File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/__main__.py", line 2, in main
+2017-01-18 12:08:54+1030 [-]     import run
+2017-01-18 12:08:54+1030 [-]   File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/run.py", line 1086, in <module>
+2017-01-18 12:08:54+1030 [-]     protocol_instance = protocol_class(interface, config)
+2017-01-18 12:08:54+1030 [-]   File "configs/scripts/disco.py", line 39, in __init__
+2017-01-18 12:08:54+1030 [-]     protocol.__init__(self, *arg, **kw)
+2017-01-18 12:08:54+1030 [-]   File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/run.py", line 708, in __init__
+2017-01-18 12:08:54+1030 [-]     ret = self.set_map_rotation(config['maps'])
+2017-01-18 12:08:54+1030 [-]   File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/run.py", line 816, in set_map_rotation
+2017-01-18 12:08:54+1030 [-]     self.advance_rotation()
+2017-01-18 12:08:54+1030 [-]   File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/run.py", line 782, in advance_rotation
+2017-01-18 12:08:54+1030 [-]     self.set_map_name(map)
+2017-01-18 12:08:54+1030 [-]   File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/run.py", line 800, in set_map_name
+2017-01-18 12:08:54+1030 [-]     self.set_map(self.map_info.data)
+2017-01-18 12:08:54+1030 [-]   File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/pyspades/server.py", line 1603, in set_map
+2017-01-18 12:08:54+1030 [-]     self.on_map_change(map)
+2017-01-18 12:08:54+1030 [-]   File "configs/scripts/blockinfo.py", line 140, in on_map_change
+2017-01-18 12:08:54+1030 [-]     protocol.on_map_change(self, map)
+2017-01-18 12:08:54+1030 [-]   File "configs/scripts/protect.py", line 51, in on_map_change
+2017-01-18 12:08:54+1030 [-]     protocol.on_map_change(self, map)
+2017-01-18 12:08:54+1030 [-]   File "configs/scripts/rollback.py", line 219, in on_map_change
+2017-01-18 12:08:54+1030 [-]     self.rollback_map = map.copy()
+2017-01-18 12:08:54+1030 [-] KeyboardInterrupt
+2017-01-18 12:18:46+1030 [-] pyspades server started on Wed Jan 18 12:18:46 2017
+2017-01-18 12:18:46+1030 [-] Log opened.
+2017-01-18 12:18:46+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass1' IN GROUP 'admin'
+2017-01-18 12:18:46+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass2' IN GROUP 'admin'
+2017-01-18 12:18:46+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass3' IN GROUP 'admin'
+2017-01-18 12:18:46+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'modpass' IN GROUP 'moderator'
+2017-01-18 12:18:46+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'guardpass' IN GROUP 'guard'
+2017-01-18 12:18:46+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'trustedpass' IN GROUP 'trusted'
+2017-01-18 12:18:46+1030 [-] Generating map 'classicgen #1177667967'...
+2017-01-18 12:18:46+1030 [-] Map loaded successfully.
+2017-01-18 12:18:46+1030 [-] Started server...
+2017-01-18 12:18:47+1030 [-] Server identifier is aos://1438233724:32887
+2017-01-18 12:18:49+1030 [-] Received SIGINT, shutting down.
+2017-01-18 12:18:49+1030 [twisted.web.server.Site] (TCP Port 32886 Closed)
+2017-01-18 12:18:49+1030 [-] Stopping factory <twisted.web.server.Site instance at 0x7fbab3335950>
+2017-01-18 12:18:49+1030 [-] Main loop terminated.
+2017-01-18 12:54:30+1030 [-] pyspades server started on Wed Jan 18 12:54:30 2017
+2017-01-18 12:54:30+1030 [-] Log opened.
+2017-01-18 12:54:30+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass1' IN GROUP 'admin'
+2017-01-18 12:54:30+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass2' IN GROUP 'admin'
+2017-01-18 12:54:30+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass3' IN GROUP 'admin'
+2017-01-18 12:54:30+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'modpass' IN GROUP 'moderator'
+2017-01-18 12:54:30+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'guardpass' IN GROUP 'guard'
+2017-01-18 12:54:30+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'trustedpass' IN GROUP 'trusted'
+2017-01-18 12:54:30+1030 [-] Generating map 'classicgen #135863757'...
+2017-01-18 12:54:30+1030 [-] Map loaded successfully.
+2017-01-18 12:54:30+1030 [-] Started server...
+2017-01-18 12:54:30+1030 [-] Received SIGINT, shutting down.
+2017-01-18 12:54:30+1030 [twisted.web.server.Site] (TCP Port 32886 Closed)
+2017-01-18 12:54:30+1030 [-] Stopping factory <twisted.web.server.Site instance at 0x7f6ea2c56518>
+2017-01-18 12:54:30+1030 [-] Main loop terminated.
+2017-01-18 13:38:27+1030 [-] pyspades server started on Wed Jan 18 13:38:27 2017
+2017-01-18 13:38:27+1030 [-] Log opened.
+2017-01-18 13:38:27+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass1' IN GROUP 'admin'
+2017-01-18 13:38:27+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass2' IN GROUP 'admin'
+2017-01-18 13:38:27+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass3' IN GROUP 'admin'
+2017-01-18 13:38:27+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'modpass' IN GROUP 'moderator'
+2017-01-18 13:38:27+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'guardpass' IN GROUP 'guard'
+2017-01-18 13:38:27+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'trustedpass' IN GROUP 'trusted'
+2017-01-18 13:38:27+1030 [-] Generating map 'classicgen #1212868525'...
+2017-01-18 13:38:28+1030 [-] Map loaded successfully.
+2017-01-18 13:38:28+1030 [-] Started server...
+2017-01-18 13:38:29+1030 [-] Received SIGINT, shutting down.
+2017-01-18 13:38:29+1030 [twisted.web.server.Site] (TCP Port 32886 Closed)
+2017-01-18 13:38:29+1030 [-] Stopping factory <twisted.web.server.Site instance at 0x7f1632315518>
+2017-01-18 13:38:29+1030 [-] Main loop terminated.
+2017-01-18 13:38:29+1030 [-] Unhandled error in Deferred:
+2017-01-18 13:38:29+1030 [-] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/temp/piq/venv/lib/python2.7/site-packages/twisted/internet/tcp.py", line 292, in connectionLost
+	    protocol.connectionLost(reason)
+	  File "/home/samuel/temp/piq/venv/lib/python2.7/site-packages/twisted/web/client.py", line 223, in connectionLost
+	    self.factory._disconnectedDeferred.callback(None)
+	  File "/home/samuel/temp/piq/venv/lib/python2.7/site-packages/twisted/internet/defer.py", line 457, in callback
+	    self._startRunCallbacks(result)
+	  File "/home/samuel/temp/piq/venv/lib/python2.7/site-packages/twisted/internet/defer.py", line 565, in _startRunCallbacks
+	    self._runCallbacks()
+	--- <exception caught here> ---
+	  File "/home/samuel/temp/piq/venv/lib/python2.7/site-packages/twisted/internet/defer.py", line 651, in _runCallbacks
+	    current.result = callback(current.result, *args, **kw)
+	  File "/home/samuel/temp/piq/venv/lib/python2.7/site-packages/piqueserver_swalladge/bansubscribe.py", line 48, in got_bans
+	    bans = json.loads(data)
+	  File "/usr/lib64/python2.7/json/__init__.py", line 339, in loads
+	    return _default_decoder.decode(s)
+	  File "/usr/lib64/python2.7/json/decoder.py", line 364, in decode
+	    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+	  File "/usr/lib64/python2.7/json/decoder.py", line 380, in raw_decode
+	    obj, end = self.scan_once(s, idx)
+	exceptions.ValueError: Unterminated string starting at: line 1 column 14124 (char 14123)
+	
+2017-01-18 13:38:29+1030 [-] Unhandled error in Deferred:
+2017-01-18 13:38:29+1030 [-] Unhandled Error
+	Traceback (most recent call last):
+	Failure: twisted.internet.error.ConnectionLost: Connection to the other side was lost in a non-clean fashion: Connection lost.
+	
+2017-01-18 19:34:30+1030 [-] pyspades server started on Wed Jan 18 19:34:30 2017
+2017-01-18 19:34:30+1030 [-] Log opened.
+2017-01-18 19:34:30+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass1' IN GROUP 'admin'
+2017-01-18 19:34:30+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass2' IN GROUP 'admin'
+2017-01-18 19:34:30+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass3' IN GROUP 'admin'
+2017-01-18 19:34:30+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'modpass' IN GROUP 'moderator'
+2017-01-18 19:34:30+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'guardpass' IN GROUP 'guard'
+2017-01-18 19:34:30+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'trustedpass' IN GROUP 'trusted'
+2017-01-18 19:34:30+1030 [-] Generating map 'classicgen #2082789001'...
+2017-01-18 19:34:31+1030 [-] Map loaded successfully.
+2017-01-18 19:34:31+1030 [-] Started server...
+2017-01-18 19:34:32+1030 [-] Server identifier is aos://1438233724:32887
+2017-01-18 19:35:53+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:05:52 +0000] "GET / HTTP/1.1" 200 6541 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) QtWebEngine/5.7.1 Chrome/49.0.2623.111 Safari/537.36"
+2017-01-18 19:35:54+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 19:35:54+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:05:52 +0000] "GET /overview HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) QtWebEngine/5.7.1 Chrome/49.0.2623.111 Safari/537.36"
+2017-01-18 19:35:55+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 19:35:55+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:05:55 +0000] "GET /overview HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) QtWebEngine/5.7.1 Chrome/49.0.2623.111 Safari/537.36"
+2017-01-18 19:35:55+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:05:55 +0000] "GET /favicon.ico HTTP/1.1" 404 153 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) QtWebEngine/5.7.1 Chrome/49.0.2623.111 Safari/537.36"
+2017-01-18 19:36:03+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:03 +0000] "GET / HTTP/1.1" 200 6541 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:04+1030 [_GenericHTTPChannelProtocol,1,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 19:36:04+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:04 +0000] "GET /overview HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:04+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:04 +0000] "GET /favicon.ico HTTP/1.1" 404 153 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:09+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:09 +0000] "GET /json HTTP/1.1" 200 459 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:14+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:14 +0000] "GET /json HTTP/1.1" 200 460 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:14+1030 [_GenericHTTPChannelProtocol,2,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 19:36:14+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:14 +0000] "GET /overview?timestamp=1484730374408 HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:19+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:19 +0000] "GET /json HTTP/1.1" 200 461 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:24+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:24 +0000] "GET /json HTTP/1.1" 200 461 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:24+1030 [_GenericHTTPChannelProtocol,1,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 19:36:24+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:24 +0000] "GET /overview?timestamp=1484730384408 HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:29+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:29 +0000] "GET /json HTTP/1.1" 200 461 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:34+1030 [_GenericHTTPChannelProtocol,1,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 19:36:34+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:34 +0000] "GET /overview?timestamp=1484730394408 HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:34+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:34 +0000] "GET /json HTTP/1.1" 200 461 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:39+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:39 +0000] "GET /json HTTP/1.1" 200 460 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:41+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:41 +0000] "GET / HTTP/1.1" 200 6542 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:41+1030 [_GenericHTTPChannelProtocol,1,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 19:36:41+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:41 +0000] "GET /overview HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:46+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:46 +0000] "GET /json HTTP/1.1" 200 460 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:51+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:51 +0000] "GET /json HTTP/1.1" 200 461 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:51+1030 [_GenericHTTPChannelProtocol,2,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 19:36:51+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:51 +0000] "GET /overview?timestamp=1484730411683 HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:36:54+1030 [_GenericHTTPChannelProtocol,2,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 19:36:54+1030 [-] "127.0.0.1" - - [18/Jan/2017:09:06:54 +0000] "GET /overview HTTP/1.1" 500 6587 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 19:37:03+1030 [-] Received SIGINT, shutting down.
+2017-01-18 19:37:03+1030 [twisted.web.server.Site] (TCP Port 32886 Closed)
+2017-01-18 19:37:03+1030 [-] Stopping factory <twisted.web.server.Site instance at 0x7f4da9404368>
+2017-01-18 19:37:03+1030 [-] Main loop terminated.
+2017-01-18 20:41:50+1030 [-] pyspades server started on Wed Jan 18 20:41:50 2017
+2017-01-18 20:41:50+1030 [-] Log opened.
+2017-01-18 20:41:50+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass1' IN GROUP 'admin'
+2017-01-18 20:41:50+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass2' IN GROUP 'admin'
+2017-01-18 20:41:50+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass3' IN GROUP 'admin'
+2017-01-18 20:41:50+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'modpass' IN GROUP 'moderator'
+2017-01-18 20:41:50+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'guardpass' IN GROUP 'guard'
+2017-01-18 20:41:50+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'trustedpass' IN GROUP 'trusted'
+2017-01-18 20:41:50+1030 [-] Generating map 'classicgen #165189380'...
+2017-01-18 20:41:51+1030 [-] Map loaded successfully.
+2017-01-18 20:41:51+1030 [-] Started server...
+2017-01-18 20:41:51+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:11:51 +0000] "GET / HTTP/1.1" 200 6539 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:41:51+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 20:41:51+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:11:51 +0000] "GET /overview HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:41:52+1030 [-] Server identifier is aos://1438233724:32887
+2017-01-18 20:41:52+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:11:51 +0000] "GET / HTTP/1.1" 200 6539 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:41:52+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 20:41:52+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:11:52 +0000] "GET /overview HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:41:52+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:11:52 +0000] "GET / HTTP/1.1" 200 6539 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:41:52+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 20:41:52+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:11:52 +0000] "GET /overview HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:41:52+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:11:52 +0000] "GET / HTTP/1.1" 200 6539 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:41:52+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 20:41:52+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:11:52 +0000] "GET /overview HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:41:52+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:11:52 +0000] "GET / HTTP/1.1" 200 6539 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:41:53+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 20:41:53+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:11:52 +0000] "GET /overview HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:41:53+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:11:52 +0000] "GET / HTTP/1.1" 200 6539 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:41:53+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 20:41:53+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:11:52 +0000] "GET /overview HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:41:57+1030 [-] Received SIGINT, shutting down.
+2017-01-18 20:41:57+1030 [twisted.web.server.Site] (TCP Port 32886 Closed)
+2017-01-18 20:41:57+1030 [-] Stopping factory <twisted.web.server.Site instance at 0x7f738a5363f8>
+2017-01-18 20:41:57+1030 [-] Main loop terminated.
+2017-01-18 20:42:24+1030 [-] pyspades server started on Wed Jan 18 20:42:24 2017
+2017-01-18 20:42:24+1030 [-] Log opened.
+2017-01-18 20:42:24+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass1' IN GROUP 'admin'
+2017-01-18 20:42:24+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass2' IN GROUP 'admin'
+2017-01-18 20:42:24+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass3' IN GROUP 'admin'
+2017-01-18 20:42:24+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'modpass' IN GROUP 'moderator'
+2017-01-18 20:42:24+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'guardpass' IN GROUP 'guard'
+2017-01-18 20:42:24+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'trustedpass' IN GROUP 'trusted'
+2017-01-18 20:42:24+1030 [-] Generating map 'classicgen #1116742551'...
+2017-01-18 20:42:25+1030 [-] Map loaded successfully.
+2017-01-18 20:42:25+1030 [-] Started server...
+2017-01-18 20:42:25+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:12:25 +0000] "GET / HTTP/1.1" 200 6540 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:42:26+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 20:42:26+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:12:25 +0000] "GET /overview HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:42:26+1030 [-] Server identifier is aos://1438233724:32887
+2017-01-18 20:42:28+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:12:28 +0000] "GET / HTTP/1.1" 200 6540 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:42:28+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 20:42:28+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:12:28 +0000] "GET /overview HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:42:33+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:12:33 +0000] "GET /json HTTP/1.1" 200 459 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:42:38+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:12:38 +0000] "GET /json HTTP/1.1" 200 460 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:42:38+1030 [_GenericHTTPChannelProtocol,1,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 20:42:38+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:12:38 +0000] "GET /overview?timestamp=1484734358863 HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:42:43+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:12:43 +0000] "GET /json HTTP/1.1" 200 461 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:42:48+1030 [_GenericHTTPChannelProtocol,1,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 20:42:48+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:12:48 +0000] "GET /overview?timestamp=1484734368863 HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:42:48+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:12:48 +0000] "GET /json HTTP/1.1" 200 461 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:42:53+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:12:53 +0000] "GET /json HTTP/1.1" 200 461 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:42:58+1030 [_GenericHTTPChannelProtocol,1,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 20:42:58+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:12:58 +0000] "GET /overview?timestamp=1484734378863 HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:42:58+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:12:58 +0000] "GET /json HTTP/1.1" 200 461 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:43:03+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:13:03 +0000] "GET /json HTTP/1.1" 200 461 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:43:08+1030 [_GenericHTTPChannelProtocol,1,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 20:43:08+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:13:08 +0000] "GET /overview?timestamp=1484734388863 HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:43:08+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:13:08 +0000] "GET /json HTTP/1.1" 200 460 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:43:13+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:13:13 +0000] "GET /json HTTP/1.1" 200 460 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:43:18+1030 [_GenericHTTPChannelProtocol,1,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 20:43:18+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:13:18 +0000] "GET /overview?timestamp=1484734398863 HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:43:18+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:13:18 +0000] "GET /json HTTP/1.1" 200 460 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:43:23+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:13:23 +0000] "GET /json HTTP/1.1" 200 460 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:43:28+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:13:28 +0000] "GET /json HTTP/1.1" 200 460 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:43:28+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 20:43:28+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:13:28 +0000] "GET /overview?timestamp=1484734408863 HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:43:33+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:13:33 +0000] "GET /json HTTP/1.1" 200 460 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:43:38+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    image = Image.fromstring('RGBA', (512, 512), overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/PIL/Image.py", line 2106, in fromstring
+	    "Please call frombytes() instead.")
+	exceptions.NotImplementedError: fromstring() has been removed. Please call frombytes() instead.
+	
+2017-01-18 20:43:38+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:13:38 +0000] "GET /overview?timestamp=1484734418863 HTTP/1.1" 500 6587 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:43:38+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:13:38 +0000] "GET /json HTTP/1.1" 200 460 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:43:39+1030 [-] Received SIGINT, shutting down.
+2017-01-18 20:43:39+1030 [twisted.web.server.Site] (TCP Port 32886 Closed)
+2017-01-18 20:43:39+1030 [-] Stopping factory <twisted.web.server.Site instance at 0x7f06f922b3f8>
+2017-01-18 20:43:39+1030 [-] Main loop terminated.
+2017-01-18 20:44:14+1030 [-] pyspades server started on Wed Jan 18 20:44:14 2017
+2017-01-18 20:44:14+1030 [-] Log opened.
+2017-01-18 20:44:14+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass1' IN GROUP 'admin'
+2017-01-18 20:44:14+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass2' IN GROUP 'admin'
+2017-01-18 20:44:14+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass3' IN GROUP 'admin'
+2017-01-18 20:44:14+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'modpass' IN GROUP 'moderator'
+2017-01-18 20:44:14+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'guardpass' IN GROUP 'guard'
+2017-01-18 20:44:14+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'trustedpass' IN GROUP 'trusted'
+2017-01-18 20:44:14+1030 [-] Generating map 'classicgen #755337327'...
+2017-01-18 20:44:14+1030 [-] Map loaded successfully.
+2017-01-18 20:44:14+1030 [-] Started server...
+2017-01-18 20:44:15+1030 [-] Server identifier is aos://1438233724:32887
+2017-01-18 20:44:18+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    print(overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/logger/_io.py", line 163, in write
+	    string = string.decode(self._encoding)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/encodings/utf_8.py", line 16, in decode
+	    return codecs.utf_8_decode(input, errors, True)
+	exceptions.UnicodeDecodeError: 'utf8' codec can't decode byte 0xff in position 3: invalid start byte
+	
+2017-01-18 20:44:18+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:14:18 +0000] "GET /overview?timestamp=1484734458863 HTTP/1.1" 500 7290 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:44:18+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:14:18 +0000] "GET /json HTTP/1.1" 200 460 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:44:23+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:14:23 +0000] "GET /json HTTP/1.1" 200 459 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:44:27+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:14:27 +0000] "GET / HTTP/1.1" 200 6540 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:44:27+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    print(overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/logger/_io.py", line 163, in write
+	    string = string.decode(self._encoding)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/encodings/utf_8.py", line 16, in decode
+	    return codecs.utf_8_decode(input, errors, True)
+	exceptions.UnicodeDecodeError: 'utf8' codec can't decode byte 0xff in position 3: invalid start byte
+	
+2017-01-18 20:44:27+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:14:27 +0000] "GET /overview HTTP/1.1" 500 7290 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:44:28+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:14:28 +0000] "GET / HTTP/1.1" 200 6540 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:44:28+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    print(overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/logger/_io.py", line 163, in write
+	    string = string.decode(self._encoding)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/encodings/utf_8.py", line 16, in decode
+	    return codecs.utf_8_decode(input, errors, True)
+	exceptions.UnicodeDecodeError: 'utf8' codec can't decode byte 0xff in position 3: invalid start byte
+	
+2017-01-18 20:44:28+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:14:28 +0000] "GET /overview HTTP/1.1" 500 7290 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:44:33+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:14:33 +0000] "GET /json HTTP/1.1" 200 460 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:44:38+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:14:38 +0000] "GET /json HTTP/1.1" 200 459 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:44:38+1030 [_GenericHTTPChannelProtocol,1,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    print(overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/logger/_io.py", line 163, in write
+	    string = string.decode(self._encoding)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/encodings/utf_8.py", line 16, in decode
+	    return codecs.utf_8_decode(input, errors, True)
+	exceptions.UnicodeDecodeError: 'utf8' codec can't decode byte 0xff in position 3: invalid start byte
+	
+2017-01-18 20:44:38+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:14:38 +0000] "GET /overview?timestamp=1484734478868 HTTP/1.1" 500 7290 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:44:43+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:14:43 +0000] "GET /json HTTP/1.1" 200 460 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:44:48+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:14:48 +0000] "GET /json HTTP/1.1" 200 459 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:44:48+1030 [_GenericHTTPChannelProtocol,0,127.0.0.1] Unhandled Error
+	Traceback (most recent call last):
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/protocols/basic.py", line 571, in dataReceived
+	    why = self.lineReceived(line)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1752, in lineReceived
+	    self.allContentReceived()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 1845, in allContentReceived
+	    req.requestReceived(command, path, version)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/http.py", line 766, in requestReceived
+	    self.process()
+	--- <exception caught here> ---
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 190, in process
+	    self.render(resrc)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/server.py", line 241, in render
+	    body = resrc.render(self)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/web/resource.py", line 250, in render
+	    return m(request)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 85, in render_GET
+	    overview = self.parent.get_overview()
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/piqueserver-0.0.19-py2.7-linux-x86_64.egg/piqueserver/statusserver.py", line 119, in get_overview
+	    print(overview)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/site-packages/twisted/logger/_io.py", line 163, in write
+	    string = string.decode(self._encoding)
+	  File "/home/samuel/projects/piqueserver/venv/lib/python2.7/encodings/utf_8.py", line 16, in decode
+	    return codecs.utf_8_decode(input, errors, True)
+	exceptions.UnicodeDecodeError: 'utf8' codec can't decode byte 0xff in position 3: invalid start byte
+	
+2017-01-18 20:44:48+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:14:48 +0000] "GET /overview?timestamp=1484734488868 HTTP/1.1" 500 7290 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:44:50+1030 [-] Received SIGINT, shutting down.
+2017-01-18 20:44:50+1030 [twisted.web.server.Site] (TCP Port 32886 Closed)
+2017-01-18 20:44:50+1030 [-] Stopping factory <twisted.web.server.Site instance at 0x7f31c8581440>
+2017-01-18 20:44:50+1030 [-] Main loop terminated.
+2017-01-18 20:44:55+1030 [-] pyspades server started on Wed Jan 18 20:44:55 2017
+2017-01-18 20:44:55+1030 [-] Log opened.
+2017-01-18 20:44:55+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass1' IN GROUP 'admin'
+2017-01-18 20:44:55+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass2' IN GROUP 'admin'
+2017-01-18 20:44:55+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'adminpass3' IN GROUP 'admin'
+2017-01-18 20:44:55+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'modpass' IN GROUP 'moderator'
+2017-01-18 20:44:55+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'guardpass' IN GROUP 'guard'
+2017-01-18 20:44:55+1030 [-] WARNING: FOUND DEFAULT PASSWORD 'trustedpass' IN GROUP 'trusted'
+2017-01-18 20:44:55+1030 [-] Generating map 'classicgen #1518887825'...
+2017-01-18 20:44:56+1030 [-] Map loaded successfully.
+2017-01-18 20:44:56+1030 [-] Started server...
+2017-01-18 20:44:57+1030 [-] Server identifier is aos://1438233724:32887
+2017-01-18 20:44:58+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:14:57 +0000] "GET / HTTP/1.1" 200 6540 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:44:58+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:14:57 +0000] "GET /overview HTTP/1.1" 200 567062 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:45:03+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:15:02 +0000] "GET /json HTTP/1.1" 200 460 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:45:08+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:15:07 +0000] "GET /json HTTP/1.1" 200 461 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:45:08+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:15:07 +0000] "GET /overview?timestamp=1484734508193 HTTP/1.1" 200 567062 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:45:13+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:15:12 +0000] "GET /json HTTP/1.1" 200 461 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:45:18+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:15:17 +0000] "GET /overview?timestamp=1484734518193 HTTP/1.1" 200 567062 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:45:18+1030 [-] "127.0.0.1" - - [18/Jan/2017:10:15:17 +0000] "GET /json HTTP/1.1" 200 461 "http://localhost:32886/" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
+2017-01-18 20:45:20+1030 [-] Received SIGINT, shutting down.
+2017-01-18 20:45:20+1030 [twisted.web.server.Site] (TCP Port 32886 Closed)
+2017-01-18 20:45:20+1030 [-] Stopping factory <twisted.web.server.Site instance at 0x7fe2206a83f8>
+2017-01-18 20:45:20+1030 [-] Main loop terminated.

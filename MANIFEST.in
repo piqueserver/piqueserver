@@ -1,7 +1,7 @@
-recursive-include configs/ *
 recursive-include enet/ *
 recursive-include examples/ * 
 recursive-include feature_server/ *
+# recursive-include feature_server/configs/ *
 recursive-include py2exe/ * 
 recursive-include pyspades/ * 
 # recursive-include piqueserver.egg-info/ * 
