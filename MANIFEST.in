@@ -8,10 +8,10 @@ recursive-include pyspades/ *
 
 global-exclude *.pyc
 global-exclude *.pyo
-global-exclude *.pyd
+# global-exclude *.pyd
 
 # C extensions
-global-exclude *.so
+# global-exclude *.so
 
 # C++ extension
 
@@ -19,7 +19,7 @@ global-exclude *.slo
 global-exclude *.lo
 global-exclude *.o
 
-global-exclude *.so
+# global-exclude *.so
 global-exclude *.dylib
 
 global-exclude *.lai
@@ -49,7 +49,7 @@ exclude pyspades/world.cpp
 exclude enet/pyenet/enet.c
 # exclude enet/pyenet/__init__.py
 exclude enet/pyenet/enet-pyspades.pyx
-recursive-exclude enet/pyenet/enet/ *
-recursive-exclude enet/pyenet/build/ *
+# recursive-exclude enet/pyenet/enet/ *
+# recursive-exclude enet/pyenet/build/ *
 exclude enet/enet-*.tar.gz
 
