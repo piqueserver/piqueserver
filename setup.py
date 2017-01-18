@@ -48,13 +48,11 @@ from distutils.core import run_setup
 try:
    import pypandoc
    import re
-
    long_description = pypandoc.convert_text(
         re.sub(r'[^\x00-\x7F]+',' ',
             pypandoc.convert('README.md', 'markdown', format="markdown_github")), 'rst', format="markdown")
-
 except (IOError, ImportError):
-   long_description = open('README.md').read()
+    long_description = ''
 
 def compile_enet():
     previousDir = os.getcwd()
