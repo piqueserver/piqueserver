@@ -167,7 +167,7 @@ setup(
         ],
     },
     package_dir = {PKG_NAME: 'feature_server', '%s.web' % PKG_NAME: 'feature_server/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet/pyenet'}, # some kind of find_packages?
-    package_data = {"pyspades.enet": ["enet.so"], "%s.web" % PKG_NAME: ["templates/status.html"]},
+    package_data = {"%s.web" % PKG_NAME: ["templates/status.html"]},
     include_package_data=True,
 
     ext_modules = ext_modules,
