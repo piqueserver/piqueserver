@@ -45,6 +45,17 @@ import shutil
 from setuptools import setup, find_packages, Extension, dist
 from distutils.core import run_setup
 
+try:
+   import pypandoc
+   import re
+
+   long_description = pypandoc.convert_text(
+        re.sub(r'[^\x00-\x7F]+',' ',
+            pypandoc.convert('README.md', 'markdown', format="markdown_github")), 'rst', format="markdown")
+
+except (IOError, ImportError):
+   long_description = open('README.md').read()
+
 def compile_enet():
     previousDir = os.getcwd()
     os.chdir("enet")
@@ -146,14 +157,30 @@ class build_ext(_build_ext):
 setup(
     name = PKG_NAME,
     packages = [PKG_NAME, '%s.web' % PKG_NAME, 'pyspades', 'pyspades.enet'],
-    version = '0.0.19',
+    version = '0.0.1',
     description = 'Open-Source server implementation for Ace of Spades',
     author = 'MatPow2, StackOverflow, piqueserver authors',
     author_email = 'nate.shoffner@gmail.com',
+    maintainer = 'noway421',
+    maintainer_email = 'noway@2ch.hk',
+    license = 'GNU General Public License v3',
+    long_description = long_description,
     url = PKG_URL,
     download_url = PKG_DOWNLOAD_URL,
     keywords = ['ace of spades', 'aos', 'server', 'pyspades', 'pysnip', 'piqueserver'],
-    classifiers = [],
+    classifiers = [
+        'Intended Audience :: System Administrators',
+        'Development Status :: 3 - Alpha',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: Unix',
+        'Environment :: Console',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'Programming Language :: Python',
+        'Programming Language :: Cython',
+        'Programming Language :: Python :: 2 :: Only',
+        'Framework :: Twisted',
+    ],
+    platforms = "Darwin, Unix",
     setup_requires = ['Cython>=0.25.2,<0.26'], # at least for now when we have to cythonize enet
     install_requires = ['Cython>=0.25.2,<0.26', 'Twisted>=16.6.0,<16.7', 'Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'], # status server is part of our 'vanila' package
     extras_require = {

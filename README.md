@@ -3,12 +3,16 @@
 An Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/PySnip).
 
 ## :rocket: Installation
+Clone the repo:
 ```bash
-virtualenv -p python2 venv && . venv/bin/activate && pip install -r requirements.txt
-./setup.py install
+git clone https://github.com/piqueserver/piqueserver
+```
+Install using pip:
+```bash
+pip install piqueserver
 ```
 And lift off! 
-```
+```bash
 piqueserver -d configs
 ```
 ## :speech_balloon: FAQ
@@ -46,11 +50,20 @@ March 2017 probably.
 
 #### Is that everything?
 
- Please see also the [original README](OLD_README.md) from PySnip and
+ Please see also the [original README](https://github.com/piqueserver/piqueserver/blob/master/OLD_README.md) from PySnip and
  the [Wiki](https://github.com/piqueserver/piqueserver/wiki) for more information.
 
 ## :blush: Contribute
 
 Don't be shy and submit us a PR or an issue! Help is always appreciated 
+
+## :wrench: Development
+
+Use virtualenv to install it
+
+```bash
+virtualenv -p python2 venv && . venv/bin/activate && pip install -r requirements.txt
+./setup.py install
+```
 
 Brought to you with :heart: by the [piqueserver team](https://github.com/orgs/piqueserver/people).
