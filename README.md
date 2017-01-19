@@ -87,7 +87,7 @@ Don't be shy and submit us a PR or an issue! Help is always appreciated
 
 ## :wrench: Development
 
-Use virtualenv to install it
+Use `pip` and `virtualenv` to setup the development environment:
 
 ```bash
 $ virtualenv -p python2 venv && . ./venv/bin/activate
