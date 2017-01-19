@@ -179,8 +179,8 @@ setup(
         'Framework :: Twisted',
     ],
     platforms = "Darwin, Unix",
-    setup_requires = ['Cython>=0.25.2,<0.26'], # at least for now when we have to cythonize enet
-    install_requires = ['Cython>=0.25.2,<0.26', 'Twisted>=16.6.0,<16.7', 'Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<=4.0'], # status server is part of our 'vanila' package
+    setup_requires = ['Cython>=0,<1'], # at least for now when we have to cythonize enet
+    install_requires = ['Cython>=0,<1', 'Twisted>=16,<17', 'Jinja2>=2,<3', 'Pillow>=3,<5'], # status server is part of our 'vanila' package
     extras_require = {
         'from': ['pygeoip>=0.3.2,<0.4'],
         # 'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
