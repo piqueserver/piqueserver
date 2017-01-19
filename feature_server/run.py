@@ -35,9 +35,9 @@ import cfg
 arg_parser = argparse.ArgumentParser(prog=cfg.pkg_name,
                                      description='%s is an open-source Python server implementation for the voxel-based game "Ace of Spades".' % cfg.pkg_name)
 
-arg_parser.add_argument("-c","--config-file", default="config.json", 
+arg_parser.add_argument("-c","--config-file", default="config.json",
         help="specify alternate config file (relative to config dir if relative path)")
-arg_parser.add_argument("-j","--json-parameters", 
+arg_parser.add_argument("-j","--json-parameters",
         help="add extra json parameters, overwriting that in config file")
 arg_parser.add_argument("-d","--config-dir", default=cfg.config_dir,
         help="the directory which contains maps, scripts, etc (in correctly named subdirs) - default is %s" % cfg.config_path)
@@ -675,7 +675,7 @@ class FeatureProtocol(ServerProtocol):
             self.ban_manager = bansubscribe.BanManager(self, ban_subscribe)
         # logfile location in resource dir if not abs path given
         logfile = choose_path(config_dir,config.get('logfile', ''))
-        if logfile.strip(): # catches empty filename 
+        if logfile.strip(): # catches empty filename
             if config.get('rotate_daily', False):
                 create_filename_path(logfile)
                 logging_file = DailyLogFile(logfile, '.')
@@ -804,7 +804,7 @@ class FeatureProtocol(ServerProtocol):
 
     def get_map(self, rot_info):
         return Map(rot_info, os.path.join(config_dir,'maps'))
-    
+
     def set_map_rotation(self, maps, now = True):
         try:
             maps = check_rotation(maps, os.path.join(config_dir,'maps'))
