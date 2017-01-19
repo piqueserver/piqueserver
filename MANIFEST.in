@@ -28,8 +28,8 @@ global-exclude *.a
 
 # config/userdata
 exclude configs/maps/*.txtc
-recursive-exclude configs/logs/ *
-recursive-exclude configs/data/ *
+recursive-exclude feature_server/configs/logs/ *
+recursive-exclude feature_server/configs/data/ *
 
 # py2exe
 recursive-exclude py2exe/dist/

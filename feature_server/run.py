@@ -41,8 +41,25 @@ arg_parser.add_argument("-j","--json-parameters",
         help="add extra json parameters, overwriting that in config file")
 arg_parser.add_argument("-d","--config-dir", default=cfg.config_dir,
         help="the directory which contains maps, scripts, etc (in correctly named subdirs) - default is %s" % cfg.config_path)
+arg_parser.add_argument("--copy-config", action='store_true', help='copies the default/example config to the default location or as specified by "-d"')
 
 args = arg_parser.parse_args()
+
+# ok, so we use the resource directory to search for maps, etc.
+config_dir = args.config_dir
+cfg.config_dir = config_dir
+
+if args.copy_config:
+    config_source = os.path.dirname(os.path.abspath(__file__)) + '/configs'
+    try:
+        print('Attempting to copy example config from %s to %s.' % (config_source, cfg.config_dir))
+        shutil.copytree(config_source, cfg.config_dir)
+    except Exception as e:
+        print(e)
+        sys.exit(1)
+
+    print('Complete! Please edit files in %s to your liking.' % cfg.config_dir)
+    sys.exit(0)
 
 
 def choose_path(base,top):
@@ -50,10 +67,6 @@ def choose_path(base,top):
     if not os.path.isabs(top):
         return os.path.join(base,top)
     return top
-
-# ok, so we use the resource directory to search for maps, etc.
-config_dir = args.config_dir
-cfg.config_dir = config_dir
 
 # add it to the path so we can import scripts
 sys.path.append(config_dir)
