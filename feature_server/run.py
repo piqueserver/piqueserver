@@ -93,6 +93,7 @@ try:
         cfg.config = config
 except IOError as e:
     print("Error reading config from {}: ".format(config_file) + str(e))
+    print("If you haven't already, try copying the example config to the default location with 'piqueserver --copy-config'.")
     sys.exit(1)
 except ValueError as e:
     print("Error in config file {}: ".format(config_file) + str(e))
