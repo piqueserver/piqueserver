@@ -93,7 +93,7 @@ Use virtualenv to install it
 $ virtualenv -p python2 venv && . ./venv/bin/activate
 (venv) $ pip install -r requirements.txt
 (venv) $ ./setup.py install
-$ deactivate # Deactivate venv
+(venv) $ deactivate # Deactivate virtualenv
 ```
 -------
 Brought to you with :heart: by the [piqueserver team](https://github.com/orgs/piqueserver/people).
