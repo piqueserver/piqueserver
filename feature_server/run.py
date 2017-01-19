@@ -35,14 +35,31 @@ import cfg
 arg_parser = argparse.ArgumentParser(prog=cfg.pkg_name,
                                      description='%s is an open-source Python server implementation for the voxel-based game "Ace of Spades".' % cfg.pkg_name)
 
-arg_parser.add_argument("-c","--config-file", default="config.json", 
+arg_parser.add_argument("-c","--config-file", default="config.json",
         help="specify alternate config file (relative to config dir if relative path)")
-arg_parser.add_argument("-j","--json-parameters", 
+arg_parser.add_argument("-j","--json-parameters",
         help="add extra json parameters, overwriting that in config file")
 arg_parser.add_argument("-d","--config-dir", default=cfg.config_dir,
         help="the directory which contains maps, scripts, etc (in correctly named subdirs) - default is %s" % cfg.config_path)
+arg_parser.add_argument("--copy-config", action='store_true', help='copies the default/example config to the default location or as specified by "-d"')
 
 args = arg_parser.parse_args()
+
+# ok, so we use the resource directory to search for maps, etc.
+config_dir = args.config_dir
+cfg.config_dir = config_dir
+
+if args.copy_config:
+    config_source = os.path.dirname(os.path.abspath(__file__)) + '/config'
+    try:
+        print('Attempting to copy example config from %s to %s.' % (config_source, cfg.config_dir))
+        shutil.copytree(config_source, cfg.config_dir)
+    except Exception as e:
+        print(e)
+        sys.exit(1)
+
+    print('Complete! Please edit files in %s to your liking.' % cfg.config_dir)
+    sys.exit(0)
 
 
 def choose_path(base,top):
@@ -50,10 +67,6 @@ def choose_path(base,top):
     if not os.path.isabs(top):
         return os.path.join(base,top)
     return top
-
-# ok, so we use the resource directory to search for maps, etc.
-config_dir = args.config_dir
-cfg.config_dir = config_dir
 
 # add it to the path so we can import scripts
 sys.path.append(config_dir)
@@ -80,6 +93,7 @@ try:
         cfg.config = config
 except IOError as e:
     print("Error reading config from {}: ".format(config_file) + str(e))
+    print("If you haven't already, try copying the example config to the default location with 'piqueserver --copy-config'.")
     sys.exit(1)
 except ValueError as e:
     print("Error in config file {}: ".format(config_file) + str(e))
@@ -675,7 +689,7 @@ class FeatureProtocol(ServerProtocol):
             self.ban_manager = bansubscribe.BanManager(self, ban_subscribe)
         # logfile location in resource dir if not abs path given
         logfile = choose_path(config_dir,config.get('logfile', ''))
-        if logfile.strip(): # catches empty filename 
+        if logfile.strip(): # catches empty filename
             if config.get('rotate_daily', False):
                 create_filename_path(logfile)
                 logging_file = DailyLogFile(logfile, '.')
@@ -804,7 +818,7 @@ class FeatureProtocol(ServerProtocol):
 
     def get_map(self, rot_info):
         return Map(rot_info, os.path.join(config_dir,'maps'))
-    
+
     def set_map_rotation(self, maps, now = True):
         try:
             maps = check_rotation(maps, os.path.join(config_dir,'maps'))

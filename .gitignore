@@ -29,8 +29,8 @@ dist/
 
 # config/userdata
 configs/maps/*.txtc
-configs/logs/
-configs/data/
+configs/logs/*
+configs/data/*
 
 # py2exe
 py2exe/dist/
