@@ -90,8 +90,10 @@ Don't be shy and submit us a PR or an issue! Help is always appreciated
 Use virtualenv to install it
 
 ```bash
-virtualenv -p python2 venv && . venv/bin/activate && pip install -r requirements.txt
-./setup.py install
+$ virtualenv -p python2 venv && . ./venv/bin/activate
+(venv) $ pip install -r requirements.txt
+(venv) $ ./setup.py install
+$ deactivate # Deactivate venv
 ```
 -------
 Brought to you with :heart: by the [piqueserver team](https://github.com/orgs/piqueserver/people).
