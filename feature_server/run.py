@@ -50,7 +50,7 @@ config_dir = args.config_dir
 cfg.config_dir = config_dir
 
 if args.copy_config:
-    config_source = os.path.dirname(os.path.abspath(__file__)) + '/configs'
+    config_source = os.path.dirname(os.path.abspath(__file__)) + '/config'
     try:
         print('Attempting to copy example config from %s to %s.' % (config_source, cfg.config_dir))
         shutil.copytree(config_source, cfg.config_dir)
