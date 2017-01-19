@@ -3,18 +3,42 @@
 An Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/PySnip).
 
 ## :rocket: Installation
-Clone the repo to get example config files:
-```bash
-git clone https://github.com/piqueserver/piqueserver
-```
-Then install using pip:
+
+Install with pip:
+
 ```bash
 pip install piqueserver
 ```
-A-a-and lift off! 
+
+or from git:
+
 ```bash
-piqueserver -d ./piqueserver/configs
+git clone https://github.com/piqueserver/piqueserver
 ```
+
+Then copy the default configuration as a base to work off
+
+```bash
+piqueserver --copy-config
+```
+
+A-a-and lift off!
+
+```bash
+piqueserver
+```
+
+### Custom config location
+
+If you wish to use a different location to `~/.config/piqueserver/` for config files, specify a directory with the `-d`
+flag:
+
+```bash
+piqueserver --copy-config -d custom_dir
+piqueserver -d custom_dir
+```
+
+
 ## :speech_balloon: FAQ
 
 #### What's the purpose?
@@ -31,11 +55,11 @@ there, I guess. The important thing is to keep AoS servers alive.
 
 #### How long will it take for the first release?
 
-March 2017 probably. 
+March 2017 probably.
 
 
 #### Why should I use piqueserver instead of PySnip/PySpades?
- 
+
  * Multi config installation
  * Docker support
  * Bug fixes
@@ -55,7 +79,7 @@ March 2017 probably.
 
 ## :blush: Contribute
 
-Don't be shy and submit us a PR or an issue! Help is always appreciated 
+Don't be shy and submit us a PR or an issue! Help is always appreciated
 
 ## :wrench: Development
 
