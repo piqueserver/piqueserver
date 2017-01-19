@@ -14,6 +14,10 @@ or from git:
 
 ```bash
 git clone https://github.com/piqueserver/piqueserver
+virtualenv2 venv
+source venv/bin/activate
+pip install -r requirements.txt
+python setup.py install
 ```
 
 Then copy the default configuration as a base to work off
