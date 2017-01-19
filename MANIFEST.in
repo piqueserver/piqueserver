@@ -27,7 +27,7 @@ global-exclude *.la
 global-exclude *.a
 
 # config/userdata
-exclude configs/maps/*.txtc
+exclude feature_server/configs/maps/*.txtc
 recursive-exclude feature_server/configs/logs/ *
 recursive-exclude feature_server/configs/data/ *
 
