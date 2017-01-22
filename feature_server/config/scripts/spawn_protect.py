@@ -25,5 +25,4 @@ def apply_script(protocol, connection, config):
                 self.send_chat( "%s is spawn-protected for %s." %(hit_player.name, prettify_timespan(timespan, True)))
                 return False
             return connection.on_hit(self, hit_amount, hit_player, type, grenade)
-    
     return protocol, SpawnProtectConnection
