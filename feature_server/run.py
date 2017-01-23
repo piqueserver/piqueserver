@@ -28,55 +28,24 @@ import time
 import shutil
 from collections import deque
 
-import argparse
-
 import cfg
 
-arg_parser = argparse.ArgumentParser(prog=cfg.pkg_name,
-                                     description='%s is an open-source Python server implementation for the voxel-based game "Ace of Spades".' % cfg.pkg_name)
-
-arg_parser.add_argument("-c","--config-file", default="config.json",
-        help="specify alternate config file (relative to config dir if relative path)")
-arg_parser.add_argument("-j","--json-parameters",
-        help="add extra json parameters, overwriting that in config file")
-arg_parser.add_argument("-d","--config-dir", default=cfg.config_dir,
-        help="the directory which contains maps, scripts, etc (in correctly named subdirs) - default is %s" % cfg.config_path)
-arg_parser.add_argument("--copy-config", action='store_true', help='copies the default/example config to the default location or as specified by "-d"')
-
-args = arg_parser.parse_args()
-
-# ok, so we use the resource directory to search for maps, etc.
-config_dir = args.config_dir
-cfg.config_dir = config_dir
-
-if args.copy_config:
-    config_source = os.path.dirname(os.path.abspath(__file__)) + '/config'
-    try:
-        print('Attempting to copy example config from %s to %s.' % (config_source, cfg.config_dir))
-        shutil.copytree(config_source, cfg.config_dir)
-    except Exception as e:
-        print(e)
-        sys.exit(1)
-
-    print('Complete! Please edit files in %s to your liking.' % cfg.config_dir)
-    sys.exit(0)
-
-
-def choose_path(base,top):
+def choose_path(base, top):
     "helper function to choose the right path/file for the config, etc."
     if not os.path.isabs(top):
-        return os.path.join(base,top)
+        return os.path.join(base, top)
     return top
 
+
 # add it to the path so we can import scripts
-sys.path.append(config_dir)
-# add our package to path too so scripts can import `feauture_server/`
-sys.path.insert(1, os.path.dirname(os.path.abspath(__file__))) # a better way instead of abs path?
+sys.path.append(cfg.config_dir)
 
-
+# add our package to path too so scripts can import `feature_server/`
+# a better way instead of abs path?
+sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
 # fix the path for the config file - handles differering directories and relative or absolute paths
-config_file = choose_path(config_dir,args.config_file)
+config_file = choose_path(cfg.config_dir, cfg.config_file)
 cfg.config_file = config_file
 
 # default passwords hardcoded in config
@@ -88,21 +57,21 @@ DEFAULT_PASSWORDS = {
 }
 
 try:
-    with open(config_file, 'rb') as f:
+    with open(cfg.config_file, 'rb') as f:
         config = json.load(f)
         cfg.config = config
 except IOError as e:
-    print("Error reading config from {}: ".format(config_file) + str(e))
+    print("Error reading config from {}: ".format(cfg.config_file) + str(e))
     print("If you haven't already, try copying the example config to the default location with 'piqueserver --copy-config'.")
     sys.exit(1)
 except ValueError as e:
-    print("Error in config file {}: ".format(config_file) + str(e))
+    print("Error in config file {}: ".format(cfg.config_file) + str(e))
     sys.exit(1)
 
 
-# update with parameters from args
-if args.json_parameters:
-    json_parameter = args.json_parameters
+# update with parameters from cfg (supplied as cli args)
+if cfg.json_parameters:
+    json_parameter = cfg.json_parameters
     config.update(eval(json_parameter))
 
 
@@ -615,7 +584,7 @@ class FeatureProtocol(ServerProtocol):
         self.win_count = itertools.count(1)
         self.bans = NetworkDict()
         try:
-            self.bans.read_list(json.load(open(os.path.join(config_dir,'bans.txt'), 'rb')))
+            self.bans.read_list(json.load(open(os.path.join(cfg.config_dir,'bans.txt'), 'rb')))
         except IOError:
             pass
         self.hard_bans = set() # possible DDoS'ers are added here
@@ -666,7 +635,7 @@ class FeatureProtocol(ServerProtocol):
         self.set_god_build = config.get('set_god_build', False)
         self.debug_log = config.get('debug_log', False)
         if self.debug_log:
-            pyspades.debug.open_debug_log(os.path.join(config_dir,'debug.log'))
+            pyspades.debug.open_debug_log(os.path.join(cfg.config_dir,'debug.log'))
         ssh = config.get('ssh', {})
         if ssh.get('enabled', False):
             from ssh import RemoteConsole
@@ -688,7 +657,7 @@ class FeatureProtocol(ServerProtocol):
             import bansubscribe
             self.ban_manager = bansubscribe.BanManager(self, ban_subscribe)
         # logfile location in resource dir if not abs path given
-        logfile = choose_path(config_dir,config.get('logfile', ''))
+        logfile = choose_path(cfg.config_dir, config.get('logfile', ''))
         if logfile.strip(): # catches empty filename
             if config.get('rotate_daily', False):
                 create_filename_path(logfile)
@@ -817,11 +786,11 @@ class FeatureProtocol(ServerProtocol):
         return True
 
     def get_map(self, rot_info):
-        return Map(rot_info, os.path.join(config_dir,'maps'))
+        return Map(rot_info, os.path.join(cfg.config_dir,'maps'))
 
     def set_map_rotation(self, maps, now = True):
         try:
-            maps = check_rotation(maps, os.path.join(config_dir,'maps'))
+            maps = check_rotation(maps, os.path.join(cfg.config_dir,'maps'))
         except MapNotFound, e:
             return e
         self.maps = maps
@@ -943,7 +912,7 @@ class FeatureProtocol(ServerProtocol):
         return result
 
     def save_bans(self):
-        json.dump(self.bans.make_list(), open_create(os.path.join(config_dir,'bans.txt'), 'wb'))
+        json.dump(self.bans.make_list(), open_create(os.path.join(cfg.config_dir,'bans.txt'), 'wb'))
         if self.ban_publish is not None:
             self.ban_publish.update()
 
