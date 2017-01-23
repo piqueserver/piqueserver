@@ -71,8 +71,13 @@ except ValueError as e:
 
 # update with parameters from cfg (supplied as cli args)
 if cfg.json_parameters:
-    json_parameter = cfg.json_parameters
-    config.update(eval(json_parameter))
+    try:
+        params = json.loads(cfg.json_parameters)
+    except Exception as e:
+        print('Error loading json parameters from the command line')
+        print(e)
+        sys.exit(1)
+    config.update(params)
 
 
 profile = config.get('profile', False)
