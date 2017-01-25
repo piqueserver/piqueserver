@@ -188,7 +188,7 @@ setup(
     },
     entry_points = {
         'console_scripts': [
-            '%s=%s.__main__:main' % (PKG_NAME, PKG_NAME)
+            '%s=%s.run:main' % (PKG_NAME, PKG_NAME)
         ],
     },
     package_dir = {PKG_NAME: 'feature_server', '%s.web' % PKG_NAME: 'feature_server/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet/pyenet'}, # some kind of find_packages?
