@@ -1,6 +1,7 @@
 import atexit
 
 from cpython cimport bool
+from libc.stdint cimport uintptr_t
 
 cdef extern from "enet/types.h":
     ctypedef unsigned char enet_uint8
@@ -21,6 +22,14 @@ cdef extern from "enet/enet.h":
         ENET_PORT_ANY = 0
 
     ctypedef int ENetSocket
+
+    ctypedef struct ENetBuffer:
+        void *data
+        size_t dataLength
+
+    ctypedef struct ENetEvent
+
+    ctypedef int (__cdecl *ENetInterceptCallback) (ENetHost *host, ENetEvent *event) except -1 # __cdecl is standard on unix and overwriten for win32
 
     ctypedef struct ENetAddress:
         enet_uint32 host
@@ -107,10 +116,14 @@ cdef extern from "enet/enet.h":
         ENetPeer *peers
         size_t peerCount
         size_t channelLimit
+        enet_uint8 *receivedData
+        size_t receivedDataLength
+        ENetAddress receivedAddress
         enet_uint32 totalSentData
         enet_uint32 totalSentPackets
         enet_uint32 totalReceivedData
         enet_uint32 totalReceivedPackets
+        ENetInterceptCallback intercept
 
     ctypedef enum ENetEventType:
         ENET_EVENT_TYPE_NONE = 0
@@ -161,6 +174,9 @@ cdef extern from "enet/enet.h":
     void enet_peer_disconnect_now(ENetPeer *peer, enet_uint32 data)
     void enet_peer_disconnect_later(ENetPeer *peer, enet_uint32 data)
 
+    # Socket functions
+    int enet_socket_send(ENetSocket socket, ENetAddress *address, ENetBuffer *buffer, size_t size)
+
 cdef enum:
     MAXHOSTNAME = 257
 
@@ -185,6 +201,8 @@ PEER_STATE_DISCONNECTING = ENET_PEER_STATE_DISCONNECTING
 PEER_STATE_ACKNOWLEDGING_DISCONNECT = ENET_PEER_STATE_ACKNOWLEDGING_DISCONNECT
 PEER_STATE_ZOMBIE = ENET_PEER_STATE_ZOMBIE
 
+cdef class Address
+
 cdef class Socket:
     """
     Socket (int socket)
@@ -197,6 +215,17 @@ cdef class Socket:
     """
 
     cdef ENetSocket _enet_socket
+
+    def send(self, Address address, data):
+        cdef ENetBuffer buffer
+        data = data if isinstance(data, bytes) else data.encode('cp437')
+
+        buffer.data = <char*>data
+        buffer.dataLength = len(data)
+
+        cdef int result = enet_socket_send(self._enet_socket,
+            &address._enet_address, &buffer, 1)
+        return result
 
     def fileno(self):
         return self._enet_socket
@@ -396,6 +425,9 @@ cdef class Peer:
             elif op == 3:
                 return self.address != obj.address
         raise NotImplementedError
+
+    def __hash__(self):
+        return <uintptr_t>self._enet_peer
 
     def send(self, channelID, Packet packet):
         """
@@ -798,6 +830,9 @@ cdef class Event:
                 (<Packet> self._packet)._enet_packet = self._enet_event.packet
             return self._packet
 
+from weakref import WeakValueDictionary
+cdef host_static_instances = WeakValueDictionary()
+
 cdef class Host:
     """
     Host (Address address, int peerCount, int channelLimit,
@@ -819,6 +854,8 @@ cdef class Host:
 
     cdef ENetHost *_enet_host
     cdef bool dealloc
+    cdef object _interceptCallback
+    cdef object __weakref__
 
     def __init__ (self, Address address=None, peerCount=0, channelLimit=0,
         incomingBandwidth=0, outgoingBandwidth=0):
@@ -831,6 +868,12 @@ cdef class Host:
         if not self._enet_host:
             raise MemoryError("Unable to create host structure!")
         self.dealloc = True
+
+        global host_static_instances
+        host_static_instances[<uintptr_t>self._enet_host] = self
+
+    def __hash__(self):
+        return <uintptr_t>self._enet_host
 
     def __cinit__(self):
         self.dealloc = False
@@ -999,6 +1042,27 @@ cdef class Host:
 
         def __set__(self, value):
             self._enet_host.totalReceivedPackets = value
+
+    property intercept:
+        def __get__(self):
+            return self._interceptCallback
+
+        def __set__(self, value):
+            if value is None:
+                self._enet_host.intercept = NULL
+            else:
+                self._enet_host.intercept = intercept_callback
+            self._interceptCallback = value
+
+
+cdef int __cdecl intercept_callback(ENetHost *host, ENetEvent *event) except -1:
+    cdef Address address = Address(None, 0)
+    address._enet_address = host.receivedAddress
+    cdef object ret = None
+
+    if <uintptr_t>host in host_static_instances:
+        ret = host_static_instances[<uintptr_t>host].intercept(address, (<char*>host.receivedData)[:host.receivedDataLength])
+    return int(bool(ret))
 
 def _enet_atexit():
     enet_deinitialize()

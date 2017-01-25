@@ -71,6 +71,29 @@ class TestHost(unittest.TestCase):
         self.assertEquals(client_connected, True)
         self.assertEquals(server_connected, True)
 
+    def test_socketsend(self):
+
+        self.send_done = False
+        socketsend_msg = b"\xff\xff\xff\xffgetstatus\x00"
+
+        def f(address, data):
+            if data != socketsend_msg:
+                # error messages are not propagating
+                # through cython
+                print("data != statusResponse")
+                assert(False)
+            self.send_done = True
+
+        while not self.send_done:
+
+            self.client.service(0)
+            self.client.socket.send(self.server.address, socketsend_msg)
+
+            event = self.server.service(0)
+            if event.type == enet.EVENT_TYPE_CONNECT:
+                self.server.intercept = f
+
+
     def test_broadcast(self):
         broadcast_done = False
         broadcast_msg = b"foo\0bar\n baz!"
