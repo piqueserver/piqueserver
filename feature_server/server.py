@@ -43,13 +43,6 @@ DEFAULT_PASSWORDS = {
 
 PORT = 32887
 
-def choose_path(base, top):
-    "helper function to choose the right path/file for the config, etc."
-    if not os.path.isabs(top):
-        return os.path.join(base, top)
-    return top
-
-
 def get_git_rev():
     if not os.path.exists(".git"):
         return 'snapshot'
@@ -628,8 +621,10 @@ class FeatureProtocol(ServerProtocol):
         if ban_subscribe.get('enabled', True):
             import bansubscribe
             self.ban_manager = bansubscribe.BanManager(self, ban_subscribe)
-        # logfile location in resource dir if not abs path given
-        logfile = choose_path(cfg.config_dir, config.get('logfile', ''))
+        # logfile path relative to config dir if not abs path
+        logfile = config.get('logfile', '')
+        if not os.path.isabs(logfile):
+            logfile = os.path.join(cfg.config_dir, logfile)
         if logfile.strip(): # catches empty filename
             if config.get('rotate_daily', False):
                 create_filename_path(logfile)
@@ -1015,10 +1010,6 @@ def run():
     # add our package to path too so scripts can import `feature_server/`
     # a better way instead of abs path?
     sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
-
-    # fix the path for the config file - handles differering directories and relative or absolute paths
-    config_file = choose_path(cfg.config_dir, cfg.config_file)
-    cfg.config_file = config_file
 
     try:
         with open(cfg.config_file, 'rb') as f:

@@ -64,8 +64,8 @@ def main():
     arg_parser = argparse.ArgumentParser(prog=cfg.pkg_name,
                                          description='%s is an open-source Python server implementation for the voxel-based game "Ace of Spades".' % cfg.pkg_name)
 
-    arg_parser.add_argument('-c', '--config-file', default='config.json',
-            help='specify the config file (relative to config dir if relative path) - default is "config.json"')
+    arg_parser.add_argument('-c', '--config-file', default=None,
+            help='specify the config file - default is "config.json" in the config dir')
     arg_parser.add_argument('-j', '--json-parameters',
             help='add extra json parameters (overrides the ones present in the config file)')
     arg_parser.add_argument('-d', '--config-dir', default=cfg.config_dir,
@@ -77,7 +77,12 @@ def main():
 
     # populate the global config with values from args
     cfg.config_dir = args.config_dir
-    cfg.config_file = args.config_file
+
+    if args.config_file is None:
+        cfg.config_file = os.path.join(cfg.config_dir, 'config.json')
+    else:
+        cfg.config_file = args.config_file
+
     cfg.json_parameters = args.json_parameters
 
     run = True
