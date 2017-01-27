@@ -11,15 +11,18 @@ from twisted.internet.task import LoopingCall
 import json
 import commands
 
+
 @commands.admin
 @commands.name('timer')
 def start_timer(connection, end):
     return connection.protocol.start_timer(int(end) * 60)
 
+
 @commands.admin
 @commands.name('stoptimer')
 def stop_timer(connection, end):
     return connection.protocol.stop_timer()
+
 
 @commands.admin
 @commands.name('startrecord')
@@ -27,11 +30,13 @@ def start_record(connection):
     connection.protocol.start_record()
     return 'Recording started.'
 
+
 @commands.admin
 @commands.name('stoprecord')
 def stop_record(connection):
     connection.protocol.stop_record()
     return 'Recording stopped.'
+
 
 @commands.admin
 @commands.name('saverecord')
@@ -46,28 +51,30 @@ commands.add(start_record)
 commands.add(stop_record)
 commands.add(save_record)
 
+
 def apply_script(protocol, connection, config):
     class MatchConnection(connection):
+
         def on_flag_take(self):
             self.add_message("%s took %s's flag!" %
-                (self.printable_name, self.team.other.name.lower()))
+                             (self.printable_name, self.team.other.name.lower()))
             return connection.on_flag_take(self)
 
         def on_flag_drop(self):
             self.add_message("%s dropped %s's flag!" %
-                (self.printable_name, self.team.other.name.lower()))
+                             (self.printable_name, self.team.other.name.lower()))
             return connection.on_flag_drop(self)
 
         def on_flag_capture(self):
             self.add_message("%s captured %s's flag!" %
-                (self.printable_name, self.team.other.name.lower()))
+                             (self.printable_name, self.team.other.name.lower()))
             return connection.on_flag_capture(self)
 
         def on_kill(self, killer, type, grenade):
             if killer is None:
                 killer = self
             self.add_message("%s was killed by %s!" %
-                (self.printable_name, killer.printable_name))
+                             (self.printable_name, killer.printable_name))
             self.protocol.add_kill(self, killer)
             return connection.on_kill(self, killer, type, grenade)
 
@@ -79,6 +86,7 @@ def apply_script(protocol, connection, config):
         timer_call = None
         timer_end = None
         record = None
+
         def __init__(self, *arg, **kw):
             protocol.__init__(self, *arg, **kw)
             self.messages = []
@@ -90,7 +98,7 @@ def apply_script(protocol, connection, config):
                 return 'Timer is running already.'
             self.timer_end = reactor.seconds() + end
             self.send_chat('Timer started, ending in %s minutes' % (end / 60),
-                irc = True)
+                           irc=True)
             self.display_timer(True)
 
         def stop_timer(self):
@@ -101,22 +109,22 @@ def apply_script(protocol, connection, config):
             else:
                 return 'No timer in progress.'
 
-        def display_timer(self, silent = False):
+        def display_timer(self, silent=False):
             time_left = self.timer_end - reactor.seconds()
             minutes_left = time_left / 60.0
             next_call = 60
             if not silent:
                 if time_left <= 0:
-                    self.send_chat('Timer ended!', irc = True)
+                    self.send_chat('Timer ended!', irc=True)
                     self.timer_end = None
                     return
                 elif minutes_left <= 1:
                     self.send_chat('%s seconds left' % int(time_left),
-                        irc = True)
+                                   irc=True)
                     next_call = max(1, int(time_left / 2.0))
                 else:
                     self.send_chat('%s minutes left' % int(minutes_left),
-                        irc = True)
+                                   irc=True)
             self.timer_call = reactor.callLater(next_call, self.display_timer)
 
         def display_messages(self):
@@ -137,7 +145,7 @@ def apply_script(protocol, connection, config):
             try:
                 return self.record[name]
             except KeyError:
-                record = {'deaths' : 0, 'kills' : 0}
+                record = {'deaths': 0, 'kills': 0}
                 self.record[name] = record
                 return record
 

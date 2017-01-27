@@ -13,11 +13,12 @@ S_SPEED = 'Day cycle speed is {multiplier}'
 S_SPEED_SET = 'Day cycle speed changed to {multiplier}'
 S_STOPPED = 'Day cycle stopped'
 
+
 @name('dayspeed')
 @admin
-def day_speed(connection, value = None):
+def day_speed(connection, value=None):
     if value is None:
-        return S_SPEED.format(multiplier = connection.protocol.time_multiplier)
+        return S_SPEED.format(multiplier=connection.protocol.time_multiplier)
     value = float(value)
     protocol = connection.protocol
     protocol.time_multiplier = value
@@ -28,12 +29,13 @@ def day_speed(connection, value = None):
     else:
         if not protocol.daycycle_loop.running:
             protocol.daycycle_loop.start(protocol.day_update_frequency)
-        return S_SPEED_SET.format(multiplier = value)
+        return S_SPEED_SET.format(multiplier=value)
 
 from math import modf
 
+
 @name('daytime')
-def day_time(connection, value = None):
+def day_time(connection, value=None):
     if value is not None:
         if not connection.admin:
             return S_NO_RIGHTS
@@ -43,12 +45,13 @@ def day_time(connection, value = None):
         connection.protocol.current_time = value
         connection.protocol.update_day_color()
     f, i = modf(connection.protocol.current_time)
-    return S_TIME_OF_DAY.format(hours = int(i), minutes = int(f * 60))
+    return S_TIME_OF_DAY.format(hours=int(i), minutes=int(f * 60))
 
 add(day_speed)
 add(day_time)
 
 from pyspades.color import *
+
 
 def apply_script(protocol, connection, config):
     class DayCycleProtocol(protocol):
@@ -73,21 +76,21 @@ def apply_script(protocol, connection, config):
             self.day_update_frequency = 0.1
             self.time_multiplier = 48.0
             self.day_colors = [
-                ( 0.00, (0.05,   0.05, 0.05), False),
-                ( 4.00, (0.05,   0.77, 0.05), False),
-                ( 5.00, (0.0694, 0.77, 0.78), True),
-                ( 5.30, (0.0361, 0.25, 0.95), False),
-                ( 6.00, (0.56,   0.18, 0.94), False),
-                ( 9.00, (0.5527, 0.24, 0.94), False),
+                (0.00, (0.05,   0.05, 0.05), False),
+                (4.00, (0.05,   0.77, 0.05), False),
+                (5.00, (0.0694, 0.77, 0.78), True),
+                (5.30, (0.0361, 0.25, 0.95), False),
+                (6.00, (0.56,   0.18, 0.94), False),
+                (9.00, (0.5527, 0.24, 0.94), False),
                 (12.00, (0.5527, 0.41, 0.95), False),
                 (19.50, (0.56,   0.28, 0.96), False),
                 (20.00, (0.15,   0.33, 0.87), False),
                 (20.25, (0.11,   0.49, 0.94), False),
                 (20.50, (0.1056, 0.69, 1.00), False),
-                (22.50, (0.1,    0.69, 0.1 ), True),
+                (22.50, (0.1,    0.69, 0.1), True),
                 (23.00, (0.05,   0.05, 0.05), False)]
             self.time_step = 24.00 / (self.day_duration /
-                self.day_update_frequency)
+                                      self.day_update_frequency)
             self.target_color_index = 0
             self.next_color()
             if not self.daycycle_loop.running:
@@ -97,20 +100,20 @@ def apply_script(protocol, connection, config):
             if self.current_time >= 24.00:
                 self.current_time = wrap(0.00, 24.00, self.current_time)
             while (self.current_time < self.start_time or
-                self.current_time >= self.target_time):
+                   self.current_time >= self.target_time):
                 self.next_color()
                 self.target_time = self.target_time or 24.00
             t = ((self.current_time - self.start_time) /
-                (self.target_time - self.start_time))
+                 (self.target_time - self.start_time))
             if self.hsv_transition:
                 new_color = interpolate_hsb(self.start_color,
-                    self.target_color, t)
+                                            self.target_color, t)
                 new_color = hsb_to_rgb(*new_color)
             else:
                 new_color = interpolate_rgb(self.start_color,
-                    self.target_color, t)
+                                            self.target_color, t)
             if (self.current_color is None or
-                rgb_distance(self.current_color, new_color) > 3):
+                    rgb_distance(self.current_color, new_color) > 3):
                 self.current_color = new_color
                 self.set_fog_color(self.current_color)
             self.current_time += self.time_step * self.time_multiplier
@@ -119,7 +122,7 @@ def apply_script(protocol, connection, config):
             self.start_time, self.start_color, _ = (
                 self.day_colors[self.target_color_index])
             self.target_color_index = ((self.target_color_index + 1) %
-                len(self.day_colors))
+                                       len(self.day_colors))
             self.target_time, self.target_color, self.hsv_transition = (
                 self.day_colors[self.target_color_index])
             if not self.hsv_transition:

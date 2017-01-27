@@ -38,10 +38,10 @@ from pyspades.common import make_color, to_coordinates
 from pyspades.constants import *
 from commands import add, admin, get_player, name
 
-SHADOW_INTEL = True # if True, shows where the intel used to be before taken
-REVEAL_ENEMIES = True # if True, mimics old intel reveal behavior when captured
-VV_ENABLED = True # if True, enables spotting by pressing SNEAK two times
-CHAT_MARKERS = True # if True, enables !build !tunnel etc teamchat triggers
+SHADOW_INTEL = True  # if True, shows where the intel used to be before taken
+REVEAL_ENEMIES = True  # if True, mimics old intel reveal behavior when captured
+VV_ENABLED = True  # if True, enables spotting by pressing SNEAK two times
+CHAT_MARKERS = True  # if True, enables !build !tunnel etc teamchat triggers
 
 S_SPOTTED = '(enemy spotted at {coords}!)'
 S_CLEARED = 'Markers cleared'
@@ -64,26 +64,29 @@ VV_TIMEFRAME = 0.5
 THERE_RAY_LENGTH = 192.0
 ENEMY_EXPIRE_DISTANCE_SQUARED = 18.0 ** 2
 
+
 def clear(connection):
     if connection not in connection.protocol.players:
         raise ValueError()
     connection.destroy_markers()
     return S_CLEARED
 
+
 @name('togglemarkers')
 @admin
-def toggle_markers(connection, player = None):
+def toggle_markers(connection, player=None):
     protocol = connection.protocol
     if player is not None:
         player = get_player(protocol, player)
         player.allow_markers = not player.allow_markers
         message = S_PLAYER_ENABLED if player.allow_markers else S_PLAYER_DISABLED
-        message = message.format(player = player.name)
-        protocol.send_chat(message, irc = True)
+        message = message.format(player=player.name)
+        protocol.send_chat(message, irc=True)
     else:
         protocol.allow_markers = not protocol.allow_markers
         message = S_ENABLED if protocol.allow_markers else S_DISABLED
-        connection.protocol.send_chat(message, irc = True)
+        connection.protocol.send_chat(message, irc=True)
+
 
 def markers(connection):
     if connection not in connection.protocol.players:
@@ -93,6 +96,7 @@ def markers(connection):
 add(clear)
 add(toggle_markers)
 add(markers)
+
 
 class BaseMarker():
     name = 'Marker'
@@ -184,7 +188,7 @@ class BaseMarker():
         self.blocks.update(cube_line(*line))
         self.lines.append(line)
 
-    def build(self, sender = None):
+    def build(self, sender=None):
         sender = sender or self.protocol.send_contained
         self.send_color(sender)
         for line in self.lines:
@@ -192,7 +196,7 @@ class BaseMarker():
         for point in self.points:
             self.send_block(sender, *point)
 
-    def destroy(self, sender = None):
+    def destroy(self, sender=None):
         # breaking a single block would make it come tumbling down, so we have
         # to destroy them all at once
         sender = sender or self.protocol.send_contained
@@ -202,15 +206,15 @@ class BaseMarker():
     def send_color(self, sender):
         set_color.value = self.color
         set_color.player_id = 32
-        sender(set_color, team = self.team)
+        sender(set_color, team=self.team)
 
-    def send_block(self, sender, x, y, z, value = BUILD_BLOCK):
+    def send_block(self, sender, x, y, z, value=BUILD_BLOCK):
         block_action.value = value
         block_action.player_id = 32
         block_action.x = x
         block_action.y = y
         block_action.z = z
-        sender(block_action, team = self.team)
+        sender(block_action, team=self.team)
 
     def send_line(self, sender, x1, y1, z1, x2, y2, z2):
         block_line.player_id = 32
@@ -220,15 +224,16 @@ class BaseMarker():
         block_line.x2 = x2
         block_line.y2 = y2
         block_line.z2 = z2
-        sender(block_line, team = self.team)
+        sender(block_line, team=self.team)
 
     def send_block_remove(self, sender, x, y, z):
         self.send_block(sender, x, y, z, DESTROY_BLOCK)
 
+
 def parse_string_map(xs_and_dots):
     # greedily attempt to get the least amount of lines and blocks required
     # to build the shape. best (worst) function ever
-    reader = csv.reader(StringIO(xs_and_dots), delimiter = ' ')
+    reader = csv.reader(StringIO(xs_and_dots), delimiter=' ')
     rows = [s for s in (''.join(row) for row in reader) if s.strip()]
     lines, points = [], []
     if not rows:
@@ -247,13 +252,17 @@ def parse_string_map(xs_and_dots):
             if max(h, v) == 1:
                 points.append((x + off_x, y + off_y))
             elif h >= v:
-                lines.append((x + off_x, y + off_y, x + off_x + h - 1, y + off_y))
+                lines.append((x + off_x, y + off_y, x +
+                              off_x + h - 1, y + off_y))
                 row = '.' * (x + h) + row[(x + h):]
-                next(islice(it, h, h), None) # forward the iterator
+                next(islice(it, h, h), None)  # forward the iterator
             else:
-                lines.append((x + off_x, y + off_y, x + off_x, y + off_y + v - 1))
-                rows[y:y + v] = (r[:x] + '.' + r[x + 1:] for r in rows[y:y + v])
+                lines.append((x + off_x, y + off_y, x +
+                              off_x, y + off_y + v - 1))
+                rows[y:y + v] = (r[:x] + '.' + r[x + 1:]
+                                 for r in rows[y:y + v])
     return lines, points
+
 
 class EnemyBackground(BaseMarker):
     color = make_color(0, 0, 0)
@@ -268,6 +277,7 @@ class EnemyBackground(BaseMarker):
     . X X X X X X X .
     . . X X X X X . .
     """
+
 
 class Enemy(BaseMarker):
     name = 'Point'
@@ -285,16 +295,17 @@ class Enemy(BaseMarker):
     . . X X X . .
     """
 
+
 class Here(BaseMarker):
     name = 'Circle'
     triggers = ['!here']
     duration = 60.0
     random_colors = [
-        make_color(192, 255,   0), # lime green
-        make_color(255, 255,   0), # yellow
-        make_color(255, 192,   0), # orange
-        make_color(255, 192, 255), # light pink
-        make_color(  0, 192, 255)  # light blue
+        make_color(192, 255,   0),  # lime green
+        make_color(255, 255,   0),  # yellow
+        make_color(255, 192,   0),  # orange
+        make_color(255, 192, 255),  # light pink
+        make_color(0, 192, 255)  # light blue
     ]
     s = """
     . . X X X X X . .
@@ -307,6 +318,7 @@ class Here(BaseMarker):
     . X X X X X X X .
     . . X X X X X . .
     """
+
 
 class BackupBackground(BaseMarker):
     color = make_color(0, 0, 0)
@@ -325,6 +337,7 @@ class BackupBackground(BaseMarker):
     . X X X X .
     . X X X X .
     """
+
 
 class Backup(BaseMarker):
     name = 'Exclamation'
@@ -346,6 +359,7 @@ class Backup(BaseMarker):
     . X X .
     """
 
+
 class Intel(BaseMarker):
     name = 'Intel'
     color = make_color(255, 255, 255)
@@ -363,6 +377,7 @@ class Intel(BaseMarker):
     . . . . . . . . . . . .
     . . . X X X X X X . . .
     """
+
 
 class BuildBackground(BaseMarker):
     color = make_color(255, 255, 255)
@@ -382,6 +397,7 @@ class BuildBackground(BaseMarker):
     . . X X X X X X X X X . .
     . . . . X X X X X . . . .
     """
+
 
 class Build(BaseMarker):
     name = 'Cube'
@@ -405,6 +421,7 @@ class Build(BaseMarker):
     . . . . X . X . . . .
     """
 
+
 class TunnelBackground(BaseMarker):
     color = make_color(255, 255, 255)
     s = """
@@ -420,6 +437,7 @@ class TunnelBackground(BaseMarker):
     . . . X X X X X . . .
     . . . . X X X . . . .
     """
+
 
 class Tunnel(BaseMarker):
     name = 'Arrow'
@@ -440,11 +458,13 @@ class Tunnel(BaseMarker):
     . . . . X . . . .
     """
 
+
 class NumberMarker(BaseMarker):
     duration = Enemy.duration
     background_class = Enemy
     color = make_color(255, 255, 255)
     always_there = True
+
 
 class Zero(NumberMarker):
     name = '0'
@@ -459,6 +479,7 @@ class Zero(NumberMarker):
     . X X X .
     """
 
+
 class One(NumberMarker):
     name = '1'
     triggers = ['!1']
@@ -471,6 +492,7 @@ class One(NumberMarker):
     . . X X .
     . X X X X
     """
+
 
 class Two(NumberMarker):
     name = '2'
@@ -485,6 +507,7 @@ class Two(NumberMarker):
     X X X X X
     """
 
+
 class Three(NumberMarker):
     name = '3'
     triggers = ['!3']
@@ -497,6 +520,7 @@ class Three(NumberMarker):
     X X . X X
     . X X X .
     """
+
 
 class Four(NumberMarker):
     name = '4'
@@ -511,6 +535,7 @@ class Four(NumberMarker):
     . . . X X
     """
 
+
 class Five(NumberMarker):
     name = '5'
     triggers = ['!5']
@@ -523,6 +548,7 @@ class Five(NumberMarker):
     . . . X X
     X X X X .
     """
+
 
 class Six(NumberMarker):
     name = '6'
@@ -537,6 +563,7 @@ class Six(NumberMarker):
     . X X X .
     """
 
+
 class Seven(NumberMarker):
     name = '7'
     triggers = ['!7']
@@ -550,6 +577,7 @@ class Seven(NumberMarker):
     X X . . .
     """
 
+
 class Eight(NumberMarker):
     name = '8'
     triggers = ['!8']
@@ -562,6 +590,7 @@ class Eight(NumberMarker):
     X X . X X
     . X X X .
     """
+
 
 class Nine(NumberMarker):
     name = '9'
@@ -588,6 +617,7 @@ for cls in chain(trigger_markers, other_markers, background_markers):
         background_markers.append(cls.background_class)
     cls.lines, cls.points = parse_string_map(cls.s)
 
+
 def apply_script(protocol, connection, config):
     class MarkerConnection(connection):
         allow_markers = True
@@ -596,20 +626,20 @@ def apply_script(protocol, connection, config):
 
         def send_markers(self):
             is_self = lambda player: player is self
-            send_me = partial(self.protocol.send_contained, rule = is_self)
+            send_me = partial(self.protocol.send_contained, rule=is_self)
             for marker in self.protocol.markers:
                 marker.build(send_me)
 
         def destroy_markers(self):
             is_self = lambda player: player is self
-            send_me = partial(self.protocol.send_contained, rule = is_self)
+            send_me = partial(self.protocol.send_contained, rule=is_self)
             for marker in self.protocol.markers:
                 marker.destroy(send_me)
 
         def make_marker(self, marker_class, location):
             marker_max = marker_class.maximum_instances
             if (marker_max is not None and
-                self.team.marker_count[marker_class] >= marker_max):
+                    self.team.marker_count[marker_class] >= marker_max):
                 self.send_chat(S_REACHED_LIMIT)
                 return
             new_marker = marker_class(self.protocol, self.team, *location)
@@ -617,7 +647,7 @@ def apply_script(protocol, connection, config):
 
         def on_animation_update(self, jump, crouch, sneak, sprint):
             markers_allowed = (VV_ENABLED and self.allow_markers and
-                self.protocol.allow_markers)
+                               self.protocol.allow_markers)
             if markers_allowed and sneak and self.world_object.sneak != sneak:
                 now = seconds()
                 if self.last_marker is None or now - self.last_marker > COOLDOWN:
@@ -629,13 +659,14 @@ def apply_script(protocol, connection, config):
                             coords = to_coordinates(*location)
                             chat_message.chat_type = CHAT_TEAM
                             chat_message.player_id = self.player_id
-                            chat_message.value = S_SPOTTED.format(coords = coords)
-                            self.protocol.send_contained(chat_message, team =
-                                self.team)
+                            chat_message.value = S_SPOTTED.format(
+                                coords=coords)
+                            self.protocol.send_contained(
+                                chat_message, team=self.team)
                             self.make_marker(Enemy, location)
                             presses.clear()
             return connection.on_animation_update(self, jump, crouch, sneak,
-                sprint)
+                                                  sprint)
 
         def on_chat(self, value, global_message):
             markers_allowed = self.allow_markers and self.protocol.allow_markers
@@ -643,14 +674,14 @@ def apply_script(protocol, connection, config):
                 chat = value.lower()
                 try:
                     marker_class = next(cls for cls in trigger_markers if
-                        cls.is_triggered(chat))
+                                        cls.is_triggered(chat))
                 except StopIteration:
                     pass
                 else:
                     if global_message:
                         self.send_chat(S_TEAMCHAT)
                     elif (self.last_marker is not None and
-                        seconds() - self.last_marker <= COOLDOWN):
+                          seconds() - self.last_marker <= COOLDOWN):
                         self.send_chat(S_WAIT)
                     else:
                         location = None
@@ -660,14 +691,15 @@ def apply_script(protocol, connection, config):
                                 self.send_chat(S_FAIL)
                         else:
                             x, y, z = self.get_location()
-                            location = (x + 6 if self.team.id == 0 else x - 6, y)
+                            location = (x + 6 if self.team.id ==
+                                        0 else x - 6, y)
                         if location:
                             self.make_marker(marker_class, location)
             return connection.on_chat(self, value, global_message)
 
         def on_login(self, name):
             self.send_markers()
-            self.sneak_presses = deque(maxlen = 2)
+            self.sneak_presses = deque(maxlen=2)
             connection.on_login(self, name)
 
         def on_team_changed(self, old_team):
@@ -716,7 +748,8 @@ def apply_script(protocol, connection, config):
                 for player in enemy_team.get_players():
                     x, y, z = player.get_location()
                     delay += 0.15
-                    call = callLater(delay, Enemy, self.protocol, self.team, x, y)
+                    call = callLater(
+                        delay, Enemy, self.protocol, self.team, x, y)
                     self.team.marker_calls.append(call)
             connection.on_flag_capture(self)
 

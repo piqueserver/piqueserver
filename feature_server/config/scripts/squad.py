@@ -9,12 +9,13 @@ import commands
 import random
 
 SQUAD_NAMES = set([
-    'Alpha','Bravo','Charlie','Delta','Epsilon','Foxtrot','Gamma',
-   'Golf','Hotel','India','Juliet','Kilo','Lima','Mike',
-   'November','Oscar','Papa','Quebec','Romero','Sierra','Tango',
-   'Uniform','Victor','Whiskey','X-ray','Yankee','Zulu'])
+    'Alpha', 'Bravo', 'Charlie', 'Delta', 'Epsilon', 'Foxtrot', 'Gamma',
+    'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Lima', 'Mike',
+    'November', 'Oscar', 'Papa', 'Quebec', 'Romero', 'Sierra', 'Tango',
+    'Uniform', 'Victor', 'Whiskey', 'X-ray', 'Yankee', 'Zulu'])
 
-def follow(self, playerkey = None):
+
+def follow(self, playerkey=None):
     if playerkey is None:
         squad_pref = None
         squad = self.squad
@@ -31,7 +32,8 @@ def follow(self, playerkey = None):
 
     return self.join_squad(squad, squad_pref)
 
-def squad(self, squadkey = None):
+
+def squad(self, squadkey=None):
     if self.protocol.squad_size <= 1:
         return 'Squads are disabled on this server.'
 
@@ -42,7 +44,7 @@ def squad(self, squadkey = None):
         result = []
         for squadkey in allsquads.keys():
             result.append(self.print_squad(
-            squadkey, allsquads[squadkey]))
+                squadkey, allsquads[squadkey]))
         result.append(('To join squads: /squad <squad name>. ' +
                        '/squad none to spawn normally.'))
         self.send_lines(result)
@@ -60,9 +62,10 @@ def squad(self, squadkey = None):
 for func in (squad, follow):
     add(func)
 
+
 def apply_script(protocol, connection, config):
     protocol.squad_respawn_time = config.get('squad_respawn_time',
-        protocol.respawn_time)
+                                             protocol.respawn_time)
     protocol.squad_size = config.get('squad_size', 0)
     protocol.auto_squad = config.get('auto_squad', True)
 
@@ -72,21 +75,21 @@ def apply_script(protocol, connection, config):
 
         def on_login(self, name):
             if self.protocol.auto_squad:
-                self.join_squad(self.find_auto_squad(),None)
+                self.join_squad(self.find_auto_squad(), None)
             return connection.on_login(self, name)
 
         def get_squad(self, team, squadkey):
-            result = {'name' : squadkey, 'players' : []}
+            result = {'name': squadkey, 'players': []}
             if squadkey is None:
                 for player in self.protocol.players.values():
                     if (player.team is team and
-                        player.squad is None):
+                            player.squad is None):
                         result['players'].append(player)
                         result['name'] = player.squad
             else:
                 for player in self.protocol.players.values():
                     if (player.team is team and player.squad and
-                        player.squad.lower() == squadkey.lower()):
+                            player.squad.lower() == squadkey.lower()):
                         result['players'].append(player)
                         result['name'] = player.squad
             return result
@@ -108,7 +111,7 @@ def apply_script(protocol, connection, config):
                 result = 'Unassigned: '
             else:
                 result = 'Squad %s: ' % (squadkey)
-            result+=', '.join([player.name for player in squadlist])
+            result += ', '.join([player.name for player in squadlist])
             return result
 
         def find_auto_squad(self):
@@ -146,10 +149,10 @@ def apply_script(protocol, connection, config):
             # unique squad, so check for squad size first
 
             existing = self.get_squad(self.team, squad)
-            squad = existing['name'] # fixes the case
+            squad = existing['name']  # fixes the case
 
             if squad and (self.protocol.squad_size
-                <= len(existing['players'])):
+                          <= len(existing['players'])):
                 return ('Squad %s is full. (limit %s)' %
                         (squad, self.protocol.squad_size))
 
@@ -166,7 +169,7 @@ def apply_script(protocol, connection, config):
 
             if newsquad and squad:
                 self.squad_broadcast('%s joined your squad.' %
-                                           self.name)
+                                     self.name)
 
             if squad is None:
                 self.respawn_time = self.protocol.respawn_time
@@ -179,21 +182,21 @@ def apply_script(protocol, connection, config):
                         return ('You are now in squad %s.' % squad)
                     else:
                         return ('You are now in squad %s, following %s.' %
-                                   (squad, squad_pref.name))
+                                (squad, squad_pref.name))
                 elif newpref:
                     if squad_pref is None:
                         return ('You are no longer following %s.' %
                                 oldpref.name)
                     else:
                         return ('You are now following %s.' %
-                                   squad_pref.name)
+                                squad_pref.name)
                 elif newsquad:
                     return 'You are now in squad %s.' % squad
 
         def leave_squad(self):
             if self.squad:
                 self.squad_broadcast("%s left your squad." %
-                                           self.name)
+                                     self.name)
             self.squad = None
             self.squad_pref = None
             for player in self.protocol.players.values():
@@ -219,8 +222,8 @@ def apply_script(protocol, connection, config):
         def on_spawn(self, pos):
             if self.squad:
                 all_members = ([n for n in self.get_squad(self.team,
-                            self.squad)['players'] if
-                            n is not self])
+                                                          self.squad)['players'] if
+                                n is not self])
                 live_members = [n for n in all_members if n.hp]
                 membernames = [m.name for m in all_members]
                 memberstr = ""
@@ -230,24 +233,24 @@ def apply_script(protocol, connection, config):
                         name += " (DEAD)"
                     else:
                         name += " (%s hp)" % all_members[n].hp
-                    if n==0:
-                        memberstr+="%s" % name
-                    elif n==len(membernames)-1:
-                        memberstr+=" and %s" % name
+                    if n == 0:
+                        memberstr += "%s" % name
+                    elif n == len(membernames) - 1:
+                        memberstr += " and %s" % name
                     else:
-                        memberstr+=", %s" % name
-                if len(all_members)>0:
+                        memberstr += ", %s" % name
+                if len(all_members) > 0:
                     self.send_chat('You are in squad %s with %s.' %
                                    (self.squad, memberstr))
                 else:
                     self.send_chat('You are in squad %s, all alone.' %
                                    self.squad)
                 if (self.squad_pref is not None and self.squad_pref.hp and
-                    self.squad_pref.team is self.team):
+                        self.squad_pref.team is self.team):
                     self.set_location_safe(self.get_follow_location(
                         self.squad_pref))
                 else:
-                    if len(live_members)>0:
+                    if len(live_members) > 0:
                         self.set_location_safe(self.get_follow_location(
                             random.choice(live_members)))
             return connection.on_spawn(self, pos)
@@ -257,7 +260,7 @@ def apply_script(protocol, connection, config):
                 self.squad_broadcast('Squadmate %s suicided' % self.name)
             else:
                 self.squad_broadcast('Squadmate %s was killed by %s' %
-                             (self.name, killer.name))
+                                     (self.name, killer.name))
             return connection.on_kill(self, killer, type, grenade)
 
         def on_chat(self, value, global_message):

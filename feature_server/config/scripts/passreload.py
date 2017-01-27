@@ -5,6 +5,7 @@ import commands
 from commands import add, admin
 import json
 
+
 @admin
 def reloadconfig(connection):
     new_config = {}
@@ -21,8 +22,10 @@ def reloadconfig(connection):
 
 add(reloadconfig)
 
+
 def apply_script(protocol, connection, config):
     class PassreloadProtocol(protocol):
+
         def reload_passes(self):
             self.passwords = config.get('passwords', {})
             for password in self.passwords.get('admin', []):

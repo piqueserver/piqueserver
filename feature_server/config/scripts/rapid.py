@@ -23,9 +23,10 @@ ALWAYS_RAPID = False
 RAPID_INTERVAL = 0.08
 RAPID_BLOCK_DELAY = 0.26
 
+
 @name('rapid')
 @admin
-def toggle_rapid(connection, player = None):
+def toggle_rapid(connection, player=None):
     protocol = connection.protocol
     if player is not None:
         player = get_player(protocol, player)
@@ -49,6 +50,7 @@ def toggle_rapid(connection, player = None):
         connection.send_chat('%s is %s' % (player.name, message))
     protocol.irc_say('* %s is %s' % (player.name, message))
 
+
 def resend_tool(player):
     set_tool.player_id = player.player_id
     set_tool.value = player.tool
@@ -58,6 +60,7 @@ def resend_tool(player):
         player.send_contained(set_tool)
 
 add(toggle_rapid)
+
 
 def apply_script(protocol, connection, config):
     class RapidConnection(connection):

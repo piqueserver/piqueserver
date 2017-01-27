@@ -13,9 +13,10 @@ from commands import add, admin, name, get_player, alias
 GRIEFCHECK_ON_VOTEKICK = True
 IRC_ONLY = True
 
+
 @name('griefcheck')
 @alias('gc')
-def grief_check(connection, player, time = None):
+def grief_check(connection, player, time=None):
     player = get_player(connection.protocol, player)
     protocol = connection.protocol
     color = connection not in protocol.players and connection.colors
@@ -28,9 +29,9 @@ def grief_check(connection, player, time = None):
     player_name = player.name
     if color:
         player_name = (('\x0303' if player.team.id else '\x0302') +
-            player_name + '\x0f')
+                       player_name + '\x0f')
     message = '%s removed %s block%s in the last ' % (player_name,
-        len(blocks) or 'no', '' if len(blocks) == 1 else 's')
+                                                      len(blocks) or 'no', '' if len(blocks) == 1 else 's')
     if minutes == 1.0:
         minutes_s = 'minute'
     else:
@@ -41,17 +42,17 @@ def grief_check(connection, player, time = None):
         infos.discard(None)
         if color:
             names = [('\x0303' if team else '\x0302') + name for name, team in
-                infos]
+                     infos]
         else:
             names = set([name for name, team in infos])
         if len(names) > 0:
             message += (' Some of them were placed by ' +
-                ('\x0f, ' if color else ', ').join(names))
+                        ('\x0f, ' if color else ', ').join(names))
             message += '\x0f.' if color else '.'
         else:
             message += ' All of them were map blocks.'
         last = blocks_removed[-1]
-        time_s = prettify_timespan(seconds() - last[0], get_seconds = True)
+        time_s = prettify_timespan(seconds() - last[0], get_seconds=True)
         message += ' Last one was destroyed %s ago' % time_s
         whom = last[1]
         if whom is None and len(names) > 0:
@@ -65,9 +66,9 @@ def grief_check(connection, player, time = None):
     switch_sentence = False
     if player.last_switch is not None and player.last_switch >= time:
         time_s = prettify_timespan(seconds() - player.last_switch,
-            get_seconds = True)
+                                   get_seconds=True)
         message += ' %s joined %s team %s ago' % (player_name,
-            player.team.name, time_s)
+                                                  player.team.name, time_s)
         switch_sentence = True
     teamkills = len([t for t in player.teamkill_times or [] if t >= time])
     if teamkills > 0:
@@ -77,17 +78,18 @@ def grief_check(connection, player, time = None):
         message += '.'
     votekick = getattr(protocol, 'votekick', None)
     if (votekick and votekick.victim is player and
-        votekick.victim.world_object and votekick.instigator.world_object):
+            votekick.victim.world_object and votekick.instigator.world_object):
         instigator = votekick.instigator
         tiles = int(distance_3d_vector(player.world_object.position,
-            instigator.world_object.position))
+                                       instigator.world_object.position))
         instigator_name = (('\x0303' if instigator.team.id else '\x0302') +
-            instigator.name + '\x0f')
+                           instigator.name + '\x0f')
         message += (' %s is %d tiles away from %s, who started the votekick.' %
-            (player_name, tiles, instigator_name))
+                    (player_name, tiles, instigator_name))
     return message
 
 add(grief_check)
+
 
 def apply_script(protocol, connection, config):
     has_votekick = 'votekick' in config.get('scripts', [])
@@ -140,13 +142,14 @@ def apply_script(protocol, connection, config):
             protocol.on_map_change(self, map)
 
         def on_votekick_start(self, instigator, victim, reason):
-            result = protocol.on_votekick_start(self, instigator, victim, reason)
+            result = protocol.on_votekick_start(
+                self, instigator, victim, reason)
             if result is None and GRIEFCHECK_ON_VOTEKICK:
                 message = grief_check(instigator, victim.name)
                 if IRC_ONLY:
                     self.irc_say('* ' + message)
                 else:
-                    self.send_chat(message, irc = True)
+                    self.send_chat(message, irc=True)
             return result
 
     return BlockInfoProtocol, BlockInfoConnection
