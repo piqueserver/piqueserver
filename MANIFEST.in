@@ -1,0 +1,55 @@
+recursive-include enet/ *
+recursive-include examples/ * 
+recursive-include feature_server/ *
+# recursive-include feature_server/config/ *
+recursive-include py2exe/ * 
+recursive-include pyspades/ * 
+# recursive-include piqueserver.egg-info/ * 
+
+global-exclude *.pyc
+global-exclude *.pyo
+# global-exclude *.pyd
+
+# C extensions
+# global-exclude *.so
+
+# C++ extension
+
+global-exclude *.slo
+global-exclude *.lo
+global-exclude *.o
+
+# global-exclude *.so
+global-exclude *.dylib
+
+global-exclude *.lai
+global-exclude *.la
+global-exclude *.a
+
+# config/userdata
+exclude feature_server/config/maps/*.txtc
+recursive-exclude feature_server/config/logs/ *
+recursive-exclude feature_server/config/data/ *
+
+# py2exe
+recursive-exclude py2exe/dist/
+exclude py2exe/*.zip
+
+exclude pyspades/bytes.cpp
+exclude pyspades/common.cpp
+exclude pyspades/contained.cpp
+exclude pyspades/loaders.cpp
+exclude pyspades/mapmaker.cpp
+exclude pyspades/packet.cpp
+exclude pyspades/vxl.cpp
+exclude pyspades/world.cpp
+
+
+# enet
+exclude enet/pyenet/enet.c
+# exclude enet/pyenet/__init__.py
+exclude enet/pyenet/enet-pyspades.pyx
+recursive-exclude enet/pyenet/enet/ *
+recursive-exclude enet/pyenet/build/ *
+exclude enet/enet-*.tar.gz
+

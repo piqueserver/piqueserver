@@ -1,5 +1,5 @@
 FROM python:2.7-alpine
-VOLUME /configs
+VOLUME /config
 
 RUN mkdir -p /usr/src/app && mkdir -p /usr/src/app/enet && mkdir -p /usr/src/app/pyspades
 WORKDIR /usr/src/app
@@ -32,6 +32,6 @@ RUN apk add --no-cache --virtual .build-deps-server gcc musl-dev g++ \
     && apk del .build-deps-server 
 
 # Copy over the rest and default to launching the server
-CMD piqueserver -d /configs
+CMD piqueserver -d /config
 
 EXPOSE 32887/udp 32887 32886 32885

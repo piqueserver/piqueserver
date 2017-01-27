@@ -19,12 +19,6 @@
 pyspades - default/featured server
 """
 
-from __future__ import absolute_import, division, print_function
-
-from six.moves import range
-from six import next
-import six
-
 import sys
 import os
 import json
@@ -34,43 +28,10 @@ import time
 import shutil
 from collections import deque
 
-import argparse
-
 import cfg
 
-arg_parser = argparse.ArgumentParser(prog=cfg.pkg_name,
-                                     description='%s is an open-source Python server implementation for the voxel-based game "Ace of Spades".' % cfg.pkg_name)
-
-arg_parser.add_argument("-c","--config-file", default="config.json", 
-        help="specify alternate config file (relative to config dir if relative path)")
-arg_parser.add_argument("-j","--json-parameters", 
-        help="add extra json parameters, overwriting that in config file")
-arg_parser.add_argument("-d","--config-dir", default=cfg.config_dir,
-        help="the directory which contains maps, scripts, etc (in correctly named subdirs) - default is %s" % cfg.config_path)
-
-args = arg_parser.parse_args()
-
-
-def choose_path(base,top):
-    "helper function to choose the right path/file for the config, etc."
-    if not os.path.isabs(top):
-        return os.path.join(base,top)
-    return top
-
-# ok, so we use the resource directory to search for maps, etc.
-config_dir = args.config_dir
-cfg.config_dir = config_dir
-
-# add it to the path so we can import scripts
-sys.path.append(config_dir)
-# add our package to path too so scripts can import `feauture_server/`
-sys.path.insert(1, os.path.dirname(os.path.abspath(__file__))) # a better way instead of abs path?
-
-
-
-# fix the path for the config file - handles differering directories and relative or absolute paths
-config_file = choose_path(config_dir,args.config_file)
-cfg.config_file = config_file
+CHAT_WINDOW_SIZE = 5
+CHAT_PER_SECOND = 0.5
 
 # default passwords hardcoded in config
 DEFAULT_PASSWORDS = {
@@ -80,27 +41,7 @@ DEFAULT_PASSWORDS = {
     'trusted' : ['trustedpass']
 }
 
-try:
-    with open(config_file) as f:
-        config = json.load(f)
-        cfg.config = config
-except IOError as e:
-    print("Error reading config from {}: ".format(config_file) + str(e))
-    sys.exit(1)
-except ValueError as e:
-    print("Error in config file {}: ".format(config_file) + str(e))
-    sys.exit(1)
-
-
-# update with parameters from args
-if args.json_parameters:
-    json_parameter = args.json_parameters
-    config.update(eval(json_parameter))
-
-
-profile = config.get('profile', False)
-
-frozen = hasattr(sys, 'frozen')
+PORT = 32887
 
 def get_git_rev():
     if not os.path.exists(".git"):
@@ -119,6 +60,9 @@ def get_git_rev():
         return 'unknown'
     return ret
 
+
+frozen = hasattr(sys, 'frozen')
+
 if frozen:
     path = os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding()))
     sys.path.append(path)
@@ -135,14 +79,14 @@ if sys.platform == 'linux2':
         from twisted.internet import epollreactor
         epollreactor.install()
     except ImportError:
-        print('(dependencies missing for epoll, using normal reactor)')
+        print '(dependencies missing for epoll, using normal reactor)'
 
 if sys.version_info < (2, 7):
     try:
         import psyco
         psyco.full()
     except ImportError:
-        print('(optional: install psyco for optimizations)')
+        print '(optional: install psyco for optimizations)'
 
 import pyspades.debug
 from pyspades.server import (ServerProtocol, ServerConnection, position_data,
@@ -165,6 +109,7 @@ from pyspades.bytes import NoDataLeft
 from scheduler import Scheduler
 import commands
 
+
 def create_path(path):
     if path:
         try:
@@ -178,9 +123,6 @@ def create_filename_path(path):
 def open_create(filename, mode):
     create_filename_path(filename)
     return open(filename, mode)
-
-CHAT_WINDOW_SIZE = 5
-CHAT_PER_SECOND = 0.5
 
 class FeatureConnection(ServerConnection):
     printable_name = None
@@ -211,8 +153,8 @@ class FeatureConnection(ServerConnection):
                 protocol.remove_ban(client_ip)
                 protocol.save_bans()
             else:
-                print('banned user %s (%s) attempted to join' % (name,
-                    client_ip))
+                print 'banned user %s (%s) attempted to join' % (name,
+                    client_ip)
                 self.disconnect(ERROR_BANNED)
                 return
         except KeyError:
@@ -233,8 +175,8 @@ class FeatureConnection(ServerConnection):
 
     def on_login(self, name):
         self.printable_name = name.encode('ascii', 'replace')
-        print('%s (IP %s, ID %s) entered the game!' % (self.printable_name,
-            self.address[0], self.player_id))
+        print '%s (IP %s, ID %s) entered the game!' % (self.printable_name,
+            self.address[0], self.player_id)
         self.protocol.irc_say('* %s (IP %s, ID %s) entered the game!' %
             (self.name, self.address[0], self.player_id))
         if self.user_types is None:
@@ -253,12 +195,12 @@ class FeatureConnection(ServerConnection):
 
     def on_disconnect(self):
         if self.name is not None:
-            print(self.printable_name, 'disconnected!')
+            print self.printable_name, 'disconnected!'
             self.protocol.irc_say('* %s (IP %s) disconnected' %
                 (self.name, self.address[0]))
             self.protocol.player_memory.append((self.name, self.address[0]))
         else:
-            print('%s disconnected' % self.address[0])
+            print '%s disconnected' % self.address[0]
         ServerConnection.on_disconnect(self)
 
     def on_command(self, command, parameters):
@@ -270,7 +212,7 @@ class FeatureConnection(ServerConnection):
         if result:
             log_message += ' -> %s' % result
             self.send_chat(result)
-        print(log_message.encode('ascii', 'replace'))
+        print log_message.encode('ascii', 'replace')
 
     def _can_build(self):
         if not self.building:
@@ -325,9 +267,9 @@ class FeatureConnection(ServerConnection):
                 is_indestructable(x, y, z - 1)):
                     return False
             elif mode == GRENADE_DESTROY:
-                for nade_x in range(x - 1, x + 2):
-                    for nade_y in range(y - 1, y + 2):
-                        for nade_z in range(z - 1, z + 2):
+                for nade_x in xrange(x - 1, x + 2):
+                    for nade_y in xrange(y - 1, y + 2):
+                        for nade_z in xrange(z - 1, z + 2):
                             if is_indestructable(nade_x, nade_y, nade_z):
                                 return False
 
@@ -432,7 +374,7 @@ class FeatureConnection(ServerConnection):
             message = '(MUTED) %s' % message
         elif global_message and self.protocol.global_chat:
             self.protocol.irc_say('<%s> %s' % (self.name, value))
-        print(message.encode('ascii', 'replace'))
+        print message.encode('ascii', 'replace')
         if self.mute:
             self.send_chat('(Chat not sent - you are muted)')
             return False
@@ -476,8 +418,8 @@ class FeatureConnection(ServerConnection):
             current_time += 2
 
     def on_hack_attempt(self, reason):
-        print('Hack attempt detected from %s: %s' % (self.printable_name,
-            reason))
+        print 'Hack attempt detected from %s: %s' % (self.printable_name,
+            reason)
         self.kick(reason)
 
     def on_user_login(self, user_type, verbose = True):
@@ -494,7 +436,7 @@ class FeatureConnection(ServerConnection):
 
     def timed_out(self):
         if self.name is not None:
-            print('%s timed out' % self.printable_name)
+            print '%s timed out' % self.printable_name
         ServerConnection.timed_out(self)
 
 def encode_lines(value):
@@ -607,15 +549,15 @@ class FeatureProtocol(ServerProtocol):
         self.win_count = itertools.count(1)
         self.bans = NetworkDict()
         try:
-            self.bans.read_list(json.load(open(os.path.join(config_dir,'bans.txt'), 'rb')))
+            self.bans.read_list(json.load(open(os.path.join(cfg.config_dir,'bans.txt'), 'rb')))
         except IOError:
             pass
         self.hard_bans = set() # possible DDoS'ers are added here
         self.player_memory = deque(maxlen = 100)
         self.config = config
         if len(self.name) > MAX_SERVER_NAME_SIZE:
-            print('(server name too long; it will be truncated to "%s")' % (
-                self.name[:MAX_SERVER_NAME_SIZE]))
+            print '(server name too long; it will be truncated to "%s")' % (
+                self.name[:MAX_SERVER_NAME_SIZE])
         self.respawn_time = config.get('respawn_time', 8)
         self.respawn_waves = config.get('respawn_waves', False)
         game_mode = config.get('game_mode', 'ctf')
@@ -658,7 +600,7 @@ class FeatureProtocol(ServerProtocol):
         self.set_god_build = config.get('set_god_build', False)
         self.debug_log = config.get('debug_log', False)
         if self.debug_log:
-            pyspades.debug.open_debug_log(os.path.join(config_dir,'debug.log'))
+            pyspades.debug.open_debug_log(os.path.join(cfg.config_dir,'debug.log'))
         ssh = config.get('ssh', {})
         if ssh.get('enabled', False):
             from ssh import RemoteConsole
@@ -679,9 +621,11 @@ class FeatureProtocol(ServerProtocol):
         if ban_subscribe.get('enabled', True):
             import bansubscribe
             self.ban_manager = bansubscribe.BanManager(self, ban_subscribe)
-        # logfile location in resource dir if not abs path given
-        logfile = choose_path(config_dir,config.get('logfile', ''))
-        if logfile.strip(): # catches empty filename 
+        # logfile path relative to config dir if not abs path
+        logfile = config.get('logfile', '')
+        if not os.path.isabs(logfile):
+            logfile = os.path.join(cfg.config_dir, logfile)
+        if logfile.strip(): # catches empty filename
             if config.get('rotate_daily', False):
                 create_filename_path(logfile)
                 logging_file = DailyLogFile(logfile, '.')
@@ -696,7 +640,7 @@ class FeatureProtocol(ServerProtocol):
         self.console = create_console(self)
 
         # check for default password usage
-        for group, passwords in six.iteritems(self.passwords):
+        for group, passwords in self.passwords.iteritems():
             if group in DEFAULT_PASSWORDS:
                 for password in passwords:
                     if password in DEFAULT_PASSWORDS[group]:
@@ -713,7 +657,7 @@ class FeatureProtocol(ServerProtocol):
         self.host.intercept = self.receive_callback
         ret = self.set_map_rotation(config['maps'])
         if not ret:
-            print('Invalid map in map rotation (%s), exiting.' % ret.map)
+            print 'Invalid map in map rotation (%s), exiting.' % ret.map
             raise SystemExit
 
         self.update_format()
@@ -730,7 +674,7 @@ class FeatureProtocol(ServerProtocol):
     def got_external_ip(self, ip):
         self.ip = ip
         self.identifier = make_server_identifier(ip, self.port)
-        print('Server identifier is %s' % self.identifier)
+        print 'Server identifier is %s' % self.identifier
 
     def set_time_limit(self, time_limit = None, additive = False):
         advance_call = self.advance_call
@@ -780,7 +724,7 @@ class FeatureProtocol(ServerProtocol):
     def advance_rotation(self, message = None):
         self.set_time_limit(False)
         if self.planned_map is None:
-            self.planned_map = next(self.map_rotator)
+            self.planned_map = self.map_rotator.next()
         map = self.planned_map
         self.planned_map = None
         self.on_advance(map)
@@ -797,7 +741,7 @@ class FeatureProtocol(ServerProtocol):
     def set_map_name(self, rot_info):
         try:
             map_info = self.get_map(rot_info)
-        except MapNotFound as e:
+        except MapNotFound, e:
             return e
         if self.map_info:
             self.on_map_leave()
@@ -809,12 +753,12 @@ class FeatureProtocol(ServerProtocol):
         return True
 
     def get_map(self, rot_info):
-        return Map(rot_info, os.path.join(config_dir,'maps'))
+        return Map(rot_info, os.path.join(cfg.config_dir,'maps'))
 
     def set_map_rotation(self, maps, now = True):
         try:
-            maps = check_rotation(maps, os.path.join(config_dir,'maps'))
-        except MapNotFound as e:
+            maps = check_rotation(maps, os.path.join(cfg.config_dir,'maps'))
+        except MapNotFound, e:
             return e
         self.maps = maps
         self.map_rotator = self.map_rotator_type(maps)
@@ -873,7 +817,7 @@ class FeatureProtocol(ServerProtocol):
         return lines
 
     def got_master_connection(self, client):
-        print('Master connection established.')
+        print 'Master connection established.'
         ServerProtocol.got_master_connection(self, client)
 
     def master_disconnected(self, client = None):
@@ -883,7 +827,7 @@ class FeatureProtocol(ServerProtocol):
                 message = 'Master connection could not be established'
             else:
                 message = 'Master connection lost'
-            print('%s, reconnecting in 60 seconds...' % message)
+            print '%s, reconnecting in 60 seconds...' % message
             self.master_reconnect_call = reactor.callLater(60,
                 self.reconnect_master)
 
@@ -926,7 +870,7 @@ class FeatureProtocol(ServerProtocol):
 
     def remove_ban(self, ip):
         results = self.bans.remove(ip)
-        print('Removing ban:', ip, results)
+        print 'Removing ban:', ip, results
         self.save_bans()
 
     def undo_last_ban(self):
@@ -935,7 +879,7 @@ class FeatureProtocol(ServerProtocol):
         return result
 
     def save_bans(self):
-        json.dump(self.bans.make_list(), open_create(os.path.join(config_dir,'bans.txt'), 'wb'))
+        json.dump(self.bans.make_list(), open_create(os.path.join(cfg.config_dir,'bans.txt'), 'wb'))
         if self.ban_publish is not None:
             self.ban_publish.update()
 
@@ -954,13 +898,13 @@ class FeatureProtocol(ServerProtocol):
         except (NoDataLeft, InvalidData):
             import traceback
             traceback.print_exc()
-            print('IP %s was hardbanned for invalid data or possibly DDoS.' % ip)
+            print 'IP %s was hardbanned for invalid data or possibly DDoS.' % ip
             self.hard_bans.add(ip)
             return
         dt = reactor.seconds() - current_time
         if dt > 1.0:
-            print('(warning: processing %r from %s took %s)' % (
-                packet.data, ip, dt))
+            print '(warning: processing %r from %s took %s)' % (
+                packet.data, ip, dt)
 
     def irc_say(self, msg, me = False):
         if self.irc_relay:
@@ -988,13 +932,13 @@ class FeatureProtocol(ServerProtocol):
         if last_time is not None:
             dt = current_time - last_time
             if dt > 1.0:
-                print('(warning: high CPU usage detected - %s)' % dt)
+                print '(warning: high CPU usage detected - %s)' % dt
         self.last_time = current_time
         ServerProtocol.update_world(self)
         time_taken = reactor.seconds() - current_time
         if time_taken > 1.0:
-            print('World update iteration took %s, objects: %s' % (time_taken,
-                self.world.objects))
+            print 'World update iteration took %s, objects: %s' % (time_taken,
+                self.world.objects)
 
     # events
 
@@ -1011,7 +955,7 @@ class FeatureProtocol(ServerProtocol):
     def on_game_end(self):
         if self.advance_on_win <= 0:
             self.irc_say('Round ended!', me = True)
-        elif next(self.win_count.next) % self.advance_on_win == 0:
+        elif self.win_count.next() % self.advance_on_win == 0:
             self.advance_rotation('Game finished!')
 
     def on_advance(self, map_name):
@@ -1054,46 +998,82 @@ class FeatureProtocol(ServerProtocol):
             return None
         return self.advance_call.getTime() - self.advance_call.seconds()
 
-PORT = 32887
 
-# apply scripts
+def run():
+    """
+    runs the server
+    """
 
-protocol_class = FeatureProtocol
-connection_class = FeatureConnection
+    # add the config dir to the path so we can import scripts
+    sys.path.append(cfg.config_dir)
 
-script_objects = []
-script_names = config.get('scripts', [])
-game_mode = config.get('game_mode', 'ctf')
-if game_mode not in ('ctf', 'tc'):
-    # must be a script with this game mode
-    script_names.append(game_mode)
+    # add our package to path too so scripts can import `feature_server/`
+    # a better way instead of abs path?
+    sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
-
-for script in script_names[:]:
     try:
-        module = __import__('scripts.%s' % script, globals(), locals(),
-            [script])
-        script_objects.append(module)
-    except ImportError as e:
-        print("(script '%s' not found: %r)" % (script, e))
-        script_names.remove(script)
+        with open(cfg.config_file, 'rb') as f:
+            config = json.load(f)
+            cfg.config = config
+    except IOError as e:
+        print("Error reading config from {}: ".format(cfg.config_file) + str(e))
+        print("If you haven't already, try copying the example config to the default location with 'piqueserver --copy-config'.")
+        sys.exit(1)
+    except ValueError as e:
+        print("Error in config file {}: ".format(cfg.config_file) + str(e))
+        sys.exit(1)
 
 
-for script in script_objects:
-    protocol_class, connection_class = script.apply_script(protocol_class,
-        connection_class, config)
+    # update with parameters from cfg (supplied as cli args)
+    if cfg.json_parameters:
+        try:
+            params = json.loads(cfg.json_parameters)
+        except Exception as e:
+            print('Error loading json parameters from the command line')
+            print(e)
+            sys.exit(1)
+        config.update(params)
 
-protocol_class.connection_class = connection_class
 
-interface = config.get('network_interface', '')
-if interface == '':
-    interface = '*'
 
-protocol_instance = protocol_class(interface, config)
-print('Started server...')
+    # apply scripts
 
-if profile:
-    import cProfile
-    cProfile.run('reactor.run()', 'profile.dat')
-else:
-    reactor.run()
+    protocol_class = FeatureProtocol
+    connection_class = FeatureConnection
+
+    script_objects = []
+    script_names = config.get('scripts', [])
+    game_mode = config.get('game_mode', 'ctf')
+    if game_mode not in ('ctf', 'tc'):
+        # must be a script with this game mode
+        script_names.append(game_mode)
+
+    for script in script_names[:]:
+        try:
+            module = __import__('scripts.%s' % script, globals(), locals(),
+                [script])
+            script_objects.append(module)
+        except ImportError, e:
+            print "(script '%s' not found: %r)" % (script, e)
+            script_names.remove(script)
+
+    for script in script_objects:
+        protocol_class, connection_class = script.apply_script(protocol_class,
+            connection_class, config)
+
+    protocol_class.connection_class = connection_class
+
+    interface = config.get('network_interface', '')
+    if interface == '':
+        interface = '*'
+
+    protocol_instance = protocol_class(interface, config)
+
+    print 'Started server...'
+
+    profile = config.get('profile', False)
+    if profile:
+        import cProfile
+        cProfile.run('reactor.run()', 'profile.dat')
+    else:
+        reactor.run()
