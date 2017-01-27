@@ -190,8 +190,9 @@ from pyspades.common import make_color
 from pyspades.types import MultikeyDict
 from pyspades.constants import *
 from piqueserver.commands import add, admin, name, alias, join_arguments
-from piqueserver.map import DEFAULT_LOAD_DIR
+from piqueserver import cfg
 
+DEFAULT_LOAD_DIR = os.path.join(cfg.config_dir, 'maps')
 SAVE_ON_MAP_CHANGE = True
 AUTOSAVE_EVERY = 0.0 # minutes, 0 = disabled
 MAX_DISTANCE = 64.0
