@@ -1020,6 +1020,13 @@ def run():
         # must be a script with this game mode
         script_names.append(game_mode)
 
+    # add this directory (feature_server) to sys.path so scripts can import
+    # modules directly (e.g. `import commands` instead of the more proper
+    # `from piqueserver import commands`
+    # NOTE: only kept for backwards compatibility with scripts originally for
+    # pysnip. Should be removed in the future due to hackiness.
+    sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
+
     script_dir = os.path.join(cfg.config_dir, 'scripts/')
     for script in script_names[:]:
         try:
