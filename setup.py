@@ -17,26 +17,27 @@ from setuptools import setup, find_packages, Extension, dist
 from distutils.core import run_setup
 
 try:
-   import pypandoc
-   import re
-   long_description = pypandoc.convert_text(
-        re.sub(r'[^\x00-\x7F]+',' ',
-            pypandoc.convert('README.md', 'markdown', format="markdown_github")), 'rst', format="markdown")
+    import pypandoc
+    import re
+    long_description = pypandoc.convert_text(
+        re.sub(r'[^\x00-\x7F]+', ' ',
+               pypandoc.convert('README.md', 'markdown', format="markdown_github")), 'rst', format="markdown")
 except (IOError, ImportError):
     long_description = ''
+
 
 def compile_enet():
     previousDir = os.getcwd()
     os.chdir("enet")
 
     ###
-    ### Prebuild.py start
+    # Prebuild.py start
     ###
     import tarfile
     try:
-      import urllib as urllib_request
+        import urllib as urllib_request
     except ImportError:
-      import urllib.request as urllib_request
+        import urllib.request as urllib_request
 
     lib_version = "1.3.13"
     enet_dir = "enet-%s" % lib_version
@@ -51,7 +52,8 @@ def compile_enet():
         shutil.rmtree("pyenet/enet")
 
     shutil.copyfile("pyenet/enet.pyx", "pyenet/enet-pyspades.pyx")
-    subprocess.Popen(['patch', '-p1', 'pyenet/enet-pyspades.pyx', 'pyspades-pyenet.patch']).communicate()
+    subprocess.Popen(['patch', '-p1', 'pyenet/enet-pyspades.pyx',
+                      'pyspades-pyenet.patch']).communicate()
 
     if not os.path.isfile(enet_file):
         print("Downloading enet")
@@ -67,14 +69,15 @@ def compile_enet():
     shutil.move(enet_dir, "pyenet/enet")
     shutil.copyfile("__init__.py-tpl", "pyenet/__init__.py")
     ###
-    ### Prebuild.py end
+    # Prebuild.py end
     ###
 
     os.chdir("pyenet")
 
     shutil.move("enet.pyx", "enet-bak.pyx")
     shutil.move("enet-pyspades.pyx", "enet.pyx")
-    run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_ext', '--inplace'])
+    run_setup(os.path.join(os.getcwd(), "setup.py"),
+              ['build_ext', '--inplace'])
     shutil.move("enet.pyx", "enet-pyspades.pyx")
     shutil.move("enet-bak.pyx", "enet.pyx")
 
@@ -100,7 +103,7 @@ if static:
 
 for name in names:
     if static:
-        extra = {'extra_link_args' : ['-static-libstdc++', '-static-libgcc']}
+        extra = {'extra_link_args': ['-static-libstdc++', '-static-libgcc']}
     else:
         extra = {}
 
@@ -108,11 +111,14 @@ for name in names:
         extra["extra_compile_args"] = ['-std=c++11']
 
     ext_modules.append(Extension(name, ['./%s.pyx' % name.replace('.', '/')],
-        language = 'c++', include_dirs=['./pyspades'], **extra))
+                                 language='c++', include_dirs=['./pyspades'], **extra))
 
 
 from distutils.command.build_ext import build_ext as _build_ext
+
+
 class build_ext(_build_ext):
+
     def run(self):
         compile_enet()
 
@@ -121,23 +127,25 @@ class build_ext(_build_ext):
 
         _build_ext.run(self)
 
-        run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_py'] + extra_args)
+        run_setup(os.path.join(os.getcwd(), "setup.py"),
+                  ['build_py'] + extra_args)
 
 setup(
-    name = PKG_NAME,
-    packages = [PKG_NAME, '%s.web' % PKG_NAME, 'pyspades', 'pyspades.enet'],
-    version = '0.0.1',
-    description = 'Open-Source server implementation for Ace of Spades',
-    author = 'MatPow2, StackOverflow, piqueserver authors',
-    author_email = 'nate.shoffner@gmail.com',
-    maintainer = 'noway421',
-    maintainer_email = 'noway@2ch.hk',
-    license = 'GNU General Public License v3',
-    long_description = long_description,
-    url = PKG_URL,
-    download_url = PKG_DOWNLOAD_URL,
-    keywords = ['ace of spades', 'aos', 'server', 'pyspades', 'pysnip', 'piqueserver'],
-    classifiers = [
+    name=PKG_NAME,
+    packages=[PKG_NAME, '%s.web' % PKG_NAME, 'pyspades', 'pyspades.enet'],
+    version='0.0.1',
+    description='Open-Source server implementation for Ace of Spades',
+    author='MatPow2, StackOverflow, piqueserver authors',
+    author_email='nate.shoffner@gmail.com',
+    maintainer='noway421',
+    maintainer_email='noway@2ch.hk',
+    license='GNU General Public License v3',
+    long_description=long_description,
+    url=PKG_URL,
+    download_url=PKG_DOWNLOAD_URL,
+    keywords=['ace of spades', 'aos', 'server',
+              'pyspades', 'pysnip', 'piqueserver'],
+    classifiers=[
         'Intended Audience :: System Administrators',
         'Development Status :: 3 - Alpha',
         'Operating System :: MacOS :: MacOS X',
@@ -149,29 +157,30 @@ setup(
         'Programming Language :: Python :: 2 :: Only',
         'Framework :: Twisted',
     ],
-    platforms = "Darwin, Unix",
-    setup_requires = ['Cython>=0,<1'], # at least for now when we have to cythonize enet
-    install_requires = ['Cython>=0,<1', 'Twisted>=16,<17', 'Jinja2>=2,<3',
-        'Pillow>=3,<5'], # status server is part of our 'vanila' package
-    extras_require = {
+    platforms="Darwin, Unix",
+    # at least for now when we have to cythonize enet
+    setup_requires=['Cython>=0,<1'],
+    install_requires=['Cython>=0,<1', 'Twisted>=16,<17', 'Jinja2>=2,<3',
+                      'Pillow>=3,<5'],  # status server is part of our 'vanila' package
+    extras_require={
         'from': ['pygeoip>=0.3.2,<0.4'],
         # 'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
         'ssh': ['pycrypto>=2.6.1,<2.7', 'pyasn1>=0.1.9,<0.2']
     },
-    entry_points = {
+    entry_points={
         'console_scripts': [
             '%s=%s.run:main' % (PKG_NAME, PKG_NAME)
         ],
     },
-    package_dir = {
+    package_dir={
         PKG_NAME: 'feature_server',
         '%s.web' % PKG_NAME: 'feature_server/web',
         'pyspades': 'pyspades',
         'pyspades.enet': 'enet/pyenet'
-    }, # some kind of find_packages?
-    package_data = {"%s.web" % PKG_NAME: ["templates/status.html"]},
+    },  # some kind of find_packages?
+    package_data={"%s.web" % PKG_NAME: ["templates/status.html"]},
     include_package_data=True,
 
-    ext_modules = ext_modules,
-    cmdclass = { 'build_ext': build_ext },
+    ext_modules=ext_modules,
+    cmdclass={'build_ext': build_ext},
 )
