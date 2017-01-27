@@ -2,41 +2,12 @@
 
 from __future__ import print_function
 
-# ### Virtualenv autoload ###
-# # Not really sure whether it's worth it... Looks like reinveting virtualenv .
-# # Consider making users to load virtualenv on their own.
-# from os import path as __p
-# venv_dirs = [__p.join(__p.dirname(__p.realpath(__file__)), i) for i in ('venv', '.venv')]
-# activated_venv = None
-# for venv_dir in venv_dirs:
-#     try:
-#         activate_this = __p.join(venv_dir, 'bin', 'activate_this.py')
-#         execfile(activate_this, dict(__file__=activate_this))
-#         activated_venv = venv_dir
-#     except IOError:
-#         pass
-#     else:
-#         break
-# print("Using virtualenv %s" % activated_venv)
-
-# import sys
-# import os
-
-# if activated_venv is not None:
-#     sys.argv[0] = __p.join(activated_venv, 'bin', 'python2')
-#     sys.executable = sys.argv[0]
-#     os.environ['_'] = sys.argv[0]
-#     sys.prefix = activated_venv
-#     sys.exec_prefix = activated_venv
-# ### Virtualenv autoload end ###
-
-
 import sys
 import os
 
-PKG_NAME="piqueserver"
-PKG_URL="https://github.com/piqueserver/piqueserver"
-PKG_DOWNLOAD_URL="https://github.com/piqueserver/piqueserver/archive/master.tar.gz"
+PKG_NAME = "piqueserver"
+PKG_URL = "https://github.com/piqueserver/piqueserver"
+PKG_DOWNLOAD_URL = "https://github.com/piqueserver/piqueserver/archive/master.tar.gz"
 
 extra_args = sys.argv[2:]
 
@@ -180,7 +151,8 @@ setup(
     ],
     platforms = "Darwin, Unix",
     setup_requires = ['Cython>=0,<1'], # at least for now when we have to cythonize enet
-    install_requires = ['Cython>=0,<1', 'Twisted>=16,<17', 'Jinja2>=2,<3', 'Pillow>=3,<5'], # status server is part of our 'vanila' package
+    install_requires = ['Cython>=0,<1', 'Twisted>=16,<17', 'Jinja2>=2,<3',
+        'Pillow>=3,<5'], # status server is part of our 'vanila' package
     extras_require = {
         'from': ['pygeoip>=0.3.2,<0.4'],
         # 'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
@@ -191,7 +163,12 @@ setup(
             '%s=%s.run:main' % (PKG_NAME, PKG_NAME)
         ],
     },
-    package_dir = {PKG_NAME: 'feature_server', '%s.web' % PKG_NAME: 'feature_server/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet/pyenet'}, # some kind of find_packages?
+    package_dir = {
+        PKG_NAME: 'feature_server',
+        '%s.web' % PKG_NAME: 'feature_server/web',
+        'pyspades': 'pyspades',
+        'pyspades.enet': 'enet/pyenet'
+    }, # some kind of find_packages?
     package_data = {"%s.web" % PKG_NAME: ["templates/status.html"]},
     include_package_data=True,
 
