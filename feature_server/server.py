@@ -61,19 +61,6 @@ def get_git_rev():
     return ret
 
 
-frozen = hasattr(sys, 'frozen')
-
-if frozen:
-    path = os.path.dirname(unicode(sys.executable, sys.getfilesystemencoding()))
-    sys.path.append(path)
-    try:
-        SERVER_VERSION = 'win32 bin - rev %s' % (open('version', 'rb').read())
-    except IOError:
-        SERVER_VERSION = 'win32 bin'
-else:
-    sys.path.append('..')
-    SERVER_VERSION = '%s - rev %s' % (sys.platform, get_git_rev())
-
 if sys.platform == 'linux2':
     try:
         from twisted.internet import epollreactor
@@ -535,7 +522,7 @@ class FeatureProtocol(ServerProtocol):
     game_mode = None # default to None so we can check
     time_announce_schedule = None
 
-    server_version = SERVER_VERSION
+    server_version = cfg.server_version
 
     def __init__(self, interface, config):
         self.config = config
