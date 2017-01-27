@@ -7,7 +7,7 @@ Maintainer: mat^2
 
 from statistics import DEFAULT_PORT, connect_statistics
 
-import commands
+from piqueserver import commands
 
 def sitelogin(connection, name, password):
     value = connection.site_login(name, password)

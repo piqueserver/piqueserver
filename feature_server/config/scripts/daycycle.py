@@ -5,7 +5,7 @@ Maintainer: hompy
 """
 
 from twisted.internet.task import LoopingCall
-from commands import name, admin, add
+from piqueserver.commands import name, admin, add
 
 S_NO_RIGHTS = 'No administrator rights!'
 S_TIME_OF_DAY = 'Time of day: {hours:02d}:{minutes:02d}'

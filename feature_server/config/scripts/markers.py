@@ -36,7 +36,7 @@ from pyspades.world import cube_line
 from pyspades.server import block_action, block_line, set_color, chat_message
 from pyspades.common import make_color, to_coordinates
 from pyspades.constants import *
-from commands import add, admin, get_player, name
+from piqueserver.commands import add, admin, get_player, name
 
 SHADOW_INTEL = True # if True, shows where the intel used to be before taken
 REVEAL_ENEMIES = True # if True, mimics old intel reveal behavior when captured

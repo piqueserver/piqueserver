@@ -3,7 +3,7 @@
 # by topologist June 30th 2012
 
 from scheduler import Scheduler
-from commands import add, admin, get_player, join_arguments, name
+from piqueserver.commands import add, admin, get_player, join_arguments, name
 
 @name('tm')
 @admin

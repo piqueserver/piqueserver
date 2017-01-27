@@ -35,7 +35,7 @@ from pyspades import world
 from pyspades.constants import *
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
-from commands import add, admin
+from piqueserver.commands import add, admin
 
 # If ALWAYS_ENABLED is False, then the 'arena' key must be set to True in
 # the 'extensions' dictionary in the map metadata

@@ -1,8 +1,8 @@
 # passreload.py
 # written by Danke
 
-import commands
-from commands import add, admin
+from piqueserver import commands
+from piqueserver.commands import add, admin
 import json
 
 @admin

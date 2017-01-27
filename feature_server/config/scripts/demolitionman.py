@@ -6,7 +6,7 @@ See the file license.txt or http://opensource.org/licenses/MIT for copying permi
 Restocks the user when reloading / throwing a nade.
 """
 
-from commands import add, admin
+from piqueserver.commands import add, admin
 
 DEMOLITION_ENABLED_AT_ROUND_START = False
 

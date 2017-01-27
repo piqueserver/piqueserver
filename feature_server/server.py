@@ -21,6 +21,7 @@ pyspades - default/featured server
 
 import sys
 import os
+import imp
 import json
 import itertools
 import random
@@ -984,9 +985,6 @@ def run():
     runs the server
     """
 
-    # add the config dir to the path so we can import scripts
-    sys.path.append(cfg.config_dir)
-
     try:
         with open(cfg.config_file, 'rb') as f:
             config = json.load(f)
@@ -1010,8 +1008,6 @@ def run():
             sys.exit(1)
         config.update(params)
 
-
-
     # apply scripts
 
     protocol_class = FeatureProtocol
@@ -1024,10 +1020,13 @@ def run():
         # must be a script with this game mode
         script_names.append(game_mode)
 
+    script_dir = os.path.join(cfg.config_dir, 'scripts/')
     for script in script_names[:]:
         try:
-            module = __import__('scripts.%s' % script, globals(), locals(),
-                [script])
+            # NOTE: this finds and loads scripts directly from the script dir
+            # no need for messing with sys.path
+            f, filename, desc = imp.find_module(script, [script_dir])
+            module = imp.load_module(script, f, filename, desc)
             script_objects.append(module)
         except ImportError, e:
             print "(script '%s' not found: %r)" % (script, e)

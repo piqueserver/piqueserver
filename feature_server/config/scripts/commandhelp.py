@@ -6,7 +6,7 @@ See the file license.txt or http://opensource.org/licenses/MIT for copying permi
 Lists all commands available to you (permission based).
 """
 
-from commands import add, admin, commands as cmdlist, aliases as aliaslist
+from piqueserver.commands import add, admin, commands as cmdlist, aliases as aliaslist
 import fnmatch
 
 def commands(connection, value = None):

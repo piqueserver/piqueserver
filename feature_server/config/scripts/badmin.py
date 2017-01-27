@@ -6,7 +6,7 @@ from twisted.internet import reactor
 from pyspades.common import prettify_timespan
 from pyspades.constants import *
 from pyspades.collision import distance_3d_vector
-from commands import add, admin, get_player
+from piqueserver.commands import add, admin, get_player
 import re
 
 BADMIN_VERSION = 9

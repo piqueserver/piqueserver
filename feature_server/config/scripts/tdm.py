@@ -6,7 +6,7 @@ Maintainer: Triplefox
 
 from pyspades.constants import *
 
-import commands
+from piqueserver import commands
 
 def score(connection):
     return connection.protocol.get_kill_count()

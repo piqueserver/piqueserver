@@ -40,7 +40,7 @@ from pyspades.collision import collision_3d
 from pyspades.constants import DESTROY_BLOCK, SPADE_DESTROY, BUILD_BLOCK
 from pyspades.contained import BlockAction, SetColor
 from twisted.internet.reactor import callLater
-from commands import add, admin
+from piqueserver.commands import add, admin
 from random import choice
 
 KILL_MESSAGES = [
