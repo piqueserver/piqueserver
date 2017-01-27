@@ -68,13 +68,6 @@ if sys.platform == 'linux2':
     except ImportError:
         print '(dependencies missing for epoll, using normal reactor)'
 
-if sys.version_info < (2, 7):
-    try:
-        import psyco
-        psyco.full()
-    except ImportError:
-        print '(optional: install psyco for optimizations)'
-
 import pyspades.debug
 from pyspades.server import (ServerProtocol, ServerConnection, position_data,
     grenade_packet, Team)
