@@ -987,10 +987,6 @@ def run():
     # add the config dir to the path so we can import scripts
     sys.path.append(cfg.config_dir)
 
-    # add our package to path too so scripts can import `feature_server/`
-    # a better way instead of abs path?
-    sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
-
     try:
         with open(cfg.config_file, 'rb') as f:
             config = json.load(f)
