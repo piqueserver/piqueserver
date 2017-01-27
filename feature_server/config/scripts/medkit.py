@@ -5,7 +5,7 @@ Author: Booboorocks998
 Maintainer: mat^2
 """
 
-import commands
+import piqueserver.commands
 from pyspades.constants import *
 
 

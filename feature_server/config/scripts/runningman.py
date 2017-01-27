@@ -19,7 +19,7 @@ from pyspades.server import grenade_packet
 from pyspades.collision import distance_3d_vector
 from pyspades.constants import *
 from pyspades.common import Vertex3
-from commands import add, admin, get_player, name
+from piqueserver.commands import add, admin, get_player, name
 
 ENABLED_AT_START = False
 

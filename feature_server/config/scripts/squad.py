@@ -4,8 +4,8 @@ BF-like squad system.
 Maintainer: Triplefox
 """
 
-from commands import add, rights, admin, name, get_player
-import commands
+from piqueserver.commands import add, rights, admin, name, get_player
+from piqueserver import commands
 import random
 
 SQUAD_NAMES = set([

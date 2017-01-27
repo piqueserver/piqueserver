@@ -1,4 +1,4 @@
-import commands
+import piqueserver.commands
 
 
 def apply_script(protocol, connection, config):

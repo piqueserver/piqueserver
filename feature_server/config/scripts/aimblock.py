@@ -14,7 +14,7 @@
 # - Ben "GreaseMonkey" Russell
 
 from twisted.internet import reactor
-import commands
+import piqueserver.commands
 
 # disable if you don't want to see all the jerk information
 AIMBLOCK_SPAM = False

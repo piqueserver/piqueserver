@@ -9,7 +9,7 @@ from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 
 import json
-import commands
+from piqueserver import commands
 
 
 @commands.admin

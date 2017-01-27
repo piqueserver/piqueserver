@@ -1,4 +1,4 @@
-from commands import add, admin
+from piqueserver.commands import add, admin
 from pyspades.contained import BlockAction, SetColor
 from pyspades.constants import *
 from math import *

@@ -21,7 +21,7 @@ from pyspades.common import prettify_timespan
 from map import check_rotation
 import random
 from scheduler import Scheduler
-import commands
+from piqueserver import commands
 
 
 def cancel_verify(connection, instigator):

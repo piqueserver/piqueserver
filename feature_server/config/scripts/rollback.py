@@ -9,8 +9,8 @@ from pyspades.vxl import VXLData
 from pyspades.contained import BlockAction, SetColor
 from pyspades.constants import *
 from pyspades.common import coordinates, make_color
-from map import Map, MapNotFound, check_rotation
-from commands import add, admin
+from piqueserver.map import Map, MapNotFound, check_rotation
+from piqueserver.commands import add, admin
 import time
 import operator
 

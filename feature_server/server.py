@@ -18,6 +18,7 @@ pyspades - default/featured server
 
 import sys
 import os
+import imp
 import json
 import itertools
 import random
@@ -58,34 +59,12 @@ def get_git_rev():
         return 'unknown'
     return ret
 
-
-frozen = hasattr(sys, 'frozen')
-
-if frozen:
-    path = os.path.dirname(
-        unicode(sys.executable, sys.getfilesystemencoding()))
-    sys.path.append(path)
-    try:
-        SERVER_VERSION = 'win32 bin - rev %s' % (open('version', 'rb').read())
-    except IOError:
-        SERVER_VERSION = 'win32 bin'
-else:
-    sys.path.append('..')
-    SERVER_VERSION = '%s - rev %s' % (sys.platform, get_git_rev())
-
 if sys.platform == 'linux2':
     try:
         from twisted.internet import epollreactor
         epollreactor.install()
     except ImportError:
         print '(dependencies missing for epoll, using normal reactor)'
-
-if sys.version_info < (2, 7):
-    try:
-        import psyco
-        psyco.full()
-    except ImportError:
-        print '(optional: install psyco for optimizations)'
 
 import pyspades.debug
 from pyspades.server import (ServerProtocol, ServerConnection, position_data,
@@ -545,7 +524,7 @@ class FeatureProtocol(ServerProtocol):
     game_mode = None  # default to None so we can check
     time_announce_schedule = None
 
-    server_version = SERVER_VERSION
+    server_version = cfg.server_version
 
     def __init__(self, interface, config):
         self.config = config
@@ -1018,13 +997,6 @@ def run():
     runs the server
     """
 
-    # add the config dir to the path so we can import scripts
-    sys.path.append(cfg.config_dir)
-
-    # add our package to path too so scripts can import `feature_server/`
-    # a better way instead of abs path?
-    sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
-
     try:
         with open(cfg.config_file, 'rb') as f:
             config = json.load(f)
@@ -1059,10 +1031,21 @@ def run():
         # must be a script with this game mode
         script_names.append(game_mode)
 
+    # add this directory (feature_server) to sys.path so scripts can import
+    # modules directly (e.g. `import commands` instead of the more proper
+    # `from piqueserver import commands`
+    # NOTE: only kept for backwards compatibility with scripts originally for
+    # pysnip. Should be removed in the future due to hackiness.
+    sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
+
+    script_dir = os.path.join(cfg.config_dir, 'scripts/')
     for script in script_names[:]:
         try:
-            module = __import__('scripts.%s' % script, globals(), locals(),
-                                [script])
+            # NOTE: this finds and loads scripts directly from the script dir
+            # no need for messing with sys.path
+            f, filename, desc = imp.find_module(script, [script_dir])
+            module = imp.load_module(script, f, filename, desc)
+            
             script_objects.append(module)
         except ImportError, e:
             print "(script '%s' not found: %r)" % (script, e)

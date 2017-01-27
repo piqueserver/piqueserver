@@ -5,7 +5,7 @@ Author: TheGrandmaster
 Maintainer: mat^2
 """
 
-from commands import get_player, add
+from piqueserver.commands import get_player, add
 
 # "ratio" must be AFTER "votekick" in the config.txt script list
 RATIO_ON_VOTEKICK = True

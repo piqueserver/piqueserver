@@ -18,8 +18,8 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from twisted.internet.reactor import seconds
-from scheduler import Scheduler
-from commands import name, add, get_player, join_arguments, InvalidPlayer
+from piqueserver.scheduler import Scheduler
+from piqueserver.commands import name, add, get_player, join_arguments, InvalidPlayer
 
 REQUIRE_REASON = True
 

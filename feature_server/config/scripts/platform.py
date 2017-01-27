@@ -189,8 +189,8 @@ from pyspades.collision import collision_3d
 from pyspades.common import make_color
 from pyspades.types import MultikeyDict
 from pyspades.constants import *
-from commands import add, admin, name, alias, join_arguments
-from map import DEFAULT_LOAD_DIR
+from piqueserver.commands import add, admin, name, alias, join_arguments
+from piqueserver.map import DEFAULT_LOAD_DIR
 
 SAVE_ON_MAP_CHANGE = True
 AUTOSAVE_EVERY = 0.0  # minutes, 0 = disabled

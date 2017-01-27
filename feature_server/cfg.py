@@ -16,7 +16,9 @@
 # http://effbot.org/pyfaq/how-do-i-share-global-variables-across-modules.htm
 
 import os
+import sys
 
+server_version = '%s - %s' % (sys.platform, '0.0.1a')
 config = {}
 pkg_name = "piqueserver"
 config_file = 'config.json'

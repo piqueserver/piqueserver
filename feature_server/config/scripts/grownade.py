@@ -49,7 +49,7 @@ from twisted.internet.task import LoopingCall
 from pyspades.server import block_action, block_line, set_color
 from pyspades.common import make_color
 from pyspades.constants import *
-from commands import add, admin, name, get_player
+from piqueserver.commands import add, admin, name, get_player
 
 FLYING_MODELS = False  # if False grenades exploding in midair will be ignored
 GROW_ON_WATER = False  # if False grenades exploding in water will do nothing

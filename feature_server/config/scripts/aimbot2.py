@@ -1,7 +1,7 @@
 from twisted.internet.task import LoopingCall
 from pyspades.constants import *
 from math import sqrt, cos, acos, pi, tan
-from commands import add, admin, get_player
+from piqueserver.commands import add, admin, get_player
 from twisted.internet import reactor
 import re
 

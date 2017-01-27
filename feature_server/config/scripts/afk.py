@@ -8,7 +8,7 @@ from math import ceil
 from operator import attrgetter
 from twisted.internet import reactor
 from pyspades.common import prettify_timespan
-from commands import name, get_player, add, admin
+from piqueserver.commands import name, get_player, add, admin
 
 S_AFK_CHECK = '{player} has been inactive for {time}'
 S_NO_PLAYERS_INACTIVE = 'No players or connections inactive for {time}'

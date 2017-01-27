@@ -28,9 +28,9 @@ dist/
 .eggs
 
 # config/userdata
-config/maps/*.txtc
-config/logs/*
-config/data/*
+feature_server/config/maps/*.txtc
+feature_server/config/logs/*
+feature_server/config/data/*
 
 # py2exe
 py2exe/dist/

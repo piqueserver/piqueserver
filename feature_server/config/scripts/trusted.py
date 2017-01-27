@@ -5,7 +5,7 @@ or rubberbanded.
 Maintainer: mat^2 / hompy
 """
 
-from commands import add, admin, get_player
+from piqueserver.commands import add, admin, get_player
 
 S_GRANTED = '{player} is now trusted'
 S_GRANTED_SELF = "You've been granted trust, and can't be votekicked"
