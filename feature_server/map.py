@@ -19,13 +19,16 @@ import imp
 import math
 import random
 
+
 class MapNotFound(Exception):
+
     def __init__(self, map):
         self.map = map
         Exception.__init__(self, 'map %s does not exist' % map)
 
     def __nonzero__(self):
         return False
+
 
 def check_rotation(maps, load_dir):
     infos = []
@@ -34,11 +37,13 @@ def check_rotation(maps, load_dir):
             map = RotationInfo(map)
         infos.append(map)
         if (not os.path.isfile(map.get_map_filename(load_dir))
-        and not os.path.isfile(map.get_meta_filename(load_dir))):
+                and not os.path.isfile(map.get_meta_filename(load_dir))):
             raise MapNotFound(map)
     return infos
 
+
 class Map(object):
+
     def __init__(self, rot_info, load_dir):
         self.load_information(rot_info, load_dir)
 
@@ -56,7 +61,8 @@ class Map(object):
     def load_information(self, rot_info, load_dir):
         self.load_dir = load_dir
         try:
-            info = imp.load_source(rot_info.name, rot_info.get_meta_filename(load_dir))
+            info = imp.load_source(
+                rot_info.name, rot_info.get_meta_filename(load_dir))
         except IOError:
             info = None
         self.info = info
@@ -95,13 +101,15 @@ class Map(object):
         self.data = VXLData(fp)
         fp.close()
 
+
 class RotationInfo(object):
     seed = None
-    def __init__(self, name = "pyspades"):
+
+    def __init__(self, name="pyspades"):
         self.full_name = name
 
         splitted = name.split("#")
-        if len(splitted) > 1: # user specified a seed
+        if len(splitted) > 1:  # user specified a seed
             name = splitted[0].strip()
             self.seed = int(splitted[1])
         self.name = name

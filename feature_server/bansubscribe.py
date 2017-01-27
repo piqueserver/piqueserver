@@ -19,26 +19,28 @@ from twisted.internet.defer import DeferredList
 
 from networkdict import NetworkDict
 
-UPDATE_INTERVAL = 5 * 60 # every 5 minute
+UPDATE_INTERVAL = 5 * 60  # every 5 minute
 
 # format is [{"ip" : "1.1.1.1", "reason : "blah"}, ...]
+
 
 class BanManager(object):
     bans = None
     new_bans = None
+
     def __init__(self, protocol, config):
         self.protocol = protocol
         self.urls = [(str(item), filter) for (item, filter) in
-            config.get('urls', [])]
+                     config.get('urls', [])]
         self.loop = LoopingCall(self.update_bans)
-        self.loop.start(UPDATE_INTERVAL, now = True)
+        self.loop.start(UPDATE_INTERVAL, now=True)
 
     def update_bans(self):
         self.new_bans = NetworkDict()
         defers = []
         for url, filter in self.urls:
             defers.append(self.protocol.getPage(url).addCallback(self.got_bans,
-                filter))
+                                                                 filter))
         DeferredList(defers).addCallback(self.bans_finished)
 
     def got_bans(self, data, filter):

@@ -25,7 +25,8 @@ import cfg
 
 def copy_config():
     config_source = os.path.dirname(os.path.abspath(__file__)) + '/config'
-    print('Attempting to copy example config to %s (origin: %s).' % (cfg.config_dir, config_source))
+    print('Attempting to copy example config to %s (origin: %s).' %
+          (cfg.config_dir, config_source))
     try:
         shutil.copytree(config_source, cfg.config_dir)
     except Exception as e:
@@ -41,7 +42,6 @@ def update_geoip(target_dir):
     ZIPPED_PATH = os.path.join(
         WORKING_DIRECTORY, os.path.basename(MAXMIND_DOWNLOAD))
     EXTRACTED_PATH = os.path.join(WORKING_DIRECTORY, 'GeoLiteCity.dat')
-
 
     if not os.path.exists(target_dir):
         print('Configuration directory does not exist')
@@ -78,13 +78,15 @@ def main():
                                          description='%s is an open-source Python server implementation for the voxel-based game "Ace of Spades".' % cfg.pkg_name)
 
     arg_parser.add_argument('-c', '--config-file', default=None,
-            help='specify the config file - default is "config.json" in the config dir')
+                            help='specify the config file - default is "config.json" in the config dir')
     arg_parser.add_argument('-j', '--json-parameters',
-            help='add extra json parameters (overrides the ones present in the config file)')
+                            help='add extra json parameters (overrides the ones present in the config file)')
     arg_parser.add_argument('-d', '--config-dir', default=cfg.config_dir,
-            help='specify the directory which contains maps, scripts, etc (in correctly named subdirs) - default is %s' % cfg.config_path)
-    arg_parser.add_argument('--copy-config', action='store_true', help='copies the default/example config dir to its default location or as specified by "-d"')
-    arg_parser.add_argument('--update-geoip', action='store_true', help='download the latest geoip database')
+                            help='specify the directory which contains maps, scripts, etc (in correctly named subdirs) - default is %s' % cfg.config_path)
+    arg_parser.add_argument('--copy-config', action='store_true',
+                            help='copies the default/example config dir to its default location or as specified by "-d"')
+    arg_parser.add_argument('--update-geoip', action='store_true',
+                            help='download the latest geoip database')
 
     args = arg_parser.parse_args()
 

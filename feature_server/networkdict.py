@@ -16,6 +16,7 @@ from pyspades.ipaddr import IPNetwork
 
 cache = {}
 
+
 def get_network(cidr):
     try:
         return cache[cidr]
@@ -24,12 +25,15 @@ def get_network(cidr):
         cache[cidr] = network
         return network
 
+
 def get_cidr(network):
     if network._prefixlen == 32:
         return str(network.ip)
     return str(network)
 
+
 class NetworkDict(object):
+
     def __init__(self):
         self.networks = []
 
