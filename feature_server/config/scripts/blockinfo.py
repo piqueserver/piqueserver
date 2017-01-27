@@ -7,7 +7,7 @@ Maintainer: hompy
 from twisted.internet.reactor import seconds
 from pyspades.collision import distance_3d_vector
 from pyspades.common import prettify_timespan
-from commands import add, admin, name, get_player, alias
+from piqueserver.commands import add, admin, name, get_player, alias
 
 # "blockinfo" must be AFTER "votekick" in the config.txt script list
 GRIEFCHECK_ON_VOTEKICK = True

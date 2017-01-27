@@ -12,7 +12,7 @@ from pyspades.common import coordinates, to_coordinates, Vertex3
 from pyspades.collision import distance_3d_vector
 from pyspades.world import Grenade
 from pyspades.constants import UPDATE_FREQUENCY
-from commands import alias, add
+from piqueserver.commands import alias, add
 
 SCORE_REQUIREMENT = 0
 STREAK_REQUIREMENT = 8

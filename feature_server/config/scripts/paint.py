@@ -11,7 +11,7 @@ Maintainer: hompy
 from pyspades.server import block_action
 from pyspades.common import Vertex3
 from pyspades.constants import *
-from commands import add, admin, get_player
+from piqueserver.commands import add, admin, get_player
 
 PAINT_RAY_LENGTH = 32.0
 

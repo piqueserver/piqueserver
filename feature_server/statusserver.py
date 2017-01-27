@@ -95,7 +95,7 @@ class StatusServerFactory(object):
     last_map_name = None
     overview = None
     def __init__(self, protocol, config):
-        self.env = Environment(loader = PackageLoader('web'))
+        self.env = Environment(loader = PackageLoader('piqueserver.web'))
         self.protocol = protocol
         root = Resource()
         root.putChild('json', JSONPage(self))

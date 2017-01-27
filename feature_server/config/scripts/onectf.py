@@ -1,5 +1,5 @@
 from pyspades.constants import *
-from commands import add, admin
+from piqueserver.commands import add, admin
 from pyspades.collision import vector_collision
 
 FLAG_SPAWN_POS = (256, 256)

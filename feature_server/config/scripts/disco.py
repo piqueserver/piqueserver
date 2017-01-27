@@ -8,7 +8,7 @@ from twisted.internet.task import LoopingCall
 from twisted.internet.reactor import callLater
 import random
 
-import commands
+from piqueserver import commands
 
 DISCO_ON_GAME_END = True
 # Time is in seconds
