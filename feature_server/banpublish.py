@@ -1,19 +1,16 @@
-# Copyright (c) James W. Hofmann 2011.
-
-# This file is part of pyspades.
-
-# pyspades is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# pyspades is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
+# feature_server/banpublish.py
+#
+#   This file is licensed under the GNU General Public License version 3.
+# In accordance to the license, there are instructions for obtaining the
+# original source code. Furthermore, the changes made to this file can
+# be seem by using diff tools and/or git-compatible software.
+#
+#   The license full text can be found in the "LICENSE" file, at the root
+# of this repository. The original PySpades code can be found in this URL:
+# https://github.com/infogulch/pyspades/releases/tag/v0.75.01.
+#
+# Original copyright: (C)2011 James W. Hofmann
+#
 
 from twisted.internet import reactor
 from twisted.web import static, server
@@ -21,7 +18,9 @@ from twisted.web.resource import Resource
 from string import Template
 import json
 
+
 class PublishResource(Resource):
+
     def __init__(self, factory):
         self.factory = factory
         Resource.__init__(self)
@@ -32,7 +31,9 @@ class PublishResource(Resource):
     def render_GET(self, request):
         return self.factory.json_bans
 
+
 class PublishServer(object):
+
     def __init__(self, protocol, config):
         self.protocol = protocol
         publish_resource = PublishResource(self)
@@ -44,5 +45,5 @@ class PublishServer(object):
         bans = []
         for network, (name, reason, timestamp) in self.protocol.bans.iteritems():
             if timestamp is None or reactor.seconds() < timestamp:
-                bans.append({"ip" : network, "reason" : reason})
+                bans.append({"ip": network, "reason": reason})
         self.json_bans = json.dumps(bans)

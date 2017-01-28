@@ -51,8 +51,8 @@ from pyspades.common import make_color
 from pyspades.constants import *
 from piqueserver.commands import add, admin, name, get_player
 
-FLYING_MODELS = False # if False grenades exploding in midair will be ignored
-GROW_ON_WATER = False # if False grenades exploding in water will do nothing
+FLYING_MODELS = False  # if False grenades exploding in midair will be ignored
+GROW_ON_WATER = False  # if False grenades exploding in water will do nothing
 
 KV6_DIR = './kv6'
 LOWEST_Z = 63 if GROW_ON_WATER else 62
@@ -68,9 +68,10 @@ S_CANCEL = 'No longer spawning models'
 S_SPECIFY_FILES = 'Specify model files to load. Wildcards are allowed, ' \
     'e.g.: "bunker", "tree*"'
 
+
 @name('model')
 @admin
-def model_grenades(connection, expression = None):
+def model_grenades(connection, expression=None):
     protocol = connection.protocol
     if connection not in protocol.players:
         raise ValueError()
@@ -85,7 +86,7 @@ def model_grenades(connection, expression = None):
             expression += '.kv6'
         paths = glob(os.path.join(KV6_DIR, expression))
         if not paths:
-            return S_NO_MATCHES.format(expression = expression)
+            return S_NO_MATCHES.format(expression=expression)
 
         # attempt to load models, discard invalid ones
         models, loaded, failed = [], [], []
@@ -98,11 +99,11 @@ def model_grenades(connection, expression = None):
             else:
                 failed.append(filename)
         if len(loaded) == 1:
-            result = S_LOADED_SINGLE.format(filename = loaded[0])
+            result = S_LOADED_SINGLE.format(filename=loaded[0])
         elif len(loaded) > 1:
-            result = S_LOADED.format(filenames = ', '.join(loaded))
+            result = S_LOADED.format(filenames=', '.join(loaded))
         if failed:
-            player.send_chat(S_FAILED.format(filenames = ', '.join(failed)))
+            player.send_chat(S_FAILED.format(filenames=', '.join(failed)))
             player.send_chat(S_PIVOT_TIP)
 
         if models:
@@ -120,6 +121,7 @@ add(model_grenades)
 KV6Voxel = namedtuple('KV6Voxel', 'b g r a z neighbors normal_index')
 NonSurfaceKV6Voxel = KV6Voxel(40, 64, 103, 128, 0, 0, 0)
 
+
 class KV6Model:
     """
     Custom implementation that also generates non-surface voxels.
@@ -132,7 +134,7 @@ class KV6Model:
 
     def __init__(self, path):
         with open(path, 'rb') as file:
-            file.read(4) # 'Kvxl'
+            file.read(4)  # 'Kvxl'
 
             self.size = unpack('III', file.read(4 * 3))
             self.pivot = tuple(int(n) for n in unpack('fff', file.read(4 * 3)))
@@ -144,7 +146,7 @@ class KV6Model:
                 voxels.append(voxel)
 
             size_x, size_y, size_z = self.size
-            file.read(4 * size_x) # discard extra information
+            file.read(4 * size_x)  # discard extra information
 
             voxel_map = {}
             voxel_iter = iter(voxels)
@@ -156,13 +158,14 @@ class KV6Model:
                     voxel_map[(x, y, voxel.z)] = voxel
                     if last_z is not None and not voxel.neighbors & 0b00010000:
                         for z in xrange(last_z + 1, voxel.z):
-                            inside_voxel = NonSurfaceKV6Voxel._replace(z = z)
+                            inside_voxel = NonSurfaceKV6Voxel._replace(z=z)
                             voxel_map[(x, y, z)] = inside_voxel
                     last_z = voxel.z
 
             if self.pivot not in voxel_map:
                 return
             self.voxels = voxel_map
+
 
 class BuildQueue:
     interval = 0.02
@@ -171,7 +174,7 @@ class BuildQueue:
     loop = None
     call_on_exhaustion = None
 
-    def __init__(self, protocol, call_on_exhaustion = None):
+    def __init__(self, protocol, call_on_exhaustion=None):
         self.protocol = protocol
         self.blocks = deque()
         self.loop = LoopingCall(self.cycle)
@@ -191,7 +194,7 @@ class BuildQueue:
             if color != last_color:
                 set_color.value = make_color(*color)
                 set_color.player_id = 32
-                self.protocol.send_contained(set_color, save = True)
+                self.protocol.send_contained(set_color, save=True)
                 last_color = color
             if not self.protocol.map.get_solid(x, y, z):
                 block_action.value = BUILD_BLOCK
@@ -199,7 +202,7 @@ class BuildQueue:
                 block_action.x = x
                 block_action.y = y
                 block_action.z = z
-                self.protocol.send_contained(block_action, save = True)
+                self.protocol.send_contained(block_action, save=True)
                 self.protocol.map.set_point(x, y, z, color)
                 blocks_left -= 1
         self.protocol.update_entities()
@@ -208,6 +211,7 @@ class BuildQueue:
         if not self.loop.running:
             self.loop.start(self.interval)
         self.blocks.append((x, y, z, color))
+
 
 class GrowModel:
     model = None
@@ -262,6 +266,7 @@ class GrowModel:
         self.grow_loop = None
         self.protocol.growers.remove(self)
 
+
 def apply_script(protocol, connection, config):
     class SeedyConnection(connection):
         grenade_models = None
@@ -282,7 +287,7 @@ def apply_script(protocol, connection, config):
             x, y, z = (int(n) for n in grenade.position.get())
             map = self.protocol.map
             if (not FLYING_MODELS and not map.get_solid(x, y, z + 1) and
-                not z == LOWEST_Z == 63):
+                    not z == LOWEST_Z == 63):
                 return
             model = choice(self.grenade_models)
             grower = GrowModel(self.protocol, model, x, y, z)

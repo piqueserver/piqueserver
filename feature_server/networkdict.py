@@ -1,6 +1,21 @@
+# feature_server/networkdict.py
+#
+#   This file is licensed under the GNU General Public License version 3.
+# In accordance to the license, there are instructions for obtaining the
+# original source code. Furthermore, the changes made to this file can
+# be seem by using diff tools and/or git-compatible software.
+#
+#   The license full text can be found in the "LICENSE" file, at the root
+# of this repository. The original PySpades code can be found in this URL:
+# https://github.com/infogulch/pyspades/releases/tag/v0.75.01.
+#
+# Original copyright: (C)2011 Mathias Kaerlev
+#
+
 from pyspades.ipaddr import IPNetwork
 
 cache = {}
+
 
 def get_network(cidr):
     try:
@@ -10,12 +25,15 @@ def get_network(cidr):
         cache[cidr] = network
         return network
 
+
 def get_cidr(network):
     if network._prefixlen == 32:
         return str(network.ip)
     return str(network)
 
+
 class NetworkDict(object):
+
     def __init__(self):
         self.networks = []
 
