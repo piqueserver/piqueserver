@@ -3,8 +3,7 @@
 from random import randint
 
 # If ALWAYS_ENABLED is False, free for all can still be enabled in the map
-# metadata by setting the key 'free_for_all' to True in the extensions
-# dictionary
+# metadata by setting the key 'free_for_all' to True in the extensions dictionary
 ALWAYS_ENABLED = True
 
 # If WATER_SPANS is True, then players can spawn in water
@@ -12,12 +11,10 @@ WATER_SPAWNS = False
 
 HIDE_POS = (0, 0, 63)
 
-
 def apply_script(protocol, connection, config):
     class FreeForAllProtocol(protocol):
         free_for_all = False
         old_friendly_fire = None
-
         def on_map_change(self, map):
             extensions = self.map_info.extensions
             if ALWAYS_ENABLED:
@@ -48,7 +45,6 @@ def apply_script(protocol, connection, config):
 
     class FreeForAllConnection(connection):
         score_hack = False
-
         def on_spawn_location(self, pos):
             if not self.score_hack and self.protocol.free_for_all:
                 while True:

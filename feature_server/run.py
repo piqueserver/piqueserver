@@ -1,16 +1,3 @@
-# run.py
-#
-#   This file is licensed under the GNU General Public License version 3.
-# In accordance to the license, there are instructions for obtaining the
-# original source code. Furthermore, the changes made to this file can
-# be seem by using diff tools and/or git-compatible software.
-#
-#   The license full text can be found in the "LICENSE" file, at the root
-# of this repository. The original PySpades code can be found in this URL:
-# https://github.com/infogulch/pyspades/releases/tag/v0.75.01.
-#
-# Original copyright: (C)2011-2012 Mathias Kaerlev
-#
 
 from __future__ import print_function
 import os
@@ -25,8 +12,7 @@ import cfg
 
 def copy_config():
     config_source = os.path.dirname(os.path.abspath(__file__)) + '/config'
-    print('Attempting to copy example config to %s (origin: %s).' %
-          (cfg.config_dir, config_source))
+    print('Attempting to copy example config to %s (origin: %s).' % (cfg.config_dir, config_source))
     try:
         shutil.copytree(config_source, cfg.config_dir)
     except Exception as e:
@@ -42,6 +28,7 @@ def update_geoip(target_dir):
     ZIPPED_PATH = os.path.join(
         WORKING_DIRECTORY, os.path.basename(MAXMIND_DOWNLOAD))
     EXTRACTED_PATH = os.path.join(WORKING_DIRECTORY, 'GeoLiteCity.dat')
+
 
     if not os.path.exists(target_dir):
         print('Configuration directory does not exist')
@@ -78,15 +65,13 @@ def main():
                                          description='%s is an open-source Python server implementation for the voxel-based game "Ace of Spades".' % cfg.pkg_name)
 
     arg_parser.add_argument('-c', '--config-file', default=None,
-                            help='specify the config file - default is "config.json" in the config dir')
+            help='specify the config file - default is "config.json" in the config dir')
     arg_parser.add_argument('-j', '--json-parameters',
-                            help='add extra json parameters (overrides the ones present in the config file)')
+            help='add extra json parameters (overrides the ones present in the config file)')
     arg_parser.add_argument('-d', '--config-dir', default=cfg.config_dir,
-                            help='specify the directory which contains maps, scripts, etc (in correctly named subdirs) - default is %s' % cfg.config_path)
-    arg_parser.add_argument('--copy-config', action='store_true',
-                            help='copies the default/example config dir to its default location or as specified by "-d"')
-    arg_parser.add_argument('--update-geoip', action='store_true',
-                            help='download the latest geoip database')
+            help='specify the directory which contains maps, scripts, etc (in correctly named subdirs) - default is %s' % cfg.config_path)
+    arg_parser.add_argument('--copy-config', action='store_true', help='copies the default/example config dir to its default location or as specified by "-d"')
+    arg_parser.add_argument('--update-geoip', action='store_true', help='download the latest geoip database')
 
     args = arg_parser.parse_args()
 

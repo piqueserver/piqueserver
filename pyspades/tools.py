@@ -17,15 +17,13 @@
 
 import struct
 
-
-def make_server_identifier(ip, port=32887):
+def make_server_identifier(ip, port = 32887):
     a, b, c, d = ip.split('.')
     a = int(a)
     b = int(b)
     c = int(c)
     d = int(d)
     return 'aos://%s:%s' % (a | (b << 8) | (c << 16) | (d << 24), port)
-
 
 def get_server_details(value):
     if not value.startswith('aos://'):

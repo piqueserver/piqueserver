@@ -12,7 +12,7 @@ import math
 from math import pi
 
 CP_COUNT = 6
-CP_EXTRA_COUNT = CP_COUNT + 2  # PLUS last 'spawn'
+CP_EXTRA_COUNT = CP_COUNT + 2 # PLUS last 'spawn'
 ANGLE = 65
 START_ANGLE = math.radians(-ANGLE)
 END_ANGLE = math.radians(ANGLE)
@@ -22,7 +22,6 @@ FIX_ANGLE = math.radians(4)
 HELP = [
     "In Tug of War, you capture your opponents' front CP to advance."
 ]
-
 
 class TugTerritory(Territory):
     disabled = True
@@ -41,34 +40,27 @@ class TugTerritory(Territory):
         self.disabled = True
         self.progress = float(self.team.id)
 
-
 def get_index(value):
     if value < 0:
         raise IndexError()
     return value
 
-
 def random_up_down(value):
     value /= 2
     return random.uniform(-value, value)
 
-
 def limit_angle(value):
     return min(END_ANGLE, max(START_ANGLE, value))
 
-
 def limit_dimension(value):
     return min(511, max(0, value))
-
 
 def get_point(x, y, magnitude, angle):
     return (limit_dimension(x + math.cos(angle) * magnitude),
             limit_dimension(y + math.sin(angle) * magnitude))
 
-
 def apply_script(protocol, connection, config):
     class TugConnection(connection):
-
         def get_spawn_location(self):
             if self.team.spawn_cp is None:
                 base = self.team.last_spawn
@@ -162,9 +154,9 @@ def apply_script(protocol, connection, config):
                     entities.append(entity)
                     index += 1
 
-            self.green_team.cp = entities[-CP_COUNT / 2]
+            self.green_team.cp = entities[-CP_COUNT/2]
             self.green_team.cp.disabled = False
-            self.green_team.spawn_cp = entities[-CP_COUNT / 2 + 1]
+            self.green_team.spawn_cp = entities[-CP_COUNT/2 + 1]
 
             return entities
 

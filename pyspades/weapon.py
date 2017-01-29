@@ -3,7 +3,6 @@ from twisted.internet import reactor
 from pyspades.constants import *
 from pyspades.collision import distance_3d_vector
 
-
 class BaseWeapon(object):
     shoot = False
     reloading = False
@@ -75,7 +74,7 @@ class BaseWeapon(object):
             self.current_stock = new_stock
             self.reload_callback()
 
-    def get_ammo(self, no_max=False):
+    def get_ammo(self, no_max = False):
         if self.shoot:
             dt = reactor.seconds() - self.shoot_time
             ammo = self.current_ammo - max(0, int(
@@ -86,12 +85,11 @@ class BaseWeapon(object):
             return ammo
         return max(0, ammo)
 
-    def is_empty(self, tolerance=CLIP_TOLERANCE):
+    def is_empty(self, tolerance = CLIP_TOLERANCE):
         return self.get_ammo(True) < -tolerance or not self.shoot
 
     def get_damage(self, value, position1, position2):
         return self.damage[value]
-
 
 class Rifle(BaseWeapon):
     name = 'Rifle'
@@ -102,28 +100,26 @@ class Rifle(BaseWeapon):
     slow_reload = False
 
     damage = {
-        TORSO: 49,
-        HEAD: 100,
-        ARMS: 33,
-        LEGS: 33
+        TORSO : 49,
+        HEAD : 100,
+        ARMS : 33,
+        LEGS : 33
     }
-
 
 class SMG(BaseWeapon):
     name = 'SMG'
-    delay = 0.11  # actually 0.1, but due to AoS scheduling, it's usually 0.11
+    delay = 0.11 # actually 0.1, but due to AoS scheduling, it's usually 0.11
     ammo = 30
     stock = 120
     reload_time = 2.5
     slow_reload = False
 
     damage = {
-        TORSO: 29,
-        HEAD: 75,
-        ARMS: 18,
-        LEGS: 18
+        TORSO : 29,
+        HEAD : 75,
+        ARMS : 18,
+        LEGS : 18
     }
-
 
 class Shotgun(BaseWeapon):
     name = 'Shotgun'
@@ -134,16 +130,16 @@ class Shotgun(BaseWeapon):
     slow_reload = True
 
     damage = {
-        TORSO: 27,
-        HEAD: 37,
-        ARMS: 16,
-        LEGS: 16
+        TORSO : 27,
+        HEAD : 37,
+        ARMS : 16,
+        LEGS : 16
     }
 
 WEAPONS = {
-    RIFLE_WEAPON: Rifle,
-    SMG_WEAPON: SMG,
-    SHOTGUN_WEAPON: Shotgun,
+    RIFLE_WEAPON : Rifle,
+    SMG_WEAPON : SMG,
+    SHOTGUN_WEAPON : Shotgun,
 }
 
 for id, weapon in WEAPONS.iteritems():

@@ -17,7 +17,6 @@ DIRT_COLOR = (71, 48, 35)
 
 StrongBlock = namedtuple('StrongBlock', 'color owner')
 
-
 def rebuild_block(player, x, y, z, color):
     set_color.value = make_color(*color)
     set_color.player_id = 32
@@ -31,11 +30,9 @@ def rebuild_block(player, x, y, z, color):
     player.send_contained(set_color)
     player.send_contained(block_action)
 
-
 def check_if_buried(protocol, x, y, z):
     if not protocol.map.is_surface(x, y, z):
         protocol.strong_blocks.pop((x, y, z), None)
-
 
 def bury_adjacent(protocol, x, y, z):
     check_if_buried(protocol, x, y, z - 1)
@@ -45,19 +42,16 @@ def bury_adjacent(protocol, x, y, z):
     check_if_buried(protocol, x, y - 1, z)
     check_if_buried(protocol, x, y + 1, z)
 
-
 def is_color_dirt(color):
     return rgb_distance(color, DIRT_COLOR) < 30
 
-
 def apply_script(protocol, connection, config):
     class StrongBlockConnection(connection):
-
         def on_disconnect(self):
             strong_blocks = self.protocol.strong_blocks
             for xyz, strong_block in strong_blocks.iteritems():
                 if strong_block.owner is self:
-                    strong_blocks[xyz] = strong_block._replace(owner=None)
+                    strong_blocks[xyz] = strong_block._replace(owner = None)
             connection.on_disconnect(self)
 
         def on_block_build(self, x, y, z):

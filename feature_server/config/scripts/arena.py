@@ -56,10 +56,9 @@ HIDE_COORD = (0, 0, 63)
 BUILDING_ENABLED = False
 
 if MAX_ROUND_TIME >= 60:
-    MAX_ROUND_TIME_TEXT = '%.2f minutes' % (float(MAX_ROUND_TIME) / 60.0)
+    MAX_ROUND_TIME_TEXT = '%.2f minutes' % (float(MAX_ROUND_TIME)/60.0)
 else:
     MAX_ROUND_TIME_TEXT = MAX_ROUND_TIME + ' seconds'
-
 
 @admin
 def coord(connection):
@@ -68,8 +67,7 @@ def coord(connection):
 
 add(coord)
 
-
-def make_color(r, g, b, a=255):
+def make_color(r, g, b, a = 255):
     r = int(r)
     g = int(g)
     b = int(b)
@@ -82,8 +80,6 @@ def make_color(r, g, b, a=255):
 # d = changing indice
 # c1 = first constant indice
 # c2 = second constant indice
-
-
 def partition(points, d, c1, c2):
     row = {}
     row_list = []
@@ -100,10 +96,9 @@ def partition(points, d, c1, c2):
         dic2.append(point)
     row_list_sorted = []
     for div in row_list:
-        row_list_sorted.append(sorted(div, key=lambda k: k[d]))
+        row_list_sorted.append(sorted(div, key = lambda k: k[d]))
     # row_list_sorted is a list containing lists of points that all have the same
-    # point[c1] and point[c2] values and are sorted in increasing order
-    # according to point[d]
+    # point[c1] and point[c2] values and are sorted in increasing order according to point[d]
     start_block = None
     final_blocks = []
     for block_list in row_list_sorted:
@@ -116,14 +111,12 @@ def partition(points, d, c1, c2):
                 next_block = None
             else:
                 next_block = block_list[i + 1]
-            # Current AoS version seems to have an upper limit of 65 blocks for
-            # a block line
+            # Current AoS version seems to have an upper limit of 65 blocks for a block line
             if counter == 65 or next_block is None or block[d] + 1 != next_block[d]:
                 final_blocks.append([start_block, block])
                 start_block = None
                 counter = 0
     return final_blocks
-
 
 def minimize_block_line(points):
     x = partition(points, 0, 1, 2)
@@ -140,7 +133,6 @@ def minimize_block_line(points):
         return z
     return x
 
-
 def get_team_alive_count(team):
     count = 0
     for player in team.get_players():
@@ -148,25 +140,20 @@ def get_team_alive_count(team):
             count += 1
     return count
 
-
 def get_team_dead(team):
     for player in team.get_players():
         if not player.world_object.dead:
             return False
     return True
 
-
 class CustomException(Exception):
-
     def __init__(self, value):
         self.parameter = value
 
     def __str__(self):
         return repr(self.parameter)
 
-
 class Gate:
-
     def __init__(self, x, y, z, protocol_obj):
         self.support_blocks = []
         self.blocks = []
@@ -174,8 +161,7 @@ class Gate:
         map = self.protocol_obj.map
         solid, self.color = map.get_point(x, y, z)
         if not solid:
-            raise CustomException(
-                'The gate coordinate (%i, %i, %i) is not solid.' % (x, y, z))
+            raise CustomException('The gate coordinate (%i, %i, %i) is not solid.' % (x, y, z))
         self.record_gate(x, y, z)
         self.blocks = minimize_block_line(self.blocks)
 
@@ -183,7 +169,7 @@ class Gate:
         map = self.protocol_obj.map
         set_color.value = make_color(*self.color)
         set_color.player_id = block_line.player_id = 32
-        self.protocol_obj.send_contained(set_color, save=True)
+        self.protocol_obj.send_contained(set_color, save = True)
         for block_line_ in self.blocks:
             start_block, end_block = block_line_
             points = world.cube_line(*(start_block + end_block))
@@ -195,18 +181,18 @@ class Gate:
                     map.set_point(x, y, z, self.color)
             block_line.x1, block_line.y1, block_line.z1 = start_block
             block_line.x2, block_line.y2, block_line.z2 = end_block
-            self.protocol_obj.send_contained(block_line, save=True)
+            self.protocol_obj.send_contained(block_line, save = True)
 
     def destroy_gate(self):
         map = self.protocol_obj.map
         block_action.player_id = 32
         block_action.value = DESTROY_BLOCK
-        for block in self.support_blocks:  # optimize wire traffic
+        for block in self.support_blocks: # optimize wire traffic
             if map.get_solid(*block):
                 map.remove_point(*block)
                 block_action.x, block_action.y, block_action.z = block
-                self.protocol_obj.send_contained(block_action, save=True)
-        for block_line_ in self.blocks:  # avoid desyncs
+                self.protocol_obj.send_contained(block_action, save = True)
+        for block_line_ in self.blocks: # avoid desyncs
             start_block, end_block = block_line_
             points = world.cube_line(*(start_block + end_block))
             if not points:
@@ -228,16 +214,15 @@ class Gate:
                 if coordinate == block:
                     return False
             self.blocks.append(coordinate)
-            returns = (self.record_gate(x + 1, y, z),
-                       self.record_gate(x - 1, y, z),
-                       self.record_gate(x, y + 1, z),
-                       self.record_gate(x, y - 1, z),
-                       self.record_gate(x, y, z + 1),
-                       self.record_gate(x, y, z - 1))
+            returns = (self.record_gate(x+1, y, z),
+                self.record_gate(x-1, y, z),
+                self.record_gate(x, y+1, z),
+                self.record_gate(x, y-1, z),
+                self.record_gate(x, y, z+1),
+                self.record_gate(x, y, z-1))
             if True in returns:
                 self.support_blocks.append(coordinate)
         return False
-
 
 def apply_script(protocol, connection, config):
     class ArenaConnection(connection):
@@ -320,7 +305,7 @@ def apply_script(protocol, connection, config):
         arena_countdown_timers = None
         arena_limit_timer = None
 
-        def check_round_end(self, killer=None, message=True):
+        def check_round_end(self, killer = None, message = True):
             if not self.arena_running:
                 return
             for team in (self.green_team, self.blue_team):
@@ -344,7 +329,7 @@ def apply_script(protocol, connection, config):
                 self.send_chat('Round ends in a tie.')
             self.begin_arena_countdown()
 
-        def arena_win(self, team, killer=None):
+        def arena_win(self, team, killer = None):
             if not self.arena_running:
                 return
             if killer is None or killer.team is not team:
@@ -369,8 +354,7 @@ def apply_script(protocol, connection, config):
                 if num != 1:
                     team.arena_message += 's'
                 team.arena_message += ' on ' + team.name
-            self.send_chat('%s and %s remain.' %
-                           (green_team.arena_message, blue_team.arena_message))
+            self.send_chat('%s and %s remain.' % (green_team.arena_message, blue_team.arena_message))
 
         def on_map_change(self, map):
             extensions = self.map_info.extensions
@@ -391,16 +375,13 @@ def apply_script(protocol, connection, config):
                     for gate in extensions['arena_gates']:
                         self.gates.append(Gate(*gate, protocol_obj=self))
                 if extensions.has_key('arena_green_spawn'):
-                    self.green_team.arena_spawn = extensions[
-                        'arena_green_spawn']
+                    self.green_team.arena_spawn = extensions['arena_green_spawn']
                 else:
-                    raise CustomException(
-                        'No arena_green_spawn given in map metadata.')
+                    raise CustomException('No arena_green_spawn given in map metadata.')
                 if extensions.has_key('arena_blue_spawn'):
                     self.blue_team.arena_spawn = extensions['arena_blue_spawn']
                 else:
-                    raise CustomException(
-                        'No arena_blue_spawn given in map metadata.')
+                    raise CustomException('No arena_blue_spawn given in map metadata.')
                 self.delay_arena_countdown(MAP_CHANGE_DELAY)
                 self.begin_arena_countdown()
             else:
@@ -452,13 +433,10 @@ def apply_script(protocol, connection, config):
             self.building = False
             self.build_gates()
             self.arena_spawn()
-            self.send_chat('The round will begin in %i seconds.' %
-                           SPAWN_ZONE_TIME)
-            self.arena_countdown_timers = [
-                reactor.callLater(SPAWN_ZONE_TIME, self.begin_arena)]
+            self.send_chat('The round will begin in %i seconds.' % SPAWN_ZONE_TIME)
+            self.arena_countdown_timers = [reactor.callLater(SPAWN_ZONE_TIME, self.begin_arena)]
             for time in xrange(1, 6):
-                self.arena_countdown_timers.append(reactor.callLater(
-                    SPAWN_ZONE_TIME - time, self.send_chat, str(time)))
+                self.arena_countdown_timers.append(reactor.callLater(SPAWN_ZONE_TIME - time, self.send_chat, str(time)))
 
         def delay_arena_countdown(self, amount):
             if self.arena_counting_down:
@@ -470,8 +448,7 @@ def apply_script(protocol, connection, config):
             self.arena_counting_down = False
             for team in (self.green_team, self.blue_team):
                 if team.count() == 0:
-                    self.send_chat(
-                        'Not enough players on the %s team to begin.' % team.name)
+                    self.send_chat('Not enough players on the %s team to begin.' % team.name)
                     self.begin_arena_countdown()
                     return
             self.arena_running = True
@@ -480,10 +457,8 @@ def apply_script(protocol, connection, config):
             self.destroy_gates()
             self.send_chat('Go!')
             if MAX_ROUND_TIME > 0:
-                self.send_chat(
-                    'There is a time limit of %s for this round.' % MAX_ROUND_TIME_TEXT)
-                self.arena_limit_timer = reactor.callLater(
-                    MAX_ROUND_TIME, self.arena_time_limit)
+                self.send_chat('There is a time limit of %s for this round.' % MAX_ROUND_TIME_TEXT)
+                self.arena_limit_timer = reactor.callLater(MAX_ROUND_TIME, self.arena_time_limit)
 
         def on_base_spawn(self, x, y, z, base, entity_id):
             if not self.arena_enabled:

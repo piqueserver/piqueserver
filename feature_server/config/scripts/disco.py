@@ -14,7 +14,6 @@ DISCO_ON_GAME_END = True
 # Time is in seconds
 DISCO_ON_GAME_END_DURATION = 10.0
 
-
 @commands.name('disco')
 @commands.admin
 def toggle_disco(connection):
@@ -31,13 +30,11 @@ DISCO_COLORS = set([
     (255, 255, 255)
 ])
 
-
 def apply_script(protocol, connection, config):
     class DiscoProtocol(protocol):
         current_colors = None
         disco = False
         old_fog_color = None
-
         def __init__(self, *arg, **kw):
             protocol.__init__(self, *arg, **kw)
             self.disco_loop = LoopingCall(self.update_color)
@@ -58,7 +55,7 @@ def apply_script(protocol, connection, config):
             if self.disco:
                 self.toggle_disco(False)
 
-        def toggle_disco(self, message=False):
+        def toggle_disco(self, message = False):
             self.disco = not self.disco
             if self.disco:
                 self.old_fog_color = self.fog_color

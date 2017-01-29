@@ -37,11 +37,9 @@ FORMATS = [
     '%u'
 ]
 
-
 class Entry(object):
     value = None
     type = None
-
     def __init__(self, value, type):
         self.value = value
         self.type = type
@@ -49,11 +47,9 @@ class Entry(object):
     def format(self, *arg):
         return self.value % arg
 
-
 class LanguageFile(object):
     items = None
-
-    def __init__(self, reader=None):
+    def __init__(self, reader = None):
         self.items = []
         if reader is None:
             return

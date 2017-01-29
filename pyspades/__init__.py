@@ -26,5 +26,5 @@ __version__ = '0.1'
 __email__ = 'matpow2@gmail.com'
 
 __all__ = ['compression', 'vxl', 'bytes', 'client', 'contained', 'collision',
-           'common', 'constants', 'debug', 'loaders', 'master', 'packet', 'protocol',
-           'server', 'tools', 'types']
+    'common', 'constants', 'debug', 'loaders', 'master', 'packet', 'protocol',
+    'server', 'tools', 'types']

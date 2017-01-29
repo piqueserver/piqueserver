@@ -7,7 +7,6 @@ Maintainer: hompy
 from pyspades.server import block_action
 from pyspades.constants import *
 
-
 def apply_script(protocol, connection, config):
     def try_add_node(map, x, y, z, list):
         if x < 0 or x >= 512 or y < 0 or y >= 512 or z < 0 or z >= 62:
@@ -17,7 +16,6 @@ def apply_script(protocol, connection, config):
         list.append((x, y, z))
 
     class DirtGrenadeConnection(connection):
-
         def grenade_exploded(self, grenade):
             if self.name is None:
                 return
@@ -40,7 +38,7 @@ def apply_script(protocol, connection, config):
                 block_action.x = x
                 block_action.y = y
                 block_action.z = z
-                self.protocol.send_contained(block_action, save=True)
+                self.protocol.send_contained(block_action, save = True)
                 map.set_point(x, y, z, self.color)
                 blocks -= 1
                 if blocks == 0:

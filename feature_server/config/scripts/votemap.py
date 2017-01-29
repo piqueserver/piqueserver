@@ -23,12 +23,10 @@ import random
 from scheduler import Scheduler
 from piqueserver import commands
 
-
 def cancel_verify(connection, instigator):
     return (connection.admin or
             connection is instigator or
             connection.rights.cancel)
-
 
 class VoteMap(object):
     extension_time = 0.0
@@ -46,8 +44,8 @@ class VoteMap(object):
         self.public_votes = self.protocol.votemap_public_votes
         self.extension_time = self.protocol.votemap_extension_time
         rotation = [n.name.lower() for n in rotation]
-        final_rotation = random.sample(rotation, min(len(rotation), 5))
-        if self.extension_time > 0:
+        final_rotation = random.sample(rotation, min(len(rotation),5))
+        if self.extension_time>0:
             final_rotation.append("extend")
         self.picks = final_rotation
         self.votes = {}
@@ -62,15 +60,15 @@ class VoteMap(object):
         counts = {}
         for v in self.votes.values():
             if counts.has_key(v):
-                counts[v]['count'] += 1
+                counts[v]['count']+=1
             else:
-                counts[v] = {'name': v, 'count': 1}
+                counts[v] = {'name':v, 'count':1}
         cvlist = list(counts.values())
-        if len(cvlist) <= 0:
-            return {'name': self.picks[0], 'count': 0}
+        if len(cvlist)<=0:
+            return {'name':self.picks[0], 'count':0}
         mv = cvlist[0]
         for n in counts.keys():
-            if counts[n]['count'] > mv['count']:
+            if counts[n]['count']>mv['count']:
                 mv = n
         mv['count'] = thresh - mv['count']
         return mv
@@ -81,7 +79,7 @@ class VoteMap(object):
             return True
         last = instigator.last_votemap
         if (last is not None and
-                reactor.seconds() - last < self.vote_interval):
+        reactor.seconds() - last < self.vote_interval):
             return "You can't start a vote now."
         return True
 
@@ -92,7 +90,7 @@ class VoteMap(object):
             protocol.send_chat('Time to vote!', irc=True)
         else:
             protocol.send_chat(
-                '* %s initiated a map vote.' % instigator.name, irc=True)
+            '* %s initiated a map vote.' % instigator.name, irc=True)
         self.schedule = schedule = Scheduler(protocol)
         schedule.call_later(self.vote_time, self.timeout)
         schedule.loop_call(30.0, self.update)
@@ -111,7 +109,7 @@ class VoteMap(object):
         if self.votes_left()['count'] <= 0:
             self.on_majority()
 
-    def cancel(self, connection=None):
+    def cancel(self, connection = None):
         if connection is None:
             message = 'Cancelled'
         elif not cancel_verify(connection, self.instigator):
@@ -143,11 +141,11 @@ class VoteMap(object):
             tl = self.protocol.set_time_limit(self.extension_time, True)
             span = prettify_timespan(tl * 60.0)
             self.protocol.send_chat('Mapvote ended. Current map will '
-                                    'continue for %s.' % span, irc=True)
+                'continue for %s.' % span, irc = True)
             self.protocol.autoschedule_votemap()
         else:
             self.protocol.send_chat('Mapvote ended. Next map will be: %s.' %
-                                    result, irc=True)
+                result, irc = True)
             self.protocol.planned_map = check_rotation([result])[0]
         self.set_cooldown()
 
@@ -159,7 +157,6 @@ class VoteMap(object):
         self.schedule.reset()
         self.protocol.votemap = None
 
-
 def votemap(connection, *arg):
     if connection not in connection.protocol.players:
         raise KeyError()
@@ -167,7 +164,6 @@ def votemap(connection, *arg):
         return "Player-initiated mapvotes are disabled on this server."
     return connection.protocol.start_votemap(
         VoteMap(connection, connection.protocol, connection.protocol.maps))
-
 
 @commands.name('vote')
 def votemap_vote(connection, value):
@@ -180,7 +176,6 @@ def votemap_vote(connection, value):
 
 commands.add(votemap)
 commands.add(votemap_vote)
-
 
 def apply_script(protocol, connection, config):
     class VoteProtocol(protocol):
@@ -197,13 +192,12 @@ def apply_script(protocol, connection, config):
         def __init__(self, interface, config):
             protocol.__init__(self, interface, config)
             self.votemap_autoschedule = config.get('votemap_autoschedule', 180)
-            self.votemap_public_votes = config.get(
-                'votemap_public_votes', True)
+            self.votemap_public_votes = config.get('votemap_public_votes', True)
             self.votemap_time = config.get('votemap_time', 120)
             self.votemap_extension_time = config.get('votemap_extension_time',
-                                                     15)
+                15)
             self.votemap_player_driven = config.get('votemap_player_driven',
-                                                    False)
+                False)
             self.votemap_percentage = config.get('votemap_percentage', 80)
             self.autoschedule_votemap()
 
@@ -212,13 +206,13 @@ def apply_script(protocol, connection, config):
                 self.autoschedule_call = self.call_end(
                     self.votemap_autoschedule, self.start_votemap)
 
-        def cancel_vote(self, connection=None):
+        def cancel_vote(self, connection = None):
             if self.votemap is not None:
                 return self.votemap.cancel(connection)
             else:
                 return protocol.cancel_vote(self, connection)
 
-        def start_votemap(self, votemap=None):
+        def start_votemap(self, votemap = None):
             if self.votemap is not None:
                 return self.votemap.update()
             if votemap is None:

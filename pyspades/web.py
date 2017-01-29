@@ -2,8 +2,7 @@ from twisted.internet import reactor
 from twisted.web import client
 from twisted.web.client import HTTPClientFactory
 
-
-def getPage(url, bindAddress=None, *arg, **kw):
+def getPage(url, bindAddress = None, *arg, **kw):
     # reimplemented here to insert bindAddress
 
     # _parse() deprecated in twisted 13.1.0 in favor of the _URI class
@@ -29,7 +28,7 @@ def getPage(url, bindAddress=None, *arg, **kw):
         from twisted.internet import ssl
         context = ssl.ClientContextFactory()
         reactor.connectSSL(host, port, factory, context,
-                           bindAddress=bindAddress)
+            bindAddress = bindAddress)
     else:
-        reactor.connectTCP(host, port, factory, bindAddress=bindAddress)
+        reactor.connectTCP(host, port, factory, bindAddress = bindAddress)
     return factory.deferred

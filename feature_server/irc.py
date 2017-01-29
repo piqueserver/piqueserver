@@ -1,16 +1,19 @@
-# feature_server/irc.py
-#
-#   This file is licensed under the GNU General Public License version 3.
-# In accordance to the license, there are instructions for obtaining the
-# original source code. Furthermore, the changes made to this file can
-# be seem by using diff tools and/or git-compatible software.
-#
-#   The license full text can be found in the "LICENSE" file, at the root
-# of this repository. The original PySpades code can be found in this URL:
-# https://github.com/infogulch/pyspades/releases/tag/v0.75.01.
-#
-# Original copyright: (C)2011-2012 Mathias Kaerlev
-#
+# Copyright (c) Mathias Kaerlev 2011-2012.
+
+# This file is part of pyspades.
+
+# pyspades is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# pyspades is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
@@ -27,18 +30,15 @@ from operator import attrgetter
 MAX_IRC_CHAT_SIZE = MAX_CHAT_SIZE * 2
 PRINTABLE_CHARACTERS = ('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP'
                         'QRSTUVWXYZ!"#$%&\\\'()*+,-./:;<=>?@[\\]^_`{|}~ \t')
-IRC_TEAM_COLORS = {0: '\x0302', 1: '\x0303'}
+IRC_TEAM_COLORS = {0 : '\x0302', 1 : '\x0303'}
 SPLIT_WHO_IN_TEAMS = True
-SPLIT_THRESHOLD = 20  # players
-
+SPLIT_THRESHOLD = 20 # players
 
 def is_printable(value):
     return value in PRINTABLE_CHARACTERS
 
-
 def filter_printable(value):
     return filter(is_printable, value)
-
 
 def channel(func):
     def new_func(self, user, channel, *arg, **kw):
@@ -47,7 +47,6 @@ def channel(func):
         user = user.split('!', 1)[0]
         func(self, user, channel, *arg, **kw)
     return new_func
-
 
 class IRCBot(irc.IRCClient):
     ops = None
@@ -109,7 +108,7 @@ class IRCBot(irc.IRCClient):
 
     @channel
     def modeChanged(self, user, channel, set, modes, args):
-        ll = {'o': self.ops, 'v': self.voices}
+        ll = {'o' : self.ops, 'v' : self.voices}
         for i in range(len(args)):
             mode, name = modes[i], args[i]
             if mode not in ll:
@@ -133,8 +132,7 @@ class IRCBot(irc.IRCClient):
                 if result is not None:
                     self.send("%s: %s" % (user, result))
             elif msg.startswith(self.factory.chatprefix):
-                max_len = MAX_IRC_CHAT_SIZE - \
-                    len(self.protocol.server_prefix) - 1
+                max_len = MAX_IRC_CHAT_SIZE - len(self.protocol.server_prefix) - 1
                 msg = msg[len(self.factory.chatprefix):].strip()
                 message = ("<%s> %s" % (prefix + alias, msg))[:max_len]
                 message = message.decode('cp1252')
@@ -152,18 +150,17 @@ class IRCBot(irc.IRCClient):
     def userKicked(self, kickee, channel, kicker, message):
         self.userLeft(kickee, channel)
 
-    def send(self, msg, filter=False):
+    def send(self, msg, filter = False):
         msg = msg.encode('cp1252', 'replace')
         if filter:
             msg = filter_printable(msg)
         self.msg(self.factory.channel, msg)
 
-    def me(self, msg, filter=False):
+    def me(self, msg, filter = False):
         msg = msg.encode('cp1252', 'replace')
         if filter:
             msg = filter_printable(msg)
         self.describe(self.factory.channel, msg)
-
 
 class IRCClientFactory(protocol.ClientFactory):
     protocol = IRCBot
@@ -185,7 +182,7 @@ class IRCClientFactory(protocol.ClientFactory):
             self.rights.update(commands.rights.get(user_type, ()))
         self.server = server
         self.nickname = config.get('nickname',
-                                   'pyspades%s' % random.randrange(0, 99)).encode('ascii')
+            'pyspades%s' % random.randrange(0, 99)).encode('ascii')
         self.username = config.get('username', 'pyspades').encode('ascii')
         self.realname = config.get('realname', server.name).encode('ascii')
         self.channel = config.get('channel', "#pyspades.bots").encode(
@@ -214,14 +211,13 @@ class IRCClientFactory(protocol.ClientFactory):
         self.bot = p
         return p
 
-
 class IRCRelay(object):
     factory = None
 
     def __init__(self, protocol, config):
         self.factory = IRCClientFactory(protocol, config)
         protocol.connectTCP(config.get('server'), config.get('port', 6667),
-                            self.factory)
+            self.factory)
 
     def send(self, *arg, **kw):
         if self.factory.bot is None:
@@ -233,19 +229,15 @@ class IRCRelay(object):
             return
         self.factory.bot.me(*arg, **kw)
 
-
 def format_name(player):
     return '%s #%s' % (player.name, player.player_id)
 
-
 def format_name_color(player):
     return (IRC_TEAM_COLORS.get(player.team.id, '') +
-            '%s #%s' % (player.name, player.player_id))
-
+        '%s #%s' % (player.name, player.player_id))
 
 def irc(func):
     return commands.restrict(func, ('irc',))
-
 
 @irc
 def who(connection):
@@ -255,7 +247,7 @@ def who(connection):
         connection.me('has no players connected')
         return
     sorted_players = sorted(protocol.players.values(),
-                            key=attrgetter('team.id', 'name'))
+        key = attrgetter('team.id', 'name'))
     name_formatter = format_name_color if connection.colors else format_name
     teams = []
     formatted_names = []
@@ -276,16 +268,14 @@ def who(connection):
             msg += separator.join(names)
             connection.me(msg)
 
-
 @irc
 def score(connection):
     connection.me("scores: Blue %s - Green %s" % (
         connection.protocol.blue_team.score,
         connection.protocol.green_team.score))
 
-
 @irc
-def alias(connection, value=None):
+def alias(connection, value = None):
     aliases = connection.factory.aliases
     unaliased_name = connection.unaliased_name
     if value is None:
@@ -299,7 +289,6 @@ def alias(connection, value=None):
         message = 'will alias %s to %s' % (unaliased_name, value)
     connection.me(message)
 
-
 @irc
 def unalias(connection):
     aliases = connection.factory.aliases
@@ -310,7 +299,6 @@ def unalias(connection):
     else:
         message = "doesn't have an alias for %s" % unaliased_name
     connection.me(message)
-
 
 @irc
 def colors(connection):

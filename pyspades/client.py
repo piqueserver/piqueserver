@@ -30,14 +30,11 @@ from pyspades.types import MultikeyDict
 
 import random
 
-
 class OtherClient(object):
-
     def __init__(self, protocol, name, player_id):
         self.name = name
         self.protocol = protocol
         self.player_id = player_id
-
 
 class ClientConnection(BaseConnection):
     protocol = None
@@ -49,9 +46,9 @@ class ClientConnection(BaseConnection):
         self.auth_val = random.randint(0, 0xFFFF)
         self.map = ByteWriter()
         self.connections = MultikeyDict()
-        self.spammy = {Ping: 0, loaders.MapChunk: 0,
-                       loaders.OrientationData: 0,
-                       loaders.PositionData: 0, loaders.InputData: 0}
+        self.spammy = {Ping : 0, loaders.MapChunk : 0,
+            loaders.OrientationData : 0,
+            loaders.PositionData : 0, loaders.InputData : 0}
 
         connect_request = ConnectionRequest()
         connect_request.auth_val = self.auth_val
@@ -62,7 +59,7 @@ class ClientConnection(BaseConnection):
     def get_version(self):
         return crc32(open('../data/client.exe', 'rb').read())
 
-    def send_join(self, team=-1, weapon=-1):
+    def send_join(self, team = -1, weapon = -1):
         print 'joining team %s' % team
         loader = SizedData()
         data = ByteWriter()
@@ -92,7 +89,7 @@ class ClientConnection(BaseConnection):
         else:
             message = None
             spammed = [spam.__name__ + (' x%s' % recv if recv > 1 else '')
-                       for spam, recv in self.spammy.items() if recv]
+                for spam, recv in self.spammy.items() if recv]
             if len(spammed):
                 message = 'received ' + ', '.join(spammed)
                 print message
@@ -144,10 +141,8 @@ class ClientConnection(BaseConnection):
     def send_data(self, data):
         self.protocol.transport.write(data)
 
-
 class ClientProtocol(DatagramProtocol):
     connection_class = ClientConnection
-
     def __init__(self, host, port):
         self.host, self.port = host, port
 

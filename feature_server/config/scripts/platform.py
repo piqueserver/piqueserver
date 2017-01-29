@@ -194,9 +194,9 @@ from piqueserver import cfg
 
 DEFAULT_LOAD_DIR = os.path.join(cfg.config_dir, 'maps')
 SAVE_ON_MAP_CHANGE = True
-AUTOSAVE_EVERY = 0.0  # minutes, 0 = disabled
+AUTOSAVE_EVERY = 0.0 # minutes, 0 = disabled
 MAX_DISTANCE = 64.0
-MIN_COOLDOWN = 0.1  # seconds
+MIN_COOLDOWN = 0.1 # seconds
 
 S_SAVED = 'Platforms saved'
 S_EXIT_BLOCKING_STATE = "You must first leave {state} mode!"
@@ -286,49 +286,48 @@ S_MAXIMUM = 'ERROR: Maximum {parameter} is {value}'
 S_NICE_LOCATION = '{:.4g}, {:.4g}, {:.4g}'
 PLATFORM_COMMANDS = ('new', 'name', 'height', 'freeze', 'destroy',  'last')
 PLATFORM_COMMAND_USAGES = {
-    'new': S_PLATFORM_NEW_USAGE,
-    'name': S_PLATFORM_NAME_USAGE,
-    'height': S_PLATFORM_HEIGHT_USAGE
+    'new' : S_PLATFORM_NEW_USAGE,
+    'name' : S_PLATFORM_NAME_USAGE,
+    'height' : S_PLATFORM_HEIGHT_USAGE
 }
 BUTTON_COMMANDS = ('new', 'name', 'destroy', 'toggle', 'cooldown', 'last')
 BUTTON_COMMAND_USAGES = {
-    'new': S_BUTTON_NEW_USAGE,
-    'name': S_BUTTON_NAME_USAGE,
-    'cooldown': S_BUTTON_COOLDOWN_USAGE
+    'new' : S_BUTTON_NEW_USAGE,
+    'name' : S_BUTTON_NAME_USAGE,
+    'cooldown' : S_BUTTON_COOLDOWN_USAGE
 }
 ACTION_COMMANDS = ('add', 'set', 'list', 'del')
 ACTION_COMMAND_USAGES = {
-    'add': S_ACTION_ADD_USAGE,
-    'del': S_ACTION_DELETE_USAGE
+    'add' : S_ACTION_ADD_USAGE,
+    'del' : S_ACTION_DELETE_USAGE
 }
 ACTION_ADD_ACTIONS = ('height', 'raise', 'lower', 'elevator', 'output',
-                      'teleport', 'chat', 'damage')
+    'teleport', 'chat', 'damage')
 ACTION_ADD_USAGES = {
-    'height': S_ACTION_HEIGHT_USAGE,
-    'raise': S_ACTION_RAISE_USAGE,
-    'lower': S_ACTION_LOWER_USAGE,
-    'elevator': S_ACTION_ELEVATOR_USAGE,
-    'output': S_ACTION_OUTPUT_USAGE,
-    'teleport': S_ACTION_TELEPORT_USAGE,
-    'chat': S_ACTION_CHAT_USAGE,
-    'damage': S_ACTION_DAMAGE_USAGE,
+    'height' : S_ACTION_HEIGHT_USAGE,
+    'raise' : S_ACTION_RAISE_USAGE,
+    'lower' : S_ACTION_LOWER_USAGE,
+    'elevator' : S_ACTION_ELEVATOR_USAGE,
+    'output' : S_ACTION_OUTPUT_USAGE,
+    'teleport' : S_ACTION_TELEPORT_USAGE,
+    'chat' : S_ACTION_CHAT_USAGE,
+    'damage' : S_ACTION_DAMAGE_USAGE,
 }
 TRIGGER_COMMANDS = ('add', 'set', 'list', 'del', 'logic', 'quiet')
 TRIGGER_COMMAND_USAGES = {
-    'add': S_TRIGGER_ADD_USAGE,
-    'del': S_TRIGGER_DELETE_USAGE,
-    'logic': S_TRIGGER_LOGIC_USAGE
+    'add' : S_TRIGGER_ADD_USAGE,
+    'del' : S_TRIGGER_DELETE_USAGE,
+    'logic' : S_TRIGGER_LOGIC_USAGE
 }
 TRIGGER_ADD_TRIGGERS = ('press', 'distance', 'track', 'height')
 TRIGGER_ADD_USAGES = {
-    'distance': S_TRIGGER_DISTANCE_USAGE,
-    'track': S_TRIGGER_TRACK_USAGE,
-    'height': S_TRIGGER_HEIGHT_USAGE,
+    'distance' : S_TRIGGER_DISTANCE_USAGE,
+    'track' : S_TRIGGER_TRACK_USAGE,
+    'height' : S_TRIGGER_HEIGHT_USAGE,
 }
 
 ACTION_RAY_LENGTH = 8.0
 ACTION_COOLDOWN = 0.25
-
 
 def parseargs(signature, args):
     signature = signature.split()
@@ -350,16 +349,13 @@ def parseargs(signature, args):
             result.append(None)
     return result
 
-
 def flatten(iterables):
     return chain.from_iterable(iterables)
-
 
 @admin
 def save(connection):
     connection.protocol.dump_platform_json()
     return S_SAVED
-
 
 @alias('p')
 @name('platform')
@@ -379,11 +375,11 @@ def platform_command(connection, *args):
             return
         elif state.blocking:
             # can't switch from a blocking mode
-            return S_EXIT_BLOCKING_STATE.format(state=state.name)
+            return S_EXIT_BLOCKING_STATE.format(state = state.name)
     if args:
         # enter new mode
         available = '|'.join(PLATFORM_COMMANDS)
-        usage = S_PLATFORM_USAGE.format(commands=available)
+        usage = S_PLATFORM_USAGE.format(commands = available)
         try:
             command = args[0]
             if command not in PLATFORM_COMMANDS:
@@ -394,7 +390,7 @@ def platform_command(connection, *args):
             if command == 'height':
                 new_state.height, = parseargs('int', args[1:])
                 if new_state.height < 0:
-                    message = S_NOT_POSITIVE.format(parameter='height')
+                    message = S_NOT_POSITIVE.format(parameter = 'height')
                     raise ValueError(message)
             elif command in ('new', 'name'):
                 new_state.label = join_arguments(args[1:], '').strip()
@@ -423,7 +419,6 @@ def platform_command(connection, *args):
         player.states.exit()
         player.states.enter(NewPlatformState())
 
-
 @alias('b')
 @name('button')
 @admin
@@ -442,11 +437,11 @@ def button_command(connection, *args):
             return
         elif state.blocking:
             # can't switch from a blocking mode
-            return S_EXIT_BLOCKING_STATE.format(state=state.name)
+            return S_EXIT_BLOCKING_STATE.format(state = state.name)
     if args:
         # enter new mode
         available = '|'.join(BUTTON_COMMANDS)
-        usage = S_BUTTON_USAGE.format(commands=available)
+        usage = S_BUTTON_USAGE.format(commands = available)
         try:
             command = args[0]
             if command not in BUTTON_COMMANDS:
@@ -461,11 +456,11 @@ def button_command(connection, *args):
             elif command == 'cooldown':
                 new_state.cooldown, = parseargs('float', args[1:])
                 if new_state.cooldown < 0.0:
-                    message = S_NOT_POSITIVE.format(parameter='cooldown')
+                    message = S_NOT_POSITIVE.format(parameter = 'cooldown')
                     raise ValueError(message)
                 if new_state.cooldown < MIN_COOLDOWN:
-                    message = S_MINIMUM.format(parameter='cooldown',
-                                               value=MIN_COOLDOWN)
+                    message = S_MINIMUM.format(parameter = 'cooldown',
+                        value = MIN_COOLDOWN)
                     raise ValueError(message)
             elif command == 'last' and state:
                 if state.name == 'select button' and player.previous_button:
@@ -490,7 +485,6 @@ def button_command(connection, *args):
         player.states.exit()
         player.states.enter(NewButtonState())
 
-
 @alias('ac')
 @name('action')
 @admin
@@ -508,10 +502,10 @@ def action_command(connection, *args):
             return
         elif state.blocking:
             # can't switch from a blocking mode
-            return S_EXIT_BLOCKING_STATE.format(state=state.name)
+            return S_EXIT_BLOCKING_STATE.format(state = state.name)
 
     available = '|'.join(ACTION_COMMANDS)
-    usage = S_ACTION_USAGE.format(commands=available)
+    usage = S_ACTION_USAGE.format(commands = available)
     try:
         command = args[0].lower()
         if command not in ACTION_COMMANDS:
@@ -520,7 +514,7 @@ def action_command(connection, *args):
         if command in ('add', 'set'):
             add = command == 'add'
             available = '|'.join(ACTION_ADD_ACTIONS)
-            usage = S_ACTION_ADD_USAGE.format(actions=available)
+            usage = S_ACTION_ADD_USAGE.format(actions = available)
             if not add:
                 usage = usage.replace('add', 'set')
 
@@ -552,17 +546,17 @@ def action_command(connection, *args):
                 # validate parameters
                 for parameter, value in kwargs.iteritems():
                     if type(value) in (int, float) and value < 0:
-                        message = S_NOT_POSITIVE.format(parameter=parameter)
+                        message = S_NOT_POSITIVE.format(parameter = parameter)
                         raise ValueError(message)
                 new_state.kwargs = kwargs
                 new_states.append(SelectPlatformState(new_state))
             elif action == 'output':
                 delay, = parseargs('[float]', args[2:])
                 new_state.kwargs = {
-                    'mode': 'height',
-                    'speed': 0.0,
-                    'delay': delay or 0.0,
-                    'force': True
+                    'mode' : 'height',
+                    'speed' : 0.0,
+                    'delay' : delay or 0.0,
+                    'force' : True
                 }
                 new_states.append(SelectPlatformState(new_state))
             elif action == 'teleport':
@@ -576,22 +570,22 @@ def action_command(connection, *args):
                 else:
                     x, y, z = parseargs('float float float', args[2:])
                 if x <= 0.0 or x > 511.0:
-                    raise ValueError(S_OUT_OF_BOUNDS.format(parameter='x'))
+                    raise ValueError(S_OUT_OF_BOUNDS.format(parameter = 'x'))
                 if y <= 0.0 or y > 511.0:
-                    raise ValueError(S_OUT_OF_BOUNDS.format(parameter='y'))
+                    raise ValueError(S_OUT_OF_BOUNDS.format(parameter = 'y'))
                 if z <= 0.0 or z > 62.0:
-                    raise ValueError(S_OUT_OF_BOUNDS_Z.format(parameter='z'))
+                    raise ValueError(S_OUT_OF_BOUNDS_Z.format(parameter = 'z'))
                 z = max(0.5, z)
-                new_state.kwargs = {'location': (x, y, z)}
+                new_state.kwargs = {'location' : (x, y, z)}
             elif action == 'chat':
                 text = join_arguments(args[2:])
                 if not text:
                     return usage
-                new_state.kwargs = {'value': text}
+                new_state.kwargs = {'value' : text}
             elif action == 'damage':
                 amount, = parseargs('int', args[2:])
                 damage_type = WEAPON_KILL if amount > 0 else FALL_KILL
-                new_state.kwargs = {'value': amount, 'type': damage_type}
+                new_state.kwargs = {'value' : amount, 'type' : damage_type}
         else:
             usage = ACTION_COMMAND_USAGES.get(command, usage)
             new_state = ActionCommandState(command)
@@ -611,7 +605,6 @@ def action_command(connection, *args):
     except IndexError:
         return usage
 
-
 @alias('t')
 @name('trigger')
 @admin
@@ -629,10 +622,10 @@ def trigger_command(connection, *args):
             return
         elif state.blocking:
             # can't switch from a blocking mode
-            return S_EXIT_BLOCKING_STATE.format(state=state.name)
+            return S_EXIT_BLOCKING_STATE.format(state = state.name)
 
     available = '|'.join(TRIGGER_COMMANDS)
-    usage = S_TRIGGER_USAGE.format(commands=available)
+    usage = S_TRIGGER_USAGE.format(commands = available)
     try:
         command = args[0].lower()
         if command not in TRIGGER_COMMANDS:
@@ -641,7 +634,7 @@ def trigger_command(connection, *args):
         if command in ('add', 'set'):
             add = command == 'add'
             available = '|'.join(TRIGGER_ADD_TRIGGERS)
-            usage = S_TRIGGER_ADD_USAGE.format(triggers=available)
+            usage = S_TRIGGER_ADD_USAGE.format(triggers = available)
             if not add:
                 usage = usage.replace('add', 'set')
 
@@ -664,16 +657,16 @@ def trigger_command(connection, *args):
                 if new_state.radius is None:
                     new_state.radius = 3.0
                 if new_state.radius < 0.0:
-                    message = S_NOT_POSITIVE.format(parameter='radius')
+                    message = S_NOT_POSITIVE.format(parameter = 'radius')
                     raise ValueError(message)
                 if new_state.radius > MAX_DISTANCE:
-                    message = S_MAXIMUM.format(parameter='radius',
-                                               value=MAX_DISTANCE)
+                    message = S_MAXIMUM.format(parameter = 'radius',
+                        value = MAX_DISTANCE)
                     raise ValueError(message)
             elif trigger == 'height':
                 new_state.height, = parseargs('int', args[2:])
                 if new_state.height < 0:
-                    message = S_NOT_POSITIVE.format(parameter='height')
+                    message = S_NOT_POSITIVE.format(parameter = 'height')
                     raise ValueError(message)
                 new_states.append(SelectPlatformState(new_state))
         else:
@@ -700,17 +693,14 @@ def trigger_command(connection, *args):
         return usage
 
 for func in (platform_command, button_command, action_command,
-             trigger_command, save):
+    trigger_command, save):
     add(func)
-
 
 def aabb(x, y, z, x1, y1, z1, x2, y2, z2):
     return x >= x1 and y >= y1 and z >= z1 and x < x2 and y < y2 and z < z2
 
-
 def prism(x1, y1, z1, x2, y2, z2):
     return product(xrange(x1, x2), xrange(y1, y2), xrange(z1, z2))
-
 
 def plane_least_rows(x1, y1, x2, y2, z):
     if y2 - y1 < x2 - x1:
@@ -720,21 +710,18 @@ def plane_least_rows(x1, y1, x2, y2, z):
         for x in xrange(x1, x2):
             yield x, y1, z, x, y2 - 1, z
 
-
 def send_color(protocol, color):
     set_color.value = make_color(*color)
     set_color.player_id = 32
-    protocol.send_contained(set_color, save=True)
+    protocol.send_contained(set_color, save = True)
 
-
-def send_block(protocol, x, y, z, value=BUILD_BLOCK):
+def send_block(protocol, x, y, z, value = BUILD_BLOCK):
     block_action.value = value
     block_action.player_id = 32
     block_action.x = x
     block_action.y = y
     block_action.z = z
-    protocol.send_contained(block_action, save=True)
-
+    protocol.send_contained(block_action, save = True)
 
 class Trigger:
     type = None
@@ -743,7 +730,7 @@ class Trigger:
     unique = False
     negate = False
 
-    def __init__(self, protocol, negate=False):
+    def __init__(self, protocol, negate = False):
         self.protocol = protocol
         self.negate = negate
 
@@ -754,8 +741,7 @@ class Trigger:
         return self.status ^ self.negate
 
     def serialize(self):
-        return {'type': self.type, 'negate': self.negate}
-
+        return {'type' : self.type, 'negate' : self.negate}
 
 class PressTrigger(Trigger):
     type = 'press'
@@ -773,11 +759,10 @@ class PressTrigger(Trigger):
         s = 'player press'
         return S_TRIGGER_LIST_NOT + s if self.negate else s
 
-
 class DistanceTrigger(Trigger):
     type = 'distance'
 
-    def __init__(self, protocol, radius, negate=False):
+    def __init__(self, protocol, radius, negate = False):
         Trigger.__init__(self, protocol, negate)
         self.radius = radius
         protocol.position_triggers.append(self)
@@ -810,21 +795,20 @@ class DistanceTrigger(Trigger):
 
     def serialize(self):
         return {
-            'type': self.type,
-            'negate': self.negate,
-            'radius': self.radius
+            'type' : self.type,
+            'negate' : self.negate,
+            'radius' : self.radius
         }
 
     def __str__(self):
         s = 'player distance=%s' % self.radius
         return S_TRIGGER_LIST_NOT + s if self.negate else s
 
-
 class TrackTrigger(Trigger):
     type = 'track'
     tracked_player = None
 
-    def __init__(self, protocol, radius, negate=False):
+    def __init__(self, protocol, radius, negate = False):
         Trigger.__init__(self, protocol, negate)
         self.radius = radius
         protocol.position_triggers.append(self)
@@ -868,20 +852,19 @@ class TrackTrigger(Trigger):
 
     def serialize(self):
         return {
-            'type': self.type,
-            'negate': self.negate,
-            'radius': self.radius
+            'type' : self.type,
+            'negate' : self.negate,
+            'radius' : self.radius
         }
 
     def __str__(self):
         s = 'track distance=%s' % self.radius
         return S_TRIGGER_LIST_NOT + s if self.negate else s
 
-
 class HeightTrigger(Trigger):
     type = 'height'
 
-    def __init__(self, protocol, platform_id, height, negate=False):
+    def __init__(self, protocol, platform_id, height, negate = False):
         Trigger.__init__(self, protocol, negate)
         platform = protocol.platforms[platform_id]
         self.platform = platform
@@ -904,15 +887,15 @@ class HeightTrigger(Trigger):
 
     def serialize(self):
         return {
-            'type': self.type,
-            'negate': self.negate,
-            'platform_id': self.platform.id,
-            'height': self.target_height
+            'type' : self.type,
+            'negate' : self.negate,
+            'platform_id' : self.platform.id,
+            'height' : self.target_height
         }
 
     def __str__(self):
         s = "platform '%s' height=%s" % (self.platform.label,
-                                         self.target_height)
+            self.target_height)
         return S_TRIGGER_LIST_NOT + s if self.negate else s
 
 TRIGGER_CLASSES = {}
@@ -920,14 +903,13 @@ for cls in (PressTrigger, TrackTrigger, DistanceTrigger, HeightTrigger):
     TRIGGER_CLASSES[cls.type] = cls
 
 PLATFORM_ACTION_FUNCTIONS = {
-    'start': 'start',
-    'height': 'start',
-    'raise': 'start',
-    'lower': 'start',
-    'elevator': 'start',
-    'output': 'start'
+    'start' : 'start',
+    'height' : 'start',
+    'raise' : 'start',
+    'lower' : 'start',
+    'elevator' : 'start',
+    'output' : 'start'
 }
-
 
 class PlatformAction:
     type = 'platform'
@@ -941,28 +923,27 @@ class PlatformAction:
 
     def run(self, value, objects):
         if self.action == 'output':
-            self.callback(height=int(value), **self.kwargs)
+            self.callback(height = int(value), **self.kwargs)
         elif value:
             self.callback(**self.kwargs)
 
     def serialize(self):
         return {
-            'type': self.type,
-            'platform_id': self.platform.id,
-            'action': self.action,
-            'kwargs': self.kwargs
+            'type' : self.type,
+            'platform_id' : self.platform.id,
+            'action' : self.action,
+            'kwargs' : self.kwargs
         }
 
     def __str__(self):
         return "platform '%s' %s(%s)" % (self.platform.label,
-                                         self.kwargs['mode'], self.kwargs['height'])
+            self.kwargs['mode'], self.kwargs['height'])
 
 PLAYER_ACTION_FUNCTIONS = {
-    'teleport': 'set_location',
-    'chat': 'send_chat',
-    'damage': 'hit'
+    'teleport' : 'set_location',
+    'chat' : 'send_chat',
+    'damage' : 'hit'
 }
-
 
 class PlayerAction:
     type = 'player'
@@ -981,9 +962,9 @@ class PlayerAction:
 
     def serialize(self):
         return {
-            'type': self.type,
-            'action': self.action,
-            'kwargs': self.kwargs
+            'type' : self.type,
+            'action' : self.action,
+            'kwargs' : self.kwargs
         }
 
     def __str__(self):
@@ -999,7 +980,6 @@ ACTION_CLASSES = {}
 for cls in (PlatformAction, PlayerAction):
     ACTION_CLASSES[cls.type] = cls
 
-
 class BaseObject:
     protocol = None
     id = None
@@ -1010,7 +990,6 @@ class BaseObject:
 
     def release(self):
         pass
-
 
 class Button(BaseObject):
     label = None
@@ -1049,7 +1028,7 @@ class Button(BaseObject):
         if new_trigger.unique:
             # ensure there is only one trigger of this type
             remove_triggers = [trigger for trigger in self.triggers if
-                               trigger.type == new_trigger.type]
+                trigger.type == new_trigger.type]
             for trigger in remove_triggers:
                 trigger.unbind()
         self.triggers.append(new_trigger)
@@ -1100,18 +1079,17 @@ class Button(BaseObject):
 
     def serialize(self):
         return {
-            'id': self.id,
-            'location': (self.x, self.y, self.z),
-            'label': self.label,
-            'color': self.color,
-            'actions': [action.serialize() for action in self.actions],
-            'triggers': [trigger.serialize() for trigger in self.triggers],
-            'logic': self.logic,
-            'cooldown': self.cooldown,
-            'disabled': self.disabled,
-            'silent': self.silent
+            'id' : self.id,
+            'location' : (self.x, self.y, self.z),
+            'label' : self.label,
+            'color' : self.color,
+            'actions' : [action.serialize() for action in self.actions],
+            'triggers' : [trigger.serialize() for trigger in self.triggers],
+            'logic' : self.logic,
+            'cooldown' : self.cooldown,
+            'disabled' : self.disabled,
+            'silent' : self.silent
         }
-
 
 class Platform(BaseObject):
     label = None
@@ -1136,11 +1114,11 @@ class Platform(BaseObject):
 
     def contains(self, x, y, z):
         return aabb(x, y, z, self.x1, self.y1, self.z, self.x2, self.y2,
-                    self.start_z)
+            self.start_z)
 
     def overlaps(self, p):
         return (self.x1 <= p.x2 and self.y1 <= p.y2 and self.z <= p.start_z and
-                self.x2 >= p.x1 and self.y2 >= p.y1 and self.start_z >= p.z)
+            self.x2 >= p.x1 and self.y2 >= p.y1 and self.start_z >= p.z)
 
     def destroy(self):
         self.destroy_z(self.z, self.start_z + 1)
@@ -1162,7 +1140,7 @@ class Platform(BaseObject):
             self.cycle_loop.stop()
         self.cycle_loop = None
 
-    def start(self, height, mode, speed, delay, wait=None, force=False):
+    def start(self, height, mode, speed, delay, wait = None, force = False):
         if self.busy and not force:
             return
         if mode == 'raise':
@@ -1187,8 +1165,7 @@ class Platform(BaseObject):
             self.cycle_loop.stop()
         self.cycle_loop = LoopingCall(self.cycle)
         if delay > 0.0:
-            self.delay_call = callLater(
-                delay, self.cycle_loop.start, self.speed)
+            self.delay_call = callLater(delay, self.cycle_loop.start, self.speed)
         else:
             self.cycle_loop.start(self.speed)
 
@@ -1202,10 +1179,10 @@ class Platform(BaseObject):
             # unstuck players
             for player in self.protocol.players.itervalues():
                 obj = player.world_object
-                looking_up = obj.orientation.get()[2] < 0.4  # 0.5 (allow lag)
+                looking_up = obj.orientation.get()[2] < 0.4 # 0.5 (allow lag)
                 x, y, z = obj.position.get()
                 if aabb(x, y, z, self.x1, self.y1, self.z - 2,
-                        self.x2, self.y2, self.start_z):
+                    self.x2, self.y2, self.start_z):
                     if looking_up and not obj.crouch and not z > self.z:
                         # player is looking up, no need to readjust
                         continue
@@ -1246,19 +1223,19 @@ class Platform(BaseObject):
         block_line.x2 = x2
         block_line.y2 = y2
         block_line.z2 = z2
-        self.protocol.send_contained(block_line, save=True)
+        self.protocol.send_contained(block_line, save = True)
 
     def build_plane(self, z):
         send_color(self.protocol, self.color)
         for line in plane_least_rows(self.x1, self.y1, self.x2, self.y2, z):
             self.build_line(*line)
 
-    def destroy_z(self, z1, z2=None):
+    def destroy_z(self, z1, z2 = None):
         if z2 is None:
             z2 = z1 + 1
         protocol = self.protocol
         overlaps = [platform for platform in protocol.platforms.itervalues() if
-                    platform is not self and platform.overlaps(self)]
+            platform is not self and platform.overlaps(self)]
         for x, y, z in prism(self.x1, self.y1, z1, self.x2, self.y2, z2):
             if any(platform.contains(x, y, z) for platform in overlaps):
                 continue
@@ -1270,14 +1247,13 @@ class Platform(BaseObject):
     def serialize(self):
         z = self.last_z if self.mode == 'elevator' else self.target_z
         return {
-            'id': self.id,
-            'start': (self.x1, self.y1, z or self.z),
-            'end': (self.x2, self.y2, self.start_z),
-            'label': self.label,
-            'color': self.color,
-            'frozen': self.frozen
+            'id' : self.id,
+            'start' : (self.x1, self.y1, z or self.z),
+            'end' : (self.x2, self.y2, self.start_z),
+            'label' : self.label,
+            'color' : self.color,
+            'frozen' : self.frozen
         }
-
 
 def player_action(player, select, inspect):
     if not select and not inspect:
@@ -1305,8 +1281,8 @@ def player_action(player, select, inspect):
                 player.states.pop()
                 return
             elif inspect and 'button' in state.name:
-                info = S_BUTTON_INFO.format(label=button.label,
-                                            cooldown=button.cooldown)
+                info = S_BUTTON_INFO.format(label = button.label,
+                    cooldown = button.cooldown)
                 player.send_chat(info)
                 return
         if not inspect:
@@ -1323,10 +1299,9 @@ def player_action(player, select, inspect):
             else:
                 player.send_chat(S_NOT_A_PLATFORM)
         elif inspect:
-            info = S_PLATFORM_INFO.format(label=platform.label,
-                                          height=platform.height)
+            info = S_PLATFORM_INFO.format(label = platform.label,
+                height = platform.height)
             player.send_chat(info)
-
 
 class State(object):
     name = None
@@ -1342,13 +1317,12 @@ class State(object):
     def get_parent(self):
         return self.parent_state if self.parent_state else self
 
-
 class NewPlatformState(State):
     name = 'new platform'
     blocking = True
     label = None
 
-    def __init__(self, label=None):
+    def __init__(self, label = None):
         self.label = label
 
     def on_enter(self, protocol, player):
@@ -1372,7 +1346,7 @@ class NewPlatformState(State):
                     block_action.x = x
                     block_action.y = y
                     block_action.z = z
-                    protocol.send_contained(block_action, save=True)
+                    protocol.send_contained(block_action, save = True)
             return S_PLATFORM_NOT_FLAT
         z2 += 1
 
@@ -1390,15 +1364,14 @@ class NewPlatformState(State):
         platform.build_plane(z1)
         protocol.platforms[id] = platform
         player.previous_platform = platform
-        return S_PLATFORM_CREATED.format(label=platform.label)
-
+        return S_PLATFORM_CREATED.format(label = platform.label)
 
 class NewButtonState(State):
     name = 'new button'
     location = None
     label = None
 
-    def __init__(self, label=None):
+    def __init__(self, label = None):
         self.label = label
 
     def on_enter(self, protocol, player):
@@ -1418,8 +1391,7 @@ class NewButtonState(State):
         button.add_trigger(PressTrigger(protocol))
         protocol.buttons[(id, (x, y, z))] = button
         player.previous_button = button
-        return S_BUTTON_CREATED.format(label=button.label)
-
+        return S_BUTTON_CREATED.format(label = button.label)
 
 class PlatformCommandState(State):
     name = 'platform command'
@@ -1431,25 +1403,25 @@ class PlatformCommandState(State):
     def on_exit(self, protocol, player):
         platform = self.platform
         if not platform:
-            return S_COMMAND_CANCEL.format(command='platform ' + self.command)
+            return S_COMMAND_CANCEL.format(command = 'platform ' + self.command)
 
         command = self.command
         if command == 'name':
             old, platform.label = platform.label, self.label
-            return S_PLATFORM_RENAMED.format(old_label=old, label=self.label)
+            return S_PLATFORM_RENAMED.format(old_label = old, label = self.label)
         elif command == 'height':
-            platform.start(self.height, 'once', 0.1, 0.0, None, force=True)
+            platform.start(self.height, 'once', 0.1, 0.0, None, force = True)
         elif command == 'freeze':
             platform.frozen = not platform.frozen
             result = S_FROZEN if platform.frozen else S_UNFROZEN
-            return result.format(label=platform.label)
+            return result.format(label = platform.label)
         elif command == 'destroy':
             platform.destroy()
             del protocol.platforms[platform.id]
             # remove actions affecting this platform
             for button in protocol.buttons.itervalues():
                 button.actions = [action for action in button.actions
-                                  if getattr(action, 'platform', None) is not platform]
+                    if getattr(action, 'platform', None) is not platform]
             # cancel any ongoing commands targeting this platform
             for player in protocol.players.itervalues():
                 state = player.states.top()
@@ -1461,8 +1433,7 @@ class PlatformCommandState(State):
             for player in protocol.players.itervalues():
                 if player.previous_platform is platform:
                     player.previous_platform = None
-            return S_PLATFORM_DESTROYED.format(label=platform.label)
-
+            return S_PLATFORM_DESTROYED.format(label = platform.label)
 
 class ButtonCommandState(State):
     name = 'button command'
@@ -1474,12 +1445,12 @@ class ButtonCommandState(State):
     def on_exit(self, protocol, player):
         button = self.button
         if not button:
-            return S_COMMAND_CANCEL.format(command='button ' + self.command)
+            return S_COMMAND_CANCEL.format(command = 'button ' + self.command)
 
         command = self.command
         if command == 'name':
             old, button.label = button.label, self.label
-            return S_BUTTON_RENAMED.format(old_label=old, label=self.label)
+            return S_BUTTON_RENAMED.format(old_label = old, label = self.label)
         elif command == 'destroy':
             button.destroy()
             del protocol.buttons[button]
@@ -1487,44 +1458,42 @@ class ButtonCommandState(State):
             for player in protocol.players.itervalues():
                 if player.previous_button is button:
                     player.previous_button = None
-            return S_BUTTON_DESTROYED.format(label=button.label)
+            return S_BUTTON_DESTROYED.format(label = button.label)
         elif command == 'toggle':
             button.disabled = not button.disabled
             result = S_DISABLED if button.disabled else S_ENABLED
-            return result.format(label=button.label)
+            return result.format(label = button.label)
         elif command == 'cooldown':
             button.cooldown = self.cooldown
-            return S_BUTTON_COOLDOWN.format(label=button.label,
-                                            cooldown=self.cooldown)
-
+            return S_BUTTON_COOLDOWN.format(label = button.label,
+                cooldown = self.cooldown)
 
 class ActionAddState(State):
     name = 'action'
     platform = None
     button = None
 
-    def __init__(self, action, add=True):
+    def __init__(self, action, add = True):
         self.action = action
         self.add = add
 
     def on_exit(self, protocol, player):
         button = self.button
         if not button:
-            return S_COMMAND_CANCEL.format(command=self.name)
+            return S_COMMAND_CANCEL.format(command = self.name)
 
         if self.action in PLATFORM_ACTION_FUNCTIONS:
             if not self.platform:
-                return S_COMMAND_CANCEL.format(command=self.name)
+                return S_COMMAND_CANCEL.format(command = self.name)
             new_action = PlatformAction(protocol, self.platform.id,
-                                        self.action, self.kwargs)
+                self.action, self.kwargs)
         elif self.action in PLAYER_ACTION_FUNCTIONS:
             new_action = PlayerAction(protocol, self.action, self.kwargs)
 
         if not self.add:
             button.actions = []
         button.actions.append(new_action)
-        return S_ACTION_ADDED.format(action=self.action, label=button.label)
-
+        return S_ACTION_ADDED.format(action = self.action, label = button.label)
 
 class ActionCommandState(State):
     name = 'action'
@@ -1536,19 +1505,19 @@ class ActionCommandState(State):
     def on_exit(self, protocol, player):
         button = self.button
         if not button:
-            return S_COMMAND_CANCEL.format(command='action ' + self.command)
+            return S_COMMAND_CANCEL.format(command = 'action ' + self.command)
 
         if self.command == 'list':
             if not button.actions:
-                return S_ACTION_LIST_EMPTY.format(label=button.label)
+                return S_ACTION_LIST_EMPTY.format(label = button.label)
 
             items = ' -- '.join('#%s %s' % (i, action) for i, action in
-                                enumerate(button.actions))
-            return S_ACTION_LIST_HEADER.format(label=button.label) + items
+                enumerate(button.actions))
+            return S_ACTION_LIST_HEADER.format(label = button.label) + items
         elif self.command == 'del':
             if self.number == 'all':
                 button.actions = []
-                return S_ACTION_DELETED_ALL.format(label=button.label)
+                return S_ACTION_DELETED_ALL.format(label = button.label)
             else:
                 try:
                     index = self.number % len(button.actions)
@@ -1557,16 +1526,15 @@ class ActionCommandState(State):
                     return S_ACTION_INVALID_NUMBER
 
                 action_type = action.type.capitalize()
-                return S_ACTION_DELETED.format(action=action_type,
-                                               number=index, label=button.label)
-
+                return S_ACTION_DELETED.format(action = action_type,
+                    number = index, label = button.label)
 
 class TriggerAddState(State):
     name = 'trigger'
     platform = None
     button = None
 
-    def __init__(self, trigger, negate, add=True):
+    def __init__(self, trigger, negate, add = True):
         self.trigger = trigger
         self.negate = negate
         self.add = add
@@ -1574,7 +1542,7 @@ class TriggerAddState(State):
     def on_exit(self, protocol, player):
         button = self.button
         if not button:
-            return S_COMMAND_CANCEL.format(command=self.name)
+            return S_COMMAND_CANCEL.format(command = self.name)
 
         if self.trigger == 'press':
             new_trigger = PressTrigger(protocol)
@@ -1584,17 +1552,15 @@ class TriggerAddState(State):
             new_trigger = TrackTrigger(protocol, self.radius)
         elif self.trigger == 'height':
             if not self.platform:
-                return S_COMMAND_CANCEL.format(command=self.name)
-            new_trigger = HeightTrigger(
-                protocol, self.platform.id, self.height)
+                return S_COMMAND_CANCEL.format(command = self.name)
+            new_trigger = HeightTrigger(protocol, self.platform.id, self.height)
         new_trigger.negate = self.negate
 
         if not self.add:
             button.clear_triggers()
         button.add_trigger(new_trigger)
-        return S_TRIGGER_ADDED.format(trigger=self.trigger,
-                                      label=button.label)
-
+        return S_TRIGGER_ADDED.format(trigger = self.trigger,
+            label = button.label)
 
 class TriggerCommandState(State):
     name = 'trigger'
@@ -1606,11 +1572,11 @@ class TriggerCommandState(State):
     def on_exit(self, protocol, player):
         button = self.button
         if not button:
-            return S_COMMAND_CANCEL.format(command='trigger ' + self.command)
+            return S_COMMAND_CANCEL.format(command = 'trigger ' + self.command)
 
         if self.command == 'list':
             if not button.triggers:
-                return S_TRIGGER_LIST_EMPTY.format(label=button.label)
+                return S_TRIGGER_LIST_EMPTY.format(label = button.label)
 
             items = []
             for i, trigger in enumerate(button.triggers):
@@ -1619,13 +1585,13 @@ class TriggerCommandState(State):
                     item += S_TRIGGER_LIST_ITEM_IS_TRUE
                 items.append(item)
             separator = (S_TRIGGER_LIST_AND if button.logic == 'and' else
-                         S_TRIGGER_LIST_OR)
+                S_TRIGGER_LIST_OR)
             items = separator.join(items)
-            return S_TRIGGER_LIST_HEADER.format(label=button.label) + items
+            return S_TRIGGER_LIST_HEADER.format(label = button.label) + items
         elif self.command == 'del':
             if self.number == 'all':
                 button.clear_triggers()
-                return S_TRIGGER_DELETED_ALL.format(label=button.label)
+                return S_TRIGGER_DELETED_ALL.format(label = button.label)
             else:
                 try:
                     trigger = button.triggers[self.number]
@@ -1636,18 +1602,17 @@ class TriggerCommandState(State):
                 trigger.unbind()
                 button.trigger_check()
                 trigger_type = trigger.type.capitalize()
-                return S_TRIGGER_DELETED.format(trigger=trigger_type,
-                                                number=index, label=button.label)
+                return S_TRIGGER_DELETED.format(trigger = trigger_type,
+                    number = index, label = button.label)
         elif self.command == 'logic':
             button.logic = self.logic
             button.trigger_check()
             result = S_LOGIC_AND if self.logic == 'and' else S_LOGIC_OR
-            return result.format(label=button.label)
+            return result.format(label = button.label)
         elif self.command == 'quiet':
             button.silent = not button.silent
             result = S_SILENT if button.silent else S_NOISY
-            return result.format(label=button.label)
-
+            return result.format(label = button.label)
 
 class SelectPlatformState(State):
     name = 'select platform'
@@ -1666,8 +1631,7 @@ class SelectPlatformState(State):
         if player.states.top() is self.parent_state:
             player.states.pop()
         elif self.platform:
-            return S_PLATFORM_SELECTED.format(label=self.platform.label)
-
+            return S_PLATFORM_SELECTED.format(label = self.platform.label)
 
 class SelectButtonState(State):
     name = 'select button'
@@ -1686,8 +1650,7 @@ class SelectButtonState(State):
         if player.states.top() is self.parent_state:
             player.states.pop()
         elif self.button:
-            return S_BUTTON_SELECTED.format(label=self.button.label)
-
+            return S_BUTTON_SELECTED.format(label = self.button.label)
 
 class StateStack:
     stack = None
@@ -1725,7 +1688,6 @@ class StateStack:
     def exit(self):
         while self.stack:
             self.pop()
-
 
 def apply_script(protocol, connection, config):
     class PlatformConnection(connection):
@@ -1781,7 +1743,7 @@ def apply_script(protocol, connection, config):
             elif mode == SPADE_DESTROY:
                 if (is_platform(x, y, z) or
                     is_platform(x, y, z + 1) or
-                        is_platform(x, y, z - 1)):
+                    is_platform(x, y, z - 1)):
                     return False
             elif mode == GRENADE_DESTROY:
                 for i, j, k in prism(x - 1, y - 1, z - 1, x + 2, y + 2, z + 2):
@@ -1815,7 +1777,7 @@ def apply_script(protocol, connection, config):
                 inspect = not self.world_object.sneak and sneak
                 player_action(self, self.world_object.primary_fire, inspect)
             return connection.on_animation_update(self, jump, crouch, sneak,
-                                                  sprint)
+                sprint)
 
         def on_command(self, command, parameters):
             if command == 'where' and not parameters:
@@ -1840,7 +1802,7 @@ def apply_script(protocol, connection, config):
             self.load_platform_json()
             if AUTOSAVE_EVERY:
                 self.autosave_loop = LoopingCall(self.dump_platform_json)
-                self.autosave_loop.start(AUTOSAVE_EVERY * 60.0, now=False)
+                self.autosave_loop.start(AUTOSAVE_EVERY * 60.0, now = False)
             protocol.on_map_change(self, map)
 
         def on_map_leave(self):
@@ -1915,17 +1877,17 @@ def apply_script(protocol, connection, config):
 
         def dump_platform_json(self):
             if (not self.platforms and not self.buttons and
-                    not self.platform_json_dirty):
+                not self.platform_json_dirty):
                 return
             data = {
-                'platforms': [platform.serialize() for platform in
-                              self.platforms.values()],
-                'buttons': [button.serialize() for button in
-                            self.buttons.values()]
+                'platforms' : [platform.serialize() for platform in
+                    self.platforms.values()],
+                'buttons' : [button.serialize() for button in
+                    self.buttons.values()]
             }
             path = self.get_platform_json_path()
             with open(path, 'w') as file:
-                json.dump(data, file, indent=4)
+                json.dump(data, file, indent = 4)
             self.platform_json_dirty = True
 
         def get_platform(self, x, y, z):

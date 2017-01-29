@@ -1,9 +1,7 @@
 SMARTNADE_DELAY = 0.5
 
-
 def apply_script(protocol, connection, config):
     class SmartNadeProtocol(protocol):
-
         def on_world_update(self):
             for player in self.players.values():
                 for nade in player.smart_nades:
@@ -14,7 +12,6 @@ def apply_script(protocol, connection, config):
             return protocol.on_world_update(self)
 
     class SmartNadeConnection(connection):
-
         def __init__(self, *arg, **kw):
             connection.__init__(self, *arg, **kw)
             self.smart_nades = []

@@ -32,11 +32,10 @@
 from math import ceil, floor
 from twisted.internet import reactor
 
-
 def apply_script(protocol, connection, config):
-    spectator_no_chat = config.get('spectator_no_chat', False)
-    spectator_kick = config.get('spectator_kick', False)
-    spectator_kick_time = config.get('spectator_kick_time', 300)  # in seconds
+    spectator_no_chat = config.get('spectator_no_chat', False);
+    spectator_kick = config.get('spectator_kick', False);
+    spectator_kick_time = config.get('spectator_kick_time', 300); # in seconds
 
     class SpectatorControlConnection(connection):
         spec_check = None
@@ -46,26 +45,22 @@ def apply_script(protocol, connection, config):
             # also, check for the right "specpower" for owners who add additional
             # rights such as guards, mini-mods, etc.
             if self.team.spectator and spectator_no_chat:
-                if not self.admin and not self.rights.specpower:  # not an admin
+                if not self.admin and not self.rights.specpower: # not an admin
                     self.send_chat('Spectators cannot speak on this server.')
-                    return False  # deny
+                    return False # deny
             return connection.on_chat(self, value, global_message)
 
         def on_team_join(self, team):
             if team.spectator and spectator_kick and spectator_kick_time > 0:
-                if not self.admin and not self.rights.specpower:  # not an admin
-                    # this check is necessary as you can join spectator from
-                    # being a spectator
-                    if self.spec_check is None or not self.spec_check.active():
-                        self.send_chat(
-                            'Warning! Spectators are kicked after %s seconds!' % (spectator_kick_time))
+                if not self.admin and not self.rights.specpower: # not an admin
+                    if self.spec_check is None or not self.spec_check.active(): # this check is necessary as you can join spectator from being a spectator
+                        self.send_chat('Warning! Spectators are kicked after %s seconds!' % (spectator_kick_time))
                         time = ceil((spectator_kick_time / 4) * 3)
-                        self.spec_check = reactor.callLater(
-                            time, self.check_spec_time, 1)
+                        self.spec_check = reactor.callLater(time, self.check_spec_time, 1)
             elif not team.spectator:
-                if self.spec_check is not None and self.spec_check.active():
-                    self.spec_check.cancel()
-                    self.spec_check = None
+                    if self.spec_check is not None and self.spec_check.active():
+                        self.spec_check.cancel()
+                        self.spec_check = None
             return connection.on_team_join(self, team)
 
         def on_disconnect(self):
@@ -83,11 +78,8 @@ def apply_script(protocol, connection, config):
                 return
             if id == 1:
                 seconds = floor(spectator_kick_time / 4)
-                self.send_chat(
-                    'Warning! If you do not leave spectator, you will be kicked in %s seconds!' % (seconds))
-                self.spec_check = reactor.callLater(
-                    seconds, self.check_spec_time, 2)
+                self.send_chat('Warning! If you do not leave spectator, you will be kicked in %s seconds!' % (seconds))
+                self.spec_check = reactor.callLater(seconds, self.check_spec_time, 2)
             elif id == 2:
-                self.kick(
-                    'You have been kicked for remaining in spectator for too long.')
+                self.kick('You have been kicked for remaining in spectator for too long.')
     return protocol, SpectatorControlConnection
