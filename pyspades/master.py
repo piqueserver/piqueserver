@@ -40,9 +40,9 @@ if STAGING:
 
 class AddServer(Loader):
     __slots__ = ['count', 'max_players', 'name', 'port', 'game_mode', 'map']
-    
+
     id = 4
-    
+
     def read(self, reader):
         if reader.dataLeft() == 1:
             self.count = reader.readByte(True)
@@ -52,7 +52,7 @@ class AddServer(Loader):
             self.name = reader.readString()
             self.game_mode = reader.readString()
             self.map = reader.readString()
-    
+
     def write(self, reader):
         if self.count is None:
             reader.writeByte(self.max_players)
@@ -68,19 +68,19 @@ add_server = AddServer()
 class MasterConnection(BaseConnection):
     disconnect_callback = None
     connected = False
-    
+
     def on_connect(self):
         self.connected = True
         self.send_server()
-        
+
         if self.defer is not None:
             self.defer.callback(self)
             self.defer = None
-    
+
     def set_count(self, value):
         add_server.count = value
         self.send_contained(add_server)
-    
+
     def send_server(self):
         protocol = self.server_protocol
         add_server.count = None
@@ -90,7 +90,7 @@ class MasterConnection(BaseConnection):
         add_server.port = protocol.host.address.port
         add_server.max_players = protocol.max_players
         self.send_contained(add_server)
-    
+
     def on_disconnect(self):
         if self.defer is not None:
             self.defer.errback(self)
