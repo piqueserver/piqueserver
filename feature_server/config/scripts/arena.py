@@ -294,7 +294,7 @@ def apply_script(protocol, connection, config):
                     self.set_location(random.choice(self.team.arena_spawns))
                     self.refill()
             return connection.on_position_update(self)
-        
+
         def get_respawn_time(self):
             if self.protocol.arena_enabled:
             if self.protocol.arena_running:

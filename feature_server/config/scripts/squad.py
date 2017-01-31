@@ -221,7 +221,7 @@ def apply_script(protocol, connection, config):
                 all_members = ([n for n in self.get_squad(self.team,
                             self.squad)['players'] if
                             n is not self])
-                live_members = [n for n in all_members if n.hp and not n.invisible and 
+                live_members = [n for n in all_members if n.hp and not n.invisible and
                                 not n.god]
                 membernames = [m.name for m in all_members]
                 memberstr = ""

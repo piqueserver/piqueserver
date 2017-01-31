@@ -100,7 +100,7 @@ def model_grenades(connection, expression = None):
     if connection not in protocol.players:
         raise ValueError()
     player = connection
-    
+
     result = None
     if expression:
         try:
@@ -115,6 +115,7 @@ def model_grenades(connection, expression = None):
         if failed:
             player.send_chat(S_FAILED.format(filenames = ', '.join(failed)))
             player.send_chat(S_PIVOT_TIP)
+
         if models:
             player.grenade_models = models
     elif player.grenade_models:

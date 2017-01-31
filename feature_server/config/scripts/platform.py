@@ -164,7 +164,7 @@ as the parameter lists are provided when you try them.
 /reach
     Increases your button activation reach. Meant to be used for getting rid
     of distance triggering buttons from a safe distance.
-    
+
     Use again to revert to normal.
 
 Maintainer: hompy
@@ -1181,7 +1181,7 @@ class Platform(BaseObject):
             self.delay_call = callLater(delay, self.run)
         else:
             self.run()
-    
+
     def run(self):
         self.running = True
         self.protocol.running_platforms.add(self)

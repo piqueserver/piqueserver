@@ -28,7 +28,7 @@ void inline limit(int * value, int min, int max)
 {
     if (*value > max) {
         *value = max;
-    }
+    } 
     else if (*value < min)
     {
         *value = min;
@@ -70,7 +70,7 @@ MapData * load_vxl(unsigned char * v)
                v += 4 * (len_bottom + 1);
                break;
             }
-
+            
             // infer the number of bottom colors in next span from chunk length
             len_top = (number_4byte_chunks-1) - len_bottom;
 
@@ -94,7 +94,7 @@ void inline delete_vxl(MapData * map)
 }
 
 struct Position {
-    int x;
+    int x; 
     int y;
     int z;
 };
@@ -136,13 +136,13 @@ int check_node(int x, int y, int z, MapData * map, int destroy)
         nodes_size = NODE_RESERVE_SIZE;
     }
     node_pos = 0;
-
+    
     push_back_node(x, y, z);
-
+    
     while (node_pos > 0) {
         if (node_pos >= nodes_size - 6) {
             nodes_size += NODE_RESERVE_SIZE;
-            nodes = (Position*)realloc((void*)nodes,
+            nodes = (Position*)realloc((void*)nodes, 
                 sizeof(Position) * nodes_size);
         }
         const Position * current_node = pop_back_node();
@@ -153,9 +153,9 @@ int check_node(int x, int y, int z, MapData * map, int destroy)
         }
         x = current_node->x;
         y = current_node->y;
-
+        
         int i = get_pos(x, y, z);
-
+	
         // already visited?
         pair<set_type<int>::iterator, bool> ret;
         ret = marked.insert(i);
@@ -170,22 +170,22 @@ int check_node(int x, int y, int z, MapData * map, int destroy)
     }
 
     // destroy the node's path!
-
+    
     if (destroy) {
-        for (set_type<int>::const_iterator iter = marked.begin();
+        for (set_type<int>::const_iterator iter = marked.begin(); 
              iter != marked.end(); ++iter)
         {
             map->geometry[*iter] = 0;
             map->colors.erase(*iter);
         }
     }
-
+    
     int ret = (int)marked.size();
     marked.clear();
     return ret;
 }
 
-// write_map/save_vxl function from stb/nothings - thanks a lot for the
+// write_map/save_vxl function from stb/nothings - thanks a lot for the 
 // public-domain code!
 
 inline int is_surface(MapData * map, int x, int y, int z)
@@ -263,7 +263,7 @@ PyObject * save_vxl(MapData * map)
             top_colors_end = k;
 
             // now skip past the solid voxels
-            while (k < MAP_Z && map->geometry[get_pos(i, j, k)] &&
+            while (k < MAP_Z && map->geometry[get_pos(i, j, k)] && 
                    !is_surface(map, i,j,k))
                ++k;
 
@@ -271,7 +271,7 @@ PyObject * save_vxl(MapData * map)
             // in the "normal" case they're bottom colors; but it's
             // possible to have air-color-solid-color-solid-color-air,
             // which we encode as air-color-solid-0, 0-color-solid-air
-
+          
             // so figure out if we have any bottom colors at this point
             bottom_colors_start = k;
 
@@ -283,7 +283,7 @@ PyObject * save_vxl(MapData * map)
                ; // in this case, the bottom colors of this span are empty, because we'l emit as top colors
             else {
                // otherwise, these are real bottom colors so we can write them
-               while (is_surface(map, i,j,k))
+               while (is_surface(map, i,j,k))  
                   ++k;
             }
             bottom_colors_end = k;
@@ -313,15 +313,15 @@ PyObject * save_vxl(MapData * map)
 
             for (z=0; z < top_colors_len; ++z)
             {
-               write_color(&out, get_write_color(map, i, j,
+               write_color(&out, get_write_color(map, i, j, 
                    top_colors_start + z));
             }
             for (z=0; z < bottom_colors_len; ++z)
             {
-               write_color(&out, get_write_color(map, i, j,
+               write_color(&out, get_write_color(map, i, j, 
                    bottom_colors_start + z));
             }
-         }
+         }  
       }
    }
    return PyString_FromStringAndSize((char *)out_global, out - out_global);
@@ -463,7 +463,7 @@ PyObject * get_generator_data(MapGenerator * generator, int columns)
             top_colors_end = k;
 
             // now skip past the solid voxels
-            while (k < MAP_Z && map->geometry[get_pos(i, j, k)] &&
+            while (k < MAP_Z && map->geometry[get_pos(i, j, k)] && 
                    !is_surface(map, i,j,k))
                ++k;
 
@@ -471,7 +471,7 @@ PyObject * get_generator_data(MapGenerator * generator, int columns)
             // in the "normal" case they're bottom colors; but it's
             // possible to have air-color-solid-color-solid-color-air,
             // which we encode as air-color-solid-0, 0-color-solid-air
-
+          
             // so figure out if we have any bottom colors at this point
             bottom_colors_start = k;
 
@@ -483,7 +483,7 @@ PyObject * get_generator_data(MapGenerator * generator, int columns)
                ; // in this case, the bottom colors of this span are empty, because we'l emit as top colors
             else {
                // otherwise, these are real bottom colors so we can write them
-               while (is_surface(map, i,j,k))
+               while (is_surface(map, i,j,k))  
                   ++k;
             }
             bottom_colors_end = k;
@@ -513,12 +513,12 @@ PyObject * get_generator_data(MapGenerator * generator, int columns)
 
             for (z=0; z < top_colors_len; ++z)
             {
-               write_color(&out, get_write_color(map, i, j,
+               write_color(&out, get_write_color(map, i, j, 
                    top_colors_start + z));
             }
             for (z=0; z < bottom_colors_len; ++z)
             {
-               write_color(&out, get_write_color(map, i, j,
+               write_color(&out, get_write_color(map, i, j, 
                    bottom_colors_start + z));
             }
          }

@@ -29,6 +29,7 @@ def update_geoip(target_dir):
         WORKING_DIRECTORY, os.path.basename(MAXMIND_DOWNLOAD))
     EXTRACTED_PATH = os.path.join(WORKING_DIRECTORY, 'GeoLiteCity.dat')
 
+
     if not os.path.exists(target_dir):
         print('Configuration directory does not exist')
         sys.exit(1)

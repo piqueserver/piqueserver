@@ -23,6 +23,7 @@ from pyspades.constants import *
 from pyspades.common import prettify_timespan
 from pyspades.server import parse_command
 from twisted.internet import reactor
+
 from map import check_rotation
 
 import cfg
