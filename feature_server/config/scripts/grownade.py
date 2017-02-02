@@ -72,25 +72,25 @@ class ModelLoadFailure(Exception):
     pass
 
 def load_models(expression):
-        if not os.path.isdir(KV6_DIR):
+    if not os.path.isdir(KV6_DIR):
         raise ModelLoadFailure(S_NO_KV6_FOLDER)
-        if not os.path.splitext(expression)[-1]:
-            # append default extension
-            expression += '.kv6'
-        paths = glob(os.path.join(KV6_DIR, expression))
-        if not paths:
+    if not os.path.splitext(expression)[-1]:
+        # append default extension
+        expression += '.kv6'
+    paths = glob(os.path.join(KV6_DIR, expression))
+    if not paths:
         raise ModelLoadFailure(S_NO_MATCHES.format(expression = expression))
 
-        # attempt to load models, discard invalid ones
-        models, loaded, failed = [], [], []
-        for path in paths:
-            model = KV6Model(path)
-            filename = os.path.split(path)[-1]
-            if model.voxels:
-                models.append(model)
-                loaded.append(filename)
-            else:
-                failed.append(filename)
+    # attempt to load models, discard invalid ones
+    models, loaded, failed = [], [], []
+    for path in paths:
+        model = KV6Model(path)
+        filename = os.path.split(path)[-1]
+        if model.voxels:
+            models.append(model)
+            loaded.append(filename)
+        else:
+            failed.append(filename)
     return models, loaded, failed
 
 @name('model')
@@ -108,23 +108,27 @@ def model_grenades(connection, expression = None):
         except ModelLoadFailure as err:
             result = str(err)
         else:
-        if len(loaded) == 1:
-            result = S_LOADED_SINGLE.format(filename = loaded[0])
-        elif len(loaded) > 1:
-            result = S_LOADED.format(filenames = ', '.join(loaded))
-        if failed:
-            player.send_chat(S_FAILED.format(filenames = ', '.join(failed)))
-            player.send_chat(S_PIVOT_TIP)
+            if len(loaded) == 1:
+                result = S_LOADED_SINGLE.format(filename = loaded[0])
+            elif len(loaded) > 1:
+                result = S_LOADED.format(filenames = ', '.join(loaded))
 
-        if models:
-            player.grenade_models = models
+            if failed:
+                player.send_chat(S_FAILED.format(filenames = ', '.join(failed)))
+                player.send_chat(S_PIVOT_TIP)
+
+            if models:
+                player.grenade_models = models
+
     elif player.grenade_models:
         player.grenade_models = None
         result = S_CANCEL
     else:
         result = S_SPECIFY_FILES
+
     if result:
         player.send_chat(result)
+
 
 add(model_grenades)
 
