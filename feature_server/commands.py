@@ -224,8 +224,8 @@ def kill(connection, value = None):
     player = get_player(connection.protocol, value, False)
     player.kill()
     if connection is not player:
-    message = '%s killed %s' % (connection.name, player.name)
-    connection.protocol.send_chat(message, irc = True)
+        message = '%s killed %s' % (connection.name, player.name)
+        connection.protocol.send_chat(message, irc = True)
 
 @admin
 def heal(connection, player = None):
