@@ -1014,9 +1014,9 @@ def handle_command(connection, command, parameters):
         command_func = commands[command]
     except KeyError:
         return # 'Invalid command'
-    aspec = command_func.argspec
-    min_params = len(aspec.args) - 1 - len(aspec.defaults or ())
-    max_params = len(aspec.args) - 1 if aspec.varargs is None else None
+    argspec = command_func.argspec
+    min_params = len(argspec.args) - 1 - len(argspec.defaults or ())
+    max_params = len(argspec.args) - 1 if argspec.varargs is None else None
     len_params = len(parameters)
     if (len_params < min_params
             or max_params is not None and len_params > max_params):
