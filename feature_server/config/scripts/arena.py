@@ -297,11 +297,11 @@ def apply_script(protocol, connection, config):
 
         def get_respawn_time(self):
             if self.protocol.arena_enabled:
-            if self.protocol.arena_running:
-                return -1
-            else:
-                return 1
-            return connection.get_respawn_time(self);
+                if self.protocol.arena_running:
+                    return -1
+                else:
+                    return 1
+            return connection.get_respawn_time(self)
 
         def respawn(self):
             if self.protocol.arena_running:
@@ -373,13 +373,13 @@ def apply_script(protocol, connection, config):
                 return
             if self.arena_old_fog_color is None and TEAM_COLOR_TIME > 0:
                 self.arena_old_fog_color = self.fog_color
-                    self.set_fog_color(team.color)
-                    reactor.callLater(TEAM_COLOR_TIME, self.arena_reset_fog_color)
+                self.set_fog_color(team.color)
+                reactor.callLater(TEAM_COLOR_TIME, self.arena_reset_fog_color)
             if killer is None or killer.team is not team:
                 for player in team.get_players():
                     if not player.world_object.dead:
-                    killer = player
-                    break
+                        killer = player
+                        break
             if killer is not None:
                 self.arena_take_flag = True
                 killer.take_flag()
