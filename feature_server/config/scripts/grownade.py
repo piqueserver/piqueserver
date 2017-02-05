@@ -125,10 +125,8 @@ def model_grenades(connection, expression = None):
         result = S_CANCEL
     else:
         result = S_SPECIFY_FILES
-
     if result:
         player.send_chat(result)
-
 
 add(model_grenades)
 

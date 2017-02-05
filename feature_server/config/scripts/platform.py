@@ -198,7 +198,7 @@ from piqueserver.commands import add, admin, name, alias, join_arguments
 from piqueserver import cfg
 
 DEFAULT_LOAD_DIR = os.path.join(cfg.config_dir, 'maps')
-SAVE_ON_MAP_CHANGE = True
+SAVE_ON_MAP_CHANGE = False
 AUTOSAVE_EVERY = 0.0 # minutes, 0 = disabled
 MAX_DISTANCE = 64.0
 MIN_COOLDOWN = 0.1 # seconds
@@ -1847,10 +1847,10 @@ def apply_script(protocol, connection, config):
                 for trigger in self.position_triggers:
                     trigger.callback(player)
             for platform in list(self.running_platforms):
-                    platform.ticks_left -= 1
-                    if platform.ticks_left <= 0:
-                        platform.ticks_left = platform.ticks_per_cycle
-                        platform.cycle()
+                platform.ticks_left -= 1
+                if platform.ticks_left <= 0:
+                    platform.ticks_left = platform.ticks_per_cycle
+                    platform.cycle()
             protocol.on_world_update(self)
 
         def get_platform_json_path(self):

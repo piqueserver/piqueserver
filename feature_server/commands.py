@@ -221,7 +221,7 @@ def kill(connection, value = None):
     else:
         if not connection.rights.kill:
             return "You can't use this command"
-    player = get_player(connection.protocol, value, False)
+        player = get_player(connection.protocol, value, False)
     player.kill()
     if connection is not player:
         message = '%s killed %s' % (connection.name, player.name)
@@ -1023,7 +1023,7 @@ def handle_command(connection, command, parameters):
         return 'Invalid number of arguments for %s' % command
     try:
         if not has_rights(command_func, connection):
-                return "You can't use this command"
+            return "You can't use this command"
         return command_func(connection, *parameters)
     except KeyError:
         return # 'Invalid command'
