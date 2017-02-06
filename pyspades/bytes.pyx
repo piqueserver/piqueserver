@@ -154,7 +154,7 @@ cdef class ByteReader:
     def __len__(self):
         return self.size
 
-    def __str__(self):
+    def __bytes__(self):
         return self.data[:self.size]
 
 cdef class ByteWriter:
@@ -209,7 +209,7 @@ cdef class ByteWriter:
     cpdef size_t tell(self):
         return get_stream_pos(self.stream)
 
-    def __str__(self):
+    def __bytes__(self):
         return get_stream(self.stream)
 
     def __dealloc__(self):

@@ -3,9 +3,7 @@
 
 from __future__ import absolute_import, division, print_function
 import os
-import sys
 
-server_version = '%s - %s' % (sys.platform, '0.0.1a')
 config = {}
 pkg_name = "piqueserver"
 config_file = 'config.json'

@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import, division, print_function
+
+from six.moves import range
+
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from pyspades.protocol import BaseConnection, BaseProtocol
@@ -29,8 +33,9 @@ from pyspades.collision import vector_collision, collision_3d
 from pyspades import world
 from pyspades.debug import *
 from pyspades.weapon import WEAPONS
-import enet
+from pyspades import enet
 
+import warnings
 import random
 import math
 import shlex
@@ -130,11 +135,11 @@ class MapGeneratorChild(object):
         return self.parent.data_left() or self.pos < self.parent.pos
 
 class ProgressiveMapGenerator(object):
-    data = ''
+    data = bytearray()
     done = False
 
     # parent attributes
-    all_data = ''
+    all_data = bytearray()
     pos = 0
     def __init__(self, map, parent = False):
         self.parent = parent
@@ -494,7 +499,7 @@ class ServerConnection(BaseConnection):
                         if self.rapids.check():
                             start, end = self.rapids.get()
                             if end - start < MAX_RAPID_SPEED:
-                                print 'RAPID HACK:', self.rapids.window
+                                print('RAPID HACK:', self.rapids.window)
                                 self.on_hack_attempt('Rapid hack detected')
                         return
                     map = self.protocol.map
@@ -1028,9 +1033,9 @@ class ServerConnection(BaseConnection):
         if self.on_block_destroy(x, y, z, GRENADE_DESTROY) == False:
             return
         map = self.protocol.map
-        for nade_x in xrange(x - 1, x + 2):
-            for nade_y in xrange(y - 1, y + 2):
-                for nade_z in xrange(z - 1, z + 2):
+        for nade_x in range(x - 1, x + 2):
+            for nade_y in range(y - 1, y + 2):
+                for nade_z in range(z - 1, z + 2):
                     if map.destroy_point(nade_x, nade_y, nade_z):
                         self.on_block_removed(nade_x, nade_y, nade_z)
         block_action.x = x
@@ -1068,12 +1073,12 @@ class ServerConnection(BaseConnection):
         if not self.map_data.data_left():
             self.map_data = None
             for data in self.saved_loaders:
-                packet = enet.Packet(str(data), enet.PACKET_FLAG_RELIABLE)
+                packet = enet.Packet(bytes(data), enet.PACKET_FLAG_RELIABLE)
                 self.peer.send(0, packet)
             self.saved_loaders = None
             self.on_join()
             return
-        for _ in xrange(10):
+        for _ in range(10):
             if not self.map_data.data_left():
                 break
             map_data.data = self.map_data.read(1024)
@@ -1086,6 +1091,12 @@ class ServerConnection(BaseConnection):
         self.protocol.transport.write(data, self.address)
 
     def send_chat(self, value, global_message = None):
+        # Ideally, all methods would send strings,
+        # but due to legacy stuff, some send bytes. Convert it
+        if isinstance(value, bytes):
+            value = value.decode()
+            warnings.warn("Bytes sent to send_chat, please send str")
+
         if self.deaf:
             return
         if global_message is None:
@@ -1497,9 +1508,9 @@ class ServerProtocol(BaseProtocol):
 
         # safe position LUT
         self.pos_table = []
-        for x in xrange(-5,6):
-            for y in xrange(-5,6):
-                for z in xrange(-5,6):
+        for x in range(-5,6):
+            for y in range(-5,6):
+                for z in range(-5,6):
                     self.pos_table.append((x,y,z))
         self.pos_table.sort(key=lambda vec: abs(vec[0]*1.03) +\
                                             abs(vec[1]*1.02) +\
@@ -1513,7 +1524,7 @@ class ServerProtocol(BaseProtocol):
             flags = enet.PACKET_FLAG_RELIABLE
         data = ByteWriter()
         contained.write(data)
-        data = str(data)
+        data = bytes(data)
         packet = enet.Packet(data, flags)
         for player in self.connections.values():
             if player is sender or player.player_id is None:
@@ -1547,7 +1558,7 @@ class ServerProtocol(BaseProtocol):
         territory_count = int((land_count/(512.0 * 512.0))*(
             MAX_TERRITORY_COUNT-MIN_TERRITORY_COUNT) + MIN_TERRITORY_COUNT)
         j = 512.0 / territory_count
-        for i in xrange(territory_count):
+        for i in range(territory_count):
             x1 = i * j
             y1 = 512 / 4
             x2 = (i + 1) * j
@@ -1579,7 +1590,7 @@ class ServerProtocol(BaseProtocol):
 
     def update_network(self):
         items = []
-        for i in xrange(32):
+        for i in range(32):
             position = orientation = None
             try:
                 player = self.players[i]

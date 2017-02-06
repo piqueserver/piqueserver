@@ -323,7 +323,11 @@ PyObject * save_vxl(MapData * map)
          }  
       }
    }
+   #if PY_MAJOR_VERSION < 3
    return PyString_FromStringAndSize((char *)out_global, out - out_global);
+   #else
+   return PyUnicode_FromStringAndSize((char *)out_global, out - out_global);
+   #endif
 }
 
 inline MapData * copy_map(MapData * map)
@@ -497,5 +501,9 @@ PyObject * get_generator_data(MapGenerator * generator, int columns)
 done:
    generator->x = i;
    generator->y = j;
+   #if PY_MAJOR_VERSION < 3
    return PyString_FromStringAndSize((char *)out_global, out - out_global);
+   #else
+   return PyBytes_FromStringAndSize((char *)out_global, out - out_global);
+   #endif
 }

@@ -24,7 +24,15 @@ and networks.
 
 __version__ = '2.1.9'
 
+from __future__ import absolute_import, division, print_function
+import six
+
 import struct
+
+if six.PY3:
+    long = int
+
+
 
 IPV4LENGTH = 32
 IPV6LENGTH = 128

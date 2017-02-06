@@ -1,3 +1,7 @@
+from __future__ import absolute_import, division, print_function
+
+import six
+
 import math
 from twisted.internet import reactor
 from pyspades.constants import *
@@ -142,5 +146,5 @@ WEAPONS = {
     SHOTGUN_WEAPON : Shotgun,
 }
 
-for id, weapon in WEAPONS.iteritems():
+for id, weapon in six.iteritems(WEAPONS):
     weapon.id = id
