@@ -157,7 +157,7 @@ class FeatureConnection(ServerConnection):
     def on_login(self, name):
         self.printable_name = name.encode('ascii', 'replace')
         if len(self.printable_name) > 15:
-            self.kick(reason='username too long', silent=True)
+            self.kick(silent=True)
         print '%s (IP %s, ID %s) entered the game!' % (self.printable_name,
             self.address[0], self.player_id)
         self.protocol.irc_say('* %s (IP %s, ID %s) entered the game!' %
