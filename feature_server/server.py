@@ -215,7 +215,6 @@ class FeatureConnection(ServerConnection):
         for point in points:
             x,y,z = point
             if x < 0 or x > 511 or y < 0 or y > 511 or z < 0 or z > 61:
-                print('stopping line build')
                 return False
         return True
 
