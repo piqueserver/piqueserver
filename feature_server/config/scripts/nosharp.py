@@ -1,7 +1,7 @@
 """
 nosharp.py - kicks player whose name starts with # and also kicks player with no name
 by kmsi(kmsiapps@gmail.com)
-version 2(2017.01.22)
+version 2(2017.02.06)
  - Added options to turn on/off
  - Now puts player on spectator team instead of kicking
 """
