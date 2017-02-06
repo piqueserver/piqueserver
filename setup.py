@@ -101,7 +101,7 @@ def compile_enet():
                 sys.stderr.write("read %d\n" % (readsofar,))
         urllib_request.urlretrieve(enet_url, enet_file, reporthook)
         print("Finished downloading enet")
-        # end code shamelessly stolen from SackOverflow
+        # end code shamelessly stolen from StackOverflow
 
     print("Unpacking enet")
     tar = tarfile.open(enet_file)
