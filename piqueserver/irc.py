@@ -23,9 +23,9 @@ from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
 
 from pyspades.constants import MAX_CHAT_SIZE
-from pyspades.common import encode, decode
+from pyspades.common import encode
 from pyspades.types import AttributeSet
-import piqueserver.commands
+from piqueserver import commands
 
 
 MAX_IRC_CHAT_SIZE = MAX_CHAT_SIZE * 2
@@ -45,11 +45,11 @@ def filter_printable(value):
 
 
 def channel(func):
-    def new_func(self, user, channel, *arg, **kw):
-        if not channel.lower() == self.factory.channel:
+    def new_func(self, user, irc_channel, *arg, **kw):
+        if not irc_channel.lower() == self.factory.channel:
             return
         user = user.split('!', 1)[0]
-        func(self, user, channel, *arg, **kw)
+        func(self, user, irc_channel, *arg, **kw)
     return new_func
 
 
@@ -60,32 +60,47 @@ class IRCBot(irc.IRCClient):
 
     def _get_nickname(self):
         return self.factory.nickname
-    nickname = property(_get_nickname)
+
+    @property
+    def nickname(self):
+        return self._get_nickname()
 
     def _get_colors(self):
         return self.factory.colors
-    colors = property(_get_colors)
+
+    @property
+    def colors(self):
+        return self._get_colors()
 
     def _get_admin(self):
         return self.factory.admin
-    admin = property(_get_admin)
+
+    @property
+    def admin(self):
+        return self._get_admin()
 
     def _get_user_types(self):
         return self.factory.user_types
-    user_types = property(_get_user_types)
+
+    @property
+    def user_types(self):
+        return self._get_user_types()
 
     def _get_rights(self):
         return self.factory.rights
-    rights = property(_get_rights)
+
+    @property
+    def rights(self):
+        return self._get_rights()
 
     def signedOn(self):
         self.join(self.factory.channel, self.factory.password)
 
-    def joined(self, channel):
-        if channel.lower() == self.factory.channel:
+    def joined(self, irc_channel):
+        if irc_channel.lower() == self.factory.channel:
             self.ops = set()
             self.voices = set()
-        print "Joined channel %s" % channel
+        print "Joined channel %s" % irc_channel
 
     def irc_NICK(self, prefix, params):
         user = prefix.split('!', 1)[0]
@@ -106,13 +121,13 @@ class IRCBot(irc.IRCClient):
             if mode in l:
                 l[mode].add(name[1:])
 
-    def left(self, channel):
-        if channel.lower() == self.factory.channel:
+    def left(self, irc_channel):
+        if irc_channel.lower() == self.factory.channel:
             self.ops = None
             self.voices = None
 
     @channel
-    def modeChanged(self, user, channel, set, modes, args):
+    def modeChanged(self, user, irc_channel, set, modes, args):
         ll = {'o': self.ops, 'v': self.voices}
         for i in range(len(args)):
             mode, name = modes[i], args[i]
@@ -125,7 +140,7 @@ class IRCBot(irc.IRCClient):
                 l.discard(name)
 
     @channel
-    def privmsg(self, user, channel, msg):
+    def privmsg(self, user, irc_channel, msg):
         if user in self.ops or user in self.voices:
             prefix = '@' if user in self.ops else '+'
             alias = self.factory.aliases.get(user, user)
@@ -145,15 +160,15 @@ class IRCBot(irc.IRCClient):
                 self.factory.server.send_chat(encode(message))
 
     @channel
-    def userLeft(self, user, channel):
+    def userLeft(self, user, irc_channel):
         self.ops.discard(user)
         self.voices.discard(user)
 
     def userQuit(self, user, message):
         self.userLeft(user, self.factory.channel)
 
-    def userKicked(self, kickee, channel, kicker, message):
-        self.userLeft(kickee, channel)
+    def userKicked(self, kickee, irc_channel, kicker, message):
+        self.userLeft(kickee, irc_channel)
 
     def send(self, msg, do_filter=False):
         msg = msg.encode('cp1252', 'replace')
@@ -323,5 +338,5 @@ def colors(connection):
     else:
         return 'colors off'
 
-for func in (who, score, alias, unalias, colors):
-    commands.add(func)
+for function in (who, score, alias, unalias, colors):
+    commands.add(function)
