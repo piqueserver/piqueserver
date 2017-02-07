@@ -57,6 +57,7 @@ class IRCBot(irc.IRCClient):
     ops = None
     voices = None
     unaliased_name = None
+    name = None
 
     def _get_nickname(self):
         return self.factory.nickname
@@ -127,16 +128,16 @@ class IRCBot(irc.IRCClient):
             self.voices = None
 
     @channel
-    def modeChanged(self, user, irc_channel, set, modes, args):
+    def modeChanged(self, user, irc_channel, set_something, modes, args):
         ll = {'o': self.ops, 'v': self.voices}
         for i in range(len(args)):
             mode, name = modes[i], args[i]
             if mode not in ll:
                 continue
             l = ll[mode]
-            if set:
+            if set_something:
                 l.add(name)
-            elif not set:
+            elif not set_something:
                 l.discard(name)
 
     @channel

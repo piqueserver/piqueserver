@@ -129,6 +129,7 @@ class FeatureConnection(ServerConnection):
     chat_time = 0
     chat_count = 0
     user_types = None
+    rights = None
 
     def on_connect(self):
         protocol = self.protocol
@@ -265,7 +266,7 @@ class FeatureConnection(ServerConnection):
         if self.protocol.god_blocks is not None:
             self.protocol.god_blocks.discard((x, y, z))
 
-    def on_hit(self, hit_amount, player, type, grenade):
+    def on_hit(self, hit_amount, player, _type, grenade):
         if not self.protocol.killing:
             self.send_chat(
                 "You can't kill anyone right now! Damage is turned OFF")
@@ -286,7 +287,7 @@ class FeatureConnection(ServerConnection):
             self.god = False
             self.god_build = False
 
-    def on_kill(self, killer, type, grenade):
+    def on_kill(self, killer, _type, grenade):
         self.streak = 0
         if killer is None or self.team is killer.team:
             return
@@ -538,7 +539,7 @@ class FeatureProtocol(ServerProtocol):
         if config.get('random_rotation', False):
             self.map_rotator_type = random_choice_cycle
         else:
-            self.map_rotator_type = itertools.cycle
+            self.map_rotator_type = itertools.cycle # pylint: disable=redefined-variable-type
         self.default_time_limit = config.get('default_time_limit', 20.0)
         self.default_cap_limit = config.get('cap_limit', 10.0)
         self.advance_on_win = int(config.get('advance_on_win', False))
@@ -769,7 +770,7 @@ class FeatureProtocol(ServerProtocol):
         return True
 
     def get_map_rotation(self):
-        return [map.full_name for map in self.maps]
+        return [map_item.full_name for map_item in self.maps]
 
     def is_indestructable(self, x, y, z):
         if self.user_blocks is not None:
@@ -798,7 +799,7 @@ class FeatureProtocol(ServerProtocol):
         if self.master_connection is not None:
             self.master_connection.send_server()
 
-    def format(self, value, extra={}):
+    def format(self, value, extra={}): # pylint: disable=dangerous-default-value
         map_info = self.map_info
         format_dict = {
             'map_name': map_info.name,
@@ -921,6 +922,7 @@ class FeatureProtocol(ServerProtocol):
         self.send_chat(line)
         reactor.callLater(self.tip_frequency * 60, self.send_tip)
 
+    # pylint: disable=arguments-differ
     def send_chat(self, value, global_message=True, sender=None,
                   team=None, irc=False):
         if irc:

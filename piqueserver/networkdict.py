@@ -13,7 +13,9 @@ def get_network(cidr):
 
 
 def get_cidr(network):
-    if network._prefixlen == 32:
+    # TODO: why are we accessing a protected attribute?
+    #       does this work?
+    if network._prefixlen == 32: # pylint: disable=protected-access
         return str(network.ip)
     return str(network)
 
@@ -38,7 +40,7 @@ class NetworkDict(object):
         networks = []
         results = []
         for item in self.networks:
-            network, value = item
+            network, _value = item
             if ip in network:
                 results.append(item)
             else:
@@ -55,7 +57,7 @@ class NetworkDict(object):
     def get_entry(self, key):
         ip = get_network(key)
         for entry in self.networks:
-            network, value = entry
+            network, _value = entry
             if ip in network:
                 return entry
         raise KeyError()

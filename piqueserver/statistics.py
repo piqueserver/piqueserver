@@ -16,9 +16,9 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-import hashlib
+# import hashlib
 
-from twisted.internet.protocol import (Protocol, ReconnectingClientFactory,
+from twisted.internet.protocol import (ReconnectingClientFactory,
                                        ServerFactory)
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred, succeed
@@ -47,18 +47,24 @@ class StatsProtocol(Int16StringReceiver):
 
 class StatsServer(StatsProtocol):
 
+    # TODO: add __init__ method for defined attributes and don't forget to call
+    # super
+    # pylint: disable=attribute-defined-outside-init
+
     def connectionMade(self):
         self.timeout_call = reactor.callLater(CONNECTION_TIMEOUT,
                                               self.timed_out)
 
+    # TODO: check why the below
+    # pylint: disable=signature-differs
     def connectionLost(self, reason):
         if self in self.factory.connections:
             self.factory.connections.remove(self)
 
     def object_received(self, obj):
-        type = obj.get('type', None)
+        obj_type = obj.get('type', None)
         if self.timeout_call is not None:
-            if type != 'auth':
+            if obj_type != 'auth':
                 self.transport.loseConnection()
                 return
             password = obj['password']
@@ -72,11 +78,13 @@ class StatsServer(StatsProtocol):
                 self.factory.connections.append(self)
                 self.connection_accepted()
             return
-        if type == 'kill':
+        if obj_type == 'kill':
             self.add_kill(obj['name'])
-        elif type == 'death':
+        elif obj_type == 'death':
             self.add_death(obj['name'])
-        elif type == 'login':
+        elif obj_type == 'login':
+            # TODO: do we want to be returning the result?
+            # pylint: disable=unused-variable
             result = self.check_user(obj['name'], obj['password']).addCallback(
                 self.send_login_result)
 
@@ -118,10 +126,10 @@ class StatsClient(StatsProtocol):
                           'password': self.factory.password})
 
     def object_received(self, obj):
-        type = obj['type']
-        if type == 'authed':
+        obj_type = obj['type']
+        if obj_type == 'authed':
             self.factory.callback(self)
-        elif type == 'login':
+        elif obj_type == 'login':
             defer = self.login_defers.pop(0)
             defer.callback(obj['result'])
 
