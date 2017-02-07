@@ -156,6 +156,8 @@ class FeatureConnection(ServerConnection):
 
     def on_login(self, name):
         self.printable_name = name.encode('ascii', 'replace')
+        if len(self.printable_name) > 15:
+            self.kick(silent=True)
         print '%s (IP %s, ID %s) entered the game!' % (self.printable_name,
             self.address[0], self.player_id)
         self.protocol.irc_say('* %s (IP %s, ID %s) entered the game!' %
@@ -205,7 +207,16 @@ class FeatureConnection(ServerConnection):
         return self._can_build()
 
     def on_line_build_attempt(self, points):
-        return self._can_build()
+        if not self._can_build():
+            return False
+
+        # originally from the bugfix.py script
+        # prevent "unlimited tower" crash, fix by Danko
+        for point in points:
+            x,y,z = point
+            if x < 0 or x > 511 or y < 0 or y > 511 or z < 0 or z > 61:
+                return False
+        return True
 
     def on_line_build(self, points):
         if self.god:
