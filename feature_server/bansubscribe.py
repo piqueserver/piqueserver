@@ -16,7 +16,6 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-from twisted.web.client import getPage
 from twisted.internet.task import LoopingCall
 from twisted.internet.defer import DeferredList
 
@@ -31,24 +30,24 @@ class BanManager(object):
     new_bans = None
     def __init__(self, protocol, config):
         self.protocol = protocol
-        self.urls = [(str(item), filter) for (item, filter) in
-            config.get('urls', [])]
+        self.urls = [(str(item), name_filter) for (item, name_filter) in
+                     config.get('urls', [])]
         self.loop = LoopingCall(self.update_bans)
-        self.loop.start(UPDATE_INTERVAL, now = True)
+        self.loop.start(UPDATE_INTERVAL, now=True)
 
     def update_bans(self):
         self.new_bans = NetworkDict()
         defers = []
-        for url, filter in self.urls:
+        for url, url_filter in self.urls:
             defers.append(self.protocol.getPage(url).addCallback(self.got_bans,
-                filter))
+                                                                 url_filter))
         DeferredList(defers).addCallback(self.bans_finished)
 
-    def got_bans(self, data, filter):
+    def got_bans(self, data, name_filter):
         bans = json.loads(data)
         for entry in bans:
             name = entry.get('name', None)
-            if name is not None and name in filter:
+            if name is not None and name in name_filter:
                 continue
             self.new_bans[str(entry['ip'])] = str(entry['reason'])
 
