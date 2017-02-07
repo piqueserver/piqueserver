@@ -53,7 +53,7 @@ class BanManager(object):
                 continue
             self.new_bans[str(entry['ip'])] = str(entry['reason'])
 
-    def bans_finished(self, result):
+    def bans_finished(self, _result):
         self.bans = self.new_bans
         self.new_bans = None
 

@@ -14,3 +14,6 @@ config_file = 'config.json'
 
 config_path = os.environ.get('XDG_CONFIG_HOME', '~/.config') + "/piqueserver"
 config_dir = os.path.expanduser(config_path)
+
+# filled from command line argument
+json_parameters = ""
