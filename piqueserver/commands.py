@@ -15,22 +15,23 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+# pylint: disable=too-many-lines
+
 import os
 import math
 import inspect
-import itertools
 from random import choice
 
 from twisted.internet import reactor
 
 from pyspades.contained import KillAction
 from pyspades.server import (create_player, set_tool, set_color, input_data,
-                            weapon_input)
-from pyspades.constants import *
+                             weapon_input)
+from pyspades.constants import (GRENADE_KILL, FALL_KILL, NETWORK_FPS)
 from pyspades.common import (prettify_timespan, coordinates, to_coordinates,
-                            make_color)
+                             make_color)
 from pyspades.server import parse_command
-from piqueserver.map import check_rotation, Map
+from piqueserver.map import check_rotation
 from piqueserver import cfg
 
 commands = {}
@@ -232,7 +233,7 @@ def unban(connection, ip):
 def undo_ban(connection, *arg):
     if len(connection.protocol.bans) > 0:
         result = connection.protocol.undo_last_ban()
-        return ('Ban for %s undone' % result[0])
+        return 'Ban for %s undone' % result[0]
     else:
         return 'No bans to undo!'
 
@@ -423,8 +424,10 @@ def toggle_build(connection, player=None):
         player.building = value
         msg = '%s can build again' if value else '%s is disabled from building'
         connection.protocol.send_chat(msg % player.name)
-        connection.protocol.irc_say('* %s %s building for %s' % (connection.name,
-                                                                 ['disabled', 'enabled'][int(value)], player.name))
+        connection.protocol.irc_say('* %s %s building for %s' %
+                                    (connection.name,
+                                     ['disabled', 'enabled'][int(value)],
+                                     player.name))
         return
     value = not connection.protocol.building
     connection.protocol.building = value
@@ -444,8 +447,9 @@ def toggle_kill(connection, player=None):
         player.killing = value
         msg = '%s can kill again' if value else '%s is disabled from killing'
         connection.protocol.send_chat(msg % player.name)
-        connection.protocol.irc_say('* %s %s killing for %s' % (connection.name,
-                                                                ['disabled', 'enabled'][int(value)], player.name))
+        connection.protocol.irc_say('* %s %s killing for %s' %
+                                    (connection.name,
+                                     ['disabled', 'enabled'][int(value)], player.name))
         return
     value = not connection.protocol.killing
     connection.protocol.killing = value
@@ -506,8 +510,9 @@ def deaf(connection, value=None):
 @admin
 def global_chat(connection):
     connection.protocol.global_chat = not connection.protocol.global_chat
-    connection.protocol.send_chat('Global chat %s' % ('enabled' if
-                                                      connection.protocol.global_chat else 'disabled'), irc=True)
+    connection.protocol.send_chat('Global chat %s' %
+                                  ('enabled' if connection.protocol.global_chat else 'disabled'),
+                                  irc=True)
 
 
 @alias('tp')
@@ -789,6 +794,8 @@ def change_planned_map(connection, *pre_maps):
         return 'Invalid map name'
 
     map = maps[0]
+    # XXX: check_rotation takes a second argument - load_dir
+    #      this command must be currently broken
     protocol.planned_map = check_rotation([map])[0]
     protocol.send_chat('%s changed next map to %s' % (name, map), irc=True)
 
@@ -893,7 +900,7 @@ def toggle_master(connection):
         int(protocol.master)])
     protocol.irc_say("* %s " % connection.name + message)
     if connection in connection.protocol.players:
-        return ("You " + message)
+        return "You " + message
 
 
 def ping(connection, value=None):
@@ -905,7 +912,7 @@ def ping(connection, value=None):
         player = get_player(connection.protocol, value)
     ping = player.latency
     if value is None:
-        return ('Your ping is %s ms. Lower ping is better!' % ping)
+        return 'Your ping is %s ms. Lower ping is better!' % ping
     return "%s's ping is %s ms" % (player.name, ping)
 
 
