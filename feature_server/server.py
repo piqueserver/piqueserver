@@ -207,7 +207,7 @@ class FeatureConnection(ServerConnection):
         return self._can_build()
 
     def on_line_build_attempt(self, points):
-        if not self._can_build():
+        if self._can_build() == False:
             return False
 
         # originally from the bugfix.py script
