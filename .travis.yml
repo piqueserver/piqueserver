@@ -12,4 +12,4 @@ install:
 script:
   - python setup.py install
   - pylint piqueserver
-  - pylint pyspades
+  # - pylint pyspades
