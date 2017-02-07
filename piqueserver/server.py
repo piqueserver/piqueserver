@@ -634,7 +634,8 @@ class FeatureProtocol(ServerProtocol):
 
         self.start_time = reactor.seconds()
         self.end_calls = []
-        self.console = create_console(self)
+        # TODO: why is this here?
+        self.console = create_console(self) # pylint: disable=assignment-from-no-return
 
         # check for default password usage
         for group, passwords in self.passwords.iteritems():
@@ -725,15 +726,15 @@ class FeatureProtocol(ServerProtocol):
         self.set_time_limit(False)
         if self.planned_map is None:
             self.planned_map = self.map_rotator.next()
-        map = self.planned_map
+        planned_map = self.planned_map
         self.planned_map = None
         self.on_advance(map)
         if message is None:
-            self.set_map_name(map)
+            self.set_map_name(planned_map)
         else:
-            self.send_chat('%s Next map: %s.' % (message, map.full_name),
+            self.send_chat('%s Next map: %s.' % (message, planned_map.full_name),
                            irc=True)
-            reactor.callLater(10, self.set_map_name, map)
+            reactor.callLater(10, self.set_map_name, planned_map)
 
     def get_mode_name(self):
         return self.game_mode_name
@@ -797,11 +798,11 @@ class FeatureProtocol(ServerProtocol):
             self.master_connection.send_server()
 
     def format(self, value, extra={}):
-        map = self.map_info
+        map_info = self.map_info
         format_dict = {
-            'map_name': map.name,
-            'map_author': map.author,
-            'map_description': map.description,
+            'map_name': map_info.name,
+            'map_author': map_info.author,
+            'map_description': map_info.description,
             'game_mode': self.get_mode_name()
         }
         format_dict.update(extra)
@@ -943,10 +944,10 @@ class FeatureProtocol(ServerProtocol):
 
     # events
 
-    def on_map_change(self, map):
+    def on_map_change(self, the_map):
         map_on_map_change = self.map_info.on_map_change
         if map_on_map_change is not None:
-            map_on_map_change(self, map)
+            map_on_map_change(self, the_map)
 
     def on_map_leave(self):
         map_on_map_leave = self.map_info.on_map_leave
@@ -1022,7 +1023,7 @@ def run():
     if cfg.json_parameters:
         try:
             params = json.loads(cfg.json_parameters)
-        except Exception as e:
+        except Exception as e: # pylint: disable=broad-except
             print('Error loading json parameters from the command line')
             print(e)
             sys.exit(1)
@@ -1069,7 +1070,9 @@ def run():
     if interface == '':
         interface = '*'
 
-    protocol_instance = protocol_class(interface, config)
+    # TODO: is this required? Maybe protocol_class needs to be called?
+    #       either way, this variable isn't used
+    protocol_instance = protocol_class(interface, config) # pylint: disable=unused-variable
 
     print('Started server...')
 

@@ -25,9 +25,9 @@ from pyspades.vxl import VXLData
 
 class MapNotFound(Exception):
 
-    def __init__(self, map):
-        self.map = map
-        Exception.__init__(self, 'map %s does not exist' % map)
+    def __init__(self, the_map):
+        self.map = the_map
+        Exception.__init__(self, 'map %s does not exist' % the_map)
 
     def __nonzero__(self):
         return False
@@ -35,17 +35,18 @@ class MapNotFound(Exception):
 
 def check_rotation(maps, load_dir):
     infos = []
-    for map in maps:
-        if type(map) is not RotationInfo:
-            map = RotationInfo(map)
-        infos.append(map)
-        if (not os.path.isfile(map.get_map_filename(load_dir))
-                and not os.path.isfile(map.get_meta_filename(load_dir))):
-            raise MapNotFound(map)
+    for the_map in maps:
+        if not isinstance(the_map, RotationInfo):
+            the_map = RotationInfo(the_map)
+        infos.append(the_map)
+        if (not os.path.isfile(the_map.get_map_filename(load_dir))
+                and not os.path.isfile(the_map.get_meta_filename(load_dir))):
+            raise MapNotFound(the_map)
     return infos
 
 
 class Map(object):
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, rot_info, load_dir):
         self.load_information(rot_info, load_dir)
