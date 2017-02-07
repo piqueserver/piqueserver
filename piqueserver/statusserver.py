@@ -15,14 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
+
+from cStringIO import StringIO
+
+from PIL import Image
+from jinja2 import Environment, PackageLoader
 from twisted.internet import reactor
 from twisted.web import server
 from twisted.web.resource import Resource
-from string import Template
-from PIL import Image
-from jinja2 import Environment, PackageLoader
-import json
-from cStringIO import StringIO
 
 OVERVIEW_UPDATE_INTERVAL = 1 * 60  # 1 minute
 
@@ -40,7 +41,7 @@ class CommonResource(Resource):
 
 class JSONPage(CommonResource):
 
-    def render_GET(self, request):
+    def render_GET(self, _request):
         protocol = self.protocol
 
         players = []
@@ -78,8 +79,7 @@ class JSONPage(CommonResource):
 
 class StatusPage(CommonResource):
 
-    def render_GET(self, request):
-        protocol = self.protocol
+    def render_GET(self, _request):
         status = self.env.get_template('status.html')
         return status.render(server=self.protocol, reactor=reactor).encode(
             'utf-8', 'replace')
@@ -121,7 +121,7 @@ class StatusServerFactory(object):
     def get_overview(self):
         current_time = reactor.seconds()
         if (self.last_overview is None or
-            self.last_map_name != self.protocol.map_info.name or
+                self.last_map_name != self.protocol.map_info.name or
                 current_time - self.last_overview > OVERVIEW_UPDATE_INTERVAL):
             overview = self.protocol.map.get_overview(rgba=True)
             image = Image.frombytes('RGBA', (512, 512), overview)
