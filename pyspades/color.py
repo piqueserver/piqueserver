@@ -6,8 +6,8 @@ def wrap(min, max, value):
 def hsb_to_rgb(hue, sat, bri):
     bri_n = bri * 255.0
     if sat == 0.0:
-	# greyscale
-	r, g, b = bri_n, bri_n, bri_n
+        # greyscale
+        r, g, b = bri_n, bri_n, bri_n
     else:
         hue_n = wrap(0.0, 1.0, hue) * 6 # wrap hue
         hue_i = floor(hue_n) # get integer part

@@ -109,12 +109,12 @@
 
 <script type="text/javascript">
     function prettifyTimespan(totalSeconds) {
-       var days = Math.floor((totalSeconds % 31536000) / 86400); 
+       var days = Math.floor((totalSeconds % 31536000) / 86400);
        var hours = Math.floor(((totalSeconds % 31536000) % 86400) / 3600);
        var minutes = Math.floor((((totalSeconds % 31536000) % 86400) % 3600) / 60);
        var seconds = (((totalSeconds % 31536000) % 86400) % 3600) % 60;
-    
-    
+
+
        var dayStr = (days > 0 ? days : 0) + " day";
        var hoursStr = (hours > 0 ? hours : 0) + " hour";
        var minutesStr = (minutes > 0 ? minutes : 0) + " minute";
@@ -123,21 +123,21 @@
        if (hours > 1) hoursStr += "s";
        if (minutes > 1) minutesStr += "s";
        if (seconds > 1) secondsStr += "s";
-    
+
        return [dayStr, hoursStr, minutesStr, secondsStr].join(", ");
     }
-    
+
     var uptime = {{(reactor.seconds() - server.start_time)|int}};
-    
+
     function displayUptime() {
        $('#uptime').html(prettifyTimespan(uptime));
     }
-    
+
     function reloadOverview() {
         //add param to bypass browser caching
        $("#mapOverview").attr("src", "overview?timestamp=" + new Date().getTime());
     }
-    
+
     function updateServerInfo() {
          $.getJSON("json", function(json) {
             $('#gameMode').html(json['gameMode']);
@@ -149,29 +149,29 @@
 
             $('#playersCurrent').html(players.length);
             $('#playersMax').html(json['maxPlayers']);
-            
+
             $("#playersTable tbody").empty();
 
             for (var i = 0; i < players.length; i++) {
                 var player = players[i];
-                $("#playersTable tbody").append("<tr><td>" + 
-                    player.name + "</td><td>" + 
-                    player.latency + "</td><td>" + 
-                    player.team + "</td><td>" + 
+                $("#playersTable tbody").append("<tr><td>" +
+                    player.name + "</td><td>" +
+                    player.latency + "</td><td>" +
+                    player.team + "</td><td>" +
                     player.kills + "</td></tr>");
             }
-    
+
         })
     };
-         
+
     setInterval(updateServerInfo, 5000);
-    setInterval(reloadOverview, 10000);   
-    
+    setInterval(reloadOverview, 10000);
+
     setInterval(function() {
         uptime += 1;
         displayUptime();
     }, 1000);
-    
+
     $(document).ready(function () {
        displayUptime()
     });

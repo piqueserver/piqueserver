@@ -8,7 +8,7 @@ cdef class ByteReader:
     cdef char * end
     cdef int start, size
     cdef object input
-    
+
     cdef char * check_available(self, int size) except NULL
     cpdef read(self, int bytes = ?)
     cpdef int readByte(self, bint unsigned = ?) except INT_ERROR
@@ -28,13 +28,13 @@ cdef class ByteReader:
 
 cdef class ByteWriter:
     cdef void * stream
-    
+
     cdef void writeSize(self, char * data, int size)
     cpdef write(self, data)
     cpdef writeByte(self, int value, bint unsigned = ?)
-    cpdef writeShort(self, int value, bint unsigned = ?, 
+    cpdef writeShort(self, int value, bint unsigned = ?,
                      bint big_endian = ?)
-    cpdef writeInt(self, long long value, bint unsigned = ?, 
+    cpdef writeInt(self, long long value, bint unsigned = ?,
                    bint big_endian = ?)
     cpdef writeFloat(self, float value, bint big_endian = ?)
     cpdef writeStringSize(self, char * value, int size)

@@ -10,7 +10,7 @@ from twisted.internet import reactor
 
 def apply_script(protocol, connection, config):
     spawn_protect_time = config.get('spawn_protect_time', 3.0)
-    
+
     class SpawnProtectConnection(connection):
         spawn_timestamp = None
 

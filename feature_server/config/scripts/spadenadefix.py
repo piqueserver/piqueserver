@@ -5,7 +5,7 @@ version 1(2017.01.21)
 """
 def apply_script(protocol, connection, config):
     class SpadenadeConnection(connection):
-    
+
         def on_grenade(self, time_left):
             if(self.world_object.secondary_fire):
                 self.send_chat('Spade-Grenade bug is blocked.')

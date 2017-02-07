@@ -39,13 +39,13 @@ grief_pattern = re.compile(".*(gr.*f.*(ing|er)|grief|destroy).*", re.IGNORECASE)
 aimbot_pattern = re.compile(".*(aim|bot|ha(ck|x)|cheat).*", re.IGNORECASE)
 
 def slur_match(player, msg):
-	return (not slur_pattern.match(msg) is None)
+    return (not slur_pattern.match(msg) is None)
 
 def grief_match(player, msg):
-	return (not grief_pattern.match(msg) is None)
+    return (not grief_pattern.match(msg) is None)
 
 def aimbot_match(player, msg):
-	return (not aimbot_pattern.match(msg) is None)
+    return (not aimbot_pattern.match(msg) is None)
 
 @admin
 def badmin(connection, var=None):
@@ -182,9 +182,9 @@ def apply_script(protocol, connection, config):
 
     class BadminConnection(connection):
         def on_chat(self, value, global_message):
-			if slur_match(self, value) and LANGUAGE_FILTER_ENABLED == True:
-				reactor.callLater(1.0, send_slur_nick, self)
-			return connection.on_chat(self, value, global_message)
+            if slur_match(self, value) and LANGUAGE_FILTER_ENABLED == True:
+                reactor.callLater(1.0, send_slur_nick, self)
+            return connection.on_chat(self, value, global_message)
     class BadminProtocol(protocol):
         def start_votekick(self, connection, player, reason = None):
             if reason == None and BLANK_VOTEKICK_ENABLED == True:

@@ -971,7 +971,7 @@ for command_func in command_list:
 try:
     import pygeoip
     database = pygeoip.GeoIP(os.path.join(cfg.config_dir, 'data/GeoLiteCity.dat'))
-    
+
     @name('from')
     def where_from(connection, value = None):
         if value is None:

@@ -1957,4 +1957,3 @@ class IPv6Network(_BaseV6, _BaseNet):
     @property
     def with_netmask(self):
         return self.with_prefixlen
-
