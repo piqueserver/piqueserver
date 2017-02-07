@@ -261,11 +261,11 @@ def format_name_color(player):
             '%s #%s' % (player.name, player.player_id))
 
 
-def irc(func):
+def restrict_irc(func):
     return commands.restrict(func, 'irc')
 
 
-@irc
+@restrict_irc
 def who(connection):
     protocol = connection.protocol
     player_count = len(protocol.players)
@@ -295,14 +295,14 @@ def who(connection):
             connection.me(msg)
 
 
-@irc
+@restrict_irc
 def score(connection):
     connection.me("scores: Blue %s - Green %s" % (
         connection.protocol.blue_team.score,
         connection.protocol.green_team.score))
 
 
-@irc
+@restrict_irc
 def alias(connection, value=None):
     aliases = connection.factory.aliases
     unaliased_name = connection.unaliased_name
@@ -318,7 +318,7 @@ def alias(connection, value=None):
     connection.me(message)
 
 
-@irc
+@restrict_irc
 def unalias(connection):
     aliases = connection.factory.aliases
     unaliased_name = connection.unaliased_name
@@ -330,7 +330,7 @@ def unalias(connection):
     connection.me(message)
 
 
-@irc
+@restrict_irc
 def colors(connection):
     connection.colors = not connection.colors
     if connection.colors:

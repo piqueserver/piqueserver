@@ -17,7 +17,6 @@
 
 from twisted.cred import portal, checkers
 from twisted.conch import manhole, manhole_ssh
-from twisted.internet import reactor
 
 
 def create_remote_factory(namespace, users):

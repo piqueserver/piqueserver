@@ -63,7 +63,7 @@ class NetworkDict(object):
     def __len__(self):
         return len(self.networks)
 
-    def __delitem__(self, key, value):
+    def __delitem__(self, key):
         ip = get_network(key)
         self.networks = [item for item in self.networks if ip not in item]
 

@@ -456,7 +456,7 @@ class FeatureTeam(Team):
 
 
 class EndCall(object):
-    active = True
+    _active = True
 
     def __init__(self, protocol, delay, func, *arg, **kw):
         self.protocol = protocol
@@ -489,10 +489,10 @@ class EndCall(object):
     def cancel(self):
         self.set(None)
         self.protocol.end_calls.remove(self)
-        self.active = False
+        self._active = False
 
     def active(self):
-        return self.active and (self.call and self.call.active())
+        return self._active and (self.call and self.call.active())
 
 
 class FeatureProtocol(ServerProtocol):
@@ -544,6 +544,7 @@ class FeatureProtocol(ServerProtocol):
         self.advance_on_win = int(config.get('advance_on_win', False))
         self.win_count = itertools.count(1)
         self.bans = NetworkDict()
+        # TODO: check if this is actually working and not silently failing
         try:
             self.bans.read_list(json.load(open(os.path.join(cfg.config_dir, 'bans.txt'), 'rb')))
         except IOError:
@@ -775,7 +776,7 @@ class FeatureProtocol(ServerProtocol):
             if (x, y, z) not in self.user_blocks:
                 return True
         if self.god_blocks is not None:
-            if (x, y, z) in self.god_blocks:
+            if (x, y, z) in self.god_blocks: # pylint: disable=unsupported-membership-test
                 return True
         map_is_indestructable = self.map_info.is_indestructable
         if map_is_indestructable is not None:

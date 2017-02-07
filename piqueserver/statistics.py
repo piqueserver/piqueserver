@@ -15,13 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
+import hashlib
+
 from twisted.internet.protocol import (Protocol, ReconnectingClientFactory,
                                        ServerFactory)
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred, succeed
 from twisted.protocols.basic import Int16StringReceiver
-import json
-import hashlib
 
 CONNECTION_TIMEOUT = 5
 DEFAULT_PORT = 32880
@@ -164,7 +165,9 @@ if __name__ == '__main__':
 
         def check_user(self, name, password):
             print 'Checking user name/pass (%s, %s)' % (name, password)
-            return succeed()
+            # TODO: pylint thinks this function should have an argument
+            #       check it out
+            return succeed() # pylint: disable=no-value-for-parameter
 
     class TestFactory(StatsFactory):
         protocol = TestServer

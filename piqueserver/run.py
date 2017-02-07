@@ -17,7 +17,7 @@ def copy_config():
     print('Attempting to copy example config to %s (origin: %s).' % (cfg.config_dir, config_source))
     try:
         shutil.copytree(config_source, cfg.config_dir)
-    except Exception as e:
+    except Exception as e: # pylint: disable=broad-except
         print(e)
         sys.exit(1)
 

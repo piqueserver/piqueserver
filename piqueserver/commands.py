@@ -795,11 +795,12 @@ def change_planned_map(connection, *pre_maps):
     if not maps:
         return 'Invalid map name'
 
-    map = maps[0]
+    planned_map = maps[0]
     # XXX: check_rotation takes a second argument - load_dir
     #      this command must be currently broken
-    protocol.planned_map = check_rotation([map])[0]
-    protocol.send_chat('%s changed next map to %s' % (name, map), irc=True)
+    # protocol.planned_map = check_rotation([planned_map])[0]
+    # protocol.send_chat('%s changed next map to %s' % (name, planned_map), irc=True)
+    protocol.send_chat('map command currently broken', irc=True)
 
 
 @name('rotation')
