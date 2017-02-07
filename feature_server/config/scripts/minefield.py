@@ -29,7 +29,7 @@ extensions = {
 Support thread: http://buildandshoot.com/viewtopic.php?f=19&t=8089
 Script location: https://github.com/learn-more/pysnip/blob/master/scripts/minefield.py
 """
-#todo: reset intel in minefield
+# todo: reset intel in minefield
 
 MINEFIELD_VERSION = 1.6
 
@@ -48,7 +48,7 @@ KILL_MESSAGES = [
     '{player} should not walk into a minefield',
     '{player} was not carefull enough in the minefield',
     '{player} thought those mines were toys!',
-    #JoJoe's messages
+    # JoJoe's messages
     '{player} showed his team the minefield. What a hero!',
     '{player} should not use their spade to defuse mines.',
     '{player} made a huge mess in the minefield.',
@@ -71,7 +71,9 @@ MINEFIELD_DBG_MESSAGE = 'Block is at x={x}, y={y}, z={z}, in field:"{m}"'
 MINEFIELD_TYPE_STRING = '{type} field({left}, {top}, {right}, {bottom})'
 MINEFIELD_MINE_ENT = 'mine'
 
+
 class Minefield:
+
     def __init__(self, ext):
         self.isBorder = ext.get('border', False)
         area = ext.get('area', False)
@@ -86,7 +88,7 @@ class Minefield:
 
     def __str__(self):
         type = 'Border' if self.isBorder else 'Inner'
-        return MINEFIELD_TYPE_STRING.format(type = type, left = self.left, top = self.top, right = self.right, bottom = self.bottom)
+        return MINEFIELD_TYPE_STRING.format(type=type, left=self.left, top=self.top, right=self.right, bottom=self.bottom)
 
     def isValid(self):
         return self.left < self.right and self.top < self.bottom
@@ -109,25 +111,25 @@ class Minefield:
         block_action.player_id = 32
         protocol.map.set_point(x, y, z, color)
         block_action.value = DESTROY_BLOCK
-        protocol.send_contained(block_action, save = True)
+        protocol.send_contained(block_action, save=True)
         block_action.value = BUILD_BLOCK
-        protocol.send_contained(block_action, save = True)
+        protocol.send_contained(block_action, save=True)
 
     def updateColor(self, protocol, color):
         set_color.value = make_color(*color)
         set_color.player_id = 32
-        protocol.send_contained(set_color, save = True)
+        protocol.send_contained(set_color, save=True)
         return color
 
     def spawnDecal(self, connection, x, y, z):
         protocol = connection.protocol
-        c = self.updateColor(protocol, (0,0,0))
+        c = self.updateColor(protocol, (0, 0, 0))
         self.singleBlock(protocol, x, y, z, c)
-        c = self.updateColor(protocol, (50,50,50))
-        for cc in ((0,1), (1,0), (-1,0), (0,-1)):
+        c = self.updateColor(protocol, (50, 50, 50))
+        for cc in ((0, 1), (1, 0), (-1, 0), (0, -1)):
             self.singleBlock(protocol, x + cc[0], y + cc[1], z, c)
-        c = self.updateColor(protocol, (100,100,100))
-        for cc in ((1,1), (1,-1), (-1,1), (-1,-1)):
+        c = self.updateColor(protocol, (100, 100, 100))
+        for cc in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
             self.singleBlock(protocol, x + cc[0], y + cc[1], z, c)
 
     def spawnNade(self, connection, x, y, z):
@@ -136,7 +138,8 @@ class Minefield:
         position = Vertex3(x, y, z)
         orientation = None
         velocity = Vertex3(0, 0, 0)
-        grenade = protocol.world.create_object(Grenade, fuse, position, orientation, velocity, connection.grenade_exploded)
+        grenade = protocol.world.create_object(
+            Grenade, fuse, position, orientation, velocity, connection.grenade_exploded)
         grenade.name = MINEFIELD_MINE_ENT
         grenade_packet.value = grenade.fuse
         grenade_packet.player_id = 32
@@ -146,24 +149,28 @@ class Minefield:
         if z >= 61.5:
             callLater(fuse + 0.1, self.spawnDecal, connection, x, y, z)
 
+
 def parseField(ext):
     m = Minefield(ext)
     if m.isValid():
         return m
     return None
 
+
 @admin
 def minedebug(connection):
     proto = connection.protocol
     proto.minefield_debug = not proto.minefield_debug
     message = 'Minefield is now in debug' if proto.minefield_debug else 'Minefield is no longer in debug'
-    proto.send_chat(message, global_message = True)
+    proto.send_chat(message, global_message=True)
     return 'You toggled minefield debug'
 
 add(minedebug)
 
+
 def apply_script(protocol, connection, config):
     class MineConnection(connection):
+
         def on_position_update(self):
             ret = connection.on_position_update(self)
             if self.protocol.minefield_debug:
@@ -172,12 +179,13 @@ def apply_script(protocol, connection, config):
             x, y, z = int(pos.x), int(pos.y), int(pos.z) + 3
             if self.world_object.crouch:
                 z -= 1
-            self.protocol.check_mine(self, x, y, z, spawnUp = True)
+            self.protocol.check_mine(self, x, y, z, spawnUp=True)
             return ret
 
         def on_block_destroy(self, x, y, z, mode):
             if self.protocol.minefield_debug:
-                message = MINEFIELD_DBG_MESSAGE.format(x = x, y = y, z = z, m = self.protocol.minefieldAt(x, y, z) or 'None')
+                message = MINEFIELD_DBG_MESSAGE.format(
+                    x=x, y=y, z=z, m=self.protocol.minefieldAt(x, y, z) or 'None')
                 self.send_chat(message)
                 return False
             if mode == DESTROY_BLOCK or mode == SPADE_DESTROY:
@@ -190,8 +198,9 @@ def apply_script(protocol, connection, config):
         def on_kill(self, killer, type, grenade):
             if grenade and grenade.name == MINEFIELD_MINE_ENT:
                 self.protocol.mine_kills += 1
-                message = choice(KILL_MESSAGES).format(player = self.name, mine_kills = self.protocol.mine_kills)
-                self.protocol.send_chat(message, global_message = True)
+                message = choice(KILL_MESSAGES).format(
+                    player=self.name, mine_kills=self.protocol.mine_kills)
+                self.protocol.send_chat(message, global_message=True)
             connection.on_kill(self, killer, type, grenade)
 
     class MineProtocol(protocol):
@@ -236,7 +245,7 @@ def apply_script(protocol, connection, config):
                         return m
             return None
 
-        def check_mine(self, connection, x, y, z, waitTime = 0.1, spawnUp = False):
+        def check_mine(self, connection, x, y, z, waitTime=0.1, spawnUp=False):
             m = self.minefieldAt(x, y, z)
             if m:
                 if spawnUp:

@@ -10,6 +10,7 @@ from pyspades.constants import *
 
 BK_FREE, BK_FRIENDLY, BK_ENEMY_FAR, BK_ENEMY_NEAR, BK_UNDO = range(5)
 
+
 def apply_script(protocol, connection, config):
 
     class ZOCConnection(connection):
@@ -30,18 +31,18 @@ def apply_script(protocol, connection, config):
             are too distant."""
             if not self.god:
                 zoc = self.zoc_type(x, y, z)
-                if zoc==BK_ENEMY_FAR:
+                if zoc == BK_ENEMY_FAR:
                     self.send_chat(
                         "You're too far away to attack this area!")
                     return False
-                elif zoc==BK_FRIENDLY:
+                elif zoc == BK_FRIENDLY:
                     cost = self.protocol.zoc_block_cost
                     if mode == SPADE_DESTROY:
                         cost *= 3
                     elif mode == GRENADE_DESTROY:
                         cost = self.protocol.zoc_grenade_cost
                     if self.zoc_destruction_points < cost:
-                        self.send_chat("Stop destroying your territory! "+
+                        self.send_chat("Stop destroying your territory! " +
                                        "Go fight the enemy!")
                         return False
                     else:
@@ -50,7 +51,7 @@ def apply_script(protocol, connection, config):
 
         def own_block(self, x, y, z):
             for position in self.block_undo:
-                if position[0]==x and position[1]==y and position[2]==z:
+                if position[0] == x and position[1] == y and position[2] == z:
                     return True
             return False
 
@@ -71,7 +72,7 @@ def apply_script(protocol, connection, config):
         def zoc_type(self, x, y, z):
             for zoc in self.protocol.zone_cache:
                 if (zoc['left'] <= x and zoc['right'] >= x and
-                    zoc['top'] <= y and zoc['bottom'] >= y):
+                        zoc['top'] <= y and zoc['bottom'] >= y):
                     if zoc['team'] is self.team:
                         if self.own_block(x, y, z):
                             return BK_UNDO
@@ -110,11 +111,11 @@ def apply_script(protocol, connection, config):
                 self.zoc_loop.start(5.0)
 
         def _build_zoc(self, x, y, team):
-            return {'team':team,
-                    'left':x - self.zoc_radius,
-                    'right':x + self.zoc_radius,
-                    'top':y - self.zoc_radius,
-                    'bottom':y + self.zoc_radius}
+            return {'team': team,
+                    'left': x - self.zoc_radius,
+                    'right': x + self.zoc_radius,
+                    'top': y - self.zoc_radius,
+                    'bottom': y + self.zoc_radius}
 
         def zoc_tick(self):
             self.cache_zones_of_control()
@@ -128,12 +129,12 @@ def apply_script(protocol, connection, config):
             if self.game_mode == CTF_MODE:
                 for flag in [self.green_team.flag, self.blue_team.flag]:
                     if flag.player is None:
-                        zones.append(self._build_zoc(flag.x,flag.y,flag.team))
+                        zones.append(self._build_zoc(flag.x, flag.y, flag.team))
                 for base in [self.green_team.base, self.blue_team.base]:
-                    zones.append(self._build_zoc(base.x,base.y,base.team))
+                    zones.append(self._build_zoc(base.x, base.y, base.team))
             elif self.game_mode == TC_MODE:
                 for flag in self.entities:
-                    zones.append(self._build_zoc(flag.x,flag.y,flag.team))
+                    zones.append(self._build_zoc(flag.x, flag.y, flag.team))
             self.zone_cache = zones
 
         def on_update_entity(self, entity):

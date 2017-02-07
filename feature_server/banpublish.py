@@ -15,13 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from twisted.internet import reactor
-from twisted.web import static, server
-from twisted.web.resource import Resource
-from string import Template
 import json
 
+from twisted.internet import reactor
+from twisted.web import server
+from twisted.web.resource import Resource
+
+
 class PublishResource(Resource):
+
     def __init__(self, factory):
         self.factory = factory
         Resource.__init__(self)
@@ -32,7 +34,9 @@ class PublishResource(Resource):
     def render_GET(self, request):
         return self.factory.json_bans
 
+
 class PublishServer(object):
+
     def __init__(self, protocol, config):
         self.protocol = protocol
         publish_resource = PublishResource(self)
@@ -44,5 +48,5 @@ class PublishServer(object):
         bans = []
         for network, (name, reason, timestamp) in self.protocol.bans.iteritems():
             if timestamp is None or reactor.seconds() < timestamp:
-                bans.append({"ip" : network, "reason" : reason})
+                bans.append({"ip": network, "reason": reason})
         self.json_bans = json.dumps(bans)

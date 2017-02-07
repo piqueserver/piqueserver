@@ -38,6 +38,7 @@ HOST = 'master.buildandshoot.com'
 if STAGING:
     PORT = 32885
 
+
 class AddServer(Loader):
     __slots__ = ['count', 'max_players', 'name', 'port', 'game_mode', 'map']
 
@@ -64,6 +65,7 @@ class AddServer(Loader):
             reader.writeByte(self.count, True)
 
 add_server = AddServer()
+
 
 class MasterConnection(BaseConnection):
     disconnect_callback = None
@@ -108,8 +110,10 @@ IP_GETTER = 'http://services.buildandshoot.com/getip'
 # http://checkip.dyndns.com/
 # http://icanhazip.com/
 
-def get_external_ip(interface = ''):
-    return getPage(IP_GETTER, bindAddress = (interface, 0))
+
+def get_external_ip(interface=''):
+    return getPage(IP_GETTER, bindAddress=(interface, 0))
+
 
 def get_master_connection(protocol):
     defer = Deferred()

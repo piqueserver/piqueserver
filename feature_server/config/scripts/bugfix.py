@@ -1,6 +1,7 @@
 # bugfix.py 1411328459
 def apply_script(protocol, connection, config):
     class BugFixConnection(connection):
+
         def on_login(self, name):
             # prevent invisible client, fix by topo
             if len(name) > 15:
@@ -12,7 +13,7 @@ def apply_script(protocol, connection, config):
             if value is False:
                 return value
             for point in points:
-                x,y,z = point
+                x, y, z = point
                 if x < 0 or x > 511 or y < 0 or y > 511 or z < 0 or z > 61:
                     return False
             return value

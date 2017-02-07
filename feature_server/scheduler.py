@@ -22,7 +22,9 @@ try:
 except ImportError:
     # python 2.6 support (sigh)
     from weakref import WeakKeyDictionary
+
     class WeakSet(object):
+
         def __init__(self):
             self._dict = WeakKeyDictionary()
 
@@ -42,7 +44,9 @@ except ImportError:
         def __len__(self):
             return len(self._dict)
 
+
 class Scheduler(object):
+
     def __init__(self, protocol):
         self.protocol = protocol
         self.calls = WeakSet()

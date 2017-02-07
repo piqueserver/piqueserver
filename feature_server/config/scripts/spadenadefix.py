@@ -3,6 +3,8 @@ spadenadefix.py - blocks spade-nade bug
 by kmsi(kmsiapps@gmail.com)
 version 1(2017.01.21)
 """
+
+
 def apply_script(protocol, connection, config):
     class SpadenadeConnection(connection):
 

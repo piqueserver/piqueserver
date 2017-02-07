@@ -11,6 +11,7 @@ WATER_SPAWNS = False
 
 HIDE_POS = (0, 0, 63)
 
+
 def apply_script(protocol, connection, config):
     class FreeForAllProtocol(protocol):
         free_for_all = False

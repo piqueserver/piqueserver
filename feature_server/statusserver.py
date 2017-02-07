@@ -24,7 +24,8 @@ from jinja2 import Environment, PackageLoader
 import json
 from cStringIO import StringIO
 
-OVERVIEW_UPDATE_INTERVAL = 1 * 60 # 1 minute
+OVERVIEW_UPDATE_INTERVAL = 1 * 60  # 1 minute
+
 
 class CommonResource(Resource):
     protocol = None
@@ -36,7 +37,9 @@ class CommonResource(Resource):
         self.parent = parent
         Resource.__init__(self)
 
+
 class JSONPage(CommonResource):
+
     def render_GET(self, request):
         protocol = self.protocol
 
@@ -52,35 +55,38 @@ class JSONPage(CommonResource):
             players.append(player_data)
 
         dictionary = {
-            "serverName" : protocol.name,
+            "serverName": protocol.name,
             "serverVersion": protocol.version,
-            "serverUptime" : reactor.seconds() - protocol.start_time,
-            "gameMode" : protocol.game_mode_name,
-            "map" : {
+            "serverUptime": reactor.seconds() - protocol.start_time,
+            "gameMode": protocol.game_mode_name,
+            "map": {
                 "name": protocol.map_info.name,
                 "version": protocol.map_info.version,
                 "author": protocol.map_info.author
             },
-            "scripts" : protocol.config.get("scripts", []),
-            "players" : players,
+            "scripts": protocol.config.get("scripts", []),
+            "players": players,
             "maxPlayers": protocol.max_players,
-            "scores" : {
+            "scores": {
                 "currentBlueScore": protocol.blue_team.score,
                 "currentGreenScore": protocol.green_team.score,
-            "maxScore": protocol.max_score}
-            }
+                "maxScore": protocol.max_score}
+        }
 
         return json.dumps(dictionary)
 
+
 class StatusPage(CommonResource):
+
     def render_GET(self, request):
         protocol = self.protocol
         status = self.env.get_template('status.html')
-        return status.render(server = self.protocol, reactor = reactor).encode(
+        return status.render(server=self.protocol, reactor=reactor).encode(
             'utf-8', 'replace')
 
 
 class MapOverview(CommonResource):
+
     def render_GET(self, request):
         overview = self.parent.get_overview()
         request.setHeader("content-type", 'png/image')
@@ -90,12 +96,14 @@ class MapOverview(CommonResource):
         return overview
     render_HEAD = render_GET
 
+
 class StatusServerFactory(object):
     last_overview = None
     last_map_name = None
     overview = None
+
     def __init__(self, protocol, config):
-        self.env = Environment(loader = PackageLoader('piqueserver.web'))
+        self.env = Environment(loader=PackageLoader('piqueserver.web'))
         self.protocol = protocol
         root = Resource()
         root.putChild('json', JSONPage(self))
@@ -113,9 +121,9 @@ class StatusServerFactory(object):
     def get_overview(self):
         current_time = reactor.seconds()
         if (self.last_overview is None or
-        self.last_map_name != self.protocol.map_info.name or
-        current_time - self.last_overview > OVERVIEW_UPDATE_INTERVAL):
-            overview = self.protocol.map.get_overview(rgba = True)
+            self.last_map_name != self.protocol.map_info.name or
+                current_time - self.last_overview > OVERVIEW_UPDATE_INTERVAL):
+            overview = self.protocol.map.get_overview(rgba=True)
             image = Image.frombytes('RGBA', (512, 512), overview)
             data = StringIO()
             image.save(data, 'png')

@@ -7,25 +7,28 @@ Maintainer: hompy
 from piqueserver.commands import add, admin
 from pyspades.common import coordinates
 
+
 @admin
-def protect(connection, value = None):
+def protect(connection, value=None):
     protocol = connection.protocol
     if value is None:
         protocol.protected = None
-        protocol.send_chat('All areas unprotected', irc = True)
+        protocol.send_chat('All areas unprotected', irc=True)
     else:
         if protocol.protected is None:
             protocol.protected = set()
         pos = coordinates(value)
         protocol.protected.symmetric_difference_update([pos])
         message = 'The area at %s is now %s' % (value.upper(),
-            'protected' if pos in protocol.protected else 'unprotected')
-        protocol.send_chat(message, irc = True)
+                                                'protected' if pos in protocol.protected else 'unprotected')
+        protocol.send_chat(message, irc=True)
 
 add(protect)
 
+
 def apply_script(protocol, connection, config):
     class ProtectConnection(connection):
+
         def _block_available(self, x, y, z):
             if not self.god and self.protocol.is_protected(x, y, z):
                 return False
@@ -47,7 +50,7 @@ def apply_script(protocol, connection, config):
 
         def on_map_change(self, map):
             self.protected = set(coordinates(s) for s in
-                getattr(self.map_info.info, 'protected', []))
+                                 getattr(self.map_info.info, 'protected', []))
             protocol.on_map_change(self, map)
 
         def is_indestructable(self, x, y, z):

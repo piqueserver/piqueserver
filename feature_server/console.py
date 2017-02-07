@@ -16,10 +16,12 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
-import commands
+
 from twisted.internet import reactor
 from twisted.protocols.basic import LineReceiver
+
 from pyspades.types import AttributeSet
+import commands
 
 stdout = sys.__stdout__
 
@@ -31,6 +33,7 @@ if sys.platform == 'win32':
         disconnecting = False
         interval = 0.01
         input = u''
+
         def __init__(self, protocol):
             self.protocol = protocol
             protocol.makeConnection(self)
@@ -39,7 +42,7 @@ if sys.platform == 'win32':
         def get_input(self):
             while msvcrt.kbhit():
                 c = msvcrt.getwch()
-                if c == u'\r': # new line
+                if c == u'\r':  # new line
                     c = u'\n'
                     stdout.write(c)
                     self.input += c
@@ -48,7 +51,7 @@ if sys.platform == 'win32':
                 elif c in (u'\xE0', u'\x00'):
                     # ignore special characters
                     msvcrt.getwch()
-                elif c == u'\x08': # delete
+                elif c == u'\x08':  # delete
                     self.input = self.input[:-1]
                     stdout.write('\x08 \x08')
                 else:
@@ -63,6 +66,7 @@ if sys.platform == 'win32':
             stdout.write(''.join(seq))
 else:
     from twisted.internet.stdio import StandardIO
+
 
 class ConsoleInput(LineReceiver):
     name = 'Console'
@@ -84,6 +88,7 @@ class ConsoleInput(LineReceiver):
                 print result
         else:
             self.protocol.send_chat(line)
+
 
 def create_console(protocol):
     console = ConsoleInput(protocol)

@@ -5,11 +5,12 @@
 import os
 import sys
 
+# pylint: disable=invalid-name
+
 server_version = '%s - %s' % (sys.platform, '0.0.1a')
 config = {}
 pkg_name = "piqueserver"
 config_file = 'config.json'
 
-prefix = os.environ.get('XDG_CONFIG_HOME', '~/.config')
-config_path = prefix + "/piqueserver"
+config_path = os.environ.get('XDG_CONFIG_HOME', '~/.config') + "/piqueserver"
 config_dir = os.path.expanduser(config_path)

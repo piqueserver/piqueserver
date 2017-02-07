@@ -28,18 +28,21 @@ S_ROLLBACK_TIME_TAKEN = 'Time taken: {seconds:.3}s'
 
 NON_SURFACE_COLOR = (0, 0, 0)
 
+
 @admin
-def rollmap(connection, mapname = None, value = None):
+def rollmap(connection, mapname=None, value=None):
     start_x, start_y, end_x, end_y = 0, 0, 512, 512
     if value is not None:
         start_x, start_y = coordinates(value)
         end_x, end_y = start_x + 64, start_y + 64
     return connection.protocol.start_rollback(connection, mapname,
-        start_x, start_y, end_x, end_y)
+                                              start_x, start_y, end_x, end_y)
+
 
 @admin
-def rollback(connection, value = None):
-    return rollmap(connection, value = value)
+def rollback(connection, value=None):
+    return rollmap(connection, value=value)
+
 
 @admin
 def rollbackcancel(connection):
@@ -48,10 +51,12 @@ def rollbackcancel(connection):
 for func in (rollmap, rollback, rollbackcancel):
     add(func)
 
+
 def apply_script(protocol, connection, config):
     rollback_on_game_end = config.get('rollback_on_game_end', False)
 
     class RollbackConnection(connection):
+
         def on_block_destroy(self, x, y, z, value):
             if self.protocol.rollback_in_progress:
                 return False
@@ -59,9 +64,9 @@ def apply_script(protocol, connection, config):
 
     class RollbackProtocol(protocol):
         rollback_in_progress = False
-        rollback_max_rows = 10 # per 'cycle', intended to cap cpu usage
-        rollback_max_packets = 180 # per 'cycle' cap for (unique packets * players)
-        rollback_max_unique_packets = 12 # per 'cycle', each block op is at least 1
+        rollback_max_rows = 10  # per 'cycle', intended to cap cpu usage
+        rollback_max_packets = 180  # per 'cycle' cap for (unique packets * players)
+        rollback_max_unique_packets = 12  # per 'cycle', each block op is at least 1
         rollback_time_between_cycles = 0.06
         rollback_time_between_progress_updates = 10.0
         rollback_start_time = None
@@ -72,7 +77,7 @@ def apply_script(protocol, connection, config):
         # rollback
 
         def start_rollback(self, connection, mapname, start_x, start_y,
-            end_x, end_y, ignore_indestructable = True):
+                           end_x, end_y, ignore_indestructable=True):
             if self.rollback_in_progress:
                 return S_ROLLBACK_IN_PROGRESS
             if mapname is None:
@@ -86,11 +91,11 @@ def apply_script(protocol, connection, config):
                 except MapNotFound as error:
                     return error.message
             name = (connection.name if connection is not None
-                else S_AUTOMATIC_ROLLBACK_PLAYER_NAME)
-            message = S_ROLLBACK_COMMENCED.format(player = name)
-            self.send_chat(message, irc = True)
+                    else S_AUTOMATIC_ROLLBACK_PLAYER_NAME)
+            message = S_ROLLBACK_COMMENCED.format(player=name)
+            self.send_chat(message, irc=True)
             self.packet_generator = self.create_rollback_generator(self.map,
-                map, start_x, start_y, end_x, end_y, ignore_indestructable)
+                                                                   map, start_x, start_y, end_x, end_y, ignore_indestructable)
             self.rollback_in_progress = True
             self.rollback_start_time = time.time()
             self.rollback_last_chat = self.rollback_start_time
@@ -102,7 +107,7 @@ def apply_script(protocol, connection, config):
         def cancel_rollback(self, connection):
             if not self.rollback_in_progress:
                 return S_NO_ROLLBACK_IN_PROGRESS
-            result = S_ROLLBACK_CANCELLED.format(player = connection.name)
+            result = S_ROLLBACK_CANCELLED.format(player=connection.name)
             self.end_rollback(result)
 
         def end_rollback(self, result):
@@ -111,8 +116,8 @@ def apply_script(protocol, connection, config):
             self.cycle_call = None
             self.packet_generator = None
             self.update_entities()
-            message = S_ROLLBACK_ENDED.format(result = result)
-            self.send_chat(message, irc = True)
+            message = S_ROLLBACK_ENDED.format(result=result)
+            self.send_chat(message, irc=True)
 
         def rollback_cycle(self):
             if not self.rollback_in_progress:
@@ -132,28 +137,28 @@ def apply_script(protocol, connection, config):
                     rows += (sent == 0)
                 self.rollback_rows += rows
                 if (time.time() - self.rollback_last_chat >
-                    self.rollback_time_between_progress_updates):
+                        self.rollback_time_between_progress_updates):
                     self.rollback_last_chat = time.time()
                     progress = float(self.rollback_rows) / self.rollback_total_rows
                     if progress < 1.0:
-                        message = S_ROLLBACK_PROGRESS.format(percent = progress)
+                        message = S_ROLLBACK_PROGRESS.format(percent=progress)
                         self.send_chat(message)
                     else:
                         self.send_chat(S_ROLLBACK_COLOR_PASS)
             except (StopIteration):
                 elapsed = time.time() - self.rollback_start_time
-                message = S_ROLLBACK_TIME_TAKEN.format(seconds = elapsed)
+                message = S_ROLLBACK_TIME_TAKEN.format(seconds=elapsed)
                 self.end_rollback(message)
 
         def create_rollback_generator(self, cur, new, start_x, start_y,
-            end_x, end_y, ignore_indestructable):
+                                      end_x, end_y, ignore_indestructable):
             surface = {}
             block_action = BlockAction()
             block_action.player_id = 31
             set_color = SetColor()
             set_color.value = make_color(*NON_SURFACE_COLOR)
             set_color.player_id = 31
-            self.send_contained(set_color, save = True)
+            self.send_contained(set_color, save=True)
             old = cur.copy()
             check_protected = hasattr(protocol, 'protected')
             for x in xrange(start_x, end_x):
@@ -168,7 +173,7 @@ def apply_script(protocol, connection, config):
                         new_solid = new.get_solid(x, y, z)
                         if cur_solid and not new_solid:
                             if (not ignore_indestructable and
-                                self.is_indestructable(x, y, z)):
+                                    self.is_indestructable(x, y, z)):
                                 continue
                             else:
                                 action = DESTROY_BLOCK
@@ -193,25 +198,25 @@ def apply_script(protocol, connection, config):
                         if action is not None:
                             block_action.z = z
                             block_action.value = action
-                            self.send_contained(block_action, save = True)
+                            self.send_contained(block_action, save=True)
                             yield 1
                 yield 0
             last_color = None
             block_action.value = BUILD_BLOCK
             for pos, color in sorted(surface.iteritems(),
-                key = operator.itemgetter(1)):
+                                     key=operator.itemgetter(1)):
                 x, y, z = pos
                 packets_sent = 0
                 if color != last_color:
                     set_color.value = make_color(*color)
-                    self.send_contained(set_color, save = True)
+                    self.send_contained(set_color, save=True)
                     packets_sent += 1
                     last_color = color
                 cur.set_point(x, y, z, color)
                 block_action.x = x
                 block_action.y = y
                 block_action.z = z
-                self.send_contained(block_action, save = True)
+                self.send_contained(block_action, save=True)
                 packets_sent += 1
                 yield packets_sent
 

@@ -7,6 +7,7 @@ fixed by learn_more
 
 from pyspades.collision import vector_collision
 
+
 def apply_script(protocol, connection, config):
     game_mode = config.get('game_mode', 'ctf')
 
@@ -14,6 +15,7 @@ def apply_script(protocol, connection, config):
         return protocol, connection
 
     class ReturnConnection(connection):
+
         def on_flag_take(self):
             self.team.other.flag.out = True
             return connection.on_flag_take(self)
@@ -31,10 +33,11 @@ def apply_script(protocol, connection, config):
                     flag.set(*flag.start)
                     flag.update()
                     self.protocol.send_chat('%s intel was returned by %s!' % (
-                        self.team.name, self.name), global_message = None)
+                        self.team.name, self.name), global_message=None)
             return connection.on_position_update(self)
 
     class ReturnProtocol(protocol):
+
         def set_map(self, map):
             protocol.set_map(self, map)
             for team in self.teams.itervalues():

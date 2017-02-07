@@ -8,11 +8,14 @@ from twisted.internet import reactor
 from pyspades.vxl import VXLData
 import os
 
+
 def get_name(map):
     return './maps/%s.saved.vxl' % (map.rot_info.name)
 
+
 def apply_script(protocol, connection, config):
     class MapSaveProtocol(protocol):
+
         def __init__(self, *arg, **kw):
             protocol.__init__(self, *arg, **kw)
             reactor.addSystemEventTrigger('before', 'shutdown', self.save_map)

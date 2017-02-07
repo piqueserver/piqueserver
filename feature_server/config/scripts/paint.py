@@ -15,8 +15,9 @@ from piqueserver.commands import add, admin, get_player
 
 PAINT_RAY_LENGTH = 32.0
 
+
 @admin
-def paint(connection, player = None):
+def paint(connection, player=None):
     protocol = connection.protocol
     if player is not None:
         player = get_player(protocol, player)
@@ -35,6 +36,7 @@ def paint(connection, player = None):
 
 add(paint)
 
+
 def paint_block(protocol, player, x, y, z, color):
     if x < 0 or y < 0 or z < 0 or x >= 512 or y >= 512 or z >= 62:
         return False
@@ -46,10 +48,11 @@ def paint_block(protocol, player, x, y, z, color):
     block_action.z = z
     block_action.player_id = player.player_id
     block_action.value = DESTROY_BLOCK
-    protocol.send_contained(block_action, save = True)
+    protocol.send_contained(block_action, save=True)
     block_action.value = BUILD_BLOCK
-    protocol.send_contained(block_action, save = True)
+    protocol.send_contained(block_action, save=True)
     return True
+
 
 def paint_ray(player):
     if player.tool != BLOCK_TOOL:
@@ -60,6 +63,7 @@ def paint_ray(player):
         if player.on_block_build_attempt(x, y, z) == False:
             return
         paint_block(player.protocol, player, x, y, z, player.color)
+
 
 def apply_script(protocol, connection, config):
     class PaintConnection(connection):

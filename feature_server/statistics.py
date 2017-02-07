@@ -16,7 +16,7 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from twisted.internet.protocol import (Protocol, ReconnectingClientFactory,
-    ServerFactory)
+                                       ServerFactory)
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred, succeed
 from twisted.protocols.basic import Int16StringReceiver
@@ -26,10 +26,13 @@ import hashlib
 CONNECTION_TIMEOUT = 5
 DEFAULT_PORT = 32880
 
+
 def hash_password(value):
-    return value # hashlib.md5(value).hexdigest()
+    return value  # hashlib.md5(value).hexdigest()
+
 
 class StatsProtocol(Int16StringReceiver):
+
     def stringReceived(self, data):
         self.object_received(json.loads(data))
 
@@ -40,10 +43,12 @@ class StatsProtocol(Int16StringReceiver):
     def object_received(self, obj):
         pass
 
+
 class StatsServer(StatsProtocol):
+
     def connectionMade(self):
         self.timeout_call = reactor.callLater(CONNECTION_TIMEOUT,
-            self.timed_out)
+                                              self.timed_out)
 
     def connectionLost(self, reason):
         if self in self.factory.connections:
@@ -61,7 +66,7 @@ class StatsServer(StatsProtocol):
             else:
                 self.timeout_call.cancel()
                 self.timeout_call = None
-                self.send_object({'type' : 'authed'})
+                self.send_object({'type': 'authed'})
                 self.name = obj['name']
                 self.factory.connections.append(self)
                 self.connection_accepted()
@@ -75,7 +80,7 @@ class StatsServer(StatsProtocol):
                 self.send_login_result)
 
     def send_login_result(self, result):
-        self.send_object({'type' : 'login', 'result' : result})
+        self.send_object({'type': 'login', 'result': result})
 
     def add_kill(self, name):
         pass
@@ -93,6 +98,7 @@ class StatsServer(StatsProtocol):
         self.timeout_call = None
         self.transport.loseConnection()
 
+
 class StatsFactory(ServerFactory):
     protocol = StatsServer
 
@@ -100,14 +106,15 @@ class StatsFactory(ServerFactory):
         self.password = hash_password(password)
         self.connections = []
 
+
 class StatsClient(StatsProtocol):
     server = None
     login_defers = None
 
     def connectionMade(self):
         self.login_defers = []
-        self.send_object({'type' : 'auth', 'name' : self.factory.name,
-            'password' : self.factory.password})
+        self.send_object({'type': 'auth', 'name': self.factory.name,
+                          'password': self.factory.password})
 
     def object_received(self, obj):
         type = obj['type']
@@ -118,18 +125,19 @@ class StatsClient(StatsProtocol):
             defer.callback(obj['result'])
 
     def add_kill(self, name):
-        self.send_object({'type' : 'kill', 'name' : name})
+        self.send_object({'type': 'kill', 'name': name})
 
     def add_death(self, name):
-        self.send_object({'type' : 'death', 'name' : name})
+        self.send_object({'type': 'death', 'name': name})
 
     def login_user(self, name, password):
         defer = Deferred()
         password = hash_password(password)
-        self.send_object({'type' : 'login', 'name' : name,
-            'password' : password})
+        self.send_object({'type': 'login', 'name': name,
+                          'password': password})
         self.login_defers.append(defer)
         return defer
+
 
 class StatsClientFactory(ReconnectingClientFactory):
     protocol = StatsClient
@@ -140,12 +148,14 @@ class StatsClientFactory(ReconnectingClientFactory):
         self.password = hash_password(password)
         self.callback = callback
 
-def connect_statistics(host, port, name, password, callback, interface = ''):
+
+def connect_statistics(host, port, name, password, callback, interface=''):
     reactor.connectTCP(host, port, StatsClientFactory(name, password, callback),
-        bindAddress = (interface, 0))
+                       bindAddress=(interface, 0))
 
 if __name__ == '__main__':
     class TestServer(StatsServer):
+
         def add_kill(self, name):
             print 'Adding kill to', name
 

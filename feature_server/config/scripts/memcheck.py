@@ -12,6 +12,7 @@ import gc
 INTERVAL = 60 * 10
 VERBOSE = False
 
+
 def apply_script(protocol, connection, config):
     def run_gc():
         ret = gc.collect()
@@ -22,5 +23,5 @@ def apply_script(protocol, connection, config):
         print 'Memory leak detected!'
         print 'Contents of gc.garbage:', gc.garbage
     loop = LoopingCall(run_gc)
-    loop.start(INTERVAL, now = False)
+    loop.start(INTERVAL, now=False)
     return protocol, connection

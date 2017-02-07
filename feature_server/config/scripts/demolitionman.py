@@ -10,16 +10,18 @@ from piqueserver.commands import add, admin
 
 DEMOLITION_ENABLED_AT_ROUND_START = False
 
+
 @admin
 def toggledemo(connection):
     connection.protocol.demolitionEnabled = not connection.protocol.demolitionEnabled
     message = 'Demolition is now disabled'
     if connection.protocol.demolitionEnabled:
         message = 'Demolition is now enabled'
-    connection.protocol.send_chat(message, irc = True)
+    connection.protocol.send_chat(message, irc=True)
     return 'ok :)'
 
 add(toggledemo)
+
 
 def apply_script(protocol, connection, config):
     class DemolitionProtocol(protocol):

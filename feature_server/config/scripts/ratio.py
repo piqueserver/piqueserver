@@ -11,6 +11,7 @@ from piqueserver.commands import get_player, add
 RATIO_ON_VOTEKICK = True
 IRC_ONLY = False
 
+
 def ratio(connection, user=None):
     has_msg = "You have"
     if user != None:
@@ -21,12 +22,13 @@ def ratio(connection, user=None):
         has_msg %= connection.name
     if connection not in connection.protocol.players:
         raise KeyError()
-    ratio = connection.ratio_kills/float(max(1,connection.ratio_deaths))
+    ratio = connection.ratio_kills / float(max(1, connection.ratio_deaths))
     ratio_msg = has_msg + (" a kill-death ratio of %.2f" % (ratio))
     return ('%s (%s kills, %s deaths).' %
-        (ratio_msg, connection.ratio_kills, connection.ratio_deaths))
+            (ratio_msg, connection.ratio_kills, connection.ratio_deaths))
 
 add(ratio)
+
 
 def apply_script(protocol, connection, config):
     class RatioConnection(connection):
@@ -41,6 +43,7 @@ def apply_script(protocol, connection, config):
             return connection.on_kill(self, killer, type, grenade)
 
     class RatioProtocol(protocol):
+
         def on_votekick_start(self, instigator, victim, reason):
             result = protocol.on_votekick_start(self, instigator, victim, reason)
             if result is None and RATIO_ON_VOTEKICK:
@@ -48,7 +51,7 @@ def apply_script(protocol, connection, config):
                 if IRC_ONLY:
                     self.irc_say('* ' + message)
                 else:
-                    self.send_chat(message, irc = True)
+                    self.send_chat(message, irc=True)
             return result
 
     return RatioProtocol, RatioConnection

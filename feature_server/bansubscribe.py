@@ -21,13 +21,15 @@ from twisted.internet.defer import DeferredList
 
 from networkdict import NetworkDict
 
-UPDATE_INTERVAL = 5 * 60 # every 5 minute
+UPDATE_INTERVAL = 5 * 60  # every 5 minute
 
 # format is [{"ip" : "1.1.1.1", "reason : "blah"}, ...]
+
 
 class BanManager(object):
     bans = None
     new_bans = None
+
     def __init__(self, protocol, config):
         self.protocol = protocol
         self.urls = [(str(item), name_filter) for (item, name_filter) in

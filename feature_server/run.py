@@ -9,6 +9,8 @@ import gzip
 
 import cfg
 
+MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
+
 
 def copy_config():
     config_source = os.path.dirname(os.path.abspath(__file__)) + '/config'
@@ -23,36 +25,34 @@ def copy_config():
 
 
 def update_geoip(target_dir):
-    MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
-    WORKING_DIRECTORY = os.path.join(target_dir, 'data/')
-    ZIPPED_PATH = os.path.join(
-        WORKING_DIRECTORY, os.path.basename(MAXMIND_DOWNLOAD))
-    EXTRACTED_PATH = os.path.join(WORKING_DIRECTORY, 'GeoLiteCity.dat')
-
+    working_directory = os.path.join(target_dir, 'data/')
+    zipped_path = os.path.join(
+        working_directory, os.path.basename(MAXMIND_DOWNLOAD))
+    extracted_path = os.path.join(working_directory, 'GeoLiteCity.dat')
 
     if not os.path.exists(target_dir):
         print('Configuration directory does not exist')
         sys.exit(1)
 
-    if not os.path.exists(WORKING_DIRECTORY):
-        os.makedirs(WORKING_DIRECTORY)
+    if not os.path.exists(working_directory):
+        os.makedirs(working_directory)
 
     print('Downloading %s' % MAXMIND_DOWNLOAD)
 
-    urllib.urlretrieve(MAXMIND_DOWNLOAD, ZIPPED_PATH)
+    urllib.urlretrieve(MAXMIND_DOWNLOAD, zipped_path)
 
     print('Download Complete')
     print('Unpacking...')
 
-    with gzip.open(ZIPPED_PATH, 'rb') as gz:
+    with gzip.open(zipped_path, 'rb') as gz:
         d = gz.read()
-        with open(EXTRACTED_PATH, 'wb') as ex:
+        with open(extracted_path, 'wb') as ex:
             ex.write(d)
 
     print('Unpacking Complete')
     print('Cleaning up...')
 
-    os.remove(ZIPPED_PATH)
+    os.remove(zipped_path)
 
 
 def run_server():
@@ -61,17 +61,30 @@ def run_server():
 
 
 def main():
+    description = '%s is an open-source Python server implementation ' \
+                  'for the voxel-based game "Ace of Spades".' % cfg.pkg_name
     arg_parser = argparse.ArgumentParser(prog=cfg.pkg_name,
-                                         description='%s is an open-source Python server implementation for the voxel-based game "Ace of Spades".' % cfg.pkg_name)
+                                         description=description)
 
     arg_parser.add_argument('-c', '--config-file', default=None,
-            help='specify the config file - default is "config.json" in the config dir')
+                            help='specify the config file - '
+                                 'default is "config.json" in the config dir')
+
     arg_parser.add_argument('-j', '--json-parameters',
-            help='add extra json parameters (overrides the ones present in the config file)')
+                            help='add extra json parameters '
+                                 '(overrides the ones present in the config file)')
+
     arg_parser.add_argument('-d', '--config-dir', default=cfg.config_dir,
-            help='specify the directory which contains maps, scripts, etc (in correctly named subdirs) - default is %s' % cfg.config_path)
-    arg_parser.add_argument('--copy-config', action='store_true', help='copies the default/example config dir to its default location or as specified by "-d"')
-    arg_parser.add_argument('--update-geoip', action='store_true', help='download the latest geoip database')
+                            help='specify the directory which contains '
+                                 'maps, scripts, etc (in correctly named '
+                                 'subdirs) - default is %s' % cfg.config_path)
+
+    arg_parser.add_argument('--copy-config', action='store_true',
+                            help='copies the default/example config dir to '
+                            'its default location or as specified by "-d"')
+
+    arg_parser.add_argument('--update-geoip', action='store_true',
+                            help='download the latest geoip database')
 
     args = arg_parser.parse_args()
 

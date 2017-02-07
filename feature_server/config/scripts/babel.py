@@ -17,8 +17,8 @@ ALWAYS_ENABLED = True
 PLATFORM_WIDTH = 100
 PLATFORM_HEIGHT = 32
 PLATFORM_COLOR = (255, 255, 255, 255)
-BLUE_BASE_COORDS = (256-138, 256)
-GREEN_BASE_COORDS = (256+138, 256)
+BLUE_BASE_COORDS = (256 - 138, 256)
+GREEN_BASE_COORDS = (256 + 138, 256)
 SPAWN_SIZE = 40
 
 
@@ -26,6 +26,7 @@ SPAWN_SIZE = 40
 PLATFORM_WIDTH /= 2
 PLATFORM_HEIGHT /= 2
 SPAWN_SIZE /= 2
+
 
 def get_entity_location(self, entity_id):
     if entity_id == BLUE_BASE:
@@ -37,12 +38,14 @@ def get_entity_location(self, entity_id):
     elif entity_id == GREEN_FLAG:
         return (256 + PLATFORM_WIDTH - 1, 256, 0)
 
+
 def get_spawn_location(connection):
     xb = connection.team.base.x
     yb = connection.team.base.y
     xb += randint(-SPAWN_SIZE, SPAWN_SIZE)
     yb += randint(-SPAWN_SIZE, SPAWN_SIZE)
     return (xb, yb, connection.protocol.map.get_z(xb, yb))
+
 
 def coord_on_platform(x, y, z):
     if z <= 2:
@@ -53,6 +56,7 @@ def coord_on_platform(x, y, z):
            and y >= (256 - PLATFORM_HEIGHT - 1) and y <= (256 + PLATFORM_HEIGHT + 1):
             return True
     return False
+
 
 def apply_script(protocol, connection, config):
     class BabelProtocol(protocol):
@@ -83,6 +87,7 @@ def apply_script(protocol, connection, config):
             return protocol.is_indestructable(self, x, y, z)
 
     class BabelConnection(connection):
+
         def invalid_build_position(self, x, y, z):
             if not self.god and self.protocol.babel:
                 if coord_on_platform(x, y, z):
@@ -91,14 +96,14 @@ def apply_script(protocol, connection, config):
             # prevent enemies from building in protected areas
             if self.team is self.protocol.blue_team:
                 if self.world_object.position.x >= 301 and self.world_object.position.x <= 384 \
-                    and self.world_object.position.y >= 240 and self.world_object.position.y <= 272:
-                        self.send_chat('You can\'t build near the enemy\'s tower!')
-                        return True
+                        and self.world_object.position.y >= 240 and self.world_object.position.y <= 272:
+                    self.send_chat('You can\'t build near the enemy\'s tower!')
+                    return True
             if self.team is self.protocol.green_team:
                 if self.world_object.position.x >= 128 and self.world_object.position.x <= 211 \
-                    and self.world_object.position.y >= 240 and self.world_object.position.y <= 272:
-                        self.send_chat('You can\'t build near the enemy\'s tower!')
-                        return True
+                        and self.world_object.position.y >= 240 and self.world_object.position.y <= 272:
+                    self.send_chat('You can\'t build near the enemy\'s tower!')
+                    return True
             return False
 
         def on_block_build_attempt(self, x, y, z):
@@ -116,9 +121,10 @@ def apply_script(protocol, connection, config):
         def on_block_destroy(self, x, y, z, mode):
             if self.team is self.protocol.blue_team:
                 if self.tool is SPADE_TOOL and self.world_object.position.x >= 128 and self.world_object.position.x <= 211 \
-                    and self.world_object.position.y >= 240 and self.world_object.position.y <= 272:
-                        self.send_chat('You can\'t destroy your team\'s blocks in this area. Attack the enemy\'s tower!')
-                        return False
+                        and self.world_object.position.y >= 240 and self.world_object.position.y <= 272:
+                    self.send_chat(
+                        'You can\'t destroy your team\'s blocks in this area. Attack the enemy\'s tower!')
+                    return False
                 if self.world_object.position.x <= 288:
                     if self.tool is WEAPON_TOOL:
                         self.send_chat('You must be closer to the enemy\'s base to shoot blocks!')
@@ -128,9 +134,10 @@ def apply_script(protocol, connection, config):
                         return False
             if self.team is self.protocol.green_team:
                 if self.tool is SPADE_TOOL and self.world_object.position.x >= 301 and self.world_object.position.x <= 384 \
-                    and self.world_object.position.y >= 240 and self.world_object.position.y <= 272:
-                        self.send_chat('You can\'t destroy your team\'s blocks in this area. Attack the enemy\'s tower!')
-                        return False
+                        and self.world_object.position.y >= 240 and self.world_object.position.y <= 272:
+                    self.send_chat(
+                        'You can\'t destroy your team\'s blocks in this area. Attack the enemy\'s tower!')
+                    return False
                 if self.world_object.position.x >= 224:
                     if self.tool is WEAPON_TOOL:
                         self.send_chat('You must be closer to the enemy\'s base to shoot blocks!')

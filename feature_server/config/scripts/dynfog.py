@@ -1,5 +1,6 @@
 import piqueserver.commands
 
+
 def apply_script(protocol, connection, config):
     class FogProtocol(protocol):
         default_fog = (128, 232, 255)

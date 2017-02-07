@@ -20,6 +20,7 @@ ONE_CTF_MODE = REVERSE_ONE_CTF
 # when playing reverse ctf
 REVERSE_ONE_CTF_MESSAGE = 'Take the intel to the enemy base to score.'
 
+
 def apply_script(protocol, connection, config):
     game_mode = config.get('game_mode', 'ctf')
     if game_mode != 'ctf':
@@ -70,6 +71,7 @@ def apply_script(protocol, connection, config):
             return pos
 
     class OneCTFConnection(connection):
+
         def on_flag_take(self):
             if self.protocol.one_ctf or self.protocol.reverse_one_ctf:
                 flag = self.team.flag

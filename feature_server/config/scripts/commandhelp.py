@@ -9,7 +9,8 @@ Lists all commands available to you (permission based).
 from piqueserver.commands import add, admin, commands as cmdlist, aliases as aliaslist
 import fnmatch
 
-def commands(connection, value = None):
+
+def commands(connection, value=None):
     names = []
     for command in cmdlist:
         command_func = cmdlist[command]
@@ -30,6 +31,7 @@ def commands(connection, value = None):
     return 'Commands: %s' % (', '.join(names))
 
 add(commands)
+
 
 def apply_script(protocol, connection, config):
     return protocol, connection

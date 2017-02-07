@@ -87,13 +87,15 @@ FOG_DISTANCE = 135.0
 
 # Don't touch any of this stuff
 FOG_DISTANCE2 = FOG_DISTANCE**2
-NEAR_MISS_COS = cos(NEAR_MISS_ANGLE * (pi/180.0))
-HEADSHOT_SNAP_ANGLE_COS = cos(HEADSHOT_SNAP_ANGLE * (pi/180.0))
+NEAR_MISS_COS = cos(NEAR_MISS_ANGLE * (pi / 180.0))
+HEADSHOT_SNAP_ANGLE_COS = cos(HEADSHOT_SNAP_ANGLE * (pi / 180.0))
 
 aimbot_pattern = re.compile(".*(aim|bot|ha(ck|x)|cheat).*", re.IGNORECASE)
 
+
 def aimbot_match(msg):
     return (not aimbot_pattern.match(msg) is None)
+
 
 def point_distance2(c1, c2):
     if c1.world_object is not None and c2.world_object is not None:
@@ -101,36 +103,44 @@ def point_distance2(c1, c2):
         p2 = c2.world_object.position
         return (p1.x - p2.x)**2 + (p1.y - p2.y)**2 + (p1.z - p2.z)**2
 
+
 def dot3d(v1, v2):
     return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]
+
 
 def magnitude(v):
     return sqrt(v[0]**2 + v[1]**2 + v[2]**2)
 
+
 def scale(v, scale):
-    return (v[0]*scale, v[1]*scale, v[2]*scale)
+    return (v[0] * scale, v[1] * scale, v[2] * scale)
+
 
 def subtract(v1, v2):
-    return (v1[0]-v2[0], v1[1]-v2[1], v1[2]-v2[2])
+    return (v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2])
 
-def accuracy(connection, name = None):
+
+def accuracy(connection, name=None):
     if name is None:
         player = connection
     else:
         player = get_player(connection.protocol, name)
     return accuracy_player(player)
 
-def accuracy_player(player, name_info = True):
+
+def accuracy_player(player, name_info=True):
     if player.rifle_count != 0:
-        rifle_percent = str(int(100.0 * (float(player.rifle_hits)/float(player.rifle_count)))) + '%'
+        rifle_percent = str(
+            int(100.0 * (float(player.rifle_hits) / float(player.rifle_count)))) + '%'
     else:
         rifle_percent = 'None'
     if player.smg_count != 0:
-        smg_percent = str(int(100.0 * (float(player.smg_hits)/float(player.smg_count)))) + '%'
+        smg_percent = str(int(100.0 * (float(player.smg_hits) / float(player.smg_count)))) + '%'
     else:
         smg_percent = 'None'
     if player.shotgun_count != 0:
-        shotgun_percent = str(int(100.0 * (float(player.shotgun_hits)/float(player.shotgun_count)))) + '%'
+        shotgun_percent = str(
+            int(100.0 * (float(player.shotgun_hits) / float(player.shotgun_count)))) + '%'
     else:
         shotgun_percent = 'None'
     s = ''
@@ -141,30 +151,37 @@ def accuracy_player(player, name_info = True):
 
 add(accuracy)
 
+
 @admin
 def hackinfo(connection, name):
     player = get_player(connection.protocol, name)
     return hackinfo_player(player)
 
+
 def hackinfo_player(player):
     info = "%s #%s (%s) has an accuracy of: " % (player.name, player.player_id, player.address[0])
     info += accuracy_player(player, False)
-    ratio = player.ratio_kills/float(max(1,player.ratio_deaths))
-    info += " Kill-death ratio of %.2f (%s kills, %s deaths)." % (ratio, player.ratio_kills, player.ratio_deaths)
+    ratio = player.ratio_kills / float(max(1, player.ratio_deaths))
+    info += " Kill-death ratio of %.2f (%s kills, %s deaths)." % (ratio,
+                                                                  player.ratio_kills, player.ratio_deaths)
     info += " %i kills in the last %i seconds." % (player.get_kill_count(), KILL_TIME)
-    info += " %i headshot snaps in the last %i seconds." % (player.get_headshot_snap_count(), HEADSHOT_SNAP_TIME)
+    info += " %i headshot snaps in the last %i seconds." % (
+        player.get_headshot_snap_count(), HEADSHOT_SNAP_TIME)
     return info
 
 add(hackinfo)
 
+
 def apply_script(protocol, connection, config):
     class Aimbot2Protocol(protocol):
+
         def start_votekick(self, payload):
             if aimbot_match(payload.reason):
                 payload.target.warn_admin('Hack related votekick.')
             return protocol.start_votekick(self, payload)
 
     class Aimbot2Connection(connection):
+
         def __init__(self, *arg, **kw):
             connection.__init__(self, *arg, **kw)
             self.rifle_hits = self.smg_hits = self.shotgun_hits = 0
@@ -179,7 +196,7 @@ def apply_script(protocol, connection, config):
             self.headshot_snap_warn_time = self.hit_percent_warn_time = 0.0
             self.kills_in_time_warn_time = self.multiple_bullets_warn_time = 0.0
 
-        def warn_admin(self, prefix = 'Possible aimbot detected.'):
+        def warn_admin(self, prefix='Possible aimbot detected.'):
             prefix += ' '
             message = hackinfo_player(self)
             for player in self.protocol.players.values():
@@ -226,7 +243,8 @@ def apply_script(protocol, connection, config):
                     self_pos = self.world_object.position
                     for enemy in self.team.other.get_players():
                         enemy_pos = enemy.world_object.position
-                        position_v = (enemy_pos.x - self_pos.x, enemy_pos.y - self_pos.y, enemy_pos.z - self_pos.z)
+                        position_v = (enemy_pos.x - self_pos.x, enemy_pos.y -
+                                      self_pos.y, enemy_pos.z - self_pos.z)
                         c = scale(new_orient_v, dot3d(new_orient_v, position_v))
                         h = magnitude(subtract(position_v, c))
                         if h <= HEAD_RADIUS:
@@ -234,7 +252,8 @@ def apply_script(protocol, connection, config):
                             self.headshot_snap_times.append(current_time)
                             if self.get_headshot_snap_count() >= HEADSHOT_SNAP_THRESHOLD:
                                 if HEADSHOT_SNAP == BAN:
-                                    self.ban('Aimbot detected - headshot snap', HEADSHOT_SNAP_BAN_DURATION)
+                                    self.ban('Aimbot detected - headshot snap',
+                                             HEADSHOT_SNAP_BAN_DURATION)
                                     return
                                 elif HEADSHOT_SNAP == KICK:
                                     self.kick('Aimbot detected - headshot snap')
@@ -278,7 +297,8 @@ def apply_script(protocol, connection, config):
                     by.kill_times.append(reactor.seconds())
                     if by.get_kill_count() >= KILL_THRESHOLD:
                         if KILLS_IN_TIME == BAN:
-                            by.ban('Aimbot detected - kills in time window', KILLS_IN_TIME_BAN_DURATION)
+                            by.ban('Aimbot detected - kills in time window',
+                                   KILLS_IN_TIME_BAN_DURATION)
                             return
                         elif KILLS_IN_TIME == KICK:
                             by.kick('Aimbot detected - kills in time window')
@@ -350,17 +370,17 @@ def apply_script(protocol, connection, config):
 
         def check_percent(self):
             if self.weapon == RIFLE_WEAPON:
-                rifle_perc = float(self.rifle_hits)/float(self.rifle_count)
+                rifle_perc = float(self.rifle_hits) / float(self.rifle_count)
                 if self.rifle_count >= RIFLE_KICK_MINIMUM:
                     if rifle_perc >= RIFLE_KICK_PERC:
                         self.hit_percent_eject(rifle_perc)
             elif self.weapon == SMG_WEAPON:
-                smg_perc = float(self.smg_hits)/float(self.smg_count)
+                smg_perc = float(self.smg_hits) / float(self.smg_count)
                 if self.smg_count >= SMG_KICK_MINIMUM:
                     if smg_perc >= SMG_KICK_PERC:
                         self.hit_percent_eject(smg_perc)
             elif self.weapon == SHOTGUN_WEAPON:
-                shotgun_perc = float(self.shotgun_hits)/float(self.shotgun_count)
+                shotgun_perc = float(self.shotgun_hits) / float(self.shotgun_count)
                 if self.shotgun_count >= SHOTGUN_KICK_MINIMUM:
                     if shotgun_perc >= SHOTGUN_KICK_PERC:
                         self.hit_percent_eject(shotgun_perc)
@@ -387,7 +407,7 @@ def apply_script(protocol, connection, config):
                 orient = self.world_object.orientation
                 orient_v = (orient.x, orient.y, orient.z)
                 position_v_mag = magnitude(position_v)
-                if position_v_mag != 0 and (dot3d(orient_v, position_v)/position_v_mag) >= NEAR_MISS_COS:
+                if position_v_mag != 0 and (dot3d(orient_v, position_v) / position_v_mag) >= NEAR_MISS_COS:
                     if self.weapon == RIFLE_WEAPON:
                         self.rifle_count += 1
                     elif self.weapon == SMG_WEAPON:
@@ -402,8 +422,8 @@ def apply_script(protocol, connection, config):
             self.bullet_loop_stop()
             if DATA_COLLECTION:
                 if self.name != None:
-                    with open('aimbot2log.txt','a') as myfile:
-                        output = self.name.encode('ascii','ignore').replace(',','') + ','
+                    with open('aimbot2log.txt', 'a') as myfile:
+                        output = self.name.encode('ascii', 'ignore').replace(',', '') + ','
                         output += str(self.rifle_hits) + ',' + str(self.rifle_count) + ','
                         output += str(self.smg_hits) + ',' + str(self.smg_count) + ','
                         output += str(self.shotgun_hits) + ',' + str(self.shotgun_count) + '\n'

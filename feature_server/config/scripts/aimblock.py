@@ -28,14 +28,16 @@ AIMBLOCK_KICK_JERK = False
 # -- NOT IMPLEMENTED!
 AIMBLOCK_KICK_SNAP = False
 
+
 def aimbotcheck(connection, user, minutes):
     connection = commands.get_player(connection.protocol, user)
     if connection not in connection.protocol.players:
         raise KeyError()
-    kills = connection.tally_kill_log(reactor.seconds() - int(minutes)*60)
+    kills = connection.tally_kill_log(reactor.seconds() - int(minutes) * 60)
     return ('Player %s did %s kills in the last %s minutes.' %
-        (connection.name, kills, minutes))
+            (connection.name, kills, minutes))
 commands.add(aimbotcheck)
+
 
 def apply_script(protocol, connection, config):
     def aimblock(f):
@@ -84,16 +86,16 @@ def apply_script(protocol, connection, config):
                     break
                 i -= 1
 
-            return -1-i
+            return -1 - i
 
         def aimbot_trywarn(self):
             curtime = reactor.seconds()
-            if curtime < self.aimbot_kill_warn_last+self.aimbot_kill_warn_pause:
+            if curtime < self.aimbot_kill_warn_last + self.aimbot_kill_warn_pause:
                 return
             self.aimbot_kill_warn_last = curtime
             aimwarn = "AIMBOT WARNING: Player \"%s\" got %d kills in the last %d seconds!" % (
                 self.name, self.tally_kill_log(self.aimbot_kill_time), self.aimbot_kill_time
-                    )
+            )
             self.protocol.irc_say(aimwarn)
 
         def on_kill(self, killer, type, grenade):
@@ -120,10 +122,10 @@ def apply_script(protocol, connection, config):
             return ret
 
         def sub_vec(self, (x1, y1, z1), (x2, y2, z2)):
-            return ((x1-x2),(y1-y2),(z1-z2))
+            return ((x1 - x2), (y1 - y2), (z1 - z2))
 
         def calc_uv(self, (x, y, z)):
-            d = (x*x + y*y + z*z)**0.5
+            d = (x * x + y * y + z * z)**0.5
             if d <= 0.001:
                 d = 0.001
 
@@ -131,7 +133,7 @@ def apply_script(protocol, connection, config):
             y /= d
             z /= d
 
-            return (x,y,z)
+            return (x, y, z)
 
         def recalc_orient_uv(self):
             ox, oy, oz = self.world_object.orientation.get()
@@ -142,7 +144,7 @@ def apply_script(protocol, connection, config):
             x1, y1, z1 = v1
             x2, y2, z2 = v2
 
-            return x1*x2 + y1*y2 + z1*z2
+            return x1 * x2 + y1 * y2 + z1 * z2
 
         @aimblock
         def get_aimbot_target(self):
@@ -165,9 +167,9 @@ def apply_script(protocol, connection, config):
 
                 xpos = p.world_object.position.get()
                 xdist = self.dot_product(
-                    self.calc_uv(self.sub_vec(xpos,locpos)),
+                    self.calc_uv(self.sub_vec(xpos, locpos)),
                     self.aimbot_orient_uv
-                        )
+                )
                 if xdist > fdist:
                     ftarg = p
                     fdist = xdist
@@ -183,16 +185,16 @@ def apply_script(protocol, connection, config):
             if oldtarget != None:
                 opos = oldtarget.world_object.position.get()
                 odist = self.dot_product(
-                    self.calc_uv(self.sub_vec(opos,locpos)),
+                    self.calc_uv(self.sub_vec(opos, locpos)),
                     self.aimbot_orient_uv
-                        )
+                )
 
             if (oldtarget != None and oldtarget != ftarg
-                        and odist < self.aimbot_heur_leeway):
+                    and odist < self.aimbot_heur_leeway):
                 self.aimbot_heuristic += (
-                    (fdist-self.aimbot_heuristic)
+                    (fdist - self.aimbot_heuristic)
                     * self.aimbot_heur_jerk
-                        )
+                )
                 if AIMBLOCK_SPAM:
                     print "Jerk test: %.5f -> %.5f" % (
                         fdist, self.aimbot_heuristic)
