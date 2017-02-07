@@ -46,10 +46,11 @@ class Map(object):
         self.load_information(rot_info, load_dir)
 
         if self.gen_script:
-            self.name = '%s #%s' % (rot_info.name, rot_info.get_seed())
+            seed = rot_info.get_seed()
+            self.name = '%s #%s' % (rot_info.name, seed)
             print "Generating map '%s'..." % self.name
-            random.seed(rot_info.get_seed())
-            self.data = self.gen_script(rot_info.name, rot_info.get_seed())
+            random.seed(seed)
+            self.data = self.gen_script(rot_info.name, seed)
         else:
             print "Loading map '%s'..." % self.name
             self.load_vxl(rot_info)
@@ -110,10 +111,10 @@ class RotationInfo(object):
         self.name = name
 
     def get_seed(self):
-        if self.seed is None:
-            random.seed()
-            self.seed = random.randint(0, math.pow(2, 31))
-        return self.seed
+        if self.seed is not None:
+            return self.seed
+        random.seed()
+        return random.randint(0, math.pow(2, 31))
 
     def get_map_filename(self, load_dir):
         return os.path.join(load_dir, '%s.vxl' % self.name)

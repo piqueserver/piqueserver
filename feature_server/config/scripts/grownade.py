@@ -68,6 +68,31 @@ S_CANCEL = 'No longer spawning models'
 S_SPECIFY_FILES = 'Specify model files to load. Wildcards are allowed, ' \
     'e.g.: "bunker", "tree*"'
 
+class ModelLoadFailure(Exception):
+    pass
+
+def load_models(expression):
+    if not os.path.isdir(KV6_DIR):
+        raise ModelLoadFailure(S_NO_KV6_FOLDER)
+    if not os.path.splitext(expression)[-1]:
+        # append default extension
+        expression += '.kv6'
+    paths = glob(os.path.join(KV6_DIR, expression))
+    if not paths:
+        raise ModelLoadFailure(S_NO_MATCHES.format(expression = expression))
+
+    # attempt to load models, discard invalid ones
+    models, loaded, failed = [], [], []
+    for path in paths:
+        model = KV6Model(path)
+        filename = os.path.split(path)[-1]
+        if model.voxels:
+            models.append(model)
+            loaded.append(filename)
+        else:
+            failed.append(filename)
+    return models, loaded, failed
+
 @name('model')
 @admin
 def model_grenades(connection, expression = None):
@@ -78,35 +103,23 @@ def model_grenades(connection, expression = None):
 
     result = None
     if expression:
-        if not os.path.isdir(KV6_DIR):
-            return S_NO_KV6_FOLDER
-        if not os.path.splitext(expression)[-1]:
-            # append default extension
-            expression += '.kv6'
-        paths = glob(os.path.join(KV6_DIR, expression))
-        if not paths:
-            return S_NO_MATCHES.format(expression = expression)
+        try:
+            models, loaded, failed = load_models(expression)
+        except ModelLoadFailure as err:
+            result = str(err)
+        else:
+            if len(loaded) == 1:
+                result = S_LOADED_SINGLE.format(filename = loaded[0])
+            elif len(loaded) > 1:
+                result = S_LOADED.format(filenames = ', '.join(loaded))
 
-        # attempt to load models, discard invalid ones
-        models, loaded, failed = [], [], []
-        for path in paths:
-            model = KV6Model(path)
-            filename = os.path.split(path)[-1]
-            if model.voxels:
-                models.append(model)
-                loaded.append(filename)
-            else:
-                failed.append(filename)
-        if len(loaded) == 1:
-            result = S_LOADED_SINGLE.format(filename = loaded[0])
-        elif len(loaded) > 1:
-            result = S_LOADED.format(filenames = ', '.join(loaded))
-        if failed:
-            player.send_chat(S_FAILED.format(filenames = ', '.join(failed)))
-            player.send_chat(S_PIVOT_TIP)
+            if failed:
+                player.send_chat(S_FAILED.format(filenames = ', '.join(failed)))
+                player.send_chat(S_PIVOT_TIP)
 
-        if models:
-            player.grenade_models = models
+            if models:
+                player.grenade_models = models
+
     elif player.grenade_models:
         player.grenade_models = None
         result = S_CANCEL

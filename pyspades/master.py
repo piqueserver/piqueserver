@@ -103,6 +103,10 @@ class MasterConnection(BaseConnection):
 from pyspades.web import getPage
 
 IP_GETTER = 'http://services.buildandshoot.com/getip'
+# other tools:
+# http://www.domaintools.com/research/my-ip/myip.xml
+# http://checkip.dyndns.com/
+# http://icanhazip.com/
 
 def get_external_ip(interface = ''):
     return getPage(IP_GETTER, bindAddress = (interface, 0))

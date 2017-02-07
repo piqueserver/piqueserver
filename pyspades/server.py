@@ -206,6 +206,7 @@ class ServerConnection(BaseConnection):
         BaseConnection.__init__(self, *arg, **kw)
         protocol = self.protocol
         address = self.peer.address
+        self.total_blocks_removed = 0
         self.address = (address.host, address.port)
         self.respawn_time = protocol.respawn_time
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
@@ -235,9 +236,13 @@ class ServerConnection(BaseConnection):
                                 loaders.ShortPlayerData.id):
                 old_team = self.team
                 team = self.protocol.teams[contained.team]
-                if self.on_team_join(team) == False:
-                    if not team.spectator:
-                        team = team.other
+
+                ret = self.on_team_join(team)
+                if ret is False:
+                    team = self.protocol.spectator_team
+                elif ret is not None:
+                    team = ret
+
                 self.team = team
                 if self.name is None:
                     name = contained.name
@@ -526,16 +531,17 @@ class ServerConnection(BaseConnection):
                         if self.on_block_destroy(x, y, z, value) == False:
                             return
                         elif value == DESTROY_BLOCK:
-                            if map.destroy_point(x, y, z):
+                            count = map.destroy_point(x, y, z)
+                            if count:
+                                self.total_blocks_removed += count
                                 self.blocks = min(50, self.blocks + 1)
                                 self.on_block_removed(x, y, z)
                         elif value == SPADE_DESTROY:
-                            if map.destroy_point(x, y, z):
-                                self.on_block_removed(x, y, z)
-                            if map.destroy_point(x, y, z + 1):
-                                self.on_block_removed(x, y, z + 1)
-                            if map.destroy_point(x, y, z - 1):
-                                self.on_block_removed(x, y, z - 1)
+                            for xyz in ((x, y, z), (x, y, z + 1), (x, y, z - 1)):
+                                count = map.destroy_point(*xyz)
+                                if count:
+                                    self.total_blocks_removed += count
+                                    self.on_block_removed(*xyz)
                         self.last_block_destroy = reactor.seconds()
                     block_action.x = x
                     block_action.y = y
@@ -602,8 +608,10 @@ class ServerConnection(BaseConnection):
                     self.set_weapon(self.weapon)
                 elif contained.id == loaders.ChangeTeam.id:
                     team = self.protocol.teams[contained.team]
-                    if self.on_team_join(team) == False:
+                    ret = self.on_team_join(team)
+                    if ret is False:
                         return
+                    team = ret or team
                     self.set_team(team)
 
     def is_valid_position(self, x, y, z, distance = None):
@@ -1007,9 +1015,9 @@ class ServerConnection(BaseConnection):
         z = position.z
         if x < 0 or x > 512 or y < 0 or y > 512 or z < 0 or z > 63:
             return
-        x = int(x)
-        y = int(y)
-        z = int(z)
+        x = int(math.floor(x))
+        y = int(math.floor(y))
+        z = int(math.floor(z))
         for player_list in (self.team.other.get_players(), (self,)):
             for player in player_list:
                 if not player.hp:
@@ -1031,7 +1039,9 @@ class ServerConnection(BaseConnection):
         for nade_x in xrange(x - 1, x + 2):
             for nade_y in xrange(y - 1, y + 2):
                 for nade_z in xrange(z - 1, z + 2):
-                    if map.destroy_point(nade_x, nade_y, nade_z):
+                    count = map.destroy_point(nade_x, nade_y, nade_z)
+                    if count:
+                        self.total_blocks_removed += count
                         self.on_block_removed(nade_x, nade_y, nade_z)
         block_action.x = x
         block_action.y = y

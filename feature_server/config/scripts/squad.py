@@ -221,7 +221,8 @@ def apply_script(protocol, connection, config):
                 all_members = ([n for n in self.get_squad(self.team,
                             self.squad)['players'] if
                             n is not self])
-                live_members = [n for n in all_members if n.hp]
+                live_members = [n for n in all_members if n.hp and not n.invisible and
+                                not n.god]
                 membernames = [m.name for m in all_members]
                 memberstr = ""
                 for n in xrange(len(all_members)):
@@ -243,7 +244,8 @@ def apply_script(protocol, connection, config):
                     self.send_chat('You are in squad %s, all alone.' %
                                    self.squad)
                 if (self.squad_pref is not None and self.squad_pref.hp and
-                    self.squad_pref.team is self.team):
+                    self.squad_pref.team is self.team and not self.squad_pref.invisible
+                    and not self.squad_pref.god):
                     self.set_location_safe(self.get_follow_location(
                         self.squad_pref))
                 else:

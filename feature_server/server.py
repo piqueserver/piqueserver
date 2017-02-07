@@ -324,13 +324,17 @@ class FeatureConnection(ServerConnection):
                     return False
         if team.locked:
             self.send_chat('Team is locked')
+            if not team.spectator and not team.other.locked:
+                return team.other
             return False
         balanced_teams = self.protocol.balanced_teams
         if balanced_teams and not team.spectator:
             other_team = team.other
             if other_team.count() < team.count() + 1 - balanced_teams:
-                self.send_chat('Team is full')
-                return False
+                if other_team.locked:
+                    return False
+                self.send_chat('Team is full, moved to %s' % other_team.name)
+                return other_team
         self.last_switch = reactor.seconds()
 
     def on_chat(self, value, global_message):
@@ -631,7 +635,10 @@ class FeatureProtocol(ServerProtocol):
         for password in self.passwords.get('admin', []):
             if not password:
                 self.everyone_is_admin = True
-        commands.rights.update(config.get('rights', {}))
+
+        for user_type, func_names in config.get('rights', {}).iteritems():
+            for func_name in func_names:
+                commands.add_rights(func_name, user_type)
 
         port = self.port = config.get('port', 32887)
         ServerProtocol.__init__(self, port, interface)

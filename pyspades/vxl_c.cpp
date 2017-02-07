@@ -149,7 +149,7 @@ int check_node(int x, int y, int z, MapData * map, int destroy)
         z = current_node->z;
         if (z >= 62) {
             marked.clear();
-            return 1;
+            return 0;
         }
         x = current_node->x;
         y = current_node->y;
@@ -180,8 +180,9 @@ int check_node(int x, int y, int z, MapData * map, int destroy)
         }
     }
     
+    int ret = (int)marked.size();
     marked.clear();
-    return 0;
+    return ret;
 }
 
 // write_map/save_vxl function from stb/nothings - thanks a lot for the 
@@ -189,8 +190,8 @@ int check_node(int x, int y, int z, MapData * map, int destroy)
 
 inline int is_surface(MapData * map, int x, int y, int z)
 {
-   if (z == 0) return 1;
    if (map->geometry[get_pos(x, y, z)]==0) return 0;
+   if (z == 0) return 1;
    if (x   >   0 && map->geometry[get_pos(x-1, y, z)]==0) return 1;
    if (x+1 < 512 && map->geometry[get_pos(x+1, y, z)]==0) return 1;
    if (y   >   0 && map->geometry[get_pos(x, y-1, z)]==0) return 1;
@@ -370,6 +371,37 @@ inline void get_random_point(int x1, int y1, int x2, int y2, MapData * map,
         Point2D item = items[random(0, size, random_1)];
         *end_x = item.x;
         *end_y = item.y;
+    }
+}
+
+#define SHADOW_DISTANCE 18
+#define SHADOW_STEP 2
+
+int sunblock(MapData * map, int x, int y, int z)
+{
+    int dec = SHADOW_DISTANCE;
+    int i = 127;
+
+    while (dec && z)
+    {
+        if (get_solid_wrap(x, --y, --z, map))
+            i -= dec;
+        dec -= SHADOW_STEP;
+    }
+    return i;
+}
+
+void update_shadows(MapData * map)
+{
+    int x, y, z;
+    int a;
+    unsigned int color;
+    for (map_type<int, int>::iterator iter = map->colors.begin();
+        iter != map->colors.end(); ++iter) {
+        get_xyz(iter->first, &x, &y, &z);
+        color = iter->second;
+        a = sunblock(map, x, y, z);
+        iter->second = (color & 0x00FFFFFF) | (a << 24);
     }
 }
 

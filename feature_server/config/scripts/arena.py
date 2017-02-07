@@ -13,19 +13,27 @@
 # Spawn locations and gate locations MUST be present in the map metadata (map txt file)
 # for arena to work properly.
 
-# Spawn locations for the green team are set by using the data from the 'arena_green_spawn'
-# tuple in the extensions dictionary. Likewise, the blue spawn is set with the 'arena_blue_spawn'
-# key.
+# The spawn location/s for the green team are set by using the data from the 'arena_green_spawns'
+# tuple in the extensions dictionary. Likewise, the blue spawn/s is set with the 'arena_blue_spawns'
+# key. 'arena_green_spawns' and 'arena_blue_spawns' are tuples which contain tuples of spawn
+# coordinates. Spawn locations are chosen randomly.
+
+# NOTE THAT THE SCRIPT RETAINS BACKWARDS COMPATIBILITY with the old 'arena_green_spawn' and
+# 'arena_blue_spawn'
+
+# The 'arena_max_spawn_distance' can be used to set MAX_SPAWN_DISTANCE on a map by map
+# basis. See the comment by MAX_SPAWN_DISTANCE for more information
 
 # The locations of gates is also determined in the map metadata. 'arena_gates' is a
 # tuple of coordinates in the extension dictionary. Each gate needs only one block
 # to be specified (since each gate is made of a uniform color)
 
 # Sample extensions dictionary of an arena map with two gates:
+# In this example there is one spawn location for blue and two spawn locations for green.
 # extensions = {
 #     'arena': True,
-#     'arena_blue_spawn' : (128, 256, 60),
-#     'arena_green_spawn' : (384, 256, 60),
+#     'arena_blue_spawns' : ((128, 256, 60),),
+#     'arena_green_spawns' : ((384, 256, 60), (123, 423, 51)),
 #     'arena_gates': ((192, 236, 59), (320, 245, 60))
 # }
 
@@ -36,29 +44,40 @@ from pyspades.constants import *
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from piqueserver.commands import add, admin
+import random
+import math
 
 # If ALWAYS_ENABLED is False, then the 'arena' key must be set to True in
 # the 'extensions' dictionary in the map metadata
 ALWAYS_ENABLED = True
 
 # How long should be spent between rounds in arena (seconds)
-SPAWN_ZONE_TIME = 20.0
+SPAWN_ZONE_TIME = 15.0
+
+# How many seconds a team color should be shown after they win a round
+# Set to 0 to disable this feature.
+TEAM_COLOR_TIME = 4.0
 
 # Maximum duration that a round can last. Time is in seconds. Set to 0 to
 # disable the time limit
 MAX_ROUND_TIME = 180
 
-MAP_CHANGE_DELAY = 30.0
+MAP_CHANGE_DELAY = 25.0
 
 # Coordinates to hide the tent and the intel
 HIDE_COORD = (0, 0, 63)
+
+# Max distance a player can be from a spawn while the players are held within
+# the gates. If they get outside this they are teleported to a spawn.
+# Used to teleport players who glitch through the map back into the spawns.
+MAX_SPAWN_DISTANCE = 15.0
 
 BUILDING_ENABLED = False
 
 if MAX_ROUND_TIME >= 60:
     MAX_ROUND_TIME_TEXT = '%.2f minutes' % (float(MAX_ROUND_TIME)/60.0)
 else:
-    MAX_ROUND_TIME_TEXT = MAX_ROUND_TIME + ' seconds'
+    MAX_ROUND_TIME_TEXT = str(MAX_ROUND_TIME) + ' seconds'
 
 @admin
 def coord(connection):
@@ -260,11 +279,29 @@ def apply_script(protocol, connection, config):
                     self.protocol.check_round_end()
             return returned
 
+        def on_position_update(self):
+            if not self.protocol.arena_running:
+                min_distance = None
+                pos = self.world_object.position
+                for spawn in self.team.arena_spawns:
+                    xd = spawn[0] - pos.x
+                    yd = spawn[1] - pos.y
+                    zd = spawn[2] - pos.z
+                    distance = math.sqrt(xd ** 2 + yd ** 2 + zd ** 2)
+                    if min_distance is None or distance < min_distance:
+                        min_distance = distance
+                if min_distance > self.protocol.arena_max_spawn_distance:
+                    self.set_location(random.choice(self.team.arena_spawns))
+                    self.refill()
+            return connection.on_position_update(self)
+
         def get_respawn_time(self):
-            if self.protocol.arena_running:
-                return -1
-            else:
-                return 1
+            if self.protocol.arena_enabled:
+                if self.protocol.arena_running:
+                    return -1
+                else:
+                    return 1
+            return connection.get_respawn_time(self)
 
         def respawn(self):
             if self.protocol.arena_running:
@@ -279,7 +316,7 @@ def apply_script(protocol, connection, config):
 
         def on_spawn_location(self, pos):
             if self.protocol.arena_enabled:
-                return self.team.arena_spawn
+                return random.choice(self.team.arena_spawns)
             return connection.on_spawn_location(self, pos)
 
         def on_flag_take(self):
@@ -304,6 +341,8 @@ def apply_script(protocol, connection, config):
         arena_take_flag = False
         arena_countdown_timers = None
         arena_limit_timer = None
+        arena_old_fog_color = None
+        arena_max_spawn_distance = MAX_SPAWN_DISTANCE
 
         def check_round_end(self, killer = None, message = True):
             if not self.arena_running:
@@ -332,16 +371,28 @@ def apply_script(protocol, connection, config):
         def arena_win(self, team, killer = None):
             if not self.arena_running:
                 return
+            if self.arena_old_fog_color is None and TEAM_COLOR_TIME > 0:
+                self.arena_old_fog_color = self.fog_color
+                self.set_fog_color(team.color)
+                reactor.callLater(TEAM_COLOR_TIME, self.arena_reset_fog_color)
             if killer is None or killer.team is not team:
                 for player in team.get_players():
-                    killer = player
-                    break
+                    if not player.world_object.dead:
+                        killer = player
+                        break
             if killer is not None:
                 self.arena_take_flag = True
                 killer.take_flag()
                 killer.capture_flag()
             self.send_chat(team.name + ' team wins the round!')
             self.begin_arena_countdown()
+
+        def arena_reset_fog_color(self):
+            if self.arena_old_fog_color is not None:
+                # Shitty fix for disco on game end
+                self.old_fog_color = self.arena_old_fog_color
+                self.set_fog_color(self.arena_old_fog_color)
+                self.arena_old_fog_color = None
 
         def arena_remaining_message(self):
             if not self.arena_running:
@@ -365,6 +416,7 @@ def apply_script(protocol, connection, config):
                     self.arena_enabled = extensions['arena']
                 else:
                     self.arena_enabled = False
+            self.arena_max_spawn_distance = MAX_SPAWN_DISTANCE
             if self.arena_enabled:
                 self.old_respawn_time = self.respawn_time
                 self.respawn_time = 0
@@ -374,14 +426,20 @@ def apply_script(protocol, connection, config):
                 if extensions.has_key('arena_gates'):
                     for gate in extensions['arena_gates']:
                         self.gates.append(Gate(*gate, protocol_obj=self))
-                if extensions.has_key('arena_green_spawn'):
-                    self.green_team.arena_spawn = extensions['arena_green_spawn']
+                if extensions.has_key('arena_green_spawns'):
+                    self.green_team.arena_spawns = extensions['arena_green_spawns']
+                elif extensions.has_key('arena_green_spawn'):
+                    self.green_team.arena_spawns = (extensions['arena_green_spawn'],)
                 else:
-                    raise CustomException('No arena_green_spawn given in map metadata.')
-                if extensions.has_key('arena_blue_spawn'):
-                    self.blue_team.arena_spawn = extensions['arena_blue_spawn']
+                    raise CustomException('No arena_green_spawns given in map metadata.')
+                if extensions.has_key('arena_blue_spawns'):
+                    self.blue_team.arena_spawns = extensions['arena_blue_spawns']
+                elif extensions.has_key('arena_blue_spawn'):
+                    self.blue_team.arena_spawns = (extensions['arena_blue_spawn'],)
                 else:
-                    raise CustomException('No arena_blue_spawn given in map metadata.')
+                    raise CustomException('No arena_blue_spawns given in map metadata.')
+                if extensions.has_key('arena_max_spawn_distance'):
+                    self.arena_max_spawn_distance = extensions['arena_max_spawn_distance']
                 self.delay_arena_countdown(MAP_CHANGE_DELAY)
                 self.begin_arena_countdown()
             else:
@@ -396,6 +454,7 @@ def apply_script(protocol, connection, config):
                 self.arena_running = False
                 self.arena_counting_down = False
                 self.arena_limit_timer = None
+                self.arena_old_fog_color = None
                 self.old_respawn_time = None
                 self.old_building = None
                 self.old_killing = None
@@ -414,9 +473,9 @@ def apply_script(protocol, connection, config):
                 if player.team.spectator:
                     continue
                 if player.world_object.dead:
-                    player.spawn(player.team.arena_spawn)
+                    player.spawn(random.choice(player.team.arena_spawns))
                 else:
-                    player.set_location(player.team.arena_spawn)
+                    player.set_location(random.choice(player.team.arena_spawns))
                     player.refill()
 
         def begin_arena_countdown(self):

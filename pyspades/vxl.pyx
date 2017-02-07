@@ -118,16 +118,17 @@ cdef class VXLData:
 
     def destroy_point(self, int x, int y, int z):
         if not self.get_solid(x, y, z) or z >= 62:
-            return False
+            return 0
         set_point(x, y, z, self.map, 0, 0)
+        count = 1
         start = time.time()
         for node_x, node_y, node_z in self.get_neighbors(x, y, z):
             if node_z < 62:
-                self.check_node(node_x, node_y, node_z, True)
+                count += self.check_node(node_x, node_y, node_z, True)
         taken = time.time() - start
         if taken > 0.1:
             print 'destroying block at', x, y, z, 'took:', taken
-        return True
+        return count
 
     def remove_point(self, int x, int y, int z):
         if is_valid_position(x, y, z):
@@ -166,7 +167,7 @@ cdef class VXLData:
                 neighbors.append((node_x, node_y, node_z))
         return neighbors
 
-    cpdef bint check_node(self, int x, int y, int z, bint destroy = False):
+    cpdef int check_node(self, int x, int y, int z, bint destroy = False):
         return check_node(x, y, z, self.map, destroy)
 
     cpdef bint build_point(self, int x, int y, int z, tuple color):
@@ -192,6 +193,9 @@ cdef class VXLData:
             return False
         set_column_color(x, y, z_start, z_color_end, self.map, color)
         return True
+
+    cpdef update_shadows(self):
+        update_shadows(self.map)
 
     def get_overview(self, int z = -1, bint rgba = False):
         cdef unsigned int * data

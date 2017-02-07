@@ -237,7 +237,7 @@ def format_name_color(player):
         '%s #%s' % (player.name, player.player_id))
 
 def irc(func):
-    return commands.restrict(func, ('irc',))
+    return commands.restrict(func, 'irc')
 
 @irc
 def who(connection):

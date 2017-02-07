@@ -64,10 +64,10 @@ as the parameter lists are provided when you try them.
             See /trigger for more information on who the "activating players" are.
 
             action:
-                height   <height> [speed=0.25] [delay]
-                raise    <amount> [speed=0.25] [delay]
-                lower    <amount> [speed=0.25] [delay]
-                elevator <height> [speed=0.75] [delay] [wait=3.0]
+                height   <height> [speed=0.15] [delay]
+                raise    <amount> [speed=0.15] [delay]
+                lower    <amount> [speed=0.15] [delay]
+                elevator <height> [speed=0.25] [delay] [wait=3.0]
                     Speed determines how fast the platform moves, in seconds.
                     Delay is the amount of time spent waiting before the platform
                     actually starts to move.
@@ -161,6 +161,12 @@ as the parameter lists are provided when you try them.
     Saves all platform and button data to mapname_platform.txt
     Use SAVE_ON_MAP_CHANGE and AUTOSAVE_EVERY to avoid having to manually save.
 
+/reach
+    Increases your button activation reach. Meant to be used for getting rid
+    of distance triggering buttons from a safe distance.
+
+    Use again to revert to normal.
+
 Maintainer: hompy
 """
 
@@ -171,7 +177,6 @@ Maintainer: hompy
 # Prevent platforms from being hidden forever
 # Negative heights
 # Nicer way of having invisible buttons?
-# 'invisibility' mode to get in range of annoying distance buttons
 # Platforms crushing players
 # Stop platform action?
 
@@ -193,12 +198,14 @@ from piqueserver.commands import add, admin, name, alias, join_arguments
 from piqueserver import cfg
 
 DEFAULT_LOAD_DIR = os.path.join(cfg.config_dir, 'maps')
-SAVE_ON_MAP_CHANGE = True
+SAVE_ON_MAP_CHANGE = False
 AUTOSAVE_EVERY = 0.0 # minutes, 0 = disabled
 MAX_DISTANCE = 64.0
 MIN_COOLDOWN = 0.1 # seconds
 
 S_SAVED = 'Platforms saved'
+S_REACH = 'You can now reach to buttons from from far away'
+S_NO_REACH = 'Button reach reverted to normal'
 S_EXIT_BLOCKING_STATE = "You must first leave {state} mode!"
 S_NOT_WORKING = 'This button is disabled'
 S_COMMAND_CANCEL = "Aborting {command} command"
@@ -240,10 +247,10 @@ S_NOISY = "Button '{label}' will animate when activated"
 S_ACTION_USAGE = 'Usage: /action <{commands}>'
 S_ACTION_ADD_USAGE = 'Usage: /action add <{actions}>'
 S_ACTION_DELETE_USAGE = 'Usage: /action del <#|all>'
-S_ACTION_HEIGHT_USAGE = 'Usage: /action add height <height> [speed=0.25] [delay]'
-S_ACTION_RAISE_USAGE = 'Usage: /action add raise <amount> [speed=0.25] [delay]'
-S_ACTION_LOWER_USAGE = 'Usage: /action add lower <amount> [speed=0.25] [delay]'
-S_ACTION_ELEVATOR_USAGE = 'Usage: /action add elevator <height> [speed=0.75] ' \
+S_ACTION_HEIGHT_USAGE = 'Usage: /action add height <height> [speed=0.15] [delay]'
+S_ACTION_RAISE_USAGE = 'Usage: /action add raise <amount> [speed=0.15] [delay]'
+S_ACTION_LOWER_USAGE = 'Usage: /action add lower <amount> [speed=0.15] [delay]'
+S_ACTION_ELEVATOR_USAGE = 'Usage: /action add elevator <height> [speed=0.25] ' \
     '[delay] [wait=3.0]'
 S_ACTION_OUTPUT_USAGE = 'Usage: /action add output [delay]'
 S_ACTION_TELEPORT_USAGE = 'Usage: /action add teleport <x y z|where>'
@@ -327,6 +334,7 @@ TRIGGER_ADD_USAGES = {
 }
 
 ACTION_RAY_LENGTH = 8.0
+ACTION_RAY_LENGTH_LONG = 32.0
 ACTION_COOLDOWN = 0.25
 
 def parseargs(signature, args):
@@ -356,6 +364,14 @@ def flatten(iterables):
 def save(connection):
     connection.protocol.dump_platform_json()
     return S_SAVED
+
+@admin
+def reach(connection):
+    if connection not in connection.protocol.players:
+        raise ValueError()
+    long = connection.reach == ACTION_RAY_LENGTH_LONG
+    connection.reach = ACTION_RAY_LENGTH if long else ACTION_RAY_LENGTH_LONG
+    return S_REACH if not long else S_NO_REACH
 
 @alias('p')
 @name('platform')
@@ -533,12 +549,12 @@ def action_command(connection, *args):
                 if action == 'elevator':
                     signature = 'int [float float float]'
                     value, speed, delay, wait = parseargs(signature, args[2:])
-                    speed = 0.75 if speed is None else speed
+                    speed = 0.25 if speed is None else speed
                     kwargs['wait'] = 3.0 if wait is None else wait
                 else:
                     signature = 'int [float float]'
                     value, speed, delay = parseargs(signature, args[2:])
-                    speed = 0.25 if speed is None else speed
+                    speed = 0.15 if speed is None else speed
                 kwargs['mode'] = action
                 kwargs['height'] = value
                 kwargs['speed'] = speed
@@ -693,7 +709,7 @@ def trigger_command(connection, *args):
         return usage
 
 for func in (platform_command, button_command, action_command,
-    trigger_command, save):
+    trigger_command, save, reach):
     add(func)
 
 def aabb(x, y, z, x1, y1, z1, x2, y2, z2):
@@ -1098,6 +1114,7 @@ class Platform(BaseObject):
     frozen = False
     mode = None
     busy = False
+    running = False
     delay_call = None
     bound_triggers = None
 
@@ -1108,7 +1125,6 @@ class Platform(BaseObject):
         self.z, self.start_z = z1, z2
         self.height = self.start_z - self.z
         self.color = color
-        self.cycle_loop = LoopingCall(self.cycle)
         for x, y, z in prism(x1, y1, z1, x2, y2, z2):
             protocol.map.set_point(x, y, z, color)
 
@@ -1136,9 +1152,6 @@ class Platform(BaseObject):
         if self.delay_call and self.delay_call.active():
             self.delay_call.cancel()
         self.delay_call = None
-        if self.cycle_loop and self.cycle_loop.running:
-            self.cycle_loop.stop()
-        self.cycle_loop = None
 
     def start(self, height, mode, speed, delay, wait = None, force = False):
         if self.busy and not force:
@@ -1155,19 +1168,23 @@ class Platform(BaseObject):
         if self.z == self.target_z:
             return
         self.busy = True
+        self.ticks_per_cycle = int(speed / UPDATE_FREQUENCY)
+        self.ticks_left = self.ticks_per_cycle
         self.start_cycle_later(delay)
 
     def start_cycle_later(self, delay):
+        self.running = False
         if self.delay_call and self.delay_call.active():
             self.delay_call.cancel()
         self.delay_call = None
-        if self.cycle_loop and self.cycle_loop.running:
-            self.cycle_loop.stop()
-        self.cycle_loop = LoopingCall(self.cycle)
         if delay > 0.0:
-            self.delay_call = callLater(delay, self.cycle_loop.start, self.speed)
+            self.delay_call = callLater(delay, self.run)
         else:
-            self.cycle_loop.start(self.speed)
+            self.run()
+
+    def run(self):
+        self.running = True
+        self.protocol.running_platforms.add(self)
 
     def cycle(self):
         if self.frozen:
@@ -1179,6 +1196,8 @@ class Platform(BaseObject):
             # unstuck players
             for player in self.protocol.players.itervalues():
                 obj = player.world_object
+                if obj is None:
+                    continue
                 looking_up = obj.orientation.get()[2] < 0.4 # 0.5 (allow lag)
                 x, y, z = obj.position.get()
                 if aabb(x, y, z, self.x1, self.y1, self.z - 2,
@@ -1200,14 +1219,13 @@ class Platform(BaseObject):
             self.z += 1
         self.height = self.start_z - self.z
         if self.z == self.target_z:
-            self.cycle_loop.stop()
-            self.cycle_loop = None
             if self.mode == 'elevator':
                 self.mode = 'return'
                 self.target_z = self.last_z
                 self.start_cycle_later(self.wait)
             else:
-                self.busy = False
+                self.busy = self.running = False
+                self.protocol.running_platforms.discard(self)
         if self.bound_triggers:
             for trigger in self.bound_triggers:
                 trigger.callback(self)
@@ -1268,7 +1286,7 @@ def player_action(player, select, inspect):
     if last_action is not None and seconds() - last_action <= ACTION_COOLDOWN:
         return
     player.last_action = seconds()
-    location = player.world_object.cast_ray(ACTION_RAY_LENGTH)
+    location = player.world_object.cast_ray(player.reach)
     if location is None:
         return
     x, y, z = location
@@ -1697,6 +1715,7 @@ def apply_script(protocol, connection, config):
         last_action = None
         previous_button = None
         previous_platform = None
+        reach = ACTION_RAY_LENGTH
 
         def on_reset(self):
             if self.states:
@@ -1789,6 +1808,7 @@ def apply_script(protocol, connection, config):
         highest_id = None
         platforms = None
         platform_json_dirty = False
+        running_platforms = None
         buttons = None
         position_triggers = None
         autosave_loop = None
@@ -1796,6 +1816,7 @@ def apply_script(protocol, connection, config):
         def on_map_change(self, map):
             self.highest_id = -1
             self.platforms = {}
+            self.running_platforms = set()
             self.buttons = MultikeyDict()
             self.position_triggers = []
             self.platform_json_dirty = False
@@ -1816,6 +1837,7 @@ def apply_script(protocol, connection, config):
             for button in self.buttons.itervalues():
                 button.release()
             self.platforms = None
+            self.running_platforms = None
             self.buttons = None
             self.position_triggers = None
             protocol.on_map_leave(self)
@@ -1824,6 +1846,11 @@ def apply_script(protocol, connection, config):
             for player in self.players.itervalues():
                 for trigger in self.position_triggers:
                     trigger.callback(player)
+            for platform in list(self.running_platforms):
+                platform.ticks_left -= 1
+                if platform.ticks_left <= 0:
+                    platform.ticks_left = platform.ticks_per_cycle
+                    platform.cycle()
             protocol.on_world_update(self)
 
         def get_platform_json_path(self):
