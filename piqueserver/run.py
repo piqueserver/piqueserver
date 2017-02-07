@@ -7,7 +7,7 @@ import argparse
 import urllib
 import gzip
 
-import cfg
+from piqueserver import cfg
 
 MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
 
@@ -56,7 +56,7 @@ def update_geoip(target_dir):
 
 
 def run_server():
-    import server
+    from piqueserver import server
     server.run()
 
 

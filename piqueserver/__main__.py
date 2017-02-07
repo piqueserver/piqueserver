@@ -2,5 +2,5 @@
 # enables running like `python2 -m piqueserver`
 
 if __name__ == '__main__':
-    import run
+    from piqueserver import run
     run.main()

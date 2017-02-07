@@ -29,7 +29,7 @@ import time
 import shutil
 from collections import deque
 
-import cfg
+from piqueserver import cfg
 
 CHAT_WINDOW_SIZE = 5
 CHAT_PER_SECOND = 0.5
@@ -70,26 +70,27 @@ if sys.platform == 'linux2':
     except ImportError:
         print '(dependencies missing for epoll, using normal reactor)'
 
-import pyspades.debug
-from pyspades.server import (ServerProtocol, ServerConnection, position_data,
-                             grenade_packet, Team)
-from map import Map, MapNotFound, check_rotation
-from console import create_console
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from twisted.python import log
 from twisted.python.logfile import DailyLogFile
+
+import pyspades.debug
+from pyspades.server import (ServerProtocol, ServerConnection, position_data,
+                             grenade_packet, Team)
 from pyspades.web import getPage
 from pyspades.common import encode, decode, prettify_timespan
 from pyspades.constants import *
 from pyspades.master import MAX_SERVER_NAME_SIZE, get_external_ip
 from pyspades.tools import make_server_identifier
 from pyspades.types import AttributeSet
-from networkdict import NetworkDict, get_network
 from pyspades.exceptions import InvalidData
 from pyspades.bytes import NoDataLeft
-from scheduler import Scheduler
-import commands
+from piqueserver.scheduler import Scheduler
+from piqueserver import commands
+from piqueserver.map import Map, MapNotFound, check_rotation
+from piqueserver.console import create_console
+from piqueserver.networkdict import NetworkDict, get_network
 
 
 def create_path(path):
@@ -598,23 +599,23 @@ class FeatureProtocol(ServerProtocol):
             pyspades.debug.open_debug_log(os.path.join(cfg.config_dir, 'debug.log'))
         ssh = config.get('ssh', {})
         if ssh.get('enabled', False):
-            from ssh import RemoteConsole
+            from piqueserver.ssh import RemoteConsole
             self.remote_console = RemoteConsole(self, ssh)
         irc = config.get('irc', {})
         if irc.get('enabled', False):
-            from irc import IRCRelay
+            from piqueserver.irc import IRCRelay
             self.irc_relay = IRCRelay(self, irc)
         status = config.get('status_server', {})
         if status.get('enabled', False):
-            from statusserver import StatusServerFactory
+            from piqueserver.statusserver import StatusServerFactory
             self.status_server = StatusServerFactory(self, status)
         publish = config.get('ban_publish', {})
         if publish.get('enabled', False):
-            from banpublish import PublishServer
+            from piqueserver.banpublish import PublishServer
             self.ban_publish = PublishServer(self, publish)
         ban_subscribe = config.get('ban_subscribe', {})
         if ban_subscribe.get('enabled', True):
-            import bansubscribe
+            from piqueserver import bansubscribe
             self.ban_manager = bansubscribe.BanManager(self, ban_subscribe)
         # logfile path relative to config dir if not abs path
         logfile = config.get('logfile', '')

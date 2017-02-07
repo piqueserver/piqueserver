@@ -21,7 +21,7 @@ from twisted.internet import reactor
 from twisted.protocols.basic import LineReceiver
 
 from pyspades.types import AttributeSet
-import commands
+from piqueserver import commands
 
 stdout = sys.__stdout__
 

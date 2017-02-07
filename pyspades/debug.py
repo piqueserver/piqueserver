@@ -44,7 +44,7 @@ def open_debug_log(file_name='debug.log'):
 def get_refcounts():
     d = {}
     import sys
-    import types
+    from pyspades import types
     # collect all classes
     for m in sys.modules.values():
         for sym in dir(m):

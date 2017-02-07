@@ -18,15 +18,21 @@
 import os
 import math
 import inspect
+import itertools
 from random import choice
-from pyspades.constants import *
-from pyspades.common import prettify_timespan
-from pyspades.server import parse_command
+
 from twisted.internet import reactor
 
-from map import check_rotation
+from pyspades.contained import KillAction
+from pyspades.server import (create_player, set_tool, set_color, input_data,
+                            weapon_input)
+from pyspades.constants import *
+from pyspades.common import (prettify_timespan, coordinates, to_coordinates,
+                            make_color)
+from pyspades.server import parse_command
+from piqueserver.map import check_rotation, Map
+from piqueserver import cfg
 
-import cfg
 commands = {}
 aliases = {}
 rights = {}
@@ -548,7 +554,6 @@ def unstick(connection, player=None):
 def tpsilent(connection, player1, player2=None):
     teleport(connection, player1, player2, silent=True)
 
-from pyspades.common import coordinates, to_coordinates
 
 
 @name('goto')
@@ -663,11 +668,6 @@ def fly(connection, player=None):
         connection.send_chat('%s is %s' % (player.name, message))
     protocol.irc_say('* %s is %s' % (player.name, message))
 
-from pyspades.contained import KillAction
-from pyspades.server import create_player, set_tool, set_color, input_data, weapon_input
-from pyspades.common import make_color
-
-
 @alias('invis')
 @alias('inv')
 @admin
@@ -776,10 +776,6 @@ def reset_game(connection):
     connection.protocol.on_game_end()
     connection.protocol.send_chat('Game has been reset by %s' % connection.name,
                                   irc=True)
-
-from map import Map
-import itertools
-
 
 @name('map')
 @admin

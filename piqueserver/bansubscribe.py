@@ -19,7 +19,7 @@ import json
 from twisted.internet.task import LoopingCall
 from twisted.internet.defer import DeferredList
 
-from networkdict import NetworkDict
+from piqueserver.networkdict import NetworkDict
 
 UPDATE_INTERVAL = 5 * 60  # every 5 minute
 

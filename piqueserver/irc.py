@@ -25,7 +25,7 @@ from twisted.internet import reactor, protocol
 from pyspades.constants import MAX_CHAT_SIZE
 from pyspades.common import encode, decode
 from pyspades.types import AttributeSet
-import commands
+import piqueserver.commands
 
 
 MAX_IRC_CHAT_SIZE = MAX_CHAT_SIZE * 2
