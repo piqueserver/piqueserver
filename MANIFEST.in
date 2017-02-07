@@ -1,7 +1,7 @@
 recursive-include enet/ *
 recursive-include examples/ * 
-recursive-include feature_server/ *
-# recursive-include feature_server/config/ *
+recursive-include piqueserver/ *
+# recursive-include piqueserver/config/ *
 recursive-include py2exe/ * 
 recursive-include pyspades/ * 
 # recursive-include piqueserver.egg-info/ * 
@@ -27,9 +27,9 @@ global-exclude *.la
 global-exclude *.a
 
 # config/userdata
-exclude feature_server/config/maps/*.txtc
-recursive-exclude feature_server/config/logs/ *
-recursive-exclude feature_server/config/data/ *
+exclude piqueserver/config/maps/*.txtc
+recursive-exclude piqueserver/config/logs/ *
+recursive-exclude piqueserver/config/data/ *
 
 # py2exe
 recursive-exclude py2exe/dist/

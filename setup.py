@@ -207,7 +207,7 @@ setup(
             '%s=%s.run:main' % (PKG_NAME, PKG_NAME)
         ],
     },
-    package_dir = {PKG_NAME: 'feature_server', '%s.web' % PKG_NAME: 'feature_server/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet/pyenet'}, # some kind of find_packages?
+    package_dir = {PKG_NAME: 'piqueserver', '%s.web' % PKG_NAME: 'piqueserver/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet/pyenet'}, # some kind of find_packages?
     package_data = {"%s.web" % PKG_NAME: ["templates/status.html"]},
     include_package_data=True,
 

@@ -32,14 +32,14 @@ PKG_NAME="piqueserver"
 open('./dist/run.bat', 'wb').write('run.exe\npause\n')
 open('./dist/version', 'wb').write(git_rev)
 
-if not os.path.isfile('../feature_server/data/GeoLiteCity.dat'):
+if not os.path.isfile('../piqueserver/data/GeoLiteCity.dat'):
     print '(missing GeoLiteCity.dat in data folder)'
 
 for name in SERVER_FILES:
-    copy('../feature_server/%s' % name, './dist/%s' % name)
+    copy('../piqueserver/%s' % name, './dist/%s' % name)
 
 for src, dst in COPY_FILES.iteritems():
-    copy('../feature_server/%s' % src, './dist/%s' % dst)
+    copy('../piqueserver/%s' % src, './dist/%s' % dst)
 
 for root, sub, files in os.walk('./dist'):
     for file in files:
@@ -52,7 +52,7 @@ for root, sub, files in os.walk('./dist'):
                     os.remove(path)
                     break
 
-filename = '%s-feature_server-%s.zip' % (PKG_NAME, git_rev)
+filename = '%s-piqueserver-%s.zip' % (PKG_NAME, git_rev)
 
 try:
     os.remove(filename)
