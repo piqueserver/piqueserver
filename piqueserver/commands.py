@@ -290,8 +290,10 @@ def help(connection):
     if connection.protocol.help is not None and not connection.admin:
         connection.send_lines(connection.protocol.help)
     else:
-        names = [command.func_name for command in command_list
-                 if command.func_name in connection.rights]
+
+        names = [command.func_name for command in command_list # pylint: disable=no-member
+                 if command.func_name in connection.rights]    # pylint: disable=no-member
+
         return 'Available commands: %s' % (', '.join(names))
 
 
@@ -1099,6 +1101,7 @@ def handle_command(connection, command, parameters):
     min_params = len(argspec.args) - 1 - len(argspec.defaults or ())
     max_params = len(argspec.args) - 1 if argspec.varargs is None else None
     len_params = len(parameters)
+    msg = None
     if (len_params < min_params
             or max_params is not None and len_params > max_params):
         return 'Invalid number of arguments for %s' % command
@@ -1107,19 +1110,20 @@ def handle_command(connection, command, parameters):
             return "You can't use this command"
         return command_func(connection, *parameters)
     except KeyError:
-        return  # 'Invalid command'
+        msg = None  # 'Invalid command'
     except TypeError as t:
         print 'Command', command, 'failed with args:', parameters
         print t
-        return 'Command failed'
+        msg = 'Command failed'
     except InvalidPlayer:
-        return 'No such player'
+        msg = 'No such player'
     except InvalidTeam:
-        return 'Invalid team specifier'
+        msg = 'Invalid team specifier'
     except ValueError:
-        return 'Invalid parameters'
+        msg = 'Invalid parameters'
+    return msg
 
 
-def handle_input(connection, input):
+def handle_input(connection, user_input):
     # for IRC and console
-    return handle_command(connection, *parse_command(input))
+    return handle_command(connection, *parse_command(user_input))

@@ -147,8 +147,8 @@ class IRCBot(irc.IRCClient):
             if msg.startswith(self.factory.commandprefix) and user in self.ops:
                 self.unaliased_name = user
                 self.name = prefix + alias
-                input = msg[len(self.factory.commandprefix):]
-                result = commands.handle_input(self, input)
+                user_input = msg[len(self.factory.commandprefix):]
+                result = commands.handle_input(self, user_input)
                 if result is not None:
                     self.send("%s: %s" % (user, result))
             elif msg.startswith(self.factory.chatprefix):
