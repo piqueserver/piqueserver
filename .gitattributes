@@ -1,0 +1,19 @@
+
+*.json      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.gitignore text eol=lf
+*.md        text eol=lf
+*.py        text eol=lf
+*.html      text eol=lf
+*.js        text eol=lf
+*.css       text eol=lf
+*.cpp       text eol=lf
+*.pxd       text eol=lf
+*.pyx       text eol=lf
+*.h         text eol=lf
+*.txt       text eol=lf
+*.cfg       text eol=lf
+
+*.bat       text eol=crlf
+*.ps1       text eol=crlf
