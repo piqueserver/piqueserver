@@ -23,10 +23,13 @@ import json
 
 SERVER_LIST = 'http://ace-spades.com/serverlist.json'
 
+
 class ServerEntry(object):
+
     def __init__(self, value):
         for k, v in value.iteritems():
             setattr(self, k, v)
+
 
 def got_servers(data, defer):
     data = json.loads(data)
@@ -37,6 +40,7 @@ def got_servers(data, defer):
         entry['port'] = port
         entries.append(ServerEntry(entry))
     defer.callback(entries)
+
 
 def get_servers():
     defer = Deferred()

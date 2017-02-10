@@ -17,12 +17,13 @@
 
 import itertools
 
+
 class IDPool(object):
     """
     Manage pool of IDs
     """
 
-    def __init__(self, start = 0):
+    def __init__(self, start=0):
         self.free_ids = []
         self.new_ids = itertools.count(start)
 
@@ -34,6 +35,7 @@ class IDPool(object):
 
     def put_back(self, id):
         self.free_ids.append(id)
+
 
 class AttributeSet(set):
     """
@@ -57,6 +59,7 @@ class AttributeSet(set):
         else:
             self.discard(name)
 
+
 class DictItem(object):
     keys = None
     value = None
@@ -70,6 +73,7 @@ class DictItem(object):
 
     def __repr__(self):
         return repr(self.value)
+
 
 class MultikeyDict(dict):
     """
@@ -110,7 +114,7 @@ class MultikeyDict(dict):
                 raise KeyError('key %s already exists' % key)
             dict.__setitem__(self, key, new_item)
 
-    def get(self, key, default = None):
+    def get(self, key, default=None):
         return self[key] if key in self else default
 
     def clear(self):

@@ -20,7 +20,7 @@ cdef extern from "Python.h":
     char* PyString_AS_STRING(object)
 
 cdef inline object allocate_memory(int size, char ** i):
-    if size < 0: 
+    if size < 0:
         size = 0
     cdef object ob = PyString_FromStringAndSize(NULL, size)
     i[0] = PyString_AS_STRING(ob)
@@ -29,10 +29,10 @@ cdef inline object allocate_memory(int size, char ** i):
 cdef extern from "common_c.h":
     struct Vector:
         float x, y, z
-    
+
     struct LongVector:
         int x, y, z
-    
+
     Vector * create_vector(float x, float y, float z)
     void destroy_vector(Vector*)
 

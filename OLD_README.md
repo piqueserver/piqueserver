@@ -25,7 +25,7 @@ PySnip is an robust, open-source and cross-platform server implementation for [A
 * Dirt grenades
 * Platforms with buttons
 * Ban subscribe service
-* A ton of other features 
+* A ton of other features
 
 ### Installing ###
 #### For windows ####
