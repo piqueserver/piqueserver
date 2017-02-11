@@ -93,6 +93,8 @@ def get_git_rev():
     if not ret:
         return 'unknown'
     return ret
+
+
 def create_path(path):
     if path:
         try:
@@ -165,7 +167,7 @@ class FeatureConnection(ServerConnection):
         if len(self.printable_name) > 15:
             self.kick(silent=True)
         print('%s (IP %s, ID %s) entered the game!' % (self.printable_name,
-            self.address[0], self.player_id))
+                                                       self.address[0], self.player_id))
         self.protocol.irc_say('* %s (IP %s, ID %s) entered the game!' %
                               (self.name, self.address[0], self.player_id))
         if self.user_types is None:
@@ -219,7 +221,7 @@ class FeatureConnection(ServerConnection):
         # originally from the bugfix.py script
         # prevent "unlimited tower" crash, fix by Danko
         for point in points:
-            x,y,z = point
+            x, y, z = point
             if x < 0 or x > 511 or y < 0 or y > 511 or z < 0 or z > 61:
                 return False
         return True
@@ -337,7 +339,8 @@ class FeatureConnection(ServerConnection):
                     return False
                 if (self.last_switch is not None and
                         reactor.seconds() - self.last_switch < teamswitch_interval * 60):
-                    self.send_chat('You must wait before switching teams again')
+                    self.send_chat(
+                        'You must wait before switching teams again')
                     return False
         if team.locked:
             self.send_chat('Team is locked')
@@ -365,7 +368,8 @@ class FeatureConnection(ServerConnection):
                     if self.chat_count / self.chat_time > CHAT_PER_SECOND:
                         self.mute = True
                         self.protocol.send_chat(
-                            '%s has been muted for excessive spam' % (self.name),
+                            '%s has been muted for excessive spam' % (
+                                self.name),
                             irc=True)
                     self.chat_time = self.chat_count = 0
                 else:
@@ -550,7 +554,7 @@ class FeatureProtocol(ServerProtocol):
         if config.get('random_rotation', False):
             self.map_rotator_type = random_choice_cycle
         else:
-            self.map_rotator_type = itertools.cycle # pylint: disable=redefined-variable-type
+            self.map_rotator_type = itertools.cycle  # pylint: disable=redefined-variable-type
         self.default_time_limit = config.get('default_time_limit', 20.0)
         self.default_cap_limit = config.get('cap_limit', 10.0)
         self.advance_on_win = int(config.get('advance_on_win', False))
@@ -558,7 +562,8 @@ class FeatureProtocol(ServerProtocol):
         self.bans = NetworkDict()
         # TODO: check if this is actually working and not silently failing
         try:
-            self.bans.read_list(json.load(open(os.path.join(cfg.config_dir, 'bans.txt'), 'rb')))
+            self.bans.read_list(
+                json.load(open(os.path.join(cfg.config_dir, 'bans.txt'), 'rb')))
         except IOError:
             pass
         self.hard_bans = set()  # possible DDoS'ers are added here
@@ -610,7 +615,8 @@ class FeatureProtocol(ServerProtocol):
         self.set_god_build = config.get('set_god_build', False)
         self.debug_log = config.get('debug_log', False)
         if self.debug_log:
-            pyspades.debug.open_debug_log(os.path.join(cfg.config_dir, 'debug.log'))
+            pyspades.debug.open_debug_log(
+                os.path.join(cfg.config_dir, 'debug.log'))
         ssh = config.get('ssh', {})
         if ssh.get('enabled', False):
             from piqueserver.ssh import RemoteConsole
@@ -648,7 +654,8 @@ class FeatureProtocol(ServerProtocol):
         self.start_time = reactor.seconds()
         self.end_calls = []
         # TODO: why is this here?
-        self.console = create_console(self) # pylint: disable=assignment-from-no-return
+        self.console = create_console(
+            self)  # pylint: disable=assignment-from-no-return
 
         # check for default password usage
         for group, passwords in self.passwords.iteritems():
@@ -729,7 +736,8 @@ class FeatureProtocol(ServerProtocol):
             else:
                 self.send_chat('%s seconds remaining.' % int(round(remaining)))
         else:
-            self.send_chat('%s minutes remaining.' % int(round(remaining / 60)))
+            self.send_chat('%s minutes remaining.' %
+                           int(round(remaining / 60)))
 
     def _time_up(self):
         self.advance_call = None
@@ -788,7 +796,7 @@ class FeatureProtocol(ServerProtocol):
             if (x, y, z) not in self.user_blocks:
                 return True
         if self.god_blocks is not None:
-            if (x, y, z) in self.god_blocks: # pylint: disable=unsupported-membership-test
+            if (x, y, z) in self.god_blocks:  # pylint: disable=unsupported-membership-test
                 return True
         map_is_indestructable = self.map_info.is_indestructable
         if map_is_indestructable is not None:
@@ -810,7 +818,7 @@ class FeatureProtocol(ServerProtocol):
         if self.master_connection is not None:
             self.master_connection.send_server()
 
-    def format(self, value, extra={}): # pylint: disable=dangerous-default-value
+    def format(self, value, extra={}):  # pylint: disable=dangerous-default-value
         map_info = self.map_info
         format_dict = {
             'map_name': map_info.name,
@@ -1026,7 +1034,7 @@ def run():
             cfg.config = config
     except IOError as e:
         print('Error reading config from {}: '.format(cfg.config_file) + str(e))
-        print('If you haven\'t already, try copying the example config to ' \
+        print('If you haven\'t already, try copying the example config to '
               'the default location with "piqueserver --copy-config".')
         sys.exit(1)
     except ValueError as e:
@@ -1037,7 +1045,7 @@ def run():
     if cfg.json_parameters:
         try:
             params = json.loads(cfg.json_parameters)
-        except Exception as e: # pylint: disable=broad-except
+        except Exception as e:  # pylint: disable=broad-except
             print('Error loading json parameters from the command line')
             print(e)
             sys.exit(1)
@@ -1086,7 +1094,8 @@ def run():
 
     # TODO: is this required? Maybe protocol_class needs to be called?
     #       either way, this variable isn't used
-    protocol_instance = protocol_class(interface, config) # pylint: disable=unused-variable
+    protocol_instance = protocol_class(
+        interface, config)  # pylint: disable=unused-variable
 
     print('Started server...')
 
