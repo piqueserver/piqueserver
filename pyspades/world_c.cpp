@@ -61,7 +61,7 @@ struct Orientation
 struct PlayerType
 {
     Vector p, e, v, s, h, f;
-    int mf, mb, ml, mr, jump, crouch, sneak, sprint, primary_fire, 
+    int mf, mb, ml, mr, jump, crouch, sneak, sprint, primary_fire,
         secondary_fire;
     float lastclimb;
     int airborne, wade, alive, weapon;
@@ -73,7 +73,7 @@ struct GrenadeType
 };
 
 inline void get_orientation(Orientation * o,
-                            float orientation_x, 
+                            float orientation_x,
                             float orientation_y,
                             float orientation_z)
 {
@@ -96,8 +96,8 @@ float distance3d(float x1, float y1, float z1, float x2, float y2, float z2)
 }
 
 int validate_hit(float shooter_x, float shooter_y, float shooter_z,
-                 float orientation_x, float orientation_y, float orientation_z, 
-                 float ox, float oy, float oz, 
+                 float orientation_x, float orientation_y, float orientation_z,
+                 float ox, float oy, float oz,
                  float tolerance)
 {
     float cx, cy, cz, r, x, y;
@@ -190,7 +190,7 @@ long can_see(MapData * map, float x0, float y0, float z0, float x1, float y1,
     else if (c.x != a.x) {
         d.x =  1; f.x = a.x+1-x0; g.x = (x1-x0)*1024; cnt += c.x-a.x;
     }
-    else 
+    else
         f.x = g.x = 0;
     if (c.y <  a.y) {
         d.y = -1; f.y = y0-a.y;   g.y = (y0-y1)*1024; cnt += a.y-c.y;
@@ -253,7 +253,7 @@ long cast_ray(MapData * map, float x0, float y0, float z0, float x1, float y1,
     else if (c.x != a.x) {
         d.x =  1; f.x = a.x+1-x0; g.x = (x1-x0)*1024; cnt += c.x-a.x;
     }
-    else 
+    else
         f.x = g.x = 0;
     if (c.y <  a.y) {
         d.y = -1; f.y = y0-a.y;   g.y = (y0-y1)*1024; cnt += a.y-c.y;
@@ -394,7 +394,7 @@ size_t cube_line(int x1, int y1, int z1, int x2, int y2, int z2,
 
 // original C code
 
-void reposition_player(PlayerType * p, Vector * position) 
+void reposition_player(PlayerType * p, Vector * position)
 {
     float f; /* FIXME meaningful name */
 
@@ -653,19 +653,19 @@ int move_grenade(GrenadeType * g)
     lp.x = (long)floor(g->p.x);
     lp.y = (long)floor(g->p.y);
     lp.z = (long)floor(g->p.z);
-    
+
     int ret = 0;
-    
+
     if(clipworld(lp.x, lp.y, lp.z))  //hit a wall
     {
         #define BOUNCE_SOUND_THRESHOLD 0.1f
-        
+
         ret = 1;
         if(fabs(g->v.x) > BOUNCE_SOUND_THRESHOLD ||
            fabs(g->v.y) > BOUNCE_SOUND_THRESHOLD ||
            fabs(g->v.z) > BOUNCE_SOUND_THRESHOLD)
             ret = 2; // play sound
-        
+
         LongVector lp2;
         lp2.x = (long)floor(fpos.x);
         lp2.y = (long)floor(fpos.y);
