@@ -31,7 +31,7 @@ from pyspades.constants import (GRENADE_KILL, FALL_KILL, NETWORK_FPS)
 from pyspades.common import (prettify_timespan, coordinates, to_coordinates,
                              make_color)
 from pyspades.server import parse_command
-from piqueserver.map import check_rotation # pylint: disable=unused-import
+from piqueserver.map import check_rotation, MapNotFound
 from piqueserver import cfg
 
 commands = {}
@@ -787,20 +787,20 @@ def reset_game(connection):
 @name('map')
 @admin
 def change_planned_map(connection, *pre_maps):
-    # name = connection.name
+    name = connection.name
     protocol = connection.protocol
-    #
-    # # parse seed numbering
-    # maps, map_list = parse_maps(pre_maps)
-    # if not maps:
-    #     return 'Invalid map name'
-    #
-    # planned_map = maps[0]
-    # XXX: check_rotation takes a second argument - load_dir
-    #      this command must be currently broken
-    # protocol.planned_map = check_rotation([planned_map])[0]
-    # protocol.send_chat('%s changed next map to %s' % (name, planned_map), irc=True)
-    protocol.send_chat('map command currently broken', irc=True)
+
+    # parse seed numbering
+    maps, _map_list = parse_maps(pre_maps)
+    if not maps:
+        return 'Invalid map name'
+
+    planned_map = maps[0]
+    try:
+        protocol.planned_map = check_rotation([planned_map])[0]
+        protocol.send_chat('%s changed next map to %s' % (name, planned_map), irc=True)
+    except MapNotFound:
+        return 'Map %s not found' % (maps[0])
 
 
 @name('rotation')
