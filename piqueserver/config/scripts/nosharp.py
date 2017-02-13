@@ -21,16 +21,18 @@ def apply_script(protocol, connection, config):
 
             autokick_call = None
 
-            if len(self.name) == 0:
-                if block_noname:
-                    self.set_team(self.protocol.spectator_team)
-                    self.send_chat('%% Your name is empty. Will be kicked soon.')
-                    self.autokick_call = reactor.callLater(autokick_duration, self.autokick)
+            if block_noname and len(self.name.strip()) == 0:
+                self.set_team(self.protocol.spectator_team)
+                self.send_chat('%% Your name is empty. Will be kicked in %s seconds.'
+                               % (autokick_duration))
+                self.autokick_call = reactor.callLater(autokick_duration, self.autokick)
 
             elif block_sharpname and self.name[0] == '#':
                 self.set_team(self.protocol.spectator_team)
-                self.send_chat('%% Your name starts with #. Will be kicked soon.')
+                self.send_chat('%% Your name starts with #. Will be kicked in %s seconds.'
+                               % (autokick_duration))
                 self.autokick_call = reactor.callLater(autokick_duration, self.autokick)
+
             else:
                 return connection.on_spawn(self, pos)
 
