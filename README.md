@@ -25,8 +25,8 @@ python setup.py install
 
 ### Archlinux
 
-An [aur package](https://aur.archlinux.org/packages/piqueserver-git/) (git master) is available. Install manually or
-with your favourite aur helper:
+An [AUR package](https://aur.archlinux.org/packages/piqueserver-git/) (git master) is available. Install manually or
+with your favourite AUR helper:
 
 ```bash
 pacaur -y piqueserver-git
