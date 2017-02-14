@@ -7,13 +7,13 @@ An Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/P
 
 ## :rocket: Installation
 
-Install with pip:
+### pip (stable version)
 
 ```bash
 pip install piqueserver
 ```
 
-or from git:
+### git (bleeding edge)
 
 ```bash
 git clone https://github.com/piqueserver/piqueserver
@@ -22,6 +22,17 @@ source venv/bin/activate
 pip install -r requirements.txt
 python setup.py install
 ```
+
+### Archlinux
+
+An [AUR package](https://aur.archlinux.org/packages/piqueserver-git/) (git master) is available. Install manually or
+with your favourite AUR helper:
+
+```bash
+pacaur -y piqueserver-git
+```
+
+## :rocket: Running
 
 Then copy the default configuration as a base to work off
 
