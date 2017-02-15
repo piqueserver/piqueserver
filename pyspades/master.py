@@ -26,7 +26,6 @@ from pyspades.constants import MASTER_VERSION
 
 import random
 
-STAGING = 0
 PORT = 32886
 
 MAX_SERVER_NAME_SIZE = 31
@@ -35,8 +34,6 @@ MAX_GAME_MODE_SIZE = 7
 
 HOST = 'master.buildandshoot.com'
 
-if STAGING:
-    PORT = 32885
 
 
 class AddServer(Loader):
