@@ -19,6 +19,7 @@ EXTENDED_RATIO = False
 RATIO_ON_VOTEKICK = True
 IRC_ONLY = False
 
+
 def ratio(connection, user=None):
     msg = "You have"
     if user != None:
@@ -29,23 +30,25 @@ def ratio(connection, user=None):
         msg %= connection.name
     if connection not in connection.protocol.players:
         raise KeyError()
-    
+
     kills = connection.ratio_kills
-    deaths = float(max(1,connection.ratio_deaths))
+    deaths = float(max(1, connection.ratio_deaths))
     headshotkills = connection.ratio_headshotkills
     meleekills = connection.ratio_meleekills
     grenadekills = connection.ratio_grenadekills
-    
-    msg += " a kill-death ratio of %.2f" % (kills/deaths)
+
+    msg += " a kill-death ratio of %.2f" % (kills / deaths)
     if HEADSHOT_RATIO:
-        msg += ", headshot-death ratio of %.2f" % (headshotkills/deaths)
+        msg += ", headshot-death ratio of %.2f" % (headshotkills / deaths)
     msg += " (%s kills, %s deaths" % (kills, connection.ratio_deaths)
     if EXTENDED_RATIO:
-        msg += ", %s headshot, %s melee, %s grenade" % (headshotkills, meleekills, grenadekills)
+        msg += ", %s headshot, %s melee, %s grenade" % (
+            headshotkills, meleekills, grenadekills)
     msg += ")."
     return msg
 
 add(ratio)
+
 
 def apply_script(protocol, connection, config):
     class RatioConnection(connection):
@@ -54,27 +57,29 @@ def apply_script(protocol, connection, config):
         ratio_meleekills = 0
         ratio_grenadekills = 0
         ratio_deaths = 0
-        
+
         def on_kill(self, killer, type, grenade):
             if killer is not None and self.team is not killer.team:
                 if self != killer:
                     killer.ratio_kills += 1
                     killer.ratio_headshotkills += type == HEADSHOT_KILL
-                    killer.ratio_meleekills    += type == MELEE_KILL
-                    killer.ratio_grenadekills  += type == GRENADE_KILL
-            
+                    killer.ratio_meleekills += type == MELEE_KILL
+                    killer.ratio_grenadekills += type == GRENADE_KILL
+
             self.ratio_deaths += 1
             return connection.on_kill(self, killer, type, grenade)
-    
+
     class RatioProtocol(protocol):
+
         def on_votekick_start(self, instigator, victim, reason):
-            result = protocol.on_votekick_start(self, instigator, victim, reason)
+            result = protocol.on_votekick_start(
+                self, instigator, victim, reason)
             if result is None and RATIO_ON_VOTEKICK:
                 message = ratio(instigator, victim.name)
                 if IRC_ONLY:
                     self.irc_say('* ' + message)
                 else:
-                    self.send_chat(message, irc = True)
+                    self.send_chat(message, irc=True)
             return result
-    
+
     return RatioProtocol, RatioConnection
