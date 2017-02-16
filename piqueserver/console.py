@@ -27,7 +27,7 @@ stdout = sys.__stdout__
 
 if sys.platform == 'win32':
     # StandardIO on Windows does not work, so we create a silly replacement
-    import msvcrt # pylint: disable=import-error
+    import msvcrt  # pylint: disable=import-error
 
     class StandardIO(object):
         disconnecting = False

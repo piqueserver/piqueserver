@@ -142,7 +142,8 @@ def apply_script(protocol, connection, config):
             protocol.on_map_change(self, map)
 
         def on_votekick_start(self, instigator, victim, reason):
-            result = protocol.on_votekick_start(self, instigator, victim, reason)
+            result = protocol.on_votekick_start(
+                self, instigator, victim, reason)
             if result is None and GRIEFCHECK_ON_VOTEKICK:
                 message = grief_check(instigator, victim.name)
                 if IRC_ONLY:

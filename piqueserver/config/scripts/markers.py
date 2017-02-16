@@ -252,12 +252,15 @@ def parse_string_map(xs_and_dots):
             if max(h, v) == 1:
                 points.append((x + off_x, y + off_y))
             elif h >= v:
-                lines.append((x + off_x, y + off_y, x + off_x + h - 1, y + off_y))
+                lines.append((x + off_x, y + off_y, x +
+                              off_x + h - 1, y + off_y))
                 row = '.' * (x + h) + row[(x + h):]
                 next(islice(it, h, h), None)  # forward the iterator
             else:
-                lines.append((x + off_x, y + off_y, x + off_x, y + off_y + v - 1))
-                rows[y:y + v] = (r[:x] + '.' + r[x + 1:] for r in rows[y:y + v])
+                lines.append((x + off_x, y + off_y, x +
+                              off_x, y + off_y + v - 1))
+                rows[y:y + v] = (r[:x] + '.' + r[x + 1:]
+                                 for r in rows[y:y + v])
     return lines, points
 
 
@@ -656,8 +659,10 @@ def apply_script(protocol, connection, config):
                             coords = to_coordinates(*location)
                             chat_message.chat_type = CHAT_TEAM
                             chat_message.player_id = self.player_id
-                            chat_message.value = S_SPOTTED.format(coords=coords)
-                            self.protocol.send_contained(chat_message, team=self.team)
+                            chat_message.value = S_SPOTTED.format(
+                                coords=coords)
+                            self.protocol.send_contained(
+                                chat_message, team=self.team)
                             self.make_marker(Enemy, location)
                             presses.clear()
             return connection.on_animation_update(self, jump, crouch, sneak,
@@ -686,7 +691,8 @@ def apply_script(protocol, connection, config):
                                 self.send_chat(S_FAIL)
                         else:
                             x, y, z = self.get_location()
-                            location = (x + 6 if self.team.id == 0 else x - 6, y)
+                            location = (x + 6 if self.team.id ==
+                                        0 else x - 6, y)
                         if location:
                             self.make_marker(marker_class, location)
             return connection.on_chat(self, value, global_message)
@@ -742,7 +748,8 @@ def apply_script(protocol, connection, config):
                 for player in enemy_team.get_players():
                     x, y, z = player.get_location()
                     delay += 0.15
-                    call = callLater(delay, Enemy, self.protocol, self.team, x, y)
+                    call = callLater(
+                        delay, Enemy, self.protocol, self.team, x, y)
                     self.team.marker_calls.append(call)
             connection.on_flag_capture(self)
 

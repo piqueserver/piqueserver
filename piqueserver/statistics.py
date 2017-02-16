@@ -175,7 +175,7 @@ if __name__ == '__main__':
             print 'Checking user name/pass (%s, %s)' % (name, password)
             # TODO: pylint thinks this function should have an argument
             #       check it out
-            return succeed() # pylint: disable=no-value-for-parameter
+            return succeed()  # pylint: disable=no-value-for-parameter
 
     class TestFactory(StatsFactory):
         protocol = TestServer

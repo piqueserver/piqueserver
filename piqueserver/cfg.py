@@ -1,6 +1,7 @@
 
 # to have global configuration variables
-# similar to http://effbot.org/pyfaq/how-do-i-share-global-variables-across-modules.htm
+# similar to
+# http://effbot.org/pyfaq/how-do-i-share-global-variables-across-modules.htm
 
 import os
 import sys

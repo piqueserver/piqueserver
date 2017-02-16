@@ -1603,7 +1603,8 @@ class TriggerAddState(State):
         elif self.trigger == 'height':
             if not self.platform:
                 return S_COMMAND_CANCEL.format(command=self.name)
-            new_trigger = HeightTrigger(protocol, self.platform.id, self.height)
+            new_trigger = HeightTrigger(
+                protocol, self.platform.id, self.height)
         new_trigger.negate = self.negate
 
         if not self.add:

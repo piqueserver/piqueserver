@@ -27,6 +27,7 @@ def apply_script(protocol, connection, config):
 
     class MedkitConnection(connection):
         medkits = 0
+
         def on_spawn(self, pos):
             self.medkits = default_medkits
             self.send_chat('You have %s medkit!' % self.medkits)

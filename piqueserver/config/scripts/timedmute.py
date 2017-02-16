@@ -51,7 +51,8 @@ class TimedMute(object):
 
     def end(self):
         self.player.mute = False
-        message = '%s was unmuted after %s seconds' % (self.player.name, self.time)
+        message = '%s was unmuted after %s seconds' % (
+            self.player.name, self.time)
         self.player.protocol.send_chat(message, irc=True)
 
 

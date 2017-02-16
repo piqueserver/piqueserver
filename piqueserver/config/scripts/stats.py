@@ -56,6 +56,7 @@ def apply_script(protocol, connection, config):
 
     class StatisticsProtocol(protocol):
         stats = None
+
         def __init__(self, *arg, **kw):
             protocol.__init__(self, *arg, **kw)
             connect_statistics(host, port, server_name, password,

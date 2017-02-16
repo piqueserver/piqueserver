@@ -25,7 +25,8 @@ def commands(connection, value=None):
                 if (value is None or fnmatch.fnmatch(a, value)):
                     include = True
                 aliases.append(a)
-        cmd = command if len(aliases) == 0 else ('%s (%s)' % (command, ', '.join(aliases)))
+        cmd = command if len(aliases) == 0 else (
+            '%s (%s)' % (command, ', '.join(aliases)))
         if include:
             names.append(cmd)
     return 'Commands: %s' % (', '.join(names))

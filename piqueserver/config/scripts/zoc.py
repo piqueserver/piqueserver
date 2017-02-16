@@ -129,7 +129,8 @@ def apply_script(protocol, connection, config):
             if self.game_mode == CTF_MODE:
                 for flag in [self.green_team.flag, self.blue_team.flag]:
                     if flag.player is None:
-                        zones.append(self._build_zoc(flag.x, flag.y, flag.team))
+                        zones.append(self._build_zoc(
+                            flag.x, flag.y, flag.team))
                 for base in [self.green_team.base, self.blue_team.base]:
                     zones.append(self._build_zoc(base.x, base.y, base.team))
             elif self.game_mode == TC_MODE:

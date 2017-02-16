@@ -94,7 +94,8 @@ def apply_script(protocol, connection, config):
                 return
             self.aimbot_kill_warn_last = curtime
             aimwarn = "AIMBOT WARNING: Player \"%s\" got %d kills in the last %d seconds!" % (
-                self.name, self.tally_kill_log(self.aimbot_kill_time), self.aimbot_kill_time
+                self.name, self.tally_kill_log(
+                    self.aimbot_kill_time), self.aimbot_kill_time
             )
             self.protocol.irc_say(aimwarn)
 

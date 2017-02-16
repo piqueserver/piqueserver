@@ -65,7 +65,8 @@ def apply_script(protocol, connection, config):
     class RollbackProtocol(protocol):
         rollback_in_progress = False
         rollback_max_rows = 10  # per 'cycle', intended to cap cpu usage
-        rollback_max_packets = 180  # per 'cycle' cap for (unique packets * players)
+        # per 'cycle' cap for (unique packets * players)
+        rollback_max_packets = 180
         rollback_max_unique_packets = 12  # per 'cycle', each block op is at least 1
         rollback_time_between_cycles = 0.06
         rollback_time_between_progress_updates = 10.0
@@ -139,7 +140,8 @@ def apply_script(protocol, connection, config):
                 if (time.time() - self.rollback_last_chat >
                         self.rollback_time_between_progress_updates):
                     self.rollback_last_chat = time.time()
-                    progress = float(self.rollback_rows) / self.rollback_total_rows
+                    progress = float(self.rollback_rows) / \
+                        self.rollback_total_rows
                     if progress < 1.0:
                         message = S_ROLLBACK_PROGRESS.format(percent=progress)
                         self.send_chat(message)

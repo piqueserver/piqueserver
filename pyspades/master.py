@@ -35,7 +35,6 @@ MAX_GAME_MODE_SIZE = 7
 HOST = 'master.buildandshoot.com'
 
 
-
 class AddServer(Loader):
     __slots__ = ['count', 'max_players', 'name', 'port', 'game_mode', 'map']
 

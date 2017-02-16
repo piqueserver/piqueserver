@@ -197,7 +197,8 @@ def apply_script(protocol, connection, config):
         def __init__(self, interface, config):
             protocol.__init__(self, interface, config)
             self.votemap_autoschedule = config.get('votemap_autoschedule', 180)
-            self.votemap_public_votes = config.get('votemap_public_votes', True)
+            self.votemap_public_votes = config.get(
+                'votemap_public_votes', True)
             self.votemap_time = config.get('votemap_time', 120)
             self.votemap_extension_time = config.get('votemap_extension_time',
                                                      15)

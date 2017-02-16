@@ -121,7 +121,8 @@ def partition(points, d, c1, c2):
     for div in row_list:
         row_list_sorted.append(sorted(div, key=lambda k: k[d]))
     # row_list_sorted is a list containing lists of points that all have the same
-    # point[c1] and point[c2] values and are sorted in increasing order according to point[d]
+    # point[c1] and point[c2] values and are sorted in increasing order
+    # according to point[d]
     start_block = None
     final_blocks = []
     for block_list in row_list_sorted:
@@ -134,7 +135,8 @@ def partition(points, d, c1, c2):
                 next_block = None
             else:
                 next_block = block_list[i + 1]
-            # Current AoS version seems to have an upper limit of 65 blocks for a block line
+            # Current AoS version seems to have an upper limit of 65 blocks for
+            # a block line
             if counter == 65 or next_block is None or block[d] + 1 != next_block[d]:
                 final_blocks.append([start_block, block])
                 start_block = None
@@ -191,7 +193,8 @@ class Gate:
         map = self.protocol_obj.map
         solid, self.color = map.get_point(x, y, z)
         if not solid:
-            raise CustomException('The gate coordinate (%i, %i, %i) is not solid.' % (x, y, z))
+            raise CustomException(
+                'The gate coordinate (%i, %i, %i) is not solid.' % (x, y, z))
         self.record_gate(x, y, z)
         self.blocks = minimize_block_line(self.blocks)
 
@@ -440,19 +443,26 @@ def apply_script(protocol, connection, config):
                     for gate in extensions['arena_gates']:
                         self.gates.append(Gate(*gate, protocol_obj=self))
                 if extensions.has_key('arena_green_spawns'):
-                    self.green_team.arena_spawns = extensions['arena_green_spawns']
+                    self.green_team.arena_spawns = extensions[
+                        'arena_green_spawns']
                 elif extensions.has_key('arena_green_spawn'):
-                    self.green_team.arena_spawns = (extensions['arena_green_spawn'],)
+                    self.green_team.arena_spawns = (
+                        extensions['arena_green_spawn'],)
                 else:
-                    raise CustomException('No arena_green_spawns given in map metadata.')
+                    raise CustomException(
+                        'No arena_green_spawns given in map metadata.')
                 if extensions.has_key('arena_blue_spawns'):
-                    self.blue_team.arena_spawns = extensions['arena_blue_spawns']
+                    self.blue_team.arena_spawns = extensions[
+                        'arena_blue_spawns']
                 elif extensions.has_key('arena_blue_spawn'):
-                    self.blue_team.arena_spawns = (extensions['arena_blue_spawn'],)
+                    self.blue_team.arena_spawns = (
+                        extensions['arena_blue_spawn'],)
                 else:
-                    raise CustomException('No arena_blue_spawns given in map metadata.')
+                    raise CustomException(
+                        'No arena_blue_spawns given in map metadata.')
                 if extensions.has_key('arena_max_spawn_distance'):
-                    self.arena_max_spawn_distance = extensions['arena_max_spawn_distance']
+                    self.arena_max_spawn_distance = extensions[
+                        'arena_max_spawn_distance']
                 self.delay_arena_countdown(MAP_CHANGE_DELAY)
                 self.begin_arena_countdown()
             else:
@@ -488,7 +498,8 @@ def apply_script(protocol, connection, config):
                 if player.world_object.dead:
                     player.spawn(random.choice(player.team.arena_spawns))
                 else:
-                    player.set_location(random.choice(player.team.arena_spawns))
+                    player.set_location(
+                        random.choice(player.team.arena_spawns))
                     player.refill()
 
         def begin_arena_countdown(self):
@@ -505,8 +516,10 @@ def apply_script(protocol, connection, config):
             self.building = False
             self.build_gates()
             self.arena_spawn()
-            self.send_chat('The round will begin in %i seconds.' % SPAWN_ZONE_TIME)
-            self.arena_countdown_timers = [reactor.callLater(SPAWN_ZONE_TIME, self.begin_arena)]
+            self.send_chat('The round will begin in %i seconds.' %
+                           SPAWN_ZONE_TIME)
+            self.arena_countdown_timers = [
+                reactor.callLater(SPAWN_ZONE_TIME, self.begin_arena)]
             for time in xrange(1, 6):
                 self.arena_countdown_timers.append(reactor.callLater(
                     SPAWN_ZONE_TIME - time, self.send_chat, str(time)))
@@ -521,7 +534,8 @@ def apply_script(protocol, connection, config):
             self.arena_counting_down = False
             for team in (self.green_team, self.blue_team):
                 if team.count() == 0:
-                    self.send_chat('Not enough players on the %s team to begin.' % team.name)
+                    self.send_chat(
+                        'Not enough players on the %s team to begin.' % team.name)
                     self.begin_arena_countdown()
                     return
             self.arena_running = True
@@ -530,8 +544,10 @@ def apply_script(protocol, connection, config):
             self.destroy_gates()
             self.send_chat('Go!')
             if MAX_ROUND_TIME > 0:
-                self.send_chat('There is a time limit of %s for this round.' % MAX_ROUND_TIME_TEXT)
-                self.arena_limit_timer = reactor.callLater(MAX_ROUND_TIME, self.arena_time_limit)
+                self.send_chat(
+                    'There is a time limit of %s for this round.' % MAX_ROUND_TIME_TEXT)
+                self.arena_limit_timer = reactor.callLater(
+                    MAX_ROUND_TIME, self.arena_time_limit)
 
         def on_base_spawn(self, x, y, z, base, entity_id):
             if not self.arena_enabled:

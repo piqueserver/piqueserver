@@ -67,7 +67,8 @@ def apply_script(protocol, connection, config):
 
         def on_flag_spawn(self, x, y, z, flag, entity_id):
             pos = self.onectf_reset_flag(flag.team.other.flag)
-            protocol.on_flag_spawn(self, pos[0], pos[1], pos[2], flag, entity_id)
+            protocol.on_flag_spawn(self, pos[0], pos[1], pos[
+                                   2], flag, entity_id)
             return pos
 
     class OneCTFConnection(connection):
@@ -88,7 +89,8 @@ def apply_script(protocol, connection, config):
             if self.protocol.one_ctf or self.protocol.reverse_one_ctf:
                 flag = self.team.flag
                 position = self.world_object.position
-                x, y, z = int(position.x), int(position.y), max(0, int(position.z))
+                x, y, z = int(position.x), int(
+                    position.y), max(0, int(position.z))
                 z = self.protocol.map.get_z(x, y, z)
                 flag.set(x, y, z)
                 flag.update()

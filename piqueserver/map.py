@@ -69,7 +69,8 @@ class Map(object):
     def load_information(self, rot_info, load_dir):
         self.load_dir = load_dir
         try:
-            info = imp.load_source(rot_info.name, rot_info.get_meta_filename(load_dir))
+            info = imp.load_source(
+                rot_info.name, rot_info.get_meta_filename(load_dir))
         except IOError:
             info = None
         self.info = info
