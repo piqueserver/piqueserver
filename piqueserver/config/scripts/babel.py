@@ -61,6 +61,7 @@ def coord_on_platform(x, y, z):
 def apply_script(protocol, connection, config):
     class BabelProtocol(protocol):
         babel = False
+
         def on_map_change(self, map):
             extensions = self.map_info.extensions
             if ALWAYS_ENABLED:
@@ -127,10 +128,12 @@ def apply_script(protocol, connection, config):
                     return False
                 if self.world_object.position.x <= 288:
                     if self.tool is WEAPON_TOOL:
-                        self.send_chat('You must be closer to the enemy\'s base to shoot blocks!')
+                        self.send_chat(
+                            'You must be closer to the enemy\'s base to shoot blocks!')
                         return False
                     if self.tool is GRENADE_TOOL:
-                        self.send_chat('You must be closer to the enemy\'s base to grenade blocks!')
+                        self.send_chat(
+                            'You must be closer to the enemy\'s base to grenade blocks!')
                         return False
             if self.team is self.protocol.green_team:
                 if self.tool is SPADE_TOOL and self.world_object.position.x >= 301 and self.world_object.position.x <= 384 \
@@ -140,10 +143,12 @@ def apply_script(protocol, connection, config):
                     return False
                 if self.world_object.position.x >= 224:
                     if self.tool is WEAPON_TOOL:
-                        self.send_chat('You must be closer to the enemy\'s base to shoot blocks!')
+                        self.send_chat(
+                            'You must be closer to the enemy\'s base to shoot blocks!')
                         return False
                     if self.tool is GRENADE_TOOL:
-                        self.send_chat('You must be closer to the enemy\'s base to grenade blocks!')
+                        self.send_chat(
+                            'You must be closer to the enemy\'s base to grenade blocks!')
                         return False
             return connection.on_block_destroy(self, x, y, z, mode)
 

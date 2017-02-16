@@ -128,7 +128,8 @@ def apply_script(protocol, connection, config):
                         self.link_deaths >= MAX_LINK_DEATHS):
                     self.get_new_link()
                 if self.link is not None and self.link.hp > 0:
-                    self.set_location_safe(self.link.world_object.position.get())
+                    self.set_location_safe(
+                        self.link.world_object.position.get())
             connection.on_spawn(self, pos)
 
         def on_team_changed(self, old_team):

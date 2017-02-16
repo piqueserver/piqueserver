@@ -193,7 +193,8 @@ def pattern_r(connection, copies):
         for yy in xrange(y1, y2 + 1):
             for zz in xrange(z1, z2 + 1):
                 if connection.protocol.map.get_solid(xx, yy, zz):
-                    color = make_color_tuple(connection.protocol.map.get_point(xx, yy, zz)[1])
+                    color = make_color_tuple(
+                        connection.protocol.map.get_point(xx, yy, zz)[1])
                     set_color(connection.protocol, color, 32)
                     for i in xrange(1, copies + 1):
                         z_offset = delta_z * i
@@ -231,6 +232,7 @@ def hollow_r(connection, thickness=1):
             blocks[x].append([])
             for z in xrange(0, zr):
                 blocks[x][y].append(False)
+
     def hollow_check(xc, yc, zc, thickness):
         if thickness > 0:
             for xx in xrange(xc - 1, xc + 2):
@@ -331,7 +333,8 @@ def apply_script(protocol, connection, config):
                     x2 = 511 - x
                 if self.mirror_y == True:
                     y2 = 511 - y
-                add_block(self.protocol, x2, y2, z, make_color_tuple(self.color), self.player_id)
+                add_block(self.protocol, x2, y2, z,
+                          make_color_tuple(self.color), self.player_id)
             connection.on_block_build(self, x, y, z)
 
     return protocol, MapMakingToolsConnection

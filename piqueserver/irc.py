@@ -153,7 +153,8 @@ class IRCBot(irc.IRCClient):
                 if result is not None:
                     self.send("%s: %s" % (user, result))
             elif msg.startswith(self.factory.chatprefix):
-                max_len = MAX_IRC_CHAT_SIZE - len(self.protocol.server_prefix) - 1
+                max_len = MAX_IRC_CHAT_SIZE - \
+                    len(self.protocol.server_prefix) - 1
                 msg = msg[len(self.factory.chatprefix):].strip()
                 message = ("<%s> %s" % (prefix + alias, msg))[:max_len]
                 message = message.decode('cp1252')

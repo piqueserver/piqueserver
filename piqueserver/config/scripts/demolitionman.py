@@ -45,7 +45,8 @@ def apply_script(protocol, connection, config):
 
         def on_spawn(self, pos):
             if self.protocol.demolitionEnabled:
-                self.send_chat('You are the demolition man, grenades & ammo will be restocked!')
+                self.send_chat(
+                    'You are the demolition man, grenades & ammo will be restocked!')
             return connection.on_spawn(self, pos)
 
     return DemolitionProtocol, DemolitionConnection

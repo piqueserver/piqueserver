@@ -15,7 +15,7 @@ def get_network(cidr):
 def get_cidr(network):
     # TODO: why are we accessing a protected attribute?
     #       does this work?
-    if network._prefixlen == 32: # pylint: disable=protected-access
+    if network._prefixlen == 32:  # pylint: disable=protected-access
         return str(network.ip)
     return str(network)
 

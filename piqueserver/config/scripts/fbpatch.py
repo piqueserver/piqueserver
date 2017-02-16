@@ -33,10 +33,15 @@ def apply_script(protocol, connection, config):
         def on_secondary_fire_set(self, secondary):
             if secondary == True:  # if right mouse button has been clicked to initiate drag building; distinguishes from the right click release that marks the end point.
                 if self.tool == 1:  # 1 refers to block tool; if the tool in hand is a block
-                    position = self.world_object.position  # grab player current position at drag build start
-                    vector = self.world_object.orientation  # grab player current orientation at drag build start
-                    vector.normalize()  # probably unnecessary, but makes sure vector values are between 0 and 1 inclusive
-                    # creates a line object starting at player and following their point of view.
+                    # grab player current position at drag build start
+                    position = self.world_object.position
+                    # grab player current orientation at drag build start
+                    vector = self.world_object.orientation
+                    # probably unnecessary, but makes sure vector values are
+                    # between 0 and 1 inclusive
+                    vector.normalize()
+                    # creates a line object starting at player and following
+                    # their point of view.
                     c = Character(self.world_object.world, position, vector)
                     # finds coordinates of the first block this line strikes.
                     line_start = c.cast_ray()

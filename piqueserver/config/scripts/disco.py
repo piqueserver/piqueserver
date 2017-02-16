@@ -37,6 +37,7 @@ def apply_script(protocol, connection, config):
         current_colors = None
         disco = False
         old_fog_color = None
+
         def __init__(self, *arg, **kw):
             protocol.__init__(self, *arg, **kw)
             self.disco_loop = LoopingCall(self.update_color)

@@ -14,10 +14,11 @@ MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCi
 
 def copy_config():
     config_source = os.path.dirname(os.path.abspath(__file__)) + '/config'
-    print('Attempting to copy example config to %s (origin: %s).' % (cfg.config_dir, config_source))
+    print('Attempting to copy example config to %s (origin: %s).' %
+          (cfg.config_dir, config_source))
     try:
         shutil.copytree(config_source, cfg.config_dir)
-    except Exception as e: # pylint: disable=broad-except
+    except Exception as e:  # pylint: disable=broad-except
         print(e)
         sys.exit(1)
 

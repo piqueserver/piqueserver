@@ -283,7 +283,7 @@ def rules(connection):
     connection.send_lines(lines)
 
 
-def help(connection): # pylint: disable=redefined-builtin
+def help(connection):  # pylint: disable=redefined-builtin
     """
     This help
     """
@@ -291,7 +291,7 @@ def help(connection): # pylint: disable=redefined-builtin
         connection.send_lines(connection.protocol.help)
     else:
 
-        names = [command.func_name for command in command_list # pylint: disable=no-member
+        names = [command.func_name for command in command_list  # pylint: disable=no-member
                  if command.func_name in connection.rights]    # pylint: disable=no-member
 
         return 'Available commands: %s' % (', '.join(names))
@@ -380,7 +380,8 @@ def switch(connection, player=None, team=None):
     else:
         raise ValueError()
     if player.team.spectator:
-        player.send_chat("The switch command can't be used on a spectating player.")
+        player.send_chat(
+            "The switch command can't be used on a spectating player.")
         return
     if team is None:
         new_team = player.team.other
@@ -467,7 +468,8 @@ def toggle_teamkill(connection):
     value = not connection.protocol.friendly_fire
     connection.protocol.friendly_fire = value
     on_off = ['OFF', 'ON'][int(value)]
-    connection.protocol.send_chat('Friendly fire has been toggled %s!' % on_off)
+    connection.protocol.send_chat(
+        'Friendly fire has been toggled %s!' % on_off)
     connection.protocol.irc_say('* %s toggled friendly fire %s' % (
         connection.name, on_off))
 
@@ -560,7 +562,6 @@ def unstick(connection, player=None):
 @admin
 def tpsilent(connection, player1, player2=None):
     teleport(connection, player1, player2, silent=True)
-
 
 
 @name('goto')
@@ -675,6 +676,7 @@ def fly(connection, player=None):
         connection.send_chat('%s is %s' % (player.name, message))
     protocol.irc_say('* %s is %s' % (player.name, message))
 
+
 @alias('invis')
 @alias('inv')
 @admin
@@ -784,6 +786,7 @@ def reset_game(connection):
     connection.protocol.send_chat('Game has been reset by %s' % connection.name,
                                   irc=True)
 
+
 @name('map')
 @admin
 def change_planned_map(connection, *pre_maps):
@@ -798,7 +801,8 @@ def change_planned_map(connection, *pre_maps):
     planned_map = maps[0]
     try:
         protocol.planned_map = check_rotation([planned_map])[0]
-        protocol.send_chat('%s changed next map to %s' % (name, planned_map), irc=True)
+        protocol.send_chat('%s changed next map to %s' %
+                           (name, planned_map), irc=True)
     except MapNotFound:
         return 'Map %s not found' % (maps[0])
 
@@ -1053,7 +1057,8 @@ for command_func in command_list:
 # optional commands
 try:
     import pygeoip
-    database = pygeoip.GeoIP(os.path.join(cfg.config_dir, 'data/GeoLiteCity.dat'))
+    database = pygeoip.GeoIP(os.path.join(
+        cfg.config_dir, 'data/GeoLiteCity.dat'))
 
     @name('from')
     def where_from(connection, value=None):
@@ -1078,7 +1083,7 @@ try:
             except ValueError:
                 pass
             # TODO: fix weird type check here
-            if type(value) is not type(''): # pylint: disable=unidiomatic-typecheck
+            if type(value) is not type(''):  # pylint: disable=unidiomatic-typecheck
                 continue
             items.append(value)
         return '%s is from %s' % (player.name, ', '.join(items))

@@ -135,7 +135,8 @@ def accuracy_player(player, name_info=True):
     else:
         rifle_percent = 'None'
     if player.smg_count != 0:
-        smg_percent = str(int(100.0 * (float(player.smg_hits) / float(player.smg_count)))) + '%'
+        smg_percent = str(
+            int(100.0 * (float(player.smg_hits) / float(player.smg_count)))) + '%'
     else:
         smg_percent = 'None'
     if player.shotgun_count != 0:
@@ -146,7 +147,8 @@ def accuracy_player(player, name_info=True):
     s = ''
     if name_info:
         s += player.name + ' has an accuracy of: '
-    s += 'Rifle: %s SMG: %s Shotgun: %s.' % (rifle_percent, smg_percent, shotgun_percent)
+    s += 'Rifle: %s SMG: %s Shotgun: %s.' % (
+        rifle_percent, smg_percent, shotgun_percent)
     return s
 
 add(accuracy)
@@ -159,12 +161,14 @@ def hackinfo(connection, name):
 
 
 def hackinfo_player(player):
-    info = "%s #%s (%s) has an accuracy of: " % (player.name, player.player_id, player.address[0])
+    info = "%s #%s (%s) has an accuracy of: " % (
+        player.name, player.player_id, player.address[0])
     info += accuracy_player(player, False)
     ratio = player.ratio_kills / float(max(1, player.ratio_deaths))
     info += " Kill-death ratio of %.2f (%s kills, %s deaths)." % (ratio,
                                                                   player.ratio_kills, player.ratio_deaths)
-    info += " %i kills in the last %i seconds." % (player.get_kill_count(), KILL_TIME)
+    info += " %i kills in the last %i seconds." % (
+        player.get_kill_count(), KILL_TIME)
     info += " %i headshot snaps in the last %i seconds." % (
         player.get_headshot_snap_count(), HEADSHOT_SNAP_TIME)
     return info
@@ -245,7 +249,8 @@ def apply_script(protocol, connection, config):
                         enemy_pos = enemy.world_object.position
                         position_v = (enemy_pos.x - self_pos.x, enemy_pos.y -
                                       self_pos.y, enemy_pos.z - self_pos.z)
-                        c = scale(new_orient_v, dot3d(new_orient_v, position_v))
+                        c = scale(new_orient_v, dot3d(
+                            new_orient_v, position_v))
                         h = magnitude(subtract(position_v, c))
                         if h <= HEAD_RADIUS:
                             current_time = reactor.seconds()
@@ -256,7 +261,8 @@ def apply_script(protocol, connection, config):
                                              HEADSHOT_SNAP_BAN_DURATION)
                                     return
                                 elif HEADSHOT_SNAP == KICK:
-                                    self.kick('Aimbot detected - headshot snap')
+                                    self.kick(
+                                        'Aimbot detected - headshot snap')
                                     return
                                 elif HEADSHOT_SNAP == WARN_ADMIN:
                                     if (current_time - self.headshot_snap_warn_time) > WARN_INTERVAL_MINIMUM:
@@ -312,7 +318,8 @@ def apply_script(protocol, connection, config):
 
         def multiple_bullets_eject(self):
             if MULTIPLE_BULLETS == BAN:
-                self.ban('Aimbot detected - multiple bullets', MULTIPLE_BULLETS_BAN_DURATION)
+                self.ban('Aimbot detected - multiple bullets',
+                         MULTIPLE_BULLETS_BAN_DURATION)
             elif MULTIPLE_BULLETS == KICK:
                 self.kick('Aimbot detected - multiple bullets')
             elif MULTIPLE_BULLETS == WARN_ADMIN:
@@ -380,13 +387,15 @@ def apply_script(protocol, connection, config):
                     if smg_perc >= SMG_KICK_PERC:
                         self.hit_percent_eject(smg_perc)
             elif self.weapon == SHOTGUN_WEAPON:
-                shotgun_perc = float(self.shotgun_hits) / float(self.shotgun_count)
+                shotgun_perc = float(self.shotgun_hits) / \
+                    float(self.shotgun_count)
                 if self.shotgun_count >= SHOTGUN_KICK_MINIMUM:
                     if shotgun_perc >= SHOTGUN_KICK_PERC:
                         self.hit_percent_eject(shotgun_perc)
 
         def on_bullet_fire(self):
-            # Remembering the past offers a performance boost, particularly with the SMG
+            # Remembering the past offers a performance boost, particularly
+            # with the SMG
             if self.last_target is not None:
                 if self.last_target.hp is not None:
                     if self.check_near_miss(self.last_target):
@@ -403,7 +412,8 @@ def apply_script(protocol, connection, config):
             if self.world_object is not None and target.world_object is not None:
                 p_self = self.world_object.position
                 p_targ = target.world_object.position
-                position_v = (p_targ.x - p_self.x, p_targ.y - p_self.y, p_targ.z - p_self.z)
+                position_v = (p_targ.x - p_self.x, p_targ.y -
+                              p_self.y, p_targ.z - p_self.z)
                 orient = self.world_object.orientation
                 orient_v = (orient.x, orient.y, orient.z)
                 position_v_mag = magnitude(position_v)
@@ -423,10 +433,14 @@ def apply_script(protocol, connection, config):
             if DATA_COLLECTION:
                 if self.name != None:
                     with open('aimbot2log.txt', 'a') as myfile:
-                        output = self.name.encode('ascii', 'ignore').replace(',', '') + ','
-                        output += str(self.rifle_hits) + ',' + str(self.rifle_count) + ','
-                        output += str(self.smg_hits) + ',' + str(self.smg_count) + ','
-                        output += str(self.shotgun_hits) + ',' + str(self.shotgun_count) + '\n'
+                        output = self.name.encode(
+                            'ascii', 'ignore').replace(',', '') + ','
+                        output += str(self.rifle_hits) + ',' + \
+                            str(self.rifle_count) + ','
+                        output += str(self.smg_hits) + ',' + \
+                            str(self.smg_count) + ','
+                        output += str(self.shotgun_hits) + ',' + \
+                            str(self.shotgun_count) + '\n'
                         myfile.write(output)
                         myfile.close()
             return connection.on_disconnect(self)

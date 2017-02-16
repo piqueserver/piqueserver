@@ -36,6 +36,7 @@ def apply_script(protocol, connection, config):
                 jerk_kick(self)
             else:
                 return connection.on_chat(self, value, global_message)
+
         def on_login(self, name):
             if admin_pattern.match(name):
                 self.send_chat('Anti-jerk: Please remove "Admin" from your ' +

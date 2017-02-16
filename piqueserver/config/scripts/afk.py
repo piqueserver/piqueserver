@@ -96,7 +96,8 @@ def apply_script(protocol, connection, config):
 
         def on_connect(self):
             if time_limit:
-                self.afk_kick_call = reactor.callLater(time_limit, self.afk_kick)
+                self.afk_kick_call = reactor.callLater(
+                    time_limit, self.afk_kick)
             self.last_activity = reactor.seconds()
             return connection.on_connect(self)
 

@@ -250,6 +250,7 @@ def apply_script(protocol, connection, config):
             if m:
                 if spawnUp:
                     z -= 1
-                callLater(waitTime, m.spawnNade, connection, x + 0.5, y + 0.5, z + 0.5)
+                callLater(waitTime, m.spawnNade, connection,
+                          x + 0.5, y + 0.5, z + 0.5)
 
     return MineProtocol, MineConnection

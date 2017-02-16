@@ -49,6 +49,7 @@ def apply_script(protocol, connection, config):
                                 'name': makeValid(p.name), 'team': getTeamId(p.team.id)})
             options['clients'] = len(players)
             return (options, players)
+
         def receive_callback(self, address, data):
             if data and data.startswith(STATUS_REQUEST):
                 data = data[len(STATUS_REQUEST):].strip()

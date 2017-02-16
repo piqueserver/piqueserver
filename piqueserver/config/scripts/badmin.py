@@ -35,7 +35,8 @@ LANGUAGE_FILTER_ENABLED = True
 
 
 slur_pattern = re.compile(".*nigger.*", re.IGNORECASE)
-grief_pattern = re.compile(".*(gr.*f.*(ing|er)|grief|destroy).*", re.IGNORECASE)
+grief_pattern = re.compile(
+    ".*(gr.*f.*(ing|er)|grief|destroy).*", re.IGNORECASE)
 aimbot_pattern = re.compile(".*(aim|bot|ha(ck|x)|cheat).*", re.IGNORECASE)
 
 
@@ -184,11 +185,13 @@ def apply_script(protocol, connection, config):
         connection.protocol.irc_say(
             "* @Badmin: %s is being punished. Type: %s (Reason: %s)" % (connection.name, punishment, reason))
         if punishment == "ban":
-            connection.ban('@Badmin: ' + reason, connection.protocol.votekick_ban_duration)
+            connection.ban('@Badmin: ' + reason,
+                           connection.protocol.votekick_ban_duration)
         elif punishment == "kick":
             connection.kick('@Badmin: ' + reason)
         elif punishment == "warn":
-            connection.protocol.send_chat(" @Badmin: Hey %s, %s" % (connection.name, reason))
+            connection.protocol.send_chat(
+                " @Badmin: Hey %s, %s" % (connection.name, reason))
 
     class BadminConnection(connection):
 
@@ -196,6 +199,7 @@ def apply_script(protocol, connection, config):
             if slur_match(self, value) and LANGUAGE_FILTER_ENABLED == True:
                 reactor.callLater(1.0, send_slur_nick, self)
             return connection.on_chat(self, value, global_message)
+
     class BadminProtocol(protocol):
 
         def start_votekick(self, connection, player, reason=None):
@@ -207,7 +211,8 @@ def apply_script(protocol, connection, config):
             # print player.ratio_kills/float(max(1,player.ratio_deaths))
             if aimbot_match(self, reason) and SCORE_AIMBOT_ENABLED == True:
                 # print "made aimbot check"
-                score = round(player.ratio_kills / float(max(1, player.ratio_deaths)))
+                score = round(player.ratio_kills /
+                              float(max(1, player.ratio_deaths)))
                 percent = round(check_percent(player))
                 # print "score: %s, acc: %s" % (score, percent)
                 if score >= SCORE_AIMBOT_BAN:
@@ -243,10 +248,12 @@ def apply_script(protocol, connection, config):
                                   (connection.name, score))
                     return
                 if score >= SCORE_GRIEF_WARN:
-                    badmin_punish(player, "warn", "Stop Griefing! (GS: %s)" % score)
+                    badmin_punish(player, "warn",
+                                  "Stop Griefing! (GS: %s)" % score)
                     return protocol.start_votekick(self, connection, player, reason)
                 if score >= SCORE_GRIEF_UNCERTAIN:
-                    connection.protocol.irc_say("* @Badmin: Grief Score: %s" % score)
+                    connection.protocol.irc_say(
+                        "* @Badmin: Grief Score: %s" % score)
                     return protocol.start_votekick(self, connection, player, reason)
                 if score < SCORE_GRIEF_UNCERTAIN:
                     connection.protocol.irc_say(
