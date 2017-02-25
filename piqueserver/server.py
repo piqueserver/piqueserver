@@ -753,7 +753,8 @@ class FeatureProtocol(ServerProtocol):
         if message is None:
             self.set_map_name(planned_map)
         else:
-            self.send_chat('%s Next map: %s.' % (message, planned_map.full_name),
+            self.send_chat(
+                '%s Next map: %s.' % (message, planned_map.full_name),
                            irc=True)
             reactor.callLater(10, self.set_map_name, planned_map)
 
@@ -921,7 +922,8 @@ class FeatureProtocol(ServerProtocol):
         except (NoDataLeft, InvalidData):
             import traceback
             traceback.print_exc()
-            print('IP %s was hardbanned for invalid data or possibly DDoS.' % ip)
+            print(
+                'IP %s was hardbanned for invalid data or possibly DDoS.' % ip)
             self.hard_bans.add(ip)
             return
         dt = reactor.seconds() - current_time
@@ -1033,7 +1035,8 @@ def run():
             config = json.load(f)
             cfg.config = config
     except IOError as e:
-        print('Error reading config from {}: '.format(cfg.config_file) + str(e))
+        print(
+            'Error reading config from {}: '.format(cfg.config_file) + str(e))
         print('If you haven\'t already, try copying the example config to '
               'the default location with "piqueserver --copy-config".')
         sys.exit(1)
@@ -1068,7 +1071,8 @@ def run():
     # `from piqueserver import commands`
     # NOTE: only kept for backwards compatibility with scripts originally for
     # pysnip. Should be removed in the future due to hackiness.
-    sys.path.insert(1, os.path.dirname(os.path.abspath(__file__))+'/../pyspades')
+    sys.path.insert(
+        1, os.path.dirname(os.path.abspath(__file__)) + '/../pyspades')
     sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
     script_dir = os.path.join(cfg.config_dir, 'scripts/')
