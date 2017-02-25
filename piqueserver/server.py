@@ -1068,6 +1068,7 @@ def run():
     # `from piqueserver import commands`
     # NOTE: only kept for backwards compatibility with scripts originally for
     # pysnip. Should be removed in the future due to hackiness.
+    sys.path.insert(1, os.path.dirname(os.path.abspath(__file__))+'/../pyspades')
     sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 
     script_dir = os.path.join(cfg.config_dir, 'scripts/')
