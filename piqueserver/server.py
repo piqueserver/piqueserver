@@ -755,7 +755,7 @@ class FeatureProtocol(ServerProtocol):
         else:
             self.send_chat(
                 '%s Next map: %s.' % (message, planned_map.full_name),
-                           irc=True)
+                irc=True)
             reactor.callLater(10, self.set_map_name, planned_map)
 
     def get_mode_name(self):
