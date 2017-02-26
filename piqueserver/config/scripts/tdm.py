@@ -8,6 +8,8 @@ from pyspades.constants import *
 
 from piqueserver import commands
 
+HIDE_COORD = (0, 0, 0)
+
 
 def score(connection):
     return connection.protocol.get_kill_count()
@@ -23,6 +25,11 @@ def apply_script(protocol, connection, config):
             self.send_chat(self.protocol.get_kill_count())
             return connection.on_spawn(self, pos)
 
+        def on_flag_take(self):
+            if self.protocol.remove_intel:
+                return False
+            return connection.on_flag_take(self)
+
         def on_flag_capture(self):
             result = connection.on_flag_capture(self)
             self.team.kills += self.protocol.intel_points
@@ -35,13 +42,21 @@ def apply_script(protocol, connection, config):
             return result
 
         def explain_game_mode(self):
-            return ('Team Deathmatch: Kill the opposing team. Intel is worth %s kills.'
-                    % self.protocol.intel_points)
+            msg = 'Team Deathmatch: Kill the opposing team.'
+            if not self.protocol.remove_intel:
+                msg += ' Intel is worth %s kills.' % self.protocol.intel_points
+            return msg
 
     class TDMProtocol(protocol):
         game_mode = CTF_MODE
         kill_limit = config.get('kill_limit', 100)
         intel_points = config.get('intel_points', 10)
+        remove_intel = config.get('remove_intel', False)
+
+        def on_flag_spawn(self, x, y, z, flag, entity_id):
+            if self.remove_intel:
+                return HIDE_COORD
+            return protocol.on_base_spawn(self, x, y, z, flag, entity_id)
 
         def get_kill_count(self):
             green_kills = self.green_team.kills
