@@ -347,6 +347,7 @@ def apply_script(protocol, connection, config):
             return returned
 
     class ArenaProtocol(protocol):
+        game_mode = CTF_MODE
         old_respawn_time = None
         old_building = None
         old_killing = None
