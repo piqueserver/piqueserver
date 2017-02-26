@@ -95,7 +95,7 @@ def apply_script(protocol, connection, config):
             return connection.on_user_login(self, user_type, verbose)
 
         def on_connect(self):
-            if time_limit:
+            if time_limit and not self.local:
                 self.afk_kick_call = reactor.callLater(
                     time_limit, self.afk_kick)
             self.last_activity = reactor.seconds()

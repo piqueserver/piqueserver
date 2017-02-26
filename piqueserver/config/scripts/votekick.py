@@ -166,7 +166,7 @@ class Votekick(object):
             raise VotekickFailure(S_SELF_VOTEKICK)
         elif protocol.get_required_votes() <= 0:
             raise VotekickFailure(S_NOT_ENOUGH_PLAYERS)
-        elif victim.admin or victim.rights.cancel:
+        elif victim.admin or victim.rights.cancel or victim.local:
             raise VotekickFailure(S_VOTEKICK_IMMUNE)
         elif not instigator.admin and (last_votekick is not None and
                                        seconds() - last_votekick < cls.interval):
@@ -257,8 +257,8 @@ def apply_script(protocol, connection, config):
 
         def get_required_votes(self):
             # votekicks are invalid if this returns <= 0
-            player_count = sum(not player.disconnected for player in
-                               self.players.itervalues()) - 1
+            player_count = sum(not player.disconnected and not player.local
+                               for player in self.players.itervalues()) - 1
             return int(player_count / 100.0 * required_percentage)
 
         def on_map_leave(self):
