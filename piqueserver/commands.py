@@ -16,6 +16,8 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 # pylint: disable=too-many-lines
+# pylint: disable=wildcard-import,unused-wildcard-import,redefined-builtin
+# pylint: disable=line-too-long
 
 if __name__ == 'commands':
     from piqueserver.commands import *
@@ -31,11 +33,11 @@ else:
     from pyspades.contained import KillAction
     from pyspades.server import (
         create_player, set_tool, set_color, input_data,
-                                 weapon_input)
+        weapon_input)
     from pyspades.constants import (GRENADE_KILL, FALL_KILL, NETWORK_FPS)
     from pyspades.common import (
         prettify_timespan, coordinates, to_coordinates,
-                                 make_color)
+        make_color)
     from pyspades.server import parse_command
     from piqueserver.map import check_rotation, MapNotFound
     from piqueserver import cfg
@@ -739,7 +741,7 @@ else:
         connection.protocol.on_game_end()
         connection.protocol.send_chat(
             'Game has been reset by %s' % connection.name,
-                                      irc=True)
+            irc=True)
 
     @name('map')
     @admin
