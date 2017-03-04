@@ -18,7 +18,7 @@ def reloadconfig(connection):
             raise ValueError('%s is not a mapping type' % cfg.config_file)
     except ValueError, v:
         print 'Error reloading config:', v
-        return 'Error reloading config. Check pyspades log for details.'
+        return 'Error reloading config. Check log for details.'
     connection.protocol.config.update(new_config)
     connection.protocol.reload_passes()
     return 'Config reloaded!'
