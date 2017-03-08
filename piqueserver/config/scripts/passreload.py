@@ -4,18 +4,21 @@
 from piqueserver import commands
 from piqueserver.commands import add, admin
 import json
+import cfg
+import os.path
 
 
 @admin
 def reloadconfig(connection):
     new_config = {}
     try:
-        new_config = json.load(open('config.txt', 'r'))
+        new_config = json.load(open(
+            os.path.join(cfg.config_dir, cfg.config_file), 'r'))
         if not isinstance(new_config, dict):
-            raise ValueError('config.txt is not a mapping type')
+            raise ValueError('%s is not a mapping type' % cfg.config_file)
     except ValueError, v:
         print 'Error reloading config:', v
-        return 'Error reloading config. Check pyspades log for details.'
+        return 'Error reloading config. Check log for details.'
     connection.protocol.config.update(new_config)
     connection.protocol.reload_passes()
     return 'Config reloaded!'

@@ -163,15 +163,17 @@ def minimize_block_line(points):
 def get_team_alive_count(team):
     count = 0
     for player in team.get_players():
-        if not player.world_object.dead:
-            count += 1
+        if player.world_object is not None:
+            if not player.world_object.dead:
+                count += 1
     return count
 
 
 def get_team_dead(team):
     for player in team.get_players():
-        if not player.world_object.dead:
-            return False
+        if player.world_object is not None:
+            if not player.world_object.dead:
+                return False
     return True
 
 
@@ -272,14 +274,14 @@ def apply_script(protocol, connection, config):
 
         def on_disconnect(self):
             if self.protocol.arena_running:
-                if self.world_object is not None:
+                if self.world_object is not None and not self.world_object.dead:
                     self.world_object.dead = True
                     self.protocol.check_round_end()
             return connection.on_disconnect(self)
 
         def on_kill(self, killer, type, grenade):
             if self.protocol.arena_running and type != TEAM_CHANGE_KILL:
-                if self.world_object is not None:
+                if self.world_object is not None and not self.world_object.dead:
                     self.world_object.dead = True
                     self.protocol.check_round_end(killer)
             return connection.on_kill(self, killer, type, grenade)
@@ -347,6 +349,7 @@ def apply_script(protocol, connection, config):
             return returned
 
     class ArenaProtocol(protocol):
+        game_mode = CTF_MODE
         old_respawn_time = None
         old_building = None
         old_killing = None
@@ -392,7 +395,7 @@ def apply_script(protocol, connection, config):
                 reactor.callLater(TEAM_COLOR_TIME, self.arena_reset_fog_color)
             if killer is None or killer.team is not team:
                 for player in team.get_players():
-                    if not player.world_object.dead:
+                    if player.world_object is not None and not player.world_object.dead:
                         killer = player
                         break
             if killer is not None:
@@ -495,7 +498,7 @@ def apply_script(protocol, connection, config):
             for player in self.players.values():
                 if player.team.spectator:
                     continue
-                if player.world_object.dead:
+                if player.world_object is not None and player.world_object.dead:
                     player.spawn(random.choice(player.team.arena_spawns))
                 else:
                     player.set_location(

@@ -19,10 +19,14 @@
 
 from twisted.internet.reactor import seconds
 from piqueserver.scheduler import Scheduler
-from piqueserver.commands import name, add, get_player, join_arguments, InvalidPlayer
+from piqueserver.commands import name, add, get_player, join_arguments, InvalidPlayer, admin, alias
 
 REQUIRE_REASON = True
 
+S_VOTEKICKING_DISABLED = 'Votekicking disabled'
+S_VOTEKICKING_SET = 'Votekicking globally {set}.'
+S_VOTEKICK_DISALLOWED = 'You are not allowed to initiate a votekick.'
+S_VOTEKICK_USER_SET = 'Votekicking is {set} for {user}.'
 S_NO_VOTEKICK = 'No votekick in progress'
 S_DEFAULT_REASON = 'NO REASON GIVEN'
 S_IN_PROGRESS = 'Votekick already in progress'
@@ -61,6 +65,11 @@ def start_votekick(connection, *args):
     if connection not in protocol.players:
         raise KeyError()
     player = connection
+
+    if not protocol.votekick_enabled:
+        return S_VOTEKICKING_DISABLED
+    if not player.votekick_enabled:
+        return S_VOTEKICK_DISALLOWED
 
     if not args:
         if protocol.votekick:
@@ -113,9 +122,26 @@ def vote_yes(connection):
 
     votekick.vote(player)
 
+
+@alias('tvk')
+@admin
+def togglevotekick(connection, *args):
+    protocol = connection.protocol
+    if len(args) == 0:
+        protocol.votekick_enabled = not protocol.votekick_enabled
+        return S_VOTEKICKING_SET.format(set=('enabled' if protocol.votekick_enabled else 'disabled'))
+    try:
+        player = get_player(protocol, '#' + args[0])
+    except InvalidPlayer:
+        player = get_player(protocol, args[0])
+    player.votekick_enabled = not player.votekick_enabled
+    return S_VOTEKICK_USER_SET.format(user=player.name,
+                                      set=('enabled' if player.votekick_enabled else 'disabled'))
+
 add(start_votekick)
 add(cancel_votekick)
 add(vote_yes)
+add(togglevotekick)
 
 
 class Votekick(object):
@@ -140,7 +166,7 @@ class Votekick(object):
             raise VotekickFailure(S_SELF_VOTEKICK)
         elif protocol.get_required_votes() <= 0:
             raise VotekickFailure(S_NOT_ENOUGH_PLAYERS)
-        elif victim.admin or victim.rights.cancel:
+        elif victim.admin or victim.rights.cancel or victim.local:
             raise VotekickFailure(S_VOTEKICK_IMMUNE)
         elif not instigator.admin and (last_votekick is not None and
                                        seconds() - last_votekick < cls.interval):
@@ -227,11 +253,12 @@ def apply_script(protocol, connection, config):
 
     class VotekickProtocol(protocol):
         votekick = None
+        votekick_enabled = True
 
         def get_required_votes(self):
             # votekicks are invalid if this returns <= 0
-            player_count = sum(not player.disconnected for player in
-                               self.players.itervalues()) - 1
+            player_count = sum(not player.disconnected and not player.local
+                               for player in self.players.itervalues()) - 1
             return int(player_count / 100.0 * required_percentage)
 
         def on_map_leave(self):
@@ -253,6 +280,7 @@ def apply_script(protocol, connection, config):
 
     class VotekickConnection(connection):
         last_votekick = None
+        votekick_enabled = True
 
         def on_disconnect(self):
             votekick = self.protocol.votekick
