@@ -56,7 +56,7 @@ def apply_script(protocol, connection, config):
         def on_flag_spawn(self, x, y, z, flag, entity_id):
             if self.remove_intel:
                 return HIDE_COORD
-            return protocol.on_base_spawn(self, x, y, z, flag, entity_id)
+            return protocol.on_flag_spawn(self, x, y, z, flag, entity_id)
 
         def get_kill_count(self):
             green_kills = self.green_team.kills

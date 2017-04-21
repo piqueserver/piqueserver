@@ -3,8 +3,8 @@
 
 from piqueserver import commands
 from piqueserver.commands import add, admin
+from piqueserver import cfg
 import json
-import cfg
 import os.path
 
 
