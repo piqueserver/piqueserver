@@ -113,3 +113,6 @@ def main():
     # only run the server if other tasks weren't performed
     if run:
         run_server()
+
+if __name__ == "__main__":
+    main()
