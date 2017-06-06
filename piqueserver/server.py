@@ -136,8 +136,10 @@ class FeatureConnection(ServerConnection):
     def on_connect(self):
         protocol = self.protocol
         client_ip = self.address[0]
-        try:
+
+        if client_ip in self.protocol.bans:
             name, reason, timestamp = self.protocol.bans[client_ip]
+
             if timestamp is not None and reactor.seconds() >= timestamp:
                 protocol.remove_ban(client_ip)
                 protocol.save_bans()
@@ -146,9 +148,9 @@ class FeatureConnection(ServerConnection):
                                                                  client_ip))
                 self.disconnect(ERROR_BANNED)
                 return
-        except KeyError:
-            pass
+
         manager = self.protocol.ban_manager
+
         if manager is not None:
             reason = manager.get_ban(client_ip)
             if reason is not None:
@@ -156,6 +158,7 @@ class FeatureConnection(ServerConnection):
                        'banned for %r') % (client_ip, reason))
                 self.disconnect(ERROR_BANNED)
                 return
+
         ServerConnection.on_connect(self)
 
     def on_join(self):
