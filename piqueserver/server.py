@@ -448,14 +448,11 @@ class FeatureConnection(ServerConnection):
 
 def encode_lines(value):
     if value is not None:
-        lines = []
-        for line in value:
-            lines.append(encode(line))
-        return lines
+        return [encode(line) for line in value]
 
 
 def random_choice_cycle(choices):
-    while 1:
+    while True:
         yield random.choice(choices)
 
 
