@@ -1,9 +1,19 @@
-from twisted.internet.task import LoopingCall
-from pyspades.constants import *
-from math import sqrt, cos, acos, pi, tan
-from piqueserver.commands import add, admin, get_player
-from twisted.internet import reactor
+"""
+Plugin to detect and react to possible aimbot users
+
+maintained by: ?
+"""
+from __future__ import division
+# So we can do `x / y` instead of `float(x) / y`
+
 import re
+from math import sqrt, cos, pi
+
+from twisted.internet.task import LoopingCall
+from twisted.internet import reactor
+
+from pyspades.constants import *
+from piqueserver.commands import add, admin, get_player
 
 DISABLED, KICK, BAN, WARN_ADMIN = xrange(4)
 
@@ -93,10 +103,6 @@ HEADSHOT_SNAP_ANGLE_COS = cos(HEADSHOT_SNAP_ANGLE * (pi / 180.0))
 aimbot_pattern = re.compile(".*(aim|bot|ha(ck|x)|cheat).*", re.IGNORECASE)
 
 
-def aimbot_match(msg):
-    return (not aimbot_pattern.match(msg) is None)
-
-
 def point_distance2(c1, c2):
     if c1.world_object is not None and c2.world_object is not None:
         p1 = c1.world_object.position
@@ -130,20 +136,18 @@ def accuracy(connection, name=None):
 
 def accuracy_player(player, name_info=True):
     if player.rifle_count != 0:
-        rifle_percent = str(
-            int(100.0 * (float(player.rifle_hits) / float(player.rifle_count)))) + '%'
+        rifle_percent = "{0:.1f}%".format((player.rifle_hits / player.rifle_count) * 100)
     else:
         rifle_percent = 'None'
     if player.smg_count != 0:
-        smg_percent = str(
-            int(100.0 * (float(player.smg_hits) / float(player.smg_count)))) + '%'
+        smg_percent = "{0:.1f}%".format((player.smg_hits / player.smg_count) * 100)
     else:
         smg_percent = 'None'
     if player.shotgun_count != 0:
-        shotgun_percent = str(
-            int(100.0 * (float(player.shotgun_hits) / float(player.shotgun_count)))) + '%'
+        shotgun_percent = "{0:.1f}%".format((player.shotgun_hits / player.shotgun_count) * 100)
     else:
         shotgun_percent = 'None'
+
     s = ''
     if name_info:
         s += player.name + ' has an accuracy of: '
@@ -180,7 +184,7 @@ def apply_script(protocol, connection, config):
     class Aimbot2Protocol(protocol):
 
         def start_votekick(self, payload):
-            if aimbot_match(payload.reason):
+            if not aimbot_pattern.match(payload.reason) is None:
                 payload.target.warn_admin('Hack related votekick.')
             return protocol.start_votekick(self, payload)
 
