@@ -136,8 +136,10 @@ class FeatureConnection(ServerConnection):
     def on_connect(self):
         protocol = self.protocol
         client_ip = self.address[0]
-        try:
+
+        if client_ip in self.protocol.bans:
             name, reason, timestamp = self.protocol.bans[client_ip]
+
             if timestamp is not None and reactor.seconds() >= timestamp:
                 protocol.remove_ban(client_ip)
                 protocol.save_bans()
@@ -146,9 +148,9 @@ class FeatureConnection(ServerConnection):
                                                                  client_ip))
                 self.disconnect(ERROR_BANNED)
                 return
-        except KeyError:
-            pass
+
         manager = self.protocol.ban_manager
+
         if manager is not None:
             reason = manager.get_ban(client_ip)
             if reason is not None:
@@ -156,6 +158,7 @@ class FeatureConnection(ServerConnection):
                        'banned for %r') % (client_ip, reason))
                 self.disconnect(ERROR_BANNED)
                 return
+
         ServerConnection.on_connect(self)
 
     def on_join(self):
@@ -358,35 +361,53 @@ class FeatureConnection(ServerConnection):
         self.last_switch = reactor.seconds()
 
     def on_chat(self, value, global_message):
-        if not self.mute:
-            current_time = reactor.seconds()
-            if self.last_chat is None:
-                self.last_chat = current_time
-            else:
-                self.chat_time += current_time - self.last_chat
-                if self.chat_count > CHAT_WINDOW_SIZE:
-                    if self.chat_count / self.chat_time > CHAT_PER_SECOND:
-                        self.mute = True
-                        self.protocol.send_chat(
-                            '%s has been muted for excessive spam' % (
-                                self.name),
-                            irc=True)
-                    self.chat_time = self.chat_count = 0
-                else:
-                    self.chat_count += 1
-                self.last_chat = current_time
-        message = '<%s> %s' % (self.name, value)
+        """
+        notifies when the server recieves a chat message
+
+        return False to block sending the message
+        """
+        message = '<{}> {}'.format(self.name, value)
+
         if self.mute:
-            message = '(MUTED) %s' % message
-        elif global_message and self.protocol.global_chat:
-            self.protocol.irc_say('<%s> %s' % (self.name, value))
-        print(message.encode('ascii', 'replace'))
-        if self.mute:
+            message = '(MUTED) {}'.format(message)
             self.send_chat('(Chat not sent - you are muted)')
             return False
-        elif global_message and not self.protocol.global_chat:
-            self.send_chat('(Chat not sent - global chat disabled)')
-            return False
+
+        if global_message:
+            if self.protocol.global_chat:
+                # forward message to IRC
+                self.protocol.irc_say(message)
+            else:
+                self.send_chat('(Chat not sent - global chat disabled)')
+                return False
+
+        # antispam:
+        current_time = reactor.seconds()
+        if self.last_chat is None:
+            self.last_chat = current_time
+
+        else:
+            self.chat_time += current_time - self.last_chat
+
+            if self.chat_count > CHAT_WINDOW_SIZE:
+                if self.chat_count / self.chat_time > CHAT_PER_SECOND:
+                    self.mute = True
+                    self.protocol.send_chat(
+                        '%s has been muted for excessive spam' % (
+                            self.name),
+                        irc=True)
+
+                # reset if CHAT_WINDOW_SIZE messages were sent and not
+                # determined to be spam
+                self.chat_time = 0
+                self.chat_count = 0
+            else:
+                self.chat_count += 1
+            self.last_chat = current_time
+
+        # TODO: replace with logging
+        print(message.encode('ascii', 'replace'))
+
         return value
 
     def kick(self, reason=None, silent=False):
