@@ -49,7 +49,7 @@ KILL_MESSAGES = [
     '{player} was not carefull enough in the minefield',
     '{player} thought those mines were toys!',
     # JoJoe's messages
-    '{player} showed his team the minefield. What a hero!',
+    '{player} showed the team the minefield. What a hero!',
     '{player} should not use their spade to defuse mines.',
     '{player} made a huge mess in the minefield.',
     '{player} detected a mine.',
@@ -64,8 +64,8 @@ KILL_MESSAGES = [
 ]
 
 
-MINEFIELD_TIP = 'Be carefull, there are mines in this map!'
-MINEFIELD_MOTD = 'Be carefull for minefields!'
+MINEFIELD_TIP = 'Be careful, there are mines in this map!'
+MINEFIELD_MOTD = 'Watch ot for minefields!'
 MINEFIELD_HELP = 'There are mines in this map!'
 MINEFIELD_DBG_MESSAGE = 'Block is at x={x}, y={y}, z={z}, in field:"{m}"'
 MINEFIELD_TYPE_STRING = '{type} field({left}, {top}, {right}, {bottom})'
