@@ -16,12 +16,13 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 # pylint: disable=too-many-lines
-# pylint: disable=wildcard-import,unused-wildcard-import,redefined-builtin
-# pylint: disable=line-too-long
+# pylint: disable=wildcard-import,unused-wildcard-import
 
 from __future__ import print_function
 
 if __name__ == 'commands':
+    # this disgusting hack allows this to be imported both as "commands" and
+    # piqueserver.commands
     from piqueserver.commands import *
 else:
 
@@ -67,20 +68,20 @@ else:
     def restrict(func, *user_types):
         def new_func(connection, *arg, **kw):
             return func(connection, *arg, **kw)
-        new_func.func_name = func.func_name
+        new_func.__name__ = func.__name__
         new_func.user_types = user_types
         new_func.argspec = inspect.getargspec(func)
         return new_func
 
     def has_rights(f, connection):
-        return not hasattr(f, 'user_types') or f.func_name in connection.rights
+        return not hasattr(f, 'user_types') or f.__name__ in connection.rights
 
     def admin(func):
         return restrict(func, 'admin')
 
     def name(name):
         def dec(func):
-            func.func_name = name
+            func.__name__ = name
             return func
         return dec
 
@@ -205,8 +206,8 @@ else:
         if duration is None:
             return 'IP/network %s permabanned%s' % (ip, reason)
         else:
-            return 'IP/network %s banned for %s%s' % (ip,
-                                                      prettify_timespan(duration * 60), reason)
+            return 'IP/network %s banned for %s%s' % (
+                ip, prettify_timespan(duration * 60), reason)
 
     @admin
     def unban(connection, ip):
@@ -266,7 +267,8 @@ else:
             return
         connection.send_lines(lines)
 
-    def help(connection):  # pylint: disable=redefined-builtin
+    @name("help")
+    def help_command(connection):
         """
         This help
         """
@@ -274,8 +276,8 @@ else:
             connection.send_lines(connection.protocol.help)
         else:
 
-            names = [command.func_name for command in command_list  # pylint: disable=no-member
-                     if command.func_name in connection.rights]    # pylint: disable=no-member
+            names = [command.__name__ for command in command_list
+                     if command.__name__ in connection.rights]
 
             return 'Available commands: %s' % (', '.join(names))
 
@@ -484,9 +486,10 @@ else:
     @admin
     def global_chat(connection):
         connection.protocol.global_chat = not connection.protocol.global_chat
-        connection.protocol.send_chat('Global chat %s' %
-                                      ('enabled' if connection.protocol.global_chat else 'disabled'),
-                                      irc=True)
+        connection.protocol.send_chat(
+            'Global chat %s' % (
+                'enabled' if connection.protocol.global_chat else 'disabled'),
+            irc=True)
 
     @alias('tp')
     @admin
@@ -912,7 +915,7 @@ else:
         return '%s has a %s' % (player.name, name)
 
     command_list = [
-        help,
+        help_command,
         pm,
         to_admin,
         login,
@@ -980,7 +983,7 @@ else:
         Function to add a command from scripts
         """
         if name is None:
-            name = func.func_name
+            name = func.__name__
         name = name.lower()
         if not hasattr(func, 'argspec'):
             func.argspec = inspect.getargspec(func)

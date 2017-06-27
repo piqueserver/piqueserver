@@ -17,8 +17,15 @@
 
 from __future__ import print_function
 
+import random
+import math
+import shlex
+import textwrap
+import collections
+import zlib
+
+from itertools import product
 from twisted.internet import reactor
-from twisted.internet.task import LoopingCall
 from pyspades.protocol import BaseConnection, BaseProtocol
 from pyspades.bytes import ByteReader, ByteWriter
 from pyspades.packet import load_client_packet
@@ -32,14 +39,6 @@ from pyspades import world
 from pyspades.debug import *
 from pyspades.weapon import WEAPONS
 import enet
-
-import random
-import math
-import shlex
-import textwrap
-import collections
-import zlib
-from itertools import product
 
 COMPRESSION_LEVEL = 9
 
