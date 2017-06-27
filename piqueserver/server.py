@@ -567,6 +567,8 @@ class FeatureProtocol(ServerProtocol):
 
     server_version = cfg.server_version
 
+    default_fog = (128, 232, 255)
+
     def __init__(self, interface, config):
         self.config = config
         if config.get('random_rotation', False):
@@ -987,6 +989,10 @@ class FeatureProtocol(ServerProtocol):
     # events
 
     def on_map_change(self, the_map):
+        self.set_fog_color(
+            getattr(self.map_info.info, 'fog', self.default_fog)
+        )
+
         map_on_map_change = self.map_info.on_map_change
         if map_on_map_change is not None:
             map_on_map_change(self, the_map)
