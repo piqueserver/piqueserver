@@ -37,6 +37,7 @@ import shlex
 import textwrap
 import collections
 import zlib
+from itertools import product
 
 COMPRESSION_LEVEL = 9
 
@@ -661,24 +662,17 @@ class ServerConnection(BaseConnection):
             x -= 0.5
             y -= 0.5
             z += 0.5
+
         x = int(x)
         y = int(y)
         z = int(z)
 
         # search for valid locations near the specified point
-        modpos = 0
-        pos_table = self.protocol.pos_table
-        while (modpos < len(pos_table) and not
-               self.is_location_free(x + pos_table[modpos][0],
-                                     y + pos_table[modpos][1],
-                                     z + pos_table[modpos][2])):
-            modpos += 1
-        if modpos == len(pos_table):  # nothing nearby
-            return
-        x = x + pos_table[modpos][0]
-        y = y + pos_table[modpos][1]
-        z = z + pos_table[modpos][2]
-        self.set_location((x, y, z))
+        for pos in self.protocol.pos_table:
+            if self.is_location_free(x+pos[0], y+pos[1], z+pos[2]):
+                self.set_location(x+pos[0], y+pos[1], z+pos[2])
+                return True
+        return False
 
     def set_location(self, location=None):
         if location is None:
@@ -1525,11 +1519,13 @@ class ServerProtocol(BaseProtocol):
         self.set_master()
 
         # safe position LUT
-        self.pos_table = []
-        for x in xrange(-5, 6):
-            for y in xrange(-5, 6):
-                for z in xrange(-5, 6):
-                    self.pos_table.append((x, y, z))
+        #
+        # Generates a LUT to check for safe positions. The slighly weird
+        # sorting is used to sort by increasing distance so the nearest spots
+        # get chosen first
+        # product(repeat=3) is the equivalent of 3 nested for loops
+        self.pos_table = list(product(range(-5, 6), repeat=3))
+
         self.pos_table.sort(key=lambda vec: abs(vec[0] * 1.03) +
                             abs(vec[1] * 1.02) +
                             abs(vec[2] * 1.01))
