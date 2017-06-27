@@ -7,8 +7,7 @@ Release thread:
 http://www.buildandshoot.com/viewtopic.php?t=2586
 """
 
-from pyspades.constants import *
-from commands import add, admin
+from pyspades.constants import CTF_MODE
 from pyspades.collision import vector_collision
 
 FLAG_SPAWN_POS = (256, 256)
@@ -19,6 +18,7 @@ DISABLED, ONE_CTF, REVERSE_ONE_CTF = xrange(3)
 
 ONE_CTF_MODE = ONE_CTF
 
+BABEL_CTF_MESSAGE = 'Take the intel to the enemy base to score.'
 
 def apply_script(protocol, connection, config):
 
@@ -30,7 +30,7 @@ def apply_script(protocol, connection, config):
                     flag.set(*HIDE_POS)
                     flag.update()
                     if self.protocol.reverse_one_ctf:
-                        self.send_chat(REVERSE_ONE_CTF_MESSAGE)
+                        self.send_chat(BABEL_CTF_MESSAGE)
                 else:
                     return False
             return connection.on_flag_take(self)
@@ -55,7 +55,7 @@ def apply_script(protocol, connection, config):
 
         def capture_flag(self):
             if self.protocol.reverse_one_ctf:
-                self.send_chat(REVERSE_ONE_CTF_MESSAGE)
+                self.send_chat(BABEL_CTF_MESSAGE)
                 return False
             return connection.capture_flag(self)
 
@@ -88,7 +88,7 @@ def apply_script(protocol, connection, config):
                 self.onectf_reset_flags()
             return protocol.on_game_end(self)
 
-        def on_map_change(self, map):
+        def on_map_change(self, map_):
             self.one_ctf = self.reverse_one_ctf = False
             self.one_ctf_spawn_pos = FLAG_SPAWN_POS
             extensions = self.map_info.extensions
@@ -102,7 +102,7 @@ def apply_script(protocol, connection, config):
                 self.reverse_one_ctf = extensions['reverse_one_ctf']
             if extensions.has_key('one_ctf_spawn_pos'):
                 self.one_ctf_spawn_pos = extensions['one_ctf_spawn_pos']
-            return protocol.on_map_change(self, map)
+            return protocol.on_map_change(self, map_)
 
         def on_flag_spawn(self, x, y, z, flag, entity_id):
             pos = self.onectf_reset_flag(flag.team.other.flag)

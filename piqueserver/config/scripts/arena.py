@@ -1,51 +1,48 @@
 # READ THE INSTRUCTIONS BELOW BEFORE YOU ASK QUESTIONS
 
-# Arena game mode written by Yourself
-# A game of team survival. The last team standing scores a point.
+# Arena game mode written by Yourself A game of team survival. The last team
+# standing scores a point.
 
-# A map that uses arena needs to be modified to have a starting area for
-# each team. A starting area is enclosed and has a gate on it. Each block of a
-# gate must have the EXACT same color to work properly. Between each rounds,
-# the gate is rebuilt. The gates are destroyed simultaneously at the start of each
+# A map that uses arena needs to be modified to have a starting area for each
+# team. A starting area is enclosed and has a gate on it. Each block of a gate
+# must have the EXACT same color to work properly. Between each rounds, the
+# gate is rebuilt. The gates are destroyed simultaneously at the start of each
 # round, releasing the players onto the map. Players are free to switch weapons
 # between rounds.
 
-# Spawn locations and gate locations MUST be present in the map metadata (map txt file)
-# for arena to work properly.
+# Spawn locations and gate locations MUST be present in the map metadata (map
+# txt file) for arena to work properly.
 
-# The spawn location/s for the green team are set by using the data from the 'arena_green_spawns'
-# tuple in the extensions dictionary. Likewise, the blue spawn/s is set with the 'arena_blue_spawns'
-# key. 'arena_green_spawns' and 'arena_blue_spawns' are tuples which contain tuples of spawn
-# coordinates. Spawn locations are chosen randomly.
+# The spawn location/s for the green team are set by using the data from the
+# 'arena_green_spawns' tuple in the extensions dictionary. Likewise, the blue
+# spawn/s is set with the 'arena_blue_spawns' key. 'arena_green_spawns' and
+# 'arena_blue_spawns' are tuples which contain tuples of spawn coordinates.
+# Spawn locations are chosen randomly.
 
-# NOTE THAT THE SCRIPT RETAINS BACKWARDS COMPATIBILITY with the old 'arena_green_spawn' and
-# 'arena_blue_spawn'
+# NOTE THAT THE SCRIPT RETAINS BACKWARDS COMPATIBILITY with the old
+# 'arena_green_spawn' and 'arena_blue_spawn'
 
-# The 'arena_max_spawn_distance' can be used to set MAX_SPAWN_DISTANCE on a map by map
-# basis. See the comment by MAX_SPAWN_DISTANCE for more information
+# The 'arena_max_spawn_distance' can be used to set MAX_SPAWN_DISTANCE on a map
+# by map basis. See the comment by MAX_SPAWN_DISTANCE for more information
 
-# The locations of gates is also determined in the map metadata. 'arena_gates' is a
-# tuple of coordinates in the extension dictionary. Each gate needs only one block
-# to be specified (since each gate is made of a uniform color)
+# The locations of gates is also determined in the map metadata. 'arena_gates'
+# is a tuple of coordinates in the extension dictionary. Each gate needs only
+# one block to be specified (since each gate is made of a uniform color)
 
-# Sample extensions dictionary of an arena map with two gates:
-# In this example there is one spawn location for blue and two spawn locations for green.
-# extensions = {
-#     'arena': True,
-#     'arena_blue_spawns' : ((128, 256, 60),),
-#     'arena_green_spawns' : ((384, 256, 60), (123, 423, 51)),
-#     'arena_gates': ((192, 236, 59), (320, 245, 60))
-# }
+# Sample extensions dictionary of an arena map with two gates: In this example
+# there is one spawn location for blue and two spawn locations for green.
+# extensions = { 'arena': True, 'arena_blue_spawns' : ((128, 256, 60),),
+# 'arena_green_spawns' : ((384, 256, 60), (123, 423, 51)), 'arena_gates':
+# ((192, 236, 59), (320, 245, 60)) }
 
+import random
+import math
 
 from pyspades.server import block_action, set_color, block_line
 from pyspades import world
-from pyspades.constants import *
+from pyspades.constants import DESTROY_BLOCK, TEAM_CHANGE_KILL, CTF_MODE
 from twisted.internet import reactor
-from twisted.internet.task import LoopingCall
 from piqueserver.commands import add, admin
-import random
-import math
 
 # If ALWAYS_ENABLED is False, then the 'arena' key must be set to True in
 # the 'extensions' dictionary in the map metadata
@@ -109,17 +106,17 @@ def partition(points, d, c1, c2):
     for point in points:
         pc1 = point[c1]
         pc2 = point[c2]
-        if not row.has_key(pc1):
+        if pc1 not in row:
             row[pc1] = {}
         dic1 = row[pc1]
-        if not dic1.has_key(pc2):
+        if pc2 not in dic1:
             dic1[pc2] = []
             row_list.append(dic1[pc2])
         dic2 = dic1[pc2]
         dic2.append(point)
-    row_list_sorted = []
-    for div in row_list:
-        row_list_sorted.append(sorted(div, key=lambda k: k[d]))
+
+    row_list_sorted = [sorted(div, key=lambda k: k[d]) for div in row_list]
+
     # row_list_sorted is a list containing lists of points that all have the same
     # point[c1] and point[c2] values and are sorted in increasing order
     # according to point[d]
@@ -177,31 +174,24 @@ def get_team_dead(team):
     return True
 
 
-class CustomException(Exception):
+class ArenaException(Exception):
+    pass
 
-    def __init__(self, value):
-        self.parameter = value
-
-    def __str__(self):
-        return repr(self.parameter)
-
-
-class Gate:
+class Gate(object):
 
     def __init__(self, x, y, z, protocol_obj):
         self.support_blocks = []
         self.blocks = []
         self.protocol_obj = protocol_obj
-        map = self.protocol_obj.map
-        solid, self.color = map.get_point(x, y, z)
+        solid, self.color = self.protocol_obj.map.get_point(x, y, z)
         if not solid:
-            raise CustomException(
+            raise ArenaException(
                 'The gate coordinate (%i, %i, %i) is not solid.' % (x, y, z))
         self.record_gate(x, y, z)
         self.blocks = minimize_block_line(self.blocks)
 
     def build_gate(self):
-        map = self.protocol_obj.map
+        map_ = self.protocol_obj.map
         set_color.value = make_color(*self.color)
         set_color.player_id = block_line.player_id = 32
         self.protocol_obj.send_contained(set_color, save=True)
@@ -212,19 +202,19 @@ class Gate:
                 continue
             for point in points:
                 x, y, z = point
-                if not map.get_solid(x, y, z):
-                    map.set_point(x, y, z, self.color)
+                if not map_.get_solid(x, y, z):
+                    map_.set_point(x, y, z, self.color)
             block_line.x1, block_line.y1, block_line.z1 = start_block
             block_line.x2, block_line.y2, block_line.z2 = end_block
             self.protocol_obj.send_contained(block_line, save=True)
 
     def destroy_gate(self):
-        map = self.protocol_obj.map
+        map_ = self.protocol_obj.map
         block_action.player_id = 32
         block_action.value = DESTROY_BLOCK
         for block in self.support_blocks:  # optimize wire traffic
-            if map.get_solid(*block):
-                map.remove_point(*block)
+            if map_.get_solid(*block):
+                map_.remove_point(*block)
                 block_action.x, block_action.y, block_action.z = block
                 self.protocol_obj.send_contained(block_action, save=True)
         for block_line_ in self.blocks:  # avoid desyncs
@@ -234,8 +224,8 @@ class Gate:
                 continue
             for point in points:
                 x, y, z = point
-                if map.get_solid(x, y, z):
-                    map.remove_point(x, y, z)
+                if map_.get_solid(x, y, z):
+                    map_.remove_point(x, y, z)
 
     def record_gate(self, x, y, z):
         if x < 0 or x > 511 or y < 0 or x > 511 or z < 0 or z > 63:
@@ -279,12 +269,12 @@ def apply_script(protocol, connection, config):
                     self.protocol.check_round_end()
             return connection.on_disconnect(self)
 
-        def on_kill(self, killer, type, grenade):
-            if self.protocol.arena_running and type != TEAM_CHANGE_KILL:
+        def on_kill(self, killer, kill_type, grenade):
+            if self.protocol.arena_running and kill_type != TEAM_CHANGE_KILL:
                 if self.world_object is not None and not self.world_object.dead:
                     self.world_object.dead = True
                     self.protocol.check_round_end(killer)
-            return connection.on_kill(self, killer, type, grenade)
+            return connection.on_kill(self, killer, kill_type, grenade)
 
         def on_team_join(self, team):
             returned = connection.on_team_join(self, team)
@@ -426,12 +416,12 @@ def apply_script(protocol, connection, config):
             self.send_chat('%s and %s remain.' %
                            (green_team.arena_message, blue_team.arena_message))
 
-        def on_map_change(self, map):
+        def on_map_change(self, map_):
             extensions = self.map_info.extensions
             if ALWAYS_ENABLED:
                 self.arena_enabled = True
             else:
-                if extensions.has_key('arena'):
+                if 'arena' in extensions:
                     self.arena_enabled = extensions['arena']
                 else:
                     self.arena_enabled = False
@@ -442,28 +432,28 @@ def apply_script(protocol, connection, config):
                 self.old_building = self.building
                 self.old_killing = self.killing
                 self.gates = []
-                if extensions.has_key('arena_gates'):
+                if 'arena_gates' in extensions:
                     for gate in extensions['arena_gates']:
                         self.gates.append(Gate(*gate, protocol_obj=self))
-                if extensions.has_key('arena_green_spawns'):
+                if 'arena_green_spawns' in extensions:
                     self.green_team.arena_spawns = extensions[
                         'arena_green_spawns']
-                elif extensions.has_key('arena_green_spawn'):
+                elif 'arena_green_spawn' in extensions:
                     self.green_team.arena_spawns = (
                         extensions['arena_green_spawn'],)
                 else:
-                    raise CustomException(
+                    raise ArenaException(
                         'No arena_green_spawns given in map metadata.')
-                if extensions.has_key('arena_blue_spawns'):
+                if 'arena_blue_spawns' in extensions:
                     self.blue_team.arena_spawns = extensions[
                         'arena_blue_spawns']
-                elif extensions.has_key('arena_blue_spawn'):
+                elif 'arena_blue_spawn' in extensions:
                     self.blue_team.arena_spawns = (
                         extensions['arena_blue_spawn'],)
                 else:
-                    raise CustomException(
+                    raise ArenaException(
                         'No arena_blue_spawns given in map metadata.')
-                if extensions.has_key('arena_max_spawn_distance'):
+                if 'arena_max_spawn_distance' in extensions:
                     self.arena_max_spawn_distance = extensions[
                         'arena_max_spawn_distance']
                 self.delay_arena_countdown(MAP_CHANGE_DELAY)

@@ -4,7 +4,6 @@ Kicks jerks for 'PRESS ALT-F4 FOR AIRSTRIKES' and so on.
 Maintainer: ?
 """
 
-from twisted.internet import reactor
 import re
 
 chat_pattern = re.compile(".*(airstrike).*(esc|escape|alt-f4|alt f4)",

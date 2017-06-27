@@ -4,8 +4,11 @@ Gives Ace of Spades a daycycle (using the fog).
 Maintainer: hompy
 """
 
+from math import modf
+
 from twisted.internet.task import LoopingCall
 from piqueserver.commands import name, admin, add
+from pyspades.color import wrap, interpolate_hsb, interpolate_rgb, hsb_to_rgb, rgb_distance
 
 S_NO_RIGHTS = 'No administrator rights!'
 S_TIME_OF_DAY = 'Time of day: {hours:02d}:{minutes:02d}'
@@ -31,9 +34,6 @@ def day_speed(connection, value=None):
             protocol.daycycle_loop.start(protocol.day_update_frequency)
         return S_SPEED_SET.format(multiplier=value)
 
-from math import modf
-
-
 @name('daytime')
 def day_time(connection, value=None):
     if value is not None:
@@ -50,7 +50,6 @@ def day_time(connection, value=None):
 add(day_speed)
 add(day_time)
 
-from pyspades.color import *
 
 
 def apply_script(protocol, connection, config):
@@ -129,8 +128,8 @@ def apply_script(protocol, connection, config):
                 self.start_color = hsb_to_rgb(*self.start_color)
                 self.target_color = hsb_to_rgb(*self.target_color)
 
-        def on_map_change(self, map):
+        def on_map_change(self, map_):
             self.reset_daycycle()
-            protocol.on_map_change(self, map)
+            protocol.on_map_change(self, map_)
 
     return DayCycleProtocol, connection

@@ -4,7 +4,6 @@ Kicks a player if inactive for too long.
 Maintainer: hompy
 """
 
-from math import ceil
 from operator import attrgetter
 from twisted.internet import reactor
 from pyspades.common import prettify_timespan

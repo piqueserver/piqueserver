@@ -5,13 +5,12 @@ Maintainer: hompy
 """
 
 from math import ceil, sin, cos
-from random import randrange, uniform, vonmisesvariate
-from twisted.internet.reactor import callLater, seconds
-from pyspades.server import orientation_data, grenade_packet
-from pyspades.common import coordinates, to_coordinates, Vertex3
-from pyspades.collision import distance_3d_vector
+from random import uniform, vonmisesvariate
+from twisted.internet import reactor
+from pyspades.server import grenade_packet
+from pyspades.common import to_coordinates, Vertex3
 from pyspades.world import Grenade
-from pyspades.constants import *
+from pyspades.constants import UPDATE_FREQUENCY, WEAPON_TOOL
 from piqueserver.commands import alias, add, admin, name, get_player
 
 STREAK_REQUIREMENT = 8
@@ -46,10 +45,10 @@ def airstrike(connection, *args):
 
     if player.airstrike:
         return S_READY
-    else:
-        kills_left = STREAK_REQUIREMENT - player.airstrike_streak
-        return S_NO_STREAK.format(streak=STREAK_REQUIREMENT,
-                                  remaining=kills_left)
+
+    kills_left = STREAK_REQUIREMENT - player.airstrike_streak
+    return S_NO_STREAK.format(streak=STREAK_REQUIREMENT,
+                              remaining=kills_left)
 
 
 add(airstrike)
@@ -80,8 +79,8 @@ def bellrand(a, b):
 class Nag(object):
     call = None
 
-    def __init__(self, seconds, f, *args, **kw):
-        self.seconds = seconds
+    def __init__(self, secs, f, *args, **kw):
+        self.seconds = secs
         self.f = f
         self.args = args
         self.kw = kw
@@ -90,7 +89,7 @@ class Nag(object):
         if self.call and self.call.active():
             self.call.reset(ZOOMV_TIME)
         else:
-            self.call = callLater(self.seconds, self.f, *self.args, **self.kw)
+            self.call = reactor.callLater(self.seconds, self.f, *self.args, **self.kw)
 
     def stop(self):
         if self.call and self.call.active():
@@ -122,9 +121,9 @@ def apply_script(protocol, connection, config):
             message = S_ENEMY.format(coords=coords)
             self.protocol.send_chat(message, global_message=False,
                                     team=self.team.other)
-            self.team.last_airstrike = seconds()
+            self.team.last_airstrike = reactor.seconds()
 
-            callLater(ARRIVAL_DELAY, self.do_airstrike, x, y, z)
+            reactor.callLater(ARRIVAL_DELAY, self.do_airstrike, x, y, z)
 
         def do_airstrike(self, x, y, z):
             if self.name is None:
@@ -147,8 +146,8 @@ def apply_script(protocol, connection, config):
                     grenade_x += uniform(*jitter)
                     grenade_y += uniform(-spread, spread)
                     delay = i * 0.85 + j * 0.11
-                    call = callLater(delay, self.create_airstrike_grenade,
-                                     grenade_x, grenade_y, grenade_z)
+                    call = reactor.callLater(delay, self.create_airstrike_grenade,
+                                             grenade_x, grenade_y, grenade_z)
                     self.airstrike_grenade_calls.append(call)
 
         def create_airstrike_grenade(self, x, y, z):
@@ -195,10 +194,10 @@ def apply_script(protocol, connection, config):
             self.airstrike_grenade_calls = None
 
         def start_zoomv(self):
-            now = seconds()
+            now = reactor.seconds()
             last_strike = getattr(self.team, 'last_airstrike', None)
             if last_strike is not None and now - last_strike < TEAM_COOLDOWN:
-                remaining = ceil(TEAM_COOLDOWN - (seconds() - last_strike))
+                remaining = ceil(TEAM_COOLDOWN - (now - last_strike))
                 message = S_COOLDOWN.format(seconds=int(remaining))
                 self.send_zoomv_chat(message)
                 return
@@ -221,19 +220,19 @@ def apply_script(protocol, connection, config):
 
         def send_zoomv_chat(self, message):
             last_message = self.last_zoomv_message
-            if last_message is None or seconds() - last_message >= 1.0:
+            if last_message is None or reactor.seconds() - last_message >= 1.0:
                 self.send_chat(message)
-                self.last_zoomv_message = seconds()
+                self.last_zoomv_message = reactor.seconds()
 
         def on_team_changed(self, old_team):
             self.end_airstrike()
             connection.on_team_changed(self, old_team)
 
-        def on_login(self, name):
+        def on_login(self, player_name):
             self.airstrike_nag = Nag(4.0, self.send_chat, S_READY)
             self.zoomv = Nag(1.0, self.end_zoomv)
             self.zoomv_nag = Nag(2.0, self.send_zoomv_chat, S_STAND)
-            connection.on_login(self, name)
+            connection.on_login(self, player_name)
 
         def on_reset(self):
             self.airstrike = False
@@ -249,7 +248,7 @@ def apply_script(protocol, connection, config):
                 self.airstrike_nag.start_or_reset()
             connection.on_spawn(self, location)
 
-        def on_kill(self, killer, type, grenade):
+        def on_kill(self, killer, kill_type, grenade):
             self.airstrike_streak = 0
             self.airstrike_nag.stop()
             self.zoomv.stop()
@@ -265,7 +264,7 @@ def apply_script(protocol, connection, config):
                             killer.send_chat(S_READY)
                             if REFILL_ON_GRANT:
                                 killer.refill()
-            connection.on_kill(self, killer, type, grenade)
+            connection.on_kill(self, killer, kill_type, grenade)
 
         def on_shoot_set(self, fire):
             if self.zoomv.active() and fire:

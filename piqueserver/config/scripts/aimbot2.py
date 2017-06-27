@@ -12,7 +12,11 @@ from math import sqrt, cos, pi
 from twisted.internet.task import LoopingCall
 from twisted.internet import reactor
 
-from pyspades.constants import *
+from pyspades.constants import (
+    WEAPON_TOOL, WEAPON_KILL, HEADSHOT_KILL,
+    RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON,
+)
+
 from piqueserver.commands import add, admin, get_player
 
 DISABLED, KICK, BAN, WARN_ADMIN = xrange(4)
@@ -118,8 +122,8 @@ def magnitude(v):
     return sqrt(v[0]**2 + v[1]**2 + v[2]**2)
 
 
-def scale(v, scale):
-    return (v[0] * scale, v[1] * scale, v[2] * scale)
+def scale(v, factor):
+    return (v[0] * factor, v[1] * factor, v[2] * factor)
 
 
 def subtract(v1, v2):
@@ -169,8 +173,8 @@ def hackinfo_player(player):
         player.name, player.player_id, player.address[0])
     info += accuracy_player(player, False)
     ratio = player.ratio_kills / float(max(1, player.ratio_deaths))
-    info += " Kill-death ratio of %.2f (%s kills, %s deaths)." % (ratio,
-                                                                  player.ratio_kills, player.ratio_deaths)
+    info += " Kill-death ratio of %.2f (%s kills, %s deaths)." % (
+        ratio, player.ratio_kills, player.ratio_deaths)
     info += " %i kills in the last %i seconds." % (
         player.get_kill_count(), KILL_TIME)
     info += " %i headshot snaps in the last %i seconds." % (
@@ -237,55 +241,71 @@ def apply_script(protocol, connection, config):
                     headshot_snap_count += 1
                 else:
                     pop_count += 1
-            for i in xrange(0, pop_count):
-                self.headshot_snap_times.pop(0)
+
+            self.headshot_snap_times = self.headshot_snap_times[pop_count]
             return headshot_snap_count
 
         def on_orientation_update(self, x, y, z):
-            if not self.first_orientation and self.world_object is not None:
-                orient = self.world_object.orientation
-                old_orient_v = (orient.x, orient.y, orient.z)
-                new_orient_v = (x, y, z)
-                theta = dot3d(old_orient_v, new_orient_v)
-                if theta <= HEADSHOT_SNAP_ANGLE_COS:
-                    self_pos = self.world_object.position
-                    for enemy in self.team.other.get_players():
-                        enemy_pos = enemy.world_object.position
-                        position_v = (enemy_pos.x - self_pos.x, enemy_pos.y -
-                                      self_pos.y, enemy_pos.z - self_pos.z)
-                        c = scale(new_orient_v, dot3d(
-                            new_orient_v, position_v))
-                        h = magnitude(subtract(position_v, c))
-                        if h <= HEAD_RADIUS:
-                            current_time = reactor.seconds()
-                            self.headshot_snap_times.append(current_time)
-                            if self.get_headshot_snap_count() >= HEADSHOT_SNAP_THRESHOLD:
-                                if HEADSHOT_SNAP == BAN:
-                                    self.ban('Aimbot detected - headshot snap',
-                                             HEADSHOT_SNAP_BAN_DURATION)
-                                    return
-                                elif HEADSHOT_SNAP == KICK:
-                                    self.kick(
-                                        'Aimbot detected - headshot snap')
-                                    return
-                                elif HEADSHOT_SNAP == WARN_ADMIN:
-                                    if (current_time - self.headshot_snap_warn_time) > WARN_INTERVAL_MINIMUM:
-                                        self.headshot_snap_warn_time = current_time
-                                        self.warn_admin()
-            else:
+            if self.first_orientation or self.world_object is None:
+                # we have no orientation data yet
                 self.first_orientation = False
+                return connection.on_orientation_update(self, x, y, z)
+
+            orient = self.world_object.orientation
+            old_orient_v = (orient.x, orient.y, orient.z)
+            new_orient_v = (x, y, z)
+            theta = dot3d(old_orient_v, new_orient_v)
+
+            if theta > HEADSHOT_SNAP_ANGLE_COS:
+                # The angle didn't change enough
+                return connection.on_orientation_update(self, x, y, z)
+
+            self_pos = self.world_object.position
+            for enemy in self.team.other.get_players():
+                enemy_pos = enemy.world_object.position
+                position_v = (enemy_pos.x - self_pos.x, enemy_pos.y -
+                              self_pos.y, enemy_pos.z - self_pos.z)
+                c = scale(new_orient_v, dot3d(new_orient_v, position_v))
+                h = magnitude(subtract(position_v, c))
+
+                if h > HEAD_RADIUS:
+                    # Didn't snap near a head
+                    continue
+
+                current_time = reactor.seconds()
+                self.headshot_snap_times.append(current_time)
+
+                if self.get_headshot_snap_count() < HEADSHOT_SNAP_THRESHOLD:
+                    # Not enough headshots yet
+                    continue
+
+                if HEADSHOT_SNAP == BAN:
+                    self.ban('Aimbot detected - headshot snap',
+                             HEADSHOT_SNAP_BAN_DURATION)
+                    return
+                elif HEADSHOT_SNAP == KICK:
+                    self.kick(
+                        'Aimbot detected - headshot snap')
+                    return
+                elif HEADSHOT_SNAP == WARN_ADMIN:
+                    if (current_time - self.headshot_snap_warn_time) > WARN_INTERVAL_MINIMUM:
+                        self.headshot_snap_warn_time = current_time
+                        self.warn_admin()
+
             return connection.on_orientation_update(self, x, y, z)
 
         def on_shoot_set(self, shoot):
-            if self.tool == WEAPON_TOOL:
-                if shoot and not self.bullet_loop.running:
-                    self.possible_targets = []
-                    for enemy in self.team.other.get_players():
-                        if point_distance2(self, enemy) <= FOG_DISTANCE2:
-                            self.possible_targets.append(enemy)
-                    self.bullet_loop_start(self.weapon_object.delay)
-                elif not shoot:
-                    self.bullet_loop_stop()
+            if self.tool != WEAPON_TOOL:
+                return connection.on_shoot_set(self, shoot)
+
+            if shoot and not self.bullet_loop.running:
+                self.possible_targets = []
+                for enemy in self.team.other.get_players():
+                    if point_distance2(self, enemy) <= FOG_DISTANCE2:
+                        self.possible_targets.append(enemy)
+                self.bullet_loop_start(self.weapon_object.delay)
+            elif not shoot:
+                self.bullet_loop_stop()
             return connection.on_shoot_set(self, shoot)
 
         def get_kill_count(self):
@@ -297,28 +317,34 @@ def apply_script(protocol, connection, config):
                     kill_count += 1
                 else:
                     pop_count += 1
-            for i in xrange(0, pop_count):
-                self.kill_times.pop(0)
+
+            self.kill_times = self.kill_times[pop_count:]
             return kill_count
 
-        def on_kill(self, by, type, grenade):
-            if by is not None and by is not self:
-                if type == WEAPON_KILL or type == HEADSHOT_KILL:
-                    by.kill_times.append(reactor.seconds())
-                    if by.get_kill_count() >= KILL_THRESHOLD:
-                        if KILLS_IN_TIME == BAN:
-                            by.ban('Aimbot detected - kills in time window',
-                                   KILLS_IN_TIME_BAN_DURATION)
-                            return
-                        elif KILLS_IN_TIME == KICK:
-                            by.kick('Aimbot detected - kills in time window')
-                            return
-                        elif KILLS_IN_TIME == WARN_ADMIN:
-                            current_time = reactor.seconds()
-                            if (current_time - by.kills_in_time_warn_time) > WARN_INTERVAL_MINIMUM:
-                                by.kills_in_time_warn_time = current_time
-                                by.warn_admin()
-            return connection.on_kill(self, by, type, grenade)
+        def on_kill(self, by, kill_type, grenade):
+            if by is None or by is self:
+                return connection.on_kill(self, by, kill_type, grenade)
+
+            if kill_type != WEAPON_KILL and kill_type != HEADSHOT_KILL:
+                return connection.on_kill(self, by, kill_type, grenade)
+
+            by.kill_times.append(reactor.seconds())
+            if by.get_kill_count() >= KILL_THRESHOLD:
+                if KILLS_IN_TIME == BAN:
+                    by.ban('Aimbot detected - kills in time window',
+                           KILLS_IN_TIME_BAN_DURATION)
+                    return
+                elif KILLS_IN_TIME == KICK:
+                    by.kick('Aimbot detected - kills in time window')
+                    return
+                elif KILLS_IN_TIME == WARN_ADMIN:
+                    current_time = reactor.seconds()
+                    if ((current_time - by.kills_in_time_warn_time)
+                            > WARN_INTERVAL_MINIMUM):
+                        by.kills_in_time_warn_time = current_time
+                        by.warn_admin()
+
+            return connection.on_kill(self, by, kill_type, grenade)
 
         def multiple_bullets_eject(self):
             if MULTIPLE_BULLETS == BAN:
@@ -328,47 +354,50 @@ def apply_script(protocol, connection, config):
                 self.kick('Aimbot detected - multiple bullets')
             elif MULTIPLE_BULLETS == WARN_ADMIN:
                 current_time = reactor.seconds()
-                if (current_time - self.multiple_bullets_warn_time) > WARN_INTERVAL_MINIMUM:
+                if ((current_time - self.multiple_bullets_warn_time)
+                        > WARN_INTERVAL_MINIMUM):
                     self.multiple_bullets_warn_time = current_time
                     self.warn_admin()
 
-        def on_hit(self, hit_amount, hit_player, type, grenade):
-            if self.team is not hit_player.team:
-                if type == WEAPON_KILL or type == HEADSHOT_KILL:
-                    current_time = reactor.seconds()
-                    shotgun_use = False
-                    if current_time - self.shot_time > (0.5 * hit_player.weapon_object.delay):
-                        shotgun_use = True
-                        self.multiple_bullets_count = 0
-                        self.shot_time = current_time
-                    if type == HEADSHOT_KILL:
-                        self.multiple_bullets_count += 1
-                    if self.weapon == RIFLE_WEAPON:
-                        if (not (hit_amount in RIFLE_DAMAGE)) and DETECT_DAMAGE_HACK:
-                            return False
-                        else:
-                            self.rifle_hits += 1
-                            if self.multiple_bullets_count >= RIFLE_MULTIPLE_BULLETS_MAX:
-                                self.multiple_bullets_eject()
-                                return False
-                    elif self.weapon == SMG_WEAPON:
-                        if (not (hit_amount in SMG_DAMAGE)) and DETECT_DAMAGE_HACK:
-                            return False
-                        else:
-                            self.smg_hits += 1
-                            if self.multiple_bullets_count >= SMG_MULTIPLE_BULLETS_MAX:
-                                self.multiple_bullets_eject()
-                                return False
-                    elif self.weapon == SHOTGUN_WEAPON:
-                        if (not (hit_amount in SHOTGUN_DAMAGE)) and DETECT_DAMAGE_HACK:
-                            return False
-                        elif shotgun_use:
-                            self.shotgun_hits += 1
-            return connection.on_hit(self, hit_amount, hit_player, type, grenade)
+        def on_hit(self, hit_amount, hit_player, hit_type, grenade):
+            if self.team is hit_player.team or hit_type not in (WEAPON_KILL, HEADSHOT_KILL):
+                return connection.on_hit(self, hit_amount, hit_player, hit_type, grenade)
 
-        def hit_percent_eject(self, accuracy):
+            current_time = reactor.seconds()
+            shotgun_use = False
+            if current_time - self.shot_time > (0.5 * hit_player.weapon_object.delay):
+                shotgun_use = True
+                self.multiple_bullets_count = 0
+                self.shot_time = current_time
+            if hit_type == HEADSHOT_KILL:
+                self.multiple_bullets_count += 1
+            if self.weapon == RIFLE_WEAPON:
+                if not (hit_amount in RIFLE_DAMAGE) and DETECT_DAMAGE_HACK:
+                    return False
+                else:
+                    self.rifle_hits += 1
+                    if self.multiple_bullets_count >= RIFLE_MULTIPLE_BULLETS_MAX:
+                        self.multiple_bullets_eject()
+                        return False
+            elif self.weapon == SMG_WEAPON:
+                if not (hit_amount in SMG_DAMAGE) and DETECT_DAMAGE_HACK:
+                    return False
+                else:
+                    self.smg_hits += 1
+                    if self.multiple_bullets_count >= SMG_MULTIPLE_BULLETS_MAX:
+                        self.multiple_bullets_eject()
+                        return False
+            elif self.weapon == SHOTGUN_WEAPON:
+                if not (hit_amount in SHOTGUN_DAMAGE) and DETECT_DAMAGE_HACK:
+                    return False
+                elif shotgun_use:
+                    self.shotgun_hits += 1
+
+            return connection.on_hit(self, hit_amount, hit_player, hit_type, grenade)
+
+        def hit_percent_eject(self, hit_accuracy):
             message = 'Aimbot detected - %i%% %s hit accuracy' %\
-                      (100.0 * accuracy, self.weapon_object.name)
+                      (100.0 * hit_accuracy, self.weapon_object.name)
             if HIT_PERCENT == BAN:
                 self.ban(message, HIT_PERCENT_BAN_DURATION)
             elif HIT_PERCENT == KICK:
@@ -421,7 +450,8 @@ def apply_script(protocol, connection, config):
                 orient = self.world_object.orientation
                 orient_v = (orient.x, orient.y, orient.z)
                 position_v_mag = magnitude(position_v)
-                if position_v_mag != 0 and (dot3d(orient_v, position_v) / position_v_mag) >= NEAR_MISS_COS:
+                if position_v_mag != 0 and (dot3d(
+                        orient_v, position_v) / position_v_mag) >= NEAR_MISS_COS:
                     if self.weapon == RIFLE_WEAPON:
                         self.rifle_count += 1
                     elif self.weapon == SMG_WEAPON:
