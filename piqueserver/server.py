@@ -782,7 +782,7 @@ class FeatureProtocol(ServerProtocol):
     def set_map_name(self, rot_info):
         try:
             map_info = self.get_map(rot_info)
-        except MapNotFound, e:
+        except MapNotFound as e:
             return e
         if self.map_info:
             self.on_map_leave()
@@ -799,7 +799,7 @@ class FeatureProtocol(ServerProtocol):
     def set_map_rotation(self, maps, now=True):
         try:
             maps = check_rotation(maps, os.path.join(cfg.config_dir, 'maps'))
-        except MapNotFound, e:
+        except MapNotFound as e:
             return e
         self.maps = maps
         self.map_rotator = self.map_rotator_type(maps)
@@ -1054,7 +1054,7 @@ def run():
             cfg.config = config
     except IOError as e:
         print(
-            'Error reading config from {}: '.format(cfg.config_file) + str(e))
+            'Error reading config from {} - {}: '.format(cfg.config_file, e))
         print('If you haven\'t already, try copying the example config to '
               'the default location with "piqueserver --copy-config".')
         sys.exit(1)
@@ -1101,7 +1101,7 @@ def run():
             f, filename, desc = imp.find_module(script, [script_dir])
             module = imp.load_module(script, f, filename, desc)
             script_objects.append(module)
-        except ImportError, e:
+        except ImportError as e:
             print("(script '%s' not found: %r)" % (script, e))
             script_names.remove(script)
 

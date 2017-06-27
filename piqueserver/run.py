@@ -40,6 +40,7 @@ def update_geoip(target_dir):
 
     print('Downloading %s' % MAXMIND_DOWNLOAD)
 
+    # PY3: replace with urllib.requests.urlretrieve
     urllib.urlretrieve(MAXMIND_DOWNLOAD, zipped_path)
 
     print('Download Complete')

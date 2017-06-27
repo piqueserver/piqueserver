@@ -19,6 +19,8 @@
 # pylint: disable=wildcard-import,unused-wildcard-import,redefined-builtin
 # pylint: disable=line-too-long
 
+from __future__ import print_function
+
 if __name__ == 'commands':
     from piqueserver.commands import *
 else:
@@ -840,7 +842,7 @@ else:
         protocol.config['name'] = name
         protocol.update_format()
         message = "%s changed servername to to '%s'" % (connection.name, name)
-        print message
+        print(message)
         connection.protocol.irc_say("* " + message)
         if connection in connection.protocol.players:
             return message
@@ -1029,9 +1031,9 @@ else:
             return '%s is from %s' % (player.name, ', '.join(items))
         add(where_from)
     except ImportError:
-        print "('from' command disabled - missing pygeoip)"
+        print("('from' command disabled - missing pygeoip)")
     except (IOError, OSError):
-        print "('from' command disabled - missing data/GeoLiteCity.dat)"
+        print("('from' command disabled - missing data/GeoLiteCity.dat)")
 
     def handle_command(connection, command, parameters):
         command = command.lower()
@@ -1058,8 +1060,8 @@ else:
         except KeyError:
             msg = None  # 'Invalid command'
         except TypeError as t:
-            print 'Command', command, 'failed with args:', parameters
-            print t
+            print('Command', command, 'failed with args:', parameters)
+            print(t)
             msg = 'Command failed'
         except InvalidPlayer:
             msg = 'No such player'

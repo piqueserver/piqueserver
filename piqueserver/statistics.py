@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import json
-# import hashlib
 
 from twisted.internet.protocol import (ReconnectingClientFactory,
                                        ServerFactory)
@@ -166,13 +167,13 @@ if __name__ == '__main__':
     class TestServer(StatsServer):
 
         def add_kill(self, name):
-            print 'Adding kill to', name
+            print('Adding kill to', name)
 
         def add_death(self, name):
-            print 'Adding death to', name
+            print('Adding death to', name)
 
         def check_user(self, name, password):
-            print 'Checking user name/pass (%s, %s)' % (name, password)
+            print('Checking user name/pass (%s, %s)' % (name, password))
             # TODO: pylint thinks this function should have an argument
             #       check it out
             return succeed()  # pylint: disable=no-value-for-parameter

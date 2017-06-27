@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 import sys
 
 from twisted.internet import reactor
@@ -85,7 +87,7 @@ class ConsoleInput(LineReceiver):
             line = line[1:]
             result = commands.handle_input(self, line)
             if result is not None:
-                print result
+                print(result)
         else:
             self.protocol.send_chat(line)
 
