@@ -10,11 +10,11 @@ def apply_script(protocol, connection, config):
 
         def on_position_update(self):
             extensions = self.protocol.map_info.extensions
-            if (extensions.has_key('water_damage') and
+            if ('water_damage' in extensions and
                     self.world_object.position.z >= 61):
                 water_damage = extensions['water_damage']
                 self.environment_hit(water_damage)
-            if (extensions.has_key('boundary_damage')):
+            if 'boundary_damage' in extensions:
                 x = self.world_object.position.x
                 y = self.world_object.position.y
                 boundary_damage = extensions['boundary_damage']

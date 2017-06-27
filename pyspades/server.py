@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from pyspades.protocol import BaseConnection, BaseProtocol
@@ -512,7 +514,7 @@ class ServerConnection(BaseConnection):
                         if self.rapids.check():
                             start, end = self.rapids.get()
                             if end - start < MAX_RAPID_SPEED:
-                                print 'RAPID HACK:', self.rapids.window
+                                print('RAPID HACK:', self.rapids.window)
                                 self.on_hack_attempt('Rapid hack detected')
                         return
                     map = self.protocol.map
@@ -670,7 +672,7 @@ class ServerConnection(BaseConnection):
         # search for valid locations near the specified point
         for pos in self.protocol.pos_table:
             if self.is_location_free(x+pos[0], y+pos[1], z+pos[2]):
-                self.set_location(x+pos[0], y+pos[1], z+pos[2])
+                self.set_location((x+pos[0], y+pos[1], z+pos[2]))
                 return True
         return False
 

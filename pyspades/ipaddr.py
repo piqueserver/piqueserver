@@ -1635,7 +1635,7 @@ class _BaseV6(object):
         """
         if ip_str.count('::') == 1:
             return True
-        if filter(lambda x: len(x) < 4, ip_str.split(':')):
+        if [x for x in ip_str.split(':') if len(x) < 4]:
             return True
         return False
 

@@ -20,7 +20,7 @@ Reads the AoSLang-En.bin file and allows you to manipulate it.
 Thanks to learn_more for file format specs
 """
 
-from pyspades.bytes import ByteReader, ByteWriter
+from pyspades.bytes import ByteWriter
 
 MAGIC = 'STR0'
 
@@ -42,9 +42,9 @@ class Entry(object):
     value = None
     type = None
 
-    def __init__(self, value, type):
+    def __init__(self, value, type_):
         self.value = value
-        self.type = type
+        self.type = type_
 
     def format(self, *arg):
         return self.value % arg
@@ -64,11 +64,11 @@ class LanguageFile(object):
             header = reader.readInt(True, False)
             end = reader.tell()
             off = header & 0x00FFFFFF
-            type = header >> 24
+            type_ = header >> 24
             reader.seek(off)
             value = reader.readString()
             reader.seek(end)
-            self.items.append(Entry(value, type))
+            self.items.append(Entry(value, type_))
 
     def write(self, reader):
         reader.write(MAGIC)
@@ -76,7 +76,7 @@ class LanguageFile(object):
         start = 8 + size * 4
         reader.writeInt(size + 1, True, False)
         values = ByteWriter()
-        for index, item in enumerate(self.items):
+        for item in self.items:
             value_offset = values.tell()
             values.writeString(item.value)
             offset = value_offset + start

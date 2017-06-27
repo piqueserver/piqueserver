@@ -52,4 +52,4 @@ if __name__ == '__main__':
         from pyspades.packet import Packet
         new_packet = Packet()
         new_packet.read(eval(' '.join(args[1:])))
-        print new_packet.items
+        print(new_packet.items)

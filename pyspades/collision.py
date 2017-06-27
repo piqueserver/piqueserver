@@ -37,8 +37,10 @@ def distance_3d_vector(vector1, vector2):
     return math.sqrt(xd**2 + yd**2 + zd**2)
 
 
-def distance_3d((x1, y1, z1), (x2, y2, z2)):
+def distance_3d(xyz1, xyz2):
+    (x1, y1, z1) = xyz1
+    (x2, y2, z2) = xyz2
     xd = x1 - x2
     yd = y1 - y2
-    zd = z2 - z2
+    zd = z1 - z2
     return math.sqrt(xd**2 + yd**2 + zd**2)
