@@ -40,7 +40,7 @@ cdef extern from "bytes_c.cpp":
     void write_float(void * stream, double value, int big_endian)
     void write_string(void * stream, char * data, size_t size)
     void write(void * stream, char * data, size_t size)
-    void rewind_stream(void * stream, int bytes)
+    void rewind_stream(void * stream, int bytecount)
     object get_stream(void * stream)
     size_t get_stream_size(void * stream)
     size_t get_stream_pos(void * stream)
@@ -53,13 +53,13 @@ DEF LONG_LONG_ERROR = -0xFFFFFFFFFFFFFFFF >> 1
 DEF FLOAT_ERROR = float('nan')
 
 cdef class ByteReader:
-    def __init__(self, input, int start = 0, int size = -1):
-        self.input = input
-        self.data = input
+    def __init__(self, input_data, int start = 0, int size = -1):
+        self.input = input_data
+        self.data = input_data
         self.data += start
         self.pos = self.data
         if size == -1:
-            size = len(input) - start
+            size = len(input_data) - start
         self.size = size
         self.end = self.data + size
         self.start = start
@@ -71,12 +71,12 @@ cdef class ByteReader:
         self.pos += size
         return data
 
-    cpdef read(self, int bytes = -1):
+    cpdef read(self, int bytecount = -1):
         cdef int left = self.dataLeft()
-        if bytes == -1 or bytes > left:
-            bytes = left
-        ret = self.pos[:bytes]
-        self.pos += bytes
+        if bytecount == -1 or bytecount > left:
+            bytecount = left
+        ret = self.pos[:bytecount]
+        self.pos += bytecount
         return ret
 
     cpdef int readByte(self, bint unsigned = False) except INT_ERROR:
@@ -138,15 +138,15 @@ cdef class ByteReader:
         if self.pos < self.data:
             self.pos = self.data
 
-    cdef void _skip(self, int bytes):
-        self.pos += bytes
+    cdef void _skip(self, int bytecount):
+        self.pos += bytecount
         if self.pos > self.end:
             self.pos = self.end
         if self.pos < self.data:
             self.pos = self.data
 
-    cpdef skipBytes(self, int bytes):
-        self._skip(bytes)
+    cpdef skipBytes(self, int bytecount):
+        self._skip(bytecount)
 
     cpdef rewind(self, int value):
         self._skip(-value)
@@ -198,13 +198,13 @@ cdef class ByteWriter:
         if size != -1:
             self.pad(size - (len(value) + 1))
 
-    cpdef pad(self, int bytes):
+    cpdef pad(self, int bytecount):
         cdef int i
-        for i in range(bytes):
+        for i in range(bytecount):
             write_ubyte(self.stream, 0)
 
-    cpdef rewind(self, int bytes):
-        rewind_stream(self.stream, bytes)
+    cpdef rewind(self, int bytecount):
+        rewind_stream(self.stream, bytecount)
 
     cpdef size_t tell(self):
         return get_stream_pos(self.stream)

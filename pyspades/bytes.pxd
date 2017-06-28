@@ -10,7 +10,7 @@ cdef class ByteReader:
     cdef object input
 
     cdef char * check_available(self, int size) except NULL
-    cpdef read(self, int bytes = ?)
+    cpdef read(self, int bytecount = ?)
     cpdef int readByte(self, bint unsigned = ?) except INT_ERROR
     cpdef int readShort(self, bint unsigned = ?, bint big_endian = ?) \
                         except INT_ERROR
@@ -20,8 +20,8 @@ cdef class ByteReader:
     cpdef readString(self, int size = ?)
     cpdef ByteReader readReader(self, int size = ?)
     cpdef int dataLeft(self)
-    cdef void _skip(self, int bytes)
-    cpdef skipBytes(self, int bytes)
+    cdef void _skip(self, int bytecount)
+    cpdef skipBytes(self, int bytecount)
     cpdef rewind(self, int value)
     cpdef seek(self, size_t pos)
     cpdef size_t tell(self)
@@ -39,6 +39,6 @@ cdef class ByteWriter:
     cpdef writeFloat(self, float value, bint big_endian = ?)
     cpdef writeStringSize(self, char * value, int size)
     cpdef writeString(self, value, int size = ?)
-    cpdef pad(self, int bytes)
-    cpdef rewind(self, int bytes)
+    cpdef pad(self, int bytecount)
+    cpdef rewind(self, int bytecount)
     cpdef size_t tell(self)

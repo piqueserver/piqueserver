@@ -18,7 +18,7 @@
 from vxl cimport VXLData, MapData
 
 cdef extern from "classicgen_c.cpp":
-    void genland(unsigned long seed, MapData * map)
+    void genland(unsigned long seed, MapData * mapdata)
 
 import array
 import random
@@ -28,9 +28,9 @@ from collections import deque
 cimport cython
 
 def generate_classic(seed):
-    cdef VXLData map = VXLData()
-    genland(seed, map.map)
-    return map
+    cdef VXLData mapdata = VXLData()
+    genland(seed, mapdata.map)
+    return mapdata
 
 class Biome(object):
     def __init__(self, gradient, height, variation, noise):

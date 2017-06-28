@@ -76,5 +76,5 @@ def load_client_packet(data):
     return load_contained_packet(data, CLIENT_LOADERS)
 
 cdef inline Loader load_contained_packet(ByteReader data, dict table):
-    type = data.readByte(True)
-    return table[type](data)
+    type_ = data.readByte(True)
+    return table[type_](data)
