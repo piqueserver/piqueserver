@@ -766,7 +766,7 @@ class FeatureProtocol(ServerProtocol):
     def advance_rotation(self, message=None):
         self.set_time_limit(False)
         if self.planned_map is None:
-            self.planned_map = self.map_rotator.next()
+            self.planned_map = next(self.map_rotator)
         planned_map = self.planned_map
         self.planned_map = None
         self.on_advance(map)
@@ -1005,7 +1005,7 @@ class FeatureProtocol(ServerProtocol):
     def on_game_end(self):
         if self.advance_on_win <= 0:
             self.irc_say('Round ended!', me=True)
-        elif self.win_count.next() % self.advance_on_win == 0:
+        elif next(self.win_count) % self.advance_on_win == 0:
             self.advance_rotation('Game finished!')
 
     def on_advance(self, map_name):

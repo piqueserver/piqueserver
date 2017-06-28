@@ -132,7 +132,7 @@ def apply_script(protocol, connection, config):
                         break
                     if sent_total > self.rollback_max_packets:
                         break
-                    sent = self.packet_generator.next()
+                    sent = next(self.packet_generator)
                     sent_unique += sent
                     sent_total += sent * len(self.connections)
                     rows += (sent == 0)
