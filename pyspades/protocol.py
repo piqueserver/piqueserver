@@ -16,13 +16,9 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from twisted.internet import reactor
-from pyspades.bytes import ByteReader, ByteWriter
-from twisted.internet.defer import Deferred
 from twisted.internet.task import LoopingCall
-from pyspades.common import hexify, stringify, binify
+from pyspades.bytes import ByteWriter
 import enet
-
-import math
 
 
 class BaseConnection(object):

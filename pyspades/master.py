@@ -17,14 +17,10 @@
 
 from pyspades.loaders import Loader
 from pyspades.protocol import BaseConnection
-from pyspades.loaders import *
-from pyspades.common import *
-from twisted.internet import reactor
-from twisted.internet.defer import Deferred
-from pyspades.bytes import ByteReader
 from pyspades.constants import MASTER_VERSION
+from pyspades.web import getPage
 
-import random
+from twisted.internet.defer import Deferred
 
 PORT = 32886
 
@@ -98,7 +94,6 @@ class MasterConnection(BaseConnection):
             callback()
         self.disconnect_callback = None
 
-from pyspades.web import getPage
 
 IP_GETTER = 'http://services.buildandshoot.com/getip'
 # other tools:
