@@ -16,7 +16,9 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Reads the AoSLang-En.bin file and allows you to manipulate it.
+This module reads the AoSLang-En.bin file that was included with voxplap AoS
+and allows you to manipulate it.
+
 Thanks to learn_more for file format specs
 """
 
