@@ -64,17 +64,10 @@ piqueserver -d custom_dir
 
  The purpose of this repo is to be a continuation of PySnip.
 
-
 #### What if PySnip development returns?
 
 Then they would merge our changes and development would be continued
 there, I guess. The important thing is to keep AoS servers alive.
-
-
-#### How long will it take for the first release?
-
-March 2017 probably.
-
 
 #### Why should I use piqueserver instead of PySnip/PySpades?
 
