@@ -20,6 +20,8 @@
 
 from __future__ import print_function
 
+import traceback
+
 if __name__ == 'commands':
     # this disgusting hack allows this to be imported both as "commands" and
     # piqueserver.commands
@@ -1064,7 +1066,7 @@ else:
             msg = None  # 'Invalid command'
         except TypeError as t:
             print('Command', command, 'failed with args:', parameters)
-            print(t)
+            traceback.print_exc(t)
             msg = 'Command failed'
         except InvalidPlayer:
             msg = 'No such player'
