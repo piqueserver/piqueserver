@@ -242,7 +242,7 @@ def apply_script(protocol, connection, config):
                 else:
                     pop_count += 1
 
-            self.headshot_snap_times = self.headshot_snap_times[pop_count]
+            self.headshot_snap_times = self.headshot_snap_times[pop_count:]
             return headshot_snap_count
 
         def on_orientation_update(self, x, y, z):
