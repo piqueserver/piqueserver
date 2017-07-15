@@ -155,6 +155,10 @@ cdef class ByteReader:
         return self.size
 
     def __str__(self):
+        # NOTE: __str__ is only supported for python2 support
+        return self.data[:self.size]
+
+    def __bytes__(self):
         return self.data[:self.size]
 
 cdef class ByteWriter:
@@ -210,6 +214,10 @@ cdef class ByteWriter:
         return get_stream_pos(self.stream)
 
     def __str__(self):
+        # NOTE: __str__ is only supported for python2 support
+        return get_stream(self.stream)
+
+    def __bytes__(self):
         return get_stream(self.stream)
 
     def __dealloc__(self):
