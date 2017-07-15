@@ -5,6 +5,7 @@ the site program).
 Maintainer: mat^2
 """
 
+from __future__ import print_function
 from statistics import DEFAULT_PORT, connect_statistics
 
 from piqueserver import commands
@@ -64,11 +65,11 @@ def apply_script(protocol, connection, config):
 
         def statistics_connected(self, stats):
             if self.stats is not None:
-                print 'Statistics server authenticated.'
+                print('Statistics server authenticated.')
                 self.tips.append('Highscores enabled! '
                                  'Use /sitelogin <forum name> <forum pass> to login.')
             else:
-                print 'Statistics reconnection successful.'
+                print('Statistics reconnection successful.')
             self.stats = stats
 
     return StatisticsProtocol, StatisticsConnection

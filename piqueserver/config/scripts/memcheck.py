@@ -17,11 +17,11 @@ def apply_script(protocol, connection, config):
     def run_gc():
         ret = gc.collect()
         if VERBOSE:
-            print 'gc.collect() ->', ret
+            print('gc.collect() ->', ret)
         if not gc.garbage:
             return
-        print 'Memory leak detected!'
-        print 'Contents of gc.garbage:', gc.garbage
+        print('Memory leak detected!')
+        print('Contents of gc.garbage:', gc.garbage)
     loop = LoopingCall(run_gc)
     loop.start(INTERVAL, now=False)
     return protocol, connection

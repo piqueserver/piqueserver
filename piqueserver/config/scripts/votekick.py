@@ -17,6 +17,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import print_function
+
 from twisted.internet.reactor import seconds
 from piqueserver.scheduler import Scheduler
 from piqueserver.commands import name, add, get_player, join_arguments, InvalidPlayer, admin, alias
@@ -214,7 +216,7 @@ class Votekick(object):
             # vote passed, ban or kick accordingly
             victim = self.victim
             self.end(S_RESULT_PASSED)
-            print '%s votekicked' % victim.name
+            print(victim.name, 'votekicked')
             if self.ban_duration > 0.0:
                 victim.ban(self.reason, self.ban_duration)
             else:

@@ -74,7 +74,7 @@ add(investigate)
 
 
 def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green (1)
-    print "start score grief"
+    print("start score grief")
     color = connection not in connection.protocol.players and connection.colors
     minutes = float(time or 2)
     if minutes < 0.0:
@@ -84,16 +84,16 @@ def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green 
     blocks = [b[1] for b in blocks_removed if b[0] >= time]
     player_name = player.name
     team_id = player.team.id  # 0=blue, 1=green
-    print "name/team set"
+    print("name/team set")
     gscore = 0  # griefscore
     map_blocks = 0
     team_blocks = 0
     enemy_blocks = 0
     team_harmed = 0
     enemy_harmed = 0
-    print "init values set"
+    print("init values set")
     if len(blocks):
-        print "len blocks = true, blocks found"
+        print("len blocks = true, blocks found")
         total_blocks = len(blocks)
         info = blocks
         for info in blocks:
@@ -105,7 +105,7 @@ def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green 
                     enemy_blocks += 1
             else:
                 map_blocks += 1
-        print "second for done"
+        print("second for done")
         infos = set(blocks)
         infos.discard(None)
         for name, team in infos:
@@ -113,15 +113,15 @@ def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green 
                 team_harmed += 1
             elif team != team_id:
                 enemy_harmed += 1
-        print "third for done"
+        print("third for done")
     else:
-        print "len blocks = false, no blocks found"
+        print("len blocks = false, no blocks found")
         total_blocks = 0
 
     # heuristic checks start here
     # if they didn't break any blocks at all, they probably aren't griefing.
     if total_blocks == 0:
-        print "no blocks, ending"
+        print("no blocks, ending")
         return 0
     # checks on team blocks destroyed
     if team_blocks > 0 and team_blocks <= 5:
@@ -134,7 +134,7 @@ def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green 
         gscore += 6
     elif team_blocks > 50:
         gscore += 10
-    print "team blocks set"
+    print("team blocks set")
     # team / total ratio checks
     if total_blocks != 0:
         ttr = (float(team_blocks) / float(total_blocks)) * 100
@@ -146,7 +146,7 @@ def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green 
         gscore += 3
     elif ttr > 80:
         gscore += 4
-    print "ttr set"
+    print("ttr set")
     # teammates harmed check
     if team_harmed == 1:
         gscore += 1
@@ -154,8 +154,8 @@ def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green 
         gscore += 3
     elif team_harmed > 4:
         gscore += 6
-    print "team harmed set"
-    print "mb: %s, tb: %s, eb: %s, Tb: %s, th: %s, ttr: %s, eh: %s, gs: %s" % (map_blocks, team_blocks, enemy_blocks, total_blocks, team_harmed, ttr, enemy_harmed, gscore)
+    print("team harmed set")
+    print("mb: %s, tb: %s, eb: %s, Tb: %s, th: %s, ttr: %s, eh: %s, gs: %s" % (map_blocks, team_blocks, enemy_blocks, total_blocks, team_harmed, ttr, enemy_harmed, gscore))
     return gscore
 
 

@@ -76,10 +76,10 @@ def apply_script(protocol, connection, config):
 
         def check_spec_time(self, id):
             if not self.team.spectator:
-                print 'WARNING 1. Safety check kept an non-spectator from being spectator-kicked. Report this please!'
+                print('WARNING 1. Safety check kept an non-spectator from being spectator-kicked. Report this please!')
                 return
             if self.admin or self.rights.specpower:
-                print 'WARNING 2. Safety check kept an admin from being spectator-kicked.'
+                print('WARNING 2. Safety check kept an admin from being spectator-kicked.')
                 return
             if id == 1:
                 seconds = floor(spectator_kick_time / 4)
