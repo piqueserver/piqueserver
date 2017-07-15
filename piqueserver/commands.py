@@ -289,7 +289,7 @@ else:
         """
         if connection not in connection.protocol.players:
             raise KeyError()
-        for user_type, passwords in connection.protocol.passwords.iteritems():
+        for user_type, passwords in connection.protocol.passwords.items():
             if password in passwords:
                 if user_type in connection.user_types:
                     return "You're already logged in as %s" % user_type

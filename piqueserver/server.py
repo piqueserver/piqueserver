@@ -29,6 +29,10 @@ import random
 import time
 from collections import deque
 
+try:
+    range
+except NameError:
+    range = xrange
 
 if sys.platform == 'linux2':
     try:
@@ -270,11 +274,9 @@ class FeatureConnection(ServerConnection):
                         is_indestructable(x, y, z - 1)):
                     return False
             elif mode == GRENADE_DESTROY:
-                for nade_x in xrange(x - 1, x + 2):
-                    for nade_y in xrange(y - 1, y + 2):
-                        for nade_z in xrange(z - 1, z + 2):
-                            if is_indestructable(nade_x, nade_y, nade_z):
-                                return False
+                for n_x, n_y, n_z in itertools.product(range(a-1, a+2) for a in (x, y, z)):
+                    if is_indestructable(n_x, n_y, n_z):
+                        return False
 
     def on_block_removed(self, x, y, z):
         if self.protocol.user_blocks is not None:
@@ -678,7 +680,7 @@ class FeatureProtocol(ServerProtocol):
             self)
 
         # check for default password usage
-        for group, passwords in self.passwords.iteritems():
+        for group, passwords in self.passwords.items():
             if group in DEFAULT_PASSWORDS:
                 for password in passwords:
                     if password in DEFAULT_PASSWORDS[group]:
@@ -689,7 +691,7 @@ class FeatureProtocol(ServerProtocol):
             if not password:
                 self.everyone_is_admin = True
 
-        for user_type, func_names in config.get('rights', {}).iteritems():
+        for user_type, func_names in config.get('rights', {}).items():
             for func_name in func_names:
                 commands.add_rights(func_name, user_type)
 
@@ -928,8 +930,8 @@ class FeatureProtocol(ServerProtocol):
             self.ban_publish.update()
 
     def receive_callback(self, address, data):
-        if data == 'HELLO':
-            self.host.socket.send(address, 'HI')
+        if data == b'HELLO':
+            self.host.socket.send(address, b'HI')
             return 1
         if address.host in self.hard_bans:
             return 1
