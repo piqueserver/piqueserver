@@ -20,7 +20,8 @@ from __future__ import absolute_import
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from pyspades.bytes import ByteWriter
-import enet
+
+from enet import enet
 
 
 class BaseConnection(object):
