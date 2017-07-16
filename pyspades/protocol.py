@@ -52,7 +52,7 @@ class BaseConnection(object):
             flags = enet.PACKET_FLAG_RELIABLE
         data = ByteWriter()
         contained.write(data)
-        packet = enet.Packet(str(data), flags)
+        packet = enet.Packet(bytes(data), flags)
         self.peer.send(0, packet)
 
     # events
