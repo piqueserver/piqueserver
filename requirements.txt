@@ -1,5 +1,5 @@
 Cython>=0,<1
-Twisted>=16,<17
+Twisted>=17
 Jinja2>=2<3
 Pillow>=3<5
 pygeoip>=0.3.2,<0.4
