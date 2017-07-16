@@ -30,7 +30,7 @@ cdef class Loader:
 
     cpdef write(self, ByteWriter reader):
         write_python = getattr(self, 'write', None)
-        if read_python is None:
+        if write_python is None:
             raise NotImplementedError('write() not implemented')
         write_python(reader)
 
