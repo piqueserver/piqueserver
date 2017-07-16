@@ -38,7 +38,7 @@ from pyspades.collision import vector_collision, collision_3d
 from pyspades import world
 from pyspades.debug import *
 from pyspades.weapon import WEAPONS
-import enet
+from enet import enet
 
 try:
     range = xrange # pylint: disable=redefined-builtin
@@ -88,8 +88,7 @@ def check_nan(*values):
     return False
 
 
-def parse_command(input):
-    value = encode(input)
+def parse_command(value):
     try:
         splitted = shlex.split(value)
     except ValueError:
@@ -99,8 +98,7 @@ def parse_command(input):
         command = splitted.pop(0)
     else:
         command = ''
-    splitted = [decode(value) for value in splitted]
-    return decode(command), splitted
+    return command, splitted
 
 
 class SlidingWindow(object):
@@ -144,7 +142,7 @@ class MapGeneratorChild(object):
 
 
 class ProgressiveMapGenerator(object):
-    data = ''
+    data = b''
     done = False
 
     # parent attributes
@@ -437,17 +435,17 @@ class ServerConnection(BaseConnection):
                         hit_amount = self.weapon_object.get_damage(
                             value, position1, position2)
                     if is_melee:
-                        type = MELEE_KILL
+                        kill_type = MELEE_KILL
                     elif contained.value == HEAD:
-                        type = HEADSHOT_KILL
+                        kill_type = HEADSHOT_KILL
                     else:
-                        type = WEAPON_KILL
-                    returned = self.on_hit(hit_amount, player, type, None)
+                        kill_type = WEAPON_KILL
+                    returned = self.on_hit(hit_amount, player, kill_type, None)
                     if returned == False:
                         return
                     elif returned is not None:
                         hit_amount = returned
-                    player.hit(hit_amount, self, type)
+                    player.hit(hit_amount, self, kill_type)
                 elif contained.id == loaders.GrenadePacket.id:
                     if check_nan(contained.value) or check_nan(*contained.position) or check_nan(*contained.velocity):
                         self.on_hack_attempt("Invalid grenade data")
@@ -607,8 +605,7 @@ class ServerConnection(BaseConnection):
                             return
                         elif result is not None:
                             value = result
-                        contained.chat_type = [CHAT_TEAM, CHAT_ALL][
-                            int(global_message)]
+                        contained.chat_type = CHAT_ALL if global_message else CHAT_TEAM
                         contained.value = value
                         contained.player_id = self.player_id
                         if global_message:
@@ -854,13 +851,13 @@ class ServerConnection(BaseConnection):
         self.on_reset()
         self.name = self.hp = self.world_object = None
 
-    def hit(self, value, by=None, type=WEAPON_KILL):
+    def hit(self, value, by=None, kill_type=WEAPON_KILL):
         if self.hp is None:
             return
         if by is not None and self.team is by.team:
             friendly_fire = self.protocol.friendly_fire
             if friendly_fire == 'on_grief':
-                if (type == MELEE_KILL and
+                if (kill_type == MELEE_KILL and
                         not self.protocol.spade_teamkills_on_grief):
                     return
                 hit_time = self.protocol.friendly_fire_time
@@ -869,17 +866,17 @@ class ServerConnection(BaseConnection):
                     return
             elif not friendly_fire:
                 return
-        self.set_hp(self.hp - value, by, type=type)
+        self.set_hp(self.hp - value, by, kill_type=kill_type)
 
-    def set_hp(self, value, hit_by=None, type=WEAPON_KILL,
+    def set_hp(self, value, hit_by=None, kill_type=WEAPON_KILL,
                hit_indicator=None, grenade=None):
         value = int(value)
         self.hp = max(0, min(100, value))
         if self.hp <= 0:
-            self.kill(hit_by, type, grenade)
+            self.kill(hit_by, kill_type, grenade)
             return
         set_hp.hp = self.hp
-        set_hp.not_fall = int(type != FALL_KILL)
+        set_hp.not_fall = int(kill_type != FALL_KILL)
         if hit_indicator is None:
             if hit_by is not None and hit_by is not self:
                 hit_indicator = hit_by.world_object.position.get()
@@ -899,7 +896,7 @@ class ServerConnection(BaseConnection):
         if not local:
             self.protocol.send_contained(change_weapon, save=True)
             if not no_kill:
-                self.kill(type=CLASS_CHANGE_KILL)
+                self.kill(kill_type=CLASS_CHANGE_KILL)
 
     def set_team(self, team):
         if team is self.team:
@@ -911,17 +908,17 @@ class ServerConnection(BaseConnection):
         if old_team.spectator:
             self.respawn()
         else:
-            self.kill(type=TEAM_CHANGE_KILL)
+            self.kill(kill_type=TEAM_CHANGE_KILL)
 
-    def kill(self, by=None, type=WEAPON_KILL, grenade=None):
+    def kill(self, by=None, kill_type=WEAPON_KILL, grenade=None):
         if self.hp is None:
             return
-        if self.on_kill(by, type, grenade) is False:
+        if self.on_kill(by, kill_type, grenade) is False:
             return
         self.drop_flag()
         self.hp = None
         self.weapon_object.reset()
-        kill_action.kill_type = type
+        kill_action.kill_type = kill_type
         if by is None:
             kill_action.killer_id = kill_action.player_id = self.player_id
         else:
@@ -1043,18 +1040,16 @@ class ServerConnection(BaseConnection):
                 elif returned is not None:
                     damage = returned
                 player.set_hp(player.hp - damage, self,
-                              hit_indicator=position.get(), type=GRENADE_KILL,
+                              hit_indicator=position.get(), kill_type=GRENADE_KILL,
                               grenade=grenade)
         if self.on_block_destroy(x, y, z, GRENADE_DESTROY) == False:
             return
         map = self.protocol.map
-        for nade_x in xrange(x - 1, x + 2):
-            for nade_y in xrange(y - 1, y + 2):
-                for nade_z in xrange(z - 1, z + 2):
-                    count = map.destroy_point(nade_x, nade_y, nade_z)
-                    if count:
-                        self.total_blocks_removed += count
-                        self.on_block_removed(nade_x, nade_y, nade_z)
+        for x, y, z in product(range(x-1, x+2), range(y-1, y+2), range(z-1, z+2)):
+            count = map.destroy_point(x, y, z)
+            if count:
+                self.total_blocks_removed += count
+                self.on_block_removed(x, y, z)
         block_action.x = x
         block_action.y = y
         block_action.z = z
@@ -1067,11 +1062,12 @@ class ServerConnection(BaseConnection):
         if not self.hp:
             return
         returned = self.on_fall(damage)
-        if returned == False:
+        if not returned:
+            # on_fall returned something un-truthy
             return
         elif returned is not None:
             damage = returned
-        self.set_hp(self.hp - damage, type=FALL_KILL)
+        self.set_hp(self.hp - damage, kill_type=FALL_KILL)
 
     def _on_reload(self):
         weapon_reload.player_id = self.player_id
@@ -1090,12 +1086,12 @@ class ServerConnection(BaseConnection):
         if not self.map_data.data_left():
             self.map_data = None
             for data in self.saved_loaders:
-                packet = enet.Packet(str(data), enet.PACKET_FLAG_RELIABLE)
+                packet = enet.Packet(bytes(data), enet.PACKET_FLAG_RELIABLE)
                 self.peer.send(0, packet)
             self.saved_loaders = None
             self.on_join()
             return
-        for _ in xrange(10):
+        for _ in range(10):
             if not self.map_data.data_left():
                 break
             map_data.data = self.map_data.read(1024)
@@ -1118,7 +1114,9 @@ class ServerConnection(BaseConnection):
             # 34 is guaranteed to be out of range!
             chat_message.player_id = 35
             prefix = self.protocol.server_prefix + ' '
+
         lines = textwrap.wrap(value, MAX_CHAT_SIZE - len(prefix) - 1)
+
         for line in lines:
             chat_message.value = '%s%s' % (prefix, line)
             self.send_contained(chat_message)
@@ -1544,7 +1542,7 @@ class ServerProtocol(BaseProtocol):
             flags = enet.PACKET_FLAG_RELIABLE
         data = ByteWriter()
         contained.write(data)
-        data = str(data)
+        data = bytes(data)
         packet = enet.Packet(data, flags)
         for player in self.connections.values():
             if player is sender or player.player_id is None:
@@ -1578,7 +1576,7 @@ class ServerProtocol(BaseProtocol):
         territory_count = int((land_count / (512.0 * 512.0)) * (
             MAX_TERRITORY_COUNT - MIN_TERRITORY_COUNT) + MIN_TERRITORY_COUNT)
         j = 512.0 / territory_count
-        for i in xrange(territory_count):
+        for i in range(territory_count):
             x1 = i * j
             y1 = 512 / 4
             x2 = (i + 1) * j
@@ -1610,7 +1608,7 @@ class ServerProtocol(BaseProtocol):
 
     def update_network(self):
         items = []
-        for i in xrange(32):
+        for i in range(32):
             position = orientation = None
             try:
                 player = self.players[i]
@@ -1676,7 +1674,7 @@ class ServerProtocol(BaseProtocol):
                 player.spawn()
 
     def get_name(self, name):
-        name = name.replace('%', '').encode('ascii', 'ignore')
+        name = name.replace('%', '')
         new_name = name
         names = [p.name.lower() for p in self.players.values()]
         i = 0
@@ -1741,8 +1739,20 @@ class ServerProtocol(BaseProtocol):
             if moved or self.on_update_entity(entity):
                 entity.update()
 
-    def send_chat(self, value, global_message=None, sender=None,
-                  team=None):
+    def send_chat(self, message, global_message=None, sender=None,
+                  team=None, special=''):
+        if special:
+            prefixes = {
+                "notice": "N% ",
+                "error": "!% ",
+                "warning": "%% ",
+            }
+
+            message = prefixes[special] + message
+
+            global_message = None
+            sender = None
+
         for player in self.players.values():
             if player is sender:
                 continue
@@ -1750,7 +1760,7 @@ class ServerProtocol(BaseProtocol):
                 continue
             if team is not None and player.team is not team:
                 continue
-            player.send_chat(value, global_message)
+            player.send_chat(message, global_message)
 
     def set_fog_color(self, color):
         self.fog_color = color
