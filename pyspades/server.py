@@ -1740,15 +1740,9 @@ class ServerProtocol(BaseProtocol):
                 entity.update()
 
     def send_chat(self, message, global_message=None, sender=None,
-                  team=None, special=''):
+                  team=None, special=None):
         if special:
-            prefixes = {
-                "notice": "N% ",
-                "error": "!% ",
-                "warning": "%% ",
-            }
-
-            message = prefixes[special] + message
+            message = SPECIAL_MESSAGE_PREFIXES[special] + message
 
             global_message = None
             sender = None

@@ -53,7 +53,8 @@ from pyspades.web import getPage
 from pyspades.common import encode, prettify_timespan
 from pyspades.constants import (ERROR_BANNED, DESTROY_BLOCK, SPADE_DESTROY,
                                 GRENADE_DESTROY, ERROR_KICKED,
-                                CTF_MODE, TC_MODE)
+                                CTF_MODE, TC_MODE, SPECIAL_ERROR, SPECIAL_NOTICE,
+                                SPECIAL_WARNING)
 from pyspades.master import MAX_SERVER_NAME_SIZE, get_external_ip
 from pyspades.tools import make_server_identifier
 from pyspades.types import AttributeSet
@@ -974,6 +975,15 @@ class FeatureProtocol(ServerProtocol):
         if irc:
             self.irc_say('* %s' % value)
         ServerProtocol.send_chat(self, value, global_message, sender, team)
+
+    def send_chat_warning(self, message, team=None):
+        ServerProtocol.send_chat(self, message, team=team, special=SPECIAL_WARNING)
+
+    def send_chat_notice(self, message, team=None):
+        ServerProtocol.send_chat(self, message, team=team, special=SPECIAL_NOTICE)
+
+    def send_chat_error(self, message, team=None):
+        ServerProtocol.send_chat(self, message, team=team, special=SPECIAL_ERROR)
 
     # log high CPU usage
 
