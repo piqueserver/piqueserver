@@ -30,9 +30,9 @@ import time
 from collections import deque
 
 try:
-    range
+    range = xrange # pylint: disable=redefined-builtin
 except NameError:
-    range = xrange
+    pass
 
 if sys.platform == 'linux2':
     try:
