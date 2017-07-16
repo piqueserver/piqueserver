@@ -841,7 +841,10 @@ class FeatureProtocol(ServerProtocol):
         if self.master_connection is not None:
             self.master_connection.send_server()
 
-    def format(self, value, extra={}):  # pylint: disable=dangerous-default-value
+    def format(self, value, extra=None):
+        if extra is None:
+            extra = {}
+
         map_info = self.map_info
         format_dict = {
             'map_name': map_info.name,
