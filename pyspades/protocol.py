@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import absolute_import
+
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from pyspades.bytes import ByteWriter
@@ -90,6 +92,7 @@ class BaseProtocol(object):
 
     def connect(self, connection_class, host, port, version, channel_count=1,
                 timeout=5.0):
+        host = host.encode()
         peer = self.host.connect(enet.Address(host, port), channel_count,
                                  version)
         connection = connection_class(self, peer)

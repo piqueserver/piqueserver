@@ -19,7 +19,7 @@
 """
 pyspades - default/featured server
 """
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 import sys
 import os
 import imp
@@ -170,7 +170,7 @@ class FeatureConnection(ServerConnection):
             self.send_lines(self.protocol.motd)
 
     def on_login(self, name):
-        self.printable_name = name.encode('ascii', 'replace')
+        self.printable_name = name.decode('ascii', 'replace')
         if len(self.printable_name) > 15:
             self.kick(silent=True)
         print('%s (IP %s, ID %s) entered the game!' % (self.printable_name,
@@ -711,7 +711,7 @@ class FeatureProtocol(ServerProtocol):
         self.master = config.get('master', True)
         self.set_master()
 
-        get_external_ip(config.get('network_interface', '')).addCallback(
+        get_external_ip(config.get('network_interface', '').encode()).addCallback(
             self.got_external_ip)
 
     def got_external_ip(self, ip):
@@ -833,7 +833,7 @@ class FeatureProtocol(ServerProtocol):
         """
         config = self.config
         default_name = 'pyspades server %s' % random.randrange(0, 2000)
-        self.name = encode(self.format(config.get('name', default_name)))
+        self.name = self.format(config.get('name', default_name))
         self.motd = self.format_lines(config.get('motd', None))
         self.help = self.format_lines(config.get('help', None))
         self.tips = self.format_lines(config.get('tips', None))
@@ -861,7 +861,7 @@ class FeatureProtocol(ServerProtocol):
         lines = []
         extra = {'server_name': self.name}
         for line in value:
-            lines.append(encode(self.format(line, extra)))
+            lines.append(self.format(line, extra))
         return lines
 
     def got_master_connection(self, client):
@@ -1060,7 +1060,7 @@ def run():
     """
 
     try:
-        with open(cfg.config_file, 'rb') as f:
+        with open(cfg.config_file, 'r') as f:
             config = json.load(f)
             cfg.config = config
     except IOError as e:

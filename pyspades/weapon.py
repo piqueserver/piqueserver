@@ -146,5 +146,5 @@ WEAPONS = {
     SHOTGUN_WEAPON: Shotgun,
 }
 
-for id, weapon in WEAPONS.iteritems():
+for id, weapon in WEAPONS.items():
     weapon.id = id

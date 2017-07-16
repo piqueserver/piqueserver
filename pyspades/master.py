@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from __future__ import unicode_literals
+
 from pyspades.loaders import Loader
 from pyspades.protocol import BaseConnection
 from pyspades.constants import MASTER_VERSION
@@ -102,8 +104,9 @@ IP_GETTER = 'http://services.buildandshoot.com/getip'
 # http://icanhazip.com/
 
 
+# TODO: make this not blow up on py3
 def get_external_ip(interface=''):
-    return getPage(IP_GETTER, bindAddress=(interface, 0))
+    return getPage(IP_GETTER.encode(), bindAddress=(str(''), 0))
 
 
 def get_master_connection(protocol):

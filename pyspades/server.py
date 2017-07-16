@@ -38,7 +38,7 @@ from pyspades.collision import vector_collision, collision_3d
 from pyspades import world
 from pyspades.debug import *
 from pyspades.weapon import WEAPONS
-from enet import enet
+import enet
 
 try:
     range = xrange # pylint: disable=redefined-builtin
