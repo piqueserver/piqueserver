@@ -17,7 +17,12 @@
 
 import json
 
-from cStringIO import StringIO
+try:
+    # python2
+    from cStringIO import StringIO
+except ImportError:
+    # python3
+    from io import StringIO
 
 from PIL import Image
 from jinja2 import Environment, PackageLoader
