@@ -29,6 +29,11 @@ import struct
 IPV4LENGTH = 32
 IPV6LENGTH = 128
 
+try:
+    long
+except NameError:
+    # Python3
+    long = int
 
 class AddressValueError(ValueError):
     """A Value Error related to the address."""
