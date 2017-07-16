@@ -40,6 +40,11 @@ from pyspades.debug import *
 from pyspades.weapon import WEAPONS
 import enet
 
+try:
+    range = xrange # pylint: disable=redefined-builtin
+except NameError:
+    pass
+
 COMPRESSION_LEVEL = 9
 
 create_player = loaders.CreatePlayer()
