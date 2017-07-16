@@ -275,9 +275,11 @@ class FeatureConnection(ServerConnection):
                         is_indestructable(x, y, z - 1)):
                     return False
             elif mode == GRENADE_DESTROY:
-                for n_x, n_y, n_z in itertools.product(range(a-1, a+2) for a in (x, y, z)):
-                    if is_indestructable(n_x, n_y, n_z):
-                        return False
+                for nade_x in xrange(x - 1, x + 2):
+                    for nade_y in xrange(y - 1, y + 2):
+                        for nade_z in xrange(z - 1, z + 2):
+                            if is_indestructable(nade_x, nade_y, nade_z):
+                                return False
 
     def on_block_removed(self, x, y, z):
         if self.protocol.user_blocks is not None:

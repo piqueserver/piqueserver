@@ -1045,11 +1045,11 @@ class ServerConnection(BaseConnection):
         if self.on_block_destroy(x, y, z, GRENADE_DESTROY) == False:
             return
         map = self.protocol.map
-        for x, y, z in product(range(x-1, x+2), range(y-1, y+2), range(z-1, z+2)):
-            count = map.destroy_point(x, y, z)
+        for n_x, n_y, n_z in product(range(x-1, x+2), range(y-1, y+2), range(z-1, z+2)):
+            count = map.destroy_point(n_x, n_y, n_z)
             if count:
                 self.total_blocks_removed += count
-                self.on_block_removed(x, y, z)
+                self.on_block_removed(n_x, n_y, n_z)
         block_action.x = x
         block_action.y = y
         block_action.z = z
