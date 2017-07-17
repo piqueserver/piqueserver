@@ -188,7 +188,7 @@ def apply_script(protocol, connection, config):
             if ALWAYS_ENABLED:
                 self.babel = True
             else:
-                if extensions.has_key('babel'):
+                if "babel" in extensions:
                     self.babel = extensions['babel']
                 else:
                     self.babel = False

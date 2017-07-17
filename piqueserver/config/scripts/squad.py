@@ -98,7 +98,7 @@ def apply_script(protocol, connection, config):
             squad_dict = {}
             for player in self.protocol.players.values():
                 if player.team is team:
-                    if squad_dict.has_key(player.squad):
+                    if player.squad in squad_dict:
                         squad_list = squad_dict[player.squad]
                     else:
                         squad_list = []

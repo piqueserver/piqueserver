@@ -61,7 +61,7 @@ class VoteMap(object):
                      self.vote_percentage / 100.0)
         counts = {}
         for v in self.votes.values():
-            if counts.has_key(v):
+            if v in counts:
                 counts[v]['count'] += 1
             else:
                 counts[v] = {'name': v, 'count': 1}

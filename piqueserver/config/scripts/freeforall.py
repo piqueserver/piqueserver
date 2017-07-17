@@ -23,7 +23,7 @@ def apply_script(protocol, connection, config):
             if ALWAYS_ENABLED:
                 self.free_for_all = True
             else:
-                if extensions.has_key('free_for_all'):
+                if 'free_for_all' in extensions:
                     self.free_for_all = extensions['free_for_all']
                 else:
                     self.free_for_all = False
