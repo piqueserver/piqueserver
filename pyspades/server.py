@@ -612,7 +612,9 @@ class ServerConnection(BaseConnection):
                             team = None
                         else:
                             team = self.team
-                        self.protocol.send_contained(contained, team=team)
+                        for player in self.protocol.players.values():
+                            if not player.deaf:
+                                player.send_contained(contained)
                         self.on_chat_sent(value, global_message)
                 elif contained.id == loaders.FogColor.id:
                     color = get_color(contained.color)
