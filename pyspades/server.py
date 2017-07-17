@@ -1062,8 +1062,7 @@ class ServerConnection(BaseConnection):
         if not self.hp:
             return
         returned = self.on_fall(damage)
-        if not returned:
-            # on_fall returned something un-truthy
+        if returned is False:
             return
         elif returned is not None:
             damage = returned
