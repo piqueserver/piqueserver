@@ -54,76 +54,6 @@ try:
 except (IOError, ImportError):
     long_description = ''
 
-def compile_enet():
-    previousDir = os.getcwd()
-    os.chdir("enet")
-
-    ###
-    ### Prebuild.py start
-    ###
-    import tarfile
-    try:
-      import urllib as urllib_request
-    except ImportError:
-      import urllib.request as urllib_request
-
-    lib_version = "1.3.13"
-    enet_dir = "enet-%s" % lib_version
-    enet_file = "%s.tar.gz" % enet_dir
-    enet_url = "http://enet.bespin.org/download/%s" % enet_file
-
-    if os.path.isfile("pyenet/enet-pyspades.pyx"):
-        os.remove("pyenet/enet-pyspades.pyx")
-    if os.path.isfile("pyenet/enet.so"):
-        os.remove("pyenet/enet.so")
-    if os.path.isdir("pyenet/enet"):
-        shutil.rmtree("pyenet/enet")
-
-    shutil.copyfile("pyenet/enet.pyx", "pyenet/enet-pyspades.pyx")
-    subprocess.Popen(['patch', '-p1', 'pyenet/enet-pyspades.pyx', 'pyspades-pyenet.patch']).communicate()
-
-    if not os.path.isfile(enet_file):
-        print("Downloading enet")
-
-        # begin code shamelessly stolen from StackOverflow
-        # http://stackoverflow.com/a/13895723/2730399
-        # Answer by https://stackoverflow.com/users/4279/j-f-sebastian
-        def reporthook(blocknum, blocksize, totalsize):
-            readsofar = blocknum * blocksize
-            if totalsize > 0:
-                percent = readsofar * 1e2 / totalsize
-                s = "\r%5.1f%% %*d / %d" % (
-                    percent, len(str(totalsize)), readsofar, totalsize)
-                sys.stderr.write(s)
-                if readsofar >= totalsize: # near the end
-                    sys.stderr.write("\n")
-            else: # total size is unknown
-                sys.stderr.write("read %d\n" % (readsofar,))
-        urllib_request.urlretrieve(enet_url, enet_file, reporthook)
-        print("Finished downloading enet")
-        # end code shamelessly stolen from StackOverflow
-
-    print("Unpacking enet")
-    tar = tarfile.open(enet_file)
-    tar.extractall()
-    tar.close()
-    print("Finished unpacking enet")
-
-    shutil.move(enet_dir, "pyenet/enet")
-    shutil.copyfile("__init__.py-tpl", "pyenet/__init__.py")
-    ###
-    ### Prebuild.py end
-    ###
-
-    os.chdir("pyenet")
-
-    shutil.move("enet.pyx", "enet-bak.pyx")
-    shutil.move("enet-pyspades.pyx", "enet.pyx")
-    run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_ext', '--inplace'])
-    shutil.move("enet.pyx", "enet-pyspades.pyx")
-    shutil.move("enet-bak.pyx", "enet.pyx")
-
-    os.chdir(previousDir)
 
 ext_modules = []
 
@@ -159,7 +89,6 @@ for name in names:
 from distutils.command.build_ext import build_ext as _build_ext
 class build_ext(_build_ext):
     def run(self):
-        compile_enet()
 
         from Cython.Build import cythonize
         self.extensions = cythonize(self.extensions)
@@ -170,7 +99,7 @@ class build_ext(_build_ext):
 
 setup(
     name = PKG_NAME,
-    packages = [PKG_NAME, '%s.web' % PKG_NAME, 'pyspades', 'pyspades.enet'],
+    packages = [PKG_NAME, '%s.web' % PKG_NAME, 'pyspades'],
     version = '0.0.1',
     description = 'Open-Source server implementation for Ace of Spades',
     author = 'MatPow2, StackOverflow, piqueserver authors',
@@ -196,7 +125,7 @@ setup(
     ],
     platforms = "Darwin, Unix",
     setup_requires = ['Cython>=0,<1'], # at least for now when we have to cythonize enet
-    install_requires = ['Cython>=0,<1', 'Twisted>=17', 'Jinja2>=2,<3', 'Pillow>=3,<5'], # status server is part of our 'vanila' package
+    install_requires = ['Cython>=0,<1', 'Twisted>=17', 'Jinja2>=2,<3', 'Pillow>=3,<5', 'pyenet'], # status server is part of our 'vanila' package
     extras_require = {
         'from': ['pygeoip>=0.3.2,<0.4'],
         # 'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
@@ -207,7 +136,7 @@ setup(
             '%s=%s.run:main' % (PKG_NAME, PKG_NAME)
         ],
     },
-    package_dir = {PKG_NAME: 'piqueserver', '%s.web' % PKG_NAME: 'piqueserver/web', 'pyspades': 'pyspades', 'pyspades.enet': 'enet/pyenet'}, # some kind of find_packages?
+    package_dir = {PKG_NAME: 'piqueserver', '%s.web' % PKG_NAME: 'piqueserver/web', 'pyspades': 'pyspades'}, # some kind of find_packages?
     package_data = {"%s.web" % PKG_NAME: ["templates/status.html"]},
     include_package_data=True,
 
