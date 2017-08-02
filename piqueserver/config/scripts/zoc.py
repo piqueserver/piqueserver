@@ -6,7 +6,8 @@ Maintainer: ?
 """
 
 from twisted.internet.task import LoopingCall
-from pyspades.constants import *
+from pyspades.constants import GRENADE_DESTROY, SPADE_DESTROY, CTF_MODE, TC_MODE
+from collections import deque
 
 BK_FREE, BK_FRIENDLY, BK_ENEMY_FAR, BK_ENEMY_NEAR, BK_UNDO = range(5)
 
@@ -14,10 +15,8 @@ BK_FREE, BK_FRIENDLY, BK_ENEMY_FAR, BK_ENEMY_NEAR, BK_UNDO = range(5)
 def apply_script(protocol, connection, config):
 
     class ZOCConnection(connection):
-        block_undo = None
-
         def on_connect(self):
-            self.block_undo = []
+            self.block_undo = deque()
             self.zoc_destruction_points = 0
             return connection.on_connect(self)
 
@@ -66,7 +65,7 @@ def apply_script(protocol, connection, config):
         def on_block_build(self, x, y, z):
             self.block_undo.append((x, y, z))
             if len(self.block_undo) > self.protocol.zoc_block_undo:
-                del self.block_undo[0]
+                self.block_undo.popleft()
             return connection.on_block_build(self, x, y, z)
 
         def zoc_type(self, x, y, z):
@@ -74,12 +73,9 @@ def apply_script(protocol, connection, config):
                 if (zoc['left'] <= x and zoc['right'] >= x and
                         zoc['top'] <= y and zoc['bottom'] >= y):
                     if zoc['team'] is self.team:
-                        if self.own_block(x, y, z):
-                            return BK_UNDO
-                        else:
-                            return BK_FRIENDLY
+                        return BK_UNDO if self.own_block(x, y, z) else BK_FRIENDLY
                     else:
-                        p_x, p_y, p_z = self.world_object.position.get()
+                        p_x, p_y = self.world_object.position.get()
                         dist_sq = (p_x - x) * (p_x - x) +\
                                   (p_y - y) * (p_y - y)
                         if self.protocol.zoc_attack_distance < dist_sq:
@@ -139,8 +135,7 @@ def apply_script(protocol, connection, config):
             self.zone_cache = zones
 
         def on_update_entity(self, entity):
-            map = self.map
-            desired_z = map.get_z(entity.x, entity.y)
+            desired_z = self.map.get_z(entity.x, entity.y)
             if int(entity.z) != int(desired_z):
                 entity.z = desired_z
                 return True
