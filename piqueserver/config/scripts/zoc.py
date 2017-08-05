@@ -75,7 +75,7 @@ def apply_script(protocol, connection, config):
                     if zoc['team'] is self.team:
                         return BK_UNDO if self.own_block(x, y, z) else BK_FRIENDLY
                     else:
-                        p_x, p_y = self.world_object.position.get()
+                        p_x, p_y, _ = self.world_object.position.get()
                         dist_sq = (p_x - x) * (p_x - x) +\
                                   (p_y - y) * (p_y - y)
                         if self.protocol.zoc_attack_distance < dist_sq:
