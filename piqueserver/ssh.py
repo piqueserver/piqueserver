@@ -15,8 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from twisted.cred import portal, checkers
-from twisted.conch import manhole, manhole_ssh
+import sys
+
+try:
+    from twisted.cred import portal, checkers
+    from twisted.conch import manhole, manhole_ssh
+except ImportError:
+    print("ERROR: piqueserver was not installed with the [ssh] option")
+    print("but SSH was enabled in the settings")
+    sys.exit(1)
 
 
 def create_remote_factory(namespace, users):
