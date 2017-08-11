@@ -129,7 +129,7 @@ setup(
     extras_require = {
         'from': ['pygeoip>=0.3.2,<0.4'],
         # 'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
-        'ssh': ['pycrypto>=2.6.1,<2.7', 'pyasn1>=0.1.9,<0.2']
+        'ssh': ['pycrypto>=2.6.1,<2.7', 'cryptography>=2.0.0,<3.0', 'pyasn1>=0.1.9,<0.2']
     },
     entry_points = {
         'console_scripts': [
