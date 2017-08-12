@@ -125,7 +125,14 @@ setup(
     ],
     platforms = "Darwin, Unix",
     setup_requires = ['Cython>=0,<1'], # at least for now when we have to cythonize enet
-    install_requires = ['Cython>=0,<1', 'Twisted>=17', 'Jinja2>=2,<3', 'Pillow>=3,<5', 'pyenet'], # status server is part of our 'vanila' package
+    install_requires = [
+        'Cython>=0,<1',
+        'Twisted>=17',
+        'Jinja2>=2,<3', # status server is part of our 'vanila' package
+        'Pillow>=3,<5',
+        'pyenet',
+        'ipaddr'
+    ],
     extras_require = {
         'from': ['pygeoip>=0.3.2,<0.4'],
         # 'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
