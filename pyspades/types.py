@@ -16,6 +16,7 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import itertools
+from collections import namedtuple
 
 
 class IDPool(object):
@@ -60,19 +61,7 @@ class AttributeSet(set):
             self.discard(name)
 
 
-class DictItem(object):
-    keys = None
-    value = None
-
-    def __init__(self, keys, value):
-        self.keys = keys
-        self.value = value
-
-    def __str__(self):
-        return str(self.value)
-
-    def __repr__(self):
-        return repr(self.value)
+DictItem = namedtuple("DictItem", ["keys", "value"])
 
 
 class MultikeyDict(dict):
