@@ -20,9 +20,10 @@ import sys
 try:
     from twisted.cred import portal, checkers
     from twisted.conch import manhole, manhole_ssh
-except ImportError:
+except ImportError as e:
     print("ERROR: piqueserver was not installed with the [ssh] option")
     print("but SSH was enabled in the settings")
+    print(e.message)
     sys.exit(1)
 
 
