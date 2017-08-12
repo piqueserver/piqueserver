@@ -58,7 +58,6 @@ from pyspades.constants import (ERROR_BANNED, DESTROY_BLOCK, SPADE_DESTROY,
 from pyspades.master import MAX_SERVER_NAME_SIZE, get_external_ip
 from pyspades.tools import make_server_identifier
 from pyspades.types import AttributeSet
-from pyspades.exceptions import InvalidData
 from pyspades.bytes import NoDataLeft
 
 from piqueserver.scheduler import Scheduler
@@ -947,7 +946,7 @@ class FeatureProtocol(ServerProtocol):
         current_time = reactor.seconds()
         try:
             ServerProtocol.data_received(self, peer, packet)
-        except (NoDataLeft, InvalidData):
+        except (NoDataLeft, ValueError):
             import traceback
             traceback.print_exc()
             print(
