@@ -263,7 +263,15 @@ class ServerConnection(BaseConnection):
             return
 
         contained = load_client_packet(ByteReader(loader.data))
-        packet_handlers[contained.id](self, contained)
+        try:
+            handler = packet_handlers[contained.id]
+        except KeyError:
+            # an invalid ID was sent
+            pass
+        finally:
+            # we call the handler in the finally clause so we don't
+            # accidentally ignore KeyErrors the handler raises
+            handler(self, contained)
 
     @register_packet_handler(loaders.ExistingPlayer)
     @register_packet_handler(loaders.ShortPlayerData)
@@ -490,7 +498,7 @@ class ServerConnection(BaseConnection):
     def on_grenade_recieved(self, contained):
         if not self.hp:
             return
-        if check_nan(contained.value) or check_nan(*contained.position) or check_nan(*contained.velocity):
+        if check_nan(contained.value, *contained.position) or check_nan(*contained.velocity):
             self.on_hack_attempt("Invalid grenade data")
             return
         if not self.grenades:
