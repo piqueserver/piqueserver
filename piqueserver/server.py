@@ -678,8 +678,7 @@ class FeatureProtocol(ServerProtocol):
         self.start_time = reactor.seconds()
         self.end_calls = []
         # TODO: why is this here?
-        self.console = create_console(  # pylint: disable=assignment-from-no-return
-            self)
+        create_console(self)
 
         # check for default password usage
         for group, passwords in self.passwords.items():
@@ -1138,15 +1137,14 @@ def run():
         interface = '*'
 
     # TODO: is this required? Maybe protocol_class needs to be called?
-    #       either way, this variable isn't used
-    protocol_instance = protocol_class(  # pylint: disable=unused-variable
-        interface, config)
+    # either way, the resulting object is not used
+    protocol_class(interface, config)
 
     print('Started server...')
 
     profile = config.get('profile', False)
     if profile:
         import cProfile
-        cProfile.run('reactor.run()', 'profile.dat')
+        cProfile.runctx('reactor.run()', None, globals())
     else:
         reactor.run()
