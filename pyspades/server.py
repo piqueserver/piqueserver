@@ -80,6 +80,13 @@ world_update = loaders.WorldUpdate()
 block_line = loaders.BlockLine()
 weapon_input = loaders.WeaponInput()
 
+packet_handlers = {}
+
+def register_packet_handler(loader):
+    def handler_wrapper(function):
+        packet_handlers[loader.id] = function
+        return function
+    return handler_wrapper
 
 def check_nan(*values):
     for value in values:
@@ -247,391 +254,456 @@ class ServerConnection(BaseConnection):
             self._connection_ack()
 
     def loader_received(self, loader):
-        # TODO: turn this giant if elif lookup table into a
-        # dictionary lookup for speed and sanity
+        """
+        called when a loader i.e. packet is recieved.
+        calls the packet handler registered with
+        @register_packet_handler
+        """
         if self.player_id is None:
             return
 
         contained = load_client_packet(ByteReader(loader.data))
-        if contained.id in (loaders.ExistingPlayer.id,
-                            loaders.ShortPlayerData.id):
-            old_team = self.team
-            team = self.protocol.teams[contained.team]
+        packet_handlers[contained.id](self, contained)
 
-            ret = self.on_team_join(team)
-            if ret is False:
-                team = self.protocol.spectator_team
-            elif ret is not None:
-                team = ret
+    @register_packet_handler(loaders.ExistingPlayer)
+    @register_packet_handler(loaders.ShortPlayerData)
+    def on_new_player_recieved(self, contained):
+        old_team = self.team
+        team = self.protocol.teams[contained.team]
 
-            self.team = team
-            if self.name is None:
-                name = contained.name
-                # vanilla AoS behaviour
-                if name == 'Deuce':
-                    name = name + str(self.player_id)
-                self.name = self.protocol.get_name(name)
-                self.protocol.players[self.name, self.player_id] = self
-                self.on_login(self.name)
-            else:
-                self.on_team_changed(old_team)
-            self.set_weapon(contained.weapon, True)
-            if self.protocol.speedhack_detect:
-                self.speedhack_detect = True
-            self.rapid_hack_detect = True
-            if team.spectator:
-                if self.world_object is not None:
-                    self.world_object.delete()
-                    self.world_object = None
-            self.spawn()
+        ret = self.on_team_join(team)
+        if ret is False:
+            team = self.protocol.spectator_team
+        elif ret is not None:
+            team = ret
+
+        self.team = team
+        if self.name is None:
+            name = contained.name
+            # vanilla AoS behaviour
+            if name == 'Deuce':
+                name = name + str(self.player_id)
+            self.name = self.protocol.get_name(name)
+            self.protocol.players[self.name, self.player_id] = self
+            self.on_login(self.name)
+        else:
+            self.on_team_changed(old_team)
+        self.set_weapon(contained.weapon, True)
+        if self.protocol.speedhack_detect:
+            self.speedhack_detect = True
+        self.rapid_hack_detect = True
+        if team.spectator:
+            if self.world_object is not None:
+                self.world_object.delete()
+                self.world_object = None
+        self.spawn()
+
+    @register_packet_handler(loaders.OrientationData)
+    def on_orientation_update_recieved(self, contained):
+        if not self.hp:
             return
-        if self.hp:
-            world_object = self.world_object
-            if contained.id == loaders.OrientationData.id:
-                x, y, z = contained.x, contained.y, contained.z
-                if check_nan(x, y, z):
-                    self.on_hack_attempt(
-                        'Invalid orientation data received')
-                    return
-                returned = self.on_orientation_update(x, y, z)
-                if returned == False:
-                    return
-                if returned is not None:
-                    x, y, z = returned
-                world_object.set_orientation(x, y, z)
-            elif contained.id == loaders.PositionData.id:
-                current_time = reactor.seconds()
-                last_update = self.last_position_update
-                self.last_position_update = current_time
-                if last_update is not None:
-                    dt = current_time - last_update
-                    if dt < MAX_POSITION_RATE:
-                        self.set_location()
-                        return
-                x, y, z = contained.x, contained.y, contained.z
-                if check_nan(x, y, z):
-                    self.on_hack_attempt(
-                        'Invalid position data received')
-                    return
-                if not self.is_valid_position(x, y, z):
-                    # vanilla behaviour
-                    self.set_location()
-                    return
-                if not self.freeze_animation:
-                    world_object.set_position(x, y, z)
-                    self.on_position_update()
-                if self.filter_visibility_data:
-                    return
-                game_mode = self.protocol.game_mode
-                if game_mode == CTF_MODE:
-                    other_flag = self.team.other.flag
-                    if vector_collision(world_object.position,
-                                        self.team.base):
-                        if other_flag.player is self:
-                            self.capture_flag()
-                        self.check_refill()
-                    if other_flag.player is None and vector_collision(
-                            world_object.position, other_flag):
-                        self.take_flag()
-                elif game_mode == TC_MODE:
-                    for entity in self.protocol.entities:
-                        collides = vector_collision(entity,
-                                                    world_object.position, TC_CAPTURE_DISTANCE)
-                        if self in entity.players:
-                            if not collides:
-                                entity.remove_player(self)
-                        else:
-                            if collides:
-                                entity.add_player(self)
-                        if collides and vector_collision(entity,
-                                                         world_object.position):
-                            self.check_refill()
-            elif contained.id == loaders.WeaponInput.id:
-                primary = contained.primary
-                secondary = contained.secondary
-                if world_object.primary_fire != primary:
-                    if self.tool == WEAPON_TOOL:
-                        self.weapon_object.set_shoot(primary)
-                    if self.tool == WEAPON_TOOL or self.tool == SPADE_TOOL:
-                        self.on_shoot_set(primary)
-                if world_object.secondary_fire != secondary:
-                    self.on_secondary_fire_set(secondary)
-                world_object.primary_fire = primary
-                world_object.secondary_fire = secondary
-                if self.filter_weapon_input:
-                    return
-                contained.player_id = self.player_id
-                self.protocol.send_contained(contained, sender=self)
-            elif contained.id == loaders.InputData.id:
-                returned = self.on_walk_update(contained.up, contained.down,
-                                               contained.left, contained.right)
-                if returned is not None:
-                    up, down, left, right = returned
-                    if (up != contained.up or down != contained.down or
-                            left != contained.left or right != contained.right):
-                        (contained.up, contained.down, contained.left,
-                            contained.right) = returned
-                        # XXX unsupported
-                        #~ self.send_contained(contained)
-                if not self.freeze_animation:
-                    world_object.set_walk(contained.up, contained.down,
-                                          contained.left, contained.right)
-                contained.player_id = self.player_id
-                z_vel = world_object.velocity.z
-                if contained.jump and not (z_vel >= 0 and z_vel < 0.017):
-                    contained.jump = False
-                # XXX unsupported for now
-                # returned = self.on_animation_update(contained.primary_fire,
-                    # contained.secondary_fire, contained.jump,
-                    # contained.crouch)
-                # if returned is not None:
-                    # fire1, fire2, jump, crouch = returned
-                    # if (fire1 != contained.primary_fire or
-                    # fire2 != contained.secondary_fire or
-                    # jump != contained.jump or
-                    # crouch != contained.crouch):
-                    # (contained.primary_fire, contained.secondary_fire,
-                    # contained.jump, contained.crouch) = returned
-                    # self.send_contained(contained)
-                returned = self.on_animation_update(contained.jump,
-                                                    contained.crouch, contained.sneak, contained.sprint)
-                if returned is not None:
-                    jump, crouch, sneak, sprint = returned
-                    if (jump != contained.jump or crouch != contained.crouch or
-                            sneak != contained.sneak or sprint != contained.sprint):
-                        (contained.jump, contained.crouch, contained.sneak,
-                            contained.sprint) = returned
-                        self.send_contained(contained)
-                if not self.freeze_animation:
-                    world_object.set_animation(contained.jump,
-                                               contained.crouch, contained.sneak, contained.sprint)
-                if self.filter_visibility_data or self.filter_animation_data:
-                    return
-                self.protocol.send_contained(contained, sender=self)
-            elif contained.id == loaders.WeaponReload.id:
-                self.weapon_object.reload()
-                if self.filter_animation_data:
-                    return
-                contained.player_id = self.player_id
-                self.protocol.send_contained(contained, sender=self)
-            elif contained.id == loaders.HitPacket.id:
-                value = contained.value
-                is_melee = value == MELEE
-                if not is_melee and self.weapon_object.is_empty():
-                    return
-                try:
-                    player = self.protocol.players[contained.player_id]
-                except KeyError:
-                    return
-                valid_hit = world_object.validate_hit(player.world_object,
-                                                      value, HIT_TOLERANCE)
-                if not valid_hit:
-                    return
-                position1 = world_object.position
-                position2 = player.world_object.position
-                if is_melee:
-                    if not vector_collision(position1, position2,
-                                            MELEE_DISTANCE):
-                        return
-                    hit_amount = self.protocol.melee_damage
+        x, y, z = contained.x, contained.y, contained.z
+        if check_nan(x, y, z):
+            self.on_hack_attempt(
+                'Invalid orientation data received')
+            return
+        returned = self.on_orientation_update(x, y, z)
+        if returned == False:
+            return
+        if returned is not None:
+            x, y, z = returned
+        self.world_object.set_orientation(x, y, z)
+
+    @register_packet_handler(loaders.PositionData)
+    def on_position_update_recieved(self, contained):
+        if not self.hp:
+            return
+        current_time = reactor.seconds()
+        last_update = self.last_position_update
+        self.last_position_update = current_time
+        if last_update is not None:
+            dt = current_time - last_update
+            if dt < MAX_POSITION_RATE:
+                self.set_location()
+                return
+        x, y, z = contained.x, contained.y, contained.z
+        if check_nan(x, y, z):
+            self.on_hack_attempt(
+                'Invalid position data received')
+            return
+        if not self.is_valid_position(x, y, z):
+            # vanilla behaviour
+            self.set_location()
+            return
+        if not self.freeze_animation:
+            self.world_object.set_position(x, y, z)
+            self.on_position_update()
+        if self.filter_visibility_data:
+            return
+        game_mode = self.protocol.game_mode
+        if game_mode == CTF_MODE:
+            other_flag = self.team.other.flag
+            if vector_collision(self.world_object.position,
+                                self.team.base):
+                if other_flag.player is self:
+                    self.capture_flag()
+                self.check_refill()
+            if other_flag.player is None and vector_collision(
+                    self.world_object.position, other_flag):
+                self.take_flag()
+        elif game_mode == TC_MODE:
+            for entity in self.protocol.entities:
+                collides = vector_collision(
+                    entity, self.world_object.position, TC_CAPTURE_DISTANCE)
+                if self in entity.players:
+                    if not collides:
+                        entity.remove_player(self)
                 else:
-                    hit_amount = self.weapon_object.get_damage(
-                        value, position1, position2)
-                if is_melee:
-                    kill_type = MELEE_KILL
-                elif contained.value == HEAD:
-                    kill_type = HEADSHOT_KILL
-                else:
-                    kill_type = WEAPON_KILL
-                returned = self.on_hit(hit_amount, player, kill_type, None)
-                if returned == False:
-                    return
-                elif returned is not None:
-                    hit_amount = returned
-                player.hit(hit_amount, self, kill_type)
-            elif contained.id == loaders.GrenadePacket.id:
-                if check_nan(contained.value) or check_nan(*contained.position) or check_nan(*contained.velocity):
-                    self.on_hack_attempt("Invalid grenade data")
-                    return
-                if not self.grenades:
-                    return
-                self.grenades -= 1
-                if not self.is_valid_position(*contained.position):
-                    contained.position = self.world_object.position.get()
-                if self.on_grenade(contained.value) == False:
-                    return
-                grenade = self.protocol.world.create_object(
-                    world.Grenade, contained.value,
-                    Vertex3(*contained.position), None,
-                    Vertex3(*contained.velocity), self.grenade_exploded)
-                grenade.team = self.team
-                self.on_grenade_thrown(grenade)
-                if self.filter_visibility_data:
-                    return
-                contained.player_id = self.player_id
-                self.protocol.send_contained(contained,
-                                             sender=self)
-            elif contained.id == loaders.SetTool.id:
-                if self.on_tool_set_attempt(contained.value) == False:
-                    return
-                old_tool = self.tool
-                self.tool = contained.value
-                if old_tool == WEAPON_TOOL:
-                    self.weapon_object.set_shoot(False)
-                if self.tool == WEAPON_TOOL:
-                    self.on_shoot_set(self.world_object.primary_fire)
-                    self.weapon_object.set_shoot(
-                        self.world_object.primary_fire)
-                self.world_object.set_weapon(self.tool == WEAPON_TOOL)
-                self.on_tool_changed(self.tool)
-                if self.filter_visibility_data or self.filter_animation_data:
-                    return
-                set_tool.player_id = self.player_id
-                set_tool.value = contained.value
-                self.protocol.send_contained(set_tool, sender=self)
-            elif contained.id == loaders.SetColor.id:
-                color = get_color(contained.value)
-                if self.on_color_set_attempt(color) == False:
-                    return
-                self.color = color
-                self.on_color_set(color)
-                if self.filter_animation_data:
-                    return
-                contained.player_id = self.player_id
-                self.protocol.send_contained(contained, sender=self,
-                                             save=True)
-            elif contained.id == loaders.BlockAction.id:
-                value = contained.value
-                if value == BUILD_BLOCK:
-                    interval = TOOL_INTERVAL[BLOCK_TOOL]
-                elif self.tool == WEAPON_TOOL:
-                    if self.weapon_object.is_empty():
-                        return
-                    interval = WEAPON_INTERVAL[self.weapon]
-                else:
-                    interval = TOOL_INTERVAL[self.tool]
-                current_time = reactor.seconds()
-                last_time = self.last_block
-                self.last_block = current_time
-                if (self.rapid_hack_detect and last_time is not None and
-                        current_time - last_time < interval):
-                    self.rapids.add(current_time)
-                    if self.rapids.check():
-                        start, end = self.rapids.get()
-                        if end - start < MAX_RAPID_SPEED:
-                            print('RAPID HACK:', self.rapids.window)
-                            self.on_hack_attempt('Rapid hack detected')
-                    return
-                map = self.protocol.map
-                x = contained.x
-                y = contained.y
-                z = contained.z
-                if z >= 62:
-                    return
-                if value == BUILD_BLOCK:
-                    self.blocks -= 1
-                    pos = world_object.position
-                    if self.blocks < -BUILD_TOLERANCE:
-                        return
-                    elif not collision_3d(pos.x, pos.y, pos.z, x, y, z,
-                                          MAX_BLOCK_DISTANCE):
-                        return
-                    elif self.on_block_build_attempt(x, y, z) == False:
-                        return
-                    elif not map.build_point(x, y, z, self.color):
-                        return
-                    self.on_block_build(x, y, z)
-                else:
-                    if not map.get_solid(x, y, z):
-                        return
-                    pos = world_object.position
-                    if self.tool == SPADE_TOOL and not collision_3d(
-                            pos.x, pos.y, pos.z, x, y, z, MAX_DIG_DISTANCE):
-                        return
-                    if self.on_block_destroy(x, y, z, value) == False:
-                        return
-                    elif value == DESTROY_BLOCK:
-                        count = map.destroy_point(x, y, z)
-                        if count:
-                            self.total_blocks_removed += count
-                            self.blocks = min(50, self.blocks + 1)
-                            self.on_block_removed(x, y, z)
-                    elif value == SPADE_DESTROY:
-                        for xyz in ((x, y, z), (x, y, z + 1), (x, y, z - 1)):
-                            count = map.destroy_point(*xyz)
-                            if count:
-                                self.total_blocks_removed += count
-                                self.on_block_removed(*xyz)
-                    self.last_block_destroy = reactor.seconds()
-                block_action.x = x
-                block_action.y = y
-                block_action.z = z
-                block_action.value = contained.value
-                block_action.player_id = self.player_id
-                self.protocol.send_contained(block_action, save=True)
-                self.protocol.update_entities()
-            elif contained.id == loaders.BlockLine.id:
-                x1, y1, z1 = (contained.x1, contained.y1, contained.z1)
-                x2, y2, z2 = (contained.x2, contained.y2, contained.z2)
-                pos = world_object.position
-                if not collision_3d(pos.x, pos.y, pos.z, x2, y2, z2,
-                                    MAX_BLOCK_DISTANCE):
-                    return
-                points = world.cube_line(x1, y1, z1, x2, y2, z2)
-                if not points:
-                    return
-                if len(points) > (self.blocks + BUILD_TOLERANCE):
-                    return
-                map = self.protocol.map
-                if self.on_line_build_attempt(points) == False:
-                    return
-                for point in points:
-                    x, y, z = point
-                    if not map.build_point(x, y, z, self.color):
-                        break
-                self.blocks -= len(points)
-                self.on_line_build(points)
-                contained.player_id = self.player_id
-                self.protocol.send_contained(contained, save=True)
-                self.protocol.update_entities()
-        if self.name:
-            if contained.id == loaders.ChatMessage.id:
-                if not self.name:
-                    return
-                value = contained.value
-                if value.startswith('/'):
-                    self.on_command(*parse_command(value[1:]))
-                else:
-                    global_message = contained.chat_type == CHAT_ALL
-                    result = self.on_chat(value, global_message)
-                    if result == False:
-                        return
-                    elif result is not None:
-                        value = result
-                    contained.chat_type = CHAT_ALL if global_message else CHAT_TEAM
-                    contained.value = value
-                    contained.player_id = self.player_id
-                    if global_message:
-                        team = None
-                    else:
-                        team = self.team
-                    self.protocol.send_contained(contained, team=team)
-                    self.on_chat_sent(value, global_message)
-            elif contained.id == loaders.FogColor.id:
-                color = get_color(contained.color)
-                self.on_command('fog', [str(item) for item in color])
-            elif contained.id == loaders.ChangeWeapon.id:
-                if self.on_weapon_set(contained.weapon) == False:
-                    return
-                self.weapon = contained.weapon
-                self.set_weapon(self.weapon)
-            elif contained.id == loaders.ChangeTeam.id:
-                team = self.protocol.teams[contained.team]
-                ret = self.on_team_join(team)
-                if ret is False:
-                    return
-                team = ret or team
-                self.set_team(team)
+                    if collides:
+                        entity.add_player(self)
+                if collides and vector_collision(entity,
+                                                 self.world_object.position):
+                    self.check_refill()
+
+    @register_packet_handler(loaders.WeaponInput)
+    def on_weapon_input_recieved(self, contained):
+        if not self.hp:
+            return
+        primary = contained.primary
+        secondary = contained.secondary
+        if self.world_object.primary_fire != primary:
+            if self.tool == WEAPON_TOOL:
+                self.weapon_object.set_shoot(primary)
+            if self.tool == WEAPON_TOOL or self.tool == SPADE_TOOL:
+                self.on_shoot_set(primary)
+        if self.world_object.secondary_fire != secondary:
+            self.on_secondary_fire_set(secondary)
+        self.world_object.primary_fire = primary
+        self.world_object.secondary_fire = secondary
+        if self.filter_weapon_input:
+            return
+        contained.player_id = self.player_id
+        self.protocol.send_contained(contained, sender=self)
+
+    @register_packet_handler(loaders.InputData)
+    def on_input_data_recieved(self, contained):
+        if not self.hp:
+            return
+        world_object = self.world_object
+        returned = self.on_walk_update(contained.up, contained.down,
+                                       contained.left, contained.right)
+        if returned is not None:
+            up, down, left, right = returned
+            if (up != contained.up or down != contained.down or
+                    left != contained.left or right != contained.right):
+                (contained.up, contained.down, contained.left,
+                    contained.right) = returned
+                # XXX unsupported
+                #~ self.send_contained(contained)
+        if not self.freeze_animation:
+            world_object.set_walk(contained.up, contained.down,
+                                  contained.left, contained.right)
+        contained.player_id = self.player_id
+        z_vel = world_object.velocity.z
+        if contained.jump and not (z_vel >= 0 and z_vel < 0.017):
+            contained.jump = False
+        # XXX unsupported for now
+        # returned = self.on_animation_update(contained.primary_fire,
+            # contained.secondary_fire, contained.jump,
+            # contained.crouch)
+        # if returned is not None:
+            # fire1, fire2, jump, crouch = returned
+            # if (fire1 != contained.primary_fire or
+            # fire2 != contained.secondary_fire or
+            # jump != contained.jump or
+            # crouch != contained.crouch):
+            # (contained.primary_fire, contained.secondary_fire,
+            # contained.jump, contained.crouch) = returned
+            # self.send_contained(contained)
+        returned = self.on_animation_update(contained.jump,
+                                            contained.crouch, contained.sneak, contained.sprint)
+        if returned is not None:
+            jump, crouch, sneak, sprint = returned
+            if (jump != contained.jump or crouch != contained.crouch or
+                    sneak != contained.sneak or sprint != contained.sprint):
+                (contained.jump, contained.crouch, contained.sneak,
+                    contained.sprint) = returned
+                self.send_contained(contained)
+        if not self.freeze_animation:
+            world_object.set_animation(contained.jump,
+                                       contained.crouch, contained.sneak, contained.sprint)
+        if self.filter_visibility_data or self.filter_animation_data:
+            return
+        self.protocol.send_contained(contained, sender=self)
+
+    @register_packet_handler(loaders.WeaponReload)
+    def on_reload_recieved(self, contained):
+        if not self.hp:
+            return
+        self.weapon_object.reload()
+        if self.filter_animation_data:
+            return
+        contained.player_id = self.player_id
+        self.protocol.send_contained(contained, sender=self)
+
+    @register_packet_handler(loaders.HitPacket)
+    def on_hit_recieved(self, contained):
+        if not self.hp:
+            return
+        world_object = self.world_object
+        value = contained.value
+        is_melee = value == MELEE
+        if not is_melee and self.weapon_object.is_empty():
+            return
+        try:
+            player = self.protocol.players[contained.player_id]
+        except KeyError:
+            return
+        valid_hit = world_object.validate_hit(player.world_object,
+                                              value, HIT_TOLERANCE)
+        if not valid_hit:
+            return
+        position1 = world_object.position
+        position2 = player.world_object.position
+        if is_melee:
+            if not vector_collision(position1, position2,
+                                    MELEE_DISTANCE):
+                return
+            hit_amount = self.protocol.melee_damage
+        else:
+            hit_amount = self.weapon_object.get_damage(
+                value, position1, position2)
+        if is_melee:
+            kill_type = MELEE_KILL
+        elif contained.value == HEAD:
+            kill_type = HEADSHOT_KILL
+        else:
+            kill_type = WEAPON_KILL
+        returned = self.on_hit(hit_amount, player, kill_type, None)
+        if returned == False:
+            return
+        elif returned is not None:
+            hit_amount = returned
+        player.hit(hit_amount, self, kill_type)
+
+    @register_packet_handler(loaders.GrenadePacket)
+    def on_grenade_recieved(self, contained):
+        if not self.hp:
+            return
+        if check_nan(contained.value) or check_nan(*contained.position) or check_nan(*contained.velocity):
+            self.on_hack_attempt("Invalid grenade data")
+            return
+        if not self.grenades:
+            return
+        self.grenades -= 1
+        if not self.is_valid_position(*contained.position):
+            contained.position = self.world_object.position.get()
+        if self.on_grenade(contained.value) == False:
+            return
+        grenade = self.protocol.world.create_object(
+            world.Grenade, contained.value,
+            Vertex3(*contained.position), None,
+            Vertex3(*contained.velocity), self.grenade_exploded)
+        grenade.team = self.team
+        self.on_grenade_thrown(grenade)
+        if self.filter_visibility_data:
+            return
+        contained.player_id = self.player_id
+        self.protocol.send_contained(contained,
+                                     sender=self)
+
+    @register_packet_handler(loaders.SetTool)
+    def on_tool_change_recieved(self, contained):
+        if not self.hp:
+            return
+        if self.on_tool_set_attempt(contained.value) == False:
+            return
+        old_tool = self.tool
+        self.tool = contained.value
+        if old_tool == WEAPON_TOOL:
+            self.weapon_object.set_shoot(False)
+        if self.tool == WEAPON_TOOL:
+            self.on_shoot_set(self.world_object.primary_fire)
+            self.weapon_object.set_shoot(
+                self.world_object.primary_fire)
+        self.world_object.set_weapon(self.tool == WEAPON_TOOL)
+        self.on_tool_changed(self.tool)
+        if self.filter_visibility_data or self.filter_animation_data:
+            return
+        set_tool.player_id = self.player_id
+        set_tool.value = contained.value
+        self.protocol.send_contained(set_tool, sender=self)
+
+    @register_packet_handler(loaders.SetColor)
+    def on_color_change_recieved(self, contained):
+        if not self.hp:
+            return
+        color = get_color(contained.value)
+        if self.on_color_set_attempt(color) == False:
+            return
+        self.color = color
+        self.on_color_set(color)
+        if self.filter_animation_data:
+            return
+        contained.player_id = self.player_id
+        self.protocol.send_contained(contained, sender=self,
+                                     save=True)
+
+    @register_packet_handler(loaders.BlockAction)
+    def on_block_action_recieved(self, contained):
+        world_object = self.world_object
+        if not self.hp:
+            return
+        value = contained.value
+        if value == BUILD_BLOCK:
+            interval = TOOL_INTERVAL[BLOCK_TOOL]
+        elif self.tool == WEAPON_TOOL:
+            if self.weapon_object.is_empty():
+                return
+            interval = WEAPON_INTERVAL[self.weapon]
+        else:
+            interval = TOOL_INTERVAL[self.tool]
+        current_time = reactor.seconds()
+        last_time = self.last_block
+        self.last_block = current_time
+        if (self.rapid_hack_detect and last_time is not None and
+                current_time - last_time < interval):
+            self.rapids.add(current_time)
+            if self.rapids.check():
+                start, end = self.rapids.get()
+                if end - start < MAX_RAPID_SPEED:
+                    print('RAPID HACK:', self.rapids.window)
+                    self.on_hack_attempt('Rapid hack detected')
+            return
+        map = self.protocol.map
+        x = contained.x
+        y = contained.y
+        z = contained.z
+        if z >= 62:
+            return
+        if value == BUILD_BLOCK:
+            self.blocks -= 1
+            pos = world_object.position
+            if self.blocks < -BUILD_TOLERANCE:
+                return
+            elif not collision_3d(pos.x, pos.y, pos.z, x, y, z,
+                                  MAX_BLOCK_DISTANCE):
+                return
+            elif self.on_block_build_attempt(x, y, z) == False:
+                return
+            elif not map.build_point(x, y, z, self.color):
+                return
+            self.on_block_build(x, y, z)
+        else:
+            if not map.get_solid(x, y, z):
+                return
+            pos = world_object.position
+            if self.tool == SPADE_TOOL and not collision_3d(
+                    pos.x, pos.y, pos.z, x, y, z, MAX_DIG_DISTANCE):
+                return
+            if self.on_block_destroy(x, y, z, value) == False:
+                return
+            elif value == DESTROY_BLOCK:
+                count = map.destroy_point(x, y, z)
+                if count:
+                    self.total_blocks_removed += count
+                    self.blocks = min(50, self.blocks + 1)
+                    self.on_block_removed(x, y, z)
+            elif value == SPADE_DESTROY:
+                for xyz in ((x, y, z), (x, y, z + 1), (x, y, z - 1)):
+                    count = map.destroy_point(*xyz)
+                    if count:
+                        self.total_blocks_removed += count
+                        self.on_block_removed(*xyz)
+            self.last_block_destroy = reactor.seconds()
+        block_action.x = x
+        block_action.y = y
+        block_action.z = z
+        block_action.value = contained.value
+        block_action.player_id = self.player_id
+        self.protocol.send_contained(block_action, save=True)
+        self.protocol.update_entities()
+
+    @register_packet_handler(loaders.BlockLine)
+    def on_block_line_recieved(self, contained):
+        if not self.hp:
+            return
+        x1, y1, z1 = (contained.x1, contained.y1, contained.z1)
+        x2, y2, z2 = (contained.x2, contained.y2, contained.z2)
+        pos = self.world_object.position
+        if not collision_3d(pos.x, pos.y, pos.z, x2, y2, z2,
+                            MAX_BLOCK_DISTANCE):
+            return
+        points = world.cube_line(x1, y1, z1, x2, y2, z2)
+        if not points:
+            return
+        if len(points) > (self.blocks + BUILD_TOLERANCE):
+            return
+        map = self.protocol.map
+        if self.on_line_build_attempt(points) == False:
+            return
+        for point in points:
+            x, y, z = point
+            if not map.build_point(x, y, z, self.color):
+                break
+        self.blocks -= len(points)
+        self.on_line_build(points)
+        contained.player_id = self.player_id
+        self.protocol.send_contained(contained, save=True)
+        self.protocol.update_entities()
+
+    @register_packet_handler(loaders.ChatMessage)
+    def on_chat_message_recieved(self, contained):
+        if not self.name:
+            return
+        value = contained.value
+        if value.startswith('/'):
+            self.on_command(*parse_command(value[1:]))
+        else:
+            global_message = contained.chat_type == CHAT_ALL
+            result = self.on_chat(value, global_message)
+            if result == False:
+                return
+            elif result is not None:
+                value = result
+            contained.chat_type = CHAT_ALL if global_message else CHAT_TEAM
+            contained.value = value
+            contained.player_id = self.player_id
+            if global_message:
+                team = None
+            else:
+                team = self.team
+            self.protocol.send_contained(contained, team=team)
+            self.on_chat_sent(value, global_message)
+
+    @register_packet_handler(loaders.FogColor)
+    def on_fog_color_recieved(self, contained):
+        # FIXME: this theoretically might anyone to set the fog...
+        # do we even need this?
+        if not self.name:
+            return
+        color = get_color(contained.color)
+        self.on_command('fog', [str(item) for item in color])
+
+    @register_packet_handler(loaders.ChangeWeapon)
+    def on_weapon_change_recieved(self, contained):
+        if not self.name:
+            return
+        if self.on_weapon_set(contained.weapon) == False:
+            return
+        self.weapon = contained.weapon
+        self.set_weapon(self.weapon)
+
+    @register_packet_handler(loaders.ChangeTeam)
+    def on_team_change_recieved(self, contained):
+        if not self.name:
+            return
+        team = self.protocol.teams[contained.team]
+        ret = self.on_team_join(team)
+        if ret is False:
+            return
+        team = ret or team
+        self.set_team(team)
 
     def is_valid_position(self, x, y, z, distance=None):
         if not self.speedhack_detect:
