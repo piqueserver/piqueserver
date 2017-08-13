@@ -241,7 +241,7 @@ class ServerConnection(BaseConnection):
                       self.protocol.connections.values()
                       if conn.address[0] == self.address[0]]
             if len(shared) > self.protocol.max_connections_per_ip:
-                self.disconnect(ERROR_KICKED)
+                self.disconnect(ERROR_TOO_MANY_CONNECTIONS)
                 return
         if not self.disconnected:
             self._connection_ack()

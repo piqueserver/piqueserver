@@ -423,7 +423,7 @@ class FeatureConnection(ServerConnection):
             self.protocol.send_chat(message, irc=True)
         # FIXME: Client should handle disconnect events the same way in both
         # main and initial loading network loops
-        self.disconnect(ERROR_KICKED + 8)
+        self.disconnect(ERROR_KICKED)
 
     def ban(self, reason=None, duration=None):
         reason = ': ' + reason if reason is not None else ''
