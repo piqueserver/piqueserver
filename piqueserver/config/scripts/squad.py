@@ -119,12 +119,12 @@ def apply_script(protocol, connection, config):
             available = set()
             unused = []
             for name in SQUAD_NAMES:
-                if squad_dict.has_key(name):
+                if name in squad_dict:
                     if len(squad_dict[name]) < self.protocol.squad_size:
                         available.add(name)
                 else:
                     unused.append(name)
-            if len(available) > 0:
+            if available:
                 return available.pop()
             else:
                 return random.choice(unused)

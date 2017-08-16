@@ -1,4 +1,4 @@
-from pyspades.ipaddr import IPNetwork
+from ipaddr import IPNetwork
 
 CACHE = {}
 
@@ -21,7 +21,6 @@ def get_cidr(network):
 
 
 class NetworkDict(object):
-
     def __init__(self):
         self.networks = []
 

@@ -38,8 +38,7 @@ cdef extern from "common_c.h":
 
 cdef inline int check_default_int(int value, int default) except -1:
     if value != default:
-        from pyspades.exceptions import InvalidData
-        raise InvalidData(
+        raise ValueError(
             'check_default() failed: was %s, should be %s' % (value, default))
     return 0
 

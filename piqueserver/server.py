@@ -58,7 +58,6 @@ from pyspades.constants import (ERROR_BANNED, DESTROY_BLOCK, SPADE_DESTROY,
 from pyspades.master import MAX_SERVER_NAME_SIZE, get_external_ip
 from pyspades.tools import make_server_identifier
 from pyspades.types import AttributeSet
-from pyspades.exceptions import InvalidData
 from pyspades.bytes import NoDataLeft
 
 from piqueserver.scheduler import Scheduler
@@ -424,7 +423,7 @@ class FeatureConnection(ServerConnection):
             self.protocol.send_chat(message, irc=True)
         # FIXME: Client should handle disconnect events the same way in both
         # main and initial loading network loops
-        self.disconnect(ERROR_KICKED + 8)
+        self.disconnect(ERROR_KICKED)
 
     def ban(self, reason=None, duration=None):
         reason = ': ' + reason if reason is not None else ''
@@ -679,8 +678,7 @@ class FeatureProtocol(ServerProtocol):
         self.start_time = reactor.seconds()
         self.end_calls = []
         # TODO: why is this here?
-        self.console = create_console(  # pylint: disable=assignment-from-no-return
-            self)
+        create_console(self)
 
         # check for default password usage
         for group, passwords in self.passwords.items():
@@ -947,7 +945,7 @@ class FeatureProtocol(ServerProtocol):
         current_time = reactor.seconds()
         try:
             ServerProtocol.data_received(self, peer, packet)
-        except (NoDataLeft, InvalidData):
+        except (NoDataLeft, ValueError):
             import traceback
             traceback.print_exc()
             print(
@@ -1139,15 +1137,14 @@ def run():
         interface = '*'
 
     # TODO: is this required? Maybe protocol_class needs to be called?
-    #       either way, this variable isn't used
-    protocol_instance = protocol_class(  # pylint: disable=unused-variable
-        interface, config)
+    # either way, the resulting object is not used
+    protocol_class(interface, config)
 
     print('Started server...')
 
     profile = config.get('profile', False)
     if profile:
         import cProfile
-        cProfile.run('reactor.run()', 'profile.dat')
+        cProfile.runctx('reactor.run()', None, globals())
     else:
         reactor.run()

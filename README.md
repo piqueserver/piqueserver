@@ -13,6 +13,12 @@ An Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/P
 pip install piqueserver
 ```
 
+to install with the optional ssh server
+
+```bash
+pip install piqueserver[ssh]
+```
+
 ### git (bleeding edge)
 
 ```bash
