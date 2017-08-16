@@ -681,7 +681,10 @@ class ServerConnection(BaseConnection):
                 team = None
             else:
                 team = self.team
-            self.protocol.send_contained(contained, team=team)
+            for player in self.protocol.players.values():
+                if not player.deaf:
+                    if team is None or team is player.team:
+                        player.send_contained(contained)
             self.on_chat_sent(value, global_message)
 
     @register_packet_handler(loaders.FogColor)
