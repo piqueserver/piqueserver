@@ -971,18 +971,36 @@ class FeatureProtocol(ServerProtocol):
 
     # pylint: disable=arguments-differ
     def send_chat(self, value, global_message=True, sender=None,
+        """
+        Send a chat message to the player.
+        """
                   team=None, irc=False):
         if irc:
             self.irc_say('* %s' % value)
         ServerProtocol.send_chat(self, value, global_message, sender, team)
 
     def send_chat_warning(self, message, team=None):
+        """
+        Send a warning message. This gets displayed
+        as a yellow popup with sound for OpenSpades
+        clients
+        """
         ServerProtocol.send_chat(self, message, team=team, special=SPECIAL_WARNING)
 
     def send_chat_notice(self, message, team=None):
+        """
+        Send a warning message. This gets displayed
+        as a popup for OpenSpades
+        clients
+        """
         ServerProtocol.send_chat(self, message, team=team, special=SPECIAL_NOTICE)
 
     def send_chat_error(self, message, team=None):
+        """
+        Send a warning message. This gets displayed
+        as a red popup with sound for OpenSpades
+        clients
+        """
         ServerProtocol.send_chat(self, message, team=team, special=SPECIAL_ERROR)
 
     # log high CPU usage
