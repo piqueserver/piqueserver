@@ -32,25 +32,7 @@ def get_color(color):
 def make_color(r, g, b):
     return b | (g << 8) | (r << 16)
 
-def binify(data, size = 2):
-    binText = bin(str(data))[2:]
-    binText = (2 * 8 - len(binText)) * '0' + binText
-    return binText
-
-MAX_HEX_SIZE = 110
 EPSILON = 0.0000001
-
-def hexify(data, max = MAX_HEX_SIZE):
-    hexed = str(data).encode('hex')
-    if max is not None and len(hexed) > max:
-        hexed = '%s (...)' % hexed[:max]
-    return hexed
-
-def stringify(data, max = MAX_HEX_SIZE):
-    data = str(data)
-    if max is not None and len(data) > max:
-        data = '%s (...)' % data[:max]
-    return '%r' % data
 
 def coordinates(data):
     if data is None:
@@ -87,19 +69,10 @@ def prettify_timespan(total, get_seconds = False):
     text = ', '.join([s for s in (days_s, hours_s, minutes_s, seconds_s) if s])
     return text
 
-def compare_reader(reader, value, name):
-    if reader.read(len(value)) != value:
-        print '%s is wrong' % name
-
 def open_debugger(name, locals):
     print '%s, opening debugger' % name
     import code
     code.interact(local = locals)
-
-def check_default(value, default):
-    if value != default:
-        raw_input('check_default() failed')
-        raise NotImplementedError('was %s, should be %s' % (value, default))
 
 import zlib
 def crc32(data):
