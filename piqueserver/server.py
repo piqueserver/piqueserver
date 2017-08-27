@@ -971,10 +971,10 @@ class FeatureProtocol(ServerProtocol):
 
     # pylint: disable=arguments-differ
     def send_chat(self, value, global_message=True, sender=None,
+                  team=None, irc=False):
         """
         Send a chat message to the player.
         """
-                  team=None, irc=False):
         if irc:
             self.irc_say('* %s' % value)
         ServerProtocol.send_chat(self, value, global_message, sender, team)
