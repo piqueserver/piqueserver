@@ -23,6 +23,7 @@ from __future__ import print_function, unicode_literals
 import sys
 import os
 import imp
+import importlib
 import json
 import itertools
 import random
@@ -209,8 +210,9 @@ class FeatureConnection(ServerConnection):
                                        ' '.join(parameters))
         if result:
             log_message += ' -> %s' % result
-            self.send_chat(result)
-        print(log_message.encode('ascii', 'replace'))
+            for i in reversed(result.split("\n")):
+                self.send_chat(i)
+        print(log_message.replace("\n", "\\n").encode('ascii', 'replace'))
 
     def _can_build(self):
         if not self.building:
@@ -458,7 +460,7 @@ class FeatureConnection(ServerConnection):
             self.admin = True
             self.speedhack_detect = False
         self.user_types.add(user_type)
-        rights = set(commands.rights.get(user_type, ()))
+        rights = set(commands.get_rights(user_type))
         self.rights.update(rights)
         if verbose:
             message = ' logged in as %s' % (user_type)
@@ -694,7 +696,7 @@ class FeatureProtocol(ServerProtocol):
 
         for user_type, func_names in config.get('rights', {}).items():
             for func_name in func_names:
-                commands.add_rights(func_name, user_type)
+                commands.add_rights(user_type, func_name)
 
         port = self.port = config.get('port', 32887)
         ServerProtocol.__init__(self, port, interface)
@@ -935,6 +937,7 @@ class FeatureProtocol(ServerProtocol):
 
     def receive_callback(self, address, data):
         if data == b'HELLO':
+            print("test")
             self.host.socket.send(address, b'HI')
             return 1
         if address.host in self.hard_bans:
@@ -1141,8 +1144,12 @@ def run():
             module = imp.load_module(script, f, filename, desc)
             script_objects.append(module)
         except ImportError as e:
-            print("(script '%s' not found: %r)" % (script, e))
-            script_names.remove(script)
+            try:
+                module = importlib.import_module(script)
+                script_objects.append(module)
+            except ImportError:
+                print("(script '%s' not found: %r)" % (script, e))
+                script_names.remove(script)
 
     for script in script_objects:
         protocol_class, connection_class = script.apply_script(protocol_class,
@@ -1166,3 +1173,4 @@ def run():
         cProfile.runctx('reactor.run()', None, globals())
     else:
         reactor.run()
+
