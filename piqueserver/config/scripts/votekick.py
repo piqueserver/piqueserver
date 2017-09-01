@@ -21,7 +21,7 @@ from __future__ import print_function
 
 from twisted.internet.reactor import seconds
 from piqueserver.scheduler import Scheduler
-from piqueserver.commands import name, add, get_player, join_arguments, InvalidPlayer, admin, alias
+from piqueserver.commands import name, add, get_player, join_arguments, CommandError, admin, alias
 
 REQUIRE_REASON = True
 
@@ -81,11 +81,7 @@ def start_votekick(connection, *args):
         raise ValueError()
 
     value = args[0]
-    try:
-        # vanilla aos behavior
-        victim = get_player(protocol, '#' + value)
-    except InvalidPlayer:
-        victim = get_player(protocol, value)
+    victim = get_player(protocol, value)
     reason = join_arguments(args[1:])
 
     try:

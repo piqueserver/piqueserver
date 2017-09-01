@@ -80,7 +80,7 @@ class ConsoleInput(LineReceiver):
         self.user_types = AttributeSet(['admin', 'console'])
         self.rights = AttributeSet()
         for user_type in self.user_types:
-            self.rights.update(commands.rights.get(user_type, ()))
+            self.rights.update(commands.get_rights(user_type))
 
     def lineReceived(self, line):
         if line.startswith('/'):

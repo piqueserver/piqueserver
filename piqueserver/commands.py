@@ -18,7 +18,7 @@
 # pylint: disable=too-many-lines
 # pylint: disable=wildcard-import,unused-wildcard-import
 
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 
 import traceback
 
@@ -32,6 +32,9 @@ else:
     import math
     import inspect
     from random import choice
+    import warnings
+    from collections import namedtuple
+    import textwrap
 
     from twisted.internet import reactor
 
@@ -47,47 +50,81 @@ else:
     from piqueserver.map import check_rotation, MapNotFound
     from piqueserver import cfg
 
-    commands = {}
-    aliases = {}
-    rights = {}
+    _commands = {}
+    _alias_map = {}
+    _rights = {}
 
-    class InvalidPlayer(Exception):
+    class CommandError(Exception):
         pass
 
-    class InvalidSpectator(InvalidPlayer):
-        pass
+    def command(name=None, *aliases):
+        """
+        Register a new command.
 
-    class InvalidTeam(Exception):
-        pass
+        The command will be accessible as `/function_name` unless a name or alias
+        is specified.
 
-    def add_rights(func_name, *user_types):
-        for user_type in user_types:
-            if user_type in rights:
-                rights[user_type].add(func_name)
+        >>> @command()
+        ... def some_command(x):
+        ...     pass
+
+        Optional mames and aliases:
+
+        >>> @command("name", "alias1", "alias2")
+        ... def some_command(x):
+        ...     pass
+        """
+        def decorator(function):
+            function.user_types = set()
+
+            # in py2 you can not modify variables in outer closures, so we need
+            # to assign into a new variable
+            if name is None:
+                func_name = function.__name__
             else:
-                rights[user_type] = set([func_name])
+                func_name = name
 
-    def restrict(func, *user_types):
-        def new_func(connection, *arg, **kw):
-            return func(connection, *arg, **kw)
-        new_func.__name__ = func.__name__
-        new_func.user_types = user_types
-        new_func.argspec = inspect.getargspec(func)
-        return new_func
+            function.command_name = func_name
 
-    def has_rights(f, connection):
-        return not hasattr(f, 'user_types') or f.__name__ in connection.rights
+            _commands[func_name] = function
 
-    def admin(func):
-        return restrict(func, 'admin')
+            if aliases:
+                function.aliases = []
+
+                for alias in aliases:
+                    _alias_map[alias] = func_name
+
+            return function
+        return decorator
+
+    def add(func):
+        """
+        Function to add a command from scripts. Deprecated
+        """
+        warnings.warn(
+            '@add is deprecated, use @command()',
+            DeprecationWarning)
+        command()(func)
 
     def name(name):
+        """
+        Give the command a new name. Deprecated
+        """
+        warnings.warn(
+            '@name is deprecated, use @command("name")',
+            DeprecationWarning)
         def dec(func):
             func.__name__ = name
             return func
         return dec
 
     def alias(name):
+        """
+        add a new alias to a command. Deprecated
+        """
+        warnings.warn(
+            '@alias is deprecated, use @command("name", "alias1", "alias2")',
+            DeprecationWarning)
         def dec(func):
             try:
                 func.aliases.append(name)
@@ -96,31 +133,171 @@ else:
             return func
         return dec
 
+    def restrict(*user_types):
+        """
+        restrict the command to only be used by a specific type of user
+
+        >>> @restrict("admin", "guard")
+        ... @command()
+        ... def some_command(x):
+        ...     pass
+        """
+        def decorator(function):
+            function.user_types = set(*user_types)
+            return function
+        return decorator
+
+    def has_permission(f, connection):
+        print(f.command_name, "in", connection.rights)
+
+        if not f.user_types:
+            return True
+        elif f.command_name in connection.rights:
+            return True
+        elif connection.admin:
+            return True
+        else:
+            return False
+
+    CommandHelp = namedtuple("CommandHelp", ["description", "usage", "info"])
+    def get_command_help(command_func):
+        doc = command_func.__doc__
+        if not doc:
+            return CommandHelp("", "", "")
+
+        doc = textwrap.dedent(doc).strip()
+
+        lines = doc.split("\n")
+
+        # Yes, this is disgusting. I wish I could think of a better way of
+        # doing it
+
+        count = 0
+        desc = ""
+        usage = ""
+        info = ""
+
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            if count == 0:
+                desc = line
+            elif count == 1:
+                usage = line
+            elif count == 2:
+                info = line
+
+            count += 1
+
+        return CommandHelp(desc, usage, info)
+
+    def format_command_error(command_func, message, exception=None):
+        """format a help message for a given command"""
+        command_help = get_command_help(command_func)
+
+        if command_help.usage:
+            return "{}\nUsage: {}".format(message, command_help.usage)
+        else:
+            return message
+
+    # it might seem unecesary to reimplement half of the dict data type for
+    # _rights, but previously this attribute was accessed and modified from
+    # various places and that made things more confusing than the needed to be
+
+    def add_rights(user_type, command_name):
+        """
+        Give the user type a new right
+
+        >>> add_rights("knights", "say_ni")
+        """
+        _rights.setdefault(user_type, []).append(command_name)
+
+    def get_rights(user_type):
+        """
+        Get a list of rights a specific user type has.
+
+        >>> add_rights("knights", "say_ni")
+        >>> get_rights("knights")
+        ["say_ni"]
+        >>> get_rights("arthur")
+        []
+        """
+        r =  _rights.get(user_type, [])
+        return r
+
+    def update_rights(rights):
+        """
+        Update the rights of all users according to the input dictionary. This
+        is currently only here for when the config needs to be reloaded.
+
+        >>> update_rights({"knights": ["say_ni"]})
+        >>> get_rights("knights")
+        ["say_ni"]
+        """
+        _rights.update(rights)
+
+    def admin(func):
+        """
+        Shorthand for @restrict("admin"). Mainly exists for backwards
+        compability with pyspades scripts.
+
+        >>> @admin
+        ... @command()
+        ... def some_command(x):
+        ...     pass
+        """
+        return restrict('admin')(func)
+
+    # TODO: all of these utility functions should be seperated from the actual
+    # implementation of the commands
+
     def get_player(protocol, value, spectators=True):
-        ret = None
+        """
+        Get a player connection object by name or ID.
+
+        IDs are formatted as: "#12"
+
+        If no player with the specified name is found, it will try to find a
+        player who's name contains the string
+        """
+        player_obj = None
         try:
             if value.startswith('#'):
                 value = int(value[1:])
-                ret = protocol.players[value]
+                player_obj = protocol.players[value]
             else:
                 players = protocol.players
                 try:
-                    ret = players[value]
+                    player_obj = players[value]
                 except KeyError:
                     value = value.lower()
+                    matches = []
                     for player in players.values():
                         name = player.name.lower()
                         if name == value:
+                            # if the playername matches, we want to return directly, otherwise
+                            # you would not be able to kick players who's name is a subset of
+                            # another players name
                             return player
                         if name.count(value):
-                            ret = player
+                            matches.append(player)
+
+                    if len(matches) > 1:
+                        # more than one player matched
+                        raise CommandError("Ambiguous player")
+                    elif len(matches) == 1:
+                        player_obj = matches[0]
+                    else:
+                        # no Players were found
+                        player_obj = None
         except (KeyError, IndexError, ValueError):
             pass
-        if ret is None:
-            raise InvalidPlayer()
-        elif not spectators and ret.world_object is None:
-            raise InvalidSpectator()
-        return ret
+        if player_obj is None:
+            raise CommandError("Invalid Player")
+        elif not spectators and player_obj.world_object is None:
+            raise CommandError("Invalid Spectator")
+        return player_obj
 
     def get_team(connection, value):
         value = value.lower()
@@ -130,7 +307,7 @@ else:
             return connection.protocol.green_team
         elif value == 'spectator':
             return connection.protocol.spectator_team
-        raise InvalidTeam()
+        raise CommandError("Invalid Team")
 
     def join_arguments(arg, default=None):
         if not arg:
@@ -147,8 +324,26 @@ else:
 
         return maps, ', '.join(maps)
 
+    def get_truthy(value):
+        value = value.lower()
+
+        if value in ("yes", "y", "on", 1):
+            return True
+        elif value in ("no", "n", "off", 0):
+            return False
+        else:
+            return None
+
+    ## Actual commands start here
+
     @admin
+    @command()
     def kick(connection, value, *arg):
+        """
+        kick a player
+        /kick <player>
+        Player is the #ID of the player, or a unique part of their name
+        """
         reason = join_arguments(arg)
         player = get_player(connection.protocol, value)
         player.kick(reason)
@@ -170,34 +365,71 @@ else:
         return duration, reason
 
     @admin
+    @command()
     def ban(connection, value, *arg):
+        """
+        Ban a player
+        /ban <player> [duration] [reason]
+        """
         duration, reason = get_ban_arguments(connection, arg)
         player = get_player(connection.protocol, value)
         player.ban(reason, duration)
 
     @admin
+    @command()
     def hban(connection, value, *arg):
-        duration = int(60)
+        """
+        Ban a player for an hour
+        /hban <player> [reason]
+        """
+        duration = 60
         reason = join_arguments(arg)
         player = get_player(connection.protocol, value)
         player.ban(reason, duration)
 
     @admin
+    @command()
     def dban(connection, value, *arg):
-        duration = int(1440)
+        """
+        Ban a player for an hour
+        /dban <player> [reason]
+        """
+        duration = 1440
         reason = join_arguments(arg)
         player = get_player(connection.protocol, value)
         player.ban(reason, duration)
 
     @admin
+    @command()
     def wban(connection, value, *arg):
-        duration = int(10080)
+        """
+        Ban a player for a week
+        /wban <player> [reason]
+        """
+        duration = 10080
         reason = join_arguments(arg)
         player = get_player(connection.protocol, value)
         player.ban(reason, duration)
 
     @admin
+    @command()
+    def pban(connection, value, *arg):
+        """
+        Ban a player permanently
+        /pban <player> [reason]
+        """
+        duration = 0
+        reason = join_arguments(arg)
+        player = get_player(connection.protocol, value)
+        player.ban(reason, duration)
+
+    @admin
+    @command()
     def banip(connection, ip, *arg):
+        """
+        Ban an ip
+        /banip <ip> [reason]
+        """
         duration, reason = get_ban_arguments(connection, arg)
         try:
             connection.protocol.add_ban(ip, reason, duration)
@@ -212,16 +444,25 @@ else:
                 ip, prettify_timespan(duration * 60), reason)
 
     @admin
+    @command()
     def unban(connection, ip):
+        """
+        Unban an ip
+        /unban <ip>
+        """
         try:
             connection.protocol.remove_ban(ip)
             return 'IP unbanned'
         except KeyError:
             return 'IP not found in ban list'
 
-    @name('undoban')
     @admin
+    @command('undoban')
     def undo_ban(connection, *arg):
+        """
+        Undo last ban
+        /undoban
+        """
         if len(connection.protocol.bans) > 0:
             result = connection.protocol.undo_last_ban()
             return 'Ban for %s undone' % result[0]
@@ -229,18 +470,26 @@ else:
             return 'No bans to undo!'
 
     @admin
+    @command()
     def say(connection, *arg):
+        """
+        Say something in chat as server message
+        /say <text>
+        """
         value = ' '.join(arg)
         connection.protocol.send_chat(value)
         connection.protocol.irc_say(value)
 
-    add_rights('kill', 'admin')
-
+    @command()
     def kill(connection, value=None):
+        """
+        Kill a player
+        /kill [target]
+        """
         if value is None:
             player = connection
         else:
-            if not connection.rights.kill:
+            if not connection.rights.kill and not connection.admin:
                 return "You can't use this command"
             player = get_player(connection.protocol, value, False)
         player.kill()
@@ -249,7 +498,12 @@ else:
             connection.protocol.send_chat(message, irc=True)
 
     @admin
+    @command()
     def heal(connection, player=None):
+        """
+        Refill an heal a player
+        /heal [target]
+        """
         if player is not None:
             player = get_player(connection.protocol, player, False)
             message = '%s was healed by %s' % (player.name, connection.name)
@@ -261,7 +515,12 @@ else:
         player.refill()
         connection.protocol.send_chat(message, irc=True)
 
+    @command()
     def rules(connection):
+        """
+        Show the rules
+        /rules
+        """
         if connection not in connection.protocol.players:
             raise KeyError()
         lines = connection.protocol.rules
@@ -269,10 +528,11 @@ else:
             return
         connection.send_lines(lines)
 
-    @name("help")
+    @command("help")
     def help_command(connection):
         """
-        This help
+        Print the help Message
+        /help
         """
         if connection.protocol.help is not None and not connection.admin:
             connection.send_lines(connection.protocol.help)
@@ -283,9 +543,11 @@ else:
 
             return 'Available commands: %s' % (', '.join(names))
 
+    @command()
     def login(connection, password):
         """
         Login as a user type
+        /login <password>
         """
         if connection not in connection.protocol.players:
             raise KeyError()
@@ -304,14 +566,23 @@ else:
         return 'Invalid password - you have %s tries left' % (
             connection.login_retries)
 
+    @command()
     def pm(connection, value, *arg):
+        """
+        Send a player a private message
+        /pm <player> <message>
+        """
         player = get_player(connection.protocol, value)
         message = join_arguments(arg)
         player.send_chat('PM from %s: %s' % (connection.name, message))
         return 'PM sent to %s' % player.name
 
-    @name('admin')
+    @command('admin')
     def to_admin(connection, *arg):
+        """
+        Send a notice to the admins
+        /admin <message>
+        """
         protocol = connection.protocol
         message = join_arguments(arg)
         if not message:
@@ -328,14 +599,24 @@ else:
                                  (connection.name, message))
         return 'Message sent to admins'
 
+    @command()
     def streak(connection):
+        """
+        View your killstreak
+        /streak
+        """
         if connection not in connection.protocol.players:
             raise KeyError()
         return ('Your current kill streak is %s. Best is %s kills' %
                 (connection.streak, connection.best_streak))
 
     @admin
+    @command()
     def lock(connection, value):
+        """
+        Lock a team
+        /lock <blue|green|spectator>
+        """
         team = get_team(connection, value)
         team.locked = True
         connection.protocol.send_chat('%s team is now locked' % team.name)
@@ -343,7 +624,12 @@ else:
                                                              team.name))
 
     @admin
+    @command()
     def unlock(connection, value):
+        """
+        Unlock a team
+        /unlock <blue|green|spectator>
+        """
         team = get_team(connection, value)
         team.locked = False
         connection.protocol.send_chat('%s team is now unlocked' % team.name)
@@ -351,7 +637,12 @@ else:
                                                                team.name))
 
     @admin
+    @command()
     def switch(connection, player=None, team=None):
+        """
+        switch a players team
+        /switch [player]
+        """
         protocol = connection.protocol
         if player is not None:
             player = get_player(protocol, player)
@@ -382,23 +673,36 @@ else:
             player.set_team(new_team)
             protocol.send_chat('%s switched teams' % player.name, irc=True)
 
-    @name('setbalance')
     @admin
+    @command('setbalance')
     def set_balance(connection, value):
-        try:
-            value = int(value)
-        except ValueError:
-            return 'Invalid value %r. Use 0 for off, 1 and up for on' % value
-        protocol = connection.protocol
-        protocol.balanced_teams = value
-        protocol.send_chat('Balanced teams set to %s' % value)
-        connection.protocol.irc_say('* %s set balanced teams to %s' % (
-            connection.name, value))
+        """
+        Turn automatic balancing on or off
+        /setbalance <on|off>
+        """
+        should_balance = get_truthy(value)
+        if should_balance is None:
+            raise CommandError()
 
-    @name('togglebuild')
-    @alias('tb')
+        protocol = connection.protocol
+        protocol.balanced_teams = should_balance
+
+        if should_balance:
+            protocol.send_chat('now balancing teams')
+            connection.protocol.irc_say(
+                '* %s turned on balanced teams' % connection.name)
+        else:
+            protocol.send_chat('now no longer balancing teams')
+            connection.protocol.irc_say(
+                '* %s turned off balanced teams' % connection.name)
+
     @admin
+    @command('togglebuild', 'tb')
     def toggle_build(connection, player=None):
+        """
+        Toggle building
+        /togglebuild [player]
+        """
         if player is not None:
             player = get_player(connection.protocol, player)
             value = not player.building
@@ -409,19 +713,22 @@ else:
                                         (connection.name,
                                          ['disabled', 'enabled'][int(value)],
                                          player.name))
-            return
-        value = not connection.protocol.building
-        connection.protocol.building = value
-        on_off = ['OFF', 'ON'][int(value)]
-        connection.protocol.send_chat('Building has been toggled %s!' % on_off)
-        connection.protocol.irc_say(
-            '* %s toggled building %s' % (connection.name,
-                                          on_off))
+        else:
+            value = not connection.protocol.building
+            connection.protocol.building = value
+            on_off = ['OFF', 'ON'][int(value)]
+            connection.protocol.send_chat('Building has been toggled %s!' % on_off)
+            connection.protocol.irc_say(
+                '* %s toggled building %s' % (connection.name,
+                                              on_off))
 
-    @name('togglekill')
-    @alias('tk')
     @admin
+    @command('togglekill', 'tk')
     def toggle_kill(connection, player=None):
+        """
+        Toggle killing
+        /togglekill [player]
+        """
         if player is not None:
             player = get_player(connection.protocol, player)
             value = not player.killing
@@ -431,18 +738,22 @@ else:
             connection.protocol.irc_say('* %s %s killing for %s' %
                                         (connection.name,
                                          ['disabled', 'enabled'][int(value)], player.name))
-            return
-        value = not connection.protocol.killing
-        connection.protocol.killing = value
-        on_off = ['OFF', 'ON'][int(value)]
-        connection.protocol.send_chat('Killing has been toggled %s!' % on_off)
-        connection.protocol.irc_say(
-            '* %s toggled killing %s' % (connection.name,
-                                         on_off))
+        else:
+            value = not connection.protocol.killing
+            connection.protocol.killing = value
+            on_off = ['OFF', 'ON'][int(value)]
+            connection.protocol.send_chat('Killing has been toggled %s!' % on_off)
+            connection.protocol.irc_say(
+                '* %s toggled killing %s' % (connection.name,
+                                             on_off))
 
-    @name('toggleteamkill')
     @admin
+    @command('toggleteamkill', 'ttk')
     def toggle_teamkill(connection):
+        """
+        Toggle teamkilling
+        /toggleteamkill
+        """
         value = not connection.protocol.friendly_fire
         connection.protocol.friendly_fire = value
         on_off = ['OFF', 'ON'][int(value)]
@@ -452,7 +763,12 @@ else:
             connection.name, on_off))
 
     @admin
+    @command()
     def mute(connection, value):
+        """
+        Mute a player
+        /mute <player>
+        """
         player = get_player(connection.protocol, value)
         if player.mute:
             return '%s is already muted' % player.name
@@ -461,7 +777,12 @@ else:
         connection.protocol.send_chat(message, irc=True)
 
     @admin
+    @command()
     def unmute(connection, value):
+        """
+        Unmute a player
+        /unmute <player>
+        """
         player = get_player(connection.protocol, value)
         if not player.mute:
             return '%s is not muted' % player.name
@@ -469,7 +790,12 @@ else:
         message = '%s has been unmuted by %s' % (player.name, connection.name)
         connection.protocol.send_chat(message, irc=True)
 
+    @command()
     def deaf(connection, value=None):
+        """
+        No longer recieve chat messages
+        /deaf [player]
+        """
         if value is not None:
             if not connection.admin and not connection.rights.deaf:
                 return 'No administrator rights!'
@@ -484,18 +810,34 @@ else:
             connection.send_chat(message)
             connection.deaf = True
 
-    @name('globalchat')
     @admin
-    def global_chat(connection):
-        connection.protocol.global_chat = not connection.protocol.global_chat
+    @command('globalchat')
+    def global_chat(connection, value=None):
+        """
+        Enable or disable global chat
+        /globalchat [on|off]
+        """
+        enabled = get_truthy(value)
+        if enabled is True:
+            connection.protocol.global_chat = True
+        elif enabled is False:
+            connection.protocol.global_chat = False
+        else:
+            connection.protocol.global_chat = not connection.protocol.global_chat
+
         connection.protocol.send_chat(
             'Global chat %s' % (
                 'enabled' if connection.protocol.global_chat else 'disabled'),
             irc=True)
 
-    @alias('tp')
     @admin
+    @command('teleport', 'tp')
     def teleport(connection, player1, player2=None, silent=False):
+        """
+        Teleport a player to another player
+        /teleport [player] <target player>
+        """
+        # TODO: refactor this
         player1 = get_player(connection.protocol, player1)
         if player2 is not None:
             if connection.admin or connection.rights.teleport_other:
@@ -523,7 +865,21 @@ else:
             connection.protocol.send_chat(message, irc=True)
 
     @admin
+    @command('tpsilent', 'tps')
+    def tpsilent(connection, player1, player2=None):
+        """
+        Silently teleport a player to another player
+        /tpsilent [player] <target player>
+        """
+        teleport(connection, player1, player2, silent=True)
+
+    @admin
+    @command()
     def unstick(connection, player=None):
+        """
+        Unstick yourself or another player
+        /unstick [player]
+        """
         if player is not None:
             player = get_player(connection.protocol, player)
         else:
@@ -532,27 +888,35 @@ else:
                                       (connection.name, player.name), irc=True)
         player.set_location_safe(player.get_location())
 
-    @alias('tps')
     @admin
-    def tpsilent(connection, player1, player2=None):
-        teleport(connection, player1, player2, silent=True)
-
-    @name('goto')
-    @admin
+    @command('goto')
     def go_to(connection, value):
+        """
+        Go to a specified sector
+        /goto <sector>
+        """
         if connection not in connection.protocol.players:
             raise KeyError()
         move(connection, connection.name, value, silent=connection.invisible)
 
-    @name('gotos')
     @admin
+    @command('gotos')
     def go_to_silent(connection, value):
+        """
+        Silently go to a specified sector
+        /gotos <sector>
+        """
         if connection not in connection.protocol.players:
             raise KeyError()
         move(connection, connection.name, value, True)
 
     @admin
+    @command()
     def move(connection, player, value, silent=False):
+        """
+        Go to a specified sector
+        /move <player> <sector>
+        """
         player = get_player(connection.protocol, player)
         x, y = coordinates(value)
         x += 32
@@ -573,20 +937,29 @@ else:
             connection.protocol.send_chat(message, irc=True)
 
     @admin
-    def where(connection, value=None):
-        if value is not None:
-            connection = get_player(connection.protocol, value)
+    @command()
+    def where(connection, player=None):
+        """
+        Find the location of a player
+        /where [player]
+        """
+        if player is not None:
+            connection = get_player(connection.protocol, player)
         elif connection not in connection.protocol.players:
             raise ValueError()
         x, y, z = connection.get_location()
         return '%s is in %s (%s, %s, %s)' % (connection.name,
                                              to_coordinates(x, y), int(x), int(y), int(z))
 
-    @alias('gods')
     @admin
-    def godsilent(connection, value=None):
-        if value is not None:
-            connection = get_player(connection.protocol, value)
+    @command('godsilent', 'gods')
+    def godsilent(connection, player=None):
+        """
+        Silently go into god mode
+        /godsilent [player]
+        """
+        if player is not None:
+            connection = get_player(connection.protocol, player)
         elif connection not in connection.protocol.players:
             raise ValueError()
         connection.god = not connection.god
@@ -594,20 +967,30 @@ else:
             connection.god_build = connection.god
         else:
             connection.god_build = False
+        #TODO: Return different message if other player is put into god mode
         return 'You have entered god mode.'
 
     @admin
-    def god(connection, value=None):
-        godsilent(connection, value)
+    @command()
+    def god(connection, player=None):
+        """
+        Go into god mode
+        /god [player]
+        """
+        godsilent(connection, player)
         if connection.god:
             message = '%s entered GOD MODE!' % connection.name
         else:
             message = '%s returned to being a mere human' % connection.name
         connection.protocol.send_chat(message, irc=True)
 
-    @name('godbuild')
     @admin
+    @command('godbuild')
     def god_build(connection, player=None):
+        """
+        Enable placing god blocks
+        /godbuild [player]
+        """
         protocol = connection.protocol
         if player is not None:
             player = get_player(protocol, player)
@@ -627,7 +1010,12 @@ else:
         protocol.irc_say('* %s is %s' % (player.name, message))
 
     @admin
+    @command()
     def fly(connection, player=None):
+        """
+        Enable flight
+        /fly [player]
+        """
         protocol = connection.protocol
         if player is not None:
             player = get_player(protocol, player)
@@ -643,10 +1031,13 @@ else:
             connection.send_chat('%s is %s' % (player.name, message))
         protocol.irc_say('* %s is %s' % (player.name, message))
 
-    @alias('invis')
-    @alias('inv')
     @admin
+    @command('invisible', 'invis', 'inv')
     def invisible(connection, player=None):
+        """
+        Turn invisible
+        /invisible [player]
+        """
         protocol = connection.protocol
         if player is not None:
             player = get_player(protocol, player)
@@ -654,6 +1045,7 @@ else:
             player = connection
         else:
             raise ValueError()
+        # TODO: move this logic to a more suitable place
         player.invisible = not player.invisible
         player.filter_visibility_data = player.invisible
         player.god = player.invisible
@@ -706,7 +1098,12 @@ else:
                 return '%s is now visible' % player.name
 
     @admin
+    @command()
     def ip(connection, value=None):
+        """
+        Get the IP of a user
+        /ip [player]
+        """
         if value is None:
             if connection not in connection.protocol.players:
                 raise ValueError()
@@ -715,9 +1112,13 @@ else:
             player = get_player(connection.protocol, value)
         return 'The IP of %s is %s' % (player.name, player.address[0])
 
-    @name('whowas')
     @admin
+    @command("whowas")
     def who_was(connection, value):
+        """
+        Get the IP of a user who has left
+        /whowas <player>
+        """
         value = value.lower()
         ret = None
         exact_match = False
@@ -729,12 +1130,16 @@ else:
             elif not exact_match and name_lower.count(value):
                 ret = (name, ip)
         if ret is None:
-            raise InvalidPlayer()
+            raise CommandError("Invalid Player")
         return "%s's most recent IP was %s" % ret
 
-    @name('resetgame')
     @admin
+    @command("resetgame")
     def reset_game(connection):
+        """
+        reset the game
+        /resetgame
+        """
         resetting_player = connection
         # irc compatibility
         if resetting_player not in connection.protocol.players:
@@ -750,9 +1155,13 @@ else:
             'Game has been reset by %s' % connection.name,
             irc=True)
 
-    @name('map')
     @admin
+    @command('map')
     def change_planned_map(connection, *pre_maps):
+        """
+        set the next map
+        /map <mapname>
+        """
         name = connection.name
         protocol = connection.protocol
 
@@ -769,8 +1178,8 @@ else:
         except MapNotFound:
             return 'Map %s not found' % (maps[0])
 
-    @name('rotation')
     @admin
+    @command('rotation')
     def change_rotation(connection, *pre_maps):
         name = connection.name
         protocol = connection.protocol
@@ -785,8 +1194,8 @@ else:
         protocol.send_chat("%s changed map rotation to %s." %
                            (name, map_list), irc=True)
 
-    @name('rotationadd')
     @admin
+    @command('rotationadd')
     def rotation_add(connection, *pre_maps):
         name = connection.name
         protocol = connection.protocol
@@ -803,34 +1212,36 @@ else:
         protocol.send_chat("%s added %s to map rotation." %
                            (name, " ".join(pre_maps)), irc=True)
 
-    @name('showrotation')
+    @command('showrotation')
     def show_rotation(connection):
         return ", ".join(connection.protocol.get_map_rotation())
 
-    @name('revertrotation')
     @admin
+    @command('revertrotation')
     def revert_rotation(connection):
         protocol = connection.protocol
         maps = protocol.config['maps']
         protocol.set_map_rotation(maps, False)
         protocol.irc_say("* %s reverted map rotation to %s" % (name, maps))
 
+    @command()
     def mapname(connection):
         return 'Current map: ' + connection.protocol.map_info.name
 
     @admin
+    @command('advancemap')
     def advance(connection):
         connection.protocol.advance_rotation('Map advance forced.')
 
-    @name('timelimit')
     @admin
+    @command('timelimit')
     def set_time_limit(connection, value):
         value = float(value)
         protocol = connection.protocol
         protocol.set_time_limit(value)
         protocol.send_chat('Time limit set to %s' % value, irc=True)
 
-    @name('time')
+    @command('time')
     def get_time_limit(connection):
         advance_call = connection.protocol.advance_call
         if advance_call is None:
@@ -839,8 +1250,8 @@ else:
             math.ceil((advance_call.getTime() - reactor.seconds()) / 60.0))
         return 'There are %s minutes left' % left
 
-    @name('servername')
     @admin
+    @command('servername')
     def server_name(connection, *arg):
         name = join_arguments(arg)
         protocol = connection.protocol
@@ -852,8 +1263,8 @@ else:
         if connection in connection.protocol.players:
             return message
 
-    @name('master')
     @admin
+    @command('togglemaster', 'master')
     def toggle_master(connection):
         protocol = connection.protocol
         protocol.set_master_state(not protocol.master)
@@ -863,6 +1274,7 @@ else:
         if connection in connection.protocol.players:
             return "You " + message
 
+    @command()
     def ping(connection, value=None):
         if value is None:
             if connection not in connection.protocol.players:
@@ -875,6 +1287,7 @@ else:
             return 'Your ping is %s ms. Lower ping is better!' % ping
         return "%s's ping is %s ms" % (player.name, ping)
 
+    @command()
     def intel(connection):
         if connection not in connection.protocol.players:
             raise KeyError()
@@ -886,10 +1299,11 @@ else:
                 return "%s has the enemy intel!" % flag.player.name
         return "Nobody in your team has the enemy intel"
 
+    @command()
     def version(connection):
         return 'Server version is "%s"' % connection.protocol.server_version
 
-    @name('server')
+    @command('server')
     def server_info(connection):
         protocol = connection.protocol
         msg = 'You are playing on "%s"' % protocol.name
@@ -897,17 +1311,20 @@ else:
             msg += ' at %s' % protocol.identifier
         return msg
 
+    @command()
     def scripts(connection):
         scripts = connection.protocol.config.get('scripts', [])
         return 'Scripts enabled: %s' % (', '.join(scripts))
 
     @admin
+    @command()
     def fog(connection, r, g, b):
         r = int(r)
         g = int(g)
         b = int(b)
         connection.protocol.set_fog_color((r, g, b))
 
+    @command()
     def weapon(connection, value):
         player = get_player(connection.protocol, value)
         if player.weapon_object is None:
@@ -916,97 +1333,17 @@ else:
             name = player.weapon_object.name
         return '%s has a %s' % (player.name, name)
 
-    command_list = [
-        help_command,
-        pm,
-        to_admin,
-        login,
-        kick,
-        intel,
-        ip,
-        who_was,
-        fog,
-        ban,
-        hban,
-        dban,
-        wban,
-        banip,
-        unban,
-        undo_ban,
-        mute,
-        unmute,
-        deaf,
-        global_chat,
-        say,
-        kill,
-        heal,
-        lock,
-        unlock,
-        switch,
-        set_balance,
-        rules,
-        toggle_build,
-        toggle_kill,
-        toggle_teamkill,
-        teleport,
-        tpsilent,
-        go_to,
-        go_to_silent,
-        move,
-        unstick,
-        where,
-        god,
-        godsilent,
-        god_build,
-        fly,
-        invisible,
-        streak,
-        reset_game,
-        toggle_master,
-        change_planned_map,
-        change_rotation,
-        revert_rotation,
-        show_rotation,
-        rotation_add,
-        advance,
-        set_time_limit,
-        get_time_limit,
-        server_name,
-        ping,
-        version,
-        server_info,
-        scripts,
-        weapon,
-        mapname
-    ]
-
-    def add(func, name=None):
-        """
-        Function to add a command from scripts
-        """
-        if name is None:
-            name = func.__name__
-        name = name.lower()
-        if not hasattr(func, 'argspec'):
-            func.argspec = inspect.getargspec(func)
-        add_rights(name, *getattr(func, 'user_types', ()))
-        commands[name] = func
-        try:
-            for alias in func.aliases:
-                aliases[alias.lower()] = name
-        except AttributeError:
-            pass
-
-    for command_func in command_list:
-        add(command_func)
-
     # optional commands
     try:
         import pygeoip
         database = pygeoip.GeoIP(os.path.join(
             cfg.config_dir, 'data/GeoLiteCity.dat'))
-
-        @name('from')
+    except ImportError:
+        print("('from' command disabled - missing pygeoip)")
+    except (IOError, OSError):
+        print("('from' command disabled - missing data/GeoLiteCity.dat)")
+    finally:
+        @command('from')
         def where_from(connection, value=None):
             if value is None:
                 if connection not in connection.protocol.players:
@@ -1029,52 +1366,51 @@ else:
                     continue
                 except ValueError:
                     pass
-                # TODO: fix weird type check here
-                if type(value) is not type(''):  # pylint: disable=unidiomatic-typecheck
+
+                if not isinstance(value, str):
                     continue
                 items.append(value)
             return '%s is from %s' % (player.name, ', '.join(items))
         add(where_from)
-    except ImportError:
-        print("('from' command disabled - missing pygeoip)")
-    except (IOError, OSError):
-        print("('from' command disabled - missing data/GeoLiteCity.dat)")
 
     def handle_command(connection, command, parameters):
         command = command.lower()
         try:
-            command = aliases[command]
+            command_func = _commands[command]
         except KeyError:
-            pass
-        try:
-            command_func = commands[command]
-        except KeyError:
-            return  # 'Invalid command'
-        argspec = command_func.argspec
+            return 'Unknown command'
+
+        if not has_permission(command_func, connection):
+            return "You can't use this command"
+
+        argspec = inspect.getargspec(command_func)
         min_params = len(argspec.args) - 1 - len(argspec.defaults or ())
         max_params = len(argspec.args) - 1 if argspec.varargs is None else None
         len_params = len(parameters)
-        msg = None
+
         if (len_params < min_params
                 or max_params is not None and len_params > max_params):
-            return 'Invalid number of arguments for %s' % command
+            return format_command_error(command_func, 'Invalid number of arguments')
+
+        msg = None
+
         try:
-            if not has_rights(command_func, connection):
-                return "You can't use this command"
             return command_func(connection, *parameters)
+        # TODO: remove all of this catching. Commands should deal with invalid
+        # parameters themselves. Instead, we should catch ALL Exceptions and
+        # make an attempt at displaying them nicely in format_command_error
         except KeyError:
             msg = None  # 'Invalid command'
         except TypeError as t:
             print('Command', command, 'failed with args:', parameters)
             traceback.print_exc(t)
             msg = 'Command failed'
-        except InvalidPlayer:
-            msg = 'No such player'
-        except InvalidTeam:
-            msg = 'Invalid team specifier'
+        except CommandError as e:
+            msg = e.message
         except ValueError:
             msg = 'Invalid parameters'
-        return msg
+
+        return format_command_error(command_func, msg)
 
     def handle_input(connection, user_input):
         # for IRC and console
