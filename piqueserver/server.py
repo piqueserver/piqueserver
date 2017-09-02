@@ -76,24 +76,6 @@ DEFAULT_PASSWORDS = {
 PORT = 32887
 
 
-def get_git_rev():
-    if not os.path.exists(".git"):
-        return 'snapshot'
-
-    from distutils.spawn import find_executable
-    if find_executable("git") is None:
-        return 'gitless'
-
-    import subprocess
-    pipe = subprocess.Popen(
-        ["git", "rev-parse", "HEAD"],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    ret = pipe.stdout.read()[:40]
-    if not ret:
-        return 'unknown'
-    return ret
-
-
 def create_path(path):
     if path:
         try:
@@ -101,10 +83,8 @@ def create_path(path):
         except OSError:
             pass
 
-
 def create_filename_path(path):
     create_path(os.path.dirname(path))
-
 
 def open_create(filename, mode):
     create_filename_path(filename)
@@ -113,7 +93,6 @@ def open_create(filename, mode):
 def random_choice_cycle(choices):
     while True:
         yield random.choice(choices)
-
 
 class FeatureTeam(Team):
     locked = False
