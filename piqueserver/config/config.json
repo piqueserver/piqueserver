@@ -105,7 +105,7 @@
         "port" : 32885
     },
     "ban_subscribe" : {
-        "enabled" : true,
+        "enabled" : false,
         "urls" : [
             ["http://www.blacklist.spadille.net/subscribe.json", []]
         ]
@@ -123,17 +123,17 @@
         "chatprefix" : "."
     },
     "scripts" : [
-        "rollback",
-        "protect",
-        "map_extensions",
-        "disco",
-        "votekick",
-        "trusted",
-        "ratio",
-        "passreload",
-        "blockinfo",
-        "fbpatch",
-        "afk"
+        "piqueserver.scripts.rollback",
+        "piqueserver.scripts.protect",
+        "piqueserver.scripts.map_extensions",
+        "piqueserver.scripts.disco",
+        "piqueserver.scripts.votekick",
+        "piqueserver.scripts.trusted",
+        "piqueserver.scripts.ratio",
+        "piqueserver.scripts.passreload",
+        "piqueserver.scripts.blockinfo",
+        "piqueserver.scripts.fbpatch",
+        "piqueserver.scripts.afk"
     ],
 
     "squad_respawn_time" : 32,
