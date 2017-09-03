@@ -1,9 +1,19 @@
 
 <img src="doc/logo.png" align="right" width="200px" alt="logo">
 
-# piqueserver [![Build Status](https://travis-ci.org/piqueserver/piqueserver.svg?branch=master)](https://travis-ci.org/piqueserver/piqueserver) [![Join the chat at https://gitter.im/piqueserver/piqueserver](https://badges.gitter.im/piqueserver/piqueserver.svg)](https://gitter.im/piqueserver/piqueserver?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# piqueserver [![Build Status](https://travis-ci.org/piqueserver/piqueserver.svg?branch=master)](https://travis-ci.org/piqueserver/piqueserver)
 
 An Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/PySnip).
+
+Gitter: [![Join the chat at https://gitter.im/piqueserver/piqueserver](https://badges.gitter.im/piqueserver/piqueserver.svg)](https://gitter.im/piqueserver/piqueserver?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+Matrix: `#piqueserver:matrix.org` [Riot Webchat link](https://riot.im/app/#/room/#piqueserver:matrix.org)
+
+Slack: Message us for an invite!
+
+IRC: Coming soon
+
+All of these are bridged together!
 
 ## :rocket: Installation
 
