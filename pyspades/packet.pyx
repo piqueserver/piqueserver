@@ -78,3 +78,23 @@ def load_client_packet(data):
 cdef inline Loader load_contained_packet(ByteReader data, dict table):
     type_ = data.readByte(True)
     return table[type_](data)
+
+_packet_handlers = {}
+
+def register_packet_handler(loader):
+    def handler_wrapper(function):
+        _packet_handlers[loader.id] = function
+        return function
+    return handler_wrapper
+
+def call_packet_handler(self, loader):
+    contained = load_client_packet(ByteReader(loader.data))
+    try:
+        handler = _packet_handlers[contained.id]
+    except KeyError:
+        # an invalid ID was sent
+        pass
+    finally:
+        # we call the handler in the finally clause so we don't
+        # accidentally ignore KeyErrors the handler raises
+        handler(self, contained)

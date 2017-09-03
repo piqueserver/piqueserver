@@ -38,17 +38,20 @@ else:
 
     from twisted.internet import reactor
 
-    from pyspades.contained import KillAction
-    from pyspades.server import (
-        create_player, set_tool, set_color, input_data,
-        weapon_input)
+    from pyspades.contained import KillAction, InputData, SetColor, WeaponInput
+    from pyspades.player import create_player, set_tool, parse_command
     from pyspades.constants import (GRENADE_KILL, FALL_KILL, NETWORK_FPS)
     from pyspades.common import (
         prettify_timespan, coordinates, to_coordinates,
         make_color)
-    from pyspades.server import parse_command
     from piqueserver.map import check_rotation, MapNotFound
     from piqueserver import cfg
+
+    # aparently, we need to send packets in this file. For now, I give in.
+    kill_action = KillAction()
+    input_data = InputData()
+    set_color = SetColor()
+    weapon_input = WeaponInput()
 
     _commands = {}
     _alias_map = {}
