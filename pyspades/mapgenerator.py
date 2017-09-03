@@ -23,7 +23,7 @@ class ProgressiveMapGenerator(object):
         generator = self.generator
         if len(data) < size and generator is not None:
             while 1:
-                map_data = generator.get_data(1024)
+                map_data = generator.get_data(size)
                 if generator.done:
                     self.generator = None
                     data += self.compressor.flush()

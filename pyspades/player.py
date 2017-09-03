@@ -1053,7 +1053,7 @@ class ServerConnection(BaseConnection):
         for _ in range(10):
             if not self.map_data.data_left():
                 break
-            map_data.data = self.map_data.read(1024)
+            map_data.data = self.map_data.read(8192)
             self.send_contained(map_data)
 
     def continue_map_transfer(self):
