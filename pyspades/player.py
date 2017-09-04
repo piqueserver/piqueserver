@@ -38,6 +38,8 @@ ctf_data = loaders.CTFState()
 tc_data = loaders.TCState()
 change_weapon = loaders.ChangeWeapon()
 weapon_reload = loaders.WeaponReload()
+handshake_init = loaders.HandShakeInit()
+version_request = loaders.VersionRequest()
 
 
 def check_nan(*values):
@@ -116,6 +118,7 @@ class ServerConnection(BaseConnection):
         self.address = (address.host, address.port)
         self.respawn_time = protocol.respawn_time
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
+        self.client_info = {}
 
     def on_connect(self):
         if self.local:
@@ -590,6 +593,16 @@ class ServerConnection(BaseConnection):
         team = ret or team
         self.set_team(team)
 
+    @register_packet_handler(loaders.HandShakeReturn)
+    def on_handshake_recieved(self, contained):
+        self.protocol.send_contained(version_request)
+
+    @register_packet_handler(loaders.VersionResponse)
+    def on_version_info_recieved(self, contained):
+        self.client_info["client"] = contained.client
+        self.client_info["version"] = contained.version
+        self.client_info["os_info"] = contained.os_info
+
     def is_valid_position(self, x, y, z, distance=None):
         if not self.speedhack_detect:
             return True
@@ -724,6 +737,9 @@ class ServerConnection(BaseConnection):
             self.protocol.send_contained(create_player, save=True)
         if not spectator:
             self.on_spawn((x, y, z))
+
+        if not self.client_info:
+            self.protocol.send_contained(handshake_init)
 
     def take_flag(self):
         if not self.hp:

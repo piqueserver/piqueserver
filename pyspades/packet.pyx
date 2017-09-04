@@ -53,7 +53,11 @@ CONTAINED_LIST = [
     contained.FogColor,
     contained.WeaponReload,
     contained.ChangeTeam,
-    contained.ChangeWeapon
+    contained.ChangeWeapon,
+    contained.HandShakeInit,
+    contained.HandShakeReturn,
+    contained.VersionRequest,
+    contained.VersionResponse,
 ]
 
 CONTAINED_LOADERS = {}
