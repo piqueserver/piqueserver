@@ -36,7 +36,7 @@ import os
 
 PKG_NAME="piqueserver"
 PKG_URL="https://github.com/piqueserver/piqueserver"
-PKG_DOWNLOAD_URL="https://github.com/piqueserver/piqueserver/archive/master.tar.gz"
+PKG_DOWNLOAD_URL="https://github.com/piqueserver/piqueserver/archive/0.1.0.zip"
 
 extra_args = sys.argv[2:]
 
@@ -100,9 +100,9 @@ class build_ext(_build_ext):
 setup(
     name = PKG_NAME,
     packages = [PKG_NAME, '%s.web' % PKG_NAME, 'pyspades'],
-    version = '0.0.1',
+    version = '0.1.0',
     description = 'Open-Source server implementation for Ace of Spades',
-    author = 'MatPow2, StackOverflow, piqueserver authors',
+    author = 'Originally MatPow2 and PySnip contributors, now, StackOverflow and piqueserver authors',
     author_email = 'nate.shoffner@gmail.com',
     maintainer = 'noway421',
     maintainer_email = 'noway@2ch.hk',
