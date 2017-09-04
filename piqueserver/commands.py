@@ -151,8 +151,6 @@ else:
         return decorator
 
     def has_permission(f, connection):
-        print(f.command_name, "in", connection.rights)
-
         if not f.user_types:
             return True
         elif f.command_name in connection.rights:
