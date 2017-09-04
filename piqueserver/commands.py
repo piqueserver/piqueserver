@@ -541,8 +541,8 @@ else:
             connection.send_lines(connection.protocol.help)
         else:
 
-            names = [command.__name__ for command in command_list
-                     if command.__name__ in connection.rights]
+            names = [command.command_name for command in _commands.values()
+                     if has_permission(command, connection)]
 
             return 'Available commands: %s' % (', '.join(names))
 
@@ -1336,6 +1336,23 @@ else:
             name = player.weapon_object.name
         return '%s has a %s' % (player.name, name)
 
+    @command("client", "cli")
+    def client(connection, target):
+        player = get_player(connection.protocol, target)
+
+        info = player.client_info
+        version = info.get("version", None)
+        if version:
+            version_string = ".".join(map(str, version))
+        else:
+            version_string = "Unknown"
+        return "{} is connected with {} ({}) on {}".format(
+            player.name,
+            info.get("client", "Unknown"),
+            version_string,
+            info.get("os_info", "Unknown")
+        )
+
     # optional commands
     try:
         import pygeoip
@@ -1379,7 +1396,8 @@ else:
     def handle_command(connection, command, parameters):
         command = command.lower()
         try:
-            command_func = _commands[command]
+            command_name = _alias_map.get(command, command)
+            command_func = _commands[command_name]
         except KeyError:
             return 'Unknown command'
 
