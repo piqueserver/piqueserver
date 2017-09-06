@@ -24,7 +24,7 @@ import enet
 from pyspades.protocol import BaseProtocol
 from pyspades.constants import (
     CTF_MODE, TC_MODE, GAME_VERSION, MIN_TERRITORY_COUNT, MAX_TERRITORY_COUNT,
-    UPDATE_FREQUENCY, UPDATE_FPS, NETWORK_FPS, SPECIAL_MESSAGE_PREFIXES)
+    UPDATE_FREQUENCY, UPDATE_FPS, NETWORK_FPS)
 from pyspades.types import MultikeyDict, IDPool
 from pyspades.master import get_master_connection
 #from pyspades.debug import *
@@ -324,14 +324,8 @@ class ServerProtocol(BaseProtocol):
             if moved or self.on_update_entity(entity):
                 entity.update()
 
-    def send_chat(self, message, global_message=None, sender=None,
-                  team=None, special=None):
-        if special:
-            message = SPECIAL_MESSAGE_PREFIXES[special] + message
-
-            global_message = None
-            sender = None
-
+    def broadcast_chat(self, message, global_message=None, sender=None,
+                       team=None):
         for player in self.players.values():
             if player is sender:
                 continue
@@ -340,6 +334,42 @@ class ServerProtocol(BaseProtocol):
             if team is not None and player.team is not team:
                 continue
             player.send_chat(message, global_message)
+
+    # backwards compatability
+    send_chat = broadcast_chat
+
+    def broadcast_chat_warning(self, message, team=None):
+        """
+        Send a warning message. This gets displayed
+        as a yellow popup with sound for OpenSpades
+        clients
+        """
+        self.send_chat(self, "%% " + str(message), team=team)
+
+    def broadcast_chat_notice(self, message, team=None):
+        """
+        Send a warning message. This gets displayed
+        as a popup for OpenSpades
+        clients
+        """
+        self.send_chat(self, "N% " + str(message), team=team)
+
+    def broadcast_chat_error(self, message, team=None):
+        """
+        Send a warning message. This gets displayed
+        as a red popup with sound for OpenSpades
+        clients
+        """
+        self.send_chat(self, "!% " + str(message), team=team)
+
+    def broadcast_chat_status(self, message, team=None):
+        """
+        Send a warning message. This gets displayed
+        as a red popup with sound for OpenSpades
+        clients
+        """
+        self.send_chat(self, "C% " + str(message), team=team)
+
 
     def set_fog_color(self, color):
         self.fog_color = color

@@ -52,8 +52,7 @@ import pyspades.debug
 from pyspades.server import (ServerProtocol, Team)
 from pyspades.web import getPage
 from pyspades.common import encode
-from pyspades.constants import (CTF_MODE, TC_MODE, SPECIAL_ERROR,
-                                SPECIAL_NOTICE, SPECIAL_WARNING)
+from pyspades.constants import (CTF_MODE, TC_MODE)
 from pyspades.master import MAX_SERVER_NAME_SIZE, get_external_ip
 from pyspades.tools import make_server_identifier
 from pyspades.bytes import NoDataLeft
@@ -584,38 +583,17 @@ class FeatureProtocol(ServerProtocol):
         reactor.callLater(self.tip_frequency * 60, self.send_tip)
 
     # pylint: disable=arguments-differ
-    def send_chat(self, value, global_message=True, sender=None,
+    def broadcast_chat(self, value, global_message=True, sender=None,
                   team=None, irc=False):
         """
-        Send a chat message to the player.
+        Send a chat message to many users
         """
         if irc:
             self.irc_say('* %s' % value)
         ServerProtocol.send_chat(self, value, global_message, sender, team)
 
-    def send_chat_warning(self, message, team=None):
-        """
-        Send a warning message. This gets displayed
-        as a yellow popup with sound for OpenSpades
-        clients
-        """
-        ServerProtocol.send_chat(self, message, team=team, special=SPECIAL_WARNING)
-
-    def send_chat_notice(self, message, team=None):
-        """
-        Send a warning message. This gets displayed
-        as a popup for OpenSpades
-        clients
-        """
-        ServerProtocol.send_chat(self, message, team=team, special=SPECIAL_NOTICE)
-
-    def send_chat_error(self, message, team=None):
-        """
-        Send a warning message. This gets displayed
-        as a red popup with sound for OpenSpades
-        clients
-        """
-        ServerProtocol.send_chat(self, message, team=team, special=SPECIAL_ERROR)
+    # backwards compatability
+    send_chat = broadcast_chat
 
     # log high CPU usage
 

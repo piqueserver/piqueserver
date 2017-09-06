@@ -1078,10 +1078,10 @@ class ServerConnection(BaseConnection):
     def send_data(self, data):
         self.protocol.transport.write(data, self.address)
 
-    def send_chat(self, value, global_message=None):
+    def send_chat(self, value, global_message=False):
         if self.deaf:
             return
-        if global_message is None:
+        if not global_message:
             chat_message.chat_type = CHAT_SYSTEM
             prefix = ''
         else:
@@ -1095,6 +1095,34 @@ class ServerConnection(BaseConnection):
         for line in lines:
             chat_message.value = '%s%s' % (prefix, line)
             self.send_contained(chat_message)
+
+    def send_chat_warning(self, message):
+        """
+        Send a warning message. This gets displayed as a yellow popup
+        with sound for OpenSpades clients
+        """
+        self.send_chat("%% " + str(message))
+
+    def send_chat_notice(self, message):
+        """
+        Send a notice. This gets displayed as a popup for OpenSpades
+        clients
+        """
+        self.send_chat("N% " + str(message))
+
+    def send_chat_error(self, message):
+        """
+        Send a error message. This gets displayed as a red popup with
+        sound for OpenSpades clients
+        """
+        self.send_chat("!% " + str(message))
+
+    def send_chat_status(self, message):
+        """
+        Send a status message. This gets displayed in the center of the
+        screen for OpenSpades clients
+        """
+        self.send_chat("C% " + str(message))
 
     # events/hooks
 
