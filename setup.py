@@ -82,6 +82,14 @@ for name in names:
     if name in ['pyspades.vxl', 'pyspades.world', 'pyspades.mapmaker']:
         extra["extra_compile_args"] = ['-std=c++11']
 
+        if sys.platform == "win32":
+            # Python aparently redifines hypot to _hypot. This fixes that.
+            extra["extra_compile_args"].extend(['-include', 'cmath'])
+
+    if sys.platform == "win32":
+        # nobody is using 32-bit in 2017. right? right? please
+        extra["define_macros"] = [("MS_WIN64", None)]
+
     ext_modules.append(Extension(name, ['./%s.pyx' % name.replace('.', '/')],
         language = 'c++', include_dirs=['./pyspades'], **extra))
 
@@ -99,8 +107,8 @@ class build_ext(_build_ext):
 
 setup(
     name = PKG_NAME,
-    packages = [PKG_NAME, '%s.web' % PKG_NAME, 'pyspades'],
-    version = '0.1.0',
+    packages = [PKG_NAME, '%s.web' % PKG_NAME, '%s.scripts' % PKG_NAME, 'pyspades'],
+    version = '0.1.0_post1',
     description = 'Open-Source server implementation for Ace of Spades',
     author = 'Originally MatPow2 and PySnip contributors, now, StackOverflow and piqueserver authors',
     author_email = 'nate.shoffner@gmail.com',
@@ -143,7 +151,12 @@ setup(
             '%s=%s.run:main' % (PKG_NAME, PKG_NAME)
         ],
     },
-    package_dir = {PKG_NAME: 'piqueserver', '%s.web' % PKG_NAME: 'piqueserver/web', 'pyspades': 'pyspades'}, # some kind of find_packages?
+    package_dir = {
+        PKG_NAME: 'piqueserver',
+        '%s.web' % PKG_NAME: 'piqueserver/web',
+        '%s.scripts' % PKG_NAME: 'piqueserver/scripts',
+        'pyspades': 'pyspades',
+    }, # some kind of find_packages?
     package_data = {"%s.web" % PKG_NAME: ["templates/status.html"]},
     include_package_data=True,
 
