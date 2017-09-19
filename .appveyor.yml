@@ -1,0 +1,9 @@
+version: 1.0.{build}
+platform:
+- x64
+install:
+- ps: pip install -r requirements.txt
+build_script:
+- ps: python setup.py install -cmingw32
+test: off
+deploy: off
