@@ -23,7 +23,6 @@ RUN apk add --no-cache --virtual .build-deps-cython gcc musl-dev \
 # but a change in .pyx or .c file will.
 # TODO: while this behaviour suits production envs perfectly, make a dev env option
 COPY pyspades/ /usr/src/app/pyspades/
-COPY enet/ /usr/src/app/enet/
 COPY piqueserver/ /usr/src/app/piqueserver/
 COPY setup.py COPYING.txt CREDITS.txt LICENSE /usr/src/app/
 
