@@ -5,7 +5,7 @@ Author: TheGrandmaster
 Maintainer: mat^2
 """
 
-from commands import get_player, add
+from piqueserver.commands import command, get_player
 from pyspades.constants import *
 
 # True if you want to include the headshot-death ratio in the ratio
@@ -19,7 +19,7 @@ EXTENDED_RATIO = False
 RATIO_ON_VOTEKICK = True
 IRC_ONLY = False
 
-
+@command()
 def ratio(connection, user=None):
     msg = "You have"
     if user != None:
@@ -46,9 +46,6 @@ def ratio(connection, user=None):
             headshotkills, meleekills, grenadekills)
     msg += ")."
     return msg
-
-add(ratio)
-
 
 def apply_script(protocol, connection, config):
     class RatioConnection(connection):

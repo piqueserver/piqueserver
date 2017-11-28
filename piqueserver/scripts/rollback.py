@@ -10,7 +10,7 @@ from pyspades.contained import BlockAction, SetColor
 from pyspades.constants import *
 from pyspades.common import coordinates, make_color
 from piqueserver.map import Map, MapNotFound, check_rotation
-from piqueserver.commands import add, admin
+from piqueserver.commands import command, admin
 import time
 import operator
 
@@ -28,8 +28,8 @@ S_ROLLBACK_TIME_TAKEN = 'Time taken: {seconds:.3}s'
 
 NON_SURFACE_COLOR = (0, 0, 0)
 
-
 @admin
+@command()
 def rollmap(connection, mapname=None, value=None):
     start_x, start_y, end_x, end_y = 0, 0, 512, 512
     if value is not None:
@@ -38,19 +38,15 @@ def rollmap(connection, mapname=None, value=None):
     return connection.protocol.start_rollback(connection, mapname,
                                               start_x, start_y, end_x, end_y)
 
-
 @admin
+@command()
 def rollback(connection, value=None):
     return rollmap(connection, value=value)
 
-
 @admin
+@command()
 def rollbackcancel(connection):
     return connection.protocol.cancel_rollback(connection)
-
-for func in (rollmap, rollback, rollbackcancel):
-    add(func)
-
 
 def apply_script(protocol, connection, config):
     rollback_on_game_end = config.get('rollback_on_game_end', False)

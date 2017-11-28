@@ -17,15 +17,14 @@ from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
 from pyspades.server import set_tool
 from pyspades.constants import *
-from piqueserver.commands import add, admin, get_player, name
+from piqueserver.commands import admin, get_player
 
 ALWAYS_RAPID = False
 RAPID_INTERVAL = 0.08
 RAPID_BLOCK_DELAY = 0.26
 
-
-@name('rapid')
 @admin
+@command('rapid')
 def toggle_rapid(connection, player=None):
     protocol = connection.protocol
     if player is not None:
@@ -58,9 +57,6 @@ def resend_tool(player):
         player.protocol.send_contained(set_tool)
     else:
         player.send_contained(set_tool)
-
-add(toggle_rapid)
-
 
 def apply_script(protocol, connection, config):
     class RapidConnection(connection):

@@ -21,7 +21,7 @@ from __future__ import print_function
 
 from twisted.internet.reactor import seconds
 from piqueserver.scheduler import Scheduler
-from piqueserver.commands import name, add, get_player, join_arguments, CommandError, admin, alias
+from piqueserver.commands import command, admin, get_player, join_arguments, CommandError
 
 REQUIRE_REASON = True
 
@@ -60,8 +60,7 @@ S_REASON = 'Reason: {reason}'
 class VotekickFailure(Exception):
     pass
 
-
-@name('votekick')
+@command('votekick')
 def start_votekick(connection, *args):
     protocol = connection.protocol
     if connection not in protocol.players:
@@ -92,7 +91,7 @@ def start_votekick(connection, *args):
         return str(err)
 
 
-@name('cancel')
+@command('cancel')
 def cancel_votekick(connection):
     protocol = connection.protocol
     votekick = protocol.votekick
@@ -107,7 +106,7 @@ def cancel_votekick(connection):
     votekick.end(S_RESULT_CANCELLED)
 
 
-@name('y')
+@command('y')
 def vote_yes(connection):
     protocol = connection.protocol
     if connection not in protocol.players:
@@ -121,7 +120,7 @@ def vote_yes(connection):
     votekick.vote(player)
 
 
-@alias('tvk')
+@command('tvk')
 @admin
 def togglevotekick(connection, *args):
     protocol = connection.protocol
@@ -135,12 +134,6 @@ def togglevotekick(connection, *args):
     player.votekick_enabled = not player.votekick_enabled
     return S_VOTEKICK_USER_SET.format(user=player.name,
                                       set=('enabled' if player.votekick_enabled else 'disabled'))
-
-add(start_votekick)
-add(cancel_votekick)
-add(vote_yes)
-add(togglevotekick)
-
 
 class Votekick(object):
     duration = 120.0  # 2 minutes

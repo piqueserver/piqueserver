@@ -8,19 +8,16 @@ from twisted.internet.task import LoopingCall
 from twisted.internet.reactor import callLater
 import random
 
-from piqueserver import commands
+from piqueserver.commands import command, admin
 
 DISCO_ON_GAME_END = True
 # Time is in seconds
 DISCO_ON_GAME_END_DURATION = 10.0
 
-
-@commands.name('disco')
-@commands.admin
+@admin
+@command('disco')
 def toggle_disco(connection):
     connection.protocol.toggle_disco(True)
-
-commands.add(toggle_disco)
 
 DISCO_COLORS = set([
     (235, 64, 0),
@@ -30,7 +27,6 @@ DISCO_COLORS = set([
     (216, 94, 231),
     (255, 255, 255)
 ])
-
 
 def apply_script(protocol, connection, config):
     class DiscoProtocol(protocol):

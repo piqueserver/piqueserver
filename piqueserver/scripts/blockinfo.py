@@ -7,15 +7,13 @@ Maintainer: hompy
 from twisted.internet.reactor import seconds
 from pyspades.collision import distance_3d_vector
 from pyspades.common import prettify_timespan
-from piqueserver.commands import add, admin, name, get_player, alias
+from piqueserver.commands import command, admin, get_player
 
 # "blockinfo" must be AFTER "votekick" in the config.txt script list
 GRIEFCHECK_ON_VOTEKICK = True
 IRC_ONLY = True
 
-
-@name('griefcheck')
-@alias('gc')
+@command('griefcheck', 'gc')
 def grief_check(connection, player, time=None):
     player = get_player(connection.protocol, player)
     protocol = connection.protocol
@@ -87,9 +85,6 @@ def grief_check(connection, player, time=None):
         message += (' %s is %d tiles away from %s, who started the votekick.' %
                     (player_name, tiles, instigator_name))
     return message
-
-add(grief_check)
-
 
 def apply_script(protocol, connection, config):
     has_votekick = 'votekick' in config.get('scripts', [])

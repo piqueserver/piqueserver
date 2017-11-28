@@ -3,11 +3,10 @@
 # by topologist June 30th 2012
 
 from scheduler import Scheduler
-from piqueserver.commands import add, admin, get_player, join_arguments, name
+from piqueserver.commands import command, admin, get_player, join_arguments
 
-
-@name('tm')
 @admin
+@command('tm')
 def timed_mute(connection, *args):
     protocol = connection.protocol
 
@@ -23,9 +22,6 @@ def timed_mute(connection, *args):
         TimedMute(player, time, reason)
     else:
         return '%s is already muted!' % nick
-
-add(timed_mute)
-
 
 class TimedMute(object):
     player = None

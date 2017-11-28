@@ -40,7 +40,7 @@ from pyspades.collision import collision_3d
 from pyspades.constants import DESTROY_BLOCK, SPADE_DESTROY, BUILD_BLOCK
 from pyspades.contained import BlockAction, SetColor
 from twisted.internet.reactor import callLater
-from piqueserver.commands import add, admin
+from piqueserver.commands import command, admin
 from random import choice
 
 KILL_MESSAGES = [
@@ -158,15 +158,13 @@ def parseField(ext):
 
 
 @admin
+@command()
 def minedebug(connection):
     proto = connection.protocol
     proto.minefield_debug = not proto.minefield_debug
     message = 'Minefield is now in debug' if proto.minefield_debug else 'Minefield is no longer in debug'
     proto.send_chat(message, global_message=True)
     return 'You toggled minefield debug'
-
-add(minedebug)
-
 
 def apply_script(protocol, connection, config):
     class MineConnection(connection):

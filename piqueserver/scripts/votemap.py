@@ -21,7 +21,7 @@ from pyspades.common import prettify_timespan
 from map import check_rotation
 import random
 from scheduler import Scheduler
-from piqueserver import commands
+from piqueserver.commands import command
 
 
 def cancel_verify(connection, instigator):
@@ -159,7 +159,7 @@ class VoteMap(object):
         self.schedule.reset()
         self.protocol.votemap = None
 
-
+@command()
 def votemap(connection, *arg):
     if connection not in connection.protocol.players:
         raise KeyError()
@@ -169,7 +169,7 @@ def votemap(connection, *arg):
         VoteMap(connection, connection.protocol, connection.protocol.maps))
 
 
-@commands.name('vote')
+@command('vote')
 def votemap_vote(connection, value):
     if connection not in connection.protocol.players:
         raise KeyError()
@@ -177,9 +177,6 @@ def votemap_vote(connection, value):
         return connection.protocol.votemap.vote(connection, value)
     else:
         return 'No map vote in progress.'
-
-commands.add(votemap)
-commands.add(votemap_vote)
 
 
 def apply_script(protocol, connection, config):

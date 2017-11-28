@@ -9,48 +9,41 @@ from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 
 import json
-from piqueserver import commands
+from piqueserver.commands import command, admin
 
 
-@commands.admin
-@commands.name('timer')
+@admin
+@command('timer')
 def start_timer(connection, end):
     return connection.protocol.start_timer(int(end) * 60)
 
 
-@commands.admin
-@commands.name('stoptimer')
+@admin
+@command('stoptimer')
 def stop_timer(connection, end):
     return connection.protocol.stop_timer()
 
 
-@commands.admin
-@commands.name('startrecord')
+@admin
+@command('startrecord')
 def start_record(connection):
     connection.protocol.start_record()
     return 'Recording started.'
 
 
-@commands.admin
-@commands.name('stoprecord')
+@admin
+@command('stoprecord')
 def stop_record(connection):
     connection.protocol.stop_record()
     return 'Recording stopped.'
 
 
-@commands.admin
-@commands.name('saverecord')
+@admin
+@command('saverecord')
 def save_record(connection, value):
     if not connection.protocol.save_record(value):
         return 'No record file available.'
     return 'Record saved.'
-
-commands.add(start_timer)
-commands.add(stop_timer)
-commands.add(start_record)
-commands.add(stop_record)
-commands.add(save_record)
-
 
 def apply_script(protocol, connection, config):
     class MatchConnection(connection):

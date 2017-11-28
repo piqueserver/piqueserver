@@ -17,7 +17,7 @@ from pyspades.constants import (
     RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON,
 )
 
-from piqueserver.commands import add, admin, get_player
+from piqueserver.commands import command, admin, get_player
 
 DISABLED, KICK, BAN, WARN_ADMIN = xrange(4)
 
@@ -129,7 +129,7 @@ def scale(v, factor):
 def subtract(v1, v2):
     return (v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2])
 
-
+@command()
 def accuracy(connection, name=None):
     if name is None:
         player = connection
@@ -159,10 +159,8 @@ def accuracy_player(player, name_info=True):
         rifle_percent, smg_percent, shotgun_percent)
     return s
 
-add(accuracy)
-
-
 @admin
+@command()
 def hackinfo(connection, name):
     player = get_player(connection.protocol, name)
     return hackinfo_player(player)
@@ -180,9 +178,6 @@ def hackinfo_player(player):
     info += " %i headshot snaps in the last %i seconds." % (
         player.get_headshot_snap_count(), HEADSHOT_SNAP_TIME)
     return info
-
-add(hackinfo)
-
 
 def apply_script(protocol, connection, config):
     class Aimbot2Protocol(protocol):

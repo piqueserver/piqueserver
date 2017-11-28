@@ -7,7 +7,7 @@ Maintainer: hompy
 from math import modf
 
 from twisted.internet.task import LoopingCall
-from piqueserver.commands import name, admin, add
+from piqueserver.commands import command, admin
 from pyspades.color import wrap, interpolate_hsb, interpolate_rgb, hsb_to_rgb, rgb_distance
 
 S_NO_RIGHTS = 'No administrator rights!'
@@ -16,9 +16,8 @@ S_SPEED = 'Day cycle speed is {multiplier}'
 S_SPEED_SET = 'Day cycle speed changed to {multiplier}'
 S_STOPPED = 'Day cycle stopped'
 
-
-@name('dayspeed')
 @admin
+@command('dayspeed')
 def day_speed(connection, value=None):
     if value is None:
         return S_SPEED.format(multiplier=connection.protocol.time_multiplier)
@@ -34,7 +33,7 @@ def day_speed(connection, value=None):
             protocol.daycycle_loop.start(protocol.day_update_frequency)
         return S_SPEED_SET.format(multiplier=value)
 
-@name('daytime')
+@command('daytime')
 def day_time(connection, value=None):
     if value is not None:
         if not connection.admin:
@@ -46,11 +45,6 @@ def day_time(connection, value=None):
         connection.protocol.update_day_color()
     f, i = modf(connection.protocol.current_time)
     return S_TIME_OF_DAY.format(hours=int(i), minutes=int(f * 60))
-
-add(day_speed)
-add(day_time)
-
-
 
 def apply_script(protocol, connection, config):
     class DayCycleProtocol(protocol):

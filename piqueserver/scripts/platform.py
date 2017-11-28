@@ -189,12 +189,12 @@ from itertools import product, imap, chain
 from twisted.internet.reactor import callLater, seconds
 from twisted.internet.task import LoopingCall
 from pyspades.world import cube_line
-from pyspades.server import block_action, block_line, set_color, position_data
+from pyspades.contained import BlockAction, BlockLine, SetColor, PositionData
 from pyspades.collision import collision_3d
 from pyspades.common import make_color
 from pyspades.types import MultikeyDict
 from pyspades.constants import *
-from piqueserver.commands import add, admin, name, alias, join_arguments
+from piqueserver.commands import command, admin, join_arguments
 from piqueserver import cfg
 
 DEFAULT_LOAD_DIR = os.path.join(cfg.config_dir, 'maps')
@@ -364,12 +364,14 @@ def flatten(iterables):
 
 
 @admin
+@command()
 def save(connection):
     connection.protocol.dump_platform_json()
     return S_SAVED
 
 
 @admin
+@command()
 def reach(connection):
     if connection not in connection.protocol.players:
         raise ValueError()
@@ -377,10 +379,8 @@ def reach(connection):
     connection.reach = ACTION_RAY_LENGTH if long else ACTION_RAY_LENGTH_LONG
     return S_REACH if not long else S_NO_REACH
 
-
-@alias('p')
-@name('platform')
 @admin
+@command('platform', 'p')
 def platform_command(connection, *args):
     protocol = connection.protocol
     if connection not in protocol.players:
@@ -440,10 +440,8 @@ def platform_command(connection, *args):
         player.states.exit()
         player.states.enter(NewPlatformState())
 
-
-@alias('b')
-@name('button')
 @admin
+@command('button', 'b')
 def button_command(connection, *args):
     protocol = connection.protocol
     if connection not in protocol.players:
@@ -507,10 +505,8 @@ def button_command(connection, *args):
         player.states.exit()
         player.states.enter(NewButtonState())
 
-
-@alias('ac')
-@name('action')
 @admin
+@command('action', 'ac')
 def action_command(connection, *args):
     protocol = connection.protocol
     if connection not in protocol.players:
@@ -628,10 +624,8 @@ def action_command(connection, *args):
     except IndexError:
         return usage
 
-
-@alias('t')
-@name('trigger')
 @admin
+@command('trigger', 't')
 def trigger_command(connection, *args):
     protocol = connection.protocol
     if connection not in protocol.players:
@@ -716,11 +710,6 @@ def trigger_command(connection, *args):
     except IndexError:
         return usage
 
-for func in (platform_command, button_command, action_command,
-             trigger_command, save, reach):
-    add(func)
-
-
 def aabb(x, y, z, x1, y1, z1, x2, y2, z2):
     return x >= x1 and y >= y1 and z >= z1 and x < x2 and y < y2 and z < z2
 
@@ -739,12 +728,14 @@ def plane_least_rows(x1, y1, x2, y2, z):
 
 
 def send_color(protocol, color):
+    set_color = SetColor()
     set_color.value = make_color(*color)
     set_color.player_id = 32
     protocol.send_contained(set_color, save=True)
 
 
 def send_block(protocol, x, y, z, value=BUILD_BLOCK):
+    block_action = BlockAction()
     block_action.value = value
     block_action.player_id = 32
     block_action.x = x
@@ -1231,6 +1222,7 @@ class Platform(BaseObject):
                     z = self.z - 2.4
                     if player.world_object.crouch:
                         z += 1.0
+                    position_data = PositionData()
                     position_data.x = x
                     position_data.y = y
                     position_data.z = z
@@ -1257,6 +1249,7 @@ class Platform(BaseObject):
         line = cube_line(x1, y1, z1, x2, y2, z2)
         for x, y, z in line:
             self.protocol.map.set_point(x, y, z, self.color)
+        block_line = BlockLine()
         block_line.player_id = 32
         block_line.x1 = x1
         block_line.y1 = y1
@@ -1383,6 +1376,7 @@ class NewPlatformState(State):
         z1, z2 = min(zipped[2]), max(zipped[2])
         if z1 != z2:
             # undo placed blocks if the design is invalid
+            block_action = BlockAction()
             block_action.value = DESTROY_BLOCK
             block_action.player_id = player.player_id
             for x, y, z in self.blocks:
