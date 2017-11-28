@@ -46,10 +46,10 @@ from itertools import product
 from collections import deque, namedtuple
 from twisted.internet.reactor import seconds
 from twisted.internet.task import LoopingCall
-from pyspades.server import block_action, block_line, set_color
+from pyspades.contained import BlockAction, SetColor
 from pyspades.common import make_color
 from pyspades.constants import *
-from piqueserver.commands import add, admin, name, get_player
+from piqueserver.commands import command, admin, get_player
 
 FLYING_MODELS = False  # if False grenades exploding in midair will be ignored
 GROW_ON_WATER = False  # if False grenades exploding in water will do nothing
@@ -95,9 +95,8 @@ def load_models(expression):
             failed.append(filename)
     return models, loaded, failed
 
-
-@name('model')
 @admin
+@command('model')
 def model_grenades(connection, expression=None):
     protocol = connection.protocol
     if connection not in protocol.players:
@@ -130,8 +129,6 @@ def model_grenades(connection, expression=None):
         result = S_SPECIFY_FILES
     if result:
         player.send_chat(result)
-
-add(model_grenades)
 
 KV6Voxel = namedtuple('KV6Voxel', 'b g r a z neighbors normal_index')
 NonSurfaceKV6Voxel = KV6Voxel(40, 64, 103, 128, 0, 0, 0)
@@ -207,11 +204,13 @@ class BuildQueue:
         while self.blocks and blocks_left:
             x, y, z, color = self.blocks.popleft()
             if color != last_color:
+                set_color = SetColor()
                 set_color.value = make_color(*color)
                 set_color.player_id = 32
                 self.protocol.send_contained(set_color, save=True)
                 last_color = color
             if not self.protocol.map.get_solid(x, y, z):
+                block_action = BlockAction()
                 block_action.value = BUILD_BLOCK
                 block_action.player_id = 32
                 block_action.x = x

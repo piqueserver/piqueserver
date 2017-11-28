@@ -1,4 +1,4 @@
-from piqueserver.commands import add, admin
+from piqueserver.commands import command, admin
 from pyspades.contained import BlockAction, SetColor
 from pyspades.constants import *
 from math import *
@@ -76,13 +76,12 @@ def remove_block(prt, x, y, z, mirror_x=False, mirror_y=False):
     return False
 
 
+@command()
 def mirror(connection, mirror_x, mirror_y):
     connection.mirror_x = bool(mirror_x)
     connection.mirror_y = bool(mirror_y)
 
-add(mirror)
-
-
+@command()
 def tunnel(*arguments):
     connection = arguments[0]
     connection.reset_build()
@@ -90,9 +89,6 @@ def tunnel(*arguments):
     connection.arguments = arguments
     connection.select = True
     connection.points = 1
-
-add(tunnel)
-
 
 def tunnel_r(connection, radius, length, zoffset=0):
     radius = int(radius)
@@ -117,7 +113,7 @@ def tunnel_r(connection, radius, length, zoffset=0):
                         remove_block(connection.protocol, x, connection.block1_y + rel_h,
                                      connection.block1_z + rel_v + zoffset, connection.mirror_x, connection.mirror_y)
 
-
+@command()
 def insert(*arguments):
     connection = arguments[0]
     connection.reset_build()
@@ -125,9 +121,6 @@ def insert(*arguments):
     connection.arguments = arguments
     connection.select = True
     connection.points = 2
-
-add(insert)
-
 
 def insert_r(connection):
     x1 = min(connection.block1_x, connection.block2_x)
@@ -143,7 +136,7 @@ def insert_r(connection):
                 add_block(connection.protocol, xx, yy, zz, color, connection.player_id,
                           connection.mirror_x, connection.mirror_y)
 
-
+@command()
 def delete(*arguments):
     connection = arguments[0]
     connection.reset_build()
@@ -151,9 +144,6 @@ def delete(*arguments):
     connection.arguments = arguments
     connection.select = True
     connection.points = 2
-
-add(delete)
-
 
 def delete_r(connection):
     x1 = min(connection.block1_x, connection.block2_x)
@@ -168,7 +158,7 @@ def delete_r(connection):
                 remove_block(connection.protocol, xx, yy, zz,
                              connection.mirror_x, connection.mirror_y)
 
-
+@command()
 def pattern(*arguments):
     connection = arguments[0]
     connection.reset_build()
@@ -176,9 +166,6 @@ def pattern(*arguments):
     connection.arguments = arguments
     connection.select = True
     connection.points = 2
-
-add(pattern)
-
 
 def pattern_r(connection, copies):
     copies = int(copies)
@@ -201,7 +188,7 @@ def pattern_r(connection, copies):
                         add_block(connection.protocol, xx, yy, zz - z_offset, color,
                                   32, connection.mirror_x, connection.mirror_y)
 
-
+@command()
 def hollow(*arguments):
     connection = arguments[0]
     connection.reset_build()
@@ -209,9 +196,6 @@ def hollow(*arguments):
     connection.arguments = arguments
     connection.select = True
     connection.points = 2
-
-add(hollow)
-
 
 def hollow_r(connection, thickness=1):
     m = connection.protocol.map

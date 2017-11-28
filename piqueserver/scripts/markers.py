@@ -33,10 +33,10 @@ from itertools import izip, islice, chain
 from random import choice
 from twisted.internet.reactor import callLater, seconds
 from pyspades.world import cube_line
-from pyspades.server import block_action, block_line, set_color, chat_message
+from pyspades.contained import BlockAction, BlockLine, SetColor, ChatMessage
 from pyspades.common import make_color, to_coordinates
 from pyspades.constants import *
-from piqueserver.commands import add, admin, get_player, name
+from piqueserver.commands import command, admin, get_player
 
 SHADOW_INTEL = True  # if True, shows where the intel used to be before taken
 REVEAL_ENEMIES = True  # if True, mimics old intel reveal behavior when captured
@@ -72,8 +72,8 @@ def clear(connection):
     return S_CLEARED
 
 
-@name('togglemarkers')
 @admin
+@command('togglemarkers')
 def toggle_markers(connection, player=None):
     protocol = connection.protocol
     if player is not None:
@@ -92,11 +92,6 @@ def markers(connection):
     if connection not in connection.protocol.players:
         raise ValueError()
     connection.send_lines(S_HELP)
-
-add(clear)
-add(toggle_markers)
-add(markers)
-
 
 class BaseMarker():
     name = 'Marker'
@@ -204,11 +199,13 @@ class BaseMarker():
             self.send_block_remove(sender, *block)
 
     def send_color(self, sender):
+        set_color = SetColor()
         set_color.value = self.color
         set_color.player_id = 32
         sender(set_color, team=self.team)
 
     def send_block(self, sender, x, y, z, value=BUILD_BLOCK):
+        block_action = BlockAction()
         block_action.value = value
         block_action.player_id = 32
         block_action.x = x
@@ -217,6 +214,7 @@ class BaseMarker():
         sender(block_action, team=self.team)
 
     def send_line(self, sender, x1, y1, z1, x2, y2, z2):
+        block_line = BlockLine()
         block_line.player_id = 32
         block_line.x1 = x1
         block_line.y1 = y1
@@ -657,6 +655,7 @@ def apply_script(protocol, connection, config):
                         location = self.get_there_location()
                         if location:
                             coords = to_coordinates(*location)
+                            chat_message = ChatMessage()
                             chat_message.chat_type = CHAT_TEAM
                             chat_message.player_id = self.player_id
                             chat_message.value = S_SPOTTED.format(

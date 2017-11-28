@@ -19,7 +19,7 @@ from pyspades.server import grenade_packet
 from pyspades.collision import distance_3d_vector
 from pyspades.constants import *
 from pyspades.common import Vertex3
-from piqueserver.commands import add, admin, get_player, name
+from piqueserver.commands import command, admin, get_player
 
 ENABLED_AT_START = False
 
@@ -44,7 +44,7 @@ S_FLAG_CAPTURED = 'The intel capture has unlinked everyone in the {team} team!'
 
 
 @admin
-@name('runningman')
+@command('runningman')
 def running_man(connection):
     protocol = connection.protocol
     protocol.running_man = not protocol.running_man
@@ -55,6 +55,7 @@ def running_man(connection):
 
 
 @admin
+@command()
 def relink(connection):
     if not connection.protocol.running_man:
         return S_NOT_ENABLED
@@ -63,6 +64,7 @@ def relink(connection):
 
 
 @admin
+@command()
 def unlink(connection, player=None):
     protocol = connection.protocol
     if not protocol.running_man:
@@ -82,10 +84,6 @@ def unlink(connection, player=None):
     message.format(player=player.name)
     if connection is not player:
         return message
-
-for func in (running_man, relink, unlink):
-    add(func)
-
 
 def apply_script(protocol, connection, config):
     class RunningManConnection(connection):

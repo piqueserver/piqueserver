@@ -38,8 +38,8 @@ ToDo:
 
 from pyspades.constants import *
 from pyspades.common import make_color
-from pyspades.server import set_color, block_action
-from piqueserver.commands import add, admin
+from pyspades.contained import SetColor, BlockAction
+from piqueserver.commands import command, admin
 from twisted.internet.task import LoopingCall
 from random import randint
 
@@ -98,18 +98,15 @@ def reset_intel(protocol, team):
 
 
 @admin
+@command()
 def resetblueintel(connection):
     reset_intel(connection.protocol, connection.protocol.blue_team)
 
 
 @admin
+@command()
 def resetgreenintel(connection):
     reset_intel(connection.protocol, connection.protocol.green_team)
-
-
-add(resetblueintel)
-add(resetgreenintel)
-
 
 def get_entity_location(self, entity_id):
     if entity_id == BLUE_BASE:
@@ -201,6 +198,7 @@ def apply_script(protocol, connection, config):
             color = byte_hls_to_rgb((h, l, s))
 
             self.color = color
+            set_color = SetColor()
             set_color.player_id = self.player_id
             set_color.value = make_color(*color)
             self.send_contained(set_color)
@@ -212,6 +210,7 @@ def apply_script(protocol, connection, config):
                 z < 1 or z > 61)
                     is False):
                 self.protocol.map.set_point(x, y, z, self.color)
+                block_action = BlockAction()
                 block_action.x = x
                 block_action.y = y
                 block_action.z = z

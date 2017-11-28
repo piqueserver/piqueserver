@@ -7,11 +7,11 @@ Maintainer: hompy
 from math import ceil, sin, cos
 from random import uniform, vonmisesvariate
 from twisted.internet import reactor
-from pyspades.server import grenade_packet
+from pyspades.contained import GrenadePacket
 from pyspades.common import to_coordinates, Vertex3
 from pyspades.world import Grenade
 from pyspades.constants import UPDATE_FREQUENCY, WEAPON_TOOL
-from piqueserver.commands import alias, add, admin, name, get_player
+from piqueserver.commands import command, admin, get_player
 
 STREAK_REQUIREMENT = 8
 
@@ -37,7 +37,7 @@ ZOOMV_RAY_LENGTH = 192.0
 ARRIVAL_DELAY = 2  # seconds from airstrike notice to arrival
 
 
-@alias('a')
+@command('airstrike','a')
 def airstrike(connection, *args):
     if connection not in connection.protocol.players:
         raise ValueError()
@@ -50,13 +50,9 @@ def airstrike(connection, *args):
     return S_NO_STREAK.format(streak=STREAK_REQUIREMENT,
                               remaining=kills_left)
 
-
-add(airstrike)
-
-
 # debug
 @admin
-@name('givestrike')
+@command('givestrike')
 def give_strike(connection, player=None):
     protocol = connection.protocol
     if player is not None:
@@ -67,10 +63,6 @@ def give_strike(connection, player=None):
         raise ValueError()
     player.airstrike = True
     player.send_chat(S_READY)
-
-
-add(give_strike)
-
 
 def bellrand(a, b):
     return (uniform(a, b) + uniform(a, b) + uniform(a, b)) / 3.0
@@ -169,6 +161,7 @@ def apply_script(protocol, connection, config):
                 return
             eta, x, y, z = collision
             grenade.fuse = eta
+            grenade_packet = GrenadePacket()
             grenade_packet.value = grenade.fuse
             grenade_packet.player_id = self.player_id
             grenade_packet.position = position.get()

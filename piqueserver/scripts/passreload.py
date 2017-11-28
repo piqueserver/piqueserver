@@ -2,13 +2,14 @@
 # written by Danke
 
 from piqueserver import commands
-from piqueserver.commands import add, admin
+from piqueserver.commands import command, admin
 from piqueserver import cfg
 import json
 import os.path
 
 
 @admin
+@command()
 def reloadconfig(connection):
     new_config = {}
     try:
@@ -22,9 +23,6 @@ def reloadconfig(connection):
     connection.protocol.config.update(new_config)
     connection.protocol.reload_passes()
     return 'Config reloaded!'
-
-add(reloadconfig)
-
 
 def apply_script(protocol, connection, config):
     class PassreloadProtocol(protocol):

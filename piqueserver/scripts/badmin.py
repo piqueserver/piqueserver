@@ -6,7 +6,7 @@ from twisted.internet import reactor
 from pyspades.common import prettify_timespan
 from pyspades.constants import *
 from pyspades.collision import distance_3d_vector
-from piqueserver.commands import add, admin, get_player
+from piqueserver.commands import command, admin, get_player
 import re
 
 BADMIN_VERSION = 9
@@ -53,16 +53,16 @@ def aimbot_match(player, msg):
 
 
 @admin
+@command()
 def badmin(connection, var=None):
     if var == None:
         return ("@Badmin (r%s): Language Filter(LF) [%s], Blank Votekick Blocker(BV) "
                 "[%s], Grief Votekick Protection(GV) [%s], Aimbot Votekick Protection(AV) [%s]"
                 % (BADMIN_VERSION, LANGUAGE_FILTER_ENABLED, BLANK_VOTEKICK_ENABLED,
                    SCORE_GRIEF_ENABLED, SCORE_AIMBOT_ENABLED))
-add(badmin)
-
 
 @admin
+@command()
 def investigate(connection, player):
     player = get_player(connection.protocol, player)
     score = score_grief(connection, player)
@@ -70,7 +70,6 @@ def investigate(connection, player):
     percent = round(check_percent(player))
     message = "Results for %s: Grief Score - %s / KDR - %s / Hit Acc. - %s" % (
         player.name, score, kdr, percent)
-add(investigate)
 
 
 def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green (1)

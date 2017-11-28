@@ -6,16 +6,13 @@ Maintainer: Triplefox
 
 from pyspades.constants import *
 
-from piqueserver import commands
+from piqueserver.commands import command
 
 HIDE_COORD = (0, 0, 0)
 
-
+@command()
 def score(connection):
     return connection.protocol.get_kill_count()
-
-commands.add(score)
-
 
 def apply_script(protocol, connection, config):
     class TDMConnection(connection):
