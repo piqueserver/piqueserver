@@ -5,6 +5,14 @@
 
 An Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/PySnip).
 
+## :point_right: Chat with us!
+ * Gitter: [![Join the chat at https://gitter.im/piqueserver/piqueserver](https://badges.gitter.im/piqueserver/piqueserver.svg)](https://gitter.im/piqueserver/piqueserver?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+ * Matrix: `#piqueserver:matrix.org` ([Riot Webchat link](https://riot.im/app/#/room/#piqueserver:matrix.org))
+ * Slack: Message us for an invite!
+ * IRC: `#piqueserver` on freenode.net ([web](http://webchat.freenode.net/?channels=%23piqueserver))
+
+All of these are bridged together!
+
 ## :rocket: Installation
 
 ### pip (stable version)
