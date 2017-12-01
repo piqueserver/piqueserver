@@ -2,7 +2,12 @@ import zlib
 
 COMPRESSION_LEVEL = 9
 
+
 class ProgressiveMapGenerator(object):
+    """
+    progressively generates the stream of bytes sent to the client for map
+    downloads
+    """
     data = b''
     done = False
 
