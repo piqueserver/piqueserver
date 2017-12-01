@@ -812,3 +812,57 @@ cdef class ChangeWeapon(Loader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
         reader.writeByte(self.weapon, True)
+
+cdef class HandShakeInit(Loader):
+    id = 31
+
+    cpdef read(self, ByteReader reader):
+        pass
+
+    cpdef write(self, ByteWriter writer):
+        writer.writeByte(self.id, True)
+        writer.writeInt(42, True)
+
+cdef class HandShakeReturn(Loader):
+    id = 32
+
+    cdef public:
+        int success
+
+    cpdef read(self, ByteReader reader):
+        self.success = int(reader.readInt(True) == 42)
+
+    cpdef write(self, ByteWriter writer):
+        writer.writeByte(self.id, True)
+
+cdef class VersionRequest(Loader):
+    id = 33
+
+    cpdef read(self, ByteReader reader):
+        pass
+
+    cpdef write(self, ByteWriter writer):
+        writer.writeByte(self.id, True)
+
+cdef class VersionResponse(Loader):
+    id = 34
+
+    cdef public:
+        str client
+        tuple version
+        str os_info
+
+    cpdef read(self, ByteReader reader):
+        magic_no = reader.readByte(True)
+        if magic_no == ord("o"):
+            self.client = "OpenSpades"
+            self.version = (
+                reader.readByte(True),
+                reader.readByte(True),
+                reader.readByte(True),
+            )
+            self.os_info = reader.readString()
+        # There are other magic numbers, but we currently do not implement them
+
+    cpdef write(self, ByteWriter writer):
+        writer.writeByte(self.id, True)

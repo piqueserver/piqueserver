@@ -1,18 +1,14 @@
 from pyspades.server import *
-from piqueserver import commands
+from piqueserver.commands import command
 
-
-@commands.alias('tws')
-@commands.admin
-@commands.name('togglewallspading')
+@admin
+@command('togglewallspading','tws')
 def togglewallspading(self):
     self.protocol.is_fluffy = not self.protocol.is_fluffy
     if not self.protocol.is_fluffy:
         return 'Spading someone behind a wall is possible again now!'
     else:
         return 'You canot spade people through walls anymore. (killjoy)'
-commands.add(togglewallspading)
-
 
 def apply_script(protocol, connection, config):
 

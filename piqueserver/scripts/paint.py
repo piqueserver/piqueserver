@@ -8,15 +8,15 @@ With block tool selected, pick a color, then hold down sneak key
 Maintainer: hompy
 """
 
-from pyspades.server import block_action
+from pyspades.contained import BlockAction
 from pyspades.common import Vertex3
 from pyspades.constants import *
-from piqueserver.commands import add, admin, get_player
+from piqueserver.commands import command, admin, get_player
 
 PAINT_RAY_LENGTH = 32.0
 
-
 @admin
+@command()
 def paint(connection, player=None):
     protocol = connection.protocol
     if player is not None:
@@ -34,15 +34,13 @@ def paint(connection, player=None):
         connection.send_chat('%s is %s' % (player.name, message))
     protocol.irc_say('* %s is %s' % (player.name, message))
 
-add(paint)
-
-
 def paint_block(protocol, player, x, y, z, color):
     if x < 0 or y < 0 or z < 0 or x >= 512 or y >= 512 or z >= 62:
         return False
     if protocol.map.get_color(x, y, z) == color:
         return False
     protocol.map.set_point(x, y, z, color)
+    block_action = BlockAction()
     block_action.x = x
     block_action.y = y
     block_action.z = z
@@ -53,7 +51,6 @@ def paint_block(protocol, player, x, y, z, color):
     protocol.send_contained(block_action, save=True)
     return True
 
-
 def paint_ray(player):
     if player.tool != BLOCK_TOOL:
         return
@@ -63,7 +60,6 @@ def paint_ray(player):
         if player.on_block_build_attempt(x, y, z) == False:
             return
         paint_block(player.protocol, player, x, y, z, player.color)
-
 
 def apply_script(protocol, connection, config):
     class PaintConnection(connection):

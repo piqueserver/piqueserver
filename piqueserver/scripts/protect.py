@@ -4,11 +4,12 @@ Protects areas against block destroying/building.
 Maintainer: hompy
 """
 
-from piqueserver.commands import add, admin
+from piqueserver.commands import command, admin
 from pyspades.common import coordinates
 
 
 @admin
+@command()
 def protect(connection, value=None):
     protocol = connection.protocol
     if value is None:
@@ -22,9 +23,6 @@ def protect(connection, value=None):
         message = 'The area at %s is now %s' % (value.upper(),
                                                 'protected' if pos in protocol.protected else 'unprotected')
         protocol.send_chat(message, irc=True)
-
-add(protect)
-
 
 def apply_script(protocol, connection, config):
     class ProtectConnection(connection):

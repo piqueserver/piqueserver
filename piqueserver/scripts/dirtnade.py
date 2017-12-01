@@ -4,7 +4,7 @@ Makes grenades create blocks.
 Maintainer: hompy
 """
 
-from pyspades.server import block_action
+from pyspades.contained import BlockAction
 from pyspades.constants import *
 
 
@@ -31,6 +31,7 @@ def apply_script(protocol, connection, config):
             map = self.protocol.map
             list = []
             try_add_node(map, x, y, z, list)
+            block_action = BlockAction()
             block_action.value = BUILD_BLOCK
             block_action.player_id = self.player_id
             while list:

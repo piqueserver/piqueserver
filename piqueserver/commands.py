@@ -38,17 +38,20 @@ else:
 
     from twisted.internet import reactor
 
-    from pyspades.contained import KillAction
-    from pyspades.server import (
-        create_player, set_tool, set_color, input_data,
-        weapon_input)
+    from pyspades.contained import KillAction, InputData, SetColor, WeaponInput
+    from pyspades.player import create_player, set_tool, parse_command
     from pyspades.constants import (GRENADE_KILL, FALL_KILL, NETWORK_FPS)
     from pyspades.common import (
         prettify_timespan, coordinates, to_coordinates,
         make_color)
-    from pyspades.server import parse_command
     from piqueserver.map import check_rotation, MapNotFound
     from piqueserver import cfg
+
+    # aparently, we need to send packets in this file. For now, I give in.
+    kill_action = KillAction()
+    input_data = InputData()
+    set_color = SetColor()
+    weapon_input = WeaponInput()
 
     _commands = {}
     _alias_map = {}
@@ -148,8 +151,6 @@ else:
         return decorator
 
     def has_permission(f, connection):
-        print(f.command_name, "in", connection.rights)
-
         if not f.user_types:
             return True
         elif f.command_name in connection.rights:
@@ -538,8 +539,8 @@ else:
             connection.send_lines(connection.protocol.help)
         else:
 
-            names = [command.__name__ for command in command_list
-                     if command.__name__ in connection.rights]
+            names = [command.command_name for command in _commands.values()
+                     if has_permission(command, connection)]
 
             return 'Available commands: %s' % (', '.join(names))
 
@@ -1333,6 +1334,23 @@ else:
             name = player.weapon_object.name
         return '%s has a %s' % (player.name, name)
 
+    @command("client", "cli")
+    def client(connection, target):
+        player = get_player(connection.protocol, target)
+
+        info = player.client_info
+        version = info.get("version", None)
+        if version:
+            version_string = ".".join(map(str, version))
+        else:
+            version_string = "Unknown"
+        return "{} is connected with {} ({}) on {}".format(
+            player.name,
+            info.get("client", "Unknown"),
+            version_string,
+            info.get("os_info", "Unknown")
+        )
+
     # optional commands
     try:
         import pygeoip
@@ -1376,7 +1394,8 @@ else:
     def handle_command(connection, command, parameters):
         command = command.lower()
         try:
-            command_func = _commands[command]
+            command_name = _alias_map.get(command, command)
+            command_func = _commands[command_name]
         except KeyError:
             return 'Unknown command'
 

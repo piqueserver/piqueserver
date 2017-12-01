@@ -8,7 +8,7 @@ Maintainer: hompy
 """
 
 from collections import namedtuple
-from pyspades.server import block_action, set_color
+from pyspades.contained import BlockAction, SetColor
 from pyspades.common import make_color
 from pyspades.color import rgb_distance
 from pyspades.constants import *
@@ -19,8 +19,10 @@ StrongBlock = namedtuple('StrongBlock', 'color owner')
 
 
 def rebuild_block(player, x, y, z, color):
+    set_color = SetColor()
     set_color.value = make_color(*color)
     set_color.player_id = 32
+    block_action = BlockAction()
     block_action.player_id = 32
     block_action.x = x
     block_action.y = y

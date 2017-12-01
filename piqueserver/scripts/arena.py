@@ -38,11 +38,11 @@
 import random
 import math
 
-from pyspades.server import block_action, set_color, block_line
+from pyspades.contained import BlockAction, SetColor, BlockLine
 from pyspades import world
 from pyspades.constants import DESTROY_BLOCK, TEAM_CHANGE_KILL, CTF_MODE
 from twisted.internet import reactor
-from piqueserver.commands import add, admin
+from piqueserver.commands import command, admin
 
 # If ALWAYS_ENABLED is False, then the 'arena' key must be set to True in
 # the 'extensions' dictionary in the map metadata
@@ -78,12 +78,10 @@ else:
 
 
 @admin
+@command()
 def coord(connection):
     connection.get_coord = True
     return 'Spade a block to get its coordinate.'
-
-add(coord)
-
 
 def make_color(r, g, b, a=255):
     r = int(r)
@@ -192,6 +190,8 @@ class Gate(object):
 
     def build_gate(self):
         map_ = self.protocol_obj.map
+        block_line = BlockLine()
+        set_color = SetColor()
         set_color.value = make_color(*self.color)
         set_color.player_id = block_line.player_id = 32
         self.protocol_obj.send_contained(set_color, save=True)
@@ -210,6 +210,7 @@ class Gate(object):
 
     def destroy_gate(self):
         map_ = self.protocol_obj.map
+        block_action = BlockAction()
         block_action.player_id = 32
         block_action.value = DESTROY_BLOCK
         for block in self.support_blocks:  # optimize wire traffic

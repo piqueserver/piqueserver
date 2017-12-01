@@ -11,6 +11,23 @@ from piqueserver import cfg
 
 MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
 
+def get_git_rev():
+    if not os.path.exists(".git"):
+        return 'snapshot'
+
+    from distutils.spawn import find_executable
+    if find_executable("git") is None:
+        return 'gitless'
+
+    import subprocess
+    pipe = subprocess.Popen(
+        ["git", "rev-parse", "HEAD"],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    ret = pipe.stdout.read()[:40]
+    if not ret:
+        return 'unknown'
+    return ret
+
 
 def copy_config():
     config_source = os.path.dirname(os.path.abspath(__file__)) + '/config'

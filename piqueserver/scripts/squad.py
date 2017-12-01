@@ -4,7 +4,7 @@ BF-like squad system.
 Maintainer: Triplefox
 """
 
-from piqueserver.commands import add, rights, admin, name, get_player
+from piqueserver.commands import command, get_player
 from piqueserver import commands
 import random
 
@@ -14,7 +14,7 @@ SQUAD_NAMES = set([
     'November', 'Oscar', 'Papa', 'Quebec', 'Romero', 'Sierra', 'Tango',
     'Uniform', 'Victor', 'Whiskey', 'X-ray', 'Yankee', 'Zulu'])
 
-
+@command()
 def follow(self, playerkey=None):
     if playerkey is None:
         squad_pref = None
@@ -32,7 +32,7 @@ def follow(self, playerkey=None):
 
     return self.join_squad(squad, squad_pref)
 
-
+@command()
 def squad(self, squadkey=None):
     if self.protocol.squad_size <= 1:
         return 'Squads are disabled on this server.'
@@ -58,9 +58,6 @@ def squad(self, squadkey=None):
         squad_pref = None
 
     return self.join_squad(squad, squad_pref)
-
-for func in (squad, follow):
-    add(func)
 
 
 def apply_script(protocol, connection, config):

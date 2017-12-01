@@ -8,16 +8,13 @@ Maintainer: mat^2
 from __future__ import print_function
 from statistics import DEFAULT_PORT, connect_statistics
 
-from piqueserver import commands
+from piqueserver.commands import command
 
-
+@command()
 def sitelogin(connection, name, password):
     value = connection.site_login(name, password)
     connection.send_chat(value)  # so it doesn't appear in the log
     return False
-
-commands.add(sitelogin)
-
 
 def apply_script(protocol, connection, config):
     stats_config = config.get('statistics', {})

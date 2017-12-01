@@ -170,9 +170,3 @@ class BaseProtocol(object):
             # make sure the LoopingCall doesn't catch this and stops
             import traceback
             traceback.print_exc()
-
-
-def make_client(*arg, **kw):
-    protocol = BaseProtocol()
-    protocol.is_client = True
-    return protocol.connect(*arg, **kw)

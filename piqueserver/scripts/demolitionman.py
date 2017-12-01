@@ -6,12 +6,13 @@ See the file license.txt or http://opensource.org/licenses/MIT for copying permi
 Restocks the user when reloading / throwing a nade.
 """
 
-from piqueserver.commands import add, admin
+from piqueserver.commands import command, admin
 
 DEMOLITION_ENABLED_AT_ROUND_START = False
 
 
 @admin
+@command()
 def toggledemo(connection):
     connection.protocol.demolitionEnabled = not connection.protocol.demolitionEnabled
     message = 'Demolition is now disabled'
@@ -19,9 +20,6 @@ def toggledemo(connection):
         message = 'Demolition is now enabled'
     connection.protocol.send_chat(message, irc=True)
     return 'ok :)'
-
-add(toggledemo)
-
 
 def apply_script(protocol, connection, config):
     class DemolitionProtocol(protocol):

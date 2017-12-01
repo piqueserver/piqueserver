@@ -7,7 +7,7 @@ Maintainer: hompy
 from operator import attrgetter
 from twisted.internet import reactor
 from pyspades.common import prettify_timespan
-from piqueserver.commands import name, get_player, add, admin
+from piqueserver.commands import command, get_player, admin
 
 S_AFK_CHECK = '{player} has been inactive for {time}'
 S_NO_PLAYERS_INACTIVE = 'No players or connections inactive for {time}'
@@ -21,9 +21,8 @@ def afk(connection, player):
     elapsed = prettify_timespan(reactor.seconds() - player.last_activity, True)
     return S_AFK_CHECK.format(player=player.name, time=elapsed)
 
-
-@name('kickafk')
 @admin
+@command('kickafk')
 def kick_afk(connection, minutes, amount=None):
     protocol = connection.protocol
     minutes = int(minutes)
@@ -53,10 +52,6 @@ def kick_afk(connection, minutes, amount=None):
     protocol.irc_say('* ' + message)
     if connection in protocol.players:
         return message
-
-add(afk)
-add(kick_afk)
-
 
 def apply_script(protocol, connection, config):
     time_limit = config.get('afk_time_limit', None)
