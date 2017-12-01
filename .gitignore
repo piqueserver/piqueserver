@@ -29,6 +29,8 @@ build/
 dist/
 *.egg-info/
 .eggs
+*.swp
+*.mypy_cache
 
 # config/userdata
 piqueserver/config/maps/*.txtc
