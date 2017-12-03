@@ -1,7 +1,7 @@
 import math
 from twisted.internet import reactor
-from pyspades.constants import *
-from pyspades.collision import distance_3d_vector
+from pyspades.constants import (RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON,
+                                HEAD, TORSO, ARMS, LEGS, CLIP_TOLERANCE)
 
 
 class BaseWeapon(object):
@@ -11,6 +11,15 @@ class BaseWeapon(object):
     shoot_time = None
     next_shot = None
     start = None
+
+    # Weapon parameters
+    stock = None  # Total number of rounds
+    ammo = None  # Number of rounds that fit in the weapon at once
+    # If the weapon should be reloaded one round at a time like the shotgun
+    slow_reload = False
+    delay = 0.0  # Time between shots
+    reload_time = 0.0  # Time between reloading and being able to shoot again
+    damage = None  # Dict of damages
 
     def __init__(self, reload_callback):
         self.reload_callback = reload_callback
@@ -94,6 +103,7 @@ class BaseWeapon(object):
 
 
 class Rifle(BaseWeapon):
+    id = RIFLE_WEAPON
     name = 'Rifle'
     delay = 0.5
     ammo = 10
@@ -110,6 +120,7 @@ class Rifle(BaseWeapon):
 
 
 class SMG(BaseWeapon):
+    id = SMG_WEAPON
     name = 'SMG'
     delay = 0.11  # actually 0.1, but due to AoS scheduling, it's usually 0.11
     ammo = 30
@@ -126,6 +137,7 @@ class SMG(BaseWeapon):
 
 
 class Shotgun(BaseWeapon):
+    id = SHOTGUN_WEAPON
     name = 'Shotgun'
     delay = 1.0
     ammo = 6
@@ -140,11 +152,9 @@ class Shotgun(BaseWeapon):
         LEGS: 16
     }
 
+
 WEAPONS = {
     RIFLE_WEAPON: Rifle,
     SMG_WEAPON: SMG,
     SHOTGUN_WEAPON: Shotgun,
 }
-
-for id, weapon in WEAPONS.items():
-    weapon.id = id

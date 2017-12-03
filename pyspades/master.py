@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+Implementation of the 0,75 master server protocol
+"""
+
 from __future__ import unicode_literals
 
 from pyspades.loaders import Loader
@@ -34,6 +38,7 @@ HOST = 'master.buildandshoot.com'
 
 
 class AddServer(Loader):
+    """The AddServer packet sent to the master server"""
     __slots__ = ['count', 'max_players', 'name', 'port', 'game_mode', 'map']
 
     id = 4
@@ -57,6 +62,7 @@ class AddServer(Loader):
             reader.writeString(self.map)
         else:
             reader.writeByte(self.count, True)
+
 
 add_server = AddServer()
 
@@ -106,7 +112,7 @@ IP_GETTER = 'http://services.buildandshoot.com/getip'
 
 # TODO: make this not blow up on py3
 def get_external_ip(interface=''):
-    return getPage(IP_GETTER.encode(), bindAddress=(str(''), 0))
+    return getPage(IP_GETTER.encode(), bindAddress=(str(interface), 0))
 
 
 def get_master_connection(protocol):
