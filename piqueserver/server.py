@@ -30,6 +30,8 @@ import random
 import time
 from collections import deque
 
+import six
+
 if sys.platform == 'linux2':
     try:
         from twisted.internet import epollreactor
@@ -341,10 +343,10 @@ class FeatureProtocol(ServerProtocol):
         self.http_agent = web.client.Agent(reactor)
         self.get_external_ip()
 
+    @inlineCallbacks
     def get_external_ip(self):
-        self.getPage(IP_GETTER.encode()).addCallback(self.got_external_ip)
+        ip = yield self.getPage(six.binary_type(IP_GETTER))
 
-    def got_external_ip(self, ip):
         self.ip = ip
         self.identifier = make_server_identifier(ip, self.port)
         print('Server identifier is %s' % self.identifier)
@@ -667,12 +669,12 @@ class FeatureProtocol(ServerProtocol):
     # useful twisted wrappers
 
     def listenTCP(self, *arg, **kw):
-        return reactor.listenTCP(*arg,
-                                 interface=self.config.get('network_interface', ''), **kw)
+        return reactor.listenTCP(
+            *arg, interface=self.config.get('network_interface', ''), **kw)
 
     def connectTCP(self, *arg, **kw):
-        return reactor.connectTCP(*arg,
-                                  bindAddress=(self.config.get('network_interface', ''), 0), **kw)
+        return reactor.connectTCP(
+            *arg, bindAddress=(self.config.get('network_interface', ''), 0), **kw)
 
     @inlineCallbacks
     def getPage(self, url):
