@@ -41,7 +41,7 @@ if sys.platform == 'linux2':
         epollreactor.install()
     except ImportError:
         print('(dependencies missing for epoll, using normal reactor)')
-
+from ipaddress import ip_address
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.python.logfile import DailyLogFile
@@ -519,7 +519,7 @@ class FeatureProtocol(ServerProtocol):
         """
         network = get_network(ip)
         for connection in self.connections.values():
-            if get_network(connection.address[0]) in network:
+            if ip_address(connection.address[0]) in network:
                 name = connection.name
                 connection.kick(silent=True)
         if duration:

@@ -1,4 +1,4 @@
-from ipaddr import IPNetwork
+from ipaddress import ip_network, ip_address
 
 CACHE = {}
 
@@ -7,18 +7,17 @@ def get_network(cidr):
     try:
         return CACHE[cidr]
     except KeyError:
-        network = IPNetwork(cidr)
+        network = ip_network(unicode(cidr))
         CACHE[cidr] = network
         return network
-
 
 def get_cidr(network):
     # TODO: why are we accessing a protected attribute?
     #       does this work?
+    # testing for IPv4?
     if network._prefixlen == 32:  # pylint: disable=protected-access
-        return str(network.ip)
+        return str(network.network_address)
     return str(network)
-
 
 class NetworkDict(object):
     def __init__(self):
@@ -54,7 +53,7 @@ class NetworkDict(object):
         return self.get_entry(key)[1]
 
     def get_entry(self, key):
-        ip = get_network(key)
+        ip = ip_address(unicode(key))
         for entry in self.networks:
             network, _value = entry
             if ip in network:
