@@ -1,20 +1,9 @@
+from six import text_type
 from ipaddress import ip_network, ip_address
-
-CACHE = {}
-
-
-def get_network(cidr):
-    try:
-        return CACHE[cidr]
-    except KeyError:
-        network = ip_network(unicode(cidr))
-        CACHE[cidr] = network
-        return network
 
 def get_cidr(network):
     # TODO: why are we accessing a protected attribute?
     #       does this work?
-    # testing for IPv4?
     if network._prefixlen == 32:  # pylint: disable=protected-access
         return str(network.network_address)
     return str(network)
@@ -34,7 +23,7 @@ class NetworkDict(object):
         return values
 
     def remove(self, key):
-        ip = get_network(key)
+        ip = ip_network(text_type(key))
         networks = []
         results = []
         for item in self.networks:
@@ -47,13 +36,13 @@ class NetworkDict(object):
         return results
 
     def __setitem__(self, key, value):
-        self.networks.append((get_network(key), value))
+        self.networks.append((ip_network(text_type(key)), value))
 
     def __getitem__(self, key):
         return self.get_entry(key)[1]
 
     def get_entry(self, key):
-        ip = ip_address(unicode(key))
+        ip = ip_address(text_type(key))
         for entry in self.networks:
             network, _value = entry
             if ip in network:
@@ -64,7 +53,7 @@ class NetworkDict(object):
         return len(self.networks)
 
     def __delitem__(self, key):
-        ip = get_network(key)
+        ip = ip_network(text_type(key))
         self.networks = [item for item in self.networks if ip not in item]
 
     def pop(self, *arg, **kw):

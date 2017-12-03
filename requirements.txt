@@ -8,3 +8,4 @@ pyasn1>=0.1.9,<0.2
 zope.interface>=4.3.3,<4.4
 pyenet
 ipaddress
+six
