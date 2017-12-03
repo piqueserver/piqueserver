@@ -4,7 +4,7 @@ from ipaddress import ip_network, ip_address
 def get_cidr(network):
     # TODO: why are we accessing a protected attribute?
     #       does this work?
-    if network._prefixlen == 32:  # pylint: disable=protected-access
+    if network.prefixlen == 32:  # pylint: disable=protected-access
         return str(network.network_address)
     return str(network)
 
