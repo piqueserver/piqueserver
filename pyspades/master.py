@@ -97,18 +97,6 @@ class MasterConnection(BaseConnection):
         self.disconnect_callback = None
 
 
-IP_GETTER = 'http://services.buildandshoot.com/getip'
-# other tools:
-# http://www.domaintools.com/research/my-ip/myip.xml
-# http://checkip.dyndns.com/
-# http://icanhazip.com/
-
-
-# TODO: make this not blow up on py3
-def get_external_ip(interface=''):
-    return getPage(IP_GETTER.encode(), bindAddress=(str(''), 0))
-
-
 def get_master_connection(protocol):
     defer = Deferred()
     connection = protocol.connect(MasterConnection, HOST, PORT, MASTER_VERSION)
