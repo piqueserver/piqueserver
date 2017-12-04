@@ -1389,7 +1389,6 @@ else:
                     continue
                 items.append(value)
             return '%s is from %s' % (player.name, ', '.join(items))
-        add(where_from)
 
     def handle_command(connection, command, parameters):
         command = command.lower()

@@ -259,6 +259,11 @@ class ServerProtocol(BaseProtocol):
                 player.spawn()
 
     def get_name(self, name):
+        '''
+        Sanitizes `name` and modifies it so that it doesn't collide with other names connected to the server.
+
+        Returns the fixed name.
+        '''
         name = name.replace('%', '')
         new_name = name
         names = [p.name.lower() for p in self.players.values()]

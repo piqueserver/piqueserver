@@ -20,6 +20,7 @@
 pyspades - default/featured server
 """
 from __future__ import print_function, unicode_literals
+from six import text_type
 import sys
 import os
 import imp
@@ -41,7 +42,7 @@ if sys.platform == 'linux2':
         epollreactor.install()
     except ImportError:
         print('(dependencies missing for epoll, using normal reactor)')
-
+from ipaddress import ip_network, ip_address
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.python.logfile import DailyLogFile
@@ -61,7 +62,7 @@ from piqueserver.scheduler import Scheduler
 from piqueserver import commands
 from piqueserver.map import Map, MapNotFound, check_rotation
 from piqueserver.console import create_console
-from piqueserver.networkdict import NetworkDict, get_network
+from piqueserver.networkdict import NetworkDict
 from piqueserver.player import FeatureConnection
 
 # default passwords hardcoded in config
@@ -517,9 +518,9 @@ class FeatureProtocol(ServerProtocol):
         Ban an ip with an optional reason and duration in minutes. If duration
         is None, ban is permanent.
         """
-        network = get_network(ip)
+        network = ip_network(text_type(ip), strict=False)
         for connection in self.connections.values():
-            if get_network(connection.address[0]) in network:
+            if ip_address(connection.address[0]) in network:
                 name = connection.name
                 connection.kick(silent=True)
         if duration:

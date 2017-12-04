@@ -14,6 +14,31 @@ An Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/P
 
 All of these are bridged together!
 
+
+## :tada: Features
+
+* Many administrator features
+* A lot of epic commands
+* A remote console (using SSH)
+* Map rotation
+* Map metadata (name, version, author, and map configuration)
+* Map extensions (water damage, etc.)
+* A map generator
+* An IRC client for managing your server
+* A JSON query webserver
+* A status server with map overview
+* Server/map scripts
+* Airstrikes
+* Melee attacks with the pickaxe
+* New gamemodes (deathmatch / runningman)
+* Rollback feature (rolling back to the original map)
+* Spectator mode
+* Dirt grenades
+* Platforms with buttons
+* Ban subscribe service
+* A ton of other features
+
+
 ## :rocket: Installation
 
 ### pip (stable version)
@@ -100,8 +125,7 @@ there, I guess. The important thing is to keep AoS servers alive.
 
 #### Is that everything?
 
- Please see also the [original README](https://github.com/piqueserver/piqueserver/blob/master/OLD_README.md) from PySnip and
- the [Wiki](https://github.com/piqueserver/piqueserver/wiki) for more information.
+ Please see also the [Wiki](https://github.com/piqueserver/piqueserver/wiki) for more information.
 
 ## :blush: Contribute
 
