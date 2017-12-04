@@ -12,7 +12,7 @@ install:
 script:
   - export CYTHON_TRACE=1
   - python setup.py install
-  - coverage run setup.py test
+  - pytest --cov=piqueserver --cov=pyspades
   - coveralls
   # - pylint piqueserver
   # - pylint pyspades
