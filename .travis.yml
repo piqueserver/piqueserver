@@ -10,6 +10,9 @@ install:
   - pip install -r dev-requirements.txt
 
 script:
+  - export CYTHON_TRACE=1
   - python setup.py install
+  - coverage run setup.py test
+  - coveralls
   # - pylint piqueserver
   # - pylint pyspades

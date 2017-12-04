@@ -73,6 +73,12 @@ static = os.environ.get('STDCPP_STATIC') == "1"
 if static:
     print("Linking the build statically.")
 
+linetrace = os.environ.get('CYTHON_TRACE') == '1'
+
+define_macros = []
+if linetrace:
+    define_macros.append(('CYTHON_TRACE', '1'))
+
 for name in names:
     if static:
         extra = {'extra_link_args' : ['-static-libstdc++', '-static-libgcc']}
@@ -91,7 +97,7 @@ for name in names:
         extra["define_macros"] = [("MS_WIN64", None)]
 
     ext_modules.append(Extension(name, ['./%s.pyx' % name.replace('.', '/')],
-        language = 'c++', include_dirs=['./pyspades'], **extra))
+        language = 'c++', include_dirs=['./pyspades'], define_macros=define_macros, **extra))
 
 
 from distutils.command.build_ext import build_ext as _build_ext
@@ -99,7 +105,14 @@ class build_ext(_build_ext):
     def run(self):
 
         from Cython.Build import cythonize
-        self.extensions = cythonize(self.extensions)
+
+        compiler_directives = {}
+        print('linetrace is')
+        print(linetrace)
+        if linetrace:
+            compiler_directives['linetrace'] = True
+
+        self.extensions = cythonize(self.extensions, compiler_directives=compiler_directives)
 
         _build_ext.run(self)
 
