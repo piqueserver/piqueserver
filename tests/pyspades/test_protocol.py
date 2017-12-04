@@ -7,4 +7,4 @@ from __future__ import print_function
 from twisted.trial import unittest
 
 class BaseConnectionTest(unittest.TestCase):
-    
+    pass

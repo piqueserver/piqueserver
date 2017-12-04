@@ -85,17 +85,4 @@ class TestByteReader(unittest.TestCase):
             self.assertEqual(reader.readFloat(False), 2.2132692287005784e-38)
             self.assertEqual(reader.readFloat(True), -6.384869180745487e+29)
 
-    def test_readfloat(self):
-        inputs = (
-            "\xF1\x00\xF1\x00\xF1\x00\xF1\x00",
-            b"\xF1\x00\xF1\x00\xF1\x00\xF1\x00",
-            bytes(b"\xF1\x00\xF1\x00\xF1\x00\xF1\x00"),
-            bytearray([0xF1, 0x00, 0xF1, 0x00, 0xF1, 0x00, 0xF1, 0x00]),
-        )
-        for i in inputs:
-            reader = ByteReader(i)
-
-            self.assertEqual(reader.readFloat(False), 2.2132692287005784e-38)
-            self.assertEqual(reader.readFloat(True), -6.384869180745487e+29)
-
     # TODO: test rest of bytes.pyx, moving on to more useful modules for now
