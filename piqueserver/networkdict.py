@@ -6,6 +6,9 @@ def get_cidr(network):
         return str(network.network_address)
     return str(network)
 
+# Note: Network objects cannot have any host bits set without strict=False.
+# More info: https://docs.python.org/3/howto/ipaddress.html#defining-networks
+
 class NetworkDict(object):
     def __init__(self):
         self.networks = []
