@@ -16,16 +16,21 @@
 *.la
 *.a
 
+# envs
+.env/
+env/
+venv/
+env2/
+env3/
 
 # etc
 
 build/
-enet/build/
-venv/
-env/
 dist/
 *.egg-info/
 .eggs
+*.swp
+*.mypy_cache
 
 # config/userdata
 piqueserver/config/maps/*.txtc
@@ -47,13 +52,10 @@ pyspades/packet.cpp
 pyspades/vxl.cpp
 pyspades/world.cpp
 
-# enet
-enet/pyenet/enet.c
-enet/pyenet/__init__.py
-enet/pyenet/enet-pyspades.pyx
-enet/pyenet/enet/
-enet/pyenet/build/
-enet/enet-*.tar.gz
-
 #misc
 .DS_Store
+.cache
+
+# coverage
+.coverage
+htmlcov

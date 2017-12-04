@@ -1,7 +1,8 @@
 
 <img src="doc/logo.png" align="right" width="200px" alt="logo">
 
-# piqueserver [![Build Status](https://travis-ci.org/piqueserver/piqueserver.svg?branch=master)](https://travis-ci.org/piqueserver/piqueserver) [![Build status](https://ci.appveyor.com/api/projects/status/3mayprg9le4lejmm/branch/master?svg=true)](https://ci.appveyor.com/project/NotAFile/piqueserver/branch/master) [![Join the chat at https://gitter.im/piqueserver/piqueserver](https://badges.gitter.im/piqueserver/piqueserver.svg)](https://gitter.im/piqueserver/piqueserver?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# piqueserver [![Build Status](https://travis-ci.org/piqueserver/piqueserver.svg?branch=master)](https://travis-ci.org/piqueserver/piqueserver) [![Build status](https://ci.appveyor.com/api/projects/status/3mayprg9le4lejmm/branch/master?svg=true)](https://ci.appveyor.com/project/NotAFile/piqueserver/branch/master) [![Coverage Status](https://coveralls.io/repos/github/piqueserver/piqueserver/badge.svg?branch=master)](https://coveralls.io/github/piqueserver/piqueserver?branch=master) [![Join the chat at https://gitter.im/piqueserver/piqueserver](https://badges.gitter.im/piqueserver/piqueserver.svg)](https://gitter.im/piqueserver/piqueserver?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 
 An Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/PySnip).
 
@@ -12,6 +13,31 @@ An Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/P
  * IRC: `#piqueserver` on freenode.net ([web](http://webchat.freenode.net/?channels=%23piqueserver))
 
 All of these are bridged together!
+
+
+## :tada: Features
+
+* Many administrator features
+* A lot of epic commands
+* A remote console (using SSH)
+* Map rotation
+* Map metadata (name, version, author, and map configuration)
+* Map extensions (water damage, etc.)
+* A map generator
+* An IRC client for managing your server
+* A JSON query webserver
+* A status server with map overview
+* Server/map scripts
+* Airstrikes
+* Melee attacks with the pickaxe
+* New gamemodes (deathmatch / runningman)
+* Rollback feature (rolling back to the original map)
+* Spectator mode
+* Dirt grenades
+* Platforms with buttons
+* Ban subscribe service
+* A ton of other features
+
 
 ## :rocket: Installation
 
@@ -99,8 +125,7 @@ there, I guess. The important thing is to keep AoS servers alive.
 
 #### Is that everything?
 
- Please see also the [original README](https://github.com/piqueserver/piqueserver/blob/master/OLD_README.md) from PySnip and
- the [Wiki](https://github.com/piqueserver/piqueserver/wiki) for more information.
+ Please see also the [Wiki](https://github.com/piqueserver/piqueserver/wiki) for more information.
 
 ## :blush: Contribute
 
