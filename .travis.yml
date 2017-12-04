@@ -12,6 +12,7 @@ install:
 script:
   - export CYTHON_TRACE=1
   - python setup.py install
+  - python setup.py build_ext --inplace
   - pytest --cov=piqueserver --cov=pyspades
   - coveralls
   # - pylint piqueserver
