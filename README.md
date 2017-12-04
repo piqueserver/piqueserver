@@ -1,7 +1,8 @@
 
 <img src="doc/logo.png" align="right" width="200px" alt="logo">
 
-# piqueserver [![Build Status](https://travis-ci.org/piqueserver/piqueserver.svg?branch=master)](https://travis-ci.org/piqueserver/piqueserver) [![Build status](https://ci.appveyor.com/api/projects/status/3mayprg9le4lejmm/branch/master?svg=true)](https://ci.appveyor.com/project/NotAFile/piqueserver/branch/master) [![Join the chat at https://gitter.im/piqueserver/piqueserver](https://badges.gitter.im/piqueserver/piqueserver.svg)](https://gitter.im/piqueserver/piqueserver?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+# piqueserver [![Build Status](https://travis-ci.org/piqueserver/piqueserver.svg?branch=master)](https://travis-ci.org/piqueserver/piqueserver) [![Build status](https://ci.appveyor.com/api/projects/status/3mayprg9le4lejmm/branch/master?svg=true)](https://ci.appveyor.com/project/NotAFile/piqueserver/branch/master) [![Coverage Status](https://coveralls.io/repos/github/piqueserver/piqueserver/badge.svg?branch=master)](https://coveralls.io/github/piqueserver/piqueserver?branch=master) [![Join the chat at https://gitter.im/piqueserver/piqueserver](https://badges.gitter.im/piqueserver/piqueserver.svg)](https://gitter.im/piqueserver/piqueserver?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 
 An Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/PySnip).
 

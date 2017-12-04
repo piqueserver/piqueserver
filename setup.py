@@ -107,8 +107,6 @@ class build_ext(_build_ext):
         from Cython.Build import cythonize
 
         compiler_directives = {}
-        print('linetrace is')
-        print(linetrace)
         if linetrace:
             compiler_directives['linetrace'] = True
 
