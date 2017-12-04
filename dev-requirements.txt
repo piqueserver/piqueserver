@@ -1,1 +1,5 @@
 pylint
+coverage
+coveralls
+pytest
+pytest-cov

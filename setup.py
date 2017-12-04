@@ -44,6 +44,8 @@ static = os.environ.get('STDCPP_STATIC') == "1"
 if static:
     print("Linking the build statically.")
 
+linetrace = os.environ.get('CYTHON_TRACE') == '1'
+
 for name in ext_names:
     if static:
         extra = {'extra_link_args': ['-static-libstdc++', '-static-libgcc']}
@@ -57,9 +59,14 @@ for name in ext_names:
             # Python aparently redifines hypot to _hypot. This fixes that.
             extra["extra_compile_args"].extend(['-include', 'cmath'])
 
+    extra['define_macros'] = []
+
     if sys.platform == "win32":
         # nobody is using 32-bit in 2017. right? right? please
-        extra["define_macros"] = [("MS_WIN64", None)]
+        extra["define_macros"].append(("MS_WIN64", None))
+
+    if linetrace:
+        extra['define_macros'].append(('CYTHON_TRACE', '1'))
 
     ext_modules.append(Extension(name, ['./%s.pyx' % name.replace('.', '/')],
                                  language='c++', include_dirs=['./pyspades'], **extra))
@@ -70,7 +77,12 @@ class build_ext(_build_ext):
     def run(self):
 
         from Cython.Build import cythonize
-        self.extensions = cythonize(self.extensions)
+
+        compiler_directives = {}
+        if linetrace:
+            compiler_directives['linetrace'] = True
+
+        self.extensions = cythonize(self.extensions, compiler_directives=compiler_directives)
 
         _build_ext.run(self)
 

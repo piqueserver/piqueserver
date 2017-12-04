@@ -55,3 +55,7 @@ pyspades/world.cpp
 #misc
 .DS_Store
 .cache
+
+# coverage
+.coverage
+htmlcov
