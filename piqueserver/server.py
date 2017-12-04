@@ -518,7 +518,7 @@ class FeatureProtocol(ServerProtocol):
         Ban an ip with an optional reason and duration in minutes. If duration
         is None, ban is permanent.
         """
-        network = ip_network(text_type(ip))
+        network = ip_network(text_type(ip), strict=False)
         for connection in self.connections.values():
             if ip_address(connection.address[0]) in network:
                 name = connection.name

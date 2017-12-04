@@ -2,9 +2,7 @@ from six import text_type
 from ipaddress import ip_network, ip_address
 
 def get_cidr(network):
-    # TODO: why are we accessing a protected attribute?
-    #       does this work?
-    if network.prefixlen == 32:  # pylint: disable=protected-access
+    if network.prefixlen == 32:
         return str(network.network_address)
     return str(network)
 
@@ -23,7 +21,7 @@ class NetworkDict(object):
         return values
 
     def remove(self, key):
-        ip = ip_network(text_type(key))
+        ip = ip_network(text_type(key), strict=False)
         networks = []
         results = []
         for item in self.networks:
@@ -36,7 +34,7 @@ class NetworkDict(object):
         return results
 
     def __setitem__(self, key, value):
-        self.networks.append((ip_network(text_type(key)), value))
+        self.networks.append((ip_network(text_type(key), strict=False), value))
 
     def __getitem__(self, key):
         return self.get_entry(key)[1]
@@ -53,7 +51,7 @@ class NetworkDict(object):
         return len(self.networks)
 
     def __delitem__(self, key):
-        ip = ip_network(text_type(key))
+        ip = ip_network(text_type(key), strict=False)
         self.networks = [item for item in self.networks if ip not in item]
 
     def pop(self, *arg, **kw):

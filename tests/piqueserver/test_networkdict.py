@@ -46,3 +46,18 @@ class TestNetworkDict(unittest.TestCase):
 		networkdict = NetworkDict()
 		networkdict["177.47.27.223"] = ['GOD', ': esp hacker', 1511717871.435394]
 		self.assertEqual(("177.47.27.223" in networkdict), True)
+
+	def test_contains_iprange(self):
+		networkdict = NetworkDict()
+		cases = [
+			# Start IP: 56.0.0.0 End IP: 56.255.255.255
+			{"iprange":"56.0.0.0/8", "within":"56.200.0.1", "outside":"57.200.0.1"},
+			# Start IP: 127.0.0.0 End IP: 127.0.255.255
+			{"iprange":"127.0.0.1/16", "within":"127.0.232.225", "outside":"127.1.232.225"},
+			# Start IP: 127.0.0.0 End IP: 127.0.0.255
+			{"iprange":"172.0.0.1/24", "within":"172.0.0.22", "outside":"127.1.232.225"}
+		]
+		for case in cases:
+			networkdict[case["iprange"]] = ['GOD', ': esp hacker', 1511717871.435394]
+			self.assertEqual((case["within"] in networkdict), True)
+			self.assertEqual((case["outside"] in networkdict), False)
