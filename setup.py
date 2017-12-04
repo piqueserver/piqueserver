@@ -75,10 +75,6 @@ if static:
 
 linetrace = os.environ.get('CYTHON_TRACE') == '1'
 
-define_macros = []
-if linetrace:
-    define_macros.append(('CYTHON_TRACE', '1'))
-
 for name in names:
     if static:
         extra = {'extra_link_args' : ['-static-libstdc++', '-static-libgcc']}
@@ -92,12 +88,17 @@ for name in names:
             # Python aparently redifines hypot to _hypot. This fixes that.
             extra["extra_compile_args"].extend(['-include', 'cmath'])
 
+    extra['define_macros'] = []
+
     if sys.platform == "win32":
         # nobody is using 32-bit in 2017. right? right? please
-        extra["define_macros"] = [("MS_WIN64", None)]
+        extra["define_macros"].append(("MS_WIN64", None))
+
+    if linetrace:
+        extra['define_macros'].append(('CYTHON_TRACE', '1'))
 
     ext_modules.append(Extension(name, ['./%s.pyx' % name.replace('.', '/')],
-        language = 'c++', include_dirs=['./pyspades'], define_macros=define_macros, **extra))
+        language = 'c++', include_dirs=['./pyspades'], **extra))
 
 
 from distutils.command.build_ext import build_ext as _build_ext
