@@ -14,7 +14,7 @@ An Ace of Spades 0.75 server based on [PySnip](https://github.com/NateShoffner/P
 All of these are bridged together!
 
 
-### :tada: Features
+## :tada: Features
 
 * Many administrator features
 * A lot of epic commands
