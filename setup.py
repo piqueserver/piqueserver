@@ -2,62 +2,33 @@
 
 from __future__ import print_function
 
-# ### Virtualenv autoload ###
-# # Not really sure whether it's worth it... Looks like reinveting virtualenv .
-# # Consider making users to load virtualenv on their own.
-# from os import path as __p
-# venv_dirs = [__p.join(__p.dirname(__p.realpath(__file__)), i) for i in ('venv', '.venv')]
-# activated_venv = None
-# for venv_dir in venv_dirs:
-#     try:
-#         activate_this = __p.join(venv_dir, 'bin', 'activate_this.py')
-#         execfile(activate_this, dict(__file__=activate_this))
-#         activated_venv = venv_dir
-#     except IOError:
-#         pass
-#     else:
-#         break
-# print("Using virtualenv %s" % activated_venv)
-
-# import sys
-# import os
-
-# if activated_venv is not None:
-#     sys.argv[0] = __p.join(activated_venv, 'bin', 'python2')
-#     sys.executable = sys.argv[0]
-#     os.environ['_'] = sys.argv[0]
-#     sys.prefix = activated_venv
-#     sys.exec_prefix = activated_venv
-# ### Virtualenv autoload end ###
-
-
 import sys
 import os
+from distutils.core import run_setup
+# build_ext is subclassed, so we import it with a _ to avoid a collision
+from distutils.command.build_ext import build_ext as _build_ext
+from setuptools import setup, Extension
 
-PKG_NAME="piqueserver"
-PKG_URL="https://github.com/piqueserver/piqueserver"
-PKG_DOWNLOAD_URL="https://github.com/piqueserver/piqueserver/archive/0.1.0.zip"
+
+PKG_NAME = "piqueserver"
+PKG_URL = "https://github.com/piqueserver/piqueserver"
+PKG_DOWNLOAD_URL = "https://github.com/piqueserver/piqueserver/archive/0.1.0.zip"
 
 extra_args = sys.argv[2:]
 
-import subprocess
-import shutil
-from setuptools import setup, find_packages, Extension, dist
-from distutils.core import run_setup
-
 try:
-   import pypandoc
-   import re
-   long_description = pypandoc.convert_text(
-        re.sub(r'[^\x00-\x7F]+',' ',
-            pypandoc.convert('README.md', 'markdown', format="markdown_github")), 'rst', format="markdown")
+    import pypandoc
+    import re
+    long_description = pypandoc.convert_text(
+        re.sub(r'[^\x00-\x7F]+', ' ',
+               pypandoc.convert('README.md', 'markdown', format="markdown_github")), 'rst', format="markdown")
 except (IOError, ImportError):
     long_description = ''
 
 
 ext_modules = []
 
-names = [
+ext_names = [
     'pyspades.vxl',
     'pyspades.bytes',
     'pyspades.packet',
@@ -73,9 +44,9 @@ static = os.environ.get('STDCPP_STATIC') == "1"
 if static:
     print("Linking the build statically.")
 
-for name in names:
+for name in ext_names:
     if static:
-        extra = {'extra_link_args' : ['-static-libstdc++', '-static-libgcc']}
+        extra = {'extra_link_args': ['-static-libstdc++', '-static-libgcc']}
     else:
         extra = {}
 
@@ -91,11 +62,11 @@ for name in names:
         extra["define_macros"] = [("MS_WIN64", None)]
 
     ext_modules.append(Extension(name, ['./%s.pyx' % name.replace('.', '/')],
-        language = 'c++', include_dirs=['./pyspades'], **extra))
+                                 language='c++', include_dirs=['./pyspades'], **extra))
 
 
-from distutils.command.build_ext import build_ext as _build_ext
 class build_ext(_build_ext):
+
     def run(self):
 
         from Cython.Build import cythonize
@@ -103,23 +74,28 @@ class build_ext(_build_ext):
 
         _build_ext.run(self)
 
-        run_setup(os.path.join(os.getcwd(), "setup.py"), ['build_py'] + extra_args)
+        run_setup(os.path.join(os.getcwd(), "setup.py"),
+                  ['build_py'] + extra_args)
+
 
 setup(
-    name = PKG_NAME,
-    packages = [PKG_NAME, '%s.web' % PKG_NAME, '%s.scripts' % PKG_NAME, 'pyspades'],
-    version = '0.1.0_post1',
-    description = 'Open-Source server implementation for Ace of Spades',
-    author = 'Originally MatPow2 and PySnip contributors, now, StackOverflow and piqueserver authors',
-    author_email = 'nate.shoffner@gmail.com',
-    maintainer = 'noway421',
-    maintainer_email = 'noway@2ch.hk',
-    license = 'GNU General Public License v3',
-    long_description = long_description,
-    url = PKG_URL,
-    download_url = PKG_DOWNLOAD_URL,
-    keywords = ['ace of spades', 'aos', 'server', 'pyspades', 'pysnip', 'piqueserver'],
-    classifiers = [
+    name=PKG_NAME,
+    packages=[PKG_NAME, '%s.web' %
+              PKG_NAME, '%s.scripts' % PKG_NAME, 'pyspades'],
+    version='0.1.0_post1',
+    description='Open-Source server implementation for Ace of Spades ',
+    author=('Originally MatPow2 and PySnip contributors,'
+            'now, StackOverflow and piqueserver authors'),
+    author_email='nate.shoffner@gmail.com',
+    maintainer='noway421',
+    maintainer_email='noway@2ch.hk',
+    license='GNU General Public License v3',
+    long_description=long_description,
+    url=PKG_URL,
+    download_url=PKG_DOWNLOAD_URL,
+    keywords=['ace of spades', 'aos', 'server',
+              'pyspades', 'pysnip', 'piqueserver'],
+    classifiers=[
         'Intended Audience :: System Administrators',
         'Development Status :: 3 - Alpha',
         'Operating System :: MacOS :: MacOS X',
@@ -131,35 +107,40 @@ setup(
         'Programming Language :: Python :: 2 :: Only',
         'Framework :: Twisted',
     ],
-    platforms = "Darwin, Unix",
-    setup_requires = ['Cython>=0,<1'], # at least for now when we have to cythonize enet
-    install_requires = [
+    platforms="Darwin, Unix",
+
+    setup_requires=['Cython>=0,<1'],
+    install_requires=[
         'Cython>=0,<1',
         'Twisted>=17',
-        'Jinja2>=2,<3', # status server is part of our 'vanila' package
+        'Jinja2>=2,<3',  # status server is part of our 'vanilla' package
         'Pillow>=3,<5',
         'pyenet',
         'ipaddress'
     ],
-    extras_require = {
+    extras_require={
         'from': ['pygeoip>=0.3.2,<0.4'],
         # 'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
-        'ssh': ['pycrypto>=2.6.1,<2.7', 'cryptography>=2.0.0,<3.0', 'pyasn1>=0.1.9,<0.2']
+        'ssh': [
+            'pycrypto>=2.6.1,<2.7',
+            'cryptography>=2.0.0,<3.0',
+            'pyasn1>=0.1.9,<0.2'
+        ]
     },
-    entry_points = {
+    entry_points={
         'console_scripts': [
             '%s=%s.run:main' % (PKG_NAME, PKG_NAME)
         ],
     },
-    package_dir = {
+    package_dir={
         PKG_NAME: 'piqueserver',
         '%s.web' % PKG_NAME: 'piqueserver/web',
         '%s.scripts' % PKG_NAME: 'piqueserver/scripts',
         'pyspades': 'pyspades',
-    }, # some kind of find_packages?
-    package_data = {"%s.web" % PKG_NAME: ["templates/status.html"]},
+    },  # some kind of find_packages?
+    package_data={"%s.web" % PKG_NAME: ["templates/status.html"]},
     include_package_data=True,
 
-    ext_modules = ext_modules,
-    cmdclass = { 'build_ext': build_ext },
+    ext_modules=ext_modules,
+    cmdclass={'build_ext': build_ext},
 )

@@ -2,6 +2,7 @@ from twisted.internet import reactor
 from twisted.web import client
 from twisted.web.client import HTTPClientFactory, URI
 
+# TODO: getPage is deprecated in twisted
 
 def getPage(url, bindAddress=None, *arg, **kw):
     # reimplemented here to insert bindAddress

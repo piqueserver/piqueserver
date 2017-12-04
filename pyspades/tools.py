@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-import struct
-
+# FIXME: This should be probably moved into it's own URL thing and put into
+# some module with a name describing it's insignificance
 
 def make_server_identifier(ip, port=32887):
     a, b, c, d = ip.split('.')
@@ -43,13 +43,3 @@ def get_server_details(value):
     c = (host & 0xFF0000) >> 16
     d = (host & 0xFF000000) >> 24
     return ('%s.%s.%s.%s' % (a, b, c, d), port)
-
-if __name__ == '__main__':
-    import sys
-    args = sys.argv[1:]
-    command = args[0]
-    if command == 'readpacket':
-        from pyspades.packet import Packet
-        new_packet = Packet()
-        new_packet.read(eval(' '.join(args[1:])))
-        print(new_packet.items)

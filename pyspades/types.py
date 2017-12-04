@@ -15,6 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+A few useful types used around the place.
+
+IDPool is used to distribute the IDs given out by the Server
+
+AttributeSet is used for tesint if various settings are active
+
+MultikeyDict is used to make player names accessible by both id and name
+"""
+
 import itertools
 from collections import namedtuple
 
@@ -22,6 +32,17 @@ from collections import namedtuple
 class IDPool(object):
     """
     Manage pool of IDs
+
+    >>> p = IDPool(start=10)
+    >>> p.pop()
+    10
+    >>> p.pop()
+    11
+    >>> p.pop()
+    12
+    >>> p.put_back(11)
+    >>> p.pop()
+    11
     """
 
     def __init__(self, start=0):
@@ -42,11 +63,20 @@ class AttributeSet(set):
     """
     set with attribute access, i.e.
 
-        foo = AttributeSet()
-        foo.bar = True
-        foo.bar == 'bar' in foo == True
-        foo.bar = False
-        foo.bar == 'bar' in foo == False
+    >>> foo = AttributeSet(("eggs", ))
+    >>> foo.eggs
+    True
+    >>> foo.spam
+    False
+
+    Also supports adding and removing elements
+
+    >>> foo.bar = True
+    >>> 'bar' in foo
+    True
+    >>> foo.bar = False
+    >>> 'bar' in foo
+    False
 
     This works as a quick shorthand for membership testing.
     """
@@ -68,9 +98,12 @@ class MultikeyDict(dict):
     """
     dict with multiple keys, i.e.
 
-        foo = MultikeyDict()
-        foo[(1, 'bar')] = 'hello'
-        foo[1] == foo['bar'] == 'hello'
+    >>> foo = MultikeyDict()
+    >>> foo[(1, 'bar')] = 'hello'
+    >>> foo[1]
+    'hello'
+    >>> foo['bar']
+    'hello'
 
     To delete: "del foo[1]" or "del foo['bar']" or "del foo['hello']"
 
