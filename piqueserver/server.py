@@ -31,10 +31,7 @@ import random
 import time
 from collections import deque
 
-try:
-    range = xrange # pylint: disable=redefined-builtin
-except NameError:
-    pass
+import six
 
 if sys.platform == 'linux2':
     try:
@@ -44,17 +41,18 @@ if sys.platform == 'linux2':
         print('(dependencies missing for epoll, using normal reactor)')
 from ipaddress import ip_network, ip_address
 from twisted.internet import reactor
+from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.python import log
 from twisted.python.logfile import DailyLogFile
+from twisted import web
 
 from piqueserver import cfg
 
 import pyspades.debug
 from pyspades.server import (ServerProtocol, Team)
-from pyspades.web import getPage
 from pyspades.common import encode
 from pyspades.constants import (CTF_MODE, TC_MODE)
-from pyspades.master import MAX_SERVER_NAME_SIZE, get_external_ip
+from pyspades.master import MAX_SERVER_NAME_SIZE
 from pyspades.tools import make_server_identifier
 from pyspades.bytes import NoDataLeft
 
@@ -64,6 +62,11 @@ from piqueserver.map import Map, MapNotFound, check_rotation
 from piqueserver.console import create_console
 from piqueserver.networkdict import NetworkDict
 from piqueserver.player import FeatureConnection
+
+try:
+    range = xrange  # pylint: disable=redefined-builtin
+except NameError:
+    pass
 
 # default passwords hardcoded in config
 DEFAULT_PASSWORDS = {
@@ -75,6 +78,8 @@ DEFAULT_PASSWORDS = {
 
 PORT = 32887
 
+web.client._HTTP11ClientFactory.noisy = False
+
 
 def create_path(path):
     if path:
@@ -83,16 +88,27 @@ def create_path(path):
         except OSError:
             pass
 
+
 def create_filename_path(path):
     create_path(os.path.dirname(path))
+
 
 def open_create(filename, mode):
     create_filename_path(filename)
     return open(filename, mode)
 
+
 def random_choice_cycle(choices):
     while True:
         yield random.choice(choices)
+
+
+IP_GETTER = 'https://services.buildandshoot.com/getip'
+# other tools:
+# http://www.domaintools.com/research/my-ip/myip.xml
+# http://checkip.dyndns.com/
+# http://icanhazip.com/
+
 
 class FeatureTeam(Team):
     locked = False
@@ -325,10 +341,13 @@ class FeatureProtocol(ServerProtocol):
         self.master = config.get('master', True)
         self.set_master()
 
-        get_external_ip(config.get('network_interface', '').encode()).addCallback(
-            self.got_external_ip)
+        self.http_agent = web.client.Agent(reactor)
+        self.get_external_ip()
 
-    def got_external_ip(self, ip):
+    @inlineCallbacks
+    def get_external_ip(self):
+        ip = yield self.getPage(six.binary_type(IP_GETTER))
+
         self.ip = ip
         self.identifier = make_server_identifier(ip, self.port)
         print('Server identifier is %s' % self.identifier)
@@ -651,16 +670,18 @@ class FeatureProtocol(ServerProtocol):
     # useful twisted wrappers
 
     def listenTCP(self, *arg, **kw):
-        return reactor.listenTCP(*arg,
-                                 interface=self.config.get('network_interface', ''), **kw)
+        return reactor.listenTCP(
+            *arg, interface=self.config.get('network_interface', ''), **kw)
 
     def connectTCP(self, *arg, **kw):
-        return reactor.connectTCP(*arg,
-                                  bindAddress=(self.config.get('network_interface', ''), 0), **kw)
+        return reactor.connectTCP(
+            *arg, bindAddress=(self.config.get('network_interface', ''), 0), **kw)
 
-    def getPage(self, *arg, **kw):
-        return getPage(*arg,
-                       bindAddress=(self.config.get('network_interface', ''), 0), **kw)
+    @inlineCallbacks
+    def getPage(self, url):
+        resp = yield self.http_agent.request(b'GET', url)
+        body = yield web.client.readBody(resp)
+        returnValue(body)
 
     # before-end calls
 
