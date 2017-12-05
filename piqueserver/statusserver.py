@@ -61,6 +61,7 @@ class JSONPage(CommonResource):
             players.append(player_data)
 
         dictionary = {
+            "serverIdentifier": protocol.identifier,
             "serverName": protocol.name,
             "serverVersion": protocol.version,
             "serverUptime": reactor.seconds() - protocol.start_time,
