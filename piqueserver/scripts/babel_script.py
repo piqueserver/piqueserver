@@ -19,7 +19,7 @@ How to install and configure:
 from pyspades.constants import *
 from random import randint
 from twisted.internet import reactor
-import commands
+from piqueserver import commands
 
 # If ALWAYS_ENABLED is False, then babel can be enabled by setting 'babel': True
 # in the map metadat extensions dictionary.
