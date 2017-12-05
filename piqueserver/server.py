@@ -44,7 +44,7 @@ from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.python import log
 from twisted.python.logfile import DailyLogFile
-from twisted import web
+from twisted.web import client as web_client
 
 from piqueserver import cfg
 
@@ -78,7 +78,7 @@ DEFAULT_PASSWORDS = {
 
 PORT = 32887
 
-web.client._HTTP11ClientFactory.noisy = False
+web_client._HTTP11ClientFactory.noisy = False
 
 
 def create_path(path):
@@ -341,7 +341,7 @@ class FeatureProtocol(ServerProtocol):
         self.master = config.get('master', True)
         self.set_master()
 
-        self.http_agent = web.client.Agent(reactor)
+        self.http_agent = web_client.Agent(reactor)
         self.get_external_ip()
 
     @inlineCallbacks
@@ -680,7 +680,7 @@ class FeatureProtocol(ServerProtocol):
     @inlineCallbacks
     def getPage(self, url):
         resp = yield self.http_agent.request(b'GET', url)
-        body = yield web.client.readBody(resp)
+        body = yield web_client.readBody(resp)
         returnValue(body)
 
     # before-end calls

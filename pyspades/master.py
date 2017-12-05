@@ -24,7 +24,6 @@ from __future__ import unicode_literals
 from pyspades.loaders import Loader
 from pyspades.protocol import BaseConnection
 from pyspades.constants import MASTER_VERSION
-from pyspades.web import getPage
 
 from twisted.internet.defer import Deferred
 
