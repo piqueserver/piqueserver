@@ -1357,9 +1357,9 @@ else:
         database = pygeoip.GeoIP(os.path.join(
             cfg.config_dir, 'data/GeoLiteCity.dat'))
     except ImportError:
-        print("('from' command disabled - missing pygeoip)")
+        print("('/from' command disabled. Please install pygeoip to enable.)")
     except (IOError, OSError):
-        print("('from' command disabled - missing data/GeoLiteCity.dat)")
+        print("('/from' command disabled due to missing GeoIP database. Run 'piqueserver --update-geoip' to install.)")
     finally:
         @command('from')
         def where_from(connection, value=None):
