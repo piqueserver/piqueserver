@@ -11,16 +11,20 @@ class BanManager(object):
     def __init__(self):
         self.bans = []
 
-    def ban(self, ip, duration, reason, name=None):
+    def ban(self, ip, duration, reason, name=None, by=None):
         ban = {
             'network': ip_network(text_type(ip), strict=False),
             'duration': duration,
             'expiry': datetime.utcnow() + timedelta(minutes=duration),
             'reason': reason,
             'name': name,
+            'by': by,
             'source': 'local'
         }
         self.bans.append(ban)
+
+    def ban_player(self, player, duration, reason, by=None):
+        self.ban(player.ip, duration, reason, player.name, by)
 
     def unban(self, ip):
         player_ip = ip_address(text_type(ip))
