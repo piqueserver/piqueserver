@@ -1,6 +1,5 @@
-from piqueserver.banmanager import BanManager
 import unittest
-import time
+from piqueserver.banmanager import BanManager
 
 
 class TestBanManager(unittest.TestCase):

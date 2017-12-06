@@ -1,6 +1,6 @@
-from six import text_type
 from datetime import datetime, timedelta
 from ipaddress import ip_network, ip_address
+from six import text_type
 
 
 def is_expired(ban):
