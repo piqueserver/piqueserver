@@ -4,10 +4,10 @@ Helps Deuces automagically when they ask in the chat for help.
 Maintainer: ?
 """
 
-from twisted.internet import reactor
 import re
+from twisted.internet import reactor
 
-deuce_name_pattern = re.compile("Deuce\d?\d?$")
+deuce_name_pattern = re.compile(r"Deuce\d?\d?$")
 nick_chat_pattern = re.compile(
     ".*how.*(set|change|choo?se|make|pick).*(name|nick)",
     re.IGNORECASE)
