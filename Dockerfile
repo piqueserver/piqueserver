@@ -8,6 +8,8 @@ WORKDIR /usr/src/app
 # In order to keep layers lean we instantly remove the build essentials 
 COPY requirements.txt /usr/src/app/
 
+RUN apk add --no-cache libffi-dev openssl-dev
+
 RUN apk add --no-cache --virtual .build-deps-cython gcc musl-dev \
     && apk add --no-cache --virtual .build-deps-pillow zlib-dev jpeg-dev \
     && apk add --no-cache zlib jpeg \
