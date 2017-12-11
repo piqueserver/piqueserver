@@ -1,5 +1,5 @@
-from piqueserver.commands import command
 import unittest
+from piqueserver.commands import command, _alias_map
 
 
 class TestCommandDecorator(unittest.TestCase):
@@ -16,3 +16,15 @@ class TestCommandDecorator(unittest.TestCase):
         def test():
             pass
         self.assertEqual(test.command_name, 'test')
+
+    def test_command_rename(self):
+        @command('notatest')
+        def test():
+            pass
+        self.assertEqual(test.command_name, 'notatest')
+
+    def test_command_alias(self):
+        @command('name', 'n')
+        def test():
+            pass
+        self.assertEqual(_alias_map['n'], 'name')
