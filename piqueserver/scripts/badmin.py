@@ -52,8 +52,7 @@ def aimbot_match(player, msg):
     return (not aimbot_pattern.match(msg) is None)
 
 
-@admin
-@command()
+@command(admin_only=True)
 def badmin(connection, var=None):
     if var == None:
         return ("@Badmin (r%s): Language Filter(LF) [%s], Blank Votekick Blocker(BV) "
@@ -61,8 +60,7 @@ def badmin(connection, var=None):
                 % (BADMIN_VERSION, LANGUAGE_FILTER_ENABLED, BLANK_VOTEKICK_ENABLED,
                    SCORE_GRIEF_ENABLED, SCORE_AIMBOT_ENABLED))
 
-@admin
-@command()
+@command(admin_only=True)
 def investigate(connection, player):
     player = get_player(connection.protocol, player)
     score = score_grief(connection, player)

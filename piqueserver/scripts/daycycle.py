@@ -16,8 +16,7 @@ S_SPEED = 'Day cycle speed is {multiplier}'
 S_SPEED_SET = 'Day cycle speed changed to {multiplier}'
 S_STOPPED = 'Day cycle stopped'
 
-@admin
-@command('dayspeed')
+@command('dayspeed', admin_only=True)
 def day_speed(connection, value=None):
     if value is None:
         return S_SPEED.format(multiplier=connection.protocol.time_multiplier)

@@ -51,8 +51,7 @@ def airstrike(connection, *args):
                               remaining=kills_left)
 
 # debug
-@admin
-@command('givestrike')
+@command('givestrike', admin_only=True)
 def give_strike(connection, player=None):
     protocol = connection.protocol
     if player is not None:

@@ -97,14 +97,12 @@ def reset_intel(protocol, team):
     protocol.send_chat("The %s intel has been reset." % team.name)
 
 
-@admin
-@command()
+@command(admin_only=True)
 def resetblueintel(connection):
     reset_intel(connection.protocol, connection.protocol.blue_team)
 
 
-@admin
-@command()
+@command(admin_only=True)
 def resetgreenintel(connection):
     reset_intel(connection.protocol, connection.protocol.green_team)
 

@@ -14,8 +14,7 @@ DISCO_ON_GAME_END = True
 # Time is in seconds
 DISCO_ON_GAME_END_DURATION = 10.0
 
-@admin
-@command('disco')
+@command('disco', admin_only=True)
 def toggle_disco(connection):
     connection.protocol.toggle_disco(True)
 

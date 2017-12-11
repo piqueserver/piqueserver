@@ -21,8 +21,7 @@ def afk(connection, player):
     elapsed = prettify_timespan(reactor.seconds() - player.last_activity, True)
     return S_AFK_CHECK.format(player=player.name, time=elapsed)
 
-@admin
-@command('kickafk')
+@command('kickafk', admin_only=True)
 def kick_afk(connection, minutes, amount=None):
     protocol = connection.protocol
     minutes = int(minutes)

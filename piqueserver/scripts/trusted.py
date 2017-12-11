@@ -12,8 +12,7 @@ S_GRANTED_SELF = "You've been granted trust, and can't be votekicked"
 S_CANT_VOTEKICK = "{player} is trusted and can't be votekicked"
 S_RESULT_TRUSTED = 'Trusted user'
 
-@admin
-@command()
+@command(admin_only=True)
 def trust(connection, player):
     player = get_player(connection.protocol, player)
     player.on_user_login('trusted', False)

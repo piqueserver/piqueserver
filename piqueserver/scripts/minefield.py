@@ -157,8 +157,7 @@ def parseField(ext):
     return None
 
 
-@admin
-@command()
+@command(admin_only=True)
 def minedebug(connection):
     proto = connection.protocol
     proto.minefield_debug = not proto.minefield_debug

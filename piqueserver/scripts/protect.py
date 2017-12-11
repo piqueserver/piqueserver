@@ -8,8 +8,7 @@ from piqueserver.commands import command, admin
 from pyspades.common import coordinates
 
 
-@admin
-@command()
+@command(admin_only=True)
 def protect(connection, value=None):
     protocol = connection.protocol
     if value is None:

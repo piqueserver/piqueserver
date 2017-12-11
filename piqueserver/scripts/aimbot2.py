@@ -159,8 +159,7 @@ def accuracy_player(player, name_info=True):
         rifle_percent, smg_percent, shotgun_percent)
     return s
 
-@admin
-@command()
+@command(admin_only=True)
 def hackinfo(connection, name):
     player = get_player(connection.protocol, name)
     return hackinfo_player(player)

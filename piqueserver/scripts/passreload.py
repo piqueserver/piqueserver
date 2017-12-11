@@ -8,8 +8,7 @@ import json
 import os.path
 
 
-@admin
-@command()
+@command(admin_only=True)
 def reloadconfig(connection):
     new_config = {}
     try:

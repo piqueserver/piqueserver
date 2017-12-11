@@ -120,8 +120,7 @@ def vote_yes(connection):
     votekick.vote(player)
 
 
-@command('tvk')
-@admin
+@command('tvk', admin_only=True)
 def togglevotekick(connection, *args):
     protocol = connection.protocol
     if len(args) == 0:

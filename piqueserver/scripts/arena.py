@@ -77,8 +77,7 @@ else:
     MAX_ROUND_TIME_TEXT = str(MAX_ROUND_TIME) + ' seconds'
 
 
-@admin
-@command()
+@command(admin_only=True)
 def coord(connection):
     connection.get_coord = True
     return 'Spade a block to get its coordinate.'

@@ -72,8 +72,7 @@ def clear(connection):
     return S_CLEARED
 
 
-@admin
-@command('togglemarkers')
+@command('togglemarkers', admin_only=True)
 def toggle_markers(connection, player=None):
     protocol = connection.protocol
     if player is not None:

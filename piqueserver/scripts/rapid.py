@@ -23,8 +23,7 @@ ALWAYS_RAPID = False
 RAPID_INTERVAL = 0.08
 RAPID_BLOCK_DELAY = 0.26
 
-@admin
-@command('rapid')
+@command('rapid', admin_only=True)
 def toggle_rapid(connection, player=None):
     protocol = connection.protocol
     if player is not None:

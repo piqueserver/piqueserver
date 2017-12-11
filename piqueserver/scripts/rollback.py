@@ -28,8 +28,7 @@ S_ROLLBACK_TIME_TAKEN = 'Time taken: {seconds:.3}s'
 
 NON_SURFACE_COLOR = (0, 0, 0)
 
-@admin
-@command()
+@command(admin_only=True)
 def rollmap(connection, mapname=None, value=None):
     start_x, start_y, end_x, end_y = 0, 0, 512, 512
     if value is not None:
@@ -38,13 +37,11 @@ def rollmap(connection, mapname=None, value=None):
     return connection.protocol.start_rollback(connection, mapname,
                                               start_x, start_y, end_x, end_y)
 
-@admin
-@command()
+@command(admin_only=True)
 def rollback(connection, value=None):
     return rollmap(connection, value=value)
 
-@admin
-@command()
+@command(admin_only=True)
 def rollbackcancel(connection):
     return connection.protocol.cancel_rollback(connection)
 

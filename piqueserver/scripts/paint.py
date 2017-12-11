@@ -15,8 +15,7 @@ from piqueserver.commands import command, admin, get_player
 
 PAINT_RAY_LENGTH = 32.0
 
-@admin
-@command()
+@command(admin_only=True)
 def paint(connection, player=None):
     protocol = connection.protocol
     if player is not None:

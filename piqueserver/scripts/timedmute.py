@@ -5,8 +5,7 @@
 from scheduler import Scheduler
 from piqueserver.commands import command, admin, get_player, join_arguments
 
-@admin
-@command('tm')
+@command('tm', admin_only=True)
 def timed_mute(connection, *args):
     protocol = connection.protocol
 

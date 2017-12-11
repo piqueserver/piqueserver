@@ -363,15 +363,13 @@ def flatten(iterables):
     return chain.from_iterable(iterables)
 
 
-@admin
-@command()
+@command(admin_only=True)
 def save(connection):
     connection.protocol.dump_platform_json()
     return S_SAVED
 
 
-@admin
-@command()
+@command(admin_only=True)
 def reach(connection):
     if connection not in connection.protocol.players:
         raise ValueError()
@@ -379,8 +377,7 @@ def reach(connection):
     connection.reach = ACTION_RAY_LENGTH if long else ACTION_RAY_LENGTH_LONG
     return S_REACH if not long else S_NO_REACH
 
-@admin
-@command('platform', 'p')
+@command('platform', 'p', admin_only=True)
 def platform_command(connection, *args):
     protocol = connection.protocol
     if connection not in protocol.players:
@@ -440,8 +437,7 @@ def platform_command(connection, *args):
         player.states.exit()
         player.states.enter(NewPlatformState())
 
-@admin
-@command('button', 'b')
+@command('button', 'b', admin_only=True)
 def button_command(connection, *args):
     protocol = connection.protocol
     if connection not in protocol.players:
@@ -505,8 +501,7 @@ def button_command(connection, *args):
         player.states.exit()
         player.states.enter(NewButtonState())
 
-@admin
-@command('action', 'ac')
+@command('action', 'ac', admin_only=True)
 def action_command(connection, *args):
     protocol = connection.protocol
     if connection not in protocol.players:
@@ -624,8 +619,7 @@ def action_command(connection, *args):
     except IndexError:
         return usage
 
-@admin
-@command('trigger', 't')
+@command('trigger', 't', admin_only=True)
 def trigger_command(connection, *args):
     protocol = connection.protocol
     if connection not in protocol.players:

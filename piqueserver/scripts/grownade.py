@@ -95,8 +95,7 @@ def load_models(expression):
             failed.append(filename)
     return models, loaded, failed
 
-@admin
-@command('model')
+@command('model', admin_only=True)
 def model_grenades(connection, expression=None):
     protocol = connection.protocol
     if connection not in protocol.players:

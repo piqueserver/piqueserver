@@ -1,8 +1,7 @@
 from pyspades.server import *
 from piqueserver.commands import command
 
-@admin
-@command('togglewallspading','tws')
+@command('togglewallspading','tws', admin_only=True)
 def togglewallspading(self):
     self.protocol.is_fluffy = not self.protocol.is_fluffy
     if not self.protocol.is_fluffy:

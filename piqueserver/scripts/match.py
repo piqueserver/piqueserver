@@ -12,34 +12,29 @@ import json
 from piqueserver.commands import command, admin
 
 
-@admin
-@command('timer')
+@command('timer', admin_only=True)
 def start_timer(connection, end):
     return connection.protocol.start_timer(int(end) * 60)
 
 
-@admin
-@command('stoptimer')
+@command('stoptimer', admin_only=True)
 def stop_timer(connection, end):
     return connection.protocol.stop_timer()
 
 
-@admin
-@command('startrecord')
+@command('startrecord', admin_only=True)
 def start_record(connection):
     connection.protocol.start_record()
     return 'Recording started.'
 
 
-@admin
-@command('stoprecord')
+@command('stoprecord', admin_only=True)
 def stop_record(connection):
     connection.protocol.stop_record()
     return 'Recording stopped.'
 
 
-@admin
-@command('saverecord')
+@command('saverecord', admin_only=True)
 def save_record(connection, value):
     if not connection.protocol.save_record(value):
         return 'No record file available.'
