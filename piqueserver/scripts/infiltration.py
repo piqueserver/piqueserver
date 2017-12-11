@@ -103,8 +103,9 @@ def apply_script(protocol, connection, config):
             attacker = self.protocol.attacker
             defender = self.protocol.defender
             attacker_count = attacker.count() + (1 if team is attacker else 0)
-            defender_count = ((defender.count() + (1 if team is defender else 0))
-                              * ATTACKER_TO_DEFENDER_RATIO)
+            defender_count = ((defender.count() +
+                               (1 if team is defender else 0)) *
+                              ATTACKER_TO_DEFENDER_RATIO)
             attacker_count = attacker_count or ATTACKER_TO_DEFENDER_RATIO
             if ((attacker_count > defender_count and team is attacker) or
                     (attacker_count < defender_count and team is defender)):

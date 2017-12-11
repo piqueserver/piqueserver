@@ -32,7 +32,7 @@ def apply_script(protocol, connection, config):
         def on_hit(self, hit_amount, hit_player, type, grenade):
             result = connection.on_hit(self, hit_amount, hit_player, type,
                                        grenade)
-            if result == False:
+            if not result:
                 return False
             if result is not None:
                 hit_amount = result

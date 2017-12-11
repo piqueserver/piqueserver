@@ -100,7 +100,7 @@ def apply_script(protocol, connection, config):
             square_1 = xrange(128)
             square_2 = xrange(512 - 128, 512)
 
-            while 1:
+            while True:
                 top = int(y) in square_1
                 bottom = int(y) in square_2
                 if top:
@@ -122,7 +122,7 @@ def apply_script(protocol, connection, config):
 
             for i in xrange(CP_EXTRA_COUNT):
                 index = 0
-                while 1:
+                while True:
                     p_x, p_y = points[index]
                     index += 1
                     if p_x >= offset:

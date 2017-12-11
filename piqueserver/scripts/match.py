@@ -40,22 +40,26 @@ def save_record(connection, value):
         return 'No record file available.'
     return 'Record saved.'
 
+
 def apply_script(protocol, connection, config):
     class MatchConnection(connection):
 
         def on_flag_take(self):
-            self.add_message("%s took %s's flag!" %
-                             (self.printable_name, self.team.other.name.lower()))
+            self.add_message(
+                "%s took %s's flag!" %
+                (self.printable_name, self.team.other.name.lower()))
             return connection.on_flag_take(self)
 
         def on_flag_drop(self):
-            self.add_message("%s dropped %s's flag!" %
-                             (self.printable_name, self.team.other.name.lower()))
+            self.add_message(
+                "%s dropped %s's flag!" %
+                (self.printable_name, self.team.other.name.lower()))
             return connection.on_flag_drop(self)
 
         def on_flag_capture(self):
-            self.add_message("%s captured %s's flag!" %
-                             (self.printable_name, self.team.other.name.lower()))
+            self.add_message(
+                "%s captured %s's flag!" %
+                (self.printable_name, self.team.other.name.lower()))
             return connection.on_flag_capture(self)
 
         def on_kill(self, killer, type, grenade):

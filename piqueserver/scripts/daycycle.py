@@ -16,6 +16,7 @@ S_SPEED = 'Day cycle speed is {multiplier}'
 S_SPEED_SET = 'Day cycle speed changed to {multiplier}'
 S_STOPPED = 'Day cycle stopped'
 
+
 @command('dayspeed', admin_only=True)
 def day_speed(connection, value=None):
     if value is None:
@@ -32,6 +33,7 @@ def day_speed(connection, value=None):
             protocol.daycycle_loop.start(protocol.day_update_frequency)
         return S_SPEED_SET.format(multiplier=value)
 
+
 @command('daytime')
 def day_time(connection, value=None):
     if value is not None:
@@ -44,6 +46,7 @@ def day_time(connection, value=None):
         connection.protocol.update_day_color()
     f, i = modf(connection.protocol.current_time)
     return S_TIME_OF_DAY.format(hours=int(i), minutes=int(f * 60))
+
 
 def apply_script(protocol, connection, config):
     class DayCycleProtocol(protocol):
@@ -68,19 +71,19 @@ def apply_script(protocol, connection, config):
             self.day_update_frequency = 0.1
             self.time_multiplier = 48.0
             self.day_colors = [
-                (0.00, (0.05,   0.05, 0.05), False),
-                (4.00, (0.05,   0.77, 0.05), False),
+                (0.00, (0.05, 0.05, 0.05), False),
+                (4.00, (0.05, 0.77, 0.05), False),
                 (5.00, (0.0694, 0.77, 0.78), True),
                 (5.30, (0.0361, 0.25, 0.95), False),
-                (6.00, (0.56,   0.18, 0.94), False),
+                (6.00, (0.56, 0.18, 0.94), False),
                 (9.00, (0.5527, 0.24, 0.94), False),
                 (12.00, (0.5527, 0.41, 0.95), False),
-                (19.50, (0.56,   0.28, 0.96), False),
-                (20.00, (0.15,   0.33, 0.87), False),
-                (20.25, (0.11,   0.49, 0.94), False),
+                (19.50, (0.56, 0.28, 0.96), False),
+                (20.00, (0.15, 0.33, 0.87), False),
+                (20.25, (0.11, 0.49, 0.94), False),
                 (20.50, (0.1056, 0.69, 1.00), False),
-                (22.50, (0.1,    0.69, 0.1), True),
-                (23.00, (0.05,   0.05, 0.05), False)]
+                (22.50, (0.1, 0.69, 0.1), True),
+                (23.00, (0.05, 0.05, 0.05), False)]
             self.time_step = 24.00 / (self.day_duration /
                                       self.day_update_frequency)
             self.target_color_index = 0

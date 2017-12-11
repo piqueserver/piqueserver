@@ -20,6 +20,7 @@ def toggledemo(connection):
     connection.protocol.send_chat(message, irc=True)
     return 'ok :)'
 
+
 def apply_script(protocol, connection, config):
     class DemolitionProtocol(protocol):
         demolitionEnabled = DEMOLITION_ENABLED_AT_ROUND_START

@@ -97,7 +97,9 @@ def apply_script(protocol, connection, config):
 
         def on_position_update(self):
             if self.protocol.reverse_one_ctf:
-                if vector_collision(self.world_object.position, self.team.other.base):
+                if vector_collision(
+                        self.world_object.position,
+                        self.team.other.base):
                     other_flag = self.team.other.flag
                     if other_flag.player is self:
                         connection.capture_flag(self)

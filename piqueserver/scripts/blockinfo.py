@@ -13,6 +13,7 @@ from piqueserver.commands import command, admin, get_player
 GRIEFCHECK_ON_VOTEKICK = True
 IRC_ONLY = True
 
+
 @command('griefcheck', 'gc')
 def grief_check(connection, player, time=None):
     player = get_player(connection.protocol, player)
@@ -28,8 +29,8 @@ def grief_check(connection, player, time=None):
     if color:
         player_name = (('\x0303' if player.team.id else '\x0302') +
                        player_name + '\x0f')
-    message = '%s removed %s block%s in the last ' % (player_name,
-                                                      len(blocks) or 'no', '' if len(blocks) == 1 else 's')
+    message = '%s removed %s block%s in the last ' % (
+        player_name, len(blocks) or 'no', '' if len(blocks) == 1 else 's')
     if minutes == 1.0:
         minutes_s = 'minute'
     else:
@@ -85,6 +86,7 @@ def grief_check(connection, player, time=None):
         message += (' %s is %d tiles away from %s, who started the votekick.' %
                     (player_name, tiles, instigator_name))
     return message
+
 
 def apply_script(protocol, connection, config):
     has_votekick = 'votekick' in config.get('scripts', [])

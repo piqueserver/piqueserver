@@ -19,10 +19,11 @@ EXTENDED_RATIO = False
 RATIO_ON_VOTEKICK = True
 IRC_ONLY = False
 
+
 @command()
 def ratio(connection, user=None):
     msg = "You have"
-    if user != None:
+    if user is not None:
         connection = get_player(connection.protocol, user)
         msg = "%s has"
         if connection not in connection.protocol.players:
@@ -46,6 +47,7 @@ def ratio(connection, user=None):
             headshotkills, meleekills, grenadekills)
     msg += ")."
     return msg
+
 
 def apply_script(protocol, connection, config):
     class RatioConnection(connection):

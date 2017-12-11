@@ -19,9 +19,10 @@ def protect(connection, value=None):
             protocol.protected = set()
         pos = coordinates(value)
         protocol.protected.symmetric_difference_update([pos])
-        message = 'The area at %s is now %s' % (value.upper(),
-                                                'protected' if pos in protocol.protected else 'unprotected')
+        message = 'The area at %s is now %s' % (
+            value.upper(), 'protected' if pos in protocol.protected else 'unprotected')
         protocol.send_chat(message, irc=True)
+
 
 def apply_script(protocol, connection, config):
     class ProtectConnection(connection):

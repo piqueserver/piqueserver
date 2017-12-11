@@ -37,7 +37,7 @@ ZOOMV_RAY_LENGTH = 192.0
 ARRIVAL_DELAY = 2  # seconds from airstrike notice to arrival
 
 
-@command('airstrike','a')
+@command('airstrike', 'a')
 def airstrike(connection, *args):
     if connection not in connection.protocol.players:
         raise ValueError()
@@ -51,6 +51,8 @@ def airstrike(connection, *args):
                               remaining=kills_left)
 
 # debug
+
+
 @command('givestrike', admin_only=True)
 def give_strike(connection, player=None):
     protocol = connection.protocol
@@ -62,6 +64,7 @@ def give_strike(connection, player=None):
         raise ValueError()
     player.airstrike = True
     player.send_chat(S_READY)
+
 
 def bellrand(a, b):
     return (uniform(a, b) + uniform(a, b) + uniform(a, b)) / 3.0
@@ -80,7 +83,8 @@ class Nag(object):
         if self.call and self.call.active():
             self.call.reset(ZOOMV_TIME)
         else:
-            self.call = reactor.callLater(self.seconds, self.f, *self.args, **self.kw)
+            self.call = reactor.callLater(
+                self.seconds, self.f, *self.args, **self.kw)
 
     def stop(self):
         if self.call and self.call.active():
@@ -120,7 +124,8 @@ def apply_script(protocol, connection, config):
             if self.name is None:
                 return
             direction = 1 if self.team.id == 0 else -1
-            jitter = (3.0 * direction, 4.0 * direction)  # forward randomization range
+            # forward randomization range
+            jitter = (3.0 * direction, 4.0 * direction)
             spread = 0.6  # symmetric Y up and down
             radius = 30.0  # maximum reach from ground zero
             estimate_travel = 32 * z / 64  # to offset spawn coordinates
@@ -137,8 +142,12 @@ def apply_script(protocol, connection, config):
                     grenade_x += uniform(*jitter)
                     grenade_y += uniform(-spread, spread)
                     delay = i * 0.85 + j * 0.11
-                    call = reactor.callLater(delay, self.create_airstrike_grenade,
-                                             grenade_x, grenade_y, grenade_z)
+                    call = reactor.callLater(
+                        delay,
+                        self.create_airstrike_grenade,
+                        grenade_x,
+                        grenade_y,
+                        grenade_z)
                     self.airstrike_grenade_calls.append(call)
 
         def create_airstrike_grenade(self, x, y, z):
@@ -149,10 +158,8 @@ def apply_script(protocol, connection, config):
 
             position = Vertex3(x, y, z)
             velocity = Vertex3(direction, 0.0, z_speed)
-            grenade = self.protocol.world.create_object(Grenade, 0.0,
-                                                        position, None,
-                                                        velocity,
-                                                        self.airstrike_exploded)
+            grenade = self.protocol.world.create_object(
+                Grenade, 0.0, position, None, velocity, self.airstrike_exploded)
             grenade.name = 'airstrike'
 
             collision = grenade.get_next_collision(UPDATE_FREQUENCY)

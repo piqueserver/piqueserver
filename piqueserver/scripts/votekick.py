@@ -60,6 +60,7 @@ S_REASON = 'Reason: {reason}'
 class VotekickFailure(Exception):
     pass
 
+
 @command('votekick')
 def start_votekick(connection, *args):
     protocol = connection.protocol
@@ -125,14 +126,16 @@ def togglevotekick(connection, *args):
     protocol = connection.protocol
     if len(args) == 0:
         protocol.votekick_enabled = not protocol.votekick_enabled
-        return S_VOTEKICKING_SET.format(set=('enabled' if protocol.votekick_enabled else 'disabled'))
+        return S_VOTEKICKING_SET.format(
+            set=('enabled' if protocol.votekick_enabled else 'disabled'))
     try:
         player = get_player(protocol, '#' + args[0])
     except InvalidPlayer:
         player = get_player(protocol, args[0])
     player.votekick_enabled = not player.votekick_enabled
-    return S_VOTEKICK_USER_SET.format(user=player.name,
-                                      set=('enabled' if player.votekick_enabled else 'disabled'))
+    return S_VOTEKICK_USER_SET.format(user=player.name, set=(
+        'enabled' if player.votekick_enabled else 'disabled'))
+
 
 class Votekick(object):
     duration = 120.0  # 2 minutes
@@ -179,10 +182,16 @@ class Votekick(object):
         self.votes = {instigator: True}
         self.ended = False
 
-        protocol.irc_say(S_ANNOUNCE_IRC.format(instigator=instigator.name,
-                                               victim=victim.name, reason=self.reason))
-        protocol.send_chat(S_ANNOUNCE.format(instigator=instigator.name,
-                                             victim=victim.name), sender=instigator)
+        protocol.irc_say(
+            S_ANNOUNCE_IRC.format(
+                instigator=instigator.name,
+                victim=victim.name,
+                reason=self.reason))
+        protocol.send_chat(
+            S_ANNOUNCE.format(
+                instigator=instigator.name,
+                victim=victim.name),
+            sender=instigator)
         protocol.send_chat(S_REASON.format(reason=self.reason),
                            sender=instigator)
         instigator.send_chat(S_ANNOUNCE_SELF.format(victim=victim.name))
@@ -231,8 +240,11 @@ class Votekick(object):
     def send_chat_update(self, target=None):
         # send only to target player if provided, otherwise broadcast to server
         target = target or self.protocol
-        target.send_chat(S_UPDATE.format(instigator=self.instigator.name,
-                                         victim=self.victim.name, needed=self.votes_remaining))
+        target.send_chat(
+            S_UPDATE.format(
+                instigator=self.instigator.name,
+                victim=self.victim.name,
+                needed=self.votes_remaining))
         target.send_chat(S_REASON.format(reason=self.reason))
 
 

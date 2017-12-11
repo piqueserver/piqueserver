@@ -92,6 +92,7 @@ def markers(connection):
         raise ValueError()
     connection.send_lines(S_HELP)
 
+
 class BaseMarker():
     name = 'Marker'
     triggers = []
@@ -298,9 +299,9 @@ class Here(BaseMarker):
     triggers = ['!here']
     duration = 60.0
     random_colors = [
-        make_color(192, 255,   0),  # lime green
-        make_color(255, 255,   0),  # yellow
-        make_color(255, 192,   0),  # orange
+        make_color(192, 255, 0),  # lime green
+        make_color(255, 255, 0),  # yellow
+        make_color(255, 192, 0),  # orange
         make_color(255, 192, 255),  # light pink
         make_color(0, 192, 255)  # light blue
     ]
@@ -602,6 +603,7 @@ class Nine(NumberMarker):
     . X X X .
     """
 
+
 # in triggering order
 number_markers = [Zero, One, Two, Three, Four, Five, Six, Seven, Eight, Nine]
 trigger_markers = [Tunnel, Backup, Build] + number_markers + [Here]
@@ -622,13 +624,13 @@ def apply_script(protocol, connection, config):
         sneak_presses = None
 
         def send_markers(self):
-            is_self = lambda player: player is self
+            def is_self(player): return player is self
             send_me = partial(self.protocol.send_contained, rule=is_self)
             for marker in self.protocol.markers:
                 marker.build(send_me)
 
         def destroy_markers(self):
-            is_self = lambda player: player is self
+            def is_self(player): return player is self
             send_me = partial(self.protocol.send_contained, rule=is_self)
             for marker in self.protocol.markers:
                 marker.destroy(send_me)

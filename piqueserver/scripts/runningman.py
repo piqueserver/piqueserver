@@ -82,6 +82,7 @@ def unlink(connection, player=None):
     if connection is not player:
         return message
 
+
 def apply_script(protocol, connection, config):
     class RunningManConnection(connection):
         link = None

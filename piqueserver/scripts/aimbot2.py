@@ -129,6 +129,7 @@ def scale(v, factor):
 def subtract(v1, v2):
     return (v1[0] - v2[0], v1[1] - v2[1], v1[2] - v2[2])
 
+
 @command()
 def accuracy(connection, name=None):
     if name is None:
@@ -140,15 +141,18 @@ def accuracy(connection, name=None):
 
 def accuracy_player(player, name_info=True):
     if player.rifle_count != 0:
-        rifle_percent = "{0:.1f}%".format((player.rifle_hits / player.rifle_count) * 100)
+        rifle_percent = "{0:.1f}%".format(
+            (player.rifle_hits / player.rifle_count) * 100)
     else:
         rifle_percent = 'None'
     if player.smg_count != 0:
-        smg_percent = "{0:.1f}%".format((player.smg_hits / player.smg_count) * 100)
+        smg_percent = "{0:.1f}%".format(
+            (player.smg_hits / player.smg_count) * 100)
     else:
         smg_percent = 'None'
     if player.shotgun_count != 0:
-        shotgun_percent = "{0:.1f}%".format((player.shotgun_hits / player.shotgun_count) * 100)
+        shotgun_percent = "{0:.1f}%".format(
+            (player.shotgun_hits / player.shotgun_count) * 100)
     else:
         shotgun_percent = 'None'
 
@@ -158,6 +162,7 @@ def accuracy_player(player, name_info=True):
     s += 'Rifle: %s SMG: %s Shotgun: %s.' % (
         rifle_percent, smg_percent, shotgun_percent)
     return s
+
 
 @command(admin_only=True)
 def hackinfo(connection, name):
@@ -177,6 +182,7 @@ def hackinfo_player(player):
     info += " %i headshot snaps in the last %i seconds." % (
         player.get_headshot_snap_count(), HEADSHOT_SNAP_TIME)
     return info
+
 
 def apply_script(protocol, connection, config):
     class Aimbot2Protocol(protocol):
@@ -282,7 +288,8 @@ def apply_script(protocol, connection, config):
                         'Aimbot detected - headshot snap')
                     return
                 elif HEADSHOT_SNAP == WARN_ADMIN:
-                    if (current_time - self.headshot_snap_warn_time) > WARN_INTERVAL_MINIMUM:
+                    if (current_time -
+                            self.headshot_snap_warn_time) > WARN_INTERVAL_MINIMUM:
                         self.headshot_snap_warn_time = current_time
                         self.warn_admin()
 
@@ -354,12 +361,15 @@ def apply_script(protocol, connection, config):
                     self.warn_admin()
 
         def on_hit(self, hit_amount, hit_player, hit_type, grenade):
-            if self.team is hit_player.team or hit_type not in (WEAPON_KILL, HEADSHOT_KILL):
-                return connection.on_hit(self, hit_amount, hit_player, hit_type, grenade)
+            if self.team is hit_player.team or hit_type not in (
+                    WEAPON_KILL, HEADSHOT_KILL):
+                return connection.on_hit(
+                    self, hit_amount, hit_player, hit_type, grenade)
 
             current_time = reactor.seconds()
             shotgun_use = False
-            if current_time - self.shot_time > (0.5 * hit_player.weapon_object.delay):
+            if current_time - \
+                    self.shot_time > (0.5 * hit_player.weapon_object.delay):
                 shotgun_use = True
                 self.multiple_bullets_count = 0
                 self.shot_time = current_time
@@ -387,7 +397,8 @@ def apply_script(protocol, connection, config):
                 elif shotgun_use:
                     self.shotgun_hits += 1
 
-            return connection.on_hit(self, hit_amount, hit_player, hit_type, grenade)
+            return connection.on_hit(
+                self, hit_amount, hit_player, hit_type, grenade)
 
         def hit_percent_eject(self, hit_accuracy):
             message = 'Aimbot detected - %i%% %s hit accuracy' %\
@@ -398,7 +409,8 @@ def apply_script(protocol, connection, config):
                 self.kick(message)
             elif HIT_PERCENT == WARN_ADMIN:
                 current_time = reactor.seconds()
-                if (current_time - self.hit_percent_warn_time) > WARN_INTERVAL_MINIMUM:
+                if (current_time -
+                        self.hit_percent_warn_time) > WARN_INTERVAL_MINIMUM:
                     self.hit_percent_warn_time = current_time
                     self.warn_admin()
 
@@ -444,8 +456,11 @@ def apply_script(protocol, connection, config):
                 orient = self.world_object.orientation
                 orient_v = (orient.x, orient.y, orient.z)
                 position_v_mag = magnitude(position_v)
-                if position_v_mag != 0 and (dot3d(
-                        orient_v, position_v) / position_v_mag) >= NEAR_MISS_COS:
+                if position_v_mag != 0 and (
+                    dot3d(
+                        orient_v,
+                        position_v) /
+                        position_v_mag) >= NEAR_MISS_COS:
                     if self.weapon == RIFLE_WEAPON:
                         self.rifle_count += 1
                     elif self.weapon == SMG_WEAPON:
@@ -459,7 +474,7 @@ def apply_script(protocol, connection, config):
         def on_disconnect(self):
             self.bullet_loop_stop()
             if DATA_COLLECTION:
-                if self.name != None:
+                if self.name is not None:
                     with open('aimbot2log.txt', 'a') as myfile:
                         output = self.name.encode(
                             'ascii', 'ignore').replace(',', '') + ','

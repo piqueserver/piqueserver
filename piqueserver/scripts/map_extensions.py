@@ -18,8 +18,8 @@ def apply_script(protocol, connection, config):
                 x = self.world_object.position.x
                 y = self.world_object.position.y
                 boundary_damage = extensions['boundary_damage']
-                if (x <= boundary_damage['left'] or x >= boundary_damage['right'] or
-                        y <= boundary_damage['top'] or y >= boundary_damage['bottom']):
+                if (x <= boundary_damage['left'] or x >= boundary_damage['right']
+                        or y <= boundary_damage['top'] or y >= boundary_damage['bottom']):
                     self.environment_hit(boundary_damage['damage'])
             connection.on_position_update(self)
 

@@ -291,7 +291,7 @@ S_WHERE_FIRST = 'ERROR: use /where first to remember your position'
 S_MINIMUM = 'ERROR: Minimum {parameter} is {value}'
 S_MAXIMUM = 'ERROR: Maximum {parameter} is {value}'
 S_NICE_LOCATION = '{:.4g}, {:.4g}, {:.4g}'
-PLATFORM_COMMANDS = ('new', 'name', 'height', 'freeze', 'destroy',  'last')
+PLATFORM_COMMANDS = ('new', 'name', 'height', 'freeze', 'destroy', 'last')
 PLATFORM_COMMAND_USAGES = {
     'new': S_PLATFORM_NEW_USAGE,
     'name': S_PLATFORM_NAME_USAGE,
@@ -377,6 +377,7 @@ def reach(connection):
     connection.reach = ACTION_RAY_LENGTH if long else ACTION_RAY_LENGTH_LONG
     return S_REACH if not long else S_NO_REACH
 
+
 @command('platform', 'p', admin_only=True)
 def platform_command(connection, *args):
     protocol = connection.protocol
@@ -436,6 +437,7 @@ def platform_command(connection, *args):
         # start construction
         player.states.exit()
         player.states.enter(NewPlatformState())
+
 
 @command('button', 'b', admin_only=True)
 def button_command(connection, *args):
@@ -500,6 +502,7 @@ def button_command(connection, *args):
         # start button creation
         player.states.exit()
         player.states.enter(NewButtonState())
+
 
 @command('action', 'ac', admin_only=True)
 def action_command(connection, *args):
@@ -619,6 +622,7 @@ def action_command(connection, *args):
     except IndexError:
         return usage
 
+
 @command('trigger', 't', admin_only=True)
 def trigger_command(connection, *args):
     protocol = connection.protocol
@@ -703,6 +707,7 @@ def trigger_command(connection, *args):
         return str(err)
     except IndexError:
         return usage
+
 
 def aabb(x, y, z, x1, y1, z1, x2, y2, z2):
     return x >= x1 and y >= y1 and z >= z1 and x < x2 and y < y2 and z < z2
@@ -917,6 +922,7 @@ class HeightTrigger(Trigger):
                                          self.target_height)
         return S_TRIGGER_LIST_NOT + s if self.negate else s
 
+
 TRIGGER_CLASSES = {}
 for cls in (PressTrigger, TrackTrigger, DistanceTrigger, HeightTrigger):
     TRIGGER_CLASSES[cls.type] = cls
@@ -956,8 +962,9 @@ class PlatformAction:
         }
 
     def __str__(self):
-        return "platform '%s' %s(%s)" % (self.platform.label,
-                                         self.kwargs['mode'], self.kwargs['height'])
+        return "platform '%s' %s(%s)" % (
+            self.platform.label, self.kwargs['mode'], self.kwargs['height'])
+
 
 PLAYER_ACTION_FUNCTIONS = {
     'teleport': 'set_location',
@@ -996,6 +1003,7 @@ class PlayerAction:
         elif self.action == 'damage':
             info = self.kwargs['value']
         return "player %s(%s)" % (self.action, info)
+
 
 ACTION_CLASSES = {}
 for cls in (PlatformAction, PlayerAction):
@@ -1454,8 +1462,9 @@ class PlatformCommandState(State):
             del protocol.platforms[platform.id]
             # remove actions affecting this platform
             for button in protocol.buttons.itervalues():
-                button.actions = [action for action in button.actions
-                                  if getattr(action, 'platform', None) is not platform]
+                button.actions = [
+                    action for action in button.actions if getattr(
+                        action, 'platform', None) is not platform]
             # cancel any ongoing commands targeting this platform
             for player in protocol.players.itervalues():
                 state = player.states.top()
@@ -1563,8 +1572,8 @@ class ActionCommandState(State):
                     return S_ACTION_INVALID_NUMBER
 
                 action_type = action.type.capitalize()
-                return S_ACTION_DELETED.format(action=action_type,
-                                               number=index, label=button.label)
+                return S_ACTION_DELETED.format(
+                    action=action_type, number=index, label=button.label)
 
 
 class TriggerAddState(State):
@@ -1642,8 +1651,8 @@ class TriggerCommandState(State):
                 trigger.unbind()
                 button.trigger_check()
                 trigger_type = trigger.type.capitalize()
-                return S_TRIGGER_DELETED.format(trigger=trigger_type,
-                                                number=index, label=button.label)
+                return S_TRIGGER_DELETED.format(
+                    trigger=trigger_type, number=index, label=button.label)
         elif self.command == 'logic':
             button.logic = self.logic
             button.trigger_check()

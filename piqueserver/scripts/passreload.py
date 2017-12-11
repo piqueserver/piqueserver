@@ -23,6 +23,7 @@ def reloadconfig(connection):
     connection.protocol.reload_passes()
     return 'Config reloaded!'
 
+
 def apply_script(protocol, connection, config):
     class PassreloadProtocol(protocol):
 
