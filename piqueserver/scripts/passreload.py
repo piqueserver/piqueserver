@@ -8,8 +8,7 @@ import json
 import os.path
 
 
-@admin
-@command()
+@command(admin_only=True)
 def reloadconfig(connection):
     new_config = {}
     try:
@@ -23,6 +22,7 @@ def reloadconfig(connection):
     connection.protocol.config.update(new_config)
     connection.protocol.reload_passes()
     return 'Config reloaded!'
+
 
 def apply_script(protocol, connection, config):
     class PassreloadProtocol(protocol):

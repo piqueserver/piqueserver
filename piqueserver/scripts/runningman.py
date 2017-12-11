@@ -43,8 +43,7 @@ S_UNLINK_ALL = 'All players unlinked!'
 S_FLAG_CAPTURED = 'The intel capture has unlinked everyone in the {team} team!'
 
 
-@admin
-@command('runningman')
+@command('runningman', admin_only=True)
 def running_man(connection):
     protocol = connection.protocol
     protocol.running_man = not protocol.running_man
@@ -54,8 +53,7 @@ def running_man(connection):
     protocol.send_chat(message, irc=True)
 
 
-@admin
-@command()
+@command(admin_only=True)
 def relink(connection):
     if not connection.protocol.running_man:
         return S_NOT_ENABLED
@@ -63,8 +61,7 @@ def relink(connection):
     connection.protocol.send_chat(S_UNLINK_ALL, irc=True)
 
 
-@admin
-@command()
+@command(admin_only=True)
 def unlink(connection, player=None):
     protocol = connection.protocol
     if not protocol.running_man:
@@ -84,6 +81,7 @@ def unlink(connection, player=None):
     message.format(player=player.name)
     if connection is not player:
         return message
+
 
 def apply_script(protocol, connection, config):
     class RunningManConnection(connection):

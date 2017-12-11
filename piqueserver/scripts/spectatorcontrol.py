@@ -57,8 +57,9 @@ def apply_script(protocol, connection, config):
                     # this check is necessary as you can join spectator from
                     # being a spectator
                     if self.spec_check is None or not self.spec_check.active():
-                        self.send_chat('Warning! Spectators are kicked after %s seconds!' %
-                                       (spectator_kick_time))
+                        self.send_chat(
+                            'Warning! Spectators are kicked after %s seconds!' %
+                            (spectator_kick_time))
                         time = ceil((spectator_kick_time / 4) * 3)
                         self.spec_check = reactor.callLater(
                             time, self.check_spec_time, 1)
@@ -76,15 +77,18 @@ def apply_script(protocol, connection, config):
 
         def check_spec_time(self, id):
             if not self.team.spectator:
-                print('WARNING 1. Safety check kept an non-spectator from being spectator-kicked. Report this please!')
+                print(
+                    'WARNING 1. Safety check kept an non-spectator from being spectator-kicked. Report this please!')
                 return
             if self.admin or self.rights.specpower:
-                print('WARNING 2. Safety check kept an admin from being spectator-kicked.')
+                print(
+                    'WARNING 2. Safety check kept an admin from being spectator-kicked.')
                 return
             if id == 1:
                 seconds = floor(spectator_kick_time / 4)
                 self.send_chat(
-                    'Warning! If you do not leave spectator, you will be kicked in %s seconds!' % (seconds))
+                    'Warning! If you do not leave spectator, you will be kicked in %s seconds!' %
+                    (seconds))
                 self.spec_check = reactor.callLater(
                     seconds, self.check_spec_time, 2)
             elif id == 2:

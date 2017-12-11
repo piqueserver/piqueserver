@@ -21,8 +21,8 @@ def afk(connection, player):
     elapsed = prettify_timespan(reactor.seconds() - player.last_activity, True)
     return S_AFK_CHECK.format(player=player.name, time=elapsed)
 
-@admin
-@command('kickafk')
+
+@command('kickafk', admin_only=True)
 def kick_afk(connection, minutes, amount=None):
     protocol = connection.protocol
     minutes = int(minutes)
@@ -47,11 +47,14 @@ def kick_afk(connection, minutes, amount=None):
             kicks += 1
         else:
             conn.disconnect()
-    message = S_AFK_KICKED.format(num_players=kicks,
-                                  num_connections=amount - kicks, time=minutes_s)
+    message = S_AFK_KICKED.format(
+        num_players=kicks,
+        num_connections=amount - kicks,
+        time=minutes_s)
     protocol.irc_say('* ' + message)
     if connection in protocol.players:
         return message
+
 
 def apply_script(protocol, connection, config):
     time_limit = config.get('afk_time_limit', None)

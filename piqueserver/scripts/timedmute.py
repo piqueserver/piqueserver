@@ -5,8 +5,8 @@
 from scheduler import Scheduler
 from piqueserver.commands import command, admin, get_player, join_arguments
 
-@admin
-@command('tm')
+
+@command('tm', admin_only=True)
 def timed_mute(connection, *args):
     protocol = connection.protocol
 
@@ -23,6 +23,7 @@ def timed_mute(connection, *args):
     else:
         return '%s is already muted!' % nick
 
+
 class TimedMute(object):
     player = None
     time = None
@@ -30,16 +31,18 @@ class TimedMute(object):
     def __init__(self, player, time=300, reason='None'):
         if time == 0:
             player.mute = True
-            player.protocol.send_chat('%s was muted indefinitely (Reason: %s)' % (
-                player.name, reason), irc=True)
+            player.protocol.send_chat(
+                '%s was muted indefinitely (Reason: %s)' %
+                (player.name, reason), irc=True)
             return
 
         schedule = Scheduler(player.protocol)
         schedule.call_later(time, self.end)
         player.mute_schedule = schedule
 
-        player.protocol.send_chat('%s was muted for %s seconds (Reason: %s)' % (
-            player.name, time, reason), irc=True)
+        player.protocol.send_chat(
+            '%s was muted for %s seconds (Reason: %s)' %
+            (player.name, time, reason), irc=True)
         player.mute = True
 
         self.player = player

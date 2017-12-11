@@ -95,8 +95,8 @@ def load_models(expression):
             failed.append(filename)
     return models, loaded, failed
 
-@admin
-@command('model')
+
+@command('model', admin_only=True)
 def model_grenades(connection, expression=None):
     protocol = connection.protocol
     if connection not in protocol.players:
@@ -129,6 +129,7 @@ def model_grenades(connection, expression=None):
         result = S_SPECIFY_FILES
     if result:
         player.send_chat(result)
+
 
 KV6Voxel = namedtuple('KV6Voxel', 'b g r a z neighbors normal_index')
 NonSurfaceKV6Voxel = KV6Voxel(40, 64, 103, 128, 0, 0, 0)

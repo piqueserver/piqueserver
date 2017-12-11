@@ -28,8 +28,8 @@ S_ROLLBACK_TIME_TAKEN = 'Time taken: {seconds:.3}s'
 
 NON_SURFACE_COLOR = (0, 0, 0)
 
-@admin
-@command()
+
+@command(admin_only=True)
 def rollmap(connection, mapname=None, value=None):
     start_x, start_y, end_x, end_y = 0, 0, 512, 512
     if value is not None:
@@ -38,15 +38,16 @@ def rollmap(connection, mapname=None, value=None):
     return connection.protocol.start_rollback(connection, mapname,
                                               start_x, start_y, end_x, end_y)
 
-@admin
-@command()
+
+@command(admin_only=True)
 def rollback(connection, value=None):
     return rollmap(connection, value=value)
 
-@admin
-@command()
+
+@command(admin_only=True)
 def rollbackcancel(connection):
     return connection.protocol.cancel_rollback(connection)
+
 
 def apply_script(protocol, connection, config):
     rollback_on_game_end = config.get('rollback_on_game_end', False)
@@ -91,8 +92,8 @@ def apply_script(protocol, connection, config):
                     else S_AUTOMATIC_ROLLBACK_PLAYER_NAME)
             message = S_ROLLBACK_COMMENCED.format(player=name)
             self.send_chat(message, irc=True)
-            self.packet_generator = self.create_rollback_generator(self.map,
-                                                                   map, start_x, start_y, end_x, end_y, ignore_indestructable)
+            self.packet_generator = self.create_rollback_generator(
+                self.map, map, start_x, start_y, end_x, end_y, ignore_indestructable)
             self.rollback_in_progress = True
             self.rollback_start_time = time.time()
             self.rollback_last_chat = self.rollback_start_time
@@ -121,7 +122,7 @@ def apply_script(protocol, connection, config):
                 return
             try:
                 sent_unique = sent_total = rows = 0
-                while 1:
+                while True:
                     if rows > self.rollback_max_rows:
                         break
                     if sent_unique > self.rollback_max_unique_packets:

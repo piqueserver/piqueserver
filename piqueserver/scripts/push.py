@@ -97,16 +97,15 @@ def reset_intel(protocol, team):
     protocol.send_chat("The %s intel has been reset." % team.name)
 
 
-@admin
-@command()
+@command(admin_only=True)
 def resetblueintel(connection):
     reset_intel(connection.protocol, connection.protocol.blue_team)
 
 
-@admin
-@command()
+@command(admin_only=True)
 def resetgreenintel(connection):
     reset_intel(connection.protocol, connection.protocol.green_team)
+
 
 def get_entity_location(self, entity_id):
     if entity_id == BLUE_BASE:
@@ -137,7 +136,8 @@ def get_spawn_location(connection):
 def apply_script(protocol, connection, config):
     class PushConnection(connection):
 
-        def invalid_build_position_check(self, x, y, check_area, error_message):
+        def invalid_build_position_check(
+                self, x, y, check_area, error_message):
             # check_area is made of x-pos, y-pos of upper left corner,
             # and x-pos, y-pos of opposite corner (bottom right)
             if (x >= check_area[0] and y >= check_area[1] and
@@ -155,31 +155,33 @@ def apply_script(protocol, connection, config):
                                 self.protocol.blue_team.cp[1] - cp_block_range,
                                 self.protocol.blue_team.cp[0] + cp_block_range,
                                 self.protocol.blue_team.cp[1] + cp_block_range)
-                invalid_pos = self.invalid_build_position_check(x, y, blue_cp_area, BUILDING_AT_CP)
+                invalid_pos = self.invalid_build_position_check(
+                    x, y, blue_cp_area, BUILDING_AT_CP)
                 if invalid_pos is True:
                     return True
             if self.team is self.protocol.green_team:
-                green_cp_area = (self.protocol.green_team.cp[0] - cp_block_range,
-                                 self.protocol.green_team.cp[1] - cp_block_range,
-                                 self.protocol.green_team.cp[0] + cp_block_range,
-                                 self.protocol.green_team.cp[1] + cp_block_range)
-                invalid_pos = self.invalid_build_position_check(x, y, green_cp_area, BUILDING_AT_CP)
+                green_cp_area = (
+                    self.protocol.green_team.cp[0] - cp_block_range,
+                    self.protocol.green_team.cp[1] - cp_block_range,
+                    self.protocol.green_team.cp[0] + cp_block_range,
+                    self.protocol.green_team.cp[1] + cp_block_range)
+                invalid_pos = self.invalid_build_position_check(
+                    x, y, green_cp_area, BUILDING_AT_CP)
                 if invalid_pos is True:
                     return True
             # prevent teams from building in enemy build area
             if (self.team is self.protocol.blue_team and
                     self.protocol.blue_team.build_area is not None):
                 invalid_pos = self.invalid_build_position_check(
-                                                                x, y,
-                                                                self.protocol.green_team.build_area,
-                                                                BUILDING_AT_ENEMY_AREA)
+                    x, y,
+                    self.protocol.green_team.build_area,
+                    BUILDING_AT_ENEMY_AREA)
                 if invalid_pos is True:
                     return True
             if (self.team is self.protocol.green_team and
                     self.protocol.green_team.build_area is not None):
-                invalid_pos = self.invalid_build_position_check(x, y,
-                                                                self.protocol.blue_team.build_area,
-                                                                BUILDING_AT_ENEMY_AREA)
+                invalid_pos = self.invalid_build_position_check(
+                    x, y, self.protocol.blue_team.build_area, BUILDING_AT_ENEMY_AREA)
                 if invalid_pos is True:
                     return True
 
@@ -206,8 +208,8 @@ def apply_script(protocol, connection, config):
 
         def build_block(self, x, y, z, looped=False):
             if ((x < 0 or x > 511 or
-                y < 0 or y > 511 or
-                z < 1 or z > 61)
+                 y < 0 or y > 511 or
+                 z < 1 or z > 61)
                     is False):
                 self.protocol.map.set_point(x, y, z, self.color)
                 block_action = BlockAction()
@@ -274,8 +276,8 @@ def apply_script(protocol, connection, config):
                             for nade_z in xrange(z - 1, z + 2):
                                 blocks.append((nade_x, nade_y, nade_z))
 
-                is_in_last = lambda block: any(last == block
-                                               for last in self.mylastblocks)
+                def is_in_last(block): return any(last == block
+                                                  for last in self.mylastblocks)
 
                 for block in blocks:
                     if is_in_last(block):
@@ -363,11 +365,13 @@ def apply_script(protocol, connection, config):
 
                 self.blue_team.spawn = extensions.get('push_blue_spawn')
                 self.blue_team.cp = extensions.get('push_blue_cp')
-                self.blue_team.build_area = extensions.get('push_blue_build_area')
+                self.blue_team.build_area = extensions.get(
+                    'push_blue_build_area')
 
                 self.green_team.spawn = extensions.get('push_green_spawn')
                 self.green_team.cp = extensions.get('push_green_cp')
-                self.green_team.build_area = extensions.get('push_green_build_area')
+                self.green_team.build_area = extensions.get(
+                    'push_green_build_area')
 
                 self.map_info.get_entity_location = get_entity_location
                 self.map_info.get_spawn_location = get_spawn_location

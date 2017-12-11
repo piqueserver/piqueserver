@@ -14,6 +14,7 @@ SQUAD_NAMES = set([
     'November', 'Oscar', 'Papa', 'Quebec', 'Romero', 'Sierra', 'Tango',
     'Uniform', 'Victor', 'Whiskey', 'X-ray', 'Yankee', 'Zulu'])
 
+
 @command()
 def follow(self, playerkey=None):
     if playerkey is None:
@@ -31,6 +32,7 @@ def follow(self, playerkey=None):
                     squad_pref.name)
 
     return self.join_squad(squad, squad_pref)
+
 
 @command()
 def squad(self, squadkey=None):
@@ -218,11 +220,10 @@ def apply_script(protocol, connection, config):
 
         def on_spawn(self, pos):
             if self.squad:
-                all_members = ([n for n in self.get_squad(self.team,
-                                                          self.squad)['players'] if
-                                n is not self])
-                live_members = [n for n in all_members if n.hp and not n.invisible and
-                                not n.god]
+                all_members = ([n for n in self.get_squad(
+                    self.team, self.squad)['players'] if n is not self])
+                live_members = [
+                    n for n in all_members if n.hp and not n.invisible and not n.god]
                 membernames = [m.name for m in all_members]
                 memberstr = ""
                 for n in xrange(len(all_members)):

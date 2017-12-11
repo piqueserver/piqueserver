@@ -23,8 +23,8 @@ ALWAYS_RAPID = False
 RAPID_INTERVAL = 0.08
 RAPID_BLOCK_DELAY = 0.26
 
-@admin
-@command('rapid')
+
+@command('rapid', admin_only=True)
 def toggle_rapid(connection, player=None):
     protocol = connection.protocol
     if player is not None:
@@ -57,6 +57,7 @@ def resend_tool(player):
         player.protocol.send_contained(set_tool)
     else:
         player.send_contained(set_tool)
+
 
 def apply_script(protocol, connection, config):
     class RapidConnection(connection):

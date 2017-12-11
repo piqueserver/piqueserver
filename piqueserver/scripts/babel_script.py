@@ -28,8 +28,8 @@ ALWAYS_ENABLED = True
 PLATFORM_WIDTH = 100
 PLATFORM_HEIGHT = 32
 PLATFORM_COLOR = (0, 255, 255, 255)
-BLUE_BASE_COORDS = (256-138, 256)
-GREEN_BASE_COORDS = (256+138, 256)
+BLUE_BASE_COORDS = (256 - 138, 256)
+GREEN_BASE_COORDS = (256 + 138, 256)
 SPAWN_SIZE = 40
 
 # Don't touch this stuff
@@ -42,7 +42,8 @@ def get_entity_location(self, entity_id):
     if entity_id == BLUE_BASE:
         return BLUE_BASE_COORDS + (self.protocol.map.get_z(*BLUE_BASE_COORDS),)
     elif entity_id == GREEN_BASE:
-        return GREEN_BASE_COORDS + (self.protocol.map.get_z(*GREEN_BASE_COORDS),)
+        return GREEN_BASE_COORDS + \
+            (self.protocol.map.get_z(*GREEN_BASE_COORDS),)
     elif entity_id == BLUE_FLAG:
         return (256 - PLATFORM_WIDTH + 1, 256, 0)
     elif entity_id == GREEN_FLAG:
@@ -59,10 +60,30 @@ def get_spawn_location(connection):
 
 def coord_on_platform(x, y, z):
     if z <= 2:
-        if x >= (256 - PLATFORM_WIDTH) and x <= (256 + PLATFORM_WIDTH) and y >= (256 - PLATFORM_HEIGHT) and y <= (256 + PLATFORM_HEIGHT):
+        if x >= (
+                256 -
+                PLATFORM_WIDTH) and x <= (
+                256 +
+                PLATFORM_WIDTH) and y >= (
+                256 -
+                PLATFORM_HEIGHT) and y <= (
+                    256 +
+                PLATFORM_HEIGHT):
             return True
     if z == 1:
-        if x >= (256 - PLATFORM_WIDTH - 1) and x <= (256 + PLATFORM_WIDTH + 1) and y >= (256 - PLATFORM_HEIGHT - 1) and y <= (256 + PLATFORM_HEIGHT + 1):
+        if x >= (
+                256 -
+                PLATFORM_WIDTH -
+                1) and x <= (
+                256 +
+                PLATFORM_WIDTH +
+                1) and y >= (
+                256 -
+                PLATFORM_HEIGHT -
+                1) and y <= (
+                    256 +
+                    PLATFORM_HEIGHT +
+                1):
             return True
     return False
 
@@ -102,25 +123,31 @@ def apply_script(protocol, connection, config):
         def on_block_destroy(self, x, y, z, mode):
             if self.team is self.protocol.blue_team:
                 if not (self.admin or self.user_types.moderator or self.user_types.guard or self.user_types.trusted) and self.tool is SPADE_TOOL and self.world_object.position.x >= 128 and self.world_object.position.x <= 211 and self.world_object.position.y >= 240 and self.world_object.position.y <= 272:
-                    self.send_chat('You can\'t destroy your team\'s blocks in this area. Attack the enemy\'s tower!')
+                    self.send_chat(
+                        'You can\'t destroy your team\'s blocks in this area. Attack the enemy\'s tower!')
                     return False
                 if self.world_object.position.x <= 288:
                     if self.tool is WEAPON_TOOL:
-                        self.send_chat('You must be closer to the enemy\'s base to shoot blocks!')
+                        self.send_chat(
+                            'You must be closer to the enemy\'s base to shoot blocks!')
                         return False
                     if self.tool is GRENADE_TOOL:
-                        self.send_chat('You must be closer to the enemy\'s base to grenade blocks!')
+                        self.send_chat(
+                            'You must be closer to the enemy\'s base to grenade blocks!')
                         return False
             if self.team is self.protocol.green_team:
                 if not (self.admin or self.user_types.moderator or self.user_types.guard or self.user_types.trusted) and self.tool is SPADE_TOOL and self.world_object.position.x >= 301 and self.world_object.position.x <= 384 and self.world_object.position.y >= 240 and self.world_object.position.y <= 272:
-                    self.send_chat('You can\'t destroy your team\'s blocks in this area. Attack the enemy\'s tower!')
+                    self.send_chat(
+                        'You can\'t destroy your team\'s blocks in this area. Attack the enemy\'s tower!')
                     return False
                 if self.world_object.position.x >= 224:
                     if self.tool is WEAPON_TOOL:
-                        self.send_chat('You must be closer to the enemy\'s base to shoot blocks!')
+                        self.send_chat(
+                            'You must be closer to the enemy\'s base to shoot blocks!')
                         return False
                     if self.tool is GRENADE_TOOL:
-                        self.send_chat('You must be closer to the enemy\'s base to grenade blocks!')
+                        self.send_chat(
+                            'You must be closer to the enemy\'s base to grenade blocks!')
                         return False
             return connection.on_block_destroy(self, x, y, z, mode)
 
@@ -130,21 +157,27 @@ def apply_script(protocol, connection, config):
         def auto_kill_intel_hog(self):
             self.auto_kill_intel_hog_call = None
             self.kill()
-            self.protocol.send_chat('God punished %s for holding the intel too long' % (self.name))
+            self.protocol.send_chat(
+                'God punished %s for holding the intel too long' %
+                (self.name))
 
         def restore_default_fog_color(self):
-            self.protocol.set_fog_color(getattr(self.protocol.map_info.info, 'fog', (128, 232, 255)))
+            self.protocol.set_fog_color(
+                getattr(self.protocol.map_info.info, 'fog', (128, 232, 255)))
 
         def on_flag_take(self):
             if self.auto_kill_intel_hog_call is not None:
                 self.auto_kill_intel_hog_call.cancel()
                 self.auto_kill_intel_hog_call = None
-            self.auto_kill_intel_hog_call = reactor.callLater(allowed_intel_hold_time, self.auto_kill_intel_hog)
+            self.auto_kill_intel_hog_call = reactor.callLater(
+                allowed_intel_hold_time, self.auto_kill_intel_hog)
             # flash team color in sky
             if self.team is self.protocol.blue_team:
-                self.protocol.set_fog_color(getattr(self.protocol.map_info.info, 'fog', (0, 0, 255)))
+                self.protocol.set_fog_color(
+                    getattr(self.protocol.map_info.info, 'fog', (0, 0, 255)))
             if self.team is self.protocol.green_team:
-                self.protocol.set_fog_color(getattr(self.protocol.map_info.info, 'fog', (0, 255, 0)))
+                self.protocol.set_fog_color(
+                    getattr(self.protocol.map_info.info, 'fog', (0, 255, 0)))
             reactor.callLater(0.25, self.restore_default_fog_color)
             return connection.on_flag_take(self)
 
@@ -160,7 +193,8 @@ def apply_script(protocol, connection, config):
                 self.reset_flag()
             elif (y >= (256 + PLATFORM_HEIGHT)) or (y < (256 - PLATFORM_HEIGHT)):
                 self.reset_flag()
-            self.protocol.set_fog_color(getattr(self.protocol.map_info.info, 'fog', (255, 0, 0)))
+            self.protocol.set_fog_color(
+                getattr(self.protocol.map_info.info, 'fog', (255, 0, 0)))
             reactor.callLater(0.25, self.restore_default_fog_color)
             return connection.on_flag_drop(self)
 
@@ -197,7 +231,9 @@ def apply_script(protocol, connection, config):
                 self.map_info.get_entity_location = get_entity_location
                 self.map_info.get_spawn_location = get_spawn_location
                 for x in xrange(256 - PLATFORM_WIDTH, 256 + PLATFORM_WIDTH):
-                    for y in xrange(256 - PLATFORM_HEIGHT, 256 + PLATFORM_HEIGHT):
+                    for y in xrange(
+                            256 - PLATFORM_HEIGHT,
+                            256 + PLATFORM_HEIGHT):
                         map.set_point(x, y, 1, PLATFORM_COLOR)
             return protocol.on_map_change(self, map)
 

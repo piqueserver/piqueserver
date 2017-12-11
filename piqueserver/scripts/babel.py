@@ -20,6 +20,7 @@ ONE_CTF_MODE = ONE_CTF
 
 BABEL_CTF_MESSAGE = 'Take the intel to the enemy base to score.'
 
+
 def apply_script(protocol, connection, config):
 
     class OneCTFConnection(connection):
@@ -39,7 +40,11 @@ def apply_script(protocol, connection, config):
             if self.protocol.one_ctf or self.protocol.reverse_one_ctf:
                 flag = self.team.flag
                 position = self.world_object.position
-                x, y, z = int(position.x), int(position.y), max(0, int(position.z))
+                x, y, z = int(
+                    position.x), int(
+                    position.y), max(
+                    0, int(
+                        position.z))
                 z = self.protocol.map.get_z(x, y, z)
                 flag.set(x, y, z)
                 flag.update()
@@ -47,7 +52,9 @@ def apply_script(protocol, connection, config):
 
         def on_position_update(self):
             if self.protocol.reverse_one_ctf:
-                if vector_collision(self.world_object.position, self.team.other.base):
+                if vector_collision(
+                        self.world_object.position,
+                        self.team.other.base):
                     other_flag = self.team.other.flag
                     if other_flag.player is self:
                         connection.capture_flag(self)
@@ -106,7 +113,8 @@ def apply_script(protocol, connection, config):
 
         def on_flag_spawn(self, x, y, z, flag, entity_id):
             pos = self.onectf_reset_flag(flag.team.other.flag)
-            protocol.on_flag_spawn(self, pos[0], pos[1], pos[2], flag, entity_id)
+            protocol.on_flag_spawn(
+                self, pos[0], pos[1], pos[2], flag, entity_id)
             return pos
 
     return OneCTFProtocol, OneCTFConnection

@@ -101,7 +101,7 @@ class VoteMap(object):
 
     def vote(self, connection, mapname):
         mapname = mapname.lower()
-        if not mapname in self.picks:
+        if mapname not in self.picks:
             connection.send_chat("Map %s is not available." % mapname)
             return
         self.votes[connection] = mapname
@@ -158,6 +158,7 @@ class VoteMap(object):
     def finish(self):
         self.schedule.reset()
         self.protocol.votemap = None
+
 
 @command()
 def votemap(connection, *arg):

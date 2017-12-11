@@ -14,7 +14,8 @@ def commands(connection, value=None):
     names = []
     for command in cmdlist:
         command_func = cmdlist[command]
-        if (hasattr(command_func, 'user_types') and command not in connection.rights):
+        if (hasattr(command_func, 'user_types')
+                and command not in connection.rights):
             continue
         include = False
         if (value is None or fnmatch.fnmatch(command, value)):
@@ -30,6 +31,7 @@ def commands(connection, value=None):
         if include:
             names.append(cmd)
     return 'Commands: %s' % (', '.join(names))
+
 
 add(commands)
 

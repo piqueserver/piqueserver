@@ -73,7 +73,8 @@ def apply_script(protocol, connection, config):
                 if (zoc['left'] <= x and zoc['right'] >= x and
                         zoc['top'] <= y and zoc['bottom'] >= y):
                     if zoc['team'] is self.team:
-                        return BK_UNDO if self.own_block(x, y, z) else BK_FRIENDLY
+                        return BK_UNDO if self.own_block(
+                            x, y, z) else BK_FRIENDLY
                     else:
                         p_x, p_y, _ = self.world_object.position.get()
                         dist_sq = (p_x - x) * (p_x - x) +\

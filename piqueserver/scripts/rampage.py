@@ -30,7 +30,10 @@ RAPID_INTERVALS = {
     SHOTGUN_WEAPON: 0.18
 }
 RAMPAGE_FOG_COLOR = (255, 0, 0)
-RAMPAGE_FOG_FUNC = lambda: RAMPAGE_FOG_COLOR
+
+
+def RAMPAGE_FOG_FUNC(): return RAMPAGE_FOG_COLOR
+
 
 ANNOUNCE_RAMPAGE = True
 S_RAMPAGE_START = '{player} IS ON A RAMPAGE!!'
@@ -80,9 +83,12 @@ def apply_script(protocol, connection, config):
             self.rapid_hack_detect = False
             self.rampage_call = callLater(RAMPAGE_DURATION, self.end_rampage)
             if RAMPAGE_DURATION > 4.0:
-                self.rampage_warning_call = callLater(RAMPAGE_DURATION - 3.0,
-                                                      fog_switch, self, self.protocol.get_fog_color,
-                                                      RAMPAGE_FOG_FUNC)
+                self.rampage_warning_call = callLater(
+                    RAMPAGE_DURATION - 3.0,
+                    fog_switch,
+                    self,
+                    self.protocol.get_fog_color,
+                    RAMPAGE_FOG_FUNC)
             if RAMPAGE_REFILLS:
                 self.refill()
             if RAMPAGE_RELOADS:
@@ -159,7 +165,7 @@ def apply_script(protocol, connection, config):
                 self.rampage_rapid_loop.start(interval, now=False)
             connection.on_shoot_set(self, fire)
 
-    send_fog_rule = lambda player: not player.rampage
+    def send_fog_rule(player): return not player.rampage
 
     class RampageProtocol(protocol):
 

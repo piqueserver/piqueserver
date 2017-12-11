@@ -45,8 +45,10 @@ def apply_script(protocol, connection, config):
             options['sv_maxclients'] = self.max_players
             players = []
             for p in self.players.values():
-                players.append({'score': p.kills, 'ping': p.latency,
-                                'name': makeValid(p.name), 'team': getTeamId(p.team.id)})
+                players.append({'score': p.kills,
+                                'ping': p.latency,
+                                'name': makeValid(p.name),
+                                'team': getTeamId(p.team.id)})
             options['clients'] = len(players)
             return (options, players)
 

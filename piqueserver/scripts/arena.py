@@ -77,11 +77,11 @@ else:
     MAX_ROUND_TIME_TEXT = str(MAX_ROUND_TIME) + ' seconds'
 
 
-@admin
-@command()
+@command(admin_only=True)
 def coord(connection):
     connection.get_coord = True
     return 'Spade a block to get its coordinate.'
+
 
 def make_color(r, g, b, a=255):
     r = int(r)
@@ -132,7 +132,8 @@ def partition(points, d, c1, c2):
                 next_block = block_list[i + 1]
             # Current AoS version seems to have an upper limit of 65 blocks for
             # a block line
-            if counter == 65 or next_block is None or block[d] + 1 != next_block[d]:
+            if counter == 65 or next_block is None or block[d] + \
+                    1 != next_block[d]:
                 final_blocks.append([start_block, block])
                 start_block = None
                 counter = 0
@@ -174,6 +175,7 @@ def get_team_dead(team):
 
 class ArenaException(Exception):
     pass
+
 
 class Gate(object):
 
@@ -529,7 +531,8 @@ def apply_script(protocol, connection, config):
             for team in (self.green_team, self.blue_team):
                 if team.count() == 0:
                     self.send_chat(
-                        'Not enough players on the %s team to begin.' % team.name)
+                        'Not enough players on the %s team to begin.' %
+                        team.name)
                     self.begin_arena_countdown()
                     return
             self.arena_running = True
@@ -539,7 +542,8 @@ def apply_script(protocol, connection, config):
             self.send_chat('Go!')
             if MAX_ROUND_TIME > 0:
                 self.send_chat(
-                    'There is a time limit of %s for this round.' % MAX_ROUND_TIME_TEXT)
+                    'There is a time limit of %s for this round.' %
+                    MAX_ROUND_TIME_TEXT)
                 self.arena_limit_timer = reactor.callLater(
                     MAX_ROUND_TIME, self.arena_time_limit)
 

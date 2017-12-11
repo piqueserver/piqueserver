@@ -31,7 +31,7 @@ def apply_script(protocol, connection, config):
         line_build = True
 
         def on_secondary_fire_set(self, secondary):
-            if secondary == True:  # if right mouse button has been clicked to initiate drag building; distinguishes from the right click release that marks the end point.
+            if secondary:  # if right mouse button has been clicked to initiate drag building; distinguishes from the right click release that marks the end point.
                 if self.tool == 1:  # 1 refers to block tool; if the tool in hand is a block
                     # grab player current position at drag build start
                     position = self.world_object.position

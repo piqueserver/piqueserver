@@ -32,14 +32,22 @@ def set_color(prt, color, player_id=32):
     prt.send_contained(c)
 
 
-def add_block(prt, x, y, z, color, player_id=32, mirror_x=False, mirror_y=False):
+def add_block(
+        prt,
+        x,
+        y,
+        z,
+        color,
+        player_id=32,
+        mirror_x=False,
+        mirror_y=False):
     if x >= 0 and x < 512 and y >= 0 and y < 512 and z >= 0 and z < 64:
-        if mirror_x == True or mirror_y == True:
+        if mirror_x or mirror_y:
             x2 = x
             y2 = y
-            if mirror_x == True:
+            if mirror_x:
                 x2 = 511 - x
-            if mirror_y == True:
+            if mirror_y:
                 y2 = 511 - y
             add_block(prt, x2, y2, z, color, player_id, False, False)
         if not prt.map.get_solid(x, y, z):
@@ -55,12 +63,12 @@ def add_block(prt, x, y, z, color, player_id=32, mirror_x=False, mirror_y=False)
 
 def remove_block(prt, x, y, z, mirror_x=False, mirror_y=False):
     if x >= 0 and x < 512 and y >= 0 and y < 512 and z >= 0 and z < 64:
-        if mirror_x == True or mirror_y == True:
+        if mirror_x or mirror_y:
             x2 = x
             y2 = y
-            if mirror_x == True:
+            if mirror_x:
                 x2 = 511 - x
-            if mirror_y == True:
+            if mirror_y:
                 y2 = 511 - y
             remove_block(prt, x2, y2, z, False, False)
         if prt.map.get_solid(x, y, z):
@@ -81,6 +89,7 @@ def mirror(connection, mirror_x, mirror_y):
     connection.mirror_x = bool(mirror_x)
     connection.mirror_y = bool(mirror_y)
 
+
 @command()
 def tunnel(*arguments):
     connection = arguments[0]
@@ -89,6 +98,7 @@ def tunnel(*arguments):
     connection.arguments = arguments
     connection.select = True
     connection.points = 1
+
 
 def tunnel_r(connection, radius, length, zoffset=0):
     radius = int(radius)
@@ -104,14 +114,31 @@ def tunnel_r(connection, radius, length, zoffset=0):
                     y1 = connection.block1_y
                     y2 = connection.block1_y + length
                     for y in xrange(min(y1, y2), max(y1, y2) + 1):
-                        remove_block(connection.protocol, connection.block1_x + rel_h, y,
-                                     connection.block1_z + rel_v + zoffset, connection.mirror_x, connection.mirror_y)
+                        remove_block(
+                            connection.protocol,
+                            connection.block1_x +
+                            rel_h,
+                            y,
+                            connection.block1_z +
+                            rel_v +
+                            zoffset,
+                            connection.mirror_x,
+                            connection.mirror_y)
                 elif facing == WEST or facing == EAST:
                     x1 = connection.block1_x
                     x2 = connection.block1_x + length
                     for x in xrange(min(x1, x2), max(x1, x2) + 1):
-                        remove_block(connection.protocol, x, connection.block1_y + rel_h,
-                                     connection.block1_z + rel_v + zoffset, connection.mirror_x, connection.mirror_y)
+                        remove_block(
+                            connection.protocol,
+                            x,
+                            connection.block1_y +
+                            rel_h,
+                            connection.block1_z +
+                            rel_v +
+                            zoffset,
+                            connection.mirror_x,
+                            connection.mirror_y)
+
 
 @command()
 def insert(*arguments):
@@ -121,6 +148,7 @@ def insert(*arguments):
     connection.arguments = arguments
     connection.select = True
     connection.points = 2
+
 
 def insert_r(connection):
     x1 = min(connection.block1_x, connection.block2_x)
@@ -133,8 +161,16 @@ def insert_r(connection):
     for xx in xrange(x1, x2 + 1):
         for yy in xrange(y1, y2 + 1):
             for zz in xrange(z1, z2 + 1):
-                add_block(connection.protocol, xx, yy, zz, color, connection.player_id,
-                          connection.mirror_x, connection.mirror_y)
+                add_block(
+                    connection.protocol,
+                    xx,
+                    yy,
+                    zz,
+                    color,
+                    connection.player_id,
+                    connection.mirror_x,
+                    connection.mirror_y)
+
 
 @command()
 def delete(*arguments):
@@ -144,6 +180,7 @@ def delete(*arguments):
     connection.arguments = arguments
     connection.select = True
     connection.points = 2
+
 
 def delete_r(connection):
     x1 = min(connection.block1_x, connection.block2_x)
@@ -158,6 +195,7 @@ def delete_r(connection):
                 remove_block(connection.protocol, xx, yy, zz,
                              connection.mirror_x, connection.mirror_y)
 
+
 @command()
 def pattern(*arguments):
     connection = arguments[0]
@@ -166,6 +204,7 @@ def pattern(*arguments):
     connection.arguments = arguments
     connection.select = True
     connection.points = 2
+
 
 def pattern_r(connection, copies):
     copies = int(copies)
@@ -185,8 +224,16 @@ def pattern_r(connection, copies):
                     set_color(connection.protocol, color, 32)
                     for i in xrange(1, copies + 1):
                         z_offset = delta_z * i
-                        add_block(connection.protocol, xx, yy, zz - z_offset, color,
-                                  32, connection.mirror_x, connection.mirror_y)
+                        add_block(
+                            connection.protocol,
+                            xx,
+                            yy,
+                            zz - z_offset,
+                            color,
+                            32,
+                            connection.mirror_x,
+                            connection.mirror_y)
+
 
 @command()
 def hollow(*arguments):
@@ -196,6 +243,7 @@ def hollow(*arguments):
     connection.arguments = arguments
     connection.select = True
     connection.points = 2
+
 
 def hollow_r(connection, thickness=1):
     m = connection.protocol.map
@@ -275,7 +323,7 @@ def apply_script(protocol, connection, config):
             return angle
 
         def on_block_destroy(self, x, y, z, value):
-            if self.select == True:
+            if self.select:
                 if self.points == 1:
                     self.block1_x = x
                     self.block1_y = y
@@ -284,14 +332,15 @@ def apply_script(protocol, connection, config):
                     self.reset_build()
                     return False
                 elif self.points == 2:
-                    if self.block1_x == None:
+                    if self.block1_x is None:
                         self.block1_x = x
                         self.block1_y = y
                         self.block1_z = z
                         self.send_chat('First block selected')
                         return False
                     else:
-                        if not (x == self.block1_x and y == self.block1_y and z == self.block1_z):
+                        if not (x == self.block1_x and y ==
+                                self.block1_y and z == self.block1_z):
                             self.block2_x = x
                             self.block2_y = y
                             self.block2_z = z
@@ -299,23 +348,23 @@ def apply_script(protocol, connection, config):
                             self.reset_build()
                             self.send_chat('Second block selected')
                             return False
-            if self.mirror_x == True or self.mirror_y == True:
+            if self.mirror_x or self.mirror_y:
                 x2 = x
                 y2 = y
-                if self.mirror_x == True:
+                if self.mirror_x:
                     x2 = 511 - x
-                if self.mirror_y == True:
+                if self.mirror_y:
                     y2 = 511 - y
                 remove_block(self.protocol, x2, y2, z)
             connection.on_block_destroy(self, x, y, z, value)
 
         def on_block_build(self, x, y, z):
-            if self.mirror_x == True or self.mirror_y == True:
+            if self.mirror_x or self.mirror_y:
                 x2 = x
                 y2 = y
-                if self.mirror_x == True:
+                if self.mirror_x:
                     x2 = 511 - x
-                if self.mirror_y == True:
+                if self.mirror_y:
                     y2 = 511 - y
                 add_block(self.protocol, x2, y2, z,
                           make_color_tuple(self.color), self.player_id)

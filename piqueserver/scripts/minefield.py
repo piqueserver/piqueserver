@@ -88,7 +88,12 @@ class Minefield:
 
     def __str__(self):
         type = 'Border' if self.isBorder else 'Inner'
-        return MINEFIELD_TYPE_STRING.format(type=type, left=self.left, top=self.top, right=self.right, bottom=self.bottom)
+        return MINEFIELD_TYPE_STRING.format(
+            type=type,
+            left=self.left,
+            top=self.top,
+            right=self.right,
+            bottom=self.bottom)
 
     def isValid(self):
         return self.left < self.right and self.top < self.bottom
@@ -139,7 +144,12 @@ class Minefield:
         orientation = None
         velocity = Vertex3(0, 0, 0)
         grenade = protocol.world.create_object(
-            Grenade, fuse, position, orientation, velocity, connection.grenade_exploded)
+            Grenade,
+            fuse,
+            position,
+            orientation,
+            velocity,
+            connection.grenade_exploded)
         grenade.name = MINEFIELD_MINE_ENT
         grenade_packet.value = grenade.fuse
         grenade_packet.player_id = 32
@@ -157,14 +167,14 @@ def parseField(ext):
     return None
 
 
-@admin
-@command()
+@command(admin_only=True)
 def minedebug(connection):
     proto = connection.protocol
     proto.minefield_debug = not proto.minefield_debug
     message = 'Minefield is now in debug' if proto.minefield_debug else 'Minefield is no longer in debug'
     proto.send_chat(message, global_message=True)
     return 'You toggled minefield debug'
+
 
 def apply_script(protocol, connection, config):
     class MineConnection(connection):
@@ -183,7 +193,8 @@ def apply_script(protocol, connection, config):
         def on_block_destroy(self, x, y, z, mode):
             if self.protocol.minefield_debug:
                 message = MINEFIELD_DBG_MESSAGE.format(
-                    x=x, y=y, z=z, m=self.protocol.minefieldAt(x, y, z) or 'None')
+                    x=x, y=y, z=z, m=self.protocol.minefieldAt(
+                        x, y, z) or 'None')
                 self.send_chat(message)
                 return False
             if mode == DESTROY_BLOCK or mode == SPADE_DESTROY:
@@ -215,7 +226,7 @@ def apply_script(protocol, connection, config):
             extensions = self.map_info.extensions
             for f in extensions.get('minefields', []):
                 m = parseField(f)
-                if not m is None:
+                if m is not None:
                     self.minefields.append(m)
             self.minefield_enabled = len(self.minefields) > 0
             return protocol.on_map_change(self, map)
@@ -224,7 +235,7 @@ def apply_script(protocol, connection, config):
             if lst is None or entry is None:
                 return
             if self.minefield_enabled:
-                if not entry in lst:
+                if entry not in lst:
                     lst.append(entry)
             else:
                 if entry in lst:
