@@ -68,7 +68,8 @@ class FeatureConnection(ServerConnection):
             self.send_lines(self.protocol.motd)
 
     def on_login(self, name):
-        self.printable_name = name.decode('ascii', 'replace')
+        # Dirty hack to remove all non-ascii chars, please fix
+        self.printable_name = name.encode().decode('ascii', 'replace')
         if len(self.printable_name) > 15:
             self.kick(silent=True)
         print('%s (IP %s, ID %s) entered the game!' % (self.printable_name,
@@ -173,9 +174,9 @@ class FeatureConnection(ServerConnection):
                         is_indestructable(x, y, z - 1)):
                     return False
             elif mode == GRENADE_DESTROY:
-                for nade_x in xrange(x - 1, x + 2):
-                    for nade_y in xrange(y - 1, y + 2):
-                        for nade_z in xrange(z - 1, z + 2):
+                for nade_x in range(x - 1, x + 2):
+                    for nade_y in range(y - 1, y + 2):
+                        for nade_z in range(z - 1, z + 2):
                             if is_indestructable(nade_x, nade_y, nade_z):
                                 return False
 

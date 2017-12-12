@@ -99,7 +99,7 @@ class MultikeyDict(dict):
     dict with multiple keys, i.e.
 
     >>> foo = MultikeyDict()
-    >>> foo[(1, 'bar')] = 'hello'
+    >>> foo[1, 'bar'] = 'hello'
     >>> foo[1]
     'hello'
     >>> foo['bar']
@@ -110,6 +110,9 @@ class MultikeyDict(dict):
     This is an alternative to maintaining 2 seperate dicts for e.g. player
     IDs and their names, so you can do both dict[player_id] and
     dict[player_name].
+
+    note: Due to implementation details, the multikeydict can only save
+    hashable values. It also can not save values used as key as value.
     """
 
     def __init__(self, *arg, **kw):

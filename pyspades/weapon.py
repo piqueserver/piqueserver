@@ -9,7 +9,7 @@ class BaseWeapon(object):
     reloading = False
     id = None
     shoot_time = None
-    next_shot = None
+    next_shot = 0
     start = None
 
     # Weapon parameters

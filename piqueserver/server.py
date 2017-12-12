@@ -251,7 +251,7 @@ class FeatureProtocol(ServerProtocol):
         self.melee_damage = config.get('melee_damage', 100)
         self.max_connections_per_ip = config.get('max_connections_per_ip', 0)
         self.passwords = config.get('passwords', {})
-        self.server_prefix = encode(config.get('server_prefix', '[*]'))
+        self.server_prefix = config.get('server_prefix', '[*]')
         self.time_announcements = config.get('time_announcements',
                                              [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                                               30, 60, 120, 180, 240, 300, 600,
@@ -346,7 +346,11 @@ class FeatureProtocol(ServerProtocol):
 
     @inlineCallbacks
     def get_external_ip(self):
-        ip = yield self.getPage(six.binary_type(IP_GETTER))
+        try:
+            ip = yield self.getPage(IP_GETTER)
+        except OSError as e:
+            print("Getting external IP failed:", e)
+            return
 
         self.ip = ip
         self.identifier = make_server_identifier(ip, self.port)
@@ -679,9 +683,9 @@ class FeatureProtocol(ServerProtocol):
 
     @inlineCallbacks
     def getPage(self, url):
-        resp = yield self.http_agent.request(b'GET', url)
+        resp = yield self.http_agent.request(b'GET', url.encode())
         body = yield web_client.readBody(resp)
-        returnValue(body)
+        returnValue(body.decode())
 
     # before-end calls
 

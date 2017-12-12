@@ -850,7 +850,7 @@ cdef class VersionResponse(Loader):
     cdef public:
         str client
         tuple version
-        str os_info
+        bytes os_info
 
     cpdef read(self, ByteReader reader):
         magic_no = reader.readByte(True)

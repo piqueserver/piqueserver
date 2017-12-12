@@ -62,7 +62,7 @@ class ServerProtocol(BaseProtocol):
     spade_teamkills_on_grief = False
     friendly_fire = False
     friendly_fire_time = 2
-    server_prefix = '[*]'
+    server_prefix = '[*] '
     respawn_time = 5
     refill_interval = 20
     master_connection = None
