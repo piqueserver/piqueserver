@@ -22,7 +22,7 @@ try:
     from cStringIO import StringIO
 except ImportError:
     # python3
-    from io import StringIO
+    from io import BytesIO
 
 from PIL import Image
 from jinja2 import Environment, PackageLoader
@@ -46,8 +46,10 @@ class CommonResource(Resource):
 
 class JSONPage(CommonResource):
 
-    def render_GET(self, _request):
+    def render_GET(self, request):
         protocol = self.protocol
+
+        request.setHeader("Content-Type", "application/json")
 
         players = []
 
@@ -80,7 +82,7 @@ class JSONPage(CommonResource):
                 "maxScore": protocol.max_score}
         }
 
-        return json.dumps(dictionary)
+        return json.dumps(dictionary).encode()
 
 
 class StatusPage(CommonResource):
@@ -112,9 +114,9 @@ class StatusServerFactory(object):
         self.env = Environment(loader=PackageLoader('piqueserver.web'))
         self.protocol = protocol
         root = Resource()
-        root.putChild('json', JSONPage(self))
-        root.putChild('', StatusPage(self))
-        root.putChild('overview', MapOverview(self))
+        root.putChild(b'json', JSONPage(self))
+        root.putChild(b'', StatusPage(self))
+        root.putChild(b'overview', MapOverview(self))
         site = server.Site(root)
 
         logging = config.get('logging', False)
@@ -131,7 +133,7 @@ class StatusServerFactory(object):
                 current_time - self.last_overview > OVERVIEW_UPDATE_INTERVAL):
             overview = self.protocol.map.get_overview(rgba=True)
             image = Image.frombytes('RGBA', (512, 512), overview)
-            data = StringIO()
+            data = BytesIO()
             image.save(data, 'png')
             self.overview = data.getvalue()
             self.last_overview = current_time
