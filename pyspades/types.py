@@ -140,7 +140,7 @@ class MultikeyDict(dict):
         return self[key] if key in self else default
 
     def clear(self):
-        dict.clear()
+        dict.clear(self)
         self.value_set.clear()
 
     def values(self):

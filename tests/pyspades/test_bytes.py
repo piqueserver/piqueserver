@@ -12,7 +12,6 @@ class TestByteReader(unittest.TestCase):
 
     def test_read(self):
         inputs = (
-            "\x00\xF0\xFF",
             b"\x00\xF0\xFF",
             bytes(b"\x00\xF0\xFF"),
             bytearray([0x00, 0xF0, 0xFF]),
@@ -25,7 +24,6 @@ class TestByteReader(unittest.TestCase):
 
     def test_readbyte(self):
         inputs = (
-            "\xF1\xF1",
             b"\xF1\xF1\xF1",
             bytes(b"\xF1\xF1\xF1"),
             bytearray([0xF1, 0xF1, 0xF1]),
@@ -38,7 +36,6 @@ class TestByteReader(unittest.TestCase):
 
     def test_readshort(self):
         inputs = (
-            "\xF1\x00\xF1\x00",
             b"\xF1\x00\xF1\x00",
             bytes(b"\xF1\x00\xF1\x00"),
             bytearray([0xF1, 0x00, 0xF1, 0x00]),
@@ -56,7 +53,6 @@ class TestByteReader(unittest.TestCase):
 
     def test_readint(self):
         inputs = (
-            "\xF1\x00\xF1\x00\xF1\x00\xF1\x00",
             b"\xF1\x00\xF1\x00\xF1\x00\xF1\x00",
             bytes(b"\xF1\x00\xF1\x00\xF1\x00\xF1\x00"),
             bytearray([0xF1, 0x00, 0xF1, 0x00, 0xF1, 0x00, 0xF1, 0x00]),
@@ -74,7 +70,6 @@ class TestByteReader(unittest.TestCase):
 
     def test_readfloat(self):
         inputs = (
-            "\xF1\x00\xF1\x00\xF1\x00\xF1\x00",
             b"\xF1\x00\xF1\x00\xF1\x00\xF1\x00",
             bytes(b"\xF1\x00\xF1\x00\xF1\x00\xF1\x00"),
             bytearray([0xF1, 0x00, 0xF1, 0x00, 0xF1, 0x00, 0xF1, 0x00]),
