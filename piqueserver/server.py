@@ -64,7 +64,6 @@ from piqueserver.networkdict import NetworkDict
 from piqueserver.player import FeatureConnection
 
 # won't be used; just need to be executed
-# _ to avoid possible name collisions
 import piqueserver.core_commands
 
 try:
@@ -220,12 +219,7 @@ class FeatureProtocol(ServerProtocol):
         # TODO: check if this is actually working and not silently failing
         try:
             self.bans.read_list(
-                json.load(
-                    open(
-                        os.path.join(
-                            cfg.config_dir,
-                            'bans.txt'),
-                        'rb')))
+                json.load(open(os.path.join(cfg.config_dir, 'bans.txt'), 'rb'))))
         except IOError:
             pass
         self.hard_bans = set()  # possible DDoS'ers are added here

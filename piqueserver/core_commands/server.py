@@ -1,7 +1,6 @@
 from __future__ import print_function, unicode_literals
 from piqueserver.commands import command, join_arguments
 
-print("core.server.py")
 
 @command('servername', admin_only=True)
 def server_name(connection, *arg):
