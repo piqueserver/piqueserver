@@ -65,16 +65,7 @@ from piqueserver.player import FeatureConnection
 
 # won't be used; just need to be executed
 # _ to avoid possible name collisions
-from piqueserver.core_commands import (
-    info,
-    map as _,
-    game as _,
-    player as _,
-    server as _,
-    moderation,
-    movement,
-    social
-)
+import piqueserver.core_commands
 
 try:
     range = xrange  # pylint: disable=redefined-builtin
