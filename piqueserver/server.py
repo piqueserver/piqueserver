@@ -63,6 +63,19 @@ from piqueserver.console import create_console
 from piqueserver.networkdict import NetworkDict
 from piqueserver.player import FeatureConnection
 
+# won't be used; just need to be executed
+# _ to avoid possible name collisions
+from piqueserver.core_commands import (
+    info,
+    map as _,
+    game as _,
+    player as _,
+    server as _,
+    moderation,
+    movement,
+    social
+)
+
 try:
     range = xrange  # pylint: disable=redefined-builtin
 except NameError:
@@ -216,7 +229,12 @@ class FeatureProtocol(ServerProtocol):
         # TODO: check if this is actually working and not silently failing
         try:
             self.bans.read_list(
-                json.load(open(os.path.join(cfg.config_dir, 'bans.txt'), 'rb')))
+                json.load(
+                    open(
+                        os.path.join(
+                            cfg.config_dir,
+                            'bans.txt'),
+                        'rb')))
         except IOError:
             pass
         self.hard_bans = set()  # possible DDoS'ers are added here
@@ -360,7 +378,7 @@ class FeatureProtocol(ServerProtocol):
             advance_call.cancel()
             self.advance_call = None
         time_limit = time_limit or self.default_time_limit
-        if time_limit == False:
+        if not time_limit:
             for call in self.end_calls[:]:
                 call.set(None)
             return
@@ -456,7 +474,7 @@ class FeatureProtocol(ServerProtocol):
                 return True
         map_is_indestructable = self.map_info.is_indestructable
         if map_is_indestructable is not None:
-            if map_is_indestructable(self, x, y, z) == True:
+            if map_is_indestructable(self, x, y, z):
                 return True
         return False
 
@@ -509,8 +527,8 @@ class FeatureProtocol(ServerProtocol):
             else:
                 message = 'Master connection lost'
             print('%s, reconnecting in 60 seconds...' % message)
-            self.master_reconnect_call = reactor.callLater(60,
-                                                           self.reconnect_master)
+            self.master_reconnect_call = reactor.callLater(
+                60, self.reconnect_master)
 
     def reconnect_master(self):
         self.master_reconnect_call = None
@@ -604,7 +622,7 @@ class FeatureProtocol(ServerProtocol):
 
     # pylint: disable=arguments-differ
     def broadcast_chat(self, value, global_message=True, sender=None,
-                  team=None, irc=False):
+                       team=None, irc=False):
         """
         Send a chat message to many users
         """
@@ -628,8 +646,9 @@ class FeatureProtocol(ServerProtocol):
         ServerProtocol.update_world(self)
         time_taken = reactor.seconds() - current_time
         if time_taken > 1.0:
-            print('World update iteration took %s, objects: %s' % (time_taken,
-                                                                   self.world.objects))
+            print(
+                'World update iteration took %s, objects: %s' %
+                (time_taken, self.world.objects))
 
     # events
 
@@ -675,7 +694,13 @@ class FeatureProtocol(ServerProtocol):
 
     def connectTCP(self, *arg, **kw):
         return reactor.connectTCP(
-            *arg, bindAddress=(self.config.get('network_interface', ''), 0), **kw)
+            *arg,
+            bindAddress=(
+                self.config.get(
+                    'network_interface',
+                    ''),
+                0),
+            **kw)
 
     @inlineCallbacks
     def getPage(self, url):
@@ -754,8 +779,8 @@ def run():
                 script_names.remove(script)
 
     for script in script_objects:
-        protocol_class, connection_class = script.apply_script(protocol_class,
-                                                               connection_class, config)
+        protocol_class, connection_class = script.apply_script(
+            protocol_class, connection_class, config)
 
     protocol_class.connection_class = connection_class
 
@@ -775,4 +800,3 @@ def run():
         cProfile.runctx('reactor.run()', None, globals())
     else:
         reactor.run()
-
