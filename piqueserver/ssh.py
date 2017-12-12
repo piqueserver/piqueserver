@@ -16,27 +16,51 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import sys
+from os import path
 
 try:
     from twisted.cred import portal, checkers
     from twisted.conch import manhole, manhole_ssh
+    from twisted.conch.ssh import keys
 except ImportError as e:
     print("ERROR: piqueserver was not installed with the [ssh] option")
     print("but SSH was enabled in the settings")
     print(e.message)
     sys.exit(1)
 
+from piqueserver import cfg
+
 
 def create_remote_factory(namespace, users):
     realm = manhole_ssh.TerminalRealm()
 
     def create_remote_protocol(_):
-        return manhole.Manhole(namespace)
+        return manhole.ColoredManhole(namespace)
+
     realm.chainedProtocolFactory.protocolFactory = create_remote_protocol
     p = portal.Portal(realm)
+
+    users = {key: value.encode() for key, value in users.items()}
+
     p.registerChecker(
         checkers.InMemoryUsernamePasswordDatabaseDontUse(**users))
     f = manhole_ssh.ConchFactory(p)
+    ssh_key_base_path = path.join(cfg.config_dir, "ssh-keys")
+    ssh_pubkey_path = path.join(ssh_key_base_path,
+                                "ssh_host_rsa_key.pub")
+    ssh_privkey_path = path.join(ssh_key_base_path,
+                                 "ssh_host_rsa_key")
+    try:
+        f.publicKeys[b"ssh-rsa"] = keys.Key.fromFile(ssh_pubkey_path)
+        f.privateKeys[b"ssh-rsa"] = keys.Key.fromFile(ssh_privkey_path)
+    except FileNotFoundError:
+        print("ERROR: You don't have any keys in the host key location")
+        print("Generate one with:")
+        print("  mkdir {}".format(ssh_key_base_path))
+        print("  ssh-keygen -f {} -t rsa".format(ssh_privkey_path))
+        print("make sure to specify no password")
+
+        sys.exit(1)
     return f
 
 
