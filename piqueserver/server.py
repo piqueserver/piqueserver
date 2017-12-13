@@ -219,7 +219,8 @@ class FeatureProtocol(ServerProtocol):
         # TODO: check if this is actually working and not silently failing
         try:
             self.bans.read_list(
-                json.load(open(os.path.join(cfg.config_dir, 'bans.txt'), 'rb'))))
+                json.load(open(os.path.join(cfg.config_dir, 'bans.txt'), 'rb'))
+            )
         except IOError:
             pass
         self.hard_bans = set()  # possible DDoS'ers are added here
