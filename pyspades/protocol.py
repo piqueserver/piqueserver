@@ -21,9 +21,6 @@ from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from pyspades.bytes import ByteWriter
 
-import sys # Should be removed alongside the conditional blocks that use
-           # sys.version_info if we drop py2 support
-
 import enet
 
 
@@ -84,11 +81,13 @@ class BaseProtocol(object):
     def __init__(self, port=None, interface='localhost',
                  update_interval=1 / 60.0):
         if port is not None and interface is not None:
-            # if py3 or greater
-            if (sys.version_info > (3, 0)):
-                address = enet.Address(interface.encode('utf-8'), port)
-            else: # py2
+            try:
                 address = enet.Address(interface, port)
+            except:
+                # needed on some systems? dunno, it was necessary for me on
+                # Xubuntu 17.10   -feikname
+                address = enet.Address(interface.encode('utf-8'), port)
+
         else:
             address = None
         self.host = enet.Host(address, self.max_connections, 1)
