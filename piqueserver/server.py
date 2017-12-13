@@ -569,7 +569,7 @@ class FeatureProtocol(ServerProtocol):
 
     def save_bans(self):
         json.dump(self.bans.make_list(), open_create(
-            os.path.join(cfg.config_dir, 'bans.txt'), 'wb'))
+            os.path.join(cfg.config_dir, 'bans.txt'), 'w'))
         if self.ban_publish is not None:
             self.ban_publish.update()
 
