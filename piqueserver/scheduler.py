@@ -15,34 +15,9 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from weakref import WeakSet
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
-try:
-    from weakref import WeakSet
-except ImportError:
-    # python 2.6 support (sigh)
-    from weakref import WeakKeyDictionary
-
-    class WeakSet(object):
-
-        def __init__(self):
-            self._dict = WeakKeyDictionary()
-
-        def add(self, value):
-            self._dict[value] = True
-
-        def remove(self, value):
-            del self._dict[value]
-
-        def __iter__(self):
-            for key in self._dict.keys():
-                yield key
-
-        def __contains__(self, other):
-            return other in self._dict
-
-        def __len__(self):
-            return len(self._dict)
 
 
 class Scheduler(object):
