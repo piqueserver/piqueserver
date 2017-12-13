@@ -774,9 +774,7 @@ def run():
 
     protocol_class.connection_class = connection_class
 
-    interface = config.get('network_interface', '')
-    if interface == '':
-        interface = '*'
+    interface = config.get('network_interface', '').encode('utf-8')
 
     # TODO: is this required? Maybe protocol_class needs to be called?
     # either way, the resulting object is not used
