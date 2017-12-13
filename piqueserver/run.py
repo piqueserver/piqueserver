@@ -4,7 +4,7 @@ import os
 import shutil
 import sys
 import argparse
-import urllib
+import six.moves.urllib as urllib
 import gzip
 
 from piqueserver import cfg
@@ -57,8 +57,7 @@ def update_geoip(target_dir):
 
     print('Downloading %s' % MAXMIND_DOWNLOAD)
 
-    # PY3: replace with urllib.requests.urlretrieve
-    urllib.urlretrieve(MAXMIND_DOWNLOAD, zipped_path)
+    urllib.request.urlretrieve(MAXMIND_DOWNLOAD, zipped_path)
 
     print('Download Complete')
     print('Unpacking...')
