@@ -93,7 +93,7 @@ class build_ext(_build_ext):
 setup(
     name=PKG_NAME,
     packages=[PKG_NAME, '%s.web' %
-              PKG_NAME, '%s.scripts' % PKG_NAME, 'pyspades'],
+              PKG_NAME, '%s.scripts' % PKG_NAME, '%s.core_commands' % PKG_NAME, 'pyspades'],
     version='0.1.0_post1',
     description='Open-Source server implementation for Ace of Spades ',
     author=('Originally MatPow2 and PySnip contributors,'
@@ -146,6 +146,7 @@ setup(
     },
     package_dir={
         PKG_NAME: 'piqueserver',
+        '%s.core_commands' % PKG_NAME: 'piqueserver/core_commands',
         '%s.web' % PKG_NAME: 'piqueserver/web',
         '%s.scripts' % PKG_NAME: 'piqueserver/scripts',
         'pyspades': 'pyspades',
