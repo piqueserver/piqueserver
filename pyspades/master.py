@@ -85,9 +85,9 @@ class MasterConnection(BaseConnection):
     def send_server(self):
         protocol = self.server_protocol
         add_server.count = None
-        add_server.name = protocol.name[:MAX_SERVER_NAME_SIZE]
-        add_server.game_mode = protocol.get_mode_name()[:MAX_GAME_MODE_SIZE]
-        add_server.map = protocol.map_info.short_name[:MAX_MAP_NAME_SIZE]
+        add_server.name = protocol.name[:MAX_SERVER_NAME_SIZE].encode()
+        add_server.game_mode = protocol.get_mode_name()[:MAX_GAME_MODE_SIZE].encode()
+        add_server.map = protocol.map_info.short_name[:MAX_MAP_NAME_SIZE].encode()
         add_server.port = protocol.host.address.port
         add_server.max_players = protocol.max_players
         self.send_contained(add_server)
