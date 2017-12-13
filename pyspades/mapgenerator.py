@@ -23,7 +23,8 @@ class ProgressiveMapGenerator(object):
     done = False
 
     # parent attributes
-    all_data = ''
+    # Bytearray is used over bytes because it is mutable, so should be faster
+    all_data = bytearray()
     pos = 0
 
     def __init__(self, map_, parent=False):
