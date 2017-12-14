@@ -33,12 +33,6 @@ from collections import deque
 
 import six
 
-if sys.platform == 'linux2':
-    try:
-        from twisted.internet import epollreactor
-        epollreactor.install()
-    except ImportError:
-        print('(dependencies missing for epoll, using normal reactor)')
 from ipaddress import ip_network, ip_address
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue

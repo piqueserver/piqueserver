@@ -40,7 +40,7 @@ class StatsProtocol(Int16StringReceiver):
 
     def send_object(self, obj):
         if self.transport is not None:
-            self.sendString(json.dumps(obj))
+            self.sendString(json.dumps(obj).encode())
 
     def object_received(self, obj):
         pass
