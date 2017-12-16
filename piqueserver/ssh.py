@@ -25,7 +25,7 @@ try:
 except ImportError as e:
     print("ERROR: piqueserver was not installed with the [ssh] option")
     print("but SSH was enabled in the settings")
-    print(e.message)
+    print(e)
     sys.exit(1)
 
 from piqueserver import cfg

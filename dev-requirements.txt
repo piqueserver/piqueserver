@@ -1,4 +1,5 @@
 pylint
+mock
 coverage
 coveralls
 pytest

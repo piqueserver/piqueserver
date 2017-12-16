@@ -36,7 +36,7 @@ def hash_password(value):
 class StatsProtocol(Int16StringReceiver):
 
     def stringReceived(self, data):
-        self.object_received(json.loads(data))
+        self.object_received(json.loads(data.decode()))
 
     def send_object(self, obj):
         if self.transport is not None:

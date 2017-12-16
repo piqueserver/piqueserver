@@ -3,6 +3,8 @@ Twisted[tls]>=17
 Jinja2>=2<3
 Pillow>=3<5
 pygeoip>=0.3.2,<0.4
+cryptography
+pyasn1
 pyenet
 ipaddress
 six
