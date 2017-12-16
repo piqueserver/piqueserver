@@ -3,7 +3,10 @@ test piqueserver/server.py
 """
 
 from twisted.trial import unittest
-from unittest.mock import Mock
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
 from piqueserver import statistics
 
 
