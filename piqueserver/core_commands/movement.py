@@ -154,23 +154,43 @@ def godsilent(connection, player=None):
     if player is not None:
         connection = get_player(connection.protocol, player)
     elif connection not in connection.protocol.players:
-        raise ValueError()
-    connection.god = not connection.god
+        return 'Unknown player: ' + player
+
+    connection.god = not connection.god # toggle godmode
+
     if connection.protocol.set_god_build:
         connection.god_build = connection.god
     else:
         connection.god_build = False
-    # TODO: Return different message if other player is put into god mode
-    return 'You have entered god mode.'
 
+    if connection.god:
+        if player is None:
+            return 'You have silently entered god mode'
+        else:
+            # TODO: Do not send this if the specified player is the one who called the command
+            connection.send_chat('Someone has made you silently enter godmode!')
+            return 'You made ' + connection.name + ' silently enter god mode'
+    else:
+        if player is None:
+            return 'You have silently returned to being a mere human'
+        else:
+            # TODO: Do not send this if the specified player is the one who called the command
+            connection.send_chat('Someone has made you silently return to being a mere human')
+            return 'You made ' + connection.name + ' silently return to being a mere human'
 
 @command(admin_only=True)
 def god(connection, player=None):
     """
-    Go into god mode
+    Go into god mode and inform everyone on the server of it
     /god [player]
     """
-    godsilent(connection, player)
+    if player is not None:
+        connection = get_player(connection.protocol, player)
+    elif connection not in connection.protocol.players:
+        return 'Unknown player: ' + player
+
+    connection.god = not connection.god # toggle godmode
+
     if connection.god:
         message = '%s entered GOD MODE!' % connection.name
     else:
@@ -181,7 +201,7 @@ def god(connection, player=None):
 @command('godbuild', admin_only=True)
 def god_build(connection, player=None):
     """
-    Enable placing god blocks
+    Place blocks that can be destroyed only by players with godmode activated
     /godbuild [player]
     """
     protocol = connection.protocol
