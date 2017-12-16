@@ -1,8 +1,9 @@
 # passreload.py
 # written by Danke
 
+from __future__ import print_function
 from piqueserver import commands
-from piqueserver.commands import command, admin
+from piqueserver.commands import command
 from piqueserver import cfg
 import json
 import os.path

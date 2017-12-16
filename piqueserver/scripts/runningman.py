@@ -12,7 +12,7 @@ Maintainer: hompy
 """
 
 from random import choice
-from itertools import ifilter
+from six import filter
 from twisted.internet.reactor import seconds
 from pyspades.world import Grenade
 from pyspades.server import grenade_packet
@@ -154,7 +154,7 @@ def apply_script(protocol, connection, config):
             return True
 
         def get_new_link(self):
-            available = list(ifilter(self.can_be_linked_to,
+            available = list(filter(self.can_be_linked_to,
                                      self.team.get_players()))
             if not available:
                 return
@@ -194,7 +194,7 @@ def apply_script(protocol, connection, config):
         running_man = ENABLED_AT_START
 
         def drop_all_links(self):
-            for player in self.players.values():
+            for player in list(self.players.values()):
                 player.drop_link(no_message=True)
 
     return RunningManProtocol, RunningManConnection

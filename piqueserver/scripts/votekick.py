@@ -17,8 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
 
+from __future__ import print_function
+from six import itervalues
 from twisted.internet.reactor import seconds
 from piqueserver.scheduler import Scheduler
 from piqueserver.commands import command, admin, get_player, join_arguments, CommandError
@@ -260,7 +261,7 @@ def apply_script(protocol, connection, config):
         def get_required_votes(self):
             # votekicks are invalid if this returns <= 0
             player_count = sum(not player.disconnected and not player.local
-                               for player in self.players.itervalues()) - 1
+                               for player in itervalues(self.players)) - 1
             return int(player_count / 100.0 * required_percentage)
 
         def on_map_leave(self):

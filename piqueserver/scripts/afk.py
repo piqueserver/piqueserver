@@ -32,7 +32,7 @@ def kick_afk(connection, minutes, amount=None):
     seconds = minutes * 60.0
     minutes_s = prettify_timespan(seconds)
     lower_bound = reactor.seconds() - seconds
-    for conn in protocol.connections.values():
+    for conn in list(protocol.connections.values()):
         if not conn.admin and conn.last_activity < lower_bound:
             to_kick.append(conn)
     if not to_kick:

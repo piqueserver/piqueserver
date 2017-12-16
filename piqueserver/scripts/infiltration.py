@@ -10,6 +10,7 @@ To use set game_mode to 'infiltration' in config.txt, do NOT add to script list.
 Maintainer: TheGrandmaster / hompy
 """
 
+from six import range
 from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
 from pyspades.server import create_player, player_left, intel_capture
@@ -80,7 +81,7 @@ class DummyPlayer():
             self.team.other.initialize()
             for entity in self.protocol.entities:
                 entity.update()
-            for player in self.protocol.players.values():
+            for player in list(self.protocol.players.values()):
                 player.hp = None
                 if player.team is not None:
                     player.spawn()
@@ -129,7 +130,7 @@ def apply_script(protocol, connection, config):
                 self.protocol.attacker_dummy = dummy
                 if self.protocol.attacker_dummy_calls is None:
                     self.protocol.attacker_dummy_calls = []
-                for i in xrange(ATTACKER_SCORE_MULTIPLIER - 1):
+                for i in range(ATTACKER_SCORE_MULTIPLIER - 1):
                     delay = i * 0.1
                     dummy_call = callLater(delay,
                                            self.protocol.attacker_dummy_score)

@@ -36,6 +36,7 @@ ToDo:
 """
 
 
+from six import range
 from pyspades.constants import *
 from pyspades.common import make_color
 from pyspades.contained import SetColor, BlockAction
@@ -271,9 +272,9 @@ def apply_script(protocol, connection, config):
                     blocks = ((x, y, z), (x, y, z + 1), (x, y, z - 1))
                 elif value == GRENADE_DESTROY:
                     blocks = []
-                    for nade_x in xrange(x - 1, x + 2):
-                        for nade_y in xrange(y - 1, y + 2):
-                            for nade_z in xrange(z - 1, z + 2):
+                    for nade_x in range(x - 1, x + 2):
+                        for nade_y in range(y - 1, y + 2):
+                            for nade_z in range(z - 1, z + 2):
                                 blocks.append((nade_x, nade_y, nade_z))
 
                 def is_in_last(block): return any(last == block

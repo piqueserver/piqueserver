@@ -60,7 +60,7 @@ class VoteMap(object):
         thresh = int((len(self.protocol.players)) *
                      self.vote_percentage / 100.0)
         counts = {}
-        for v in self.votes.values():
+        for v in list(self.votes.values()):
             if v in counts:
                 counts[v]['count'] += 1
             else:
@@ -69,7 +69,7 @@ class VoteMap(object):
         if len(cvlist) <= 0:
             return {'name': self.picks[0], 'count': 0}
         mv = cvlist[0]
-        for n in counts.keys():
+        for n in list(counts.keys()):
             if counts[n]['count'] > mv['count']:
                 mv = n
         mv['count'] = thresh - mv['count']

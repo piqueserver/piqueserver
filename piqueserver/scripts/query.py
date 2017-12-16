@@ -44,7 +44,7 @@ def apply_script(protocol, connection, config):
             options['gametype'] = makeValid(self.get_mode_name())
             options['sv_maxclients'] = self.max_players
             players = []
-            for p in self.players.values():
+            for p in list(self.players.values()):
                 players.append({'score': p.kills,
                                 'ping': p.latency,
                                 'name': makeValid(p.name),

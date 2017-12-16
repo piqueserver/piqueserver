@@ -4,6 +4,7 @@ Progressively roll backs map to their original state (or to another map).
 Maintainer: hompy
 """
 
+from six import range
 from twisted.internet.task import LoopingCall
 from pyspades.vxl import VXLData
 from pyspades.contained import BlockAction, SetColor
@@ -160,13 +161,13 @@ def apply_script(protocol, connection, config):
             self.send_contained(set_color, save=True)
             old = cur.copy()
             check_protected = hasattr(protocol, 'protected')
-            for x in xrange(start_x, end_x):
+            for x in range(start_x, end_x):
                 block_action.x = x
-                for y in xrange(start_y, end_y):
+                for y in range(start_y, end_y):
                     block_action.y = y
                     if check_protected and self.is_protected(x, y, 0):
                         continue
-                    for z in xrange(63):
+                    for z in range(63):
                         action = None
                         cur_solid = cur.get_solid(x, y, z)
                         new_solid = new.get_solid(x, y, z)
@@ -202,7 +203,7 @@ def apply_script(protocol, connection, config):
                 yield 0
             last_color = None
             block_action.value = BUILD_BLOCK
-            for pos, color in sorted(surface.iteritems(),
+            for pos, color in sorted(iter(surface.items()),
                                      key=operator.itemgetter(1)):
                 x, y, z = pos
                 packets_sent = 0

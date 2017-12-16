@@ -16,6 +16,7 @@ How to install and configure:
 5) Set cap_limit to "10" in config.txt
 """
 
+from six import range
 from pyspades.constants import *
 from random import randint
 from twisted.internet import reactor
@@ -230,8 +231,8 @@ def apply_script(protocol, connection, config):
                 self.map_info.cap_limit = 1
                 self.map_info.get_entity_location = get_entity_location
                 self.map_info.get_spawn_location = get_spawn_location
-                for x in xrange(256 - PLATFORM_WIDTH, 256 + PLATFORM_WIDTH):
-                    for y in xrange(
+                for x in range(256 - PLATFORM_WIDTH, 256 + PLATFORM_WIDTH):
+                    for y in range(
                             256 - PLATFORM_HEIGHT,
                             256 + PLATFORM_HEIGHT):
                         map.set_point(x, y, 1, PLATFORM_COLOR)

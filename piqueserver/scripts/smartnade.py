@@ -5,7 +5,7 @@ def apply_script(protocol, connection, config):
     class SmartNadeProtocol(protocol):
 
         def on_world_update(self):
-            for player in self.players.values():
+            for player in list(self.players.values()):
                 for nade in player.smart_nades:
                     if nade.fuse > SMARTNADE_DELAY:
                         for enemy in player.team.other.get_players():

@@ -44,6 +44,7 @@ from struct import unpack
 from random import choice
 from itertools import product
 from collections import deque, namedtuple
+from six import range
 from twisted.internet.reactor import seconds
 from twisted.internet.task import LoopingCall
 from pyspades.contained import BlockAction, SetColor
@@ -154,7 +155,7 @@ class KV6Model:
 
             voxel_count, = unpack('I', file.read(4))
             voxels = []
-            for i in xrange(voxel_count):
+            for i in range(voxel_count):
                 voxel = KV6Voxel._make(unpack('BBBBHBB', file.read(8)))
                 voxels.append(voxel)
 
@@ -163,14 +164,14 @@ class KV6Model:
 
             voxel_map = {}
             voxel_iter = iter(voxels)
-            for x, y in product(xrange(size_x), xrange(size_y)):
+            for x, y in product(range(size_x), range(size_y)):
                 last_z = None
                 column_len, = unpack('H', file.read(2))
-                for i in xrange(column_len):
+                for i in range(column_len):
                     voxel = next(voxel_iter)
                     voxel_map[(x, y, voxel.z)] = voxel
                     if last_z is not None and not voxel.neighbors & 0b00010000:
-                        for z in xrange(last_z + 1, voxel.z):
+                        for z in range(last_z + 1, voxel.z):
                             inside_voxel = NonSurfaceKV6Voxel._replace(z=z)
                             voxel_map[(x, y, z)] = inside_voxel
                     last_z = voxel.z

@@ -26,11 +26,12 @@ Maintainer: hompy
 """
 
 import csv
-from StringIO import StringIO
+from io import StringIO
 from collections import deque, defaultdict
 from functools import partial
-from itertools import izip, islice, chain
+from itertools import islice, chain
 from random import choice
+from six import zip
 from twisted.internet.reactor import callLater, seconds
 from pyspades.world import cube_line
 from pyspades.contained import BlockAction, BlockLine, SetColor, ChatMessage
@@ -240,7 +241,7 @@ def parse_string_map(xs_and_dots):
     width, height = len(rows[0]), len(rows)
     off_x, off_y = -width // 2, -height // 2
     for y, row in enumerate(rows):
-        columns = [''.join(l[y:]).split('.', 1)[0] for l in izip(*rows)]
+        columns = [''.join(l[y:]).split('.', 1)[0] for l in zip(*rows)]
         it = enumerate(columns)
         for x, column in it:
             h = len(row[x:].split('.', 1)[0])

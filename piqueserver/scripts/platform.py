@@ -180,12 +180,14 @@ Maintainer: hompy
 # Platforms crushing players
 # Stop platform action?
 
-import __builtin__
+import builtins
 import json
 import os
 import operator
 from collections import defaultdict
-from itertools import product, imap, chain
+from itertools import product, chain
+from builtins import int
+from six import iteritems, itervalues, range, map
 from twisted.internet.reactor import callLater, seconds
 from twisted.internet.task import LoopingCall
 from pyspades.world import cube_line
@@ -374,8 +376,8 @@ def reach(connection):
     if connection not in connection.protocol.players:
         raise ValueError()
     long = connection.reach == ACTION_RAY_LENGTH_LONG
-    connection.reach = ACTION_RAY_LENGTH if long else ACTION_RAY_LENGTH_LONG
-    return S_REACH if not long else S_NO_REACH
+    connection.reach = ACTION_RAY_LENGTH if int else ACTION_RAY_LENGTH_LONG
+    return S_REACH if not int else S_NO_REACH
 
 
 @command('platform', 'p', admin_only=True)
@@ -561,7 +563,7 @@ def action_command(connection, *args):
                 kwargs['speed'] = speed
                 kwargs['delay'] = delay or 0.0
                 # validate parameters
-                for parameter, value in kwargs.iteritems():
+                for parameter, value in iteritems(kwargs):
                     if type(value) in (int, float) and value < 0:
                         message = S_NOT_POSITIVE.format(parameter=parameter)
                         raise ValueError(message)
@@ -714,15 +716,15 @@ def aabb(x, y, z, x1, y1, z1, x2, y2, z2):
 
 
 def prism(x1, y1, z1, x2, y2, z2):
-    return product(xrange(x1, x2), xrange(y1, y2), xrange(z1, z2))
+    return product(range(x1, x2), range(y1, y2), range(z1, z2))
 
 
 def plane_least_rows(x1, y1, x2, y2, z):
     if y2 - y1 < x2 - x1:
-        for y in xrange(y1, y2):
+        for y in range(y1, y2):
             yield x1, y, z, x2 - 1, y, z
     else:
-        for x in xrange(x1, x2):
+        for x in range(x1, x2):
             yield x, y1, z, x, y2 - 1, z
 
 
@@ -1084,7 +1086,7 @@ class Button(BaseObject):
 
     def action(self):
         self.cooldown_call = callLater(self.cooldown, self.reset)
-        objects = set(flatten(self.shared_trigger_objects.itervalues()))
+        objects = set(flatten(iter(self.shared_trigger_objects.values())))
         if self.disabled:
             if not self.silent:
                 for player in objects:
@@ -1210,7 +1212,7 @@ class Platform(BaseObject):
             self.build_plane(self.z)
             self.protocol.update_entities()
             # unstuck players
-            for player in self.protocol.players.itervalues():
+            for player in itervalues(self.protocol.players):
                 obj = player.world_object
                 if obj is None:
                     continue
@@ -1270,7 +1272,7 @@ class Platform(BaseObject):
         if z2 is None:
             z2 = z1 + 1
         protocol = self.protocol
-        overlaps = [platform for platform in protocol.platforms.itervalues() if
+        overlaps = [platform for platform in itervalues(protocol.platforms) if
                     platform is not self and platform.overlaps(self)]
         for x, y, z in prism(self.x1, self.y1, z1, self.x2, self.y2, z2):
             if any(platform.contains(x, y, z) for platform in overlaps):
@@ -1372,7 +1374,7 @@ class NewPlatformState(State):
         if not self.blocks:
             return S_PLATFORM_CANCEL
 
-        zipped = zip(*self.blocks)
+        zipped = list(zip(*self.blocks))
         x1, y1 = min(zipped[0]), min(zipped[1])
         x2, y2 = max(zipped[0]) + 1, max(zipped[1]) + 1
         z1, z2 = min(zipped[2]), max(zipped[2])
@@ -1394,7 +1396,7 @@ class NewPlatformState(State):
         color_sum = (0, 0, 0)
         for x, y, z in self.blocks:
             color = protocol.map.get_color(x, y, z)
-            color_sum = tuple(imap(operator.add, color_sum, color))
+            color_sum = tuple(map(operator.add, color_sum, color))
         color_avg = tuple(n / len(self.blocks) for n in color_sum)
 
         protocol.highest_id += 1
@@ -1461,19 +1463,19 @@ class PlatformCommandState(State):
             platform.destroy()
             del protocol.platforms[platform.id]
             # remove actions affecting this platform
-            for button in protocol.buttons.itervalues():
+            for button in itervalues(protocol.buttons):
                 button.actions = [
                     action for action in button.actions if getattr(
                         action, 'platform', None) is not platform]
             # cancel any ongoing commands targeting this platform
-            for player in protocol.players.itervalues():
+            for player in itervalues(protocol.players):
                 state = player.states.top()
                 if not state:
                     continue
                 if getattr(state.get_parent(), 'platform', None) is platform:
                     player.states.exit()
             # clear last platform memory from players
-            for player in protocol.players.itervalues():
+            for player in itervalues(protocol.players):
                 if player.previous_platform is platform:
                     player.previous_platform = None
             return S_PLATFORM_DESTROYED.format(label=platform.label)
@@ -1499,7 +1501,7 @@ class ButtonCommandState(State):
             button.destroy()
             del protocol.buttons[button]
             # clear last button memory from players
-            for player in protocol.players.itervalues():
+            for player in itervalues(protocol.players):
                 if player.previous_button is button:
                     player.previous_button = None
             return S_BUTTON_DESTROYED.format(label=button.label)
@@ -1867,9 +1869,9 @@ def apply_script(protocol, connection, config):
             if self.autosave_loop and self.autosave_loop.running:
                 self.autosave_loop.stop()
             self.autosave_loop = None
-            for platform in self.platforms.itervalues():
+            for platform in itervalues(self.platforms):
                 platform.release()
-            for button in self.buttons.itervalues():
+            for button in itervalues(self.buttons):
                 button.release()
             self.platforms = None
             self.running_platforms = None
@@ -1878,7 +1880,7 @@ def apply_script(protocol, connection, config):
             protocol.on_map_leave(self)
 
         def on_world_update(self):
-            for player in self.players.itervalues():
+            for player in itervalues(self.players):
                 for trigger in self.position_triggers:
                     trigger.callback(player)
             for platform in list(self.running_platforms):
@@ -1934,7 +1936,7 @@ def apply_script(protocol, connection, config):
             ids.sort()
             self.highest_id = ids[-1] if ids else -1
             self.platform_json_dirty = True
-            for button in self.buttons.itervalues():
+            for button in itervalues(self.buttons):
                 button.trigger_check()
 
         def dump_platform_json(self):
@@ -1943,9 +1945,9 @@ def apply_script(protocol, connection, config):
                 return
             data = {
                 'platforms': [platform.serialize() for platform in
-                              self.platforms.values()],
+                              list(self.platforms.values())],
                 'buttons': [button.serialize() for button in
-                            self.buttons.values()]
+                            list(self.buttons.values())]
             }
             path = self.get_platform_json_path()
             with open(path, 'w') as file:
@@ -1953,7 +1955,7 @@ def apply_script(protocol, connection, config):
             self.platform_json_dirty = True
 
         def get_platform(self, x, y, z):
-            for platform in self.platforms.itervalues():
+            for platform in itervalues(self.platforms):
                 if platform.contains(x, y, z):
                     return platform
             return None

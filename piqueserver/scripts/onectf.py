@@ -1,3 +1,4 @@
+from six import range
 from pyspades.constants import *
 from pyspades.collision import vector_collision
 
@@ -9,7 +10,7 @@ HIDE_POS = (0, 0, 63)
 # 'one_ctf' to 'True' or 'reverse_one_ctf' to 'True' in the extensions dictionary. ex:
 # extensions = {'reverse_one_ctf': True}
 
-DISABLED, ONE_CTF, REVERSE_ONE_CTF = xrange(3)
+DISABLED, ONE_CTF, REVERSE_ONE_CTF = range(3)
 
 ONE_CTF_MODE = REVERSE_ONE_CTF
 
