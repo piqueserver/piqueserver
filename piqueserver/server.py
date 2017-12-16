@@ -540,7 +540,7 @@ class FeatureProtocol(ServerProtocol):
         is None, ban is permanent.
         """
         network = ip_network(text_type(ip), strict=False)
-        for connection in self.connections.values():
+        for connection in list(self.connections.values()):
             if ip_address(connection.address[0]) in network:
                 name = connection.name
                 connection.kick(silent=True)
