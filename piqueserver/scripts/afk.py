@@ -5,6 +5,7 @@ Maintainer: hompy
 """
 
 from operator import attrgetter
+from six import itervalues
 from twisted.internet import reactor
 from pyspades.common import prettify_timespan
 from piqueserver.commands import command, get_player, admin
@@ -32,7 +33,7 @@ def kick_afk(connection, minutes, amount=None):
     seconds = minutes * 60.0
     minutes_s = prettify_timespan(seconds)
     lower_bound = reactor.seconds() - seconds
-    for conn in list(protocol.connections.values()):
+    for conn in list(itervalues(protocol.connections)):
         if not conn.admin and conn.last_activity < lower_bound:
             to_kick.append(conn)
     if not to_kick:

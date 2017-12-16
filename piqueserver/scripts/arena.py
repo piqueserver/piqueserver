@@ -37,6 +37,7 @@
 
 import random
 import math
+from six import itervalues
 from six.moves import range
 from pyspades.contained import BlockAction, SetColor, BlockLine
 from pyspades import world
@@ -488,7 +489,7 @@ def apply_script(protocol, connection, config):
                 gate.destroy_gate()
 
         def arena_spawn(self):
-            for player in list(self.players.values()):
+            for player in list(itervalues(self.players)):
                 if player.team.spectator:
                     continue
                 if player.world_object is not None and player.world_object.dead:

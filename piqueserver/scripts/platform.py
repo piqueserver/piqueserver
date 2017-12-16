@@ -1087,7 +1087,7 @@ class Button(BaseObject):
 
     def action(self):
         self.cooldown_call = callLater(self.cooldown, self.reset)
-        objects = set(flatten(iter(self.shared_trigger_objects.values())))
+        objects = set(flatten(itervalues(self.shared_trigger_objects)))
         if self.disabled:
             if not self.silent:
                 for player in objects:
@@ -1946,9 +1946,9 @@ def apply_script(protocol, connection, config):
                 return
             data = {
                 'platforms': [platform.serialize() for platform in
-                              list(self.platforms.values())],
+                              list(itervalues(self.platforms))],
                 'buttons': [button.serialize() for button in
-                            list(self.buttons.values())]
+                            list(itervalues(self.buttons))]
             }
             path = self.get_platform_json_path()
             with open(path, 'w') as file:

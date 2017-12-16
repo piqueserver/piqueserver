@@ -15,11 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+import random
+from six import iterkeys, itervalues
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from pyspades.common import prettify_timespan
 from map import check_rotation
-import random
 from scheduler import Scheduler
 from piqueserver.commands import command
 
@@ -60,7 +61,7 @@ class VoteMap(object):
         thresh = int((len(self.protocol.players)) *
                      self.vote_percentage / 100.0)
         counts = {}
-        for v in list(self.votes.values()):
+        for v in list(itervalues(self.votes)):
             if v in counts:
                 counts[v]['count'] += 1
             else:
@@ -69,7 +70,7 @@ class VoteMap(object):
         if len(cvlist) <= 0:
             return {'name': self.picks[0], 'count': 0}
         mv = cvlist[0]
-        for n in list(counts.keys()):
+        for n in list(iterkeys(counts)):
             if counts[n]['count'] > mv['count']:
                 mv = n
         mv['count'] = thresh - mv['count']

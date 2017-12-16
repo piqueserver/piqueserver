@@ -6,6 +6,7 @@ Maintainer: ?
 """
 
 from collections import deque
+from six import itervalues
 from six.moves import range
 from twisted.internet.task import LoopingCall
 from pyspades.constants import GRENADE_DESTROY, SPADE_DESTROY, CTF_MODE, TC_MODE
@@ -117,7 +118,7 @@ def apply_script(protocol, connection, config):
 
         def zoc_tick(self):
             self.cache_zones_of_control()
-            for player in list(self.players.values()):
+            for player in list(itervalues(self.players)):
                 player.zoc_destruction_points += self.zoc_points_per_tick
                 if player.zoc_destruction_points > self.zoc_point_cap:
                     player.zoc_destruction_points = self.zoc_point_cap
