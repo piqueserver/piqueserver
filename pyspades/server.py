@@ -91,19 +91,19 @@ class ServerProtocol(BaseProtocol):
         self.entities = []
         self.players = MultikeyDict()
         self.player_ids = IDPool()
-        self.spectator_team = self.team_class(-1, self.spectator_name,
+        self.team_spectator = self.team_class(-1, self.spectator_name,
                                               (0, 0, 0), True, self)
-        self.blue_team = self.team_class(0, self.team1_name, self.team1_color,
-                                         False, self)
-        self.green_team = self.team_class(1, self.team2_name, self.team2_color,
-                                          False, self)
+        self.team_1 = self.team_class(0, self.team1_name, self.team1_color,
+                                      False, self)
+        self.team_2 = self.team_class(1, self.team2_name, self.team2_color,
+                                      False, self)
         self.teams = {
             -1: self.spectator_team,
-            0: self.blue_team,
-            1: self.green_team
+            0: self.team_1,
+            1: self.team_2
         }
-        self.blue_team.other = self.green_team
-        self.green_team.other = self.blue_team
+        self.team_1.other = self.team_2
+        self.team_2.other = self.team_1
         self.world = world.World()
         self.set_master()
 
@@ -118,6 +118,21 @@ class ServerProtocol(BaseProtocol):
         self.pos_table.sort(key=lambda vec: abs(vec[0] * 1.03) +
                             abs(vec[1] * 1.02) +
                             abs(vec[2] * 1.01))
+
+    @property
+    def blue_team(self):
+        """alias to team_1 for backwards-compatibility"""
+        return self.team_1
+
+    @property
+    def green_team(self):
+        """alias to team_2 for backwards-compatibility"""
+        return self.team_2
+
+    @property
+    def spectator_team(self):
+        """alias to team_spectator for backwards-compatibility"""
+        return self.team_spectator
 
     def send_contained(self, contained, unsequenced=False, sender=None,
                        team=None, save=False, rule=None):
@@ -169,9 +184,9 @@ class ServerProtocol(BaseProtocol):
             flag = Territory(i, self, *self.get_random_location(
                 zone=(x1, y1, x2, y2)))
             if i < territory_count / 2:
-                team = self.blue_team
+                team = self.team_1
             elif i > (territory_count - 1) / 2:
-                team = self.green_team
+                team = self.team_2
             else:
                 # odd number - neutral
                 team = None
@@ -215,8 +230,8 @@ class ServerProtocol(BaseProtocol):
         self.map = map_obj
         self.world.map = map_obj
         self.on_map_change(map_obj)
-        self.blue_team.initialize()
-        self.green_team.initialize()
+        self.team_1.initialize()
+        self.team_2.initialize()
         if self.game_mode == TC_MODE:
             self.reset_tc()
         self.players = MultikeyDict()
@@ -234,10 +249,13 @@ class ServerProtocol(BaseProtocol):
         self.update_entities()
 
     def reset_game(self, player=None, territory=None):
-        blue_team = self.blue_team
-        green_team = self.green_team
-        blue_team.initialize()
-        green_team.initialize()
+        """reset the score of the game
+
+        player is the player which should be awarded the necessary captures to
+        end the game
+        """
+        self.team_1.initialize()
+        self.team_2.initialize()
         if self.game_mode == CTF_MODE:
             if player is None:
                 player = list(self.players.values())[0]

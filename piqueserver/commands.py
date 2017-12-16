@@ -297,14 +297,22 @@ def get_player(protocol, value, spectators=True):
 
 def get_team(connection, value):
     value = value.lower()
-    if value == 'blue':
-        return connection.protocol.blue_team
-    elif value == 'green':
-        return connection.protocol.green_team
-    elif value == 'spectator':
+    team_1 = connection.protocol.team_1
+    team_2 = connection.protocol.team_2
+    team_spectator = connection.protocol.team_spectator
+    if value == team_1.name.lower():
+        return connection.protocol.team_1
+    elif value == team_2.name.lower():
+        return connection.protocol.team_2
+    elif value == team_spectator.name.lower():
         return connection.protocol.spectator_team
-    raise CommandError("Invalid Team")
-
+    elif value == '1':
+        return connection.protocol.team_1
+    elif value == '2':
+        return connection.protocol.team_2
+    elif value == 'spec':
+        return connection.protocol.spectator_team
+    raise ValueError('Invalid Team')
 
 def join_arguments(arg, default=None):
     if not arg:
