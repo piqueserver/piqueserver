@@ -314,6 +314,7 @@ def get_team(connection, value):
         return connection.protocol.spectator_team
     raise ValueError('Invalid Team')
 
+
 def join_arguments(arg, default=None):
     if not arg:
         return default
@@ -377,7 +378,7 @@ def handle_command(connection, command, parameters):
         traceback.print_exc(t)
         msg = 'Command failed'
     except CommandError as e:
-        msg = e.message
+        msg = str(e)
     except ValueError:
         msg = 'Invalid parameters'
 
