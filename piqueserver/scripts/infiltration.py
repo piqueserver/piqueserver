@@ -10,7 +10,7 @@ To use set game_mode to 'infiltration' in config.txt, do NOT add to script list.
 Maintainer: TheGrandmaster / hompy
 """
 
-from six import range
+from six.moves import range
 from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
 from pyspades.server import create_player, player_left, intel_capture

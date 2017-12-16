@@ -8,7 +8,7 @@ Maintainer: mat^2
 import random
 import math
 from math import pi
-from six import range
+from six.moves import range
 from pyspades.constants import *
 from pyspades.server import Territory
 

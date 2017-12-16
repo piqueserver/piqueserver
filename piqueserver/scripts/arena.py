@@ -37,7 +37,7 @@
 
 import random
 import math
-from six import range
+from six.moves import range
 from pyspades.contained import BlockAction, SetColor, BlockLine
 from pyspades import world
 from pyspades.constants import DESTROY_BLOCK, TEAM_CHANGE_KILL, CTF_MODE

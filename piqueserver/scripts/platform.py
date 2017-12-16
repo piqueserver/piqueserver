@@ -187,7 +187,8 @@ import operator
 from collections import defaultdict
 from itertools import product, chain
 from builtins import int
-from six import iteritems, itervalues, range, map
+from six import iteritems, itervalues
+from six.moves import range, map
 from twisted.internet.reactor import callLater, seconds
 from twisted.internet.task import LoopingCall
 from pyspades.world import cube_line

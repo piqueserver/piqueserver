@@ -12,7 +12,7 @@ Maintainer: hompy
 """
 
 from random import choice
-from six import filter
+from six.moves import filter
 from twisted.internet.reactor import seconds
 from pyspades.world import Grenade
 from pyspades.server import grenade_packet

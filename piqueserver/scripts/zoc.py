@@ -6,7 +6,7 @@ Maintainer: ?
 """
 
 from collections import deque
-from six import range
+from six.moves import range
 from twisted.internet.task import LoopingCall
 from pyspades.constants import GRENADE_DESTROY, SPADE_DESTROY, CTF_MODE, TC_MODE
 

@@ -16,7 +16,7 @@ How to install and configure:
 5) Set cap_limit to "10" in config.txt
 """
 
-from six import range
+from six.moves import range
 from pyspades.constants import *
 from random import randint
 from twisted.internet import reactor

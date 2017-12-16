@@ -5,7 +5,7 @@ maintained by: ?
 """
 # So we can do `x / y` instead of `float(x) / y`
 from __future__ import division
-from six import range
+from six.moves import range
 
 
 import re

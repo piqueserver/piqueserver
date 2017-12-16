@@ -1,5 +1,5 @@
 from math import *
-from six import range
+from six.moves import range
 from piqueserver.commands import command, admin
 from pyspades.contained import BlockAction, SetColor
 from pyspades.constants import *

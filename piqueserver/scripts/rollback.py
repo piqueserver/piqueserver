@@ -4,7 +4,7 @@ Progressively roll backs map to their original state (or to another map).
 Maintainer: hompy
 """
 
-from six import range
+from six.moves import range
 from twisted.internet.task import LoopingCall
 from pyspades.vxl import VXLData
 from pyspades.contained import BlockAction, SetColor

@@ -7,7 +7,7 @@ Release thread:
 http://www.buildandshoot.com/viewtopic.php?t=2586
 """
 
-from six import range
+from six.moves import range
 from pyspades.constants import CTF_MODE
 from pyspades.collision import vector_collision
 

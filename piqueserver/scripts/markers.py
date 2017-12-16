@@ -31,7 +31,7 @@ from collections import deque, defaultdict
 from functools import partial
 from itertools import islice, chain
 from random import choice
-from six import zip
+from six.moves import zip
 from twisted.internet.reactor import callLater, seconds
 from pyspades.world import cube_line
 from pyspades.contained import BlockAction, BlockLine, SetColor, ChatMessage
