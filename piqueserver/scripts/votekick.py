@@ -130,9 +130,9 @@ def togglevotekick(connection, *args):
         return S_VOTEKICKING_SET.format(
             set=('enabled' if protocol.votekick_enabled else 'disabled'))
     try:
-        player = get_player(protocol, '#' + args[0])
-    except InvalidPlayer:
         player = get_player(protocol, args[0])
+    except CommandError:
+        return 'Invalid Player'
     player.votekick_enabled = not player.votekick_enabled
     return S_VOTEKICK_USER_SET.format(user=player.name, set=(
         'enabled' if player.votekick_enabled else 'disabled'))
