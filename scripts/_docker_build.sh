@@ -25,4 +25,4 @@ for whl in wheelhouse/*.whl; do
 done
 
 # fix perms so it's possible to remove without being root
-chmod go+w -R build wheelhouse
+chmod go+w -R /io/build /io/wheelhouse
