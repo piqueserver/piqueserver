@@ -4,13 +4,14 @@ Saves current map on shutdown (and optionally loads it again on startup)
 Maintainer: mat^2
 """
 
+import os
 from twisted.internet import reactor
 from pyspades.vxl import VXLData
-import os
+from piqueserver import cfg
 
 
 def get_name(map):
-    return './maps/%s.saved.vxl' % (map.rot_info.name)
+    return '%s/%s.saved.vxl' % (os.path.join(cfg.config_dir, 'maps'), map.rot_info.name)
 
 
 def apply_script(protocol, connection, config):
