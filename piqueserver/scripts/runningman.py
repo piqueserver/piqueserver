@@ -15,7 +15,7 @@ from random import choice
 from six.moves import filter
 from twisted.internet.reactor import seconds
 from pyspades.world import Grenade
-from pyspades.server import grenade_packet
+from pyspades.contained import GrenadePacket
 from pyspades.collision import distance_3d_vector
 from pyspades.constants import *
 from pyspades.common import Vertex3
@@ -183,6 +183,7 @@ def apply_script(protocol, connection, config):
             position = self.world_object.position
             protocol.world.create_object(Grenade, 0.0, position, None,
                                          Vertex3(), self.grenade_exploded)
+            grenade_packet = GrenadePacket()
             grenade_packet.value = 0.0
             grenade_packet.player_id = self.player_id
             grenade_packet.position = position.get()
