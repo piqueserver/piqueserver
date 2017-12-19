@@ -28,6 +28,7 @@ env3/
 
 build/
 dist/
+wheelhouse/
 *.egg-info/
 .eggs
 *.swp
