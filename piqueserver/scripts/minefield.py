@@ -34,7 +34,7 @@ Script location: https://github.com/learn-more/pysnip/blob/master/scripts/minefi
 MINEFIELD_VERSION = 1.6
 
 from pyspades.world import Grenade
-from pyspades.server import grenade_packet, block_action, set_color
+from pyspades.contained import GrenadePacket, BlockAction, SetColor
 from pyspades.common import Vertex3, make_color
 from pyspades.collision import collision_3d
 from pyspades.constants import DESTROY_BLOCK, SPADE_DESTROY, BUILD_BLOCK
@@ -110,6 +110,7 @@ class Minefield:
             z += 1
         if protocol.map.get_color(x, y, z) == color:
             return
+        block_action = BlockAction()
         block_action.x = x
         block_action.y = y
         block_action.z = z
@@ -121,6 +122,7 @@ class Minefield:
         protocol.send_contained(block_action, save=True)
 
     def updateColor(self, protocol, color):
+        set_color = SetColor()
         set_color.value = make_color(*color)
         set_color.player_id = 32
         protocol.send_contained(set_color, save=True)
@@ -151,6 +153,7 @@ class Minefield:
             velocity,
             connection.grenade_exploded)
         grenade.name = MINEFIELD_MINE_ENT
+        grenade_packet = GrenadePacket()
         grenade_packet.value = grenade.fuse
         grenade_packet.player_id = 32
         grenade_packet.position = position.get()

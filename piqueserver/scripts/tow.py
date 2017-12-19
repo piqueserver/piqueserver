@@ -9,7 +9,7 @@ import random
 import math
 from math import pi
 from six.moves import range
-from pyspades.constants import *
+from pyspades.constants import TC_MODE
 from pyspades.server import Territory
 
 CP_COUNT = 6

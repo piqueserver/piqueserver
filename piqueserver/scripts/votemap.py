@@ -20,8 +20,8 @@ from six import iterkeys, itervalues
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from pyspades.common import prettify_timespan
-from map import check_rotation
-from scheduler import Scheduler
+from piqueserver.map import check_rotation
+from piqueserver.scheduler import Scheduler
 from piqueserver.commands import command
 
 
