@@ -38,7 +38,6 @@ from pyspades.contained import GrenadePacket, BlockAction, SetColor
 from pyspades.common import Vertex3, make_color
 from pyspades.collision import collision_3d
 from pyspades.constants import DESTROY_BLOCK, SPADE_DESTROY, BUILD_BLOCK
-from pyspades.contained import BlockAction, SetColor
 from twisted.internet.reactor import callLater
 from piqueserver.commands import command, admin
 from random import choice
