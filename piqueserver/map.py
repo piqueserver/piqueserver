@@ -72,7 +72,7 @@ class Map(object):
         self.load_dir = load_dir
         try:
             info = imp.load_source(
-                rot_info.name, rot_info.get_meta_filename(load_dir))
+                'piqueserver_internal_map_' + rot_info.name, rot_info.get_meta_filename(load_dir))
         except IOError:
             info = None
         self.info = info
