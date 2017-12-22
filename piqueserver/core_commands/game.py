@@ -1,4 +1,5 @@
 import math
+import re
 from twisted.internet import reactor
 from piqueserver.commands import command, CommandError, get_player, get_team, get_truthy
 
@@ -216,8 +217,37 @@ def set_time_limit(connection, value):
 
 
 @command(admin_only=True)
-def fog(connection, r, g, b):
-    r = int(r)
-    g = int(g)
-    b = int(b)
+def fog(connection, *args):
+    """
+    Sets the fog color
+    /fog red green blue (all values 0-255)
+    /fog #aabbcc        (hex representation of rgb)
+    /fog #abc           (short hex representation of rgb)
+    """
+    if(len(args) == 3):
+        r = int(args[0])
+        g = int(args[1])
+        b = int(args[2])
+    elif(len(args) == 1 and args[0][0] == '#'):
+        hex_code = args[0][1:]
+
+        if (len(hex_code) != 3) and (len(hex_code) != 6):
+            raise ValueError()
+
+        if len(hex_code) == 3: # it's a short hex code, turn it into a full one
+            hex_code = (hex_code[0]*2) + (hex_code[1]*2) + (hex_code[2]*2)
+
+        valid_characters = re.compile('[a-fA-F0-9]')
+        for char in hex_code:
+            if valid_characters.match(char) == None:
+                raise ValueError()
+
+        r = int(hex_code[0:2], base=16)
+        g = int(hex_code[2:4], base=16)
+        b = int(hex_code[4:6], base=16)
+    else:
+        raise ValueError()
+
     connection.protocol.set_fog_color((r, g, b))
+    # TODO: Warn when the fog was set to the same color as before
+    return 'Fog color changed successfully'

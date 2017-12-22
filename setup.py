@@ -94,7 +94,7 @@ setup(
     name=PKG_NAME,
     packages=[PKG_NAME, '%s.web' %
               PKG_NAME, '%s.scripts' % PKG_NAME, '%s.core_commands' % PKG_NAME, 'pyspades'],
-    version='0.1.0_post1',
+    version='0.1.0_post2',
     description='Open-Source server implementation for Ace of Spades ',
     author=('Originally MatPow2 and PySnip contributors,'
             'now, StackOverflow and piqueserver authors'),

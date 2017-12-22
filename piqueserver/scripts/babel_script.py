@@ -9,18 +9,20 @@ http://www.buildandshoot.com/viewtopic.php?t=2586
 
 How to install and configure:
 
-1) Save babel_script.py to 'scripts' folder: http://aloha.pk/files/aos/pyspades/feature_server/scripts/babel_script.py
-2) Save babel.py to 'scripts' folder: http://aloha.pk/files/aos/pyspades/feature_server/scripts/babel.py
+1) Save babel_script.py to 'scripts' folder:
+http://aloha.pk/files/aos/pyspades/feature_server/scripts/babel_script.py
+2) Save babel.py to 'scripts' folder:
+http://aloha.pk/files/aos/pyspades/feature_server/scripts/babel.py
 3) Set game_mode to "babel" in config.txt
 4) Add "babel_script" to scripts list in config.txt
 5) Set cap_limit to "10" in config.txt
 """
 
-from six.moves import range
-from pyspades.constants import *
 from random import randint
+from six.moves import range
+from pyspades.constants import (BLUE_BASE, GREEN_BASE, BLUE_FLAG, GREEN_FLAG,
+                                SPADE_TOOL, GRENADE_TOOL, WEAPON_TOOL)
 from twisted.internet import reactor
-from piqueserver import commands
 
 # If ALWAYS_ENABLED is False, then babel can be enabled by setting 'babel': True
 # in the map metadat extensions dictionary.
@@ -61,52 +63,39 @@ def get_spawn_location(connection):
 
 def coord_on_platform(x, y, z):
     if z <= 2:
-        if x >= (
-                256 -
-                PLATFORM_WIDTH) and x <= (
-                256 +
-                PLATFORM_WIDTH) and y >= (
-                256 -
-                PLATFORM_HEIGHT) and y <= (
-                    256 +
-                PLATFORM_HEIGHT):
+        if (256 - PLATFORM_WIDTH <= x <= 256 + PLATFORM_WIDTH and
+                256 - PLATFORM_HEIGHT <= y <= 256 + PLATFORM_HEIGHT):
             return True
     if z == 1:
-        if x >= (
-                256 -
-                PLATFORM_WIDTH -
-                1) and x <= (
-                256 +
-                PLATFORM_WIDTH +
-                1) and y >= (
-                256 -
-                PLATFORM_HEIGHT -
-                1) and y <= (
-                    256 +
-                    PLATFORM_HEIGHT +
-                1):
+        if (256 - PLATFORM_WIDTH - 1 <= x <= 256 + PLATFORM_WIDTH + 1
+            and 256 - PLATFORM_HEIGHT - 1 <= y <= 256 + PLATFORM_HEIGHT + 1):
             return True
     return False
-
 
 def apply_script(protocol, connection, config):
     allowed_intel_hold_time = config.get('allowed_intel_hold_time', 150)
 
     class TowerOfBabelConnection(connection):
+        def get_protected_area(self, team):
+            """returns minx, maxx, miny, maxy"""
+            if team is self.protocol.blue_team:
+                return 301, 384, 240, 272
+            else:
+                return 128, 211, 240, 272
+
         def invalid_build_position(self, x, y, z):
+            position = self.world_object.position
+
             if not self.god and self.protocol.babel:
                 if coord_on_platform(x, y, z):
                     connection.on_block_build_attempt(self, x, y, z)
                     return True
             # prevent enemies from building in protected areas
-            if self.team is self.protocol.blue_team:
-                if self.world_object.position.x >= 301 and self.world_object.position.x <= 384 and self.world_object.position.y >= 240 and self.world_object.position.y <= 272:
-                    self.send_chat('You can\'t build near the enemy\'s tower!')
-                    return True
-            if self.team is self.protocol.green_team:
-                if self.world_object.position.x >= 128 and self.world_object.position.x <= 211 and self.world_object.position.y >= 240 and self.world_object.position.y <= 272:
-                    self.send_chat('You can\'t build near the enemy\'s tower!')
-                    return True
+
+            minx, maxx, miny, maxy = self.get_protected_area(self.team)
+            if minx <= position.x <= maxx and miny <= position.y <= maxy:
+                self.send_chat('You can\'t build near the enemy\'s tower!')
+                return True
             return False
 
         def on_block_build_attempt(self, x, y, z):
@@ -120,36 +109,31 @@ def apply_script(protocol, connection, config):
                     return False
             return connection.on_line_build_attempt(self, points)
 
+        def is_trusted_for_block_destruction(self):
+            return self.admin or self.user_types.moderator or self.user_types.guard or self.user_types.trusted
+
         # anti team destruction
         def on_block_destroy(self, x, y, z, mode):
+            minx, maxx, miny, maxy = self.get_protected_area(self.team.other)
+
+            position = self.world_object.position
+
+            if not self.is_trusted_for_block_destruction() and self.tool is SPADE_TOOL:
+                if minx <= position.x <= maxx and miny <= position.y <= maxy:
+                    self.send_chat('You can\'t destroy your team\'s blocks in this area. Attack the enemy\'s tower!')
+                    return False
+
             if self.team is self.protocol.blue_team:
-                if not (self.admin or self.user_types.moderator or self.user_types.guard or self.user_types.trusted) and self.tool is SPADE_TOOL and self.world_object.position.x >= 128 and self.world_object.position.x <= 211 and self.world_object.position.y >= 240 and self.world_object.position.y <= 272:
-                    self.send_chat(
-                        'You can\'t destroy your team\'s blocks in this area. Attack the enemy\'s tower!')
-                    return False
-                if self.world_object.position.x <= 288:
-                    if self.tool is WEAPON_TOOL:
-                        self.send_chat(
-                            'You must be closer to the enemy\'s base to shoot blocks!')
-                        return False
-                    if self.tool is GRENADE_TOOL:
-                        self.send_chat(
-                            'You must be closer to the enemy\'s base to grenade blocks!')
-                        return False
-            if self.team is self.protocol.green_team:
-                if not (self.admin or self.user_types.moderator or self.user_types.guard or self.user_types.trusted) and self.tool is SPADE_TOOL and self.world_object.position.x >= 301 and self.world_object.position.x <= 384 and self.world_object.position.y >= 240 and self.world_object.position.y <= 272:
-                    self.send_chat(
-                        'You can\'t destroy your team\'s blocks in this area. Attack the enemy\'s tower!')
-                    return False
-                if self.world_object.position.x >= 224:
-                    if self.tool is WEAPON_TOOL:
-                        self.send_chat(
-                            'You must be closer to the enemy\'s base to shoot blocks!')
-                        return False
-                    if self.tool is GRENADE_TOOL:
-                        self.send_chat(
-                            'You must be closer to the enemy\'s base to grenade blocks!')
-                        return False
+                can_shoot_blocks = position <= 288
+            else:
+                can_shoot_blocks = position >= 224
+
+            if can_shoot_blocks:
+                if self.tool is WEAPON_TOOL:
+                    self.send_chat('You must be closer to the enemy\'s base to shoot blocks!')
+                else:
+                    self.send_chat('You must be closer to the enemy\'s base to grenade blocks!')
+                return False
             return connection.on_block_destroy(self, x, y, z, mode)
 
         auto_kill_intel_hog_call = None

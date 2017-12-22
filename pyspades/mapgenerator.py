@@ -13,7 +13,7 @@ class ProgressiveMapGenerator(object):
     downloads.
 
     It supports two modes. In the default parent=False mode, reading is normal.
-    
+
     In the `parent=True` mode a child generator is created with `get_child` to
     actually read the data. This is presumably done so that the work of map
     generation is not duplicated for each client if several connect at the same
@@ -23,8 +23,7 @@ class ProgressiveMapGenerator(object):
     done = False
 
     # parent attributes
-    # Bytearray is used over bytes because it is mutable, so should be faster
-    all_data = bytearray()
+    all_data = b''
     pos = 0
 
     def __init__(self, map_, parent=False):

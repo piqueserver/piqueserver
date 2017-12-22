@@ -33,6 +33,8 @@ def pm(connection, value, *arg):
     """
     player = get_player(connection.protocol, value)
     message = join_arguments(arg)
+    if len(message) == 0:
+        return "Please specify your message"
     player.send_chat('PM from %s: %s' % (connection.name, message))
     return 'PM sent to %s' % player.name
 
