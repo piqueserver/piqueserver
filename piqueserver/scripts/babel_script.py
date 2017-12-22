@@ -124,9 +124,9 @@ def apply_script(protocol, connection, config):
                     return False
 
             if self.team is self.protocol.blue_team:
-                can_shoot_blocks = position <= 288
+                can_shoot_blocks = position.x <= 288
             else:
-                can_shoot_blocks = position >= 224
+                can_shoot_blocks = position.x >= 224
 
             if can_shoot_blocks:
                 if self.tool is WEAPON_TOOL:
