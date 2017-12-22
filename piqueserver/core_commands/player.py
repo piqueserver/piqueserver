@@ -1,10 +1,9 @@
 from piqueserver.commands import command, get_player
 
-
 @command("client", "cli")
 def client(connection, *args):
     """
-    Prints to you information about your client or the client of a given player
+    Tells you information about your client or the client of a given player
     /client [player]
     """
     if len(args) == 0:
@@ -32,6 +31,10 @@ def client(connection, *args):
 
 @command()
 def weapon(connection, value):
+    """
+    Tells you what weapon a given player is using
+    /weapon <player>
+    """
     player = get_player(connection.protocol, value)
     if player.weapon_object is None:
         name = '(unknown)'
@@ -42,6 +45,10 @@ def weapon(connection, value):
 
 @command()
 def intel(connection):
+    """
+    Informs you of who has the enemy intel
+    /intel
+    """
     if connection not in connection.protocol.players:
         raise KeyError()
     flag = connection.team.other.flag
@@ -56,8 +63,8 @@ def intel(connection):
 @command()
 def kill(connection, value=None):
     """
-    Kill a player
-    /kill [target]
+    Kills a given player
+    /kill <target>
     """
     if value is None:
         player = connection
@@ -74,8 +81,8 @@ def kill(connection, value=None):
 @command(admin_only=True)
 def heal(connection, player=None):
     """
-    Refill an heal a player
-    /heal [target]
+    Heals and refills yourself or a given player and informs everyone on the server of it
+    /heal [player]
     """
     if player is not None:
         player = get_player(connection.protocol, player, False)
@@ -92,7 +99,7 @@ def heal(connection, player=None):
 @command()
 def deaf(connection, value=None):
     """
-    No longer recieve chat messages
+    Makes you or a given player no longer receive chat messages
     /deaf [player]
     """
     if value is not None:

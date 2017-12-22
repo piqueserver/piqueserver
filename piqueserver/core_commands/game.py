@@ -6,6 +6,10 @@ from piqueserver.commands import command, CommandError, get_player, get_team, ge
 
 @command('time')
 def get_time_limit(connection):
+    """
+    Tells you the current time limit
+    /time
+    """
     advance_call = connection.protocol.advance_call
     if advance_call is None:
         return 'No time limit set'
@@ -210,6 +214,10 @@ def global_chat(connection, value=None):
 
 @command('timelimit', admin_only=True)
 def set_time_limit(connection, value):
+    """
+    Sets the time limit
+    /timelimit <duration>
+    """
     value = float(value)
     protocol = connection.protocol
     protocol.set_time_limit(value)

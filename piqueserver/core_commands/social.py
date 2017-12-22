@@ -4,7 +4,7 @@ from piqueserver.commands import command, get_player, join_arguments
 @command()
 def login(connection, password):
     """
-    Login as a user type
+    Allows staff and trusted members to log in
     /login <password>
     """
     if connection not in connection.protocol.players:
@@ -28,7 +28,7 @@ def login(connection, password):
 @command()
 def pm(connection, value, *arg):
     """
-    Send a player a private message
+    Sends a private message to a given player
     /pm <player> <message>
     """
     player = get_player(connection.protocol, value)
@@ -42,7 +42,7 @@ def pm(connection, value, *arg):
 @command('admin')
 def to_admin(connection, *arg):
     """
-    Send a notice to the admins
+    Sends a message to all admins currently online
     /admin <message>
     """
     protocol = connection.protocol
