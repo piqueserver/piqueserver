@@ -36,9 +36,9 @@ GREEN_BASE_COORDS = (256 + 138, 256)
 SPAWN_SIZE = 40
 
 # Don't touch this stuff
-PLATFORM_WIDTH /= 2
-PLATFORM_HEIGHT /= 2
-SPAWN_SIZE /= 2
+PLATFORM_WIDTH //= 2
+PLATFORM_HEIGHT //= 2
+SPAWN_SIZE //= 2
 
 
 def get_entity_location(self, entity_id):
