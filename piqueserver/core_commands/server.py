@@ -48,7 +48,10 @@ def scripts(connection):
     /version
     """
     scripts = connection.protocol.config.get('scripts', [])
-    return 'Scripts enabled: %s' % (', '.join(scripts))
+    if len(scripts) > 0:
+        return 'Scripts enabled: %s' % (', '.join(scripts))
+    else:
+        return 'No scripts are enabled currently'
 
 
 @command('togglemaster', 'master', admin_only=True)
