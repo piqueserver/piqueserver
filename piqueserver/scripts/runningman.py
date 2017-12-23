@@ -189,7 +189,7 @@ def apply_script(protocol, connection, config):
             grenade_packet.position = position.get()
             grenade_packet.velocity = (0.0, 0.0, 0.0)
             protocol.send_contained(grenade_packet)
-            self.kill(type=GRENADE_KILL)
+            self.kill(kill_type=GRENADE_KILL)
 
     class RunningManProtocol(protocol):
         running_man = ENABLED_AT_START
