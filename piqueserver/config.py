@@ -40,12 +40,8 @@ class ConfigStore():
         self.raw_config = {}
 
     def load_config(self, config_file, style=DEFAULT_STYLE):
-        if style == TOML_STYLE:
-            self.raw_config = toml.load(open(config_file))
-        elif style == JSON_STYLE:
-            self.raw_config = json.load(open(config_file))
-        else:
-            raise ConfigException('Unsupported config file format: {}'.format(style))
+        self.clear_config()
+        self.update_config(config_file, style)
 
     def update_config(self, config_file, style=DEFAULT_STYLE):
         if style == TOML_STYLE:
@@ -54,6 +50,12 @@ class ConfigStore():
             self.raw_config.update(json.load(open(config_file)))
         else:
             raise ConfigException('Unsupported config file format: {}'.format(style))
+
+    def load_config_object(self, config):
+        self.raw_config = config
+
+    def update_config_object(self, config):
+        self.raw_config.update(config)
 
     def dump_config(self, out_file, style=DEFAULT_STYLE):
         if style == TOML_STYLE:

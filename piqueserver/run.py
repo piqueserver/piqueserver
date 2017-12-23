@@ -6,8 +6,10 @@ import sys
 import argparse
 import six.moves.urllib as urllib
 import gzip
+import json
 
 from piqueserver import cfg
+from piqueserver.config import config, TOML_STYLE, JSON_STYLE, ConfigException
 
 MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
 
@@ -115,6 +117,33 @@ def main():
         cfg.config_file = args.config_file
 
     cfg.json_parameters = args.json_parameters
+
+    # find and load the config
+    if args.config_file is None:
+        for _style, ext in ((TOML_STYLE, 'toml'), (JSON_STYLE, 'json')):
+            config_file = os.path.join(cfg.config_dir, 'config.{}'.format(ext))
+            style = _style
+            if os.path.exists(config_file):
+                break
+    else:
+        config_file = args.config_file
+        ext = os.path.splitext(config_file)[1]
+        if ext == 'json':
+            style = JSON_STYLE
+        elif ext == 'toml':
+            style = TOML_STYLE
+        else:
+            raise ConfigException('Unsupported config file type! Must have json or toml extension.')
+
+    print('Loading config from {!r}'.format(config_file))
+    config.load_config(config_file, style=style)
+
+    print(config.raw_config)
+
+
+    # update config with cli overrides
+    if args.json_parameters:
+        config.update_config_object(json.loads(args.json_parameters))
 
     run = True
 
