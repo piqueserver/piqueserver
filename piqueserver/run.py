@@ -138,8 +138,6 @@ def main():
     print('Loading config from {!r}'.format(config_file))
     config.load_config(config_file, style=style)
 
-    print(config.raw_config)
-
 
     # update config with cli overrides
     if args.json_parameters:

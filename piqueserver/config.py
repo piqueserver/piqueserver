@@ -104,9 +104,14 @@ class Option():
         return value
 
     def set(self, value):
-        value = self.cast(value)
+        if self.cast is not None:
+            value = self.cast(value)
         self._validate(value)
         self.store.set(self.name, value)
+
+    @property
+    def value(self):
+        return self.get()
 
 
 config = ConfigStore()

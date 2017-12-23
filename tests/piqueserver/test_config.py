@@ -34,3 +34,17 @@ class TestExampleConfig(unittest.TestCase):
             bounded.set(30)
 
         self.assertEqual(bounded.get(), 5)
+
+    def test_get(self):
+        f = 'tests/example_config/simple.toml'
+        test = config.option('testthing')
+        config.load_config(f)
+
+
+        self.assertEqual(test.get(), test.value)
+        self.assertEqual(test.get(), None)
+
+        test.set('something')
+
+        self.assertEqual(test.get(), test.value)
+        self.assertEqual(test.get(), 'something')
