@@ -11,6 +11,10 @@ from piqueserver import cfg
 
 MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
 
+# (major, minor) versions of python we are supporting
+# used on startup to emit a warning if not running on a supported version
+SUPPORTED_PYTHONS = ((2,7), (3,4), (3,5), (3,6))
+
 def get_git_rev():
     if not os.path.exists(".git"):
         return 'snapshot'
@@ -79,6 +83,14 @@ def run_server():
 
 
 def main():
+    if (sys.version_info.major, sys.version_info.minor) not in SUPPORTED_PYTHONS:
+        print('Warning: you are running on an unsupported Python version.\n'
+              'Please see https://github.com/piqueserver/piqueserver/wiki/Supported-Environments for more information.')
+    elif sys.version_info.major == 2:
+        print('You are running piqueserver on Python 2.\n'
+              'This will be deprecated soon and it is recommended to upgrade to Python 3.\n'
+              'Please see https://github.com/piqueserver/piqueserver/wiki/Supported-Environments for more information.')
+
     description = '%s is an open-source Python server implementation ' \
                   'for the voxel-based game "Ace of Spades".' % cfg.pkg_name
     arg_parser = argparse.ArgumentParser(prog=cfg.pkg_name,
