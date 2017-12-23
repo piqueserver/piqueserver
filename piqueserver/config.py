@@ -1,86 +1,110 @@
+# Copyright (c) 2017 Piqueserver development team
+
+# This file is part of piqueserver.
+
+# piqueserver is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# piqueserver is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with piqueserver.  If not, see <http://www.gnu.org/licenses/>.
+
+import json
 import toml
-from pprint import pprint
+
+
+DEFAULT_STYLE = 'TOML'
+TOML_STYLE = 'TOML'
+JSON_STYLE = 'JSON'
+
 
 class ConfigException(Exception):
     pass
 
 
-class ConfigEngine():
+class ConfigStore():
     '''
-    configuration engine that handles loading and saving config,
-    and all the things
+    configuration store that manages global configuration
     '''
+
     def __init__(self):
         self.raw_config = {}
-        self.style = 'TOML'
 
-    def load_config(self, config_file, style='TOML'):
-        # TODO: could also have this merge into current config if available
-        self.style = style
+    def clear_config(self):
+        self.raw_config = {}
 
-        if style == 'TOML':
+    def load_config(self, config_file, style=DEFAULT_STYLE):
+        if style == TOML_STYLE:
             self.raw_config = toml.load(open(config_file))
+        elif style == JSON_STYLE:
+            self.raw_config = json.load(open(config_file))
         else:
-            raise Exception()
+            raise ConfigException('Unsupported config file format: {}'.format(style))
 
-    def dump_config(self, out_file=None, style='TOML'):
-        if out_file is None:
-            pprint(self.raw_config)
-        # TODO
-        pass
+    def update_config(self, config_file, style=DEFAULT_STYLE):
+        if style == TOML_STYLE:
+            self.raw_config.update(toml.load(open(config_file)))
+        elif style == JSON_STYLE:
+            self.raw_config.update(json.load(open(config_file)))
+        else:
+            raise ConfigException('Unsupported config file format: {}'.format(style))
+
+    def dump_config(self, out_file, style=DEFAULT_STYLE):
+        if style == TOML_STYLE:
+            toml.dump(self.raw_config, open(out_file, 'w'))
+        elif style == JSON_STYLE:
+            json.dump(self.raw_config, open(out_file, 'w'))
+        else:
+            raise ConfigException('Unsupported config file format: {}'.format(style))
 
     def get(self, name, default):
-        # TODO: handle nested config values
-        # XXX: should requesting a config value that is a dictionary object
-        #       return the whole dictionary, or fail?
-        return self.raw_config.get(name, default)
+        if name not in self.raw_config:
+            self.raw_config[name] = default
+        return self.raw_config.get(name)
 
     def set(self, name, value):
         self.raw_config[name] = value
 
-    def __call__(self, name, cast=None, default=None, validate=None):
-        return ConfigObject(self, name, cast, default, validate)
+    def option(self, name, cast=None, default=None, validate=None):
+        option = Option(self, name, default, cast, validate)
+
+        return option
 
 
 
-class ConfigObject():
+class Option():
     '''
-    configuration object stored in the engine
+    configuration option object, backed by a configuration store
     '''
-    def __init__(self, engine, name, cast, default, validate):
+    def __init__(self, store, name, default, cast, validate):
+        self.store = store # ConfigStore object
         self.name = name
-        self.cast = cast
         self.default = default
+        self.cast = cast
         self.validate = validate
-        self.engine = engine
 
-        value = self.engine.get(name, default)
-        self.value = self._cast_and_validate(value)
-
-    def _cast_and_validate(self, value):
-        if self.cast is not None:
-            try:
-                value = self.cast(value)
-            except Exception as e:
-                print(e)
-                print('failed to cast config value')
-
+    def _validate(self, value):
         if self.validate is not None:
-            ok = self.validate(value)
-            if not ok:
-                raise ConfigException('failed to validate')
-
+            if not self.validate(value):
+                raise ConfigException('Failed to validate {!r} config option'.format(self.name))
         return value
 
-
     def get(self):
-        # TODO: use getattr magic to get and set this?
-        return self.value
+        value = self.store.get(self.name, self.default)
+        if self.cast is not None:
+            return self.cast(value)
+        return value
 
     def set(self, value):
-        # TODO: investigate possible issues with mutations if setting things like lists
-        self.value = self._cast_and_validate(value)
-        self.engine.set(self.name, self.value)
+        value = self.cast(value)
+        self._validate(value)
+        self.store.set(self.name, value)
 
 
-config = ConfigEngine()
+config = ConfigStore()
