@@ -4,7 +4,7 @@ by kmsi(kmsiapps@gmail.com)
 version 2(2017.12.23)
 """
 
-from pyspades.constants import SPADE_TOOL, GRENADE_TOOL
+from pyspades.constants import SPADE_TOOL
 
 def apply_script(protocol, connection, config):
     class SpadenadeConnection(connection):
