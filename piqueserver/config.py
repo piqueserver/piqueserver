@@ -34,10 +34,10 @@ class ConfigStore():
     '''
 
     def __init__(self):
-        self.raw_config = {}
+        self._raw_config = {}
 
     def clear_config(self):
-        self.raw_config = {}
+        self._raw_config = {}
 
     def load_config(self, config_file, style=DEFAULT_STYLE):
         self.clear_config()
@@ -45,36 +45,51 @@ class ConfigStore():
 
     def update_config(self, config_file, style=DEFAULT_STYLE):
         if style == TOML_STYLE:
-            self.raw_config.update(toml.load(open(config_file)))
+            self._raw_config.update(toml.load(open(config_file)))
         elif style == JSON_STYLE:
-            self.raw_config.update(json.load(open(config_file)))
+            self._raw_config.update(json.load(open(config_file)))
         else:
             raise ConfigException('Unsupported config file format: {}'.format(style))
 
     def load_config_object(self, config):
-        self.raw_config = config
+        self._raw_config = config
 
     def update_config_object(self, config):
-        self.raw_config.update(config)
+        self._raw_config.update(config)
 
     def dump_config(self, out_file, style=DEFAULT_STYLE):
         if style == TOML_STYLE:
-            toml.dump(self.raw_config, open(out_file, 'w'))
+            toml.dump(self._raw_config, open(out_file, 'w'))
         elif style == JSON_STYLE:
-            json.dump(self.raw_config, open(out_file, 'w'))
+            json.dump(self._raw_config, open(out_file, 'w'))
         else:
             raise ConfigException('Unsupported config file format: {}'.format(style))
 
-    def get(self, name, default):
-        if name not in self.raw_config:
-            self.raw_config[name] = default
-        return self.raw_config.get(name)
+    def get_raw_config(self):
+        return self._raw_config
 
-    def set(self, name, value):
-        self.raw_config[name] = value
+    def get(self, name, default=None, section=None):
+        if section:
+            if section not in self._raw_config:
+                self._raw_config[section] = {}
+                self._raw_config[section][name] = default
+            return self._raw_config[section][name]
+        else:
+            if name not in self._raw_config:
+                self._raw_config[name] = default
+            return self._raw_config[name]
 
-    def option(self, name, cast=None, default=None, validate=None):
-        option = Option(self, name, default, cast, validate)
+
+    def set(self, name, value, section=None):
+        if section:
+            if section not in self._raw_config:
+                self._raw_config[section] = {}
+            self._raw_config[section][name] = value
+        else:
+            self._raw_config[name] = value
+
+    def option(self, name, section=None, cast=None, default=None, validate=None):
+        option = Option(self, name, section, default, cast, validate)
 
         return option
 
@@ -84,9 +99,10 @@ class Option():
     '''
     configuration option object, backed by a configuration store
     '''
-    def __init__(self, store, name, default, cast, validate):
+    def __init__(self, store, name, section, default, cast, validate):
         self.store = store # ConfigStore object
         self.name = name
+        self.section = section
         self.default = default
         self.cast = cast
         self.validate = validate
@@ -98,7 +114,7 @@ class Option():
         return value
 
     def get(self):
-        value = self.store.get(self.name, self.default)
+        value = self.store.get(self.name, self.default, self.section)
         if self.cast is not None:
             return self.cast(value)
         return value
@@ -107,7 +123,7 @@ class Option():
         if self.cast is not None:
             value = self.cast(value)
         self._validate(value)
-        self.store.set(self.name, value)
+        self.store.set(self.name, value, self.section)
 
     @property
     def value(self):

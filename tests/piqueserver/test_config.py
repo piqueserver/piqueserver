@@ -48,3 +48,18 @@ class TestExampleConfig(unittest.TestCase):
 
         self.assertEqual(test.get(), test.value)
         self.assertEqual(test.get(), 'something')
+
+    def test_nested(self):
+        f = 'tests/example_config/simple.toml'
+        config.load_config(f)
+
+        port = config.option('port', section='server')
+        self.assertEqual(port.get(), 4567)
+
+        test = config.option('nonexistant', section='lol', default='hi')
+        self.assertEqual(test.get(), 'hi')
+
+        raw = config.get_raw_config()
+
+        self.assertEqual(raw['server']['port'], 4567)
+        self.assertEqual(raw['lol']['nonexistant'], 'hi')
