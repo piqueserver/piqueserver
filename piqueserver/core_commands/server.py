@@ -1,7 +1,7 @@
 from __future__ import print_function, unicode_literals
 from piqueserver.commands import command, join_arguments
 
-# Does this affect master server list?
+# Also affects master server list
 @command('servername', admin_only=True)
 def server_name(connection, *arg):
     """
