@@ -92,7 +92,7 @@ def apply_script(protocol, connection, config):
 
         def on_position_update(self):
             if self.protocol.running_man:
-                if self.link is not None and self.link.hp > 0:
+                if self.link is not None and self.link.hp is not None and self.link.hp > 0:
                     dist = distance_3d_vector(self.world_object.position,
                                               self.link.world_object.position)
                     if dist > LINK_DISTANCE:
@@ -123,7 +123,7 @@ def apply_script(protocol, connection, config):
                 if (self.link is None or
                         self.link_deaths >= MAX_LINK_DEATHS):
                     self.get_new_link()
-                if self.link is not None and self.link.hp > 0:
+                if self.link is not None and self.link.hp is not None and self.link.hp > 0:
                     self.set_location_safe(
                         self.link.world_object.position.get())
             connection.on_spawn(self, pos)
@@ -173,7 +173,7 @@ def apply_script(protocol, connection, config):
         def drop_link(self, force_message=False, no_message=False):
             if self.link is None:
                 return
-            if (self.link.hp > 0 or force_message) and not no_message:
+            if (self.link.hp is not None and (self.link.hp > 0 or force_message)) and not no_message:
                 self.link.send_chat(S_FREE)
             self.link.link = None
             self.link = None
