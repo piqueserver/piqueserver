@@ -85,6 +85,7 @@ def run_server():
 def main():
     if (sys.version_info.major, sys.version_info.minor) not in SUPPORTED_PYTHONS:
         print('Warning: you are running on an unsupported Python version.\n'
+              'The server may not run correctly.\n'
               'Please see https://github.com/piqueserver/piqueserver/wiki/Supported-Environments for more information.')
     elif sys.version_info.major == 2:
         print('You are running piqueserver on Python 2.\n'
