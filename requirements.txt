@@ -8,3 +8,4 @@ pyasn1
 pyenet
 ipaddress
 six
+toml
