@@ -1,5 +1,6 @@
 import unittest
-from piqueserver.config import config, ConfigException
+from piqueserver.config import config, ConfigException, JSON_STYLE, TOML_STYLE
+from json import JSONDecodeError
 
 
 class TestExampleConfig(unittest.TestCase):
@@ -35,6 +36,11 @@ class TestExampleConfig(unittest.TestCase):
 
         self.assertEqual(bounded.get(), 5)
 
+        bounded.set(6)
+        self.assertEqual(bounded.get(), 6)
+
+
+
     def test_get(self):
         f = 'tests/example_config/simple.toml'
         test = config.option('testthing')
@@ -63,3 +69,56 @@ class TestExampleConfig(unittest.TestCase):
 
         self.assertEqual(raw['server']['port'], 4567)
         self.assertEqual(raw['lol']['nonexistant'], 'hi')
+
+    def test_reload(self):
+        f = 'tests/example_config/simple.toml'
+        config.load_config(f)
+
+        port = config.option('port', section='server', default=32887)
+        self.assertEqual(port.get(), 4567)
+
+        config.clear_config()
+        self.assertEqual(port.get(), 32887)
+        port.set(456)
+        self.assertEqual(port.get(), 456)
+
+
+        config.clear_config()
+        port.set(5555)
+        self.assertEqual(port.get(), 5555)
+
+    def test_raw_loading(self):
+        config.clear_config()
+        name = config.option('name')
+        port = config.option('port', section='server')
+
+        obj = {'server':{'port': 4567}, 'name': 'thing'}
+        config.load_config_object(obj)
+        self.assertEqual(name.get(), 'thing')
+
+        obj = {'server':{'port': 42}}
+        config.update_config_object(obj)
+        self.assertEqual(port.get(), 42)
+        self.assertEqual(name.get(), 'thing')
+
+        obj = {'server':{'port': 4567}, 'name': 'thing'}
+        config.load_config_object(obj)
+        self.assertEqual(port.get(), 4567)
+        self.assertEqual(name.get(), 'thing')
+
+    def test_fail_load(self):
+        f = 'tests/example_config/simple.toml'
+
+        with self.assertRaises(ConfigException):
+            config.load_config(f, style='aoeuaoeu')
+
+        with self.assertRaises(JSONDecodeError):
+            config.load_config(f, style=JSON_STYLE)
+
+    def test_json(self):
+        f = 'piqueserver/config/config.json'
+        config.load_config(f, style=JSON_STYLE)
+
+        # "name" : "piqueserver instance",
+        name = config.option('name')
+        self.assertEqual(name.get(), 'piqueserver instance')
