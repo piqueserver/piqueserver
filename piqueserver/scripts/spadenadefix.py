@@ -12,7 +12,6 @@ def apply_script(protocol, connection, config):
             self.wasSpade = (self.tool == SPADE_TOOL)
         
         def on_grenade(self, time_left):
-            print(self.wasSpade)
             if(self.world_object.secondary_fire and self.wasSpade):
                 self.send_chat('Spade-Grenade bug is blocked.')
                 self.wasSpade = False
