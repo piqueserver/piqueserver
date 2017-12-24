@@ -7,7 +7,6 @@ Maintainer: mat^2
 
 import random
 import math
-from math import pi
 from six.moves import range
 from pyspades.constants import TC_MODE
 from pyspades.server import Territory
@@ -163,9 +162,9 @@ def apply_script(protocol, connection, config):
                     entities.append(entity)
                     index += 1
 
-            self.green_team.cp = entities[-CP_COUNT / 2]
+            self.green_team.cp = entities[-CP_COUNT // 2]
             self.green_team.cp.disabled = False
-            self.green_team.spawn_cp = entities[-CP_COUNT / 2 + 1]
+            self.green_team.spawn_cp = entities[-CP_COUNT // 2 + 1]
 
             return entities
 
