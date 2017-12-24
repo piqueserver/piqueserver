@@ -22,11 +22,8 @@ REVERSE_ONE_CTF_MESSAGE = 'Take the intel to the enemy base to score.'
 
 
 def apply_script(protocol, connection, config):
-    game_mode = config.get('game_mode', 'ctf')
-    if game_mode != 'ctf':
-        return protocol, connection
-
     class OneCTFProtocol(protocol):
+        game_mode = CTF_MODE
         one_ctf = False
         reverse_one_ctf = False
 
