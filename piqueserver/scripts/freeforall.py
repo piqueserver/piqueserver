@@ -2,6 +2,8 @@
 
 from random import randint
 
+from pyspades.constants import CTF_MODE
+
 # If ALWAYS_ENABLED is False, free for all can still be enabled in the map
 # metadata by setting the key 'free_for_all' to True in the extensions
 # dictionary
@@ -15,6 +17,7 @@ HIDE_POS = (0, 0, 63)
 
 def apply_script(protocol, connection, config):
     class FreeForAllProtocol(protocol):
+        game_mode = CTF_MODE
         free_for_all = False
         old_friendly_fire = None
 
