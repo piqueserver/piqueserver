@@ -32,10 +32,13 @@ class ConfigStore():
     def __init__(self):
         self._raw_config = {}
         self.options = {}
+        self.sections = {}
 
     def _validate_all(self):
         for option in self.options.values():
             option.validate(option.get())
+        for section in self.sections.values():
+            section._validate_all()
 
     def get_dict(self):
         return self._raw_config
@@ -74,30 +77,63 @@ class ConfigStore():
         else:
             raise ValueError('Unsupported config file format: {}'.format(style))
 
-    def get(self, name, default=None, section=None):
-        if section:
-            if section not in self._raw_config:
-                self._raw_config[section] = {}
-                self._raw_config[section][name] = default
-            return self._raw_config[section][name]
-        else:
-            if name not in self._raw_config:
-                self._raw_config[name] = default
-            return self._raw_config[name]
+    def get(self, name, default=None):
+        if name not in self._raw_config:
+            self._raw_config[name] = default
+        return self._raw_config[name]
+
+    def set(self, name, value):
+        self._raw_config[name] = value
+
+    def option(self, name, cast=None, default=None, validate=None):
+        option = Option(self, name, default, cast, validate)
+        self.options[name] = option
+        return option
+
+    def section(self, name):
+        section = Section(self, name)
+        self.sections[name] = section
+        return section
 
 
-    def set(self, name, value, section=None):
-        if section:
-            if section not in self._raw_config:
-                self._raw_config[section] = {}
-            self._raw_config[section][name] = value
-        else:
-            self._raw_config[name] = value
+class Section():
+    '''
+    represents a section of a configstore
+    '''
 
-    def option(self, name, section=None, cast=None, default=None, validate=None):
-        option = Option(self, name, section, default, cast, validate)
-        self.options[(section, name)] = option
+    def __init__(self, store, name):
+        self.store = store
+        self.name = name
+        self.options = {}
 
+    def _validate_all(self):
+        for option in self.options.values():
+            option.validate(option.get())
+
+    def get_dict(self):
+        return self.store.get_dict().get(self.name, {})
+
+    def update_from_dict(self, config):
+        d = {self.name: config}
+        self.store.update_from_dict(d)
+
+    def get(self, name, default):
+        section = self.store.get(self.name, {})
+        if name not in section:
+            section[name] = default
+            self.store.set(self.name, section)
+        return section[name]
+
+    def set(self, name, value):
+        # TODO: better method of getting and setting that doesn't require
+        # updating entire dictionaries?
+        section = self.store.get(self.name, {})
+        section[name] = value
+        self.store.set(self.name, section)
+
+    def option(self, name, cast=None, default=None, validate=None):
+        option = Option(self, name, default, cast, validate)
+        self.options[name] = option
         return option
 
 
@@ -106,10 +142,12 @@ class Option():
     '''
     configuration option object, backed by a configuration store
     '''
-    def __init__(self, store, name, section, default, cast, validate):
+    def __init__(self, store, name, default, cast, validate):
+        '''
+        store: a ConfigStore or Section object. Must provide `get()` and `set(value)` methods
+        '''
         self.store = store # ConfigStore object
         self.name = name
-        self.section = section
         self.default = default
         self.cast = cast
         self.validate_func = validate
@@ -124,7 +162,7 @@ class Option():
         return value
 
     def get(self):
-        value = self.store.get(self.name, self.default, self.section)
+        value = self.store.get(self.name, self.default)
         if self.cast is not None:
             return self.cast(value)
         return value
@@ -133,7 +171,7 @@ class Option():
         if self.cast is not None:
             value = self.cast(value)
         self.validate(value)
-        self.store.set(self.name, value, self.section)
+        self.store.set(self.name, value)
 
     @property
     def value(self):

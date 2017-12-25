@@ -55,10 +55,12 @@ class TestExampleConfig(unittest.TestCase):
         f = 'tests/example_config/simple.toml'
         config.load_from_file(open(f))
 
-        port = config.option('port', section='server')
+        server_config = config.section('server')
+        port = server_config.option('port')
         self.assertEqual(port.get(), 4567)
 
-        test = config.option('nonexistant', section='lol', default='hi')
+        lol = config.section('lol')
+        test = lol.option('nonexistant', default='hi')
         self.assertEqual(test.get(), 'hi')
 
         raw = config.get_dict()
@@ -70,7 +72,8 @@ class TestExampleConfig(unittest.TestCase):
         f = 'tests/example_config/simple.toml'
         config.load_from_file(open(f))
 
-        port = config.option('port', section='server', default=32887)
+        server_config = config.section('server')
+        port = server_config.option('port', default=32887)
         self.assertEqual(port.get(), 4567)
 
         config.load_from_dict({})
@@ -86,7 +89,7 @@ class TestExampleConfig(unittest.TestCase):
     def test_raw_loading(self):
         config.load_from_dict({})
         name = config.option('name')
-        port = config.option('port', section='server')
+        port = config.section('server').option('port')
 
         obj = {'server': {'port': 4567}, 'name': 'thing'}
         config.load_from_dict(obj)
