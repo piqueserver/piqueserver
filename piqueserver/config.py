@@ -156,6 +156,11 @@ class Option():
 
 
     def validate(self, value):
+        '''
+        Runs the validation function (if provided) against the value.
+        The function should not mutate the value.
+        Returns the value if validation function returns a truthy value, otherwise raises an exception
+        '''
         if self.validate_func is not None:
             if not self.validate_func(value):
                 raise ValueError('Failed to validate {!r} config option'.format(self.name))

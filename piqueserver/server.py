@@ -67,6 +67,10 @@ except NameError:
     pass
 
 def check_passwords(passwords):
+    '''
+    Validator function to be run when the passwords configuration item is updated/set.
+    Designed to warn if default passwords found in the config.
+    '''
     # default passwords as hardcoded in example config
     default_passwords = {
         'admin': ['adminpass1', 'adminpass2', 'adminpass3'],
@@ -83,6 +87,7 @@ def check_passwords(passwords):
                     print(("WARNING: FOUND DEFAULT PASSWORD '%s'"
                            " IN GROUP '%s'" % (password, group)))
 
+    # always validate - this function is just to warn if default passwords found
     return True
 
 
