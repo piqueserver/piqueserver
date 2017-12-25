@@ -77,7 +77,7 @@ def where(connection, player=None):
         raise ValueError()
     x, y, z = connection.get_location()
     return '%s is in %s (%s, %s, %s)' % (
-        connection.name, to_coordinates(x, y), int(x), int(y), int(z))
+        connection.name, to_coordinates(int(x), int(y)), int(x), int(y), int(z))
 
 
 @command('teleport', 'tp', admin_only=True)
