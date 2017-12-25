@@ -68,6 +68,19 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(raw['server']['port'], 4567)
         self.assertEqual(raw['lol']['nonexistant'], 'hi')
 
+        raw = server_config.get_dict()
+        self.assertEqual(raw['port'], 4567)
+        self.assertEqual(raw['name'], 'piqueserver instance')
+
+        server_config.update_from_dict({'port': 1})
+        raw = server_config.get_dict()
+        self.assertEqual(raw['port'], 1)
+        self.assertEqual(raw['name'], 'piqueserver instance')
+
+        server_config.load_from_dict({'port': 1})
+        self.assertEqual(server_config.get_dict(), {'port': 1})
+        self.assertEqual(test.get(), 'hi')
+
     def test_reload(self):
         f = 'tests/example_config/simple.toml'
         config.load_from_file(open(f))

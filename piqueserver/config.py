@@ -113,9 +113,13 @@ class Section():
     def get_dict(self):
         return self.store.get_dict().get(self.name, {})
 
+    def load_from_dict(self, config):
+        self.store.set(self.name, config)
+
     def update_from_dict(self, config):
-        d = {self.name: config}
-        self.store.update_from_dict(d)
+        d = self.store.get(self.name, {})
+        d.update(config)
+        self.store.set(self.name, d)
 
     def get(self, name, default):
         section = self.store.get(self.name, {})
