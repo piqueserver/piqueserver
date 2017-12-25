@@ -46,7 +46,7 @@ def coordinates(data):
     return x, y
 
 def to_coordinates(x, y):
-    return '{}{}'.format(chr(ord('A') + int(x) // 64).upper(), (int(y) // 64) + 1)
+    return '%s%s' % (chr(ord('a') + int(x) / 64).upper(), (int(y) / 64) + 1)
 
 def prettify_timespan(total, get_seconds = False):
     total = int(total)
