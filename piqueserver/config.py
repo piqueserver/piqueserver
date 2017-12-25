@@ -35,6 +35,11 @@ class ConfigStore():
 
     def __init__(self):
         self._raw_config = {}
+        self.options = {}
+
+    def validate_all(self):
+        for option in self.options.values():
+            option.validate(option.get())
 
     def clear_config(self):
         self._raw_config = {}
@@ -50,12 +55,15 @@ class ConfigStore():
             self._raw_config.update(json.load(open(config_file)))
         else:
             raise ConfigException('Unsupported config file format: {}'.format(style))
+        self.validate_all()
 
     def load_config_object(self, config):
         self._raw_config = config
+        self.validate_all()
 
     def update_config_object(self, config):
         self._raw_config.update(config)
+        self.validate_all()
 
     def dump_config(self, out_file, style=DEFAULT_STYLE):
         if style == TOML_STYLE:
@@ -90,6 +98,7 @@ class ConfigStore():
 
     def option(self, name, section=None, cast=None, default=None, validate=None):
         option = Option(self, name, section, default, cast, validate)
+        self.options[(section, name)] = option
 
         return option
 
@@ -105,11 +114,14 @@ class Option():
         self.section = section
         self.default = default
         self.cast = cast
-        self.validate = validate
+        self.validate_func = validate
 
-    def _validate(self, value):
-        if self.validate is not None:
-            if not self.validate(value):
+        self.validate(self.get())
+
+
+    def validate(self, value):
+        if self.validate_func is not None:
+            if not self.validate_func(value):
                 raise ConfigException('Failed to validate {!r} config option'.format(self.name))
         return value
 
@@ -122,7 +134,7 @@ class Option():
     def set(self, value):
         if self.cast is not None:
             value = self.cast(value)
-        self._validate(value)
+        self.validate(value)
         self.store.set(self.name, value, self.section)
 
     @property
