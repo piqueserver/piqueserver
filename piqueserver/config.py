@@ -24,10 +24,6 @@ TOML_STYLE = 'TOML'
 JSON_STYLE = 'JSON'
 
 
-class ConfigException(Exception):
-    pass
-
-
 class ConfigStore():
     '''
     configuration store that manages global configuration
@@ -37,44 +33,46 @@ class ConfigStore():
         self._raw_config = {}
         self.options = {}
 
-    def validate_all(self):
+    def _validate_all(self):
         for option in self.options.values():
             option.validate(option.get())
 
-    def clear_config(self):
+    def get_dict(self):
+        return self._raw_config
+
+    def load_from_file(self, fobj, style=DEFAULT_STYLE):
+        '''
+        clear the current configuration and load new configuration from a file like object
+        in a supported format
+        '''
         self._raw_config = {}
+        self.update_from_file(fobj, style)
 
-    def load_config(self, config_file, style=DEFAULT_STYLE):
-        self.clear_config()
-        self.update_config(config_file, style)
-
-    def update_config(self, config_file, style=DEFAULT_STYLE):
+    def update_from_file(self, fobj, style=DEFAULT_STYLE):
+        d = {}
         if style == TOML_STYLE:
-            self._raw_config.update(toml.load(open(config_file)))
+            d = toml.load(fobj)
         elif style == JSON_STYLE:
-            self._raw_config.update(json.load(open(config_file)))
+            d = json.load(fobj)
         else:
-            raise ConfigException('Unsupported config file format: {}'.format(style))
-        self.validate_all()
+            raise ValueError('Unsupported config file format: {}'.format(style))
+        self.update_from_dict(d)
 
-    def load_config_object(self, config):
-        self._raw_config = config
-        self.validate_all()
+    def load_from_dict(self, config):
+        self._raw_config = {}
+        self.update_from_dict(config)
 
-    def update_config_object(self, config):
+    def update_from_dict(self, config):
         self._raw_config.update(config)
-        self.validate_all()
+        self._validate_all()
 
-    def dump_config(self, out_file, style=DEFAULT_STYLE):
+    def dump(self, out_file, style=DEFAULT_STYLE):
         if style == TOML_STYLE:
             toml.dump(self._raw_config, open(out_file, 'w'))
         elif style == JSON_STYLE:
             json.dump(self._raw_config, open(out_file, 'w'))
         else:
-            raise ConfigException('Unsupported config file format: {}'.format(style))
-
-    def get_raw_config(self):
-        return self._raw_config
+            raise ValueError('Unsupported config file format: {}'.format(style))
 
     def get(self, name, default=None, section=None):
         if section:
@@ -122,7 +120,7 @@ class Option():
     def validate(self, value):
         if self.validate_func is not None:
             if not self.validate_func(value):
-                raise ConfigException('Failed to validate {!r} config option'.format(self.name))
+                raise ValueError('Failed to validate {!r} config option'.format(self.name))
         return value
 
     def get(self):
