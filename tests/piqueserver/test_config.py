@@ -134,3 +134,19 @@ class TestExampleConfig(unittest.TestCase):
         # "name" : "piqueserver instance",
         name = config.option('name')
         self.assertEqual(name.get(), 'piqueserver instance')
+
+    def test_more_nested(self):
+        f = 'tests/example_config/simple.toml'
+        config.load_from_file(open(f))
+
+        server_config = config.section('server')
+        port = server_config.option('port')
+        self.assertEqual(port.get(), 4567)
+
+        thing_config = server_config.section('things')
+        self.assertEqual(thing_config.option('thing1').get(), 'something')
+
+        thing2 = thing_config.option('thing2')
+        thing2.set('something else')
+
+        self.assertEqual(thing_config.get_dict(), {'thing1': 'something', 'thing2': 'something else'})

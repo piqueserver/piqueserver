@@ -104,11 +104,14 @@ class Section():
     def __init__(self, store, name):
         self.store = store
         self.name = name
+        self.sections = {}
         self.options = {}
 
     def _validate_all(self):
         for option in self.options.values():
             option.validate(option.get())
+        for section in self.sections.values():
+            section._validate_all()
 
     def get_dict(self):
         return self.store.get_dict().get(self.name, {})
@@ -134,6 +137,11 @@ class Section():
         section = self.store.get(self.name, {})
         section[name] = value
         self.store.set(self.name, section)
+
+    def section(self, name):
+        section = Section(self, name)
+        self.sections[name] = section
+        return section
 
     def option(self, name, cast=None, default=None, validate=None):
         option = Option(self, name, default, cast, validate)

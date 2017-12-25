@@ -6,10 +6,13 @@ name = "piqueserver instance"
 game_mode = "ctf"
 port = 4567
 
-  [passwords]
-  admin = ["adminpass1", "adminpass2", "adminpass3"]
-  moderator = ["modpass"]
+[passwords]
+admin = ["adminpass1", "adminpass2", "adminpass3"]
+moderator = ["modpass"]
 
 [squad]
 respawn_time = 32
 size = 5
+
+[server.things]
+thing1 = "something"
