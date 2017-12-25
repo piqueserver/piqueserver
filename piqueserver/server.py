@@ -20,7 +20,6 @@
 pyspades - default/featured server
 """
 from __future__ import print_function, unicode_literals
-from six import text_type
 import sys
 import os
 import imp
@@ -32,6 +31,8 @@ import time
 from collections import deque
 
 import six
+from six import text_type
+from six.moves import range
 
 from ipaddress import ip_network, ip_address
 from twisted.internet import reactor
@@ -59,11 +60,6 @@ from piqueserver.player import FeatureConnection
 
 # won't be used; just need to be executed
 import piqueserver.core_commands
-
-try:
-    range = xrange  # pylint: disable=redefined-builtin
-except NameError:
-    pass
 
 # default passwords hardcoded in config
 DEFAULT_PASSWORDS = {
