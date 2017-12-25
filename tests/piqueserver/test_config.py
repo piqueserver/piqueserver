@@ -1,6 +1,5 @@
 import unittest
-from piqueserver.config import config, ConfigException, JSON_STYLE, TOML_STYLE
-from json import JSONDecodeError
+from piqueserver.config import config, ConfigException, JSON_STYLE
 
 
 class TestExampleConfig(unittest.TestCase):
@@ -24,12 +23,12 @@ class TestExampleConfig(unittest.TestCase):
         s = config.option('testnumber', cast=str, default=None)
         self.assertEqual(s.get(), '42')
 
-
     def test_validation(self):
         f = 'tests/example_config/simple.toml'
         config.load_config(f)
 
-        bounded = config.option('testboundednumber', cast=int, validate=lambda n:0<n<11, default=5)
+        bounded = config.option('testboundednumber', cast=int, default=5,
+                                validate=lambda n: 0 < n < 11)
 
         with self.assertRaises(ConfigException):
             bounded.set(30)
@@ -39,13 +38,10 @@ class TestExampleConfig(unittest.TestCase):
         bounded.set(6)
         self.assertEqual(bounded.get(), 6)
 
-
-
     def test_get(self):
         f = 'tests/example_config/simple.toml'
         test = config.option('testthing')
         config.load_config(f)
-
 
         self.assertEqual(test.get(), test.value)
         self.assertEqual(test.get(), None)
@@ -82,7 +78,6 @@ class TestExampleConfig(unittest.TestCase):
         port.set(456)
         self.assertEqual(port.get(), 456)
 
-
         config.clear_config()
         port.set(5555)
         self.assertEqual(port.get(), 5555)
@@ -92,16 +87,16 @@ class TestExampleConfig(unittest.TestCase):
         name = config.option('name')
         port = config.option('port', section='server')
 
-        obj = {'server':{'port': 4567}, 'name': 'thing'}
+        obj = {'server': {'port': 4567}, 'name': 'thing'}
         config.load_config_object(obj)
         self.assertEqual(name.get(), 'thing')
 
-        obj = {'server':{'port': 42}}
+        obj = {'server': {'port': 42}}
         config.update_config_object(obj)
         self.assertEqual(port.get(), 42)
         self.assertEqual(name.get(), 'thing')
 
-        obj = {'server':{'port': 4567}, 'name': 'thing'}
+        obj = {'server': {'port': 4567}, 'name': 'thing'}
         config.load_config_object(obj)
         self.assertEqual(port.get(), 4567)
         self.assertEqual(name.get(), 'thing')
@@ -112,7 +107,7 @@ class TestExampleConfig(unittest.TestCase):
         with self.assertRaises(ConfigException):
             config.load_config(f, style='aoeuaoeu')
 
-        with self.assertRaises(JSONDecodeError):
+        with self.assertRaises(ValueError):
             config.load_config(f, style=JSON_STYLE)
 
     def test_json(self):
