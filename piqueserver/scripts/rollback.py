@@ -4,6 +4,8 @@ Progressively roll backs map to their original state (or to another map).
 Maintainer: hompy
 """
 
+import os
+
 from six.moves import range
 from twisted.internet.task import LoopingCall
 from pyspades.vxl import VXLData
@@ -12,6 +14,7 @@ from pyspades.constants import *
 from pyspades.common import coordinates, make_color
 from piqueserver.map import Map, MapNotFound, check_rotation
 from piqueserver.commands import command, admin
+from piqueserver import cfg
 import time
 import operator
 
@@ -86,7 +89,7 @@ def apply_script(protocol, connection, config):
                     maps = check_rotation([mapname])
                     if not maps:
                         return S_INVALID_MAP_NAME
-                    map = Map(maps[0]).data
+                    map = Map(maps[0], os.path.join(cfg.config_dir, "maps")).data
                 except MapNotFound as error:
                     return error.message
             name = (connection.name if connection is not None
