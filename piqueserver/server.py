@@ -330,12 +330,18 @@ class FeatureProtocol(ServerProtocol):
 
         self.http_agent = web_client.Agent(reactor)
 
-        # ip_getter should be a url that returns solely the requester's public ip in the response body
+        # ip_getter should be a url that returns only the requester's public ip in the response body
         # other tools:
-        # http://www.domaintools.com/research/my-ip/myip.xml
-        # http://checkip.dyndns.com/
-        # http://icanhazip.com/
-        ip_getter = config.get('ip_getter', 'https://services.buildandshoot.com/getip')
+        # https://icanhazip.com/
+        # https://api.ipify.org
+        #
+        # default to http on windows - see https://github.com/piqueserver/piqueserver/issues/215
+        if sys.platform == 'win32':
+            default_ip_getter = 'http://services.buildandshoot.com/getip'
+        else:
+            default_ip_getter = 'https://services.buildandshoot.com/getip'
+
+        ip_getter = config.get('ip_getter', default_ip_getter)
         if ip_getter:
             self.get_external_ip(ip_getter)
 
