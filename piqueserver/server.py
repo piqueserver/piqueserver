@@ -337,7 +337,7 @@ class FeatureProtocol(ServerProtocol):
         # http://icanhazip.com/
         ip_getter = config.get('ip_getter', 'https://services.buildandshoot.com/getip')
         if ip_getter:
-            self.get_external_ip()
+            self.get_external_ip(ip_getter)
 
     @inlineCallbacks
     def get_external_ip(self, ip_getter):
