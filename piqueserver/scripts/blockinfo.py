@@ -34,7 +34,7 @@ def grief_check(connection, player, time=None):
     if minutes == 1.0:
         minutes_s = 'minute'
     else:
-        minutes_s = '%s minutes' % ('%f' % minutes).rstrip('0').rstrip('.')
+        minutes_s = '{:.1f} minutes'.format(minutes)
     message += minutes_s + '.'
     if len(blocks):
         infos = set(blocks)
@@ -89,7 +89,6 @@ def grief_check(connection, player, time=None):
 
 
 def apply_script(protocol, connection, config):
-    has_votekick = 'votekick' in config.get('scripts', [])
 
     class BlockInfoConnection(connection):
         blocks_removed = None
