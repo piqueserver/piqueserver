@@ -28,6 +28,8 @@ extensions = {
 
 Support thread: http://buildandshoot.com/viewtopic.php?f=19&t=8089
 Script location: https://github.com/learn-more/pysnip/blob/master/scripts/minefield.py
+
+Warning: conflicts with `smartnade` script.
 """
 # todo: reset intel in minefield
 

@@ -1,3 +1,9 @@
+'''
+Smartnade script
+
+Warning: conflicts with `minefield` script.
+'''
+
 from six import itervalues
 
 SMARTNADE_DELAY = 0.5
