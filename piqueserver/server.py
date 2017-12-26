@@ -737,12 +737,8 @@ def run():
 
     script_objects = []
     script_names = config.get('scripts', [])
-    game_mode = config.get('game_mode', 'ctf')
-    if game_mode not in ('ctf', 'tc'):
-        # must be a script with this game mode
-        script_names.append(game_mode)
-
     script_dir = os.path.join(cfg.config_dir, 'scripts/')
+
     for script in script_names[:]:
         try:
             # NOTE: this finds and loads scripts directly from the script dir
@@ -754,13 +750,33 @@ def run():
             try:
                 module = importlib.import_module(script)
                 script_objects.append(module)
-            except ImportError:
+            except ImportError as e:
                 print("(script '%s' not found: %r)" % (script, e))
                 script_names.remove(script)
 
     for script in script_objects:
         protocol_class, connection_class = script.apply_script(
             protocol_class, connection_class, config)
+
+
+    # apply the game_mode script
+    game_mode = config.get('game_mode', 'ctf')
+    if game_mode not in ('ctf', 'tc'):
+        # must be a script with this game mode
+        module = None
+        try:
+            game_mode_dir = os.path.join(cfg.config_dir, 'game_modes/')
+            f, filename, desc = imp.find_module(game_mode, [game_mode_dir])
+            module = imp.load_module(game_mode, f, filename, desc)
+        except ImportError as e:
+            try:
+                module = importlib.import_module(game_mode)
+            except ImportError as e:
+                print("(game_mode '%s' not found: %r)" % (game_mode, e))
+
+        if module:
+            protocol_class, connection_class = module.apply_script(
+                protocol_class, connection_class, config)
 
     protocol_class.connection_class = connection_class
 
