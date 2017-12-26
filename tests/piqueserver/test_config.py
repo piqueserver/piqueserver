@@ -1,5 +1,5 @@
 import unittest
-from piqueserver.config import config, JSON_STYLE, TOML_STYLE
+from piqueserver.config import config, JSON_FORMAT, TOML_FORMAT
 
 
 class TestExampleConfig(unittest.TestCase):
@@ -43,12 +43,10 @@ class TestExampleConfig(unittest.TestCase):
         test = config.option('testthing')
         config.load_from_file(open(f))
 
-        self.assertEqual(test.get(), test.value)
         self.assertEqual(test.get(), None)
 
         test.set('something')
 
-        self.assertEqual(test.get(), test.value)
         self.assertEqual(test.get(), 'something')
 
     def test_nested(self):
@@ -122,14 +120,14 @@ class TestExampleConfig(unittest.TestCase):
         f = 'tests/example_config/simple.toml'
 
         with self.assertRaises(ValueError):
-            config.load_from_file(open(f), style='aoeuaoeu')
+            config.load_from_file(open(f), format_='aoeuaoeu')
 
         with self.assertRaises(ValueError):
-            config.load_from_file(open(f), style=JSON_STYLE)
+            config.load_from_file(open(f), format_=JSON_FORMAT)
 
     def test_json(self):
         f = 'piqueserver/config/config.json'
-        config.load_from_file(open(f), style=JSON_STYLE)
+        config.load_from_file(open(f), format_=JSON_FORMAT)
 
         # "name" : "piqueserver instance",
         name = config.option('name')
@@ -150,3 +148,23 @@ class TestExampleConfig(unittest.TestCase):
         thing2.set('something else')
 
         self.assertEqual(thing_config.get_dict(), {'thing1': 'something', 'thing2': 'something else'})
+
+    def test_nested_update(self):
+        f = 'tests/example_config/simple.toml'
+        config.load_from_file(open(f))
+
+        updates = {
+                'server': {
+                    'things': {
+                        'thing2': 'added'
+                        }
+                    }
+                }
+
+        config.update_from_dict(updates)
+
+        raw = config.get_dict()
+
+        self.assertEqual(raw['server']['things']['thing1'], 'something')
+        self.assertEqual(raw['server']['things']['thing2'], 'added')
+        self.assertEqual(raw['server']['name'], 'piqueserver instance')
