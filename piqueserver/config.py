@@ -79,7 +79,7 @@ class ConfigStore():
 
     def load_from_file(self, fobj, format_=DEFAULT_FORMAT):
         '''
-        Clear the current configuration and load new configuration from a file like object
+        Clear the current configuration and load new configuration from a file-like object
         in a supported format.
         '''
         self._raw_config = {}
@@ -113,18 +113,17 @@ class ConfigStore():
         self._raw_config = self._nested_update(self._raw_config, config)
         self._validate_all()
 
-    def dump_to_file(self, out_file, format_=DEFAULT_FORMAT):
+    def dump_to_file(self, fobj, format_=DEFAULT_FORMAT):
         '''
-        Writes the current configuration to a file (filename specified by `out_file`),
+        Writes the current configuration to a file-like objection,
         with the format specified by `format_`.
         '''
-        with open(out_file, 'w') as f:
-            if format_ == TOML_FORMAT:
-                toml.dump(self._raw_config, f)
-            elif format_ == JSON_FORMAT:
-                json.dump(self._raw_config, f, indent=2)
-            else:
-                raise ValueError('Unsupported config file format: {}'.format(format_))
+        if format_ == TOML_FORMAT:
+            toml.dump(self._raw_config, fobj)
+        elif format_ == JSON_FORMAT:
+            json.dump(self._raw_config, fobj, indent=2)
+        else:
+            raise ValueError('Unsupported config file format: {}'.format(format_))
 
     def _get(self, name, default=None):
         if name not in self._raw_config:

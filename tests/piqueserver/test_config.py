@@ -1,3 +1,5 @@
+import tempfile
+
 import unittest
 from piqueserver.config import config, JSON_FORMAT, TOML_FORMAT
 
@@ -168,3 +170,26 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(raw['server']['things']['thing1'], 'something')
         self.assertEqual(raw['server']['things']['thing2'], 'added')
         self.assertEqual(raw['server']['name'], 'piqueserver instance')
+
+    def test_dump_to_file(self):
+        f = 'tests/example_config/simple.toml'
+        config.load_from_file(open(f))
+
+        with self.assertRaises(ValueError):
+            config.dump_to_file(None, format_='garbage123')
+
+        with tempfile.TemporaryFile(mode='w+') as f:
+            config.dump_to_file(f, JSON_FORMAT)
+            f.seek(0)
+            out = f.read().strip()
+            # at least make sure it wrote something that could be json
+            self.assertEqual(out[0], '{')
+            self.assertEqual(out[-1], '}')
+
+
+        with tempfile.TemporaryFile(mode='w+') as f:
+            config.dump_to_file(f, TOML_FORMAT)
+            f.seek(0)
+            out = f.read().strip()
+            # at least make sure it wrote something that could be toml
+            self.assertIn('[server]', out)
