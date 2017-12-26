@@ -4,12 +4,14 @@ on IRC and a custom timer.
 
 Maintainer: mat^2
 """
+import os
 
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 
 import json
 from piqueserver.commands import command, admin
+from piqueserver import cfg
 
 
 @command('timer', admin_only=True)
@@ -35,8 +37,8 @@ def stop_record(connection):
 
 
 @command('saverecord', admin_only=True)
-def save_record(connection, value):
-    if not connection.protocol.save_record(value):
+def save_record(connection, name):
+    if not connection.protocol.save_record(name):
         return 'No record file available.'
     return 'Record saved.'
 
@@ -147,10 +149,12 @@ def apply_script(protocol, connection, config):
         def stop_record(self):
             self.record = None
 
-        def save_record(self, value):
+        def save_record(self, name):
             if self.record is None:
                 return False
-            json.dump(self.record, open(value, 'wb'))
+            path = os.path.join(cfg.config_dir, "record_{}.json".format(name))
+            with open(path, "w") as f:
+                json.dump(self.record, f)
             return True
 
     return MatchProtocol, MatchConnection
