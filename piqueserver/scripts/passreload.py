@@ -35,5 +35,5 @@ def apply_script(protocol, connection, config):
                     print('REMEMBER TO CHANGE THE DEFAULT ADMINISTRATOR PASSWORD!')
                 elif not password:
                     self.everyone_is_admin = True
-            commands.rights.update(config.get('rights', {}))
+            commands.update_rights(config.get('rights', {}))
     return PassreloadProtocol, connection
