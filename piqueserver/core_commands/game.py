@@ -7,7 +7,7 @@ from piqueserver.commands import command, CommandError, get_player, get_team, ge
 @command('time')
 def get_time_limit(connection):
     """
-    Tells you the current time limit
+    Tell you the current time limit
     /time
     """
     advance_call = connection.protocol.advance_call
@@ -21,7 +21,7 @@ def get_time_limit(connection):
 @command("resetgame", admin_only=True)
 def reset_game(connection):
     """
-    reset the game
+    Reset the game
     /resetgame
     """
     resetting_player = connection
@@ -43,8 +43,9 @@ def reset_game(connection):
 @command(admin_only=True)
 def lock(connection, value):
     """
-    Lock a team
+    Make a specified team no longer joinable until it's unlocked
     /lock <blue|green|spectator>
+    New players will be placed in the spectator team even if it's locked
     """
     team = get_team(connection, value)
     team.locked = True
@@ -69,7 +70,7 @@ def unlock(connection, value):
 @command(admin_only=True)
 def switch(connection, player=None, team=None):
     """
-    switch a players team
+    Switch teams either for yourself or for a given player
     /switch [player]
     """
     protocol = connection.protocol
@@ -129,7 +130,7 @@ def set_balance(connection, value):
 @command('togglebuild', 'tb', admin_only=True)
 def toggle_build(connection, player=None):
     """
-    Toggle building
+    Toggle building for everyone in the server or for a given player
     /togglebuild [player]
     """
     if player is not None:
@@ -155,7 +156,7 @@ def toggle_build(connection, player=None):
 @command('togglekill', 'tk', admin_only=True)
 def toggle_kill(connection, player=None):
     """
-    Toggle killing
+    Toggle killing for everyone in the server or for a given player
     /togglekill [player]
     """
     if player is not None:
@@ -180,7 +181,7 @@ def toggle_kill(connection, player=None):
 @command('toggleteamkill', 'ttk', admin_only=True)
 def toggle_teamkill(connection):
     """
-    Toggle teamkilling
+    Toggle friendly fire
     /toggleteamkill
     """
     value = not connection.protocol.friendly_fire
@@ -197,6 +198,7 @@ def global_chat(connection, value=None):
     """
     Enable or disable global chat
     /globalchat [on|off]
+    Toggles if no arguments are given
     """
     enabled = get_truthy(value)
     if enabled is True:
@@ -215,7 +217,7 @@ def global_chat(connection, value=None):
 @command('timelimit', admin_only=True)
 def set_time_limit(connection, value):
     """
-    Sets the time limit
+    Set this game time limit
     /timelimit <duration>
     """
     value = float(value)
@@ -227,7 +229,7 @@ def set_time_limit(connection, value):
 @command(admin_only=True)
 def fog(connection, *args):
     """
-    Sets the fog color
+    Set the fog color
     /fog red green blue (all values 0-255)
     /fog #aabbcc        (hex representation of rgb)
     /fog #abc           (short hex representation of rgb)

@@ -5,7 +5,7 @@ from piqueserver.commands import command, parse_maps
 @command()
 def mapname(connection):
     """
-    Tells you what's the name of the current map
+    Tell you what's the name of the current map
     /mapname
     """
     return 'Current map: ' + connection.protocol.map_info.name
@@ -14,7 +14,7 @@ def mapname(connection):
 @command('showrotation')
 def show_rotation(connection):
     """
-    Tells you the current map rotation
+    Tell you the current map rotation
     /showrotation
     """
     return ", ".join(connection.protocol.get_map_rotation())
@@ -23,7 +23,7 @@ def show_rotation(connection):
 @command('map', admin_only=True)
 def change_planned_map(connection, *pre_maps):
     """
-    Sets what's the next map to be loaded after current game ends and inform everyone of it
+    Set the next map to be loaded after current game ends and inform everyone of it
     /map <mapname>
     """
     name = connection.name
@@ -46,7 +46,7 @@ def change_planned_map(connection, *pre_maps):
 @command('rotation', admin_only=True)
 def change_rotation(connection, *pre_maps):
     """
-    Changes the current map rotation and informs everyone on the server of it
+    Change the current map rotation and informs everyone on the server of it
     /rotation <map1> ... <mapN>
     """
     name = connection.name
@@ -66,7 +66,7 @@ def change_rotation(connection, *pre_maps):
 @command('rotationadd', admin_only=True)
 def rotation_add(connection, *pre_maps):
     """
-    Appends a given map to the current map rotation and informs everyone on the server of it
+    Append a given map to the current map rotation and informs everyone on the server of it
     /rotationadd <map>
     """
     name = connection.name
@@ -89,7 +89,7 @@ def rotation_add(connection, *pre_maps):
 @command('revertrotation', admin_only=True)
 def revert_rotation(connection):
     """
-    Inverts the current map rotation
+    Invert the current map rotation
     /revertrotation
     """
     protocol = connection.protocol
@@ -102,7 +102,7 @@ def revert_rotation(connection):
 @command('advancemap', admin_only=True)
 def advance(connection):
     """
-    Forces the next map to be loaded instead of waiting for the time limit
+    Force the next map to be immediately loaded instead of waiting for the time limit to end
     /advancemap
     """
     connection.protocol.advance_rotation('Map advance forced.')

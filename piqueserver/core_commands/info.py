@@ -4,7 +4,7 @@ from piqueserver.commands import command, _commands, has_permission, get_player
 @command()
 def streak(connection):
     """
-    Tells your current kill streak
+    Tell your current kill streak
     /streak
     """
     if connection not in connection.protocol.players:
@@ -16,7 +16,7 @@ def streak(connection):
 @command()
 def ping(connection, value=None):
     """
-    Tells your current ping (time for your actions to be received by the server)
+    Tell your current ping (time for your actions to be received by the server)
     /ping
     """
     if value is None:
@@ -34,7 +34,7 @@ def ping(connection, value=None):
 @command()
 def rules(connection):
     """
-    Shows you the server rules
+    Show you the server rules
     /rules
     """
     if connection not in connection.protocol.players:
@@ -48,7 +48,7 @@ def rules(connection):
 @command("help")
 def help_command(connection):
     """
-    Prints all available commands
+    Print all available commands
     /help
     """
     if connection.protocol.help is not None and not connection.admin:

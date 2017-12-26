@@ -1,12 +1,12 @@
 from __future__ import print_function, unicode_literals
 from piqueserver.commands import command, join_arguments
 
-# Also affects master server list
 @command('servername', admin_only=True)
 def server_name(connection, *arg):
     """
-    Modifies the server name
+    Change the server name until it restarts
     /servername <new-name>
+    Also affects the master list
     """
     name = join_arguments(arg)
     protocol = connection.protocol
@@ -22,7 +22,7 @@ def server_name(connection, *arg):
 @command('server')
 def server_info(connection):
     """
-    Tells you the name of the server and it's aos:// URI
+    Tell you the name of this server and its aos:// URI
     /server
     """
     protocol = connection.protocol
@@ -35,7 +35,7 @@ def server_info(connection):
 @command()
 def version(connection):
     """
-    Tells you this server's piqueserver version
+    Tell you this server's piqueserver version
     /version
     """
     return 'Server version is "%s"' % connection.protocol.server_version
@@ -44,7 +44,7 @@ def version(connection):
 @command()
 def scripts(connection):
     """
-    Tells you which scripts are enabled on this server currently
+    Tell you which scripts are enabled on this server currently
     /version
     """
     scripts = connection.protocol.config.get('scripts', [])
@@ -57,7 +57,7 @@ def scripts(connection):
 @command('togglemaster', 'master', admin_only=True)
 def toggle_master(connection):
     """
-    Toggles connection to the master server list
+    Toggle connection to the master server list
     /togglemaster
     """
     protocol = connection.protocol

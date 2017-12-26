@@ -36,7 +36,7 @@ def get_ban_arguments(connection, arg):
 @command(admin_only=True)
 def kick(connection, value, *arg):
     """
-    Kicks a given player
+    Kick a given player
     /kick <player>
     Player is the #ID of the player, or an unique part of their name
     """
@@ -48,7 +48,7 @@ def kick(connection, value, *arg):
 @command(admin_only=True)
 def ban(connection, value, *arg):
     """
-    Bans a given player forever or for a limited amount of time
+    Ban a given player forever or for a limited amount of time
     /ban <player> [duration] [reason]
     """
     duration, reason = get_ban_arguments(connection, arg)
@@ -59,7 +59,7 @@ def ban(connection, value, *arg):
 @command(admin_only=True)
 def hban(connection, value, *arg):
     """
-    Bans a given player for an hour
+    Ban a given player for an hour
     /hban <player> [reason]
     """
     duration = 60
@@ -83,7 +83,7 @@ def dban(connection, value, *arg):
 @command(admin_only=True)
 def wban(connection, value, *arg):
     """
-    Bans a given player for one week
+    Ban a given player for one week
     /wban <player> [reason]
     """
     duration = 10080
@@ -95,7 +95,7 @@ def wban(connection, value, *arg):
 @command(admin_only=True)
 def pban(connection, value, *arg):
     """
-    Bans a given player permanently
+    Ban a given player permanently
     /pban <player> [reason]
     """
     duration = 0
@@ -107,7 +107,7 @@ def pban(connection, value, *arg):
 @command(admin_only=True)
 def banip(connection, ip, *arg):
     """
-    Bans an ip
+    Ban an ip
     /banip <ip> [reason]
     """
     duration, reason = get_ban_arguments(connection, arg)
@@ -127,7 +127,7 @@ def banip(connection, ip, *arg):
 @command(admin_only=True)
 def unban(connection, ip):
     """
-    Unbans an ip
+    Unban an ip
     /unban <ip>
     """
     try:
@@ -140,7 +140,7 @@ def unban(connection, ip):
 @command('undoban', admin_only=True)
 def undo_ban(connection, *arg):
     """
-    Undoes last ban
+    Undo last ban
     /undoban
     """
     if len(connection.protocol.bans) > 0:

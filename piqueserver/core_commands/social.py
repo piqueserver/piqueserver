@@ -4,8 +4,9 @@ from piqueserver.commands import command, get_player, join_arguments
 @command()
 def login(connection, password):
     """
-    Allows staff and trusted members to log in
+    Log in if you're staff or a trusted member of this server
     /login <password>
+    You will be kicked if a wrong password is given 3 times in a row
     """
     if connection not in connection.protocol.players:
         raise KeyError()
@@ -28,7 +29,7 @@ def login(connection, password):
 @command()
 def pm(connection, value, *arg):
     """
-    Sends a private message to a given player
+    Send a private message to a given player
     /pm <player> <message>
     """
     player = get_player(connection.protocol, value)
@@ -42,7 +43,7 @@ def pm(connection, value, *arg):
 @command('admin')
 def to_admin(connection, *arg):
     """
-    Sends a message to all admins currently online
+    Send a message to all admins currently online
     /admin <message>
     """
     protocol = connection.protocol
@@ -59,4 +60,4 @@ def to_admin(connection, *arg):
         if player.admin and player is not connection:
             player.send_chat('To ADMINS from %s: %s' %
                              (connection.name, message))
-    return 'Message sent to admins'
+    return 'Message sent to all admins currently online'
