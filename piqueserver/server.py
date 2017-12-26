@@ -347,7 +347,7 @@ class FeatureProtocol(ServerProtocol):
             print("Getting external IP failed:", e)
             return
 
-        self.ip = ip
+        self.ip = ip.strip()
         self.identifier = make_server_identifier(ip, self.port)
         print('Server identifier is %s' % self.identifier)
 
