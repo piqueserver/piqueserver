@@ -186,8 +186,6 @@ class _Section():
         return section[name]
 
     def _set(self, name, value):
-        # TODO: better method of getting and setting that doesn't require
-        # updating entire dictionaries?
         section = self._store._get(self._name, {})
         section[name] = value
         self._store._set(self._name, section)
