@@ -24,6 +24,7 @@
         "Cheating isn't welcome. Griefing is frowned upon. Have fun!"
     ],
     "master" : false,
+    "ip_getter" : "https://services.buildandshoot.com/getip",
     "max_players" : 32,
     "max_connections_per_ip" : 3,
     "port" : 32887,
