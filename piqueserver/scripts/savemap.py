@@ -25,11 +25,14 @@ def apply_script(protocol, connection, config):
             map = protocol.get_map(self, name)
             if config.get('load_saved_map', False):
                 cached_path = get_name(map)
+                print("Loading saved map for {} from {}".format(name, cached_path))
                 if os.path.isfile(cached_path):
                     map.data = VXLData(open(cached_path, 'rb'))
+                    print("Saved map loaded")
             return map
 
         def save_map(self):
             open(get_name(self.map_info), 'wb').write(self.map.generate())
+            print("Map saved to {}".format(get_name(self.map_info)))
 
     return MapSaveProtocol, connection
