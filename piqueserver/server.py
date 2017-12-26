@@ -228,7 +228,7 @@ class FeatureProtocol(ServerProtocol):
             self.game_mode = TC_MODE
         elif self.game_mode is None:
             raise NotImplementedError('invalid game mode: %s' % game_mode)
-        self.game_mode_name = game_mode
+        self.game_mode_name = game_mode.split('.')[-1]
         team1 = config.get('team1', {})
         team2 = config.get('team2', {})
         self.team1_name = team1.get('name', 'Blue')
