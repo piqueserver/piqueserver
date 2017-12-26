@@ -80,7 +80,7 @@ def apply_script(protocol, connection, config):
 
         def on_block_destroy(self, x, y, z, value):
             can_destroy = connection.on_block_destroy(self, x, y, z, value)
-            if can_destroy:
+            if can_destroy != False:
                 strong_block = self.protocol.strong_blocks.pop((x, y, z), None)
                 if strong_block is not None:
                     # block is a strong block
