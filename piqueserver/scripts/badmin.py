@@ -74,6 +74,7 @@ def investigate(connection, player):
     percent = round(check_percent(player))
     message = "Results for %s: Grief Score - %s / KDR - %s / Hit Acc. - %s" % (
         player.name, score, kdr, percent)
+    return message
 
 
 def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green (1)
@@ -172,12 +173,16 @@ def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green 
 
 
 def check_percent(self):
-    if self.weapon == RIFLE_WEAPON:
-        if self.semi_hits == 0 or self.semi_count == 0:
-            return 0
-        else:
-            return (float(self.semi_hits) / float(self.semi_count)) * 100
-    elif self.weapon == SMG_WEAPON:
+    # TODO: uncomment this when you find out what/where semi_hits and
+    #       semi_count should be defined. Possibly in aimbot2.py, but currently these
+    #       attributes don't exist anywhere
+    # if self.weapon == RIFLE_WEAPON:
+    #     if self.semi_hits == 0 or self.semi_count == 0:
+    #         return 0
+    #     else:
+    #         return (float(self.semi_hits) / float(self.semi_count)) * 100
+    # elif self.weapon == SMG_WEAPON:
+    if self.weapon == SMG_WEAPON:
         if self.smg_hits == 0 or self.smg_count == 0:
             return 0
         else:
