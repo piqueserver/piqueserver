@@ -96,13 +96,6 @@ def random_choice_cycle(choices):
         yield random.choice(choices)
 
 
-IP_GETTER = 'https://services.buildandshoot.com/getip'
-# other tools:
-# http://www.domaintools.com/research/my-ip/myip.xml
-# http://checkip.dyndns.com/
-# http://icanhazip.com/
-
-
 class FeatureTeam(Team):
     locked = False
 
@@ -336,17 +329,31 @@ class FeatureProtocol(ServerProtocol):
         self.set_master()
 
         self.http_agent = web_client.Agent(reactor)
-        self.get_external_ip()
+
+        # ip_getter should be a url that returns only the requester's public ip in the response body
+        # other tools:
+        # https://icanhazip.com/
+        # https://api.ipify.org
+        #
+        # default to http on windows - see https://github.com/piqueserver/piqueserver/issues/215
+        if sys.platform == 'win32':
+            default_ip_getter = 'http://services.buildandshoot.com/getip'
+        else:
+            default_ip_getter = 'https://services.buildandshoot.com/getip'
+
+        ip_getter = config.get('ip_getter', default_ip_getter)
+        if ip_getter:
+            self.get_external_ip(ip_getter)
 
     @inlineCallbacks
-    def get_external_ip(self):
+    def get_external_ip(self, ip_getter):
         try:
-            ip = yield self.getPage(IP_GETTER)
+            ip = yield self.getPage(ip_getter)
         except OSError as e:
             print("Getting external IP failed:", e)
             return
 
-        self.ip = ip
+        self.ip = ip.strip()
         self.identifier = make_server_identifier(ip, self.port)
         print('Server identifier is %s' % self.identifier)
 
