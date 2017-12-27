@@ -29,13 +29,12 @@ import itertools
 import random
 import time
 from collections import deque
-import re
 
 import six
 from six import text_type
 from six.moves import range
 
-from ipaddress import ip_network, ip_address
+from ipaddress import ip_network, ip_address, IPv4Address, AddressValueError
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.python import log
@@ -351,19 +350,19 @@ class FeatureProtocol(ServerProtocol):
         print('Retrieving external IP from {!r} to generate server identifier.'.format(ip_getter))
         try:
             ip = yield self.getPage(ip_getter)
+            ip = IPv4Address(ip.strip())
+        except AddressValueError as e:
+            print('External IP getter service returned invalid data.\n'
+                  'Please check the "ip_getter" setting in your config.')
+            return
         except Exception as e:
             print("Getting external IP failed:", e)
             return
 
-        ip = ip.strip()
-        if not re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', ip):
-            print('External IP getter service returned invalid data.\n'
-                  'Please check the "ip_getter" setting in your config.')
-            return
-
-        self.ip = ip
-        self.identifier = make_server_identifier(ip, self.port)
-        print('Server public ip address: {}:{}'.format(ip, self.port))
+        self.ip = ip.exploded
+        self.ip_address = ip
+        self.identifier = make_server_identifier(self.ip, self.port)
+        print('Server public ip address: {}:{}'.format(self.ip, self.port))
         print('Public aos identifier: {}'.format(self.identifier))
 
     def set_time_limit(self, time_limit=None, additive=False):
