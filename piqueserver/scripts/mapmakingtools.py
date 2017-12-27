@@ -92,11 +92,10 @@ def mirror(connection, mirror_x, mirror_y):
 
 
 @command()
-def tunnel(*arguments):
-    connection = arguments[0]
+def tunnel(connection, radius, length, zoffset=0):
     connection.reset_build()
     connection.callback = tunnel_r
-    connection.arguments = arguments
+    connection.arguments = [connection, radius, length, zoffset]
     connection.select = True
     connection.points = 1
 
@@ -142,11 +141,10 @@ def tunnel_r(connection, radius, length, zoffset=0):
 
 
 @command()
-def insert(*arguments):
-    connection = arguments[0]
+def insert(connection):
     connection.reset_build()
     connection.callback = insert_r
-    connection.arguments = arguments
+    connection.arguments = [connection]
     connection.select = True
     connection.points = 2
 
@@ -174,11 +172,10 @@ def insert_r(connection):
 
 
 @command()
-def delete(*arguments):
-    connection = arguments[0]
+def delete(connection):
     connection.reset_build()
     connection.callback = delete_r
-    connection.arguments = arguments
+    connection.arguments = [connection]
     connection.select = True
     connection.points = 2
 
@@ -198,16 +195,15 @@ def delete_r(connection):
 
 
 @command()
-def pattern(*arguments):
-    connection = arguments[0]
+def pattern(connection, copies=1):
     connection.reset_build()
     connection.callback = pattern_r
-    connection.arguments = arguments
+    connection.arguments = [connection, copies]
     connection.select = True
     connection.points = 2
 
 
-def pattern_r(connection, copies):
+def pattern_r(connection, copies=1):
     copies = int(copies)
     x1 = min(connection.block1_x, connection.block2_x)
     x2 = max(connection.block1_x, connection.block2_x)
@@ -237,11 +233,10 @@ def pattern_r(connection, copies):
 
 
 @command()
-def hollow(*arguments):
-    connection = arguments[0]
+def hollow(connection, thickness=1):
     connection.reset_build()
     connection.callback = hollow_r
-    connection.arguments = arguments
+    connection.arguments = [connection, thickness]
     connection.select = True
     connection.points = 2
 
@@ -329,7 +324,10 @@ def apply_script(protocol, connection, config):
                     self.block1_x = x
                     self.block1_y = y
                     self.block1_z = z
-                    self.callback(*self.arguments)
+                    try:
+                        self.callback(*self.arguments)
+                    except Exception as e:
+                        self.send_chat('Map building failed: {}'.format(e))
                     self.reset_build()
                     return False
                 elif self.points == 2:
@@ -345,7 +343,10 @@ def apply_script(protocol, connection, config):
                             self.block2_x = x
                             self.block2_y = y
                             self.block2_z = z
-                            self.callback(*self.arguments)
+                            try:
+                                self.callback(*self.arguments)
+                            except Exception as e:
+                                self.send_chat('Map building failed: {}'.format(e))
                             self.reset_build()
                             self.send_chat('Second block selected')
                             return False
