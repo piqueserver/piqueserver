@@ -1,5 +1,7 @@
 from __future__ import print_function, unicode_literals
 
+import math
+
 from twisted.internet import reactor
 
 from piqueserver import commands
@@ -9,6 +11,7 @@ from pyspades.constants import (ERROR_BANNED, DESTROY_BLOCK, SPADE_DESTROY,
                                 GRENADE_DESTROY, ERROR_KICKED)
 from pyspades.server import ServerConnection
 from pyspades.common import encode, prettify_timespan
+from pyspades.world import Character
 
 # TODO: move these where they belong
 CHAT_WINDOW_SIZE = 5
@@ -34,6 +37,7 @@ class FeatureConnection(ServerConnection):
     chat_count = 0
     user_types = None
     rights = None
+    can_complete_line_build = True
 
     def on_connect(self):
         protocol = self.protocol
@@ -113,6 +117,8 @@ class FeatureConnection(ServerConnection):
         print(log_message.replace("\n", "\\n").encode('ascii', 'replace'))
 
     def _can_build(self):
+        if not self.can_complete_line_build:
+            return False
         if not self.building:
             return False
         if not self.god and not self.protocol.building:
@@ -120,6 +126,36 @@ class FeatureConnection(ServerConnection):
 
     def on_block_build_attempt(self, x, y, z):
         return self._can_build()
+
+    def on_secondary_fire_set(self, secondary):
+
+        # Inlined from fbpatch.py
+        # Author: Nick Christensen AKA a_girl
+        # Distant Drag Build Client Bug Patch for (0.75) and possibly (0.76)
+        #
+        # if right mouse button has been clicked to initiate drag building;
+        # distinguishes from the right click release that marks the end point.
+        if secondary:
+            if self.tool == 1:  # 1 refers to block tool; if the tool in hand is a block
+                # grab player current position at drag build start
+                position = self.world_object.position
+                # grab player current orientation at drag build start
+                vector = self.world_object.orientation
+                # probably unnecessary, but makes sure vector values are
+                # between 0 and 1 inclusive
+                vector.normalize()
+                # creates a line object starting at player and following
+                # their point of view.
+                c = Character(self.world_object.world, position, vector)
+                # finds coordinates of the first block this line strikes.
+                line_start = c.cast_ray()
+                if line_start:  # if player is pointing at a valid point.  Distant solid blocks will return False
+                    if distance(position, line_start) > 6:
+                        self.can_complete_line_build = False
+                    else:
+                        self.can_complete_line_build = True
+                else:
+                    self.can_complete_line_build = False
 
     def on_line_build_attempt(self, points):
         if self._can_build() == False:
@@ -374,3 +410,14 @@ class FeatureConnection(ServerConnection):
 def encode_lines(value):
     if value is not None:
         return [encode(line) for line in value]
+
+# calculate the distance between an object with x, y, and z members and a
+# tuple containing (x, y, z) coords.
+def distance(a, b):
+    x1, y1, z1 = a.x, a.y, a.z
+    x2, y2, z2 = b
+    x = x2 - x1
+    y = y2 - y1
+    z = z2 - z1
+    sum_ = (x ** 2) + (y ** 2) + (z ** 2)
+    return math.sqrt(sum_)
