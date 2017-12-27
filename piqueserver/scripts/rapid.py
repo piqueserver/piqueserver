@@ -15,9 +15,8 @@ Mantainer: hompy
 
 from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
-from pyspades.server import set_tool
-from pyspades.constants import *
-from piqueserver.commands import admin, get_player
+from pyspades.player import set_tool
+from piqueserver.commands import command, get_player
 
 ALWAYS_RAPID = False
 RAPID_INTERVAL = 0.08

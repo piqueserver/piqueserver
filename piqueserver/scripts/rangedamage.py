@@ -32,22 +32,26 @@ def apply_script(protocol, connection, config):
         def on_hit(self, hit_amount, hit_player, type, grenade):
             result = connection.on_hit(self, hit_amount, hit_player, type,
                                        grenade)
-            if not result:
-                return False
-            if result is not None:
-                hit_amount = result
-            dist = sqrt(point_distance2(self, hit_player))
-            if self.weapon == RIFLE_WEAPON:
-                pct = (100 * self.protocol.rifle_multiplier
-                       - self.protocol.rifle_pct_per_block * dist)
-            elif self.weapon == SMG_WEAPON:
-                pct = (100 * self.protocol.smg_multiplier
-                       - self.protocol.smg_pct_per_block * dist)
-            elif self.weapon == SHOTGUN_WEAPON:
-                pct = (100 * self.protocol.shotgun_multiplier
-                       - self.protocol.shotgun_pct_per_block * dist)
-            pct = max(0, pct) / 100.0
-            hit_amount = int(hit_amount * pct)
-            return hit_amount
+                                       
+            if grenade is None: #Don't reduce damage when using grenade e.g. airstrike
+                if result == False:
+                    return False
+                if result is not None:
+                    hit_amount = result
+                dist = sqrt(point_distance2(self, hit_player))
+                if self.weapon == RIFLE_WEAPON:
+                    pct = (100 * self.protocol.rifle_multiplier
+                        - self.protocol.rifle_pct_per_block * dist)
+                elif self.weapon == SMG_WEAPON:
+                    pct = (100 * self.protocol.smg_multiplier
+                        - self.protocol.smg_pct_per_block * dist)
+                elif self.weapon == SHOTGUN_WEAPON:
+                    pct = (100 * self.protocol.shotgun_multiplier
+                        - self.protocol.shotgun_pct_per_block * dist)
+                pct = max(0, pct) / 100.0
+                hit_amount = int(hit_amount * pct)
+                return hit_amount
+            else:
+                return connection.on_hit(self, hit_amount, hit_player, type, grenade)
 
     return RangeDamageProtocol, RangeDamageConnection

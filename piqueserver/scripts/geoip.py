@@ -41,3 +41,6 @@ finally:
                 continue
             items.append(value)
         return '%s is from %s' % (player.name, ', '.join(items))
+
+def apply_script(protocol, connection, config):
+    return protocol, connection

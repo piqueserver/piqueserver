@@ -1,4 +1,4 @@
-from pyspades.server import *
+from pyspades.constants import SPADE_TOOL
 from piqueserver.commands import command
 
 
