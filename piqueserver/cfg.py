@@ -6,9 +6,11 @@
 import os
 import sys
 
+import piqueserver
+
 # pylint: disable=invalid-name
 
-server_version = '%s - %s' % (sys.platform, '0.0.1a')
+server_version = '%s - %s' % (sys.platform, piqueserver.__version__)
 config = {}
 pkg_name = "piqueserver"
 config_file = 'config.json'

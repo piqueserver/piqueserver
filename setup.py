@@ -26,6 +26,13 @@ except (IOError, ImportError):
     long_description = ''
 
 
+
+# load version info from the piqueserver module manually
+here = os.path.abspath(os.path.dirname(__file__))
+version = {}
+with open(os.path.join(here, 'piqueserver/version.py')) as f:
+    exec(f.read(), version)
+
 ext_modules = []
 
 ext_names = [
@@ -95,7 +102,7 @@ setup(
     packages=[PKG_NAME, '%s.web' % PKG_NAME,
         '%s.scripts' % PKG_NAME, '%s.game_modes' % PKG_NAME,
         '%s.core_commands' % PKG_NAME, 'pyspades'],
-    version='0.1.0_post2',
+    version=version['__version__'],
     description='Open-Source server implementation for Ace of Spades ',
     author=('Originally MatPow2 and PySnip contributors,'
             'now, StackOverflow and piqueserver authors'),
@@ -110,17 +117,21 @@ setup(
               'pyspades', 'pysnip', 'piqueserver'],
     classifiers=[
         'Intended Audience :: System Administrators',
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Operating System :: MacOS :: MacOS X',
         'Operating System :: Unix',
+        'Operating System :: Microsoft :: Windows',
         'Environment :: Console',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Programming Language :: Python',
         'Programming Language :: Cython',
-        'Programming Language :: Python :: 2 :: Only',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
         'Framework :: Twisted',
+        'Topic :: Games/Entertainment',
+        'Topic :: Games/Entertainment :: First Person Shooters',
     ],
-    platforms="Darwin, Unix",
+    platforms="Darwin, Unix, Win32",
 
     setup_requires=['Cython>=0,<1'],
     install_requires=[
