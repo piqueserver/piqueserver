@@ -199,13 +199,19 @@ class FeatureProtocol(ServerProtocol):
         self.advance_on_win = int(config.get('advance_on_win', False))
         self.win_count = itertools.count(1)
         self.bans = NetworkDict()
-        # TODO: check if this is actually working and not silently failing
+
+        # attempt to load a saved bans list
         try:
-            self.bans.read_list(
-                json.load(open(os.path.join(cfg.config_dir, 'bans.txt'), 'r'))
-            )
-        except IOError:
-            pass
+            with open(os.path.join(cfg.config_dir, 'bans.txt'), 'r') as f:
+                self.bans.read_list(json.load(f))
+        except IOError as e:
+            if e.errno == 2: # not found
+                pass
+            else:
+                print('Could not read bans.txt: {}'.format(e))
+        except ValueError as e:
+            print('Could not parse bans.txt: {}'.format(e))
+
         self.hard_bans = set()  # possible DDoS'ers are added here
         self.player_memory = deque(maxlen=100)
         self.config = config
