@@ -53,7 +53,7 @@ def apply_script(protocol, connection, config):
 
         def on_team_join(self, team):
             if team.spectator and spectator_kick and spectator_kick_time > 0:
-                if not self.admin and not self.rights.specpower:  # not an admin
+                if self.rights is None or (not self.admin and not self.rights.specpower):  # not an admin
                     # this check is necessary as you can join spectator from
                     # being a spectator
                     if self.spec_check is None or not self.spec_check.active():
