@@ -74,23 +74,6 @@ PORT = 32887
 web_client._HTTP11ClientFactory.noisy = False
 
 
-def create_path(path):
-    if path:
-        try:
-            os.makedirs(path)
-        except OSError:
-            pass
-
-
-def create_filename_path(path):
-    create_path(os.path.dirname(path))
-
-
-def open_create(filename, mode):
-    create_filename_path(filename)
-    return open(filename, mode)
-
-
 def random_choice_cycle(choices):
     while True:
         yield random.choice(choices)
@@ -288,11 +271,11 @@ class FeatureProtocol(ServerProtocol):
         if not os.path.isabs(logfile):
             logfile = os.path.join(cfg.config_dir, logfile)
         if logfile.strip():  # catches empty filename
+            os.makedirs(os.path.dirname(logfile), exist_ok=True)
             if config.get('rotate_daily', False):
-                create_filename_path(logfile)
                 logging_file = DailyLogFile(logfile, '.')
             else:
-                logging_file = open_create(logfile, 'a')
+                logging_file = open(logfile, 'a')
             log.addObserver(log.FileLogObserver(logging_file).emit)
             log.msg('pyspades server started on %s' % time.strftime('%c'))
         log.startLogging(sys.stdout)  # force twisted logging
@@ -571,8 +554,10 @@ class FeatureProtocol(ServerProtocol):
         return result
 
     def save_bans(self):
-        json.dump(self.bans.make_list(), open_create(
-            os.path.join(cfg.config_dir, 'bans.txt'), 'w'))
+        ban_file = os.path.join(cfg.condif_dir, 'bans.txt')
+        os.makedirs(os.path.dirname(ban_file), exist_ok=True)
+        with open(ban_file, 'w') as f:
+            json.dump(self.bans.make_list(), f, indent=2)
         if self.ban_publish is not None:
             self.ban_publish.update()
 
