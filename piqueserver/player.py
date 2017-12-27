@@ -10,7 +10,7 @@ import pyspades
 from pyspades.constants import (ERROR_BANNED, DESTROY_BLOCK, SPADE_DESTROY,
                                 GRENADE_DESTROY, ERROR_KICKED, BLOCK_TOOL)
 from pyspades.server import ServerConnection
-from pyspades.common import encode, prettify_timespan
+from pyspades.common import encode, prettify_timespan, Vertex3
 from pyspades.world import Character
 
 # TODO: move these where they belong
@@ -150,7 +150,8 @@ class FeatureConnection(ServerConnection):
                 # finds coordinates of the first block this line strikes.
                 line_start = c.cast_ray()
                 if line_start:  # if player is pointing at a valid point.  Distant solid blocks will return False
-                    if distance(position, line_start) > 6:
+                    distance = (Vertex3(*line_start) - Vertex3(position.x, position.y, position.z)).length()
+                    if distance > 6:
                         self.can_complete_line_build = False
                     else:
                         self.can_complete_line_build = True
@@ -410,14 +411,3 @@ class FeatureConnection(ServerConnection):
 def encode_lines(value):
     if value is not None:
         return [encode(line) for line in value]
-
-# calculate the distance between an object with x, y, and z members and a
-# tuple containing (x, y, z) coords.
-def distance(a, b):
-    x1, y1, z1 = a.x, a.y, a.z
-    x2, y2, z2 = b
-    x = x2 - x1
-    y = y2 - y1
-    z = z2 - z1
-    sum_ = (x ** 2) + (y ** 2) + (z ** 2)
-    return math.sqrt(sum_)
