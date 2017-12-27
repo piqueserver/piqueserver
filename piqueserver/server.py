@@ -29,6 +29,7 @@ import itertools
 import random
 import time
 from collections import deque
+import re
 
 import six
 from six import text_type
@@ -347,15 +348,23 @@ class FeatureProtocol(ServerProtocol):
 
     @inlineCallbacks
     def get_external_ip(self, ip_getter):
+        print('Retrieving external IP from {!r} to generate server identifier.'.format(ip_getter))
         try:
             ip = yield self.getPage(ip_getter)
-        except OSError as e:
+        except Exception as e:
             print("Getting external IP failed:", e)
             return
 
-        self.ip = ip.strip()
+        ip = ip.strip()
+        if not re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', ip):
+            print('External IP getter service returned invalid data.\n'
+                  'Please check the "ip_getter" setting in your config.')
+            return
+
+        self.ip = ip
         self.identifier = make_server_identifier(ip, self.port)
-        print('Server identifier is %s' % self.identifier)
+        print('Server public ip address: {}:{}'.format(ip, self.port))
+        print('Public aos identifier: {}'.format(self.identifier))
 
     def set_time_limit(self, time_limit=None, additive=False):
         advance_call = self.advance_call
