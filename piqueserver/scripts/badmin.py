@@ -223,7 +223,7 @@ def apply_script(protocol, connection, config):
 
     class BadminProtocol(protocol):
 
-        def start_votekick(self, connection, player, reason=None):
+        def on_votekick_start(self, connection, player, reason=None):
             if reason is None and BLANK_VOTEKICK_ENABLED:
                 connection.protocol.irc_say(
                     "* @Badmin: %s is attempting a blank votekick (against %s)" %
@@ -251,13 +251,13 @@ def apply_script(protocol, connection, config):
                     badmin_punish(
                         player, "warn", "People think you're aimbotting! (KDR: %s, Hit Acc: %s)" %
                         (score, percent))
-                    return protocol.start_votekick(
+                    return protocol.on_votekick_start(
                         self, connection, player, reason)
                 if score >= SCORE_AIMBOT_UNCERTAIN:
                     connection.protocol.irc_say(
                         "* @Badmin: Aimbot vote: (KDR: %s, Hit Acc: %s)" %
                         (score, percent))
-                    return protocol.start_votekick(
+                    return protocol.on_votekick_start(
                         self, connection, player, reason)
                 if score < SCORE_AIMBOT_UNCERTAIN:
                     connection.protocol.irc_say(
@@ -281,18 +281,18 @@ def apply_script(protocol, connection, config):
                 if score >= SCORE_GRIEF_WARN:
                     badmin_punish(player, "warn",
                                   "Stop Griefing! (GS: %s)" % score)
-                    return protocol.start_votekick(
+                    return protocol.on_votekick_start(
                         self, connection, player, reason)
                 if score >= SCORE_GRIEF_UNCERTAIN:
                     connection.protocol.irc_say(
                         "* @Badmin: Grief Score: %s" % score)
-                    return protocol.start_votekick(
+                    return protocol.on_votekick_start(
                         self, connection, player, reason)
                 if score < SCORE_GRIEF_UNCERTAIN:
                     connection.protocol.irc_say(
                         "* @Badmin: I've cancelled a griefing votekick! Kicker: %s, Kickee: %s, Score: %s" %
                         (connection.name, player.name, score))
                     return "@Badmin: This player has not been griefing."
-            return protocol.start_votekick(self, connection, player, reason)
+            return protocol.on_votekick_start(self, connection, player, reason)
 
     return BadminProtocol, BadminConnection
