@@ -25,12 +25,15 @@ VV_ENABLED and CHAT_MARKERS below.
 Maintainer: hompy
 """
 
+from __future__ import unicode_literals
+
 import csv
-from StringIO import StringIO
+from io import StringIO
 from collections import deque, defaultdict
 from functools import partial
-from itertools import izip, islice, chain
+from itertools import islice, chain
 from random import choice
+from six.moves import zip
 from twisted.internet.reactor import callLater, seconds
 from pyspades.world import cube_line
 from pyspades.contained import BlockAction, BlockLine, SetColor, ChatMessage
@@ -65,6 +68,7 @@ THERE_RAY_LENGTH = 192.0
 ENEMY_EXPIRE_DISTANCE_SQUARED = 18.0 ** 2
 
 
+@command(admin_only=True)
 def clear(connection):
     if connection not in connection.protocol.players:
         raise ValueError()
@@ -87,6 +91,7 @@ def toggle_markers(connection, player=None):
         connection.protocol.send_chat(message, irc=True)
 
 
+@command()
 def markers(connection):
     if connection not in connection.protocol.players:
         raise ValueError()
@@ -229,18 +234,23 @@ class BaseMarker():
 
 
 def parse_string_map(xs_and_dots):
-    # greedily attempt to get the least amount of lines and blocks required
-    # to build the shape. best (worst) function ever
-    reader = csv.reader(StringIO(xs_and_dots), delimiter=' ')
-    rows = [s for s in (''.join(row) for row in reader) if s.strip()]
+    """greedily attempt to get the least amount of lines and blocks required
+    to build the shape. best (worst) function ever"""
+
+    # format to List[str] with spaces removed, e.g. ["...XX.XX", "..X.XX.."]
+    rows = [s.replace(" ", "") for s in xs_and_dots.splitlines() if s.strip()]
     lines, points = [], []
     if not rows:
         return lines, points
 
     width, height = len(rows[0]), len(rows)
+
+    # offset of the top left to the center
     off_x, off_y = -width // 2, -height // 2
+
     for y, row in enumerate(rows):
-        columns = [''.join(l[y:]).split('.', 1)[0] for l in izip(*rows)]
+        # if anyone understands this code, tell us
+        columns = [''.join(l[y:]).split('.', 1)[0] for l in zip(*rows)]
         it = enumerate(columns)
         for x, column in it:
             h = len(row[x:].split('.', 1)[0])
@@ -612,7 +622,11 @@ background_markers = []
 
 # turn bitmap into line and block instructions
 for cls in chain(trigger_markers, other_markers, background_markers):
+    # FIXME: This code does not actually work! It only places the background,
+    # not the foreground
     if cls.background_class:
+        # This modifies background-markers while looping over it, which is very
+        # bad practice. However in this case it is accidentally fine.
         background_markers.append(cls.background_class)
     cls.lines, cls.points = parse_string_map(cls.s)
 

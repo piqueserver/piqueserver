@@ -3,8 +3,10 @@ Plugin to detect and react to possible aimbot users
 
 maintained by: ?
 """
-from __future__ import division
 # So we can do `x / y` instead of `float(x) / y`
+from __future__ import division
+from six.moves import range
+
 
 import re
 from math import sqrt, cos, pi
@@ -19,7 +21,7 @@ from pyspades.constants import (
 
 from piqueserver.commands import command, admin, get_player
 
-DISABLED, KICK, BAN, WARN_ADMIN = xrange(4)
+DISABLED, KICK, BAN, WARN_ADMIN = range(4)
 
 # This is an option for data collection. Data is outputted to aimbot2log.txt
 DATA_COLLECTION = False
@@ -211,7 +213,7 @@ def apply_script(protocol, connection, config):
         def warn_admin(self, prefix='Possible aimbot detected.'):
             prefix += ' '
             message = hackinfo_player(self)
-            for player in self.protocol.players.values():
+            for player in list(self.protocol.players.values()):
                 if player.admin:
                     player.send_chat(prefix + message)
             irc_relay = self.protocol.irc_relay

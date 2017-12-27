@@ -14,9 +14,10 @@ Maintainer: hompy
 from collections import deque
 from twisted.internet.reactor import callLater, seconds
 from twisted.internet.task import LoopingCall
-from pyspades.server import set_tool, fog_color, weapon_reload
+from pyspades.player import set_tool, weapon_reload
+from pyspades.server import fog_color
 from pyspades.common import make_color
-from pyspades.constants import *
+from pyspades.constants import GRENADE_KILL, RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON
 
 KILL_REQUIREMENT = 3
 TIME_REQUIREMENT = 8.0

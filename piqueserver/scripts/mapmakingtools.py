@@ -1,7 +1,9 @@
-from piqueserver.commands import command, admin
+from math import atan2, sqrt, pi
+
+from six.moves import range
+from piqueserver.commands import command
 from pyspades.contained import BlockAction, SetColor
-from pyspades.constants import *
-from math import *
+from pyspades.constants import BUILD_BLOCK, DESTROY_BLOCK
 
 EAST = 0
 SOUTH = 1
@@ -91,11 +93,10 @@ def mirror(connection, mirror_x, mirror_y):
 
 
 @command()
-def tunnel(*arguments):
-    connection = arguments[0]
+def tunnel(connection, radius, length, zoffset=0):
     connection.reset_build()
     connection.callback = tunnel_r
-    connection.arguments = arguments
+    connection.arguments = [connection, radius, length, zoffset]
     connection.select = True
     connection.points = 1
 
@@ -107,13 +108,13 @@ def tunnel_r(connection, radius, length, zoffset=0):
     facing = connection.get_direction()
     if facing == WEST or facing == NORTH:
         length = -length
-    for rel_h in xrange(-radius, radius + 1):
-        for rel_v in xrange(-radius, 1):
+    for rel_h in range(-radius, radius + 1):
+        for rel_v in range(-radius, 1):
             if round(sqrt(rel_h**2 + rel_v**2)) <= radius:
                 if facing == NORTH or facing == SOUTH:
                     y1 = connection.block1_y
                     y2 = connection.block1_y + length
-                    for y in xrange(min(y1, y2), max(y1, y2) + 1):
+                    for y in range(min(y1, y2), max(y1, y2) + 1):
                         remove_block(
                             connection.protocol,
                             connection.block1_x +
@@ -127,7 +128,7 @@ def tunnel_r(connection, radius, length, zoffset=0):
                 elif facing == WEST or facing == EAST:
                     x1 = connection.block1_x
                     x2 = connection.block1_x + length
-                    for x in xrange(min(x1, x2), max(x1, x2) + 1):
+                    for x in range(min(x1, x2), max(x1, x2) + 1):
                         remove_block(
                             connection.protocol,
                             x,
@@ -141,11 +142,10 @@ def tunnel_r(connection, radius, length, zoffset=0):
 
 
 @command()
-def insert(*arguments):
-    connection = arguments[0]
+def insert(connection):
     connection.reset_build()
     connection.callback = insert_r
-    connection.arguments = arguments
+    connection.arguments = [connection]
     connection.select = True
     connection.points = 2
 
@@ -158,9 +158,9 @@ def insert_r(connection):
     z1 = min(connection.block1_z, connection.block2_z)
     z2 = max(connection.block1_z, connection.block2_z)
     color = make_color_tuple(connection.color)
-    for xx in xrange(x1, x2 + 1):
-        for yy in xrange(y1, y2 + 1):
-            for zz in xrange(z1, z2 + 1):
+    for xx in range(x1, x2 + 1):
+        for yy in range(y1, y2 + 1):
+            for zz in range(z1, z2 + 1):
                 add_block(
                     connection.protocol,
                     xx,
@@ -173,11 +173,10 @@ def insert_r(connection):
 
 
 @command()
-def delete(*arguments):
-    connection = arguments[0]
+def delete(connection):
     connection.reset_build()
     connection.callback = delete_r
-    connection.arguments = arguments
+    connection.arguments = [connection]
     connection.select = True
     connection.points = 2
 
@@ -189,24 +188,23 @@ def delete_r(connection):
     y2 = max(connection.block1_y, connection.block2_y)
     z1 = min(connection.block1_z, connection.block2_z)
     z2 = max(connection.block1_z, connection.block2_z)
-    for xx in xrange(x1, x2 + 1):
-        for yy in xrange(y1, y2 + 1):
-            for zz in xrange(z1, z2 + 1):
+    for xx in range(x1, x2 + 1):
+        for yy in range(y1, y2 + 1):
+            for zz in range(z1, z2 + 1):
                 remove_block(connection.protocol, xx, yy, zz,
                              connection.mirror_x, connection.mirror_y)
 
 
 @command()
-def pattern(*arguments):
-    connection = arguments[0]
+def pattern(connection, copies=1):
     connection.reset_build()
     connection.callback = pattern_r
-    connection.arguments = arguments
+    connection.arguments = [connection, copies]
     connection.select = True
     connection.points = 2
 
 
-def pattern_r(connection, copies):
+def pattern_r(connection, copies=1):
     copies = int(copies)
     x1 = min(connection.block1_x, connection.block2_x)
     x2 = max(connection.block1_x, connection.block2_x)
@@ -215,14 +213,14 @@ def pattern_r(connection, copies):
     z1 = min(connection.block1_z, connection.block2_z)
     z2 = max(connection.block1_z, connection.block2_z)
     delta_z = (z2 - z1) + 1
-    for xx in xrange(x1, x2 + 1):
-        for yy in xrange(y1, y2 + 1):
-            for zz in xrange(z1, z2 + 1):
+    for xx in range(x1, x2 + 1):
+        for yy in range(y1, y2 + 1):
+            for zz in range(z1, z2 + 1):
                 if connection.protocol.map.get_solid(xx, yy, zz):
                     color = make_color_tuple(
                         connection.protocol.map.get_point(xx, yy, zz)[1])
                     set_color(connection.protocol, color, 32)
-                    for i in xrange(1, copies + 1):
+                    for i in range(1, copies + 1):
                         z_offset = delta_z * i
                         add_block(
                             connection.protocol,
@@ -236,11 +234,10 @@ def pattern_r(connection, copies):
 
 
 @command()
-def hollow(*arguments):
-    connection = arguments[0]
+def hollow(connection, thickness=1):
     connection.reset_build()
     connection.callback = hollow_r
-    connection.arguments = arguments
+    connection.arguments = [connection, thickness]
     connection.select = True
     connection.points = 2
 
@@ -258,36 +255,36 @@ def hollow_r(connection, thickness=1):
     xr = x2 - x1 + 1
     yr = y2 - y1 + 1
     zr = z2 - z1 + 1
-    for x in xrange(0, xr):
+    for x in range(0, xr):
         blocks.append([])
-        for y in xrange(0, yr):
+        for y in range(0, yr):
             blocks[x].append([])
-            for z in xrange(0, zr):
+            for z in range(0, zr):
                 blocks[x][y].append(False)
 
     def hollow_check(xc, yc, zc, thickness):
         if thickness > 0:
-            for xx in xrange(xc - 1, xc + 2):
+            for xx in range(xc - 1, xc + 2):
                 if xx >= 0 and xx < xr:
-                    for yy in xrange(yc - 1, yc + 2):
+                    for yy in range(yc - 1, yc + 2):
                         if yy >= 0 and yy < yr:
-                            for zz in xrange(zc - 1, zc + 2):
+                            for zz in range(zc - 1, zc + 2):
                                 if zz >= 0 and zz < zr:
                                     blocks[xx][yy][zz] = True
                                     if m.get_solid(x1 + xx, y1 + yy, z1 + zz):
                                         hollow_check(xx, yy, zz, thickness - 1)
-    for x in xrange(0, xr):
-        for y in xrange(0, yr):
-            for z in xrange(0, zr):
+    for x in range(0, xr):
+        for y in range(0, yr):
+            for z in range(0, zr):
                 if m.get_solid(x1 + x, y1 + y, z1 + z):
                     if m.is_surface(x1 + x, y1 + y, z1 + z):
                         blocks[x][y][z] = True
                         hollow_check(x, y, z, thickness)
                 else:
                     blocks[x][y][z] = True
-    for x in xrange(0, xr):
-        for y in xrange(0, yr):
-            for z in xrange(0, zr):
+    for x in range(0, xr):
+        for y in range(0, yr):
+            for z in range(0, zr):
                 if not blocks[x][y][z]:
                     remove_block(connection.protocol, x1 + x, y1 + y, z1 + z)
 
@@ -314,9 +311,9 @@ def apply_script(protocol, connection, config):
             orientation = self.world_object.orientation
             angle = atan2(orientation.y, orientation.x)
             if angle < 0:
-                angle += 6.283185307179586476925286766559
+                angle += pi*2
             # Convert to units of quadrents
-            angle *= 0.63661977236758134307553505349006
+            angle *= 2/pi
             angle = round(angle)
             if angle == 4:
                 angle = 0
@@ -328,7 +325,10 @@ def apply_script(protocol, connection, config):
                     self.block1_x = x
                     self.block1_y = y
                     self.block1_z = z
-                    self.callback(*self.arguments)
+                    try:
+                        self.callback(*self.arguments)
+                    except Exception as e:
+                        self.send_chat('Map building failed: {}'.format(e))
                     self.reset_build()
                     return False
                 elif self.points == 2:
@@ -344,7 +344,10 @@ def apply_script(protocol, connection, config):
                             self.block2_x = x
                             self.block2_y = y
                             self.block2_z = z
-                            self.callback(*self.arguments)
+                            try:
+                                self.callback(*self.arguments)
+                            except Exception as e:
+                                self.send_chat('Map building failed: {}'.format(e))
                             self.reset_build()
                             self.send_chat('Second block selected')
                             return False

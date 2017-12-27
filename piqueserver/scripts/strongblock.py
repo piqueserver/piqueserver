@@ -8,6 +8,7 @@ Maintainer: hompy
 """
 
 from collections import namedtuple
+from six import iteritems
 from pyspades.contained import BlockAction, SetColor
 from pyspades.common import make_color
 from pyspades.color import rgb_distance
@@ -57,7 +58,7 @@ def apply_script(protocol, connection, config):
 
         def on_disconnect(self):
             strong_blocks = self.protocol.strong_blocks
-            for xyz, strong_block in strong_blocks.iteritems():
+            for xyz, strong_block in iteritems(strong_blocks):
                 if strong_block.owner is self:
                     strong_blocks[xyz] = strong_block._replace(owner=None)
             connection.on_disconnect(self)
@@ -79,7 +80,7 @@ def apply_script(protocol, connection, config):
 
         def on_block_destroy(self, x, y, z, value):
             can_destroy = connection.on_block_destroy(self, x, y, z, value)
-            if can_destroy:
+            if can_destroy != False:
                 strong_block = self.protocol.strong_blocks.pop((x, y, z), None)
                 if strong_block is not None:
                     # block is a strong block

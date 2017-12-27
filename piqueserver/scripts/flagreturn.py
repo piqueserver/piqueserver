@@ -5,6 +5,7 @@ Maintainer: mat^2
 fixed by learn_more
 """
 
+from six import itervalues
 from pyspades.collision import vector_collision
 
 
@@ -40,7 +41,7 @@ def apply_script(protocol, connection, config):
 
         def set_map(self, map):
             protocol.set_map(self, map)
-            for team in self.teams.itervalues():
+            for team in itervalues(self.teams):
                 if team.spectator:
                     continue
                 team.flag.out = False

@@ -10,18 +10,19 @@ from pyspades.common import prettify_timespan
 from piqueserver.commands import command, admin, get_player
 
 # "blockinfo" must be AFTER "votekick" in the config.txt script list
+# TODO: port these to new config system once merged
 GRIEFCHECK_ON_VOTEKICK = True
-IRC_ONLY = True
+IRC_ONLY = False
 
 
 @command('griefcheck', 'gc')
-def grief_check(connection, player, time=None):
+def grief_check(connection, player, minutes=2):
     player = get_player(connection.protocol, player)
     protocol = connection.protocol
     color = connection not in protocol.players and connection.colors
-    minutes = float(time or 2)
-    if minutes < 0.0:
-        raise ValueError()
+    minutes = float(minutes)
+    if minutes <= 0.0:
+        raise ValueError('minutes must be number greater than 0')
     time = seconds() - minutes * 60.0
     blocks_removed = player.blocks_removed or []
     blocks = [b[1] for b in blocks_removed if b[0] >= time]
@@ -34,7 +35,7 @@ def grief_check(connection, player, time=None):
     if minutes == 1.0:
         minutes_s = 'minute'
     else:
-        minutes_s = '%s minutes' % ('%f' % minutes).rstrip('0').rstrip('.')
+        minutes_s = '{:.1f} minutes'.format(minutes)
     message += minutes_s + '.'
     if len(blocks):
         infos = set(blocks)
@@ -89,7 +90,6 @@ def grief_check(connection, player, time=None):
 
 
 def apply_script(protocol, connection, config):
-    has_votekick = 'votekick' in config.get('scripts', [])
 
     class BlockInfoConnection(connection):
         blocks_removed = None

@@ -21,12 +21,9 @@ def antijerk_match(player, msg):
 
 
 def apply_script(protocol, connection, config):
+    jerk_ban_duration = config.get('jerk_ban_duration', 15.0)
     def jerk_kick(connection):
-        if connection.protocol.votekick_ban_duration:
-            connection.ban('Autoban: anti-jerk',
-                           connection.protocol.votekick_ban_duration)
-        else:
-            connection.kick('Autokick: anti-jerk')
+        connection.ban('Autoban: anti-jerk', jerk_ban_duration)
 
     class AntiJerkConnection(connection):
 

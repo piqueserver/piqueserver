@@ -2,9 +2,8 @@
 Turns your grenades into magical kv6-growing seeds. Or beans!
 
 Use /model <filename> to load model files. These must be placed inside a folder
-named 'kv6' in the feature_server directory. A full path would look like this:
-"C:\my_pyspades\feature_server\kv6\some_model.kv6". Then you load it with
-/model some_model
+named 'kv6' in the config directory. A full path would look like this:
+"~/config/kv6/intel.kv6". Then you load it with/model some_model
 
 Wildcards and subfolders are allowed. Some examples:
 
@@ -29,6 +28,8 @@ To be sure, you can move the pivot to *half* of a block, e.g.: (4.50, 4.50, 8.50
 In a tree kv6, for example, the pivot point would lie on the lowest block of the
 tree trunk, so that it grows up and not into the ground.
 
+Works best with 0.75 kv6 models.
+
 ---
 
 You can adjust FLYING_MODELS and GROW_ON_WATER to allow growing in the air and
@@ -44,17 +45,19 @@ from struct import unpack
 from random import choice
 from itertools import product
 from collections import deque, namedtuple
+from six.moves import range
 from twisted.internet.reactor import seconds
 from twisted.internet.task import LoopingCall
 from pyspades.contained import BlockAction, SetColor
 from pyspades.common import make_color
-from pyspades.constants import *
-from piqueserver.commands import command, admin, get_player
+from pyspades.constants import BUILD_BLOCK
+from piqueserver.commands import command
+from piqueserver import cfg
 
 FLYING_MODELS = False  # if False grenades exploding in midair will be ignored
 GROW_ON_WATER = False  # if False grenades exploding in water will do nothing
 
-KV6_DIR = './kv6'
+KV6_DIR = "./"+cfg.config_dir+'kv6'
 LOWEST_Z = 63 if GROW_ON_WATER else 62
 GROW_INTERVAL = 0.3
 
@@ -154,7 +157,7 @@ class KV6Model:
 
             voxel_count, = unpack('I', file.read(4))
             voxels = []
-            for i in xrange(voxel_count):
+            for i in range(voxel_count):
                 voxel = KV6Voxel._make(unpack('BBBBHBB', file.read(8)))
                 voxels.append(voxel)
 
@@ -163,14 +166,14 @@ class KV6Model:
 
             voxel_map = {}
             voxel_iter = iter(voxels)
-            for x, y in product(xrange(size_x), xrange(size_y)):
+            for x, y in product(range(size_x), range(size_y)):
                 last_z = None
                 column_len, = unpack('H', file.read(2))
-                for i in xrange(column_len):
+                for i in range(column_len):
                     voxel = next(voxel_iter)
                     voxel_map[(x, y, voxel.z)] = voxel
                     if last_z is not None and not voxel.neighbors & 0b00010000:
-                        for z in xrange(last_z + 1, voxel.z):
+                        for z in range(last_z + 1, voxel.z):
                             inside_voxel = NonSurfaceKV6Voxel._replace(z=z)
                             voxel_map[(x, y, z)] = inside_voxel
                     last_z = voxel.z
