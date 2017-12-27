@@ -8,7 +8,7 @@ from piqueserver import commands
 
 import pyspades
 from pyspades.constants import (ERROR_BANNED, DESTROY_BLOCK, SPADE_DESTROY,
-                                GRENADE_DESTROY, ERROR_KICKED)
+                                GRENADE_DESTROY, ERROR_KICKED, BLOCK_TOOL)
 from pyspades.server import ServerConnection
 from pyspades.common import encode, prettify_timespan
 from pyspades.world import Character
@@ -136,7 +136,7 @@ class FeatureConnection(ServerConnection):
         # if right mouse button has been clicked to initiate drag building;
         # distinguishes from the right click release that marks the end point.
         if secondary:
-            if self.tool == 1:  # 1 refers to block tool; if the tool in hand is a block
+            if self.tool == BLOCK_TOOL:  # 1 refers to block tool; if the tool in hand is a block
                 # grab player current position at drag build start
                 position = self.world_object.position
                 # grab player current orientation at drag build start
