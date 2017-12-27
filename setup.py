@@ -26,6 +26,13 @@ except (IOError, ImportError):
     long_description = ''
 
 
+
+# load version info from the piqueserver module manually
+here = os.path.abspath(os.path.dirname(__file__))
+version = {}
+with open(os.path.join(here, 'piqueserver/version.py')) as f:
+    exec(f.read(), version)
+
 ext_modules = []
 
 ext_names = [
@@ -94,7 +101,7 @@ setup(
     name=PKG_NAME,
     packages=[PKG_NAME, '%s.web' %
               PKG_NAME, '%s.scripts' % PKG_NAME, '%s.core_commands' % PKG_NAME, 'pyspades'],
-    version='0.1.0_post2',
+    version=version['__version__'],
     description='Open-Source server implementation for Ace of Spades ',
     author=('Originally MatPow2 and PySnip contributors,'
             'now, StackOverflow and piqueserver authors'),
