@@ -310,9 +310,9 @@ def apply_script(protocol, connection, config):
             orientation = self.world_object.orientation
             angle = atan2(orientation.y, orientation.x)
             if angle < 0:
-                angle += 6.283185307179586476925286766559
+                angle += pi*2
             # Convert to units of quadrents
-            angle *= 0.63661977236758134307553505349006
+            angle *= 2/pi
             angle = round(angle)
             if angle == 4:
                 angle = 0
