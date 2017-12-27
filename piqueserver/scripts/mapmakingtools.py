@@ -1,8 +1,9 @@
-from math import *
+from math import atan2, sqrt, pi
+
 from six.moves import range
-from piqueserver.commands import command, admin
+from piqueserver.commands import command
 from pyspades.contained import BlockAction, SetColor
-from pyspades.constants import *
+from pyspades.constants import BUILD_BLOCK, DESTROY_BLOCK
 
 EAST = 0
 SOUTH = 1
