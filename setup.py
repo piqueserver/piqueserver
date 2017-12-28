@@ -12,7 +12,7 @@ from setuptools import setup, Extension
 
 PKG_NAME = "piqueserver"
 PKG_URL = "https://github.com/piqueserver/piqueserver"
-PKG_DOWNLOAD_URL = "https://github.com/piqueserver/piqueserver/archive/0.1.0.zip"
+PKG_DOWNLOAD_URL = "https://github.com/piqueserver/piqueserver/archive/v0.1.1.zip"
 
 extra_args = sys.argv[2:]
 
@@ -128,17 +128,17 @@ setup(
     setup_requires=['Cython>=0,<1'],
     install_requires=[
         'Cython>=0,<1',
-        'Twisted>=17',
+        'Twisted[tls]>=17',
         'Jinja2>=2,<3',  # status server is part of our 'vanilla' package
         'Pillow>=3,<5',
         'pyenet',
-        'ipaddress'
+        'ipaddress',
+        'six'
     ],
     extras_require={
         'from': ['pygeoip>=0.3.2,<0.4'],
         # 'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
         'ssh': [
-            'pycrypto>=2.6.1,<2.7',
             'cryptography>=2.0.0,<3.0',
             'pyasn1>=0.1.9,<0.2'
         ]
