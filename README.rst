@@ -166,7 +166,7 @@ team <https://github.com/orgs/piqueserver/people>`__.
 .. |Build Status| image:: https://travis-ci.org/piqueserver/piqueserver.svg?branch=master
    :target: https://travis-ci.org/piqueserver/piqueserver
 .. |Build status| image:: https://ci.appveyor.com/api/projects/status/3mayprg9le4lejmm/branch/master?svg=true
-   :target: https://ci.appveyor.com/project/NotAFile/piqueserver/branch/master
+   :target: https://ci.appveyor.com/project/piqueserver/piqueserver/branch/master
 .. |Coverage Status| image:: https://coveralls.io/repos/github/piqueserver/piqueserver/badge.svg?branch=master
    :target: https://coveralls.io/github/piqueserver/piqueserver?branch=master
 .. |Join the chat at https://gitter.im/piqueserver/piqueserver| image:: https://badges.gitter.im/piqueserver/piqueserver.svg
