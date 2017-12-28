@@ -755,12 +755,14 @@ def run():
 
     for script in script_names[:]:
         try:
-            # NOTE: this finds and loads scripts directly from the script dir
+            # this finds and loads scripts directly from the script dir
             # no need for messing with sys.path
             f, filename, desc = imp.find_module(script, [script_dir])
-            module = imp.load_module(script, f, filename, desc)
+            module = imp.load_module('piqueserver_script_namespace_' + script, f, filename, desc)
             script_objects.append(module)
         except ImportError as e:
+            # warning: this also catches import errors from inside the script
+            # module it tried to load
             try:
                 module = importlib.import_module(script)
                 script_objects.append(module)
@@ -781,7 +783,7 @@ def run():
         try:
             game_mode_dir = os.path.join(cfg.config_dir, 'game_modes/')
             f, filename, desc = imp.find_module(game_mode, [game_mode_dir])
-            module = imp.load_module(game_mode, f, filename, desc)
+            module = imp.load_module('piqueserver_gamemode_namespace_' + game_mode, f, filename, desc)
         except ImportError as e:
             try:
                 module = importlib.import_module(game_mode)
