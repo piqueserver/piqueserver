@@ -16,16 +16,8 @@ PKG_DOWNLOAD_URL = "https://github.com/piqueserver/piqueserver/archive/0.1.0.zip
 
 extra_args = sys.argv[2:]
 
-try:
-    import pypandoc
-    import re
-    long_description = pypandoc.convert_text(
-        re.sub(r'[^\x00-\x7F]+', ' ',
-               pypandoc.convert('README.md', 'markdown', format="markdown_github")), 'rst', format="markdown")
-except (IOError, ImportError):
-    long_description = ''
-
-
+with open('README.rst') as f:
+    long_description = f.read()
 
 # load version info from the piqueserver module manually
 here = os.path.abspath(os.path.dirname(__file__))
