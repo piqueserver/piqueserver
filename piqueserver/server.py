@@ -73,11 +73,12 @@ PORT = 32887
 
 web_client._HTTP11ClientFactory.noisy = False
 
-def make_parent_dirs(filename):
+def ensure_dir_exists(filename):
     d = os.path.dirname(filename)
-    if not os.path.exists(d):
+    try:
         os.makedirs(d)
-
+    except FileExistsError:
+        pass
 
 def random_choice_cycle(choices):
     while True:
@@ -276,7 +277,7 @@ class FeatureProtocol(ServerProtocol):
         if not os.path.isabs(logfile):
             logfile = os.path.join(cfg.config_dir, logfile)
         if logfile.strip():  # catches empty filename
-            make_parent_dirs(logfile)
+            ensure_dir_exists(logfile)
             if config.get('rotate_daily', False):
                 logging_file = DailyLogFile(logfile, '.')
             else:
@@ -560,7 +561,7 @@ class FeatureProtocol(ServerProtocol):
 
     def save_bans(self):
         ban_file = os.path.join(cfg.condif_dir, 'bans.txt')
-        make_parent_dirs(ban_file)
+        ensure_dir_exists(ban_file)
         with open(ban_file, 'w') as f:
             json.dump(self.bans.make_list(), f, indent=2)
         if self.ban_publish is not None:
