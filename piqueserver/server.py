@@ -359,10 +359,9 @@ class FeatureProtocol(ServerProtocol):
             print("Getting external IP failed:", e)
             return
 
-        self.ip = ip.exploded
-        self.ip_address = ip
-        self.identifier = make_server_identifier(self.ip, self.port)
-        print('Server public ip address: {}:{}'.format(self.ip, self.port))
+        self.ip = ip
+        self.identifier = make_server_identifier(ip, self.port)
+        print('Server public ip address: {}:{}'.format(ip, self.port))
         print('Public aos identifier: {}'.format(self.identifier))
 
     def set_time_limit(self, time_limit=None, additive=False):
