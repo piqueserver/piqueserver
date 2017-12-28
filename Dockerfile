@@ -1,4 +1,4 @@
-FROM python:2.7-alpine
+FROM python:3.6-alpine
 VOLUME /config
 
 RUN mkdir -p /usr/src/app && mkdir -p /usr/src/app/enet && mkdir -p /usr/src/app/pyspades
@@ -8,12 +8,15 @@ WORKDIR /usr/src/app
 # In order to keep layers lean we instantly remove the build essentials 
 COPY requirements.txt /usr/src/app/
 
-RUN apk add --no-cache libffi-dev openssl-dev
-
+# Note: manylinux wheel support isn't enabled by default for alpinelinux
+# we temporarly enable it for pyenet since it is compatible
 RUN apk add --no-cache --virtual .build-deps-cython gcc musl-dev \
-    && apk add --no-cache --virtual .build-deps-pillow zlib-dev jpeg-dev \
+    && apk add --no-cache --virtual .build-deps-pillow zlib-dev jpeg-dev libffi-dev openssl-dev \
     && apk add --no-cache zlib jpeg \
     \
+    && echo "manylinux1_compatible = True" > /usr/local/lib/python3.6/_manylinux.py \
+    && pip install pyenet \
+    && rm /usr/local/lib/python3.6/_manylinux.py \
     && pip install --no-cache-dir -r requirements.txt \
     \
     && apk del .build-deps-cython \
@@ -29,7 +32,7 @@ COPY piqueserver/ /usr/src/app/piqueserver/
 COPY setup.py COPYING.txt CREDITS.txt LICENSE /usr/src/app/
 
 RUN apk add --no-cache --virtual .build-deps-server gcc musl-dev g++ \
-    && STDCPP_STATIC=1 ./setup.py install \
+    && STDCPP_STATIC=1 python ./setup.py install \
     && apk del .build-deps-server 
 
 # Copy over the rest and default to launching the server
