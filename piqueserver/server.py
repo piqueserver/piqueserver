@@ -34,7 +34,7 @@ import six
 from six import text_type
 from six.moves import range
 
-from ipaddress import ip_network, ip_address
+from ipaddress import ip_network, ip_address, IPv4Address, AddressValueError
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.python import log
@@ -347,15 +347,22 @@ class FeatureProtocol(ServerProtocol):
 
     @inlineCallbacks
     def get_external_ip(self, ip_getter):
+        print('Retrieving external IP from {!r} to generate server identifier.'.format(ip_getter))
         try:
             ip = yield self.getPage(ip_getter)
-        except OSError as e:
+            ip = IPv4Address(ip.strip())
+        except AddressValueError as e:
+            print('External IP getter service returned invalid data.\n'
+                  'Please check the "ip_getter" setting in your config.')
+            return
+        except Exception as e:
             print("Getting external IP failed:", e)
             return
 
-        self.ip = ip.strip()
+        self.ip = ip
         self.identifier = make_server_identifier(ip, self.port)
-        print('Server identifier is %s' % self.identifier)
+        print('Server public ip address: {}:{}'.format(ip, self.port))
+        print('Public aos identifier: {}'.format(self.identifier))
 
     def set_time_limit(self, time_limit=None, additive=False):
         advance_call = self.advance_call
