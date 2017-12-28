@@ -73,6 +73,11 @@ PORT = 32887
 
 web_client._HTTP11ClientFactory.noisy = False
 
+def make_parent_dirs(filename):
+    d = os.path.dirname(filename)
+    if not os.path.exists(d):
+        os.makedirs(d)
+
 
 def random_choice_cycle(choices):
     while True:
@@ -187,11 +192,11 @@ class FeatureProtocol(ServerProtocol):
         try:
             with open(os.path.join(cfg.config_dir, 'bans.txt'), 'r') as f:
                 self.bans.read_list(json.load(f))
+        except FileNotFoundError as e:
+            # if it doesn't exist, then no bans, no error
+            pass
         except IOError as e:
-            if e.errno == 2: # not found
-                pass
-            else:
-                print('Could not read bans.txt: {}'.format(e))
+            print('Could not read bans.txt: {}'.format(e))
         except ValueError as e:
             print('Could not parse bans.txt: {}'.format(e))
 
@@ -271,7 +276,7 @@ class FeatureProtocol(ServerProtocol):
         if not os.path.isabs(logfile):
             logfile = os.path.join(cfg.config_dir, logfile)
         if logfile.strip():  # catches empty filename
-            os.makedirs(os.path.dirname(logfile), exist_ok=True)
+            make_parent_dirs(logfile)
             if config.get('rotate_daily', False):
                 logging_file = DailyLogFile(logfile, '.')
             else:
@@ -555,7 +560,7 @@ class FeatureProtocol(ServerProtocol):
 
     def save_bans(self):
         ban_file = os.path.join(cfg.condif_dir, 'bans.txt')
-        os.makedirs(os.path.dirname(ban_file), exist_ok=True)
+        make_parent_dirs(ban_file)
         with open(ban_file, 'w') as f:
             json.dump(self.bans.make_list(), f, indent=2)
         if self.ban_publish is not None:
