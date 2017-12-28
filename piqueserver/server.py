@@ -73,23 +73,12 @@ PORT = 32887
 
 web_client._HTTP11ClientFactory.noisy = False
 
-
-def create_path(path):
-    if path:
-        try:
-            os.makedirs(path)
-        except OSError:
-            pass
-
-
-def create_filename_path(path):
-    create_path(os.path.dirname(path))
-
-
-def open_create(filename, mode):
-    create_filename_path(filename)
-    return open(filename, mode)
-
+def ensure_dir_exists(filename):
+    d = os.path.dirname(filename)
+    try:
+        os.makedirs(d)
+    except FileExistsError:
+        pass
 
 def random_choice_cycle(choices):
     while True:
@@ -199,13 +188,19 @@ class FeatureProtocol(ServerProtocol):
         self.advance_on_win = int(config.get('advance_on_win', False))
         self.win_count = itertools.count(1)
         self.bans = NetworkDict()
-        # TODO: check if this is actually working and not silently failing
+
+        # attempt to load a saved bans list
         try:
-            self.bans.read_list(
-                json.load(open(os.path.join(cfg.config_dir, 'bans.txt'), 'r'))
-            )
-        except IOError:
+            with open(os.path.join(cfg.config_dir, 'bans.txt'), 'r') as f:
+                self.bans.read_list(json.load(f))
+        except FileNotFoundError as e:
+            # if it doesn't exist, then no bans, no error
             pass
+        except IOError as e:
+            print('Could not read bans.txt: {}'.format(e))
+        except ValueError as e:
+            print('Could not parse bans.txt: {}'.format(e))
+
         self.hard_bans = set()  # possible DDoS'ers are added here
         self.player_memory = deque(maxlen=100)
         self.config = config
@@ -282,11 +277,11 @@ class FeatureProtocol(ServerProtocol):
         if not os.path.isabs(logfile):
             logfile = os.path.join(cfg.config_dir, logfile)
         if logfile.strip():  # catches empty filename
+            ensure_dir_exists(logfile)
             if config.get('rotate_daily', False):
-                create_filename_path(logfile)
                 logging_file = DailyLogFile(logfile, '.')
             else:
-                logging_file = open_create(logfile, 'a')
+                logging_file = open(logfile, 'a')
             log.addObserver(log.FileLogObserver(logging_file).emit)
             log.msg('pyspades server started on %s' % time.strftime('%c'))
         log.startLogging(sys.stdout)  # force twisted logging
@@ -572,8 +567,10 @@ class FeatureProtocol(ServerProtocol):
         return result
 
     def save_bans(self):
-        json.dump(self.bans.make_list(), open_create(
-            os.path.join(cfg.config_dir, 'bans.txt'), 'w'))
+        ban_file = os.path.join(cfg.condif_dir, 'bans.txt')
+        ensure_dir_exists(ban_file)
+        with open(ban_file, 'w') as f:
+            json.dump(self.bans.make_list(), f, indent=2)
         if self.ban_publish is not None:
             self.ban_publish.update()
 
