@@ -1,6 +1,9 @@
 piqueserver |Build Status| |Build status| |Coverage Status| |Join the chat at https://gitter.im/piqueserver/piqueserver|
 ========================================================================================================================
 
+|piqueserver logo|
+
+
 An Ace of Spades 0.75 server based on
 `PySnip <https://github.com/NateShoffner/PySnip>`__.
 
@@ -171,5 +174,5 @@ team <https://github.com/orgs/piqueserver/people>`__.
    :target: https://coveralls.io/github/piqueserver/piqueserver?branch=master
 .. |Join the chat at https://gitter.im/piqueserver/piqueserver| image:: https://badges.gitter.im/piqueserver/piqueserver.svg
    :target: https://gitter.im/piqueserver/piqueserver?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
-.. |Join the chat at https://gitter.im/piqueserver/piqueserver| image:: https://badges.gitter.im/piqueserver/piqueserver.svg
-   :target: https://gitter.im/piqueserver/piqueserver?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+.. |piqueserver logo| image:: doc/logo.png
+   :width: 200
