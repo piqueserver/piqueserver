@@ -4,8 +4,8 @@ piqueserver |Build Status| |Build status| |Coverage Status| |Join the chat at ht
 An Ace of Spades 0.75 server based on
 `PySnip <https://github.com/NateShoffner/PySnip>`__.
 
-Chat with us!
--------------
+\:point_right: Chat with us!
+----------------------------
 
 -  Gitter: |Join the chat at https://gitter.im/piqueserver/piqueserver|
 -  Matrix: ``#piqueserver:matrix.org`` (`Riot Webchat
@@ -16,8 +16,8 @@ Chat with us!
 
 All of these are bridged together!
 
-Features
---------
+\:tada: Features
+----------------
 
 -  Many administrator features
 -  A lot of epic commands
@@ -40,8 +40,8 @@ Features
 -  Ban subscribe service
 -  A ton of other features
 
-Installation
-------------
+\:rocket: Installation
+----------------------
 
 pip (stable version)
 ~~~~~~~~~~~~~~~~~~~~
@@ -78,8 +78,8 @@ helper:
 
     pacaur -y piqueserver-git
 
-Running
--------
+\:rocket: Running
+-----------------
 
 Then copy the default configuration as a base to work off
 
@@ -104,8 +104,8 @@ for config files, specify a directory with the ``-d`` flag:
     piqueserver --copy-config -d custom_dir
     piqueserver -d custom_dir
 
-FAQ
----
+\:speech_balloon: FAQ
+---------------------
 
 What's the purpose?
 ~~~~~~~~~~~~~~~~~~~
@@ -141,13 +141,13 @@ Please see also the
 `Wiki <https://github.com/piqueserver/piqueserver/wiki>`__ for more
 information.
 
-Contribute
-----------
+\:blush: Contribute
+-------------------
 
 Don't be shy and submit us a PR or an issue! Help is always appreciated
 
-Development
------------
+\:wrench: Development
+---------------------
 
 Use ``pip`` and ``virtualenv`` to setup the development environment:
 
@@ -160,7 +160,7 @@ Use ``pip`` and ``virtualenv`` to setup the development environment:
 
 --------------
 
-Brought to you with by the `piqueserver
+Brought to you with :heart: by the `piqueserver
 team <https://github.com/orgs/piqueserver/people>`__.
 
 .. |Build Status| image:: https://travis-ci.org/piqueserver/piqueserver.svg?branch=master
