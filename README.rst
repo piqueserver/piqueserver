@@ -108,18 +108,18 @@ FAQ
 ---
 
 What's the purpose?
-^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~
 
 The purpose of this repo is to be a continuation of PySnip.
 
 What if PySnip development returns?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Then they would merge our changes and development would be continued
 there, I guess. The important thing is to keep AoS servers alive.
 
 Why should I use piqueserver instead of PySnip/PySpades?
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 -  Multi config installation
 -  Docker support
@@ -129,13 +129,13 @@ Why should I use piqueserver instead of PySnip/PySpades?
 -  New scripts
 
 What about 0.76 support
-^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~
 
 Working with multiple versions is a pain. 0.76 will be suported in the
 future only.
 
 Is that everything?
-^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~
 
 Please see also the
 `Wiki <https://github.com/piqueserver/piqueserver/wiki>`__ for more
