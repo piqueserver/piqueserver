@@ -125,12 +125,12 @@ setup(
     ],
     platforms="Darwin, Unix, Win32",
 
-    setup_requires=['Cython>=0,<1'],
+    setup_requires=['Cython>=0.27,<1'],
     install_requires=[
-        'Cython>=0,<1',
-        'Twisted[tls]>=17',
+        'Cython>=0.27,<1',
+        'Twisted[tls]>=17,<18',
         'Jinja2>=2,<3',  # status server is part of our 'vanilla' package
-        'Pillow>=3,<5',
+        'Pillow>=4.3.0,<5',
         'pyenet',
         'ipaddress',
         'six'
@@ -139,8 +139,8 @@ setup(
         'from': ['pygeoip>=0.3.2,<0.4'],
         # 'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
         'ssh': [
-            'cryptography>=2.0.0,<3.0',
-            'pyasn1>=0.1.9,<0.2'
+            'cryptography>=2.1.4,<2.2',
+            'pyasn1>=0.4.2,<0.5'
         ]
     },
     entry_points={
