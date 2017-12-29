@@ -15,16 +15,33 @@
 # You should have received a copy of the GNU General Public License
 # along with piqueserver.  If not, see <http://www.gnu.org/licenses/>.
 
+import sys
+import os
 import collections
 import json
 
 import six
 import toml
 
+import piqueserver
 
+
+# supported config format constants to avoid typos
 DEFAULT_FORMAT = 'TOML'
 TOML_FORMAT = 'TOML'
 JSON_FORMAT = 'JSON'
+
+# global constants we need to know at the start
+SERVER_VERSION = '%s - %s' % (sys.platform, piqueserver.__version__)
+PKG_NAME = 'piqueserver'
+_path = os.environ.get('XDG_CONFIG_HOME', '~/.config') + '/piqueserver'
+DEFAULT_CONFIG_DIR = os.path.expanduser(_path)
+MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
+
+# (major, minor) versions of python we are supporting
+# used on startup to emit a warning if not running on a supported version
+SUPPORTED_PYTHONS = ((2,7), (3,4), (3,5), (3,6))
+
 
 
 class ConfigStore():
@@ -261,3 +278,8 @@ class _Option():
 
 
 config = ConfigStore()
+
+# commonly used config options declared here
+_temp_section = config.section('_internal')
+config_dir = _temp_section.option('config_dir', default=DEFAULT_CONFIG_DIR)
+config_file = _temp_section.option('config_file', default=DEFAULT_CONFIG_DIR)

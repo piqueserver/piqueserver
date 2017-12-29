@@ -41,8 +41,7 @@ from twisted.python import log
 from twisted.python.logfile import DailyLogFile
 from twisted.web import client as web_client
 
-from piqueserver import cfg
-from piqueserver.config import config as config_store
+from piqueserver.config import config, SERVER_VERSION, config_dir
 
 import pyspades.debug
 from pyspades.server import (ServerProtocol, Team)
@@ -87,7 +86,22 @@ def check_passwords(passwords):
     return True
 
 
-PORT = 32887
+# declare configuration options
+bans_config = config.section('bans')
+game_config = config.section('game')
+map_config = config.section('maps')
+server_config = config.section('server')
+logging_config = config.section('logging')
+
+bans_file = bans_config.option('file', default='bans.txt')
+respawn_time = game_config.option('respawn_time', default=8)
+respawn_waves = game_config.option('respawn_waves', default=False)
+game_mode = game_config.option('game_mode', default='ctf')
+random_rotation = map_config.option('random_rotation', default=False)
+passwords = server_config.option('passwords', default={}, validate=check_passwords)
+logfile = logging_config.option('logfile', default='./logs/log.txt')
+map_rotation = map_config.option('rotation', default=['classicgen', 'random'],
+        validate=lambda x:type(x) == list)
 
 web_client._HTTP11ClientFactory.noisy = False
 
@@ -191,25 +205,25 @@ class FeatureProtocol(ServerProtocol):
     game_mode = None  # default to None so we can check
     time_announce_schedule = None
 
-    server_version = cfg.server_version
+    server_version = SERVER_VERSION
 
     default_fog = (128, 232, 255)
 
-    def __init__(self, interface, config):
-        self.config = config
-        if config.get('random_rotation', False):
+    def __init__(self, interface, config_dict):
+        self.config = config_dict
+        if random_rotation:
             self.map_rotator_type = random_choice_cycle
         else:
             self.map_rotator_type = itertools.cycle  # pylint: disable=redefined-variable-type
-        self.default_time_limit = config.get('default_time_limit', 20.0)
-        self.default_cap_limit = config.get('cap_limit', 10.0)
-        self.advance_on_win = int(config.get('advance_on_win', False))
+        self.default_time_limit = self.config.get('default_time_limit', 20.0)
+        self.default_cap_limit = self.config.get('cap_limit', 10.0)
+        self.advance_on_win = int(self.config.get('advance_on_win', False))
         self.win_count = itertools.count(1)
         self.bans = NetworkDict()
 
         # attempt to load a saved bans list
         try:
-            with open(os.path.join(cfg.config_dir, 'bans.txt'), 'r') as f:
+            with open(os.path.join(config_dir.get(), bans_file.get()), 'r') as f:
                 self.bans.read_list(json.load(f))
         except FileNotFoundError as e:
             # if it doesn't exist, then no bans, no error
@@ -221,13 +235,12 @@ class FeatureProtocol(ServerProtocol):
 
         self.hard_bans = set()  # possible DDoS'ers are added here
         self.player_memory = deque(maxlen=100)
-        self.config = config
         if len(self.name) > MAX_SERVER_NAME_SIZE:
             print('(server name too long; it will be truncated to "%s")' % (
                 self.name[:MAX_SERVER_NAME_SIZE]))
-        self.respawn_time = config.get('respawn_time', 8)
-        self.respawn_waves = config.get('respawn_waves', False)
-        game_mode = config.get('game_mode', 'ctf')
+        self.respawn_time = respawn_time.get()
+        self.respawn_waves = respawn_waves.get()
+        game_mode = self.config.get('game_mode', 'ctf')
         if game_mode == 'ctf':
             self.game_mode = CTF_MODE
         elif game_mode == 'tc':
@@ -235,71 +248,72 @@ class FeatureProtocol(ServerProtocol):
         elif self.game_mode is None:
             raise NotImplementedError('invalid game mode: %s' % game_mode)
         self.game_mode_name = game_mode.split('.')[-1]
-        team1 = config.get('team1', {})
-        team2 = config.get('team2', {})
+        team1 = self.config.get('team1', {})
+        team2 = self.config.get('team2', {})
         self.team1_name = team1.get('name', 'Blue')
         self.team2_name = team2.get('name', 'Green')
         self.team1_color = tuple(team1.get('color', (0, 0, 196)))
         self.team2_color = tuple(team2.get('color', (0, 196, 0)))
-        self.friendly_fire = config.get('friendly_fire', True)
-        self.friendly_fire_time = config.get('grief_friendly_fire_time', 2.0)
-        self.spade_teamkills_on_grief = config.get('spade_teamkills_on_grief',
+        self.friendly_fire = self.config.get('friendly_fire', True)
+        self.friendly_fire_time = self.config.get('grief_friendly_fire_time', 2.0)
+        self.spade_teamkills_on_grief = self.config.get('spade_teamkills_on_grief',
                                                    False)
-        self.fall_damage = config.get('fall_damage', True)
-        self.teamswitch_interval = config.get('teamswitch_interval', 0)
-        self.max_players = config.get('max_players', 20)
-        self.melee_damage = config.get('melee_damage', 100)
-        self.max_connections_per_ip = config.get('max_connections_per_ip', 0)
-        self.passwords = config_store.option('passwords', default={}, validate=check_passwords).get()
-        self.server_prefix = config.get('server_prefix', '[*]')
-        self.time_announcements = config.get('time_announcements',
+        self.fall_damage = self.config.get('fall_damage', True)
+        self.teamswitch_interval = self.config.get('teamswitch_interval', 0)
+        self.max_players = self.config.get('max_players', 20)
+        self.melee_damage = self.config.get('melee_damage', 100)
+        self.max_connections_per_ip = self.config.get('max_connections_per_ip', 0)
+        self.passwords = passwords.get()
+        self.server_prefix = self.config.get('server_prefix', '[*]')
+        self.time_announcements = self.config.get('time_announcements',
                                              [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                                               30, 60, 120, 180, 240, 300, 600,
                                               900, 1200, 1800, 2400, 3000])
-        self.balanced_teams = config.get('balanced_teams', None)
-        self.login_retries = config.get('login_retries', 1)
+        self.balanced_teams = self.config.get('balanced_teams', None)
+        self.login_retries = self.config.get('login_retries', 1)
 
         # voting configuration
-        self.default_ban_time = config.get('default_ban_duration', 24 * 60)
+        self.default_ban_time = self.config.get('default_ban_duration', 24 * 60)
 
-        self.speedhack_detect = config.get('speedhack_detect', True)
-        if config.get('user_blocks_only', False):
+        self.speedhack_detect = self.config.get('speedhack_detect', True)
+        if self.config.get('user_blocks_only', False):
             self.user_blocks = set()
-        self.set_god_build = config.get('set_god_build', False)
-        self.debug_log = config.get('debug_log', False)
+        self.set_god_build = self.config.get('set_god_build', False)
+        self.debug_log = self.config.get('debug_log', False)
         if self.debug_log:
+            # TODO: make this configurable
             pyspades.debug.open_debug_log(
-                os.path.join(cfg.config_dir, 'debug.log'))
-        ssh = config.get('ssh', {})
+                os.path.join(config_dir, 'debug.log'))
+        ssh = self.config.get('ssh', {})
         if ssh.get('enabled', False):
             from piqueserver.ssh import RemoteConsole
             self.remote_console = RemoteConsole(self, ssh)
-        irc = config.get('irc', {})
+        irc = self.config.get('irc', {})
         if irc.get('enabled', False):
             from piqueserver.irc import IRCRelay
             self.irc_relay = IRCRelay(self, irc)
-        status = config.get('status_server', {})
+        status = self.config.get('status_server', {})
         if status.get('enabled', False):
             from piqueserver.statusserver import StatusServerFactory
             self.status_server = StatusServerFactory(self, status)
-        publish = config.get('ban_publish', {})
+        publish = self.config.get('ban_publish', {})
         if publish.get('enabled', False):
             from piqueserver.banpublish import PublishServer
             self.ban_publish = PublishServer(self, publish)
-        ban_subscribe = config.get('ban_subscribe', {})
+        ban_subscribe = self.config.get('ban_subscribe', {})
         if ban_subscribe.get('enabled', True):
             from piqueserver import bansubscribe
             self.ban_manager = bansubscribe.BanManager(self, ban_subscribe)
         # logfile path relative to config dir if not abs path
-        logfile = config.get('logfile', '')
-        if not os.path.isabs(logfile):
-            logfile = os.path.join(cfg.config_dir, logfile)
-        if logfile.strip():  # catches empty filename
-            ensure_dir_exists(logfile)
-            if config.get('rotate_daily', False):
-                logging_file = DailyLogFile(logfile, '.')
+        l = logfile.get()
+        if l.strip():  # catches empty filename
+            if not os.path.isabs(l):
+                l = os.path.join(config_dir.get(), l)
+            ensure_dir_exists(l)
+            if self.config.get('rotate_daily', False):
+                logging_file = DailyLogFile(l, '.')
             else:
-                logging_file = open(logfile, 'a')
+                logging_file = open(l, 'a')
             log.addObserver(log.FileLogObserver(logging_file).emit)
             log.msg('pyspades server started on %s' % time.strftime('%c'))
         log.startLogging(sys.stdout)  # force twisted logging
@@ -313,24 +327,24 @@ class FeatureProtocol(ServerProtocol):
             if not password:
                 self.everyone_is_admin = True
 
-        for user_type, func_names in config.get('rights', {}).items():
+        for user_type, func_names in self.config.get('rights', {}).items():
             for func_name in func_names:
                 commands.add_rights(user_type, func_name)
 
-        port = self.port = config.get('port', 32887)
+        port = self.port = self.config.get('port', 32887)
         ServerProtocol.__init__(self, port, interface)
         self.host.intercept = self.receive_callback
-        ret = self.set_map_rotation(config['maps'])
+        ret = self.set_map_rotation(map_rotation.get())
         if not ret:
             print('Invalid map in map rotation (%s), exiting.' % ret.map)
             raise SystemExit
 
         self.update_format()
-        self.tip_frequency = config.get('tip_frequency', 0)
+        self.tip_frequency = self.config.get('tip_frequency', 0)
         if self.tips is not None and self.tip_frequency > 0:
             reactor.callLater(self.tip_frequency * 60, self.send_tip)
 
-        self.master = config.get('master', True)
+        self.master = self.config.get('master', True)
         self.set_master()
 
         self.http_agent = web_client.Agent(reactor)
@@ -346,7 +360,7 @@ class FeatureProtocol(ServerProtocol):
         else:
             default_ip_getter = 'https://services.buildandshoot.com/getip'
 
-        ip_getter = config.get('ip_getter', default_ip_getter)
+        ip_getter = self.config.get('ip_getter', default_ip_getter)
         if ip_getter:
             self.get_external_ip(ip_getter)
 
@@ -448,11 +462,11 @@ class FeatureProtocol(ServerProtocol):
         return True
 
     def get_map(self, rot_info):
-        return Map(rot_info, os.path.join(cfg.config_dir, 'maps'))
+        return Map(rot_info, os.path.join(config_dir.get(), 'maps'))
 
     def set_map_rotation(self, maps, now=True):
         try:
-            maps = check_rotation(maps, os.path.join(cfg.config_dir, 'maps'))
+            maps = check_rotation(maps, os.path.join(config_dir.get(), 'maps'))
         except MapNotFound as e:
             return e
         self.maps = maps
@@ -483,11 +497,11 @@ class FeatureProtocol(ServerProtocol):
         """
         config = self.config
         default_name = 'pyspades server %s' % random.randrange(0, 2000)
-        self.name = self.format(config.get('name', default_name))
-        self.motd = self.format_lines(config.get('motd', None))
-        self.help = self.format_lines(config.get('help', None))
-        self.tips = self.format_lines(config.get('tips', None))
-        self.rules = self.format_lines(config.get('rules', None))
+        self.name = self.format(self.config.get('name', default_name))
+        self.motd = self.format_lines(self.config.get('motd', None))
+        self.help = self.format_lines(self.config.get('help', None))
+        self.tips = self.format_lines(self.config.get('tips', None))
+        self.rules = self.format_lines(self.config.get('rules', None))
         if self.master_connection is not None:
             self.master_connection.send_server()
 
@@ -577,7 +591,7 @@ class FeatureProtocol(ServerProtocol):
         return result
 
     def save_bans(self):
-        ban_file = os.path.join(cfg.condif_dir, 'bans.txt')
+        ban_file = os.path.join(config_dir.get(), 'bans.txt')
         ensure_dir_exists(ban_file)
         with open(ban_file, 'w') as f:
             json.dump(self.bans.make_list(), f, indent=2)
@@ -727,38 +741,14 @@ def run():
     runs the server
     """
 
-    try:
-        with open(cfg.config_file, 'r') as f:
-            config = json.load(f)
-            cfg.config = config
-    except IOError as e:
-        print(
-            'Error reading config from {} - {}: '.format(cfg.config_file, e))
-        print('If you haven\'t already, try copying the example config to '
-              'the default location with "piqueserver --copy-config".')
-        sys.exit(1)
-    except ValueError as e:
-        print("Error in config file {}: ".format(cfg.config_file) + str(e))
-        sys.exit(1)
-
-    # update with parameters from cfg (supplied as cli args)
-    if cfg.json_parameters:
-        try:
-            params = json.loads(cfg.json_parameters)
-        except Exception as e:  # pylint: disable=broad-except
-            print('Error loading json parameters from the command line')
-            print(e)
-            sys.exit(1)
-        config.update(params)
-
     # apply scripts
 
     protocol_class = FeatureProtocol
     connection_class = FeatureConnection
 
     script_objects = []
-    script_names = config.get('scripts', [])
-    script_dir = os.path.join(cfg.config_dir, 'scripts/')
+    script_names = config.get_dict().get('scripts', [])
+    script_dir = os.path.join(config_dir.get(), 'scripts/')
 
     for script in script_names[:]:
         try:
@@ -779,39 +769,38 @@ def run():
 
     for script in script_objects:
         protocol_class, connection_class = script.apply_script(
-            protocol_class, connection_class, config)
+            protocol_class, connection_class, config.get_dict())
 
 
     # apply the game_mode script
-    game_mode = config.get('game_mode', 'ctf')
-    if game_mode not in ('ctf', 'tc'):
+    if game_mode.get() not in ('ctf', 'tc'):
         # must be a script with this game mode
         module = None
         try:
-            game_mode_dir = os.path.join(cfg.config_dir, 'game_modes/')
-            f, filename, desc = imp.find_module(game_mode, [game_mode_dir])
-            module = imp.load_module('piqueserver_gamemode_namespace_' + game_mode, f, filename, desc)
+            game_mode_dir = os.path.join(config_dir.get(), 'game_modes/')
+            f, filename, desc = imp.find_module(game_mode.get(), [game_mode_dir])
+            module = imp.load_module('piqueserver_gamemode_namespace_' + game_mode.get(), f, filename, desc)
         except ImportError as e:
             try:
-                module = importlib.import_module(game_mode)
+                module = importlib.import_module(game_mode.get())
             except ImportError as e:
-                print("(game_mode '%s' not found: %r)" % (game_mode, e))
+                print("(game_mode '%s' not found: %r)" % (game_mode.get(), e))
 
         if module:
             protocol_class, connection_class = module.apply_script(
-                protocol_class, connection_class, config)
+                protocol_class, connection_class, config.get_dict())
 
     protocol_class.connection_class = connection_class
 
-    interface = config.get('network_interface', '').encode('utf-8')
+    interface = config.get_dict().get('network_interface', '').encode('utf-8')
 
     # TODO: is this required? Maybe protocol_class needs to be called?
     # either way, the resulting object is not used
-    protocol_class(interface, config)
+    protocol_class(interface, config.get_dict())
 
     print('Started server...')
 
-    profile = config.get('profile', False)
+    profile = config.get_dict().get('profile', False)
     if profile:
         import cProfile
         cProfile.runctx('reactor.run()', None, globals())

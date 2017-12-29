@@ -52,12 +52,12 @@ from pyspades.contained import BlockAction, SetColor
 from pyspades.common import make_color
 from pyspades.constants import BUILD_BLOCK
 from piqueserver.commands import command
-from piqueserver import cfg
+from piqueserver.config import config_dir
 
 FLYING_MODELS = False  # if False grenades exploding in midair will be ignored
 GROW_ON_WATER = False  # if False grenades exploding in water will do nothing
 
-KV6_DIR = "./"+cfg.config_dir+'kv6'
+KV6_DIR = "./"+config_dir.get()+'/kv6'
 LOWEST_Z = 63 if GROW_ON_WATER else 62
 GROW_INTERVAL = 0.3
 

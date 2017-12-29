@@ -8,14 +8,9 @@ import six.moves.urllib as urllib
 import gzip
 import json
 
-from piqueserver import cfg
-from piqueserver.config import config, TOML_FORMAT, JSON_FORMAT
-
-MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
-
-# (major, minor) versions of python we are supporting
-# used on startup to emit a warning if not running on a supported version
-SUPPORTED_PYTHONS = ((2,7), (3,4), (3,5), (3,6))
+from piqueserver.config import (config, TOML_FORMAT, JSON_FORMAT,
+            PKG_NAME, MAXMIND_DOWNLOAD, SUPPORTED_PYTHONS, config_dir
+        )
 
 def get_git_rev():
     if not os.path.exists(".git"):
@@ -38,14 +33,15 @@ def get_git_rev():
 def copy_config():
     config_source = os.path.dirname(os.path.abspath(__file__)) + '/config'
     print('Attempting to copy example config to %s (origin: %s).' %
-          (cfg.config_dir, config_source))
+          (config_dir.get(), config_source))
     try:
-        shutil.copytree(config_source, cfg.config_dir)
+        shutil.copytree(config_source, config_dir.get())
     except Exception as e:  # pylint: disable=broad-except
         print(e)
         sys.exit(1)
 
-    print('Complete! Please edit the files in %s to your liking.' % cfg.config_dir)
+    print('Complete! Please edit the files in %s to your liking.' %
+            config_dir.get())
 
 
 def update_geoip(target_dir):
@@ -95,8 +91,8 @@ def main():
               'Please see https://github.com/piqueserver/piqueserver/wiki/Supported-Environments for more information.')
 
     description = '%s is an open-source Python server implementation ' \
-                  'for the voxel-based game "Ace of Spades".' % cfg.pkg_name
-    arg_parser = argparse.ArgumentParser(prog=cfg.pkg_name,
+                  'for the voxel-based game "Ace of Spades".' % PKG_NAME
+    arg_parser = argparse.ArgumentParser(prog=PKG_NAME,
                                          description=description)
 
     arg_parser.add_argument('-c', '--config-file', default=None,
@@ -107,10 +103,10 @@ def main():
                             help='add extra json parameters '
                                  '(overrides the ones present in the config file)')
 
-    arg_parser.add_argument('-d', '--config-dir', default=cfg.config_dir,
+    arg_parser.add_argument('-d', '--config-dir', default=config_dir,
                             help='specify the directory which contains '
                                  'maps, scripts, etc (in correctly named '
-                                 'subdirs) - default is %s' % cfg.config_path)
+                                 'subdirs) - default is %s' % config_dir)
 
     arg_parser.add_argument('--copy-config', action='store_true',
                             help='copies the default/example config dir to '
@@ -121,21 +117,14 @@ def main():
 
     args = arg_parser.parse_args()
 
-    # populate the global config with values from args
-    cfg.config_dir = args.config_dir
-
-    if args.config_file is None:
-        cfg.config_file = os.path.join(cfg.config_dir, 'config.json')
-    else:
-        cfg.config_file = args.config_file
-
-    cfg.json_parameters = args.json_parameters
+    # override the config_dir from cli args
+    config_dir.set(args.config_dir)
 
     # find and load the config
     format_ = None
     if args.config_file is None:
         for format__, ext in ((TOML_FORMAT, 'toml'), (JSON_FORMAT, 'json')):
-            config_file = os.path.join(cfg.config_dir, 'config.{}'.format(ext))
+            config_file = os.path.join(config_dir.get(), 'config.{}'.format(ext))
             format_ = format__
             if os.path.exists(config_file):
                 break
@@ -165,7 +154,7 @@ def main():
         copy_config()
         run = False
     if args.update_geoip:
-        update_geoip(cfg.config_dir)
+        update_geoip(config_dir.get())
         run = False
 
     # only run the server if other tasks weren't performed

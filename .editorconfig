@@ -16,6 +16,9 @@ end_of_line = lf
 [*.{bat,ps1}]
 end_of_line = crlf
 
+[*.{py,pyx,pxd}]
+max_line_length = 80
+
 
 # Tab indentation for makefiles
 [Makefile]

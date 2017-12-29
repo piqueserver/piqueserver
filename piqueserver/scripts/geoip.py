@@ -1,13 +1,13 @@
 from __future__ import print_function, unicode_literals
 import os
-from piqueserver import cfg
 from piqueserver.commands import command, get_player
+from piqueserver.config import config_dir
 
 # optional commands
 try:
     import pygeoip
     database = pygeoip.GeoIP(os.path.join(
-        cfg.config_dir, 'data/GeoLiteCity.dat'))
+        config_dir.get(), 'data/GeoLiteCity.dat'))
 except ImportError:
     print("('/from' command disabled. Please install pygeoip to enable.)")
 except (IOError, OSError):

@@ -23,7 +23,8 @@ import math
 import random
 
 from pyspades.vxl import VXLData
-from piqueserver import cfg
+from piqueserver.config import config, config_dir
+
 
 
 class MapNotFound(Exception):
@@ -38,7 +39,7 @@ class MapNotFound(Exception):
 
 def check_rotation(maps, load_dir=None):
     if load_dir is None:
-        load_dir = os.path.join(cfg.config_dir, 'maps')
+        load_dir = os.path.join(config_dir.get(), 'maps')
     infos = []
     for the_map in maps:
         if not isinstance(the_map, RotationInfo):
