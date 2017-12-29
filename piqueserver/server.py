@@ -92,6 +92,8 @@ game_config = config.section('game')
 map_config = config.section('maps')
 server_config = config.section('server')
 logging_config = config.section('logging')
+team1_config = game_config.section('team1')
+team2_config = game_config.section('team2')
 
 bans_file = bans_config.option('file', default='bans.txt')
 respawn_time = game_config.option('respawn_time', default=8)
@@ -101,7 +103,17 @@ random_rotation = map_config.option('random_rotation', default=False)
 passwords = server_config.option('passwords', default={}, validate=check_passwords)
 logfile = logging_config.option('logfile', default='./logs/log.txt')
 map_rotation = map_config.option('rotation', default=['classicgen', 'random'],
-        validate=lambda x:type(x) == list)
+        validate=lambda x: type(x) == list)
+default_time_limit = game_config.option('default_time_limit', default=20,
+        validate=lambda x: type(x) == int or type(x) == float)
+cap_limit = game_config.option('cap_limit', default=10,
+        validate=lambda x: type(x) == int or type(x) == float)
+advance_on_win = game_config.option('advance_on_win', default=False,
+        validate=lambda x: type(x) == bool)
+team1_name = team1_config.option('name', default='Blue')
+team2_name = team2_config.option('name', default='Green')
+team1_color = team1_config.option('color', default=(0, 0, 196))
+team2_color = team2_config.option('color', default=(0, 196, 0))
 
 web_client._HTTP11ClientFactory.noisy = False
 
@@ -215,9 +227,9 @@ class FeatureProtocol(ServerProtocol):
             self.map_rotator_type = random_choice_cycle
         else:
             self.map_rotator_type = itertools.cycle  # pylint: disable=redefined-variable-type
-        self.default_time_limit = self.config.get('default_time_limit', 20.0)
-        self.default_cap_limit = self.config.get('cap_limit', 10.0)
-        self.advance_on_win = int(self.config.get('advance_on_win', False))
+        self.default_time_limit = default_time_limit.get()
+        self.default_cap_limit = cap_limit.get()
+        self.advance_on_win = int(advance_on_win.get())
         self.win_count = itertools.count(1)
         self.bans = NetworkDict()
 
@@ -240,20 +252,17 @@ class FeatureProtocol(ServerProtocol):
                 self.name[:MAX_SERVER_NAME_SIZE]))
         self.respawn_time = respawn_time.get()
         self.respawn_waves = respawn_waves.get()
-        game_mode = self.config.get('game_mode', 'ctf')
-        if game_mode == 'ctf':
+        if game_mode.get() == 'ctf':
             self.game_mode = CTF_MODE
-        elif game_mode == 'tc':
+        elif game_mode.get() == 'tc':
             self.game_mode = TC_MODE
         elif self.game_mode is None:
             raise NotImplementedError('invalid game mode: %s' % game_mode)
-        self.game_mode_name = game_mode.split('.')[-1]
-        team1 = self.config.get('team1', {})
-        team2 = self.config.get('team2', {})
-        self.team1_name = team1.get('name', 'Blue')
-        self.team2_name = team2.get('name', 'Green')
-        self.team1_color = tuple(team1.get('color', (0, 0, 196)))
-        self.team2_color = tuple(team2.get('color', (0, 196, 0)))
+        self.game_mode_name = game_mode.get().split('.')[-1]
+        self.team1_name = team1_name.get()
+        self.team2_name = team2_name.get()
+        self.team1_color = tuple(team1_color.get())
+        self.team2_color = tuple(team2_color.get())
         self.friendly_fire = self.config.get('friendly_fire', True)
         self.friendly_fire_time = self.config.get('grief_friendly_fire_time', 2.0)
         self.spade_teamkills_on_grief = self.config.get('spade_teamkills_on_grief',
