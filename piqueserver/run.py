@@ -97,11 +97,11 @@ def main():
 
     arg_parser.add_argument('-c', '--config-file', default=None,
                             help='specify the config file - '
-                                 'default is "config.json" in the config dir')
+                                 'default is "config.toml" in the config dir')
 
     arg_parser.add_argument('-j', '--json-parameters',
-                            help='add extra json parameters '
-                                 '(overrides the ones present in the config file)')
+                            help='add extra settings in json format '
+                                 '(overrides the config present in the config file)')
 
     arg_parser.add_argument('-d', '--config-dir', default=config_dir,
                             help='specify the directory which contains '
