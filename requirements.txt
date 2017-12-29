@@ -6,6 +6,7 @@ Pillow>=4.3.0,<5
 pyenet
 ipaddress
 six
+toml
 
 # from command
 pygeoip>=0.3.2,<0.4

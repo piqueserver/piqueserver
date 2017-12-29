@@ -42,6 +42,7 @@ from twisted.python.logfile import DailyLogFile
 from twisted.web import client as web_client
 
 from piqueserver import cfg
+from piqueserver.config import config as config_store
 
 import pyspades.debug
 from pyspades.server import (ServerProtocol, Team)
@@ -61,13 +62,30 @@ from piqueserver.player import FeatureConnection
 # won't be used; just need to be executed
 import piqueserver.core_commands
 
-# default passwords hardcoded in config
-DEFAULT_PASSWORDS = {
-    'admin': ['adminpass1', 'adminpass2', 'adminpass3'],
-    'moderator': ['modpass'],
-    'guard': ['guardpass'],
-    'trusted': ['trustedpass']
-}
+def check_passwords(passwords):
+    '''
+    Validator function to be run when the passwords configuration item is updated/set.
+    Designed to warn if default passwords found in the config.
+    '''
+    # default passwords as hardcoded in example config
+    default_passwords = {
+        'admin': ['adminpass1', 'adminpass2', 'adminpass3'],
+        'moderator': ['modpass'],
+        'guard': ['guardpass'],
+        'trusted': ['trustedpass']
+    }
+
+    # check for default password usage
+    for group, passwords in passwords.items():
+        if group in default_passwords:
+            for password in passwords:
+                if password in default_passwords[group]:
+                    print(("WARNING: FOUND DEFAULT PASSWORD '%s'"
+                           " IN GROUP '%s'" % (password, group)))
+
+    # always validate - this function is just to warn if default passwords found
+    return True
+
 
 PORT = 32887
 
@@ -232,7 +250,7 @@ class FeatureProtocol(ServerProtocol):
         self.max_players = config.get('max_players', 20)
         self.melee_damage = config.get('melee_damage', 100)
         self.max_connections_per_ip = config.get('max_connections_per_ip', 0)
-        self.passwords = config.get('passwords', {})
+        self.passwords = config_store.option('passwords', default={}, validate=check_passwords).get()
         self.server_prefix = config.get('server_prefix', '[*]')
         self.time_announcements = config.get('time_announcements',
                                              [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
@@ -290,14 +308,6 @@ class FeatureProtocol(ServerProtocol):
         self.end_calls = []
         # TODO: why is this here?
         create_console(self)
-
-        # check for default password usage
-        for group, passwords in self.passwords.items():
-            if group in DEFAULT_PASSWORDS:
-                for password in passwords:
-                    if password in DEFAULT_PASSWORDS[group]:
-                        print(("WARNING: FOUND DEFAULT PASSWORD '%s'"
-                               " IN GROUP '%s'" % (password, group)))
 
         for password in self.passwords.get('admin', []):
             if not password:

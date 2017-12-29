@@ -133,6 +133,7 @@ setup(
         'Pillow>=4.3.0,<5',
         'pyenet',
         'ipaddress',
+        'toml',
         'six'
     ],
     extras_require={
