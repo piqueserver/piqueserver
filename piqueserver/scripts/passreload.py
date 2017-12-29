@@ -1,8 +1,9 @@
 # passreload.py
 # written by Danke
 
+from __future__ import print_function
 from piqueserver import commands
-from piqueserver.commands import command, admin
+from piqueserver.commands import command
 from piqueserver import cfg
 import json
 import os.path
@@ -34,5 +35,5 @@ def apply_script(protocol, connection, config):
             for password in self.passwords.get('admin', []):
                 if not password:
                     self.everyone_is_admin = True
-            commands.rights.update(config.get('rights', {}))
+            commands.update_rights(config.get('rights', {}))
     return PassreloadProtocol, connection

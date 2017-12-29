@@ -7,6 +7,7 @@ Release thread:
 http://www.buildandshoot.com/viewtopic.php?t=2586
 """
 
+from six.moves import range
 from pyspades.constants import CTF_MODE
 from pyspades.collision import vector_collision
 
@@ -14,7 +15,7 @@ FLAG_SPAWN_POS = (256, 256)
 
 HIDE_POS = (0, 0, 63)
 
-DISABLED, ONE_CTF, REVERSE_ONE_CTF = xrange(3)
+DISABLED, ONE_CTF, REVERSE_ONE_CTF = range(3)
 
 ONE_CTF_MODE = ONE_CTF
 

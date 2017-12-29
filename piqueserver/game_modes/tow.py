@@ -5,11 +5,11 @@ straight line to win.
 Maintainer: mat^2
 """
 
-from pyspades.constants import *
-from pyspades.server import Territory
 import random
 import math
-from math import pi
+from six.moves import range
+from pyspades.constants import TC_MODE
+from pyspades.server import Territory
 
 CP_COUNT = 6
 CP_EXTRA_COUNT = CP_COUNT + 2  # PLUS last 'spawn'
@@ -97,8 +97,8 @@ def apply_script(protocol, connection, config):
 
             points = []
 
-            square_1 = xrange(128)
-            square_2 = xrange(512 - 128, 512)
+            square_1 = range(128)
+            square_2 = range(512 - 128, 512)
 
             while True:
                 top = int(y) in square_1
@@ -120,7 +120,7 @@ def apply_script(protocol, connection, config):
             move = 512 / CP_EXTRA_COUNT
             offset = move / 2
 
-            for i in xrange(CP_EXTRA_COUNT):
+            for i in range(CP_EXTRA_COUNT):
                 index = 0
                 while True:
                     p_x, p_y = points[index]
@@ -162,9 +162,9 @@ def apply_script(protocol, connection, config):
                     entities.append(entity)
                     index += 1
 
-            self.green_team.cp = entities[-CP_COUNT / 2]
+            self.green_team.cp = entities[-CP_COUNT // 2]
             self.green_team.cp.disabled = False
-            self.green_team.spawn_cp = entities[-CP_COUNT / 2 + 1]
+            self.green_team.spawn_cp = entities[-CP_COUNT // 2 + 1]
 
             return entities
 

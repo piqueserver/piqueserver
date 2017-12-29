@@ -2,6 +2,7 @@
 # He might not always get it right, but he'll get it done, and isn't that what really matters?
 # -Requirements: blockinfo.py (for grief detection), ratio.py (for k/d ratio), aimbot2.py (hit accuracy)
 
+from __future__ import print_function
 from twisted.internet import reactor
 from pyspades.common import prettify_timespan
 from pyspades.constants import *
@@ -73,6 +74,7 @@ def investigate(connection, player):
     percent = round(check_percent(player))
     message = "Results for %s: Grief Score - %s / KDR - %s / Hit Acc. - %s" % (
         player.name, score, kdr, percent)
+    return message
 
 
 def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green (1)
@@ -171,12 +173,16 @@ def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green 
 
 
 def check_percent(self):
-    if self.weapon == RIFLE_WEAPON:
-        if self.semi_hits == 0 or self.semi_count == 0:
-            return 0
-        else:
-            return (float(self.semi_hits) / float(self.semi_count)) * 100
-    elif self.weapon == SMG_WEAPON:
+    # TODO: uncomment this when you find out what/where semi_hits and
+    #       semi_count should be defined. Possibly in aimbot2.py, but currently these
+    #       attributes don't exist anywhere
+    # if self.weapon == RIFLE_WEAPON:
+    #     if self.semi_hits == 0 or self.semi_count == 0:
+    #         return 0
+    #     else:
+    #         return (float(self.semi_hits) / float(self.semi_count)) * 100
+    # elif self.weapon == SMG_WEAPON:
+    if self.weapon == SMG_WEAPON:
         if self.smg_hits == 0 or self.smg_count == 0:
             return 0
         else:
@@ -217,7 +223,7 @@ def apply_script(protocol, connection, config):
 
     class BadminProtocol(protocol):
 
-        def start_votekick(self, connection, player, reason=None):
+        def on_votekick_start(self, connection, player, reason=None):
             if reason is None and BLANK_VOTEKICK_ENABLED:
                 connection.protocol.irc_say(
                     "* @Badmin: %s is attempting a blank votekick (against %s)" %
@@ -245,13 +251,13 @@ def apply_script(protocol, connection, config):
                     badmin_punish(
                         player, "warn", "People think you're aimbotting! (KDR: %s, Hit Acc: %s)" %
                         (score, percent))
-                    return protocol.start_votekick(
+                    return protocol.on_votekick_start(
                         self, connection, player, reason)
                 if score >= SCORE_AIMBOT_UNCERTAIN:
                     connection.protocol.irc_say(
                         "* @Badmin: Aimbot vote: (KDR: %s, Hit Acc: %s)" %
                         (score, percent))
-                    return protocol.start_votekick(
+                    return protocol.on_votekick_start(
                         self, connection, player, reason)
                 if score < SCORE_AIMBOT_UNCERTAIN:
                     connection.protocol.irc_say(
@@ -275,18 +281,18 @@ def apply_script(protocol, connection, config):
                 if score >= SCORE_GRIEF_WARN:
                     badmin_punish(player, "warn",
                                   "Stop Griefing! (GS: %s)" % score)
-                    return protocol.start_votekick(
+                    return protocol.on_votekick_start(
                         self, connection, player, reason)
                 if score >= SCORE_GRIEF_UNCERTAIN:
                     connection.protocol.irc_say(
                         "* @Badmin: Grief Score: %s" % score)
-                    return protocol.start_votekick(
+                    return protocol.on_votekick_start(
                         self, connection, player, reason)
                 if score < SCORE_GRIEF_UNCERTAIN:
                     connection.protocol.irc_say(
                         "* @Badmin: I've cancelled a griefing votekick! Kicker: %s, Kickee: %s, Score: %s" %
                         (connection.name, player.name, score))
                     return "@Badmin: This player has not been griefing."
-            return protocol.start_votekick(self, connection, player, reason)
+            return protocol.on_votekick_start(self, connection, player, reason)
 
     return BadminProtocol, BadminConnection

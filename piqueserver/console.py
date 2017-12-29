@@ -73,7 +73,7 @@ else:
 class ConsoleInput(LineReceiver):
     name = 'Console'
     admin = True
-    delimiter = '\n'
+    delimiter = b'\n'
 
     def __init__(self, protocol):
         self.protocol = protocol
@@ -83,13 +83,12 @@ class ConsoleInput(LineReceiver):
             self.rights.update(commands.get_rights(user_type))
 
     def lineReceived(self, line):
-        if line.startswith('/'):
-            line = line[1:]
-            result = commands.handle_input(self, line)
-            if result is not None:
-                print(result)
-        else:
-            self.protocol.send_chat(line)
+        if not line:
+            return
+
+        result = commands.handle_input(self, line.decode())
+        if result is not None:
+            print(result)
 
 
 def create_console(protocol):

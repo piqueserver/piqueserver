@@ -36,9 +36,9 @@ def get_ban_arguments(connection, arg):
 @command(admin_only=True)
 def kick(connection, value, *arg):
     """
-    kick a player
+    Kick a given player
     /kick <player>
-    Player is the #ID of the player, or a unique part of their name
+    Player is the #ID of the player, or an unique part of their name
     """
     reason = join_arguments(arg)
     player = get_player(connection.protocol, value)
@@ -48,7 +48,7 @@ def kick(connection, value, *arg):
 @command(admin_only=True)
 def ban(connection, value, *arg):
     """
-    Ban a player
+    Ban a given player forever or for a limited amount of time
     /ban <player> [duration] [reason]
     """
     duration, reason = get_ban_arguments(connection, arg)
@@ -59,7 +59,7 @@ def ban(connection, value, *arg):
 @command(admin_only=True)
 def hban(connection, value, *arg):
     """
-    Ban a player for an hour
+    Ban a given player for an hour
     /hban <player> [reason]
     """
     duration = 60
@@ -71,7 +71,7 @@ def hban(connection, value, *arg):
 @command(admin_only=True)
 def dban(connection, value, *arg):
     """
-    Ban a player for an hour
+    Ban a given player for one day
     /dban <player> [reason]
     """
     duration = 1440
@@ -83,7 +83,7 @@ def dban(connection, value, *arg):
 @command(admin_only=True)
 def wban(connection, value, *arg):
     """
-    Ban a player for a week
+    Ban a given player for one week
     /wban <player> [reason]
     """
     duration = 10080
@@ -95,7 +95,7 @@ def wban(connection, value, *arg):
 @command(admin_only=True)
 def pban(connection, value, *arg):
     """
-    Ban a player permanently
+    Ban a given player permanently
     /pban <player> [reason]
     """
     duration = 0

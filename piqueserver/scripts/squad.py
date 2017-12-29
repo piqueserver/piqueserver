@@ -4,9 +4,10 @@ BF-like squad system.
 Maintainer: Triplefox
 """
 
+import random
+from six import itervalues, iterkeys
 from piqueserver.commands import command, get_player
 from piqueserver import commands
-import random
 
 SQUAD_NAMES = set([
     'Alpha', 'Bravo', 'Charlie', 'Delta', 'Epsilon', 'Foxtrot', 'Gamma',
@@ -44,7 +45,7 @@ def squad(self, squadkey=None):
     if squadkey is None:
         allsquads = self.get_squads(self.team)
         result = []
-        for squadkey in allsquads.keys():
+        for squadkey in list(iterkeys(allsquads)):
             result.append(self.print_squad(
                 squadkey, allsquads[squadkey]))
         result.append(('To join squads: /squad <squad name>. ' +
@@ -80,13 +81,13 @@ def apply_script(protocol, connection, config):
         def get_squad(self, team, squadkey):
             result = {'name': squadkey, 'players': []}
             if squadkey is None:
-                for player in self.protocol.players.values():
+                for player in list(itervalues(self.protocol.players)):
                     if (player.team is team and
                             player.squad is None):
                         result['players'].append(player)
                         result['name'] = player.squad
             else:
-                for player in self.protocol.players.values():
+                for player in list(itervalues(self.protocol.players)):
                     if (player.team is team and player.squad and
                             player.squad.lower() == squadkey.lower()):
                         result['players'].append(player)
@@ -95,7 +96,7 @@ def apply_script(protocol, connection, config):
 
         def get_squads(self, team):
             squad_dict = {}
-            for player in self.protocol.players.values():
+            for player in list(itervalues(self.protocol.players)):
                 if player.team is team:
                     if player.squad in squad_dict:
                         squad_list = squad_dict[player.squad]
@@ -198,7 +199,7 @@ def apply_script(protocol, connection, config):
                                      self.name)
             self.squad = None
             self.squad_pref = None
-            for player in self.protocol.players.values():
+            for player in list(itervalues(self.protocol.players)):
                 if player.squad_pref is self:
                     player.squad_pref = None
             self.respawn_time = self.protocol.respawn_time
@@ -226,7 +227,7 @@ def apply_script(protocol, connection, config):
                     n for n in all_members if n.hp and not n.invisible and not n.god]
                 membernames = [m.name for m in all_members]
                 memberstr = ""
-                for n in xrange(len(all_members)):
+                for n in range(len(all_members)):
                     name = membernames[n]
                     if not all_members[n].hp:
                         name += " (DEAD)"

@@ -6,14 +6,14 @@ Maintainer: mat^2
 """
 
 from piqueserver.commands import command
-from pyspades.constants import *
+from pyspades.constants import FALL_KILL
 
 
-@commands('medkit', 'm')
+@command('medkit', 'm')
 def medkit(connection):
     if connection.medkits and connection.hp < 100:
         connection.set_hp(connection.hp + connection.protocol.heal_amount,
-                          type=FALL_KILL)
+                          kill_type=FALL_KILL)
         connection.medkits -= 1
         connection.send_chat('You have been healed')
     else:

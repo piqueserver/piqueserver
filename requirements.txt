@@ -1,11 +1,16 @@
-Cython>=0,<1
-Twisted[tls]>=17
-Jinja2>=2<3
-Pillow>=3<5
-pygeoip>=0.3.2,<0.4
-cryptography
-pyasn1
+# core
+Cython>=0.27,<1
+Twisted[tls]>=17,<18
+Jinja2>=2,<3
+Pillow>=4.3.0,<5
 pyenet
 ipaddress
 six
 toml
+
+# from command
+pygeoip>=0.3.2,<0.4
+
+# ssh
+cryptography>=2.1.4,<2.2
+pyasn1>=0.4.2,<0.5

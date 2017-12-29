@@ -34,7 +34,7 @@ import six
 from six import text_type
 from six.moves import range
 
-from ipaddress import ip_network, ip_address
+from ipaddress import ip_network, ip_address, IPv4Address, AddressValueError
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.python import log
@@ -91,34 +91,16 @@ PORT = 32887
 
 web_client._HTTP11ClientFactory.noisy = False
 
-
-def create_path(path):
-    if path:
-        try:
-            os.makedirs(path)
-        except OSError:
-            pass
-
-
-def create_filename_path(path):
-    create_path(os.path.dirname(path))
-
-
-def open_create(filename, mode):
-    create_filename_path(filename)
-    return open(filename, mode)
-
+def ensure_dir_exists(filename):
+    d = os.path.dirname(filename)
+    try:
+        os.makedirs(d)
+    except FileExistsError:
+        pass
 
 def random_choice_cycle(choices):
     while True:
         yield random.choice(choices)
-
-
-IP_GETTER = 'https://services.buildandshoot.com/getip'
-# other tools:
-# http://www.domaintools.com/research/my-ip/myip.xml
-# http://checkip.dyndns.com/
-# http://icanhazip.com/
 
 
 class FeatureTeam(Team):
@@ -224,13 +206,19 @@ class FeatureProtocol(ServerProtocol):
         self.advance_on_win = int(config.get('advance_on_win', False))
         self.win_count = itertools.count(1)
         self.bans = NetworkDict()
-        # TODO: check if this is actually working and not silently failing
+
+        # attempt to load a saved bans list
         try:
-            self.bans.read_list(
-                json.load(open(os.path.join(cfg.config_dir, 'bans.txt'), 'r'))
-            )
-        except IOError:
+            with open(os.path.join(cfg.config_dir, 'bans.txt'), 'r') as f:
+                self.bans.read_list(json.load(f))
+        except FileNotFoundError as e:
+            # if it doesn't exist, then no bans, no error
             pass
+        except IOError as e:
+            print('Could not read bans.txt: {}'.format(e))
+        except ValueError as e:
+            print('Could not parse bans.txt: {}'.format(e))
+
         self.hard_bans = set()  # possible DDoS'ers are added here
         self.player_memory = deque(maxlen=100)
         self.config = config
@@ -246,7 +234,7 @@ class FeatureProtocol(ServerProtocol):
             self.game_mode = TC_MODE
         elif self.game_mode is None:
             raise NotImplementedError('invalid game mode: %s' % game_mode)
-        self.game_mode_name = game_mode
+        self.game_mode_name = game_mode.split('.')[-1]
         team1 = config.get('team1', {})
         team2 = config.get('team2', {})
         self.team1_name = team1.get('name', 'Blue')
@@ -307,11 +295,11 @@ class FeatureProtocol(ServerProtocol):
         if not os.path.isabs(logfile):
             logfile = os.path.join(cfg.config_dir, logfile)
         if logfile.strip():  # catches empty filename
+            ensure_dir_exists(logfile)
             if config.get('rotate_daily', False):
-                create_filename_path(logfile)
                 logging_file = DailyLogFile(logfile, '.')
             else:
-                logging_file = open_create(logfile, 'a')
+                logging_file = open(logfile, 'a')
             log.addObserver(log.FileLogObserver(logging_file).emit)
             log.msg('pyspades server started on %s' % time.strftime('%c'))
         log.startLogging(sys.stdout)  # force twisted logging
@@ -346,19 +334,40 @@ class FeatureProtocol(ServerProtocol):
         self.set_master()
 
         self.http_agent = web_client.Agent(reactor)
-        self.get_external_ip()
+
+        # ip_getter should be a url that returns only the requester's public ip in the response body
+        # other tools:
+        # https://icanhazip.com/
+        # https://api.ipify.org
+        #
+        # default to http on windows - see https://github.com/piqueserver/piqueserver/issues/215
+        if sys.platform == 'win32':
+            default_ip_getter = 'http://services.buildandshoot.com/getip'
+        else:
+            default_ip_getter = 'https://services.buildandshoot.com/getip'
+
+        ip_getter = config.get('ip_getter', default_ip_getter)
+        if ip_getter:
+            self.get_external_ip(ip_getter)
 
     @inlineCallbacks
-    def get_external_ip(self):
+    def get_external_ip(self, ip_getter):
+        print('Retrieving external IP from {!r} to generate server identifier.'.format(ip_getter))
         try:
-            ip = yield self.getPage(IP_GETTER)
-        except OSError as e:
+            ip = yield self.getPage(ip_getter)
+            ip = IPv4Address(ip.strip())
+        except AddressValueError as e:
+            print('External IP getter service returned invalid data.\n'
+                  'Please check the "ip_getter" setting in your config.')
+            return
+        except Exception as e:
             print("Getting external IP failed:", e)
             return
 
         self.ip = ip
         self.identifier = make_server_identifier(ip, self.port)
-        print('Server identifier is %s' % self.identifier)
+        print('Server public ip address: {}:{}'.format(ip, self.port))
+        print('Public aos identifier: {}'.format(self.identifier))
 
     def set_time_limit(self, time_limit=None, additive=False):
         advance_call = self.advance_call
@@ -568,8 +577,10 @@ class FeatureProtocol(ServerProtocol):
         return result
 
     def save_bans(self):
-        json.dump(self.bans.make_list(), open_create(
-            os.path.join(cfg.config_dir, 'bans.txt'), 'w'))
+        ban_file = os.path.join(cfg.condif_dir, 'bans.txt')
+        ensure_dir_exists(ban_file)
+        with open(ban_file, 'w') as f:
+            json.dump(self.bans.make_list(), f, indent=2)
         if self.ban_publish is not None:
             self.ban_publish.update()
 
@@ -747,30 +758,48 @@ def run():
 
     script_objects = []
     script_names = config.get('scripts', [])
-    game_mode = config.get('game_mode', 'ctf')
-    if game_mode not in ('ctf', 'tc'):
-        # must be a script with this game mode
-        script_names.append(game_mode)
-
     script_dir = os.path.join(cfg.config_dir, 'scripts/')
+
     for script in script_names[:]:
         try:
-            # NOTE: this finds and loads scripts directly from the script dir
+            # this finds and loads scripts directly from the script dir
             # no need for messing with sys.path
             f, filename, desc = imp.find_module(script, [script_dir])
-            module = imp.load_module(script, f, filename, desc)
+            module = imp.load_module('piqueserver_script_namespace_' + script, f, filename, desc)
             script_objects.append(module)
         except ImportError as e:
+            # warning: this also catches import errors from inside the script
+            # module it tried to load
             try:
                 module = importlib.import_module(script)
                 script_objects.append(module)
-            except ImportError:
+            except ImportError as e:
                 print("(script '%s' not found: %r)" % (script, e))
                 script_names.remove(script)
 
     for script in script_objects:
         protocol_class, connection_class = script.apply_script(
             protocol_class, connection_class, config)
+
+
+    # apply the game_mode script
+    game_mode = config.get('game_mode', 'ctf')
+    if game_mode not in ('ctf', 'tc'):
+        # must be a script with this game mode
+        module = None
+        try:
+            game_mode_dir = os.path.join(cfg.config_dir, 'game_modes/')
+            f, filename, desc = imp.find_module(game_mode, [game_mode_dir])
+            module = imp.load_module('piqueserver_gamemode_namespace_' + game_mode, f, filename, desc)
+        except ImportError as e:
+            try:
+                module = importlib.import_module(game_mode)
+            except ImportError as e:
+                print("(game_mode '%s' not found: %r)" % (game_mode, e))
+
+        if module:
+            protocol_class, connection_class = module.apply_script(
+                protocol_class, connection_class, config)
 
     protocol_class.connection_class = connection_class
 

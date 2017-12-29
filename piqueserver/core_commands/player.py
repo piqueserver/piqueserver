@@ -1,9 +1,19 @@
 from piqueserver.commands import command, get_player
 
-
 @command("client", "cli")
-def client(connection, target):
-    player = get_player(connection.protocol, target)
+def client(connection, *args):
+    """
+    Tell you information about your client or the client of a given player
+    /client [player]
+    """
+    if len(args) == 0:
+        player = connection
+        who_is = "You are"
+    if len(args) == 1:
+        player = get_player(connection.protocol, target)
+        who_is = player.name + " is"
+    else:
+       return "Invalid number of arguments"
 
     info = player.client_info
     version = info.get("version", None)
@@ -11,16 +21,20 @@ def client(connection, target):
         version_string = ".".join(map(str, version))
     else:
         version_string = "Unknown"
-    return "{} is connected with {} ({}) on {}".format(
-        player.name,
+
+    return "{} connected with {} ({}) on {}".format(
+        who_is,
         info.get("client", "Unknown"),
         version_string,
         info.get("os_info", "Unknown")
     )
 
-
 @command()
 def weapon(connection, value):
+    """
+    Tell you what weapon a given player is using
+    /weapon <player>
+    """
     player = get_player(connection.protocol, value)
     if player.weapon_object is None:
         name = '(unknown)'
@@ -31,6 +45,10 @@ def weapon(connection, value):
 
 @command()
 def intel(connection):
+    """
+    Inform you of who has the enemy intel
+    /intel
+    """
     if connection not in connection.protocol.players:
         raise KeyError()
     flag = connection.team.other.flag
@@ -45,7 +63,7 @@ def intel(connection):
 @command()
 def kill(connection, value=None):
     """
-    Kill a player
+    Kill yourself or a given player
     /kill [target]
     """
     if value is None:
@@ -63,8 +81,8 @@ def kill(connection, value=None):
 @command(admin_only=True)
 def heal(connection, player=None):
     """
-    Refill an heal a player
-    /heal [target]
+    Heal and refill yourself or a given player and inform everyone on the server of this action
+    /heal [player]
     """
     if player is not None:
         player = get_player(connection.protocol, player, False)
@@ -81,7 +99,7 @@ def heal(connection, player=None):
 @command()
 def deaf(connection, value=None):
     """
-    No longer recieve chat messages
+    Make you or a given player no longer receive chat messages
     /deaf [player]
     """
     if value is not None:

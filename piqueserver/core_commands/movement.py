@@ -5,7 +5,7 @@ from piqueserver.commands import command, get_player
 @command(admin_only=True)
 def unstick(connection, player=None):
     """
-    Unstick yourself or another player
+    Unstick yourself or another player and inform everyone on the server of it
     /unstick [player]
     """
     if player is not None:
@@ -20,8 +20,9 @@ def unstick(connection, player=None):
 @command('goto', admin_only=True)
 def go_to(connection, value):
     """
-    Go to a specified sector
+    Go to a specified sector (e.g. A5) and inform everyone on the server of it
     /goto <sector>
+    If you're invisivible, it will happen silenty
     """
     if connection not in connection.protocol.players:
         raise KeyError()
@@ -68,7 +69,7 @@ def move(connection, player, value, silent=False):
 @command(admin_only=True)
 def where(connection, player=None):
     """
-    Find the location of a player
+    Tell you the coordinates of yourself or of a given player
     /where [player]
     """
     if player is not None:
@@ -83,7 +84,7 @@ def where(connection, player=None):
 @command('teleport', 'tp', admin_only=True)
 def teleport(connection, player1, player2=None, silent=False):
     """
-    Teleport a player to another player
+    Teleport yourself or a given player to another player
     /teleport [player] <target player>
     """
     # TODO: refactor this
@@ -128,6 +129,7 @@ def fly(connection, player=None):
     """
     Enable flight
     /fly [player]
+    Hold control and press space ;)
     """
     protocol = connection.protocol
     if player is not None:

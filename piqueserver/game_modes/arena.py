@@ -37,7 +37,8 @@
 
 import random
 import math
-
+from six import itervalues
+from six.moves import range
 from pyspades.contained import BlockAction, SetColor, BlockLine
 from pyspades import world
 from pyspades.constants import DESTROY_BLOCK, TEAM_CHANGE_KILL, CTF_MODE
@@ -488,7 +489,7 @@ def apply_script(protocol, connection, config):
                 gate.destroy_gate()
 
         def arena_spawn(self):
-            for player in self.players.values():
+            for player in list(itervalues(self.players)):
                 if player.team.spectator:
                     continue
                 if player.world_object is not None and player.world_object.dead:
@@ -516,7 +517,7 @@ def apply_script(protocol, connection, config):
                            SPAWN_ZONE_TIME)
             self.arena_countdown_timers = [
                 reactor.callLater(SPAWN_ZONE_TIME, self.begin_arena)]
-            for time in xrange(1, 6):
+            for time in range(1, 6):
                 self.arena_countdown_timers.append(reactor.callLater(
                     SPAWN_ZONE_TIME - time, self.send_chat, str(time)))
 

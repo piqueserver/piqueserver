@@ -2,13 +2,15 @@
 # default time 5 minutes, default reason None
 # by topologist June 30th 2012
 
-from scheduler import Scheduler
-from piqueserver.commands import command, admin, get_player, join_arguments
+from piqueserver.scheduler import Scheduler
+from piqueserver.commands import command, get_player, join_arguments
 
 
 @command('tm', admin_only=True)
 def timed_mute(connection, *args):
     protocol = connection.protocol
+    if len(args) < 3:
+        return '/tm <nick> <time> <reason>'
 
     nick = args[0]
     time = int(args[1])

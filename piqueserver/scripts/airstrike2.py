@@ -6,6 +6,7 @@ Maintainer: hompy
 
 from math import ceil, sin, cos
 from random import uniform, vonmisesvariate
+from six.moves import range
 from twisted.internet import reactor
 from pyspades.contained import GrenadePacket
 from pyspades.common import to_coordinates, Vertex3
@@ -133,12 +134,12 @@ def apply_script(protocol, connection, config):
             grenade_z = 1
 
             self.airstrike_grenade_calls = []
-            for i in xrange(10):
+            for i in range(10):
                 angle = vonmisesvariate(0.0, 0.0)  # fancy for uniform(0, 2*pi)
                 distance = bellrand(-radius, radius)
                 grenade_x = x + cos(angle) * distance
                 grenade_y = y + sin(angle) * distance
-                for j in xrange(5):
+                for j in range(5):
                     grenade_x += uniform(*jitter)
                     grenade_y += uniform(-spread, spread)
                     delay = i * 0.85 + j * 0.11

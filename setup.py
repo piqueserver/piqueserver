@@ -12,19 +12,18 @@ from setuptools import setup, Extension
 
 PKG_NAME = "piqueserver"
 PKG_URL = "https://github.com/piqueserver/piqueserver"
-PKG_DOWNLOAD_URL = "https://github.com/piqueserver/piqueserver/archive/0.1.0.zip"
+PKG_DOWNLOAD_URL = "https://github.com/piqueserver/piqueserver/archive/v0.1.1.zip"
 
 extra_args = sys.argv[2:]
 
-try:
-    import pypandoc
-    import re
-    long_description = pypandoc.convert_text(
-        re.sub(r'[^\x00-\x7F]+', ' ',
-               pypandoc.convert('README.md', 'markdown', format="markdown_github")), 'rst', format="markdown")
-except (IOError, ImportError):
-    long_description = ''
+with open('README.rst') as f:
+    long_description = f.read()
 
+# load version info from the piqueserver module manually
+here = os.path.abspath(os.path.dirname(__file__))
+version = {}
+with open(os.path.join(here, 'piqueserver/version.py')) as f:
+    exec(f.read(), version)
 
 ext_modules = []
 
@@ -92,9 +91,10 @@ class build_ext(_build_ext):
 
 setup(
     name=PKG_NAME,
-    packages=[PKG_NAME, '%s.web' %
-              PKG_NAME, '%s.scripts' % PKG_NAME, '%s.core_commands' % PKG_NAME, 'pyspades'],
-    version='0.1.0_post2',
+    packages=[PKG_NAME, '%s.web' % PKG_NAME,
+        '%s.scripts' % PKG_NAME, '%s.game_modes' % PKG_NAME,
+        '%s.core_commands' % PKG_NAME, 'pyspades'],
+    version=version['__version__'],
     description='Open-Source server implementation for Ace of Spades ',
     author=('Originally MatPow2 and PySnip contributors,'
             'now, StackOverflow and piqueserver authors'),
@@ -109,35 +109,39 @@ setup(
               'pyspades', 'pysnip', 'piqueserver'],
     classifiers=[
         'Intended Audience :: System Administrators',
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Operating System :: MacOS :: MacOS X',
         'Operating System :: Unix',
+        'Operating System :: Microsoft :: Windows',
         'Environment :: Console',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Programming Language :: Python',
         'Programming Language :: Cython',
-        'Programming Language :: Python :: 2 :: Only',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 3',
         'Framework :: Twisted',
+        'Topic :: Games/Entertainment',
+        'Topic :: Games/Entertainment :: First Person Shooters',
     ],
-    platforms="Darwin, Unix",
+    platforms="Darwin, Unix, Win32",
 
-    setup_requires=['Cython>=0,<1'],
+    setup_requires=['Cython>=0.27,<1'],
     install_requires=[
-        'Cython>=0,<1',
-        'Twisted>=17',
+        'Cython>=0.27,<1',
+        'Twisted[tls]>=17,<18',
         'Jinja2>=2,<3',  # status server is part of our 'vanilla' package
-        'Pillow>=3,<5',
+        'Pillow>=4.3.0,<5',
         'pyenet',
         'ipaddress',
         'toml',
+        'six'
     ],
     extras_require={
         'from': ['pygeoip>=0.3.2,<0.4'],
         # 'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
         'ssh': [
-            'pycrypto>=2.6.1,<2.7',
-            'cryptography>=2.0.0,<3.0',
-            'pyasn1>=0.1.9,<0.2'
+            'cryptography>=2.1.4,<2.2',
+            'pyasn1>=0.4.2,<0.5'
         ]
     },
     entry_points={
@@ -150,6 +154,7 @@ setup(
         '%s.core_commands' % PKG_NAME: 'piqueserver/core_commands',
         '%s.web' % PKG_NAME: 'piqueserver/web',
         '%s.scripts' % PKG_NAME: 'piqueserver/scripts',
+        '%s.game_modes' % PKG_NAME: 'piqueserver/game_modes',
         'pyspades': 'pyspades',
     },  # some kind of find_packages?
     package_data={"%s.web" % PKG_NAME: ["templates/status.html"]},

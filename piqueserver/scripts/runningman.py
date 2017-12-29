@@ -12,10 +12,10 @@ Maintainer: hompy
 """
 
 from random import choice
-from itertools import ifilter
+from six.moves import filter
 from twisted.internet.reactor import seconds
 from pyspades.world import Grenade
-from pyspades.server import grenade_packet
+from pyspades.contained import GrenadePacket
 from pyspades.collision import distance_3d_vector
 from pyspades.constants import *
 from pyspades.common import Vertex3
@@ -92,7 +92,7 @@ def apply_script(protocol, connection, config):
 
         def on_position_update(self):
             if self.protocol.running_man:
-                if self.link is not None and self.link.hp > 0:
+                if self.link is not None and self.link.hp is not None and self.link.hp > 0:
                     dist = distance_3d_vector(self.world_object.position,
                                               self.link.world_object.position)
                     if dist > LINK_DISTANCE:
@@ -123,7 +123,7 @@ def apply_script(protocol, connection, config):
                 if (self.link is None or
                         self.link_deaths >= MAX_LINK_DEATHS):
                     self.get_new_link()
-                if self.link is not None and self.link.hp > 0:
+                if self.link is not None and self.link.hp is not None and self.link.hp > 0:
                     self.set_location_safe(
                         self.link.world_object.position.get())
             connection.on_spawn(self, pos)
@@ -154,7 +154,7 @@ def apply_script(protocol, connection, config):
             return True
 
         def get_new_link(self):
-            available = list(ifilter(self.can_be_linked_to,
+            available = list(filter(self.can_be_linked_to,
                                      self.team.get_players()))
             if not available:
                 return
@@ -173,7 +173,7 @@ def apply_script(protocol, connection, config):
         def drop_link(self, force_message=False, no_message=False):
             if self.link is None:
                 return
-            if (self.link.hp > 0 or force_message) and not no_message:
+            if (self.link.hp is not None and (self.link.hp > 0 or force_message)) and not no_message:
                 self.link.send_chat(S_FREE)
             self.link.link = None
             self.link = None
@@ -183,18 +183,19 @@ def apply_script(protocol, connection, config):
             position = self.world_object.position
             protocol.world.create_object(Grenade, 0.0, position, None,
                                          Vertex3(), self.grenade_exploded)
+            grenade_packet = GrenadePacket()
             grenade_packet.value = 0.0
             grenade_packet.player_id = self.player_id
             grenade_packet.position = position.get()
             grenade_packet.velocity = (0.0, 0.0, 0.0)
             protocol.send_contained(grenade_packet)
-            self.kill(type=GRENADE_KILL)
+            self.kill(kill_type=GRENADE_KILL)
 
     class RunningManProtocol(protocol):
         running_man = ENABLED_AT_START
 
         def drop_all_links(self):
-            for player in self.players.values():
+            for player in list(self.players.values()):
                 player.drop_link(no_message=True)
 
     return RunningManProtocol, RunningManConnection

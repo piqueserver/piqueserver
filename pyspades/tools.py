@@ -19,7 +19,8 @@
 # some module with a name describing it's insignificance
 
 def make_server_identifier(ip, port=32887):
-    a, b, c, d = ip.split('.')
+    # ip should be an IPv4Address object
+    a, b, c, d = ip.exploded.split('.')
     a = int(a)
     b = int(b)
     c = int(c)
