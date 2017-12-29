@@ -1,4 +1,5 @@
 import tempfile
+from pprint import pprint
 
 import unittest
 from piqueserver.config import ConfigStore, JSON_FORMAT, TOML_FORMAT
@@ -204,3 +205,30 @@ class TestExampleConfig(unittest.TestCase):
             out = f.read().strip()
             # at least make sure it wrote something that could be toml
             self.assertIn('[server]', out)
+
+    def test_check_unused(self):
+        config = ConfigStore()
+        d = {
+                'server': {
+                    'name': 'wat',
+                    'unreg1': 'nothing',
+                    },
+                'unreg2': {
+                    'unreg3': 'should not be warned about'
+                    }
+                }
+        config.load_from_dict(d)
+
+        server_config = config.section('server')
+        name = server_config.option('name')
+
+        one = config.check_unused()
+        two = {
+                'server': {
+                    'unreg1': 'nothing',
+                    },
+                'unreg2': {
+                    'unreg3': 'should not be warned about'
+                    }
+                }
+        self.assertEqual(one, two)

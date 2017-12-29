@@ -150,6 +150,26 @@ class ConfigStore():
     def _set(self, name, value):
         self._raw_config[name] = value
 
+    def check_unused(self):
+        '''
+        Return the subset of the underlying dictionary that doesn't have any
+        corresponding registered options.
+        '''
+
+        unused = {}
+        for k, v in six.iteritems(self.get_dict()):
+            if isinstance(v, collections.Mapping):
+                if k not in self._sections:
+                    unused[k] = v
+                else:
+                    section_unused = self._sections[k].check_unused()
+                    unused[k] = section_unused
+            else:
+                if k not in self._options:
+                    unused[k] = v
+
+        return unused
+
     def option(self, name, cast=None, default=None, validate=None):
         '''
         Register and return a new option object.
@@ -167,7 +187,7 @@ class ConfigStore():
         return section
 
 
-class _Section():
+class _Section(ConfigStore):
     '''
     Represents a section of a configstore. Can be nested arbitarily.
     '''
@@ -177,14 +197,14 @@ class _Section():
         self._sections = {}
         self._options = {}
 
-    def _validate_all(self):
-        for option in self._options.values():
-            option._validate(option.get())
-        for section in self._sections.values():
-            section._validate_all()
-
     def get_dict(self):
         return self._store.get_dict().get(self._name, {})
+
+    def load_from_file(self, fobj, format_=DEFAULT_FORMAT):
+        raise NotImplementedError()
+
+    def update_from_file(self, fobj, format_=DEFAULT_FORMAT):
+        raise NotImplementedError()
 
     def load_from_dict(self, config):
         self._store._set(self._name, config)
@@ -193,6 +213,9 @@ class _Section():
         d = self._store._get(self._name, {})
         d.update(config)
         self._store._set(self._name, d)
+
+    def dump_to_file(self, fobj, format_=DEFAULT_FORMAT):
+        raise NotImplementedError()
 
     def _get(self, name, default):
         section = self._store._get(self._name, {})

@@ -29,6 +29,7 @@ import itertools
 import random
 import time
 from collections import deque
+from pprint import pprint
 
 import six
 from six import text_type
@@ -114,6 +115,8 @@ team1_name = team1_config.option('name', default='Blue')
 team2_name = team2_config.option('name', default='Green')
 team1_color = team1_config.option('color', default=(0, 0, 196))
 team2_color = team2_config.option('color', default=(0, 196, 0))
+friendly_fire = game_config.option('friendly_fire', default=True)
+
 
 web_client._HTTP11ClientFactory.noisy = False
 
@@ -263,7 +266,7 @@ class FeatureProtocol(ServerProtocol):
         self.team2_name = team2_name.get()
         self.team1_color = tuple(team1_color.get())
         self.team2_color = tuple(team2_color.get())
-        self.friendly_fire = self.config.get('friendly_fire', True)
+        self.friendly_fire = friendly_fire.get()
         self.friendly_fire_time = self.config.get('grief_friendly_fire_time', 2.0)
         self.spade_teamkills_on_grief = self.config.get('spade_teamkills_on_grief',
                                                    False)
@@ -806,6 +809,12 @@ def run():
     # TODO: is this required? Maybe protocol_class needs to be called?
     # either way, the resulting object is not used
     protocol_class(interface, config.get_dict())
+
+    print('Checking for unregistered config items...')
+    unused = config.check_unused()
+    if unused:
+        print('The following config items are not used:')
+        pprint(unused)
 
     print('Started server...')
 
