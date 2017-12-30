@@ -8,7 +8,10 @@ import os
 from twisted.internet import reactor
 from pyspades.vxl import VXLData
 from piqueserver import cfg
+from piqueserver.config import config
 
+savemap_config = config.section('savemap')
+LOAD_SAVED_MAP_OPTION = savemap_config.option('load_saved_map', False)
 
 def get_name(map):
     return '%s/%s.saved.vxl' % (os.path.join(cfg.config_dir, 'maps'), map.rot_info.name)
@@ -23,7 +26,7 @@ def apply_script(protocol, connection, config):
 
         def get_map(self, name):
             map = protocol.get_map(self, name)
-            if config.get('load_saved_map', False):
+            if LOAD_SAVED_MAP_OPTION.get():
                 cached_path = get_name(map)
                 print("Loading saved map for {} from {}".format(name, cached_path))
                 if os.path.isfile(cached_path):

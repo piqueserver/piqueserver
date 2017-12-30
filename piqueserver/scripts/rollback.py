@@ -16,7 +16,7 @@ from pyspades.constants import *
 from pyspades.common import coordinates, make_color
 from piqueserver.map import Map, MapNotFound, check_rotation
 from piqueserver.commands import command, admin
-from piqueserver.config import config_dir
+from piqueserver.config import config_dir, config
 
 S_INVALID_MAP_NAME = 'Invalid map name'
 S_ROLLBACK_IN_PROGRESS = 'Rollback in progress'
@@ -32,6 +32,8 @@ S_ROLLBACK_TIME_TAKEN = 'Time taken: {seconds:.3}s'
 
 NON_SURFACE_COLOR = (0, 0, 0)
 
+rollback_config = config.section('rollback')
+ROLLBACK_ON_GAME_END_OPTION = rollback_config.option('rollback_on_game_end', False)
 
 @command(admin_only=True)
 def rollmap(connection, mapname=None, value=None):
@@ -54,7 +56,7 @@ def rollbackcancel(connection):
 
 
 def apply_script(protocol, connection, config):
-    rollback_on_game_end = config.get('rollback_on_game_end', False)
+    rollback_on_game_end = ROLLBACK_ON_GAME_END_OPTION.get()
 
     class RollbackConnection(connection):
 

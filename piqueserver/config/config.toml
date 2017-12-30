@@ -79,6 +79,7 @@ network_interface = ""
 # other scripts being loaded before them.
 scripts = [
  "piqueserver.scripts.rollback",
+ "piqueserver.scripts.savemap",
  "piqueserver.scripts.protect",
  "piqueserver.scripts.map_extensions",
  "piqueserver.scripts.disco",
@@ -319,7 +320,10 @@ auto_squad = false
 
 
 # piqueserver.scripts.savemap
+# allows automatically saving a snapshot of the map on server close
 [savemap]
+
+# automatically load the saved map on map load
 load_saved_map = false
 
 
