@@ -98,7 +98,7 @@ team1_config = game_config.section('team1')
 team2_config = game_config.section('team2')
 
 bans_file = bans_config.option('file', default='bans.txt')
-respawn_time = game_config.option('respawn_time', default=8)
+respawn_time_option = game_config.option('respawn_time', default=8)
 respawn_waves = game_config.option('respawn_waves', default=False)
 game_mode = game_config.option('game_mode', default='ctf')
 random_rotation = map_config.option('random_rotation', default=False)
@@ -303,7 +303,7 @@ class FeatureProtocol(ServerProtocol):
         if len(self.name) > MAX_SERVER_NAME_SIZE:
             print('(server name too long; it will be truncated to "%s")' % (
                 self.name[:MAX_SERVER_NAME_SIZE]))
-        self.respawn_time = respawn_time.get()
+        self.respawn_time = respawn_time_option.get()
         self.respawn_waves = respawn_waves.get()
         if game_mode.get() == 'ctf':
             self.game_mode = CTF_MODE

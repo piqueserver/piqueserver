@@ -8,12 +8,20 @@ import random
 from six import itervalues, iterkeys
 from piqueserver.commands import command, get_player
 from piqueserver import commands
+from piqueserver.config import config
+from piqueserver.server import respawn_time_option
 
 SQUAD_NAMES = set([
     'Alpha', 'Bravo', 'Charlie', 'Delta', 'Epsilon', 'Foxtrot', 'Gamma',
     'Golf', 'Hotel', 'India', 'Juliet', 'Kilo', 'Lima', 'Mike',
     'November', 'Oscar', 'Papa', 'Quebec', 'Romero', 'Sierra', 'Tango',
     'Uniform', 'Victor', 'Whiskey', 'X-ray', 'Yankee', 'Zulu'])
+
+squad_config = config.section('squad')
+RESPAWN_TIME_OPTION = squad_config.option('respawn_time',
+        default=respawn_time_option.get())
+SIZE_OPTION = squad_config.option('size', 0)
+AUTO_SQUAD_OPTION = squad_config.option('auto_squad', True)
 
 
 @command()
@@ -64,10 +72,9 @@ def squad(self, squadkey=None):
 
 
 def apply_script(protocol, connection, config):
-    protocol.squad_respawn_time = config.get('squad_respawn_time',
-                                             protocol.respawn_time)
-    protocol.squad_size = config.get('squad_size', 0)
-    protocol.auto_squad = config.get('auto_squad', True)
+    protocol.squad_respawn_time = RESPAWN_TIME_OPTION.get()
+    protocol.squad_size = SIZE_OPTION.get()
+    protocol.auto_squad = AUTO_SQUAD_OPTION.get()
 
     class SquadConnection(connection):
         squad = None
