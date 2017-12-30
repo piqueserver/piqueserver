@@ -93,6 +93,7 @@ game_config = config.section('game')
 map_config = config.section('maps')
 server_config = config.section('server')
 logging_config = config.section('logging')
+info_config = config.section('info')
 team1_config = game_config.section('team1')
 team2_config = game_config.section('team2')
 
@@ -139,7 +140,30 @@ speedhack_detect = game_config.option('speedhack_detect', True)
 user_blocks_only = game_config.option('user_blocks_only', False)
 debug_log_enabled = logging_config.option('debug_log', False)
 set_god_build = game_config.option('set_god_build', False)
+ssh_options = config.option('ssh', {})
+irc_options = config.option('irc', {})
+status_server_options = config.option('status_server', {})
+ban_publish = bans_config.option('publish', False)
+ban_publish_port = bans_config.option('publish_port', 32885)
+logging_rotate_daily = logging_config.option('rotate_daily', False)
+tip_frequency = info_config.option('tips_frequency', 0)
+register_master_option = server_config.option('master', False)
 
+# default to http for ip_getter on windows
+# see https://github.com/piqueserver/piqueserver/issues/215
+if sys.platform == 'win32':
+    default_ip_getter = 'http://services.buildandshoot.com/getip'
+else:
+    default_ip_getter = 'https://services.buildandshoot.com/getip'
+ip_getter_option = server_config.option('ip_getter', default_ip_getter)
+name_option = info_config.option('name', default='piqueserver #%s' % random.randrange(0, 2000))
+motd_option = info_config.option('motd')
+help_option = info_config.option('help')
+rules_option = info_config.option('rules')
+tips_option = info_config.option('tips')
+network_interface = server_config.option('network_interface', default='')
+scripts_option = server_config.option('scripts', [])
+ban_subscribe_enabled = bans_config.option('subscribe', False)
 
 web_client._HTTP11ClientFactory.noisy = False
 
@@ -316,24 +340,22 @@ class FeatureProtocol(ServerProtocol):
             # TODO: make this configurable
             pyspades.debug.open_debug_log(
                 os.path.join(config_dir, 'debug.log'))
-        ssh = self.config.get('ssh', {})
+        ssh = ssh_options.get()
         if ssh.get('enabled', False):
             from piqueserver.ssh import RemoteConsole
             self.remote_console = RemoteConsole(self, ssh)
-        irc = self.config.get('irc', {})
+        irc = irc_options.get()
         if irc.get('enabled', False):
             from piqueserver.irc import IRCRelay
             self.irc_relay = IRCRelay(self, irc)
-        status = self.config.get('status_server', {})
+        status = status_server_options.get()
         if status.get('enabled', False):
             from piqueserver.statusserver import StatusServerFactory
             self.status_server = StatusServerFactory(self, status)
-        publish = self.config.get('ban_publish', {})
-        if publish.get('enabled', False):
+        if ban_publish.get():
             from piqueserver.banpublish import PublishServer
-            self.ban_publish = PublishServer(self, publish)
-        ban_subscribe = self.config.get('ban_subscribe', {})
-        if ban_subscribe.get('enabled', True):
+            self.ban_publish = PublishServer(self, ban_publish_port.get())
+        if ban_subscribe_enabled.get():
             from piqueserver import bansubscribe
             self.ban_manager = bansubscribe.BanManager(self, ban_subscribe)
         # logfile path relative to config dir if not abs path
@@ -342,7 +364,7 @@ class FeatureProtocol(ServerProtocol):
             if not os.path.isabs(l):
                 l = os.path.join(config_dir.get(), l)
             ensure_dir_exists(l)
-            if self.config.get('rotate_daily', False):
+            if logging_rotate_daily.get():
                 logging_file = DailyLogFile(l, '.')
             else:
                 logging_file = open(l, 'a')
@@ -372,27 +394,16 @@ class FeatureProtocol(ServerProtocol):
             raise SystemExit
 
         self.update_format()
-        self.tip_frequency = self.config.get('tip_frequency', 0)
+        self.tip_frequency = tip_frequency.get()
         if self.tips is not None and self.tip_frequency > 0:
             reactor.callLater(self.tip_frequency * 60, self.send_tip)
 
-        self.master = self.config.get('master', True)
+        self.master = register_master_option.get()
         self.set_master()
 
         self.http_agent = web_client.Agent(reactor)
 
-        # ip_getter should be a url that returns only the requester's public ip in the response body
-        # other tools:
-        # https://icanhazip.com/
-        # https://api.ipify.org
-        #
-        # default to http on windows - see https://github.com/piqueserver/piqueserver/issues/215
-        if sys.platform == 'win32':
-            default_ip_getter = 'http://services.buildandshoot.com/getip'
-        else:
-            default_ip_getter = 'https://services.buildandshoot.com/getip'
-
-        ip_getter = self.config.get('ip_getter', default_ip_getter)
+        ip_getter = ip_getter_option.get()
         if ip_getter:
             self.get_external_ip(ip_getter)
 
@@ -527,13 +538,11 @@ class FeatureProtocol(ServerProtocol):
         """
         Called when the map (or other variables) have been updated
         """
-        config = self.config
-        default_name = 'pyspades server %s' % random.randrange(0, 2000)
-        self.name = self.format(self.config.get('name', default_name))
-        self.motd = self.format_lines(self.config.get('motd', None))
-        self.help = self.format_lines(self.config.get('help', None))
-        self.tips = self.format_lines(self.config.get('tips', None))
-        self.rules = self.format_lines(self.config.get('rules', None))
+        self.name = self.format(name_option.get())
+        self.motd = self.format_lines(motd_option.get())
+        self.help = self.format_lines(help_option.get())
+        self.tips = self.format_lines(tips_option.get())
+        self.rules = self.format_lines(rules_option.get())
         if self.master_connection is not None:
             self.master_connection.send_server()
 
@@ -737,15 +746,13 @@ class FeatureProtocol(ServerProtocol):
 
     def listenTCP(self, *arg, **kw):
         return reactor.listenTCP(
-            *arg, interface=self.config.get('network_interface', ''), **kw)
+            *arg, interface=network_interface.get(), **kw)
 
     def connectTCP(self, *arg, **kw):
         return reactor.connectTCP(
             *arg,
             bindAddress=(
-                self.config.get(
-                    'network_interface',
-                    ''),
+                network_interface.get(),
                 0),
             **kw)
 
@@ -779,7 +786,7 @@ def run():
     connection_class = FeatureConnection
 
     script_objects = []
-    script_names = config.get_dict().get('scripts', [])
+    script_names = scripts_option.get()
     script_dir = os.path.join(config_dir.get(), 'scripts/')
 
     for script in script_names[:]:
@@ -824,7 +831,7 @@ def run():
 
     protocol_class.connection_class = connection_class
 
-    interface = config.get_dict().get('network_interface', '').encode('utf-8')
+    interface = network_interface.get().encode('utf-8')
 
     # TODO: is this required? Maybe protocol_class needs to be called?
     # either way, the resulting object is not used

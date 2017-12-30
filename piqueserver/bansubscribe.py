@@ -20,20 +20,23 @@ from twisted.internet.task import LoopingCall
 from twisted.internet.defer import DeferredList
 
 from piqueserver.networkdict import NetworkDict
+from piqueserver.config import config
 
 UPDATE_INTERVAL = 5 * 60  # every 5 minute
 
 # format is [{"ip" : "1.1.1.1", "reason : "blah"}, ...]
 
+bans_config = config.section('bans')
+urls = bans_config.option('urls', [])
 
 class BanManager(object):
     bans = None
     new_bans = None
 
-    def __init__(self, protocol, config):
+    def __init__(self, protocol):
         self.protocol = protocol
         self.urls = [(str(item), name_filter) for (item, name_filter) in
-                     config.get('urls', [])]
+                     urls.get()]
         self.loop = LoopingCall(self.update_bans)
         self.loop.start(UPDATE_INTERVAL, now=True)
 

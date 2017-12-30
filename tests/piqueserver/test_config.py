@@ -137,7 +137,7 @@ class TestExampleConfig(unittest.TestCase):
 
     def test_json(self):
         config = ConfigStore()
-        f = 'piqueserver/config/config.json'
+        f = 'piqueserver/config/simple.json'
         config.load_from_file(open(f), format_=JSON_FORMAT)
 
         # "name" : "piqueserver instance",
