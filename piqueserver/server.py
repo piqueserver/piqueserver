@@ -116,7 +116,9 @@ team1_name = team1_config.option('name', default='Blue')
 team2_name = team2_config.option('name', default='Green')
 team1_color = team1_config.option('color', default=(0, 0, 196))
 team2_color = team2_config.option('color', default=(0, 196, 0))
-friendly_fire = game_config.option('friendly_fire', default=True)
+friendly_fire = game_config.option('friendly_fire', default=False)
+friendly_fire_on_grief = game_config.option('friendly_fire_on_grief',
+        default=True)
 grief_friendly_fire_time = game_config.option('grief_friendly_fire_time',
         default=2)
 spade_teamkills_on_grief = game_config.option('spade_teamkills_on_grief',
@@ -139,6 +141,7 @@ default_ban_duration = bans_config.option('default_duration', default=24 * 60)
 speedhack_detect = game_config.option('speedhack_detect', True)
 user_blocks_only = game_config.option('user_blocks_only', False)
 debug_log_enabled = logging_config.option('debug_log', False)
+logging_profile_option = logging_config.option('profile', False)
 set_god_build = game_config.option('set_god_build', False)
 ssh_options = config.option('ssh', {})
 irc_options = config.option('irc', {})
@@ -314,6 +317,7 @@ class FeatureProtocol(ServerProtocol):
         self.team1_color = tuple(team1_color.get())
         self.team2_color = tuple(team2_color.get())
         self.friendly_fire = friendly_fire.get()
+        self.friendly_fire_on_grief = friendly_fire_on_grief.get()
         self.friendly_fire_time = grief_friendly_fire_time.get()
         self.spade_teamkills_on_grief = spade_teamkills_on_grief.get()
         self.fall_damage = fall_damage.get()
@@ -845,7 +849,7 @@ def run():
 
     print('Started server...')
 
-    profile = config.get_dict().get('profile', False)
+    profile = logging_profile_option.get()
     if profile:
         import cProfile
         cProfile.runctx('reactor.run()', None, globals())

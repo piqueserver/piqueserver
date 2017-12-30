@@ -87,7 +87,6 @@ scripts = [
  "piqueserver.scripts.ratio",
  "piqueserver.scripts.passreload",
  "piqueserver.scripts.blockinfo",
- "piqueserver.scripts.fbpatch",
  "piqueserver.scripts.afk"
 ]
 

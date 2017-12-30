@@ -9,6 +9,7 @@ from six import itervalues
 from twisted.internet import reactor
 from pyspades.common import prettify_timespan
 from piqueserver.commands import command, get_player, admin
+from piqueserver.config import config
 
 S_AFK_CHECK = '{player} has been inactive for {time}'
 S_NO_PLAYERS_INACTIVE = 'No players or connections inactive for {time}'
@@ -16,6 +17,9 @@ S_AFK_KICKED = ('{num_players} players kicked, {num_connections} connections '
                 'terminated for {time} inactivity')
 S_AFK_KICK_REASON = 'Inactive for {time}'
 
+afk_config = config.section('afk')
+time_limit_option = afk_config.option('time_limit', default=None, cast=lambda
+        n:None if n is None else n*60.0)
 
 def afk(connection, player):
     player = get_player(connection.protocol, player)
@@ -58,8 +62,7 @@ def kick_afk(connection, minutes, amount=None):
 
 
 def apply_script(protocol, connection, config):
-    time_limit = config.get('afk_time_limit', None)
-    time_limit = time_limit and time_limit * 60.0
+    time_limit = time_limit_option.get()
 
     class AFKConnection(connection):
         afk_kick_call = None
