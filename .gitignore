@@ -26,6 +26,7 @@ env3/
 
 # etc
 
+_build/
 build/
 dist/
 wheelhouse/
