@@ -23,6 +23,7 @@ from six import itervalues
 from twisted.internet.reactor import seconds
 from piqueserver.scheduler import Scheduler
 from piqueserver.commands import command, admin, get_player, join_arguments, CommandError
+from piqueserver.config import config
 
 REQUIRE_REASON = True
 
@@ -56,6 +57,10 @@ S_ANNOUNCE_SELF = 'You started a votekick against {victim}. Say /CANCEL to ' \
     'stop it'
 S_UPDATE = '{instigator} is votekicking {victim}. /Y to vote ({needed} left)'
 S_REASON = 'Reason: {reason}'
+
+# register options
+VOTEKICK_CONFIG = config.section('votekick')
+REQUIRED_PERCENTAGE_OPTION = VOTEKICK_CONFIG.option('percentage', 25.0)
 
 
 class VotekickFailure(Exception):
@@ -252,7 +257,6 @@ class Votekick(object):
 def apply_script(protocol, connection, config):
     Votekick.ban_duration = config.get('votekick_ban_duration', 15.0)
     Votekick.public_votes = config.get('votekick_public_votes', True)
-    required_percentage = config.get('votekick_percentage', 25.0)
 
     class VotekickProtocol(protocol):
         votekick = None
@@ -262,7 +266,7 @@ def apply_script(protocol, connection, config):
             # votekicks are invalid if this returns <= 0
             player_count = sum(not player.disconnected and not player.local
                                for player in itervalues(self.players)) - 1
-            return int(player_count / 100.0 * required_percentage)
+            return int(player_count / 100.0 * REQUIRED_PERCENTAGE_OPTION.get())
 
         def on_map_leave(self):
             if self.votekick:
