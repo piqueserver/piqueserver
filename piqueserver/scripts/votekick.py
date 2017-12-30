@@ -61,7 +61,8 @@ S_REASON = 'Reason: {reason}'
 # register options
 VOTEKICK_CONFIG = config.section('votekick')
 REQUIRED_PERCENTAGE_OPTION = VOTEKICK_CONFIG.option('percentage', 25.0)
-
+BAN_DURATION_OPTION = VOTEKICK_CONFIG.option('ban_duration', 15.0)
+PUBLIC_VOTES_OPTION = VOTEKICK_CONFIG.option('public_votes', True)
 
 class VotekickFailure(Exception):
     pass
@@ -255,8 +256,8 @@ class Votekick(object):
 
 
 def apply_script(protocol, connection, config):
-    Votekick.ban_duration = config.get('votekick_ban_duration', 15.0)
-    Votekick.public_votes = config.get('votekick_public_votes', True)
+    Votekick.ban_duration = BAN_DURATION_OPTION.get()
+    Votekick.public_votes = PUBLIC_VOTES_OPTION.get()
 
     class VotekickProtocol(protocol):
         votekick = None

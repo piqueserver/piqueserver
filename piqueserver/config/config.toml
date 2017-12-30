@@ -349,8 +349,14 @@ public_votes = true
 # TODO: document
 # piqueserver.scripts.votemap
 [votemap]
+
+# publically display which map players voted for
 public_votes = true
+
+# extend current map (meaning?)
 extension_time = 15
+
+# players can initiate voting for a new map with /votemap
 player_driven = false
 autoschedule = false
 time = 120

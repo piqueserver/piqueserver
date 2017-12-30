@@ -23,7 +23,16 @@ from pyspades.common import prettify_timespan
 from piqueserver.map import check_rotation
 from piqueserver.scheduler import Scheduler
 from piqueserver.commands import command
+from piqueserver.config import config
 
+votemap_config = config.section('votemap')
+
+VOTEMAP_AUTOSCHEDULE_OPTION = votemap_config.option('autoschedule', 180)
+VOTEMAP_PUBLIC_VOTES_OPTION = votemap_config.option( 'public_votes', True)
+VOTEMAP_TIME_OPTION = votemap_config.option('time', 120)
+VOTEMAP_EXTENSION_TIME_OPTION = votemap_config.option('extension_time', 15)
+VOTEMAP_PLAYER_DRIVEN_OPTION = votemap_config.option('player_driven', False)
+VOTEMAP_PERCENTAGE_OPTION = votemap_config.option('percentage', 80)
 
 def cancel_verify(connection, instigator):
     return (connection.admin or
@@ -195,15 +204,12 @@ def apply_script(protocol, connection, config):
 
         def __init__(self, interface, config):
             protocol.__init__(self, interface, config)
-            self.votemap_autoschedule = config.get('votemap_autoschedule', 180)
-            self.votemap_public_votes = config.get(
-                'votemap_public_votes', True)
-            self.votemap_time = config.get('votemap_time', 120)
-            self.votemap_extension_time = config.get('votemap_extension_time',
-                                                     15)
-            self.votemap_player_driven = config.get('votemap_player_driven',
-                                                    False)
-            self.votemap_percentage = config.get('votemap_percentage', 80)
+            self.votemap_autoschedule = VOTEMAP_AUTOSCHEDULE_OPTION.get()
+            self.votemap_public_votes = VOTEMAP_PUBLIC_VOTES_OPTION.get()
+            self.votemap_time = VOTEMAP_TIME_OPTION.get()
+            self.votemap_extension_time = VOTEMAP_EXTENSION_TIME_OPTION.get()
+            self.votemap_player_driven = VOTEMAP_PLAYER_DRIVEN_OPTION.get()
+            self.votemap_percentage = VOTEMAP_PERCENTAGE_OPTION.get()
             self.autoschedule_votemap()
 
         def autoschedule_votemap(self):
