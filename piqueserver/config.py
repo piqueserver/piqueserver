@@ -159,18 +159,20 @@ class ConfigStore():
         unused = {}
         for k, v in six.iteritems(self.get_dict()):
             if isinstance(v, collections.Mapping):
-                if k not in self._sections:
-                    unused[k] = v
-                else:
+                if k in self._sections:
                     section_unused = self._sections[k].check_unused()
-                    unused[k] = section_unused
+                    if section_unused:
+                        unused[k] = section_unused
+                else:
+                    if k not in self._options:
+                        unused[k] = v
             else:
                 if k not in self._options:
                     unused[k] = v
 
         return unused
 
-    def option(self, name, cast=None, default=None, validate=None):
+    def option(self, name, default=None, cast=None, validate=None):
         '''
         Register and return a new option object.
         '''
@@ -228,23 +230,6 @@ class _Section(ConfigStore):
         section = self._store._get(self._name, {})
         section[name] = value
         self._store._set(self._name, section)
-
-    def section(self, name):
-        '''
-        Registers and returns a new Section object which is a subsection of this section.
-        '''
-        section = _Section(self, name)
-        self._sections[name] = section
-        return section
-
-    def option(self, name, cast=None, default=None, validate=None):
-        '''
-        Registers and returns a new Option object which is an option in this section.
-        '''
-        option = _Option(self, name, default, cast, validate)
-        self._options[name] = option
-        return option
-
 
 
 class _Option():

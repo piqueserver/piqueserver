@@ -116,6 +116,29 @@ team2_name = team2_config.option('name', default='Green')
 team1_color = team1_config.option('color', default=(0, 0, 196))
 team2_color = team2_config.option('color', default=(0, 196, 0))
 friendly_fire = game_config.option('friendly_fire', default=True)
+grief_friendly_fire_time = game_config.option('grief_friendly_fire_time',
+        default=2)
+spade_teamkills_on_grief = game_config.option('spade_teamkills_on_grief',
+        default=False)
+time_announcements = game_config.option('time_announcements', default=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                                              30, 60, 120, 180, 240, 300, 600,
+                                              900, 1200, 1800, 2400, 3000])
+rights = config.option('rights', default={})
+port_option = server_config.option('port', default=32887, validate=lambda n: type(n) == int)
+fall_damage = game_config.option('fall_damage', default=True)
+teamswitch_interval = game_config.option('teamswitch_interval', default=0)
+teamswitch_allowed = game_config.option('teamswitch_allowed', default=True)
+max_players = server_config.option('max_players', default=20)
+melee_damage = game_config.option('melee_damage', default=100)
+max_connections_per_ip = server_config.option('max_connections_per_ip', default=0)
+server_prefix = server_config.option('server_prefix', default='[*]')
+balanced_teams = game_config.option('balanced_teams', default=None)
+login_retries = server_config.option('login_retries', 1)
+default_ban_duration = bans_config.option('default_duration', default=24 * 60)
+speedhack_detect = game_config.option('speedhack_detect', True)
+user_blocks_only = game_config.option('user_blocks_only', False)
+debug_log_enabled = logging_config.option('debug_log', False)
+set_god_build = game_config.option('set_god_build', False)
 
 
 web_client._HTTP11ClientFactory.noisy = False
@@ -267,31 +290,28 @@ class FeatureProtocol(ServerProtocol):
         self.team1_color = tuple(team1_color.get())
         self.team2_color = tuple(team2_color.get())
         self.friendly_fire = friendly_fire.get()
-        self.friendly_fire_time = self.config.get('grief_friendly_fire_time', 2.0)
-        self.spade_teamkills_on_grief = self.config.get('spade_teamkills_on_grief',
-                                                   False)
-        self.fall_damage = self.config.get('fall_damage', True)
-        self.teamswitch_interval = self.config.get('teamswitch_interval', 0)
-        self.max_players = self.config.get('max_players', 20)
-        self.melee_damage = self.config.get('melee_damage', 100)
-        self.max_connections_per_ip = self.config.get('max_connections_per_ip', 0)
+        self.friendly_fire_time = grief_friendly_fire_time.get()
+        self.spade_teamkills_on_grief = spade_teamkills_on_grief.get()
+        self.fall_damage = fall_damage.get()
+        self.teamswitch_interval = teamswitch_interval.get()
+        self.teamswitch_allowed = teamswitch_allowed.get()
+        self.max_players = max_players.get()
+        self.melee_damage = melee_damage.get()
+        self.max_connections_per_ip = max_connections_per_ip.get()
         self.passwords = passwords.get()
-        self.server_prefix = self.config.get('server_prefix', '[*]')
-        self.time_announcements = self.config.get('time_announcements',
-                                             [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                                              30, 60, 120, 180, 240, 300, 600,
-                                              900, 1200, 1800, 2400, 3000])
-        self.balanced_teams = self.config.get('balanced_teams', None)
-        self.login_retries = self.config.get('login_retries', 1)
+        self.server_prefix = server_prefix.get()
+        self.time_announcements = time_announcements.get()
+        self.balanced_teams = balanced_teams.get()
+        self.login_retries = login_retries.get()
 
         # voting configuration
-        self.default_ban_time = self.config.get('default_ban_duration', 24 * 60)
+        self.default_ban_time = default_ban_duration.get()
 
-        self.speedhack_detect = self.config.get('speedhack_detect', True)
-        if self.config.get('user_blocks_only', False):
+        self.speedhack_detect = speedhack_detect.get()
+        if user_blocks_only.get():
             self.user_blocks = set()
-        self.set_god_build = self.config.get('set_god_build', False)
-        self.debug_log = self.config.get('debug_log', False)
+        self.set_god_build = set_god_build.get()
+        self.debug_log = debug_log_enabled.get()
         if self.debug_log:
             # TODO: make this configurable
             pyspades.debug.open_debug_log(
@@ -339,11 +359,11 @@ class FeatureProtocol(ServerProtocol):
             if not password:
                 self.everyone_is_admin = True
 
-        for user_type, func_names in self.config.get('rights', {}).items():
+        for user_type, func_names in rights.get().items():
             for func_name in func_names:
                 commands.add_rights(user_type, func_name)
 
-        port = self.port = self.config.get('port', 32887)
+        port = self.port = port_option.get()
         ServerProtocol.__init__(self, port, interface)
         self.host.intercept = self.receive_callback
         ret = self.set_map_rotation(map_rotation.get())

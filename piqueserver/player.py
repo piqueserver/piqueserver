@@ -278,7 +278,8 @@ class FeatureConnection(ServerConnection):
         if self.team is not None:
             if self.protocol.teamswitch_interval:
                 teamswitch_interval = self.protocol.teamswitch_interval
-                if teamswitch_interval == 'never':
+                teamswitch_allowed = self.protocol.teamswitch_allowed
+                if not teamswitch_allowed:
                     self.send_chat('Switching teams is not allowed')
                     return False
                 if (self.last_switch is not None and

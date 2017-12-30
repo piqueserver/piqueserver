@@ -91,7 +91,7 @@ scripts = [
  "piqueserver.scripts.afk"
 ]
 
-# number of /login attempts allowed before players are auto-kicked (default: 3)
+# number of /login attempts allowed before players are auto-kicked (default: 1)
 login_retries = 3
 
 
@@ -247,6 +247,9 @@ random_rotation = false
 
 [logging]
 
+# enable the debug logging
+debug_log = false
+
 # the logfile to log to if logging enabled
 # relative paths are resolved relative to the config directory; parent
 # directories are created as necessary
@@ -254,7 +257,7 @@ logfile = "./logs/log.txt"
 
 # TODO: document
 rotate_daily = true
-debug_log = false
+
 profile = false
 
 
