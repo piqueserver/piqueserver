@@ -120,7 +120,17 @@ def main():
     # override the config_dir from cli args
     config_dir.set(args.config_dir)
 
+    # TODO: set config/map/script/log/etc. dirs from config file, thus removing
+    # the need for the --config-dir argument and the config file is then a
+    # single source of configuration
+
     # find and load the config
+    # search order:
+    # - --config-file (must have toml or json file extension)
+    # - --config-dir/config.toml
+    # - --config-dir/config.json
+    # - ~/.config/piqueserver/config.toml
+    # - ~/.config/piqueserver/config.json
     format_ = None
     if args.config_file is None:
         for format__, ext in ((TOML_FORMAT, 'toml'), (JSON_FORMAT, 'json')):
