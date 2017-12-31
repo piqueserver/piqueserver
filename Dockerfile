@@ -29,7 +29,7 @@ RUN apk add --no-cache --virtual .build-deps-cython gcc musl-dev \
 # TODO: while this behaviour suits production envs perfectly, make a dev env option
 COPY pyspades/ /usr/src/app/pyspades/
 COPY piqueserver/ /usr/src/app/piqueserver/
-COPY setup.py COPYING.txt CREDITS.txt LICENSE /usr/src/app/
+COPY setup.py COPYING.txt CREDITS.txt LICENSE README.rst /usr/src/app/
 
 RUN apk add --no-cache --virtual .build-deps-server gcc musl-dev g++ \
     && STDCPP_STATIC=1 python ./setup.py install \
