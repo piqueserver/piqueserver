@@ -4,9 +4,10 @@ import os
 import shutil
 import sys
 import argparse
-import six.moves.urllib as urllib
 import gzip
 import json
+
+import six.moves.urllib as urllib
 
 from piqueserver import cfg
 from piqueserver.config import config, TOML_FORMAT, JSON_FORMAT
@@ -15,7 +16,8 @@ MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCi
 
 # (major, minor) versions of python we are supporting
 # used on startup to emit a warning if not running on a supported version
-SUPPORTED_PYTHONS = ((2,7), (3,4), (3,5), (3,6))
+SUPPORTED_PYTHONS = ((2, 7), (3, 4), (3, 5), (3, 6))
+
 
 def get_git_rev():
     if not os.path.exists(".git"):
@@ -45,7 +47,8 @@ def copy_config():
         print(e)
         sys.exit(1)
 
-    print('Complete! Please edit the files in %s to your liking.' % cfg.config_dir)
+    print('Complete! Please edit the files in %s to your liking.' %
+          cfg.config_dir)
 
 
 def update_geoip(target_dir):
@@ -147,7 +150,8 @@ def main():
         elif ext == 'toml':
             format_ = TOML_FORMAT
         else:
-            raise ValueError('Unsupported config file format! Must have json or toml extension.')
+            raise ValueError(
+                'Unsupported config file format! Must have json or toml extension.')
 
     print('Loading config from {!r}'.format(config_file))
     with open(config_file) as fobj:
@@ -171,6 +175,7 @@ def main():
     # only run the server if other tasks weren't performed
     if run:
         run_server()
+
 
 if __name__ == "__main__":
     main()
