@@ -58,7 +58,7 @@ from piqueserver.map import Map, MapNotFound, check_rotation
 from piqueserver.console import create_console
 from piqueserver.networkdict import NetworkDict
 from piqueserver.player import FeatureConnection
-from piqueserver.config import config, config_dir
+from piqueserver.config import config
 
 # won't be used; just need to be executed
 import piqueserver.core_commands
@@ -289,7 +289,7 @@ class FeatureProtocol(ServerProtocol):
 
         # attempt to load a saved bans list
         try:
-            with open(os.path.join(config_dir.get(), bans_file.get()), 'r') as f:
+            with open(os.path.join(config.config_dir, bans_file.get()), 'r') as f:
                 self.bans.read_list(json.load(f))
         except FileNotFoundError as e:
             # if it doesn't exist, then no bans, no error
@@ -344,7 +344,7 @@ class FeatureProtocol(ServerProtocol):
         if self.debug_log:
             # TODO: make this configurable
             pyspades.debug.open_debug_log(
-                os.path.join(config_dir, 'debug.log'))
+                os.path.join(config.config_dir, 'debug.log'))
         ssh = ssh_options.get()
         if ssh.get('enabled', False):
             from piqueserver.ssh import RemoteConsole
@@ -367,7 +367,7 @@ class FeatureProtocol(ServerProtocol):
         l = logfile.get()
         if l.strip():  # catches empty filename
             if not os.path.isabs(l):
-                l = os.path.join(config_dir.get(), l)
+                l = os.path.join(config.config_dir, l)
             ensure_dir_exists(l)
             if logging_rotate_daily.get():
                 logging_file = DailyLogFile(l, '.')
@@ -510,11 +510,11 @@ class FeatureProtocol(ServerProtocol):
         return True
 
     def get_map(self, rot_info):
-        return Map(rot_info, os.path.join(config_dir.get(), 'maps'))
+        return Map(rot_info, os.path.join(config.config_dir, 'maps'))
 
     def set_map_rotation(self, maps, now=True):
         try:
-            maps = check_rotation(maps, os.path.join(config_dir.get(), 'maps'))
+            maps = check_rotation(maps, os.path.join(config.config_dir, 'maps'))
         except MapNotFound as e:
             return e
         self.maps = maps
@@ -637,7 +637,7 @@ class FeatureProtocol(ServerProtocol):
         return result
 
     def save_bans(self):
-        ban_file = os.path.join(config_dir.get(), 'bans.txt')
+        ban_file = os.path.join(config.config_dir, 'bans.txt')
         ensure_dir_exists(ban_file)
         with open(ban_file, 'w') as f:
             json.dump(self.bans.make_list(), f, indent=2)
@@ -792,7 +792,7 @@ def run():
 
     script_objects = []
     script_names = scripts_option.get()
-    script_dir = os.path.join(config_dir.get(), 'scripts/')
+    script_dir = os.path.join(config.config_dir, 'scripts/')
 
     for script in script_names[:]:
         try:
@@ -821,7 +821,7 @@ def run():
         # must be a script with this game mode
         module = None
         try:
-            game_mode_dir = os.path.join(config_dir.get(), 'game_modes/')
+            game_mode_dir = os.ospath.join(config.config_dir, 'game_modes/')
             f, filename, desc = imp.find_module(game_mode.get(), [game_mode_dir])
             module = imp.load_module('piqueserver_gamemode_namespace_' + game_mode.get(), f, filename, desc)
         except ImportError as e:

@@ -1,18 +1,21 @@
 from __future__ import print_function, unicode_literals
 import os
 from piqueserver.commands import command, get_player
-from piqueserver.config import config_dir
+from piqueserver.config import config
 
 # optional commands
 try:
     import pygeoip
-    database = pygeoip.GeoIP(os.path.join(
-        config_dir.get(), 'data/GeoLiteCity.dat'))
+    database = pygeoip.GeoIP(
+        os.path.join(config.config_dir, 'data/GeoLiteCity.dat'))
 except ImportError:
     print("('/from' command disabled. Please install pygeoip to enable.)")
 except (IOError, OSError):
-    print("('/from' command disabled due to missing GeoIP database. Run 'piqueserver --update-geoip' to install.)")
+    print(
+        "('/from' command disabled due to missing GeoIP database. Run 'piqueserver --update-geoip' to install.)"
+    )
 finally:
+
     @command('from')
     def where_from(connection, value=None):
         if value is None:
@@ -41,6 +44,7 @@ finally:
                 continue
             items.append(value)
         return '%s is from %s' % (player.name, ', '.join(items))
+
 
 def apply_script(protocol, connection, config):
     return protocol, connection

@@ -15,16 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with piqueserver.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys
-import os
 import collections
 import json
+import os
+import sys
 
 import six
-import toml
 
 import piqueserver
-
+import toml
 
 # supported config format constants to avoid typos
 DEFAULT_FORMAT = 'TOML'
@@ -38,8 +37,7 @@ MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCi
 
 # (major, minor) versions of python we are supporting
 # used on startup to emit a warning if not running on a supported version
-SUPPORTED_PYTHONS = ((2,7), (3,4), (3,5), (3,6))
-
+SUPPORTED_PYTHONS = ((2, 7), (3, 4), (3, 5), (3, 6))
 
 
 class ConfigStore():
@@ -69,10 +67,14 @@ class ConfigStore():
     ```
 
     '''
+
     def __init__(self):
         self._raw_config = {}
         self._options = {}
         self._sections = {}
+
+        # these are for config that isn't ever stored in the config file (yet)
+        self.config_dir = DEFAULT_CONFIG_DIR
 
     def _validate_all(self):
         for option in self._options.values():
@@ -111,7 +113,8 @@ class ConfigStore():
         elif format_ == JSON_FORMAT:
             d = json.load(fobj)
         else:
-            raise ValueError('Unsupported config file format: {}'.format(format_))
+            raise ValueError(
+                'Unsupported config file format: {}'.format(format_))
         self.update_from_dict(d)
 
     def load_from_dict(self, config):
@@ -138,7 +141,8 @@ class ConfigStore():
         elif format_ == JSON_FORMAT:
             json.dump(self._raw_config, fobj, indent=2)
         else:
-            raise ValueError('Unsupported config file format: {}'.format(format_))
+            raise ValueError(
+                'Unsupported config file format: {}'.format(format_))
 
     def _get(self, name, default=None):
         if name not in self._raw_config:
@@ -191,6 +195,7 @@ class _Section(ConfigStore):
     '''
     Represents a section of a configstore. Can be nested arbitarily.
     '''
+
     def __init__(self, store, name):
         self._store = store
         self._name = name
@@ -234,6 +239,7 @@ class _Option():
     '''
     configuration option object, backed by a configuration store
     '''
+
     def __init__(self, store, name, default, cast, validate):
         '''
         store: a ConfigStore or Section object. Must provide `get()` and `set(value)` methods
@@ -241,7 +247,7 @@ class _Option():
         cast: a transformation function that will be called whenever you retrieve the option's value.
         validate: a function that takes the casted value and should return bool indicating whether it is a valid value
         '''
-        self._store = store # ConfigStore object
+        self._store = store  # ConfigStore object
         self._name = name
         self._default = default
         self._cast = cast
@@ -249,7 +255,6 @@ class _Option():
 
         # get and validate on declaration to make sure all is good
         self._validate(self.get())
-
 
     def _validate(self, value):
         '''
@@ -259,7 +264,8 @@ class _Option():
         '''
         if self._validate_func is not None:
             if not self._validate_func(value):
-                raise ValueError('Failed to validate {!r} config option'.format(self._name))
+                raise ValueError(
+                    'Failed to validate {!r} config option'.format(self._name))
         return value
 
     def get(self):
@@ -283,9 +289,5 @@ class _Option():
         self._store._set(self._name, value)
 
 
+# the global instance to be used across all the codebase
 config = ConfigStore()
-
-# commonly used config options declared here
-_temp_section = config.section('_internal')
-config_dir = _temp_section.option('config_dir', default=DEFAULT_CONFIG_DIR)
-config_file = _temp_section.option('config_file', default=DEFAULT_CONFIG_DIR)

@@ -28,7 +28,7 @@ except ImportError as e:
     print(e)
     sys.exit(1)
 
-from piqueserver.config import config, config_dir
+from piqueserver.config import config
 
 
 def create_remote_factory(namespace, users):
@@ -45,7 +45,7 @@ def create_remote_factory(namespace, users):
     p.registerChecker(
         checkers.InMemoryUsernamePasswordDatabaseDontUse(**users))
     f = manhole_ssh.ConchFactory(p)
-    ssh_key_base_path = path.join(config_dir, "ssh-keys")
+    ssh_key_base_path = path.join(config.config_dir, "ssh-keys")
     ssh_pubkey_path = path.join(ssh_key_base_path,
                                 "ssh_host_rsa_key.pub")
     ssh_privkey_path = path.join(ssh_key_base_path,

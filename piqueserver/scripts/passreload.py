@@ -2,20 +2,23 @@
 # written by Danke
 
 from __future__ import print_function
-from piqueserver import commands
-from piqueserver.commands import command
-from piqueserver import cfg
+
 import json
 import os.path
 
+from piqueserver import commands
+from piqueserver.commands import command
+from piqueserver.config import config
+
 # TODO: build an entire config reload core script
+
 
 @command(admin_only=True)
 def reloadconfig(connection):
     new_config = {}
     try:
-        new_config = json.load(open(
-            os.path.join(cfg.config_dir, cfg.config_file), 'r'))
+        new_config = json.load(
+            open(os.path.join(config.config_dir, cfg.config_file), 'r'))
         if not isinstance(new_config, dict):
             raise ValueError('%s is not a mapping type' % cfg.config_file)
     except ValueError as v:
@@ -30,10 +33,10 @@ def reloadconfig(connection):
 
 def apply_script(protocol, connection, config):
     class PassreloadProtocol(protocol):
-
         def reload_passes(self):
             for password in self.passwords.get('admin', []):
                 if not password:
                     self.everyone_is_admin = True
             commands.update_rights(config.get('rights', {}))
+
     return PassreloadProtocol, connection

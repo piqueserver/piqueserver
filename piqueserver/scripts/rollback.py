@@ -16,7 +16,7 @@ from pyspades.constants import *
 from pyspades.common import coordinates, make_color
 from piqueserver.map import Map, MapNotFound, check_rotation
 from piqueserver.commands import command, admin
-from piqueserver.config import config_dir, config
+from piqueserver.config import config
 
 S_INVALID_MAP_NAME = 'Invalid map name'
 S_ROLLBACK_IN_PROGRESS = 'Rollback in progress'
@@ -91,7 +91,7 @@ def apply_script(protocol, connection, config):
                     maps = check_rotation([mapname])
                     if not maps:
                         return S_INVALID_MAP_NAME
-                    map = Map(maps[0], os.path.join(config_dir.get(), "maps")).data
+                    map = Map(maps[0], os.path.join(config.config_dir, "maps")).data
                 except MapNotFound as error:
                     return error.message
             name = (connection.name if connection is not None
