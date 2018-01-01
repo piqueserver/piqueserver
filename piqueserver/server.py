@@ -42,7 +42,6 @@ from twisted.python import log
 from twisted.python.logfile import DailyLogFile
 from twisted.web import client as web_client
 
-from piqueserver.config import config, SERVER_VERSION, config_dir
 
 import pyspades.debug
 from pyspades.server import (ServerProtocol, Team)
@@ -52,12 +51,14 @@ from pyspades.master import MAX_SERVER_NAME_SIZE
 from pyspades.tools import make_server_identifier
 from pyspades.bytes import NoDataLeft
 
+import piqueserver
 from piqueserver.scheduler import Scheduler
 from piqueserver import commands
 from piqueserver.map import Map, MapNotFound, check_rotation
 from piqueserver.console import create_console
 from piqueserver.networkdict import NetworkDict
 from piqueserver.player import FeatureConnection
+from piqueserver.config import config, config_dir
 
 # won't be used; just need to be executed
 import piqueserver.core_commands
@@ -270,7 +271,7 @@ class FeatureProtocol(ServerProtocol):
     game_mode = None  # default to None so we can check
     time_announce_schedule = None
 
-    server_version = SERVER_VERSION
+    server_version = '%s - %s' % (sys.platform, piqueserver.__version__)
 
     default_fog = (128, 232, 255)
 

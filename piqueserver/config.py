@@ -32,8 +32,6 @@ TOML_FORMAT = 'TOML'
 JSON_FORMAT = 'JSON'
 
 # global constants we need to know at the start
-SERVER_VERSION = '%s - %s' % (sys.platform, piqueserver.__version__)
-PKG_NAME = 'piqueserver'
 _path = os.environ.get('XDG_CONFIG_HOME', '~/.config') + '/piqueserver'
 DEFAULT_CONFIG_DIR = os.path.expanduser(_path)
 MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
