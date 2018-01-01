@@ -41,7 +41,7 @@ class PublishServer(object):
         self.protocol = protocol
         publish_resource = PublishResource(self)
         site = server.Site(publish_resource)
-        protocol.listenTCP(site)
+        protocol.listenTCP(port, site)
         self.update()
 
     def update(self):
