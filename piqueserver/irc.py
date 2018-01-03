@@ -40,12 +40,12 @@ SPLIT_WHO_IN_TEAMS = True
 SPLIT_THRESHOLD = 20  # players
 
 
-def is_printable(value):
-    return value in PRINTABLE_CHARACTERS
-
-
 def filter_printable(value):
-    return filter(is_printable, value)
+    clean = ""
+    for c in str(value):
+        if c in PRINTABLE_CHARACTERS:
+            clean += c
+    return clean
 
 
 def channel(func):
@@ -69,6 +69,10 @@ class IRCBot(irc.IRCClient):
     @property
     def nickname(self):
         return self._get_nickname()
+
+    @nickname.setter
+    def nickname(self, nickname):
+        self.factory.nickname = nickname
 
     def _get_colors(self):
         return self.factory.colors
@@ -209,14 +213,13 @@ class IRCClientFactory(protocol.ClientFactory):
             self.rights.update(commands.get_rights(user_type))
         self.server = server
         self.nickname = config.get('nickname',
-                                   'pyspades%s' % random.randrange(0, 99)).encode('ascii')
-        self.username = config.get('username', 'pyspades').encode('ascii')
-        self.realname = config.get('realname', server.name).encode('ascii')
-        self.channel = config.get('channel', "#pyspades.bots").encode(
-            'ascii').lower()
-        self.commandprefix = config.get('commandprefix', '.').encode('ascii')
-        self.chatprefix = config.get('chatprefix', '').encode('ascii')
-        self.password = config.get('password', '').encode('ascii') or None
+                                   'pyspades%s' % random.randrange(0, 99))
+        self.username = config.get('username', 'pyspades')
+        self.realname = config.get('realname', server.name)
+        self.channel = config.get('channel', "#pyspades.bots").lower()
+        self.commandprefix = config.get('commandprefix', '.')
+        self.chatprefix = config.get('chatprefix', '')
+        self.password = config.get('password', '') or None
 
     def startedConnecting(self, connector):
         print("Connecting to IRC server...")
@@ -265,6 +268,7 @@ def format_name(player):
 def format_name_color(player):
     return (IRC_TEAM_COLORS.get(player.team.id, '') +
             '%s #%s' % (player.name, player.player_id))
+
 
 @restrict("irc")
 @command()

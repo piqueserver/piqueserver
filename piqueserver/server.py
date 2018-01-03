@@ -22,6 +22,7 @@ pyspades - default/featured server
 from __future__ import print_function, unicode_literals
 import sys
 import os
+import errno
 import imp
 import importlib
 import json
@@ -95,8 +96,11 @@ def ensure_dir_exists(filename):
     d = os.path.dirname(filename)
     try:
         os.makedirs(d)
-    except FileExistsError:
-        pass
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            pass
+        else:
+            raise
 
 def random_choice_cycle(choices):
     while True:
@@ -577,7 +581,7 @@ class FeatureProtocol(ServerProtocol):
         return result
 
     def save_bans(self):
-        ban_file = os.path.join(cfg.condif_dir, 'bans.txt')
+        ban_file = os.path.join(cfg.config_dir, 'bans.txt')
         ensure_dir_exists(ban_file)
         with open(ban_file, 'w') as f:
             json.dump(self.bans.make_list(), f, indent=2)
@@ -612,9 +616,9 @@ class FeatureProtocol(ServerProtocol):
     def irc_say(self, msg, me=False):
         if self.irc_relay:
             if me:
-                self.irc_relay.me(msg, filter=True)
+                self.irc_relay.me(msg, do_filter=True)
             else:
-                self.irc_relay.send(msg, filter=True)
+                self.irc_relay.send(msg, do_filter=True)
 
     def send_tip(self):
         line = self.tips[random.randrange(len(self.tips))]
