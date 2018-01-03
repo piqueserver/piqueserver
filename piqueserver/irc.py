@@ -18,8 +18,9 @@
 from __future__ import print_function
 
 import random
-from itertools import groupby, chain, izip
+from itertools import groupby, chain
 from operator import attrgetter
+from six.moves import zip
 
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
@@ -28,6 +29,7 @@ from pyspades.constants import MAX_CHAT_SIZE
 from pyspades.common import encode
 from pyspades.types import AttributeSet
 from piqueserver import commands
+from piqueserver.commands import command, restrict
 
 
 MAX_IRC_CHAT_SIZE = MAX_CHAT_SIZE * 2
@@ -204,7 +206,7 @@ class IRCClientFactory(protocol.ClientFactory):
         self.user_types = AttributeSet(['admin', 'irc'])
         self.rights = AttributeSet()
         for user_type in self.user_types:
-            self.rights.update(commands.rights.get(user_type, ()))
+            self.rights.update(commands.get_rights(user_type))
         self.server = server
         self.nickname = config.get('nickname',
                                    'pyspades%s' % random.randrange(0, 99)).encode('ascii')
@@ -264,12 +266,8 @@ def format_name_color(player):
     return (IRC_TEAM_COLORS.get(player.team.id, '') +
             '%s #%s' % (player.name, player.player_id))
 
-
-def restrict_irc(func):
-    return commands.restrict(func, 'irc')
-
-
-@restrict_irc
+@restrict("irc")
+@command()
 def who(connection):
     protocol = connection.protocol
     player_count = len(protocol.players)
@@ -291,7 +289,7 @@ def who(connection):
         msg += separator.join(chain.from_iterable(formatted_names))
         connection.me(msg)
     else:
-        for team, names in izip(teams, formatted_names):
+        for team, names in zip(teams, formatted_names):
             name_count = len(names)
             noun = 'player' if name_count == 1 else 'players'
             msg = 'has %s %s in %s: ' % (name_count, noun, team.name)
@@ -299,14 +297,16 @@ def who(connection):
             connection.me(msg)
 
 
-@restrict_irc
+@restrict("irc")
+@command()
 def score(connection):
     connection.me("scores: Blue %s - Green %s" % (
         connection.protocol.blue_team.score,
         connection.protocol.green_team.score))
 
 
-@restrict_irc
+@restrict("irc")
+@command()
 def alias(connection, value=None):
     aliases = connection.factory.aliases
     unaliased_name = connection.unaliased_name
@@ -322,7 +322,8 @@ def alias(connection, value=None):
     connection.me(message)
 
 
-@restrict_irc
+@restrict("irc")
+@command()
 def unalias(connection):
     aliases = connection.factory.aliases
     unaliased_name = connection.unaliased_name
@@ -334,13 +335,11 @@ def unalias(connection):
     connection.me(message)
 
 
-@restrict_irc
+@restrict("irc")
+@command()
 def colors(connection):
     connection.colors = not connection.colors
     if connection.colors:
         return '\x0312c\x0304o\x0309l\x0308o\x0306r\x0313s \x0f\x16ON!'
     else:
         return 'colors off'
-
-for function in (who, score, alias, unalias, colors):
-    commands.add(function)
