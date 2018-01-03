@@ -17,6 +17,7 @@
 
 from __future__ import print_function
 
+import re
 import random
 from itertools import groupby, chain
 from operator import attrgetter
@@ -33,19 +34,11 @@ from piqueserver.commands import command, restrict
 
 
 MAX_IRC_CHAT_SIZE = MAX_CHAT_SIZE * 2
-PRINTABLE_CHARACTERS = ('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP'
-                        'QRSTUVWXYZ!"#$%&\\\'()*+,-./:;<=>?@[\\]^_`{|}~ \t')
 IRC_TEAM_COLORS = {0: '\x0302', 1: '\x0303'}
 SPLIT_WHO_IN_TEAMS = True
 SPLIT_THRESHOLD = 20  # players
 
-
-def filter_printable(value):
-    clean = ""
-    for c in str(value):
-        if c in PRINTABLE_CHARACTERS:
-            clean += c
-    return clean
+irc_color_codes = re.compile("\x03(?:\d{1,2}(?:,\d{1,2})?)?", re.UNICODE)
 
 
 def channel(func):
@@ -165,8 +158,7 @@ class IRCBot(irc.IRCClient):
                     len(self.protocol.server_prefix) - 1
                 msg = msg[len(self.factory.chatprefix):].strip()
                 message = ("<%s> %s" % (prefix + alias, msg))[:max_len]
-                message = message.decode('cp1252')
-                print(message.encode('ascii', 'replace'))
+                print(message)
                 self.factory.server.send_chat(encode(message))
 
     @channel
@@ -181,15 +173,13 @@ class IRCBot(irc.IRCClient):
         self.userLeft(kickee, irc_channel)
 
     def send(self, msg, do_filter=False):
-        msg = msg.encode('cp1252', 'replace')
         if do_filter:
-            msg = filter_printable(msg)
+            msg = irc_color_codes.sub('', msg)
         self.msg(self.factory.channel, msg)
 
     def me(self, msg, do_filter=False):
-        msg = msg.encode('cp1252', 'replace')
         if do_filter:
-            msg = filter_printable(msg)
+            msg = irc_color_codes.sub('', msg)
         self.describe(self.factory.channel, msg)
 
 

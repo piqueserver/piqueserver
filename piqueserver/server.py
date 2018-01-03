@@ -100,7 +100,7 @@ def ensure_dir_exists(filename):
         if e.errno == errno.EEXIST:
             pass
         else:
-            raise
+            raise e
 
 def random_choice_cycle(choices):
     while True:
