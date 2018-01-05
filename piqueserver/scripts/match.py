@@ -11,7 +11,7 @@ from twisted.internet.task import LoopingCall
 
 import json
 from piqueserver.commands import command, admin
-from piqueserver import cfg
+from piqueserver import config
 
 
 @command('timer', admin_only=True)
@@ -152,7 +152,7 @@ def apply_script(protocol, connection, config):
         def save_record(self, name):
             if self.record is None:
                 return False
-            path = os.path.join(cfg.config_dir, "record_{}.json".format(name))
+            path = os.path.join(config.config_dir, "record_{}.json".format(name))
             with open(path, "w") as f:
                 json.dump(self.record, f)
             return True
