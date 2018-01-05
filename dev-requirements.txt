@@ -4,3 +4,4 @@ coverage
 coveralls
 pytest
 pytest-cov
+Sphinx

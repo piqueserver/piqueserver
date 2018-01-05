@@ -1,5 +1,5 @@
-piqueserver |Build Status| |Build status| |Coverage Status| |Join the chat at https://gitter.im/piqueserver/piqueserver|
-========================================================================================================================
+piqueserver |Build Status| |Build status| |Coverage Status|
+===========================================================
 
 An Ace of Spades 0.75 server based on
 `PySnip <https://github.com/NateShoffner/PySnip>`__.

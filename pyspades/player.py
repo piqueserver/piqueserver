@@ -911,6 +911,8 @@ class ServerConnection(BaseConnection):
     def _connection_ack(self):
         self._send_connection_data()
         self.send_map(ProgressiveMapGenerator(self.protocol.map))
+        if not self.client_info:
+            self.protocol.send_contained(handshake_init)
 
     def _send_connection_data(self):
         saved_loaders = self.saved_loaders = []
