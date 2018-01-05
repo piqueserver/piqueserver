@@ -71,6 +71,10 @@ class IRCBot(irc.IRCClient):
     def colors(self):
         return self.factory.colors
 
+    @colors.setter
+    def colors(self, colors):
+        self.factory.colors = colors
+
     @property
     def admin(self):
         return self.factory.admin
