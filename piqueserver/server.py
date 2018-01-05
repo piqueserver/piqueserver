@@ -585,10 +585,15 @@ class FeatureProtocol(ServerProtocol):
             self.ban_publish.update()
 
     def receive_callback(self, address, data):
+        """This hook recieves the raw UDP data before it is processed by enet"""
+
+        # reply to ASCII HELLO messages with HI so that clients can measure the
+        # connection latency
         if data == b'HELLO':
-            print("test")
             self.host.socket.send(address, b'HI')
             return 1
+
+        # This drop the connection of any ip in hard_bans
         if address.host in self.hard_bans:
             return 1
 
