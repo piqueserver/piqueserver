@@ -42,6 +42,9 @@ irc_color_codes = re.compile("\x03(?:\d{1,2}(?:,\d{1,2})?)?", re.UNICODE)
 
 
 def channel(func):
+    """This decorator rewrites the username of incoming messages to strip the
+    ident and rejects it if the source channel is not equal to the channel the
+    bot is in"""
     def new_func(self, user, irc_channel, *arg, **kw):
         if not irc_channel.lower() == self.factory.channel:
             return
@@ -56,44 +59,29 @@ class IRCBot(irc.IRCClient):
     unaliased_name = None
     name = None
 
-    def _get_nickname(self):
-        return self.factory.nickname
-
     @property
     def nickname(self):
-        return self._get_nickname()
+        return self.factory.nickname
 
     @nickname.setter
     def nickname(self, nickname):
         self.factory.nickname = nickname
 
-    def _get_colors(self):
+    @property
+    def colors(self):
         return self.factory.colors
 
     @property
-    def colors(self):
-        return self._get_colors()
-
-    def _get_admin(self):
+    def admin(self):
         return self.factory.admin
 
     @property
-    def admin(self):
-        return self._get_admin()
-
-    def _get_user_types(self):
+    def user_types(self):
         return self.factory.user_types
 
     @property
-    def user_types(self):
-        return self._get_user_types()
-
-    def _get_rights(self):
-        return self.factory.rights
-
-    @property
     def rights(self):
-        return self._get_rights()
+        return self.factory.rights
 
     def signedOn(self):
         self.join(self.factory.channel, self.factory.password)
@@ -143,23 +131,26 @@ class IRCBot(irc.IRCClient):
 
     @channel
     def privmsg(self, user, irc_channel, msg):
-        if user in self.ops or user in self.voices:
-            prefix = '@' if user in self.ops else '+'
-            alias = self.factory.aliases.get(user, user)
-            if msg.startswith(self.factory.commandprefix) and user in self.ops:
-                self.unaliased_name = user
-                self.name = prefix + alias
-                user_input = msg[len(self.factory.commandprefix):]
-                result = commands.handle_input(self, user_input)
-                if result is not None:
-                    self.send("%s: %s" % (user, result))
-            elif msg.startswith(self.factory.chatprefix):
-                max_len = MAX_IRC_CHAT_SIZE - \
-                    len(self.protocol.server_prefix) - 1
-                msg = msg[len(self.factory.chatprefix):].strip()
-                message = ("<%s> %s" % (prefix + alias, msg))[:max_len]
-                print(message)
-                self.factory.server.send_chat(encode(message))
+        if user not in self.ops and user not in self.voices:
+            return  # This user is unpriviledged
+
+        prefix = '@' if user in self.ops else '+'
+        alias = self.factory.aliases.get(user, user)
+
+        if msg.startswith(self.factory.chatprefix):
+            max_len = MAX_IRC_CHAT_SIZE - \
+                len(self.protocol.server_prefix) - 1
+            msg = msg[len(self.factory.chatprefix):].strip()
+            message = ("<%s> %s" % (prefix + alias, msg))[:max_len]
+            print(message)
+            self.factory.server.send_chat(encode(message))
+        elif msg.startswith(self.factory.commandprefix) and user in self.ops:
+            self.unaliased_name = user
+            self.name = prefix + alias
+            user_input = msg[len(self.factory.commandprefix):]
+            result = commands.handle_input(self, user_input)
+            if result is not None:
+                self.send("%s: %s" % (user, result))
 
     @channel
     def userLeft(self, user, irc_channel):
