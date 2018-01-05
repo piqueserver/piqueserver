@@ -15,18 +15,13 @@ from piqueserver.config import config
 
 @command(admin_only=True)
 def reloadconfig(connection):
-    new_config = {}
     try:
-        new_config = json.load(
-            open(os.path.join(config.config_dir, cfg.config_file), 'r'))
-        if not isinstance(new_config, dict):
-            raise ValueError('%s is not a mapping type' % cfg.config_file)
-    except ValueError as v:
-        print('Error reloading config:', v)
+        extension = os.path.splitext(config.config_file)[1][1:]
+        with open(config.config_file) as fobj:
+            config.update_from_file(fobj, format_=extension.upper())
+    except Exception as e:
+        print('Error reloading config:', e)
         return 'Error reloading config. Check log for details.'
-    # NOTE: this updates the config dictionary, but doesn't update any config -
-    # does it actually work?
-    connection.protocol.config.update(new_config)
     connection.protocol.reload_passes()
     return 'Config reloaded!'
 
