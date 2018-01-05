@@ -75,6 +75,7 @@ class ConfigStore():
 
         # these are for config that isn't ever stored in the config file (yet)
         self.config_dir = DEFAULT_CONFIG_DIR
+        self.config_file = os.path.join(DEFAULT_CONFIG_DIR,"config.toml")
 
     def _validate_all(self):
         for option in self._options.values():

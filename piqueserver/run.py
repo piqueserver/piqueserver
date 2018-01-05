@@ -170,6 +170,7 @@ def main():
                 'Unsupported config file format! Must have json or toml extension.'
             )
 
+    config.config_file = config_file
     print('Loading config from {!r}'.format(config_file))
     with open(config_file) as fobj:
         config.load_from_file(fobj, format_=format_)
