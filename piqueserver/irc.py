@@ -198,10 +198,10 @@ class IRCClientFactory(protocol.ClientFactory):
             self.rights.update(commands.get_rights(user_type))
         self.server = server
         self.nickname = config.get('nickname',
-                                   'pyspades%s' % random.randrange(0, 99))
-        self.username = config.get('username', 'pyspades')
+                                   'piqueserver%s' % random.randrange(0, 99))
+        self.username = config.get('username', 'piqueserver')
         self.realname = config.get('realname', server.name)
-        self.channel = config.get('channel', "#pyspades.bots").lower()
+        self.channel = config.get('channel', "#piqueserver.bots").lower()
         self.commandprefix = config.get('commandprefix', '.')
         self.chatprefix = config.get('chatprefix', '')
         self.password = config.get('password', '') or None
