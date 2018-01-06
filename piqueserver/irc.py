@@ -147,7 +147,7 @@ class IRCBot(irc.IRCClient):
             msg = msg[len(self.factory.chatprefix):].strip()
             message = ("<%s> %s" % (prefix + alias, msg))[:max_len]
             print(message)
-            self.factory.server.send_chat(encode(message))
+            self.factory.server.broadcast_chat(message)
         elif msg.startswith(self.factory.commandprefix) and user in self.ops:
             self.unaliased_name = user
             self.name = prefix + alias
