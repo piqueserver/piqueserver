@@ -38,7 +38,7 @@ IRC_TEAM_COLORS = {0: '\x0302', 1: '\x0303'}
 SPLIT_WHO_IN_TEAMS = True
 SPLIT_THRESHOLD = 20  # players
 
-irc_color_codes = re.compile("\x03(?:\d{1,2}(?:,\d{1,2})?)?", re.UNICODE)
+irc_color_codes = re.compile(r"\x03(?:\d{1,2}(?:,\d{1,2})?)?", re.UNICODE)
 
 
 def channel(func):
