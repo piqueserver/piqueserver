@@ -927,8 +927,10 @@ class ServerConnection(BaseConnection):
                 existing_player.team = player.team.id
                 existing_player.color = make_color(*player.color)
                 saved_loaders.append(existing_player.generate())
-                if player.world_object.dead:
-                    kill_action.killer_id = 31
+                # send kill packets for dead players
+                if player.player_id != self.player_id and player.world_object \
+                and player.world_object.dead:
+                    kill_action.killer_id = player.player_id
                     kill_action.player_id = player.player_id
                     kill_action.kill_type = FALL_KILL
                     saved_loaders.append(kill_action.generate())
