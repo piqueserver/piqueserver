@@ -927,6 +927,11 @@ class ServerConnection(BaseConnection):
                 existing_player.team = player.team.id
                 existing_player.color = make_color(*player.color)
                 saved_loaders.append(existing_player.generate())
+                if player.world_object.dead:
+                    kill_action.killer_id = 31
+                    kill_action.player_id = player.player_id
+                    kill_action.kill_type = FALL_KILL
+                    saved_loaders.append(kill_action.generate())
 
             self.player_id = self.protocol.player_ids.pop()
             self.protocol.update_master()
