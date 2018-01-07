@@ -22,6 +22,7 @@ pyspades - default/featured server
 from __future__ import print_function, unicode_literals
 import sys
 import os
+import errno
 import imp
 import importlib
 import json
@@ -175,8 +176,11 @@ def ensure_dir_exists(filename):
     d = os.path.dirname(filename)
     try:
         os.makedirs(d)
-    except FileExistsError:
-        pass
+    except OSError as e:
+        if e.errno == errno.EEXIST:
+            pass
+        else:
+            raise e
 
 def random_choice_cycle(choices):
     while True:
@@ -645,10 +649,15 @@ class FeatureProtocol(ServerProtocol):
             self.ban_publish.update()
 
     def receive_callback(self, address, data):
+        """This hook recieves the raw UDP data before it is processed by enet"""
+
+        # reply to ASCII HELLO messages with HI so that clients can measure the
+        # connection latency
         if data == b'HELLO':
-            print("test")
             self.host.socket.send(address, b'HI')
             return 1
+
+        # This drop the connection of any ip in hard_bans
         if address.host in self.hard_bans:
             return 1
 
@@ -672,9 +681,9 @@ class FeatureProtocol(ServerProtocol):
     def irc_say(self, msg, me=False):
         if self.irc_relay:
             if me:
-                self.irc_relay.me(msg, filter=True)
+                self.irc_relay.me(msg, do_filter=True)
             else:
-                self.irc_relay.send(msg, filter=True)
+                self.irc_relay.send(msg, do_filter=True)
 
     def send_tip(self):
         line = self.tips[random.randrange(len(self.tips))]

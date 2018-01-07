@@ -17,9 +17,11 @@
 
 from __future__ import print_function
 
+import re
 import random
-from itertools import groupby, chain, izip
+from itertools import groupby, chain
 from operator import attrgetter
+from six.moves import zip
 
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
@@ -28,25 +30,21 @@ from pyspades.constants import MAX_CHAT_SIZE
 from pyspades.common import encode
 from pyspades.types import AttributeSet
 from piqueserver import commands
+from piqueserver.commands import command, restrict
 
 
 MAX_IRC_CHAT_SIZE = MAX_CHAT_SIZE * 2
-PRINTABLE_CHARACTERS = ('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP'
-                        'QRSTUVWXYZ!"#$%&\\\'()*+,-./:;<=>?@[\\]^_`{|}~ \t')
 IRC_TEAM_COLORS = {0: '\x0302', 1: '\x0303'}
 SPLIT_WHO_IN_TEAMS = True
 SPLIT_THRESHOLD = 20  # players
 
-
-def is_printable(value):
-    return value in PRINTABLE_CHARACTERS
-
-
-def filter_printable(value):
-    return filter(is_printable, value)
+irc_color_codes = re.compile(r"\x03(?:\d{1,2}(?:,\d{1,2})?)?", re.UNICODE)
 
 
 def channel(func):
+    """This decorator rewrites the username of incoming messages to strip the
+    ident and rejects it if the source channel is not equal to the channel the
+    bot is in"""
     def new_func(self, user, irc_channel, *arg, **kw):
         if not irc_channel.lower() == self.factory.channel:
             return
@@ -61,40 +59,33 @@ class IRCBot(irc.IRCClient):
     unaliased_name = None
     name = None
 
-    def _get_nickname(self):
-        return self.factory.nickname
-
     @property
     def nickname(self):
-        return self._get_nickname()
+        return self.factory.nickname
 
-    def _get_colors(self):
-        return self.factory.colors
+    @nickname.setter
+    def nickname(self, nickname):
+        self.factory.nickname = nickname
 
     @property
     def colors(self):
-        return self._get_colors()
+        return self.factory.colors
 
-    def _get_admin(self):
-        return self.factory.admin
+    @colors.setter
+    def colors(self, colors):
+        self.factory.colors = colors
 
     @property
     def admin(self):
-        return self._get_admin()
-
-    def _get_user_types(self):
-        return self.factory.user_types
+        return self.factory.admin
 
     @property
     def user_types(self):
-        return self._get_user_types()
-
-    def _get_rights(self):
-        return self.factory.rights
+        return self.factory.user_types
 
     @property
     def rights(self):
-        return self._get_rights()
+        return self.factory.rights
 
     def signedOn(self):
         self.join(self.factory.channel, self.factory.password)
@@ -144,24 +135,26 @@ class IRCBot(irc.IRCClient):
 
     @channel
     def privmsg(self, user, irc_channel, msg):
-        if user in self.ops or user in self.voices:
-            prefix = '@' if user in self.ops else '+'
-            alias = self.factory.aliases.get(user, user)
-            if msg.startswith(self.factory.commandprefix) and user in self.ops:
-                self.unaliased_name = user
-                self.name = prefix + alias
-                user_input = msg[len(self.factory.commandprefix):]
-                result = commands.handle_input(self, user_input)
-                if result is not None:
-                    self.send("%s: %s" % (user, result))
-            elif msg.startswith(self.factory.chatprefix):
-                max_len = MAX_IRC_CHAT_SIZE - \
-                    len(self.protocol.server_prefix) - 1
-                msg = msg[len(self.factory.chatprefix):].strip()
-                message = ("<%s> %s" % (prefix + alias, msg))[:max_len]
-                message = message.decode('cp1252')
-                print(message.encode('ascii', 'replace'))
-                self.factory.server.send_chat(encode(message))
+        if user not in self.ops and user not in self.voices:
+            return  # This user is unpriviledged
+
+        prefix = '@' if user in self.ops else '+'
+        alias = self.factory.aliases.get(user, user)
+
+        if msg.startswith(self.factory.chatprefix):
+            max_len = MAX_IRC_CHAT_SIZE - \
+                len(self.protocol.server_prefix) - 1
+            msg = msg[len(self.factory.chatprefix):].strip()
+            message = ("<%s> %s" % (prefix + alias, msg))[:max_len]
+            print(message)
+            self.factory.server.broadcast_chat(message)
+        elif msg.startswith(self.factory.commandprefix) and user in self.ops:
+            self.unaliased_name = user
+            self.name = prefix + alias
+            user_input = msg[len(self.factory.commandprefix):]
+            result = commands.handle_input(self, user_input)
+            if result is not None:
+                self.send("%s: %s" % (user, result))
 
     @channel
     def userLeft(self, user, irc_channel):
@@ -175,15 +168,13 @@ class IRCBot(irc.IRCClient):
         self.userLeft(kickee, irc_channel)
 
     def send(self, msg, do_filter=False):
-        msg = msg.encode('cp1252', 'replace')
         if do_filter:
-            msg = filter_printable(msg)
+            msg = irc_color_codes.sub('', msg)
         self.msg(self.factory.channel, msg)
 
     def me(self, msg, do_filter=False):
-        msg = msg.encode('cp1252', 'replace')
         if do_filter:
-            msg = filter_printable(msg)
+            msg = irc_color_codes.sub('', msg)
         self.describe(self.factory.channel, msg)
 
 
@@ -204,17 +195,16 @@ class IRCClientFactory(protocol.ClientFactory):
         self.user_types = AttributeSet(['admin', 'irc'])
         self.rights = AttributeSet()
         for user_type in self.user_types:
-            self.rights.update(commands.rights.get(user_type, ()))
+            self.rights.update(commands.get_rights(user_type))
         self.server = server
         self.nickname = config.get('nickname',
-                                   'pyspades%s' % random.randrange(0, 99)).encode('ascii')
-        self.username = config.get('username', 'pyspades').encode('ascii')
-        self.realname = config.get('realname', server.name).encode('ascii')
-        self.channel = config.get('channel', "#pyspades.bots").encode(
-            'ascii').lower()
-        self.commandprefix = config.get('commandprefix', '.').encode('ascii')
-        self.chatprefix = config.get('chatprefix', '').encode('ascii')
-        self.password = config.get('password', '').encode('ascii') or None
+                                   'piqueserver%s' % random.randrange(0, 99))
+        self.username = config.get('username', 'piqueserver')
+        self.realname = config.get('realname', server.name)
+        self.channel = config.get('channel', "#piqueserver.bots").lower()
+        self.commandprefix = config.get('commandprefix', '.')
+        self.chatprefix = config.get('chatprefix', '')
+        self.password = config.get('password', '') or None
 
     def startedConnecting(self, connector):
         print("Connecting to IRC server...")
@@ -265,11 +255,8 @@ def format_name_color(player):
             '%s #%s' % (player.name, player.player_id))
 
 
-def restrict_irc(func):
-    return commands.restrict(func, 'irc')
-
-
-@restrict_irc
+@restrict("irc")
+@command()
 def who(connection):
     protocol = connection.protocol
     player_count = len(protocol.players)
@@ -291,7 +278,7 @@ def who(connection):
         msg += separator.join(chain.from_iterable(formatted_names))
         connection.me(msg)
     else:
-        for team, names in izip(teams, formatted_names):
+        for team, names in zip(teams, formatted_names):
             name_count = len(names)
             noun = 'player' if name_count == 1 else 'players'
             msg = 'has %s %s in %s: ' % (name_count, noun, team.name)
@@ -299,14 +286,16 @@ def who(connection):
             connection.me(msg)
 
 
-@restrict_irc
+@restrict("irc")
+@command()
 def score(connection):
     connection.me("scores: Blue %s - Green %s" % (
         connection.protocol.blue_team.score,
         connection.protocol.green_team.score))
 
 
-@restrict_irc
+@restrict("irc")
+@command()
 def alias(connection, value=None):
     aliases = connection.factory.aliases
     unaliased_name = connection.unaliased_name
@@ -322,7 +311,8 @@ def alias(connection, value=None):
     connection.me(message)
 
 
-@restrict_irc
+@restrict("irc")
+@command()
 def unalias(connection):
     aliases = connection.factory.aliases
     unaliased_name = connection.unaliased_name
@@ -334,13 +324,11 @@ def unalias(connection):
     connection.me(message)
 
 
-@restrict_irc
+@restrict("irc")
+@command()
 def colors(connection):
     connection.colors = not connection.colors
     if connection.colors:
         return '\x0312c\x0304o\x0309l\x0308o\x0306r\x0313s \x0f\x16ON!'
     else:
         return 'colors off'
-
-for function in (who, score, alias, unalias, colors):
-    commands.add(function)
