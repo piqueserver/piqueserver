@@ -397,9 +397,10 @@ class FeatureProtocol(ServerProtocol):
         port = self.port = port_option.get()
         ServerProtocol.__init__(self, port, interface)
         self.host.intercept = self.receive_callback
-        ret = self.set_map_rotation(map_rotation.get())
-        if not ret:
-            print('Invalid map in map rotation (%s), exiting.' % ret.map)
+        try:
+            self.set_map_rotation(config['maps'])
+        except MapNotFound as e:
+            print('Invalid map in map rotation (%s), exiting.' % e.map)
             raise SystemExit
 
         self.update_format()
@@ -482,6 +483,10 @@ class FeatureProtocol(ServerProtocol):
         self.advance_rotation('Time up!')
 
     def advance_rotation(self, message=None):
+        """
+        Advances to the next map in the rotation. If message is provided
+        it will send it to the chat, waits for 10 seconds and then advances.
+        """
         self.set_time_limit(False)
         if self.planned_map is None:
             self.planned_map = next(self.map_rotator)
@@ -500,10 +505,10 @@ class FeatureProtocol(ServerProtocol):
         return self.game_mode_name
 
     def set_map_name(self, rot_info):
-        try:
-            map_info = self.get_map(rot_info)
-        except MapNotFound as e:
-            return e
+        """
+        Sets the map by its name.
+        """
+        map_info = self.get_map(rot_info)
         if self.map_info:
             self.on_map_leave()
         self.map_info = map_info
@@ -511,21 +516,23 @@ class FeatureProtocol(ServerProtocol):
         self.set_map(self.map_info.data)
         self.set_time_limit(self.map_info.time_limit)
         self.update_format()
-        return True
 
     def get_map(self, rot_info):
-        return Map(rot_info, os.path.join(config.config_dir, 'maps'))
+        """
+        Creates and returns a Map object from rotation info
+        """
+        return Map(rot_info, os.path.join(cfg.config_dir, 'maps'))
 
     def set_map_rotation(self, maps, now=True):
-        try:
-            maps = check_rotation(maps, os.path.join(config.config_dir, 'maps'))
-        except MapNotFound as e:
-            return e
+        """
+        Over-writes the current map rotation with provided one.
+        And advances immediately with the new rotation by default.
+        """
+        maps = check_rotation(maps, os.path.join(cfg.config_dir, 'maps'))
         self.maps = maps
         self.map_rotator = self.map_rotator_type(maps)
         if now:
             self.advance_rotation()
-        return True
 
     def get_map_rotation(self):
         return [map_item.full_name for map_item in self.maps]
