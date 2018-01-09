@@ -37,6 +37,11 @@ class MapNotFound(Exception):
 
 
 def check_rotation(maps, load_dir=None):
+    """
+    Checks if provided maps exist in maps dir. and
+    returns an array of RotationInfo objects for those maps.
+    Raises MapNotFound exception if maps are not found.
+    """
     if load_dir is None:
         load_dir = os.path.join(cfg.config_dir, 'maps')
     infos = []
