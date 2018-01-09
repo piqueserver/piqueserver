@@ -56,9 +56,10 @@ def change_rotation(connection, *pre_maps):
 
     if len(maps) == 0:
         return 'Usage: /rotation <map1> <map2> <map3> ...'
-    ret = protocol.set_map_rotation(maps, False)
-    if not ret:
-        return 'Invalid map in map rotation (%s)' % ret.map
+    try:
+        protocol.set_map_rotation(maps, False)
+    except MapNotFound as e:
+        return 'Invalid map in map rotation (%s)' % e.map
     protocol.send_chat("%s changed map rotation to %s." %
                        (name, map_list), irc=True)
 
@@ -79,9 +80,10 @@ def rotation_add(connection, *pre_maps):
     map_list = ", ".join(maps) + map_list
     maps.extend(new_maps)
 
-    ret = protocol.set_map_rotation(maps, False)
-    if not ret:
-        return 'Invalid map in map rotation (%s)' % ret.map
+    try:
+        protocol.set_map_rotation(maps, False)
+    except MapNotFound as e:
+        return 'Invalid map in map rotation (%s)' % e.map
     protocol.send_chat("%s added %s to map rotation." %
                        (name, " ".join(pre_maps)), irc=True)
 

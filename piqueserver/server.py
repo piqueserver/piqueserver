@@ -325,7 +325,7 @@ class FeatureProtocol(ServerProtocol):
         ServerProtocol.__init__(self, port, interface)
         self.host.intercept = self.receive_callback
         try:
-            ret = self.set_map_rotation(config['maps'])
+            self.set_map_rotation(config['maps'])
         except MapNotFound as e:
             print('Invalid map in map rotation (%s), exiting.' % e.map)
             raise SystemExit
