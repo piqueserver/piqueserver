@@ -421,6 +421,10 @@ class FeatureProtocol(ServerProtocol):
         self.advance_rotation('Time up!')
 
     def advance_rotation(self, message=None):
+        """
+        Advances to the next map in the rotation. If message is provided
+        it will send it to the chat, waits for 10 seconds and then advances.
+        """
         self.set_time_limit(False)
         if self.planned_map is None:
             self.planned_map = next(self.map_rotator)
@@ -439,6 +443,9 @@ class FeatureProtocol(ServerProtocol):
         return self.game_mode_name
 
     def set_map_name(self, rot_info):
+        """
+        Sets the map by its name.
+        """
         map_info = self.get_map(rot_info)
         if self.map_info:
             self.on_map_leave()
@@ -449,9 +456,16 @@ class FeatureProtocol(ServerProtocol):
         self.update_format()
 
     def get_map(self, rot_info):
+        """
+        Creates and returns a Map object from rotation info
+        """
         return Map(rot_info, os.path.join(cfg.config_dir, 'maps'))
 
     def set_map_rotation(self, maps, now=True):
+        """
+        Over-writes the current map rotation with provided one.
+        And advances immediately with the new rotation by default.
+        """
         maps = check_rotation(maps, os.path.join(cfg.config_dir, 'maps'))
         self.maps = maps
         self.map_rotator = self.map_rotator_type(maps)
