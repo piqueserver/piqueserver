@@ -324,9 +324,10 @@ class FeatureProtocol(ServerProtocol):
         port = self.port = config.get('port', 32887)
         ServerProtocol.__init__(self, port, interface)
         self.host.intercept = self.receive_callback
-        ret = self.set_map_rotation(config['maps'])
-        if not ret:
-            print('Invalid map in map rotation (%s), exiting.' % ret.map)
+        try:
+            ret = self.set_map_rotation(config['maps'])
+        except MapNotFound as e:
+            print('Invalid map in map rotation (%s), exiting.' % e.map)
             raise SystemExit
 
         self.update_format()
@@ -438,10 +439,7 @@ class FeatureProtocol(ServerProtocol):
         return self.game_mode_name
 
     def set_map_name(self, rot_info):
-        try:
-            map_info = self.get_map(rot_info)
-        except MapNotFound as e:
-            return e
+        map_info = self.get_map(rot_info)
         if self.map_info:
             self.on_map_leave()
         self.map_info = map_info
@@ -449,21 +447,16 @@ class FeatureProtocol(ServerProtocol):
         self.set_map(self.map_info.data)
         self.set_time_limit(self.map_info.time_limit)
         self.update_format()
-        return True
 
     def get_map(self, rot_info):
         return Map(rot_info, os.path.join(cfg.config_dir, 'maps'))
 
     def set_map_rotation(self, maps, now=True):
-        try:
-            maps = check_rotation(maps, os.path.join(cfg.config_dir, 'maps'))
-        except MapNotFound as e:
-            return e
+        maps = check_rotation(maps, os.path.join(cfg.config_dir, 'maps'))
         self.maps = maps
         self.map_rotator = self.map_rotator_type(maps)
         if now:
             self.advance_rotation()
-        return True
 
     def get_map_rotation(self):
         return [map_item.full_name for map_item in self.maps]
