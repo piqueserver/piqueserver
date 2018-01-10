@@ -95,18 +95,20 @@ def decode(value):
 
 ascii_control_code_regexp = re.compile(r'[\x00-\x1F]')
 
-def _replace_hex(s):
-    return r"\x{:h}".format(s)
+def _replace_hex(match):
+    return r"\x{:x}".format(ord(match.group()))
 
 def escape_control_codes(untrusted_str):
     """escape all ascii control codes in a string note: this still leaves
     things like special unicode characters in place"""
 
-    # Make the common symbols prettier
-    untrusted_str = untrusted_str.translate({13: '\\r', 10: '\\n', 9: '\\t'})
+    # Escapes common symbols
+    # untrusted_str = untrusted_str.translate({13: '\\r', 10: '\\n', 9: '\\t'})
+    # py2 doesn't support the prettier implementation
+    untrusted_str = untrusted_str.replace('\r', '\\r').replace('\t', '\\t').replace('\n', '\\n')
 
     # Escape all characters under 0x20 with their hex notation
-    return ascii_control_code_regexp.sub(untrusted_str, _replace_hex)
+    return ascii_control_code_regexp.sub(_replace_hex, untrusted_str)
 
 cdef class Vertex3:
     # NOTE: for the most part this behaves as a 2d vector, with z being tacked on
