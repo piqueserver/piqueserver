@@ -499,6 +499,10 @@ def apply_script(protocol, connection, config):
                         random.choice(player.team.arena_spawns))
                     player.refill()
 
+        def refill_all(self):
+            for player in itervalues(self.players):
+                player.refill()
+
         def begin_arena_countdown(self):
             if self.arena_limit_timer is not None:
                 if self.arena_limit_timer.cancelled == 0 and self.arena_limit_timer.called == 0:
@@ -539,6 +543,7 @@ def apply_script(protocol, connection, config):
             self.arena_running = True
             self.killing = True
             self.building = BUILDING_ENABLED
+            self.refill_all()
             self.destroy_gates()
             self.send_chat('Go!')
             if MAX_ROUND_TIME > 0:
