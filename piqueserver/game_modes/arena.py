@@ -501,6 +501,8 @@ def apply_script(protocol, connection, config):
 
         def refill_all(self):
             for player in itervalues(self.players):
+                if player.team.spectator:
+                    continue
                 player.refill()
 
         def begin_arena_countdown(self):
