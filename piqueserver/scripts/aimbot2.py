@@ -475,7 +475,6 @@ def apply_script(protocol, connection, config):
             self.bullet_loop_stop()
             if collect_data:
                 if self.name is not None:
-                    # TODO: does it work under py2?
                     with open(os.path.join(cfg.config_dir,'aimbot2log.csv'), 'a+') as csvfile:
                         csvfile.seek(0)
                         fieldnames = ['name', 'rifle_hits', 'rifle_count', 'smg_hits', 'smg_count', 'shotgun_hits', 'shotgun_count']
