@@ -311,7 +311,7 @@ def apply_script(protocol, connection, config):
                 if self.protocol.arena_running:
                     return -1
                 else:
-                    return 1
+                    return 0
             return connection.get_respawn_time(self)
 
         def respawn(self):
