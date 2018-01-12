@@ -188,8 +188,8 @@ def god(connection, player=None):
     """
     if player:
         connection = get_player(connection.protocol, player)
-    else:
-        raise CommandError
+    elif connection not in connection.protocol.players:
+        return 'Unknown player'
 
     connection.god = not connection.god # toggle godmode
 
