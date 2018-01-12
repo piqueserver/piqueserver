@@ -10,7 +10,7 @@ import pyspades
 from pyspades.constants import (ERROR_BANNED, DESTROY_BLOCK, SPADE_DESTROY,
                                 GRENADE_DESTROY, ERROR_KICKED, BLOCK_TOOL)
 from pyspades.server import ServerConnection
-from pyspades.common import encode, prettify_timespan, Vertex3
+from pyspades.common import encode, escape_control_codes, prettify_timespan, Vertex3
 from pyspades.world import Character
 
 # TODO: move these where they belong
@@ -72,8 +72,7 @@ class FeatureConnection(ServerConnection):
             self.send_lines(self.protocol.motd)
 
     def on_login(self, name):
-        # Dirty hack to remove all non-ascii chars, please fix
-        self.printable_name = name.encode().decode('ascii', 'replace')
+        self.printable_name = escape_control_codes(name)
         if len(self.printable_name) > 15:
             self.kick(silent=True)
         print('%s (IP %s, ID %s) entered the game!' % (self.printable_name,
@@ -114,7 +113,7 @@ class FeatureConnection(ServerConnection):
             log_message += ' -> %s' % result
             for i in reversed(result.split("\n")):
                 self.send_chat(i)
-        print(log_message.replace("\n", "\\n").encode('ascii', 'replace'))
+        print(escape_control_codes(log_message))
 
     def _can_build(self):
         if not self.can_complete_line_build:
@@ -347,7 +346,7 @@ class FeatureConnection(ServerConnection):
             self.last_chat = current_time
 
         # TODO: replace with logging
-        print(message.encode('ascii', 'replace'))
+        print(escape_control_codes(message))
 
         return value
 
