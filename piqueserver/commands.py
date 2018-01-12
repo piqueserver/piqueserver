@@ -373,9 +373,9 @@ def handle_command(connection, command, parameters):
     # make an attempt at displaying them nicely in format_command_error
     except KeyError:
         msg = None  # 'Invalid command'
-    except TypeError as t:
+    except TypeError:
         print('Command', command, 'failed with args:', parameters)
-        traceback.print_exc(t)
+        traceback.print_exc()
         msg = 'Command failed'
     except CommandError as e:
         msg = str(e)

@@ -1,5 +1,5 @@
 from pyspades.common import (coordinates, to_coordinates)
-from piqueserver.commands import command, get_player
+from piqueserver.commands import command, CommandError, get_player
 
 
 @command(admin_only=True)
@@ -186,10 +186,10 @@ def god(connection, player=None):
     Go into god mode and inform everyone on the server of it
     /god [player]
     """
-    if player is not None:
+    if player:
         connection = get_player(connection.protocol, player)
     elif connection not in connection.protocol.players:
-        return 'Unknown player: ' + player
+        return 'Unknown player'
 
     connection.god = not connection.god # toggle godmode
 
