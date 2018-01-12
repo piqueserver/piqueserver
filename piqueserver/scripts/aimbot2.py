@@ -6,8 +6,8 @@ maintained by: ?
 # So we can do `x / y` instead of `float(x) / y`
 from __future__ import division
 from six.moves import range
-
-
+import os
+import csv
 import re
 from math import sqrt, cos, pi
 
@@ -18,13 +18,10 @@ from pyspades.constants import (
     WEAPON_TOOL, WEAPON_KILL, HEADSHOT_KILL,
     RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON,
 )
-
+from piqueserver import cfg
 from piqueserver.commands import command, admin, get_player
 
 DISABLED, KICK, BAN, WARN_ADMIN = range(4)
-
-# This is an option for data collection. Data is outputted to aimbot2log.txt
-DATA_COLLECTION = False
 
 # This controls which detection methods are enabled. If a player is detected
 # using one of these methods, the player is kicked.
@@ -187,6 +184,7 @@ def hackinfo_player(player):
 
 
 def apply_script(protocol, connection, config):
+    collect_data = config.get("aimbot_collect_data", False)
     class Aimbot2Protocol(protocol):
 
         def start_votekick(self, payload):
@@ -475,19 +473,29 @@ def apply_script(protocol, connection, config):
         # Data collection stuff
         def on_disconnect(self):
             self.bullet_loop_stop()
-            if DATA_COLLECTION:
+            if collect_data:
                 if self.name is not None:
-                    with open('aimbot2log.txt', 'a') as myfile:
-                        output = self.name.encode(
-                            'ascii', 'ignore').replace(',', '') + ','
-                        output += str(self.rifle_hits) + ',' + \
-                            str(self.rifle_count) + ','
-                        output += str(self.smg_hits) + ',' + \
-                            str(self.smg_count) + ','
-                        output += str(self.shotgun_hits) + ',' + \
-                            str(self.shotgun_count) + '\n'
-                        myfile.write(output)
-                        myfile.close()
+                    with open(os.path.join(cfg.config_dir,'aimbot2log.csv'), 'a+') as csvfile:
+                        csvfile.seek(0)
+                        fieldnames = ['name', 'rifle_hits', 'rifle_count', 'smg_hits', 'smg_count', 'shotgun_hits', 'shotgun_count']
+                        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                        try:
+                            has_header = csv.Sniffer().has_header(csvfile.readline())
+                        except csv.Error:
+                            # Empty file causes this error
+                            has_header = False
+                        if not has_header:
+                            writer.writeheader()
+                        writer.writerow({
+                            'name': self.name,
+                            'rifle_hits': self.rifle_hits,
+                            'rifle_count': self.rifle_count,
+                            'smg_hits': self.smg_hits,
+                            'smg_count': self.smg_count,
+                            'shotgun_hits': self.shotgun_hits,
+                            'shotgun_count': self.shotgun_count
+                        })
+                        csvfile.close()
             return connection.on_disconnect(self)
 
     return Aimbot2Protocol, Aimbot2Connection
