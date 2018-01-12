@@ -23,10 +23,6 @@ from piqueserver.commands import command, admin, get_player
 
 DISABLED, KICK, BAN, WARN_ADMIN = range(4)
 
-# This is an option for data collection. Data is outputted to aimbot2log.txt
-# TODO: make it configureable
-DATA_COLLECTION = True
-
 # This controls which detection methods are enabled. If a player is detected
 # using one of these methods, the player is kicked.
 HEADSHOT_SNAP = WARN_ADMIN
@@ -188,6 +184,7 @@ def hackinfo_player(player):
 
 
 def apply_script(protocol, connection, config):
+    collect_data = config.get("aimbot_collect_data", False)
     class Aimbot2Protocol(protocol):
 
         def start_votekick(self, payload):
@@ -476,7 +473,7 @@ def apply_script(protocol, connection, config):
         # Data collection stuff
         def on_disconnect(self):
             self.bullet_loop_stop()
-            if DATA_COLLECTION:
+            if collect_data:
                 if self.name is not None:
                     # TODO: does it work under py2?
                     with open(os.path.join(cfg.config_dir,'aimbot2log.csv'), 'a+') as csvfile:
