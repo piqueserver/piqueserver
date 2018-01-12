@@ -17,7 +17,7 @@
 
 import sys
 from os import path
-
+import errno
 try:
     from twisted.cred import portal, checkers
     from twisted.conch import manhole, manhole_ssh
@@ -53,14 +53,16 @@ def create_remote_factory(namespace, users):
     try:
         f.publicKeys[b"ssh-rsa"] = keys.Key.fromFile(ssh_pubkey_path)
         f.privateKeys[b"ssh-rsa"] = keys.Key.fromFile(ssh_privkey_path)
-    except FileNotFoundError:
-        print("ERROR: You don't have any keys in the host key location")
-        print("Generate one with:")
-        print("  mkdir {}".format(ssh_key_base_path))
-        print("  ssh-keygen -f {} -t rsa".format(ssh_privkey_path))
-        print("make sure to specify no password")
-
-        sys.exit(1)
+    except OSError as e:
+        if e.errno == errno.ENOENT:
+            print("ERROR: You don't have any keys in the host key location")
+            print("Generate one with:")
+            print("  mkdir {}".format(ssh_key_base_path))
+            print("  ssh-keygen -f {} -t rsa".format(ssh_privkey_path))
+            print("make sure to specify no password")
+            sys.exit(1)
+        else:
+            raise e
     return f
 
 
