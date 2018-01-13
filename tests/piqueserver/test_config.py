@@ -2,13 +2,35 @@ import tempfile
 
 import unittest
 from piqueserver.config import config, JSON_FORMAT, TOML_FORMAT
+from io import StringIO
+
+SIMPLE_TOML_CONFIG = u"""
+title = "something"
+testnumber = 42
+
+[server]
+name = "piqueserver instance"
+game_mode = "ctf"
+port = 4567
+
+[passwords]
+admin = ["adminpass1", "adminpass2", "adminpass3"]
+moderator = ["modpass"]
+
+[squad]
+respawn_time = 32
+size = 5
+
+[server.things]
+thing1 = "something"
+"""
 
 
 class TestExampleConfig(unittest.TestCase):
 
     def test_simple(self):
-        f = 'tests/example_config/simple.toml'
-        config.load_from_file(open(f))
+        f = StringIO(SIMPLE_TOML_CONFIG)
+        config.load_from_file(f)
 
         gravity = config.option('gravity', cast=bool, default=True)
         self.assertEqual(gravity.get(), True)
@@ -26,8 +48,8 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(s.get(), '42')
 
     def test_validation(self):
-        f = 'tests/example_config/simple.toml'
-        config.load_from_file(open(f))
+        f = StringIO(SIMPLE_TOML_CONFIG)
+        config.load_from_file(f)
 
         bounded = config.option('testboundednumber', cast=int,
                                 validate=lambda n: 0 < n < 11, default=5)
@@ -41,9 +63,9 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(bounded.get(), 6)
 
     def test_get(self):
-        f = 'tests/example_config/simple.toml'
+        f = StringIO(SIMPLE_TOML_CONFIG)
         test = config.option('testthing')
-        config.load_from_file(open(f))
+        config.load_from_file(f)
 
         self.assertEqual(test.get(), None)
 
@@ -52,8 +74,8 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(test.get(), 'something')
 
     def test_nested(self):
-        f = 'tests/example_config/simple.toml'
-        config.load_from_file(open(f))
+        f = StringIO(SIMPLE_TOML_CONFIG)
+        config.load_from_file(f)
 
         server_config = config.section('server')
         port = server_config.option('port')
@@ -82,8 +104,8 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(test.get(), 'hi')
 
     def test_reload(self):
-        f = 'tests/example_config/simple.toml'
-        config.load_from_file(open(f))
+        f = StringIO(SIMPLE_TOML_CONFIG)
+        config.load_from_file(f)
 
         server_config = config.section('server')
         port = server_config.option('port', default=32887)
@@ -93,7 +115,6 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(port.get(), 32887)
         port.set(456)
         self.assertEqual(port.get(), 456)
-
 
         config.load_from_dict({})
         port.set(5555)
@@ -119,25 +140,25 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(name.get(), 'thing')
 
     def test_fail_load(self):
-        f = 'tests/example_config/simple.toml'
+        f = StringIO(SIMPLE_TOML_CONFIG)
 
         with self.assertRaises(ValueError):
-            config.load_from_file(open(f), format_='aoeuaoeu')
+            config.load_from_file(f, format_='aoeuaoeu')
 
         with self.assertRaises(ValueError):
-            config.load_from_file(open(f), format_=JSON_FORMAT)
+            config.load_from_file(f, format_=JSON_FORMAT)
 
-    def test_json(self):
-        f = 'piqueserver/config/config.json'
-        config.load_from_file(open(f), format_=JSON_FORMAT)
+    def test_json_default(self):
+        with open('piqueserver/config/config.json') as f:
+            config.load_from_file(f, format_=JSON_FORMAT)
 
         # "name" : "piqueserver instance",
         name = config.option('name')
         self.assertEqual(name.get(), 'piqueserver instance')
 
     def test_more_nested(self):
-        f = 'tests/example_config/simple.toml'
-        config.load_from_file(open(f))
+        f = StringIO(SIMPLE_TOML_CONFIG)
+        config.load_from_file(f)
 
         server_config = config.section('server')
         port = server_config.option('port')
@@ -152,8 +173,8 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(thing_config.get_dict(), {'thing1': 'something', 'thing2': 'something else'})
 
     def test_nested_update(self):
-        f = 'tests/example_config/simple.toml'
-        config.load_from_file(open(f))
+        f = StringIO(SIMPLE_TOML_CONFIG)
+        config.load_from_file(f)
 
         updates = {
                 'server': {
@@ -172,8 +193,8 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(raw['server']['name'], 'piqueserver instance')
 
     def test_dump_to_file(self):
-        f = 'tests/example_config/simple.toml'
-        config.load_from_file(open(f))
+        f = StringIO(SIMPLE_TOML_CONFIG)
+        config.load_from_file(f)
 
         with self.assertRaises(ValueError):
             config.dump_to_file(None, format_='garbage123')
@@ -185,7 +206,6 @@ class TestExampleConfig(unittest.TestCase):
             # at least make sure it wrote something that could be json
             self.assertEqual(out[0], '{')
             self.assertEqual(out[-1], '}')
-
 
         with tempfile.TemporaryFile(mode='w+') as f:
             config.dump_to_file(f, TOML_FORMAT)
