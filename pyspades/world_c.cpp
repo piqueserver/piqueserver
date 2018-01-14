@@ -152,7 +152,7 @@ long isvoxelsolidwrap(long x, long y, long z)
         return 0;
     else if (z >= 64)
         return 1;
-	return get_solid((int)x & VSIDM, (int)y & VSIDM, z, global_map);
+    return get_solid((int)x & VSIDM, (int)y & VSIDM, z, global_map);
 }
 
 //same as isvoxelsolid but water is empty
