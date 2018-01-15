@@ -49,6 +49,7 @@ def copy_config():
 
     print('Complete! Please edit the files in %s to your liking.' %
           cfg.config_dir)
+    sys.exit(0)
 
 
 def update_geoip(target_dir):
@@ -80,6 +81,7 @@ def update_geoip(target_dir):
     print('Cleaning up...')
 
     os.remove(zipped_path)
+    sys.exit(0)
 
 
 def run_server():
@@ -127,6 +129,13 @@ def main():
     # populate the global config with values from args
     cfg.config_dir = args.config_dir
 
+    # copy config and update geoip can happen at the same time
+    # note these functions call sys.exit with codes 0 or 1 based on failure or success
+    if args.copy_config:
+        copy_config()
+    if args.update_geoip:
+        update_geoip(cfg.config_dir)
+
     if args.config_file is None:
         cfg.config_file = os.path.join(cfg.config_dir, 'config.json')
     else:
@@ -161,20 +170,8 @@ def main():
     if args.json_parameters:
         config.update_from_dict(json.loads(args.json_parameters))
 
-    run = True
 
-    # copy config and update geoip can happen at the same time
-    # note that sys.exit is called from either of these functions on failure
-    if args.copy_config:
-        copy_config()
-        run = False
-    if args.update_geoip:
-        update_geoip(cfg.config_dir)
-        run = False
-
-    # only run the server if other tasks weren't performed
-    if run:
-        run_server()
+    run_server()
 
 
 if __name__ == "__main__":
