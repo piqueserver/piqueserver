@@ -15,10 +15,23 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+"""
+This module contains the definitions and registrations for the various packets used in the server
+"""
+
+# Notes:
+# Here Packets are registered with the discouraged register_packet() notation.
+# This is due to these packets all being cdef. This means you can not assign to
+# them, and hence not use decorators on them.
+#
+# Other things that should probably be done here is using cython.freelist(n) to
+# speed up allocation for packets
+
 from pyspades.common import *
 from pyspades.constants import *
 from pyspades.loaders cimport Loader
 from pyspades.bytes cimport ByteReader, ByteWriter
+from pyspades.packet import register_packet
 
 cdef inline float limit(float a):
     if a > 512.0:
@@ -73,6 +86,8 @@ cdef class PositionData(Loader):
         reader.writeByte(self.id, True)
         write_position(reader, self.x, self.y, self.z)
 
+register_packet(PositionData)
+
 cdef class OrientationData(Loader):
     id = 1
 
@@ -96,6 +111,8 @@ cdef class OrientationData(Loader):
         reader.writeFloat(self.x, False)
         reader.writeFloat(self.y, False)
         reader.writeFloat(self.z, False)
+
+register_packet(OrientationData)
 
 cdef class WorldUpdate(Loader):
     id = 2
@@ -127,6 +144,8 @@ cdef class WorldUpdate(Loader):
             reader.writeFloat(o_y, False)
             reader.writeFloat(o_z, False)
 
+register_packet(WorldUpdate)
+
 cdef class InputData(Loader):
     id = 3
     cdef public:
@@ -154,6 +173,8 @@ cdef class InputData(Loader):
             (self.sneak << 6) | (self.sprint << 7))
         reader.writeByte(byte, True)
 
+register_packet(InputData)
+
 cdef class WeaponInput(Loader):
     id = 4
 
@@ -174,6 +195,8 @@ cdef class WeaponInput(Loader):
         reader.writeByte(byte, True)
 
 
+register_packet(WeaponInput)
+
 cdef class HitPacket(Loader):
     id = 5
 
@@ -188,6 +211,8 @@ cdef class HitPacket(Loader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
         reader.writeByte(self.value, True)
+
+register_packet(HitPacket, server=False)
 
 cdef class SetHP(Loader):
     id = 5
@@ -211,6 +236,8 @@ cdef class SetHP(Loader):
         reader.writeFloat(self.source_x, False)
         reader.writeFloat(self.source_y, False)
         reader.writeFloat(self.source_z, False)
+
+register_packet(SetHP, client=False)
 
 cdef class GrenadePacket(Loader):
     id = 6
@@ -237,6 +264,8 @@ cdef class GrenadePacket(Loader):
         for value in self.velocity:
             reader.writeFloat(value, False)
 
+register_packet(GrenadePacket)
+
 cdef class SetTool(Loader):
     id = 7
 
@@ -252,6 +281,8 @@ cdef class SetTool(Loader):
         reader.writeByte(self.player_id, True)
         reader.writeByte(self.value, True)
 
+register_packet(SetTool)
+
 cdef class SetColor(Loader):
     id = 8
 
@@ -266,6 +297,8 @@ cdef class SetColor(Loader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
         write_color(reader, self.value)
+
+register_packet(SetColor)
 
 cdef class ExistingPlayer(Loader):
     id = 9
@@ -294,6 +327,8 @@ cdef class ExistingPlayer(Loader):
         write_color(reader, self.color)
         reader.writeString(encode(self.name))
 
+register_packet(ExistingPlayer)
+
 cdef class ShortPlayerData(Loader):
     id = 10
 
@@ -310,6 +345,8 @@ cdef class ShortPlayerData(Loader):
         reader.writeByte(self.player_id, True)
         reader.writeByte(self.team, False)
         reader.writeByte(self.weapon, True)
+
+register_packet(ShortPlayerData)
 
 cdef class MoveObject(Loader):
     id = 11
@@ -332,6 +369,8 @@ cdef class MoveObject(Loader):
         reader.writeFloat(self.x, False)
         reader.writeFloat(self.y, False)
         reader.writeFloat(self.z, False)
+
+register_packet(MoveObject)
 
 cdef class CreatePlayer(Loader):
     id = 12
@@ -357,6 +396,8 @@ cdef class CreatePlayer(Loader):
         write_position(reader, self.x, self.y, self.z)
         reader.writeString(encode(self.name))
 
+register_packet(CreatePlayer)
+
 cdef class BlockAction(Loader):
     id = 13
 
@@ -377,6 +418,8 @@ cdef class BlockAction(Loader):
         reader.writeInt(self.x, False, False)
         reader.writeInt(self.y, False, False)
         reader.writeInt(self.z, False, False)
+
+register_packet(BlockAction)
 
 cdef class BlockLine(Loader):
     id = 14
@@ -405,8 +448,11 @@ cdef class BlockLine(Loader):
         reader.writeInt(self.y2, False, False)
         reader.writeInt(self.z2, False, False)
 
+register_packet(BlockLine)
+
 cdef class CTFState(Loader):
-    id = 0
+    id = CTF_MODE # this is not a real a packet, it sent as part of the StateData packet
+                  # data
 
     cdef public:
         unsigned int team1_score, team2_score, cap_limit
@@ -507,7 +553,8 @@ cdef class ObjectTerritory(Loader):
         reader.writeByte(state, True)
 
 cdef class TCState(Loader):
-    id = 1
+    id = TC_MODE # this is not a real a packet, it sent as part of the StateData packet
+                 # data
 
     cdef public:
         list territories
@@ -581,6 +628,8 @@ cdef class StateData(Loader):
         reader.writeByte(self.state.id, True)
         self.state.write(reader)
 
+register_packet(StateData)
+
 cdef class KillAction(Loader):
     id = 16
 
@@ -600,6 +649,8 @@ cdef class KillAction(Loader):
         reader.writeByte(self.kill_type, True)
         reader.writeByte(self.respawn_time, True)
 
+register_packet(KillAction)
+
 cdef class ChatMessage(Loader):
     id = 17
 
@@ -618,6 +669,8 @@ cdef class ChatMessage(Loader):
         reader.writeByte(self.chat_type, True)
         reader.writeString(encode(self.value))
 
+register_packet(ChatMessage)
+
 cdef class MapStart(Loader):
     id = 18
 
@@ -630,6 +683,8 @@ cdef class MapStart(Loader):
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
         reader.writeInt(self.size, True, False)
+
+register_packet(MapStart)
 
 cdef class MapChunk(Loader):
     id = 19
@@ -644,6 +699,8 @@ cdef class MapChunk(Loader):
         reader.writeByte(self.id, True)
         reader.write(self.data)
 
+register_packet(MapChunk)
+
 cdef class PlayerLeft(Loader):
     id = 20
 
@@ -656,6 +713,8 @@ cdef class PlayerLeft(Loader):
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
+
+register_packet(PlayerLeft)
 
 cdef class TerritoryCapture(Loader):
     id = 21
@@ -673,6 +732,8 @@ cdef class TerritoryCapture(Loader):
         reader.writeByte(self.object_index, True)
         reader.writeByte(self.winning, True)
         reader.writeByte(self.state, True)
+
+register_packet(TerritoryCapture)
 
 cdef class ProgressBar(Loader):
     id = 22
@@ -695,6 +756,8 @@ cdef class ProgressBar(Loader):
         reader.writeByte(self.rate, False)
         reader.writeFloat(self.progress, False)
 
+register_packet(ProgressBar)
+
 cdef class IntelCapture(Loader):
     id = 23
 
@@ -711,6 +774,8 @@ cdef class IntelCapture(Loader):
         reader.writeByte(self.player_id, True)
         reader.writeByte(self.winning, True)
 
+register_packet(IntelCapture)
+
 cdef class IntelPickup(Loader):
     id = 24
 
@@ -723,6 +788,8 @@ cdef class IntelPickup(Loader):
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
+
+register_packet(IntelPickup)
 
 cdef class IntelDrop(Loader):
     id = 25
@@ -740,6 +807,8 @@ cdef class IntelDrop(Loader):
         reader.writeByte(self.player_id, True)
         write_position(reader, self.x, self.y, self.z)
 
+register_packet(IntelDrop)
+
 cdef class Restock(Loader):
     id = 26
 
@@ -753,6 +822,8 @@ cdef class Restock(Loader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
 
+register_packet(Restock)
+
 cdef class FogColor(Loader):
     id = 27
 
@@ -765,6 +836,8 @@ cdef class FogColor(Loader):
     cpdef write(self, ByteWriter reader):
         reader.writeByte(self.id, True)
         reader.writeInt(self.color << 8, True, False)
+
+register_packet(FogColor)
 
 cdef class WeaponReload(Loader):
     id = 28
@@ -783,6 +856,8 @@ cdef class WeaponReload(Loader):
         reader.writeByte(self.clip_ammo, True)
         reader.writeByte(self.reserve_ammo, True)
 
+register_packet(WeaponReload)
+
 cdef class ChangeTeam(Loader):
     id = 29
 
@@ -797,6 +872,8 @@ cdef class ChangeTeam(Loader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
         reader.writeByte(self.team, False)
+
+register_packet(ChangeTeam)
 
 cdef class ChangeWeapon(Loader):
     id = 30
@@ -813,6 +890,8 @@ cdef class ChangeWeapon(Loader):
         reader.writeByte(self.player_id, True)
         reader.writeByte(self.weapon, True)
 
+register_packet(ChangeWeapon)
+
 cdef class HandShakeInit(Loader):
     id = 31
 
@@ -822,6 +901,8 @@ cdef class HandShakeInit(Loader):
     cpdef write(self, ByteWriter writer):
         writer.writeByte(self.id, True)
         writer.writeInt(42, True)
+
+register_packet(HandShakeInit)
 
 cdef class HandShakeReturn(Loader):
     id = 32
@@ -835,6 +916,8 @@ cdef class HandShakeReturn(Loader):
     cpdef write(self, ByteWriter writer):
         writer.writeByte(self.id, True)
 
+register_packet(HandShakeReturn)
+
 cdef class VersionRequest(Loader):
     id = 33
 
@@ -843,6 +926,8 @@ cdef class VersionRequest(Loader):
 
     cpdef write(self, ByteWriter writer):
         writer.writeByte(self.id, True)
+
+register_packet(VersionRequest)
 
 cdef class VersionResponse(Loader):
     id = 34
@@ -864,3 +949,5 @@ cdef class VersionResponse(Loader):
 
     cpdef write(self, ByteWriter writer):
         writer.writeByte(self.id, True)
+
+register_packet(VersionResponse)
