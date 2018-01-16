@@ -45,11 +45,11 @@ def copy_config():
         shutil.copytree(config_source, cfg.config_dir)
     except Exception as e:  # pylint: disable=broad-except
         print(e)
-        sys.exit(1)
+        return 1
 
     print('Complete! Please edit the files in %s to your liking.' %
           cfg.config_dir)
-    sys.exit(0)
+    return 0
 
 
 def update_geoip(target_dir):
@@ -60,7 +60,7 @@ def update_geoip(target_dir):
 
     if not os.path.exists(target_dir):
         print('Configuration directory does not exist')
-        sys.exit(1)
+        return 1
 
     if not os.path.exists(working_directory):
         os.makedirs(working_directory)
@@ -81,7 +81,7 @@ def update_geoip(target_dir):
     print('Cleaning up...')
 
     os.remove(zipped_path)
-    sys.exit(0)
+    return 0
 
 
 def run_server():
@@ -129,12 +129,20 @@ def main():
     # populate the global config with values from args
     cfg.config_dir = args.config_dir
 
-    # copy config and update geoip can happen at the same time
-    # note these functions call sys.exit with codes 0 or 1 based on failure or success
-    if args.copy_config:
-        copy_config()
-    if args.update_geoip:
-        update_geoip(cfg.config_dir)
+    # run the required tasks if args given
+    if args.copy_config or args.update_geoip:
+        if args.copy_config:
+            status = copy_config()
+            if status != 0:
+                return status
+
+        if args.update_geoip:
+            status = update_geoip(cfg.config_dir)
+            if status != 0:
+                return status
+
+        return 0
+
 
     if args.config_file is None:
         cfg.config_file = os.path.join(cfg.config_dir, 'config.json')
@@ -172,7 +180,8 @@ def main():
 
 
     run_server()
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
