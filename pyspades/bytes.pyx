@@ -31,21 +31,25 @@ cdef extern from "bytes_c.cpp":
     double read_float(char * data, int big_endian)
     char * read_string(char * data)
 
-    void * create_stream()
-    void delete_stream(void * stream)
-    void write_byte(void * stream, char value)
-    void write_ubyte(void * stream, unsigned char value)
-    void write_short(void * stream, short value, int big_endian)
-    void write_ushort(void * stream, unsigned short value, int big_endian)
-    void write_int(void * stream, int value, int big_endian)
-    void write_uint(void * stream, unsigned int value, int big_endian)
-    void write_float(void * stream, double value, int big_endian)
-    void write_string(void * stream, char * data, size_t size)
-    void write(void * stream, char * data, size_t size)
-    void rewind_stream(void * stream, int bytecount)
-    object get_stream(void * stream)
-    size_t get_stream_size(void * stream)
-    size_t get_stream_pos(void * stream)
+    stringstream * create_stream()
+    void delete_stream(stringstream * stream)
+    void write_byte(stringstream * stream, char value)
+    void write_ubyte(stringstream * stream, unsigned char value)
+    void write_short(stringstream * stream, short value, int big_endian)
+    void write_ushort(stringstream * stream, unsigned short value, int big_endian)
+    void write_int(stringstream * stream, int value, int big_endian)
+    void write_uint(stringstream * stream, unsigned int value, int big_endian)
+    void write_float(stringstream * stream, double value, int big_endian)
+    void write_string(stringstream * stream, char * data, size_t size)
+    void write(stringstream * stream, char * data, size_t size)
+    void rewind_stream(stringstream * stream, int bytecount)
+    object get_stream(stringstream * stream)
+    size_t get_stream_size(stringstream * stream)
+    size_t get_stream_pos(stringstream * stream)
+
+cdef extern from "<sstream>" namespace "std":
+    cdef cppclass stringstream:
+        pass
 
 class NoDataLeft(Exception):
     pass
