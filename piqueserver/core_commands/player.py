@@ -1,19 +1,17 @@
 from piqueserver.commands import command, get_player
 
 @command("client", "cli")
-def client(connection, *args):
+def client(connection, target=None):
     """
     Tell you information about your client or the client of a given player
     /client [player]
     """
-    if len(args) == 0:
+    if not target:
         player = connection
         who_is = "You are"
-    if len(args) == 1:
+    else:
         player = get_player(connection.protocol, target)
         who_is = player.name + " is"
-    else:
-       return "Invalid number of arguments"
 
     info = player.client_info
     version = info.get("version", None)
@@ -28,6 +26,7 @@ def client(connection, *args):
         version_string,
         info.get("os_info", "Unknown")
     )
+
 
 @command()
 def weapon(connection, value):
