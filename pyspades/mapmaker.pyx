@@ -475,7 +475,7 @@ cdef inline list bresenham_line(int x, int y, int x2, int y2):
     coords.append((x2,y2))
     return coords
 
-from color import *
+from pyspades.color import *
 
 class Gradient(object):
     def __init__(self):
