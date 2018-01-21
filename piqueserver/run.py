@@ -84,11 +84,6 @@ def update_geoip(target_dir):
     return 0
 
 
-def run_server():
-    from piqueserver import server
-    server.run()
-
-
 def main():
     if (sys.version_info.major, sys.version_info.minor) not in SUPPORTED_PYTHONS:
         print('Warning: you are running on an unsupported Python version.\n'
@@ -134,14 +129,14 @@ def main():
         if args.copy_config:
             status = copy_config()
             if status != 0:
-                return status
+                sys.exit(status)
 
         if args.update_geoip:
             status = update_geoip(cfg.config_dir)
             if status != 0:
-                return status
+                sys.exit(status)
 
-        return 0
+        return # if we have done a task, don't run the server
 
 
     if args.config_file is None:
@@ -179,9 +174,9 @@ def main():
         config.update_from_dict(json.loads(args.json_parameters))
 
 
-    run_server()
-    return 0
+    from piqueserver import server
+    server.run()
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
