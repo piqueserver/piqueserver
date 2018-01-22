@@ -157,9 +157,9 @@ def main():
     else:
         config_file = args.config_file
         ext = os.path.splitext(config_file)[1]
-        if ext == 'json':
+        if ext == '.json':
             format_ = JSON_FORMAT
-        elif ext == 'toml':
+        elif ext == '.toml':
             format_ = TOML_FORMAT
         else:
             raise ValueError(
