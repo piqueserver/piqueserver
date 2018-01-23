@@ -850,7 +850,7 @@ cdef class VersionResponse(Loader):
     cdef public:
         str client
         tuple version
-        bytes os_info
+        str os_info
 
     cpdef read(self, ByteReader reader):
         magic_no = reader.readByte(True)
@@ -861,7 +861,7 @@ cdef class VersionResponse(Loader):
                 reader.readByte(True),
                 reader.readByte(True),
             )
-            self.os_info = reader.readString()
+            self.os_info = decode(reader.readString())
         # There are other magic numbers, but we currently do not implement them
 
     cpdef write(self, ByteWriter writer):

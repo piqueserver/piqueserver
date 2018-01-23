@@ -16,6 +16,7 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from math import pi
+import re
 
 cdef extern from "math.h":
     double sqrt(double x)
@@ -88,6 +89,26 @@ def encode(value):
 def decode(value):
     if value is not None:
         return value.decode('cp437', 'replace')
+
+# Printing untrusted ASCII control codes to the console can have a number of
+# annoying to dangerous side effects depending on the terminal emulator used
+
+ascii_control_code_regexp = re.compile(r'[\x00-\x1F]')
+
+def _replace_hex(match):
+    return r"\x{:x}".format(ord(match.group()))
+
+def escape_control_codes(untrusted_str):
+    """escape all ascii control codes in a string note: this still leaves
+    things like special unicode characters in place"""
+
+    # Escapes common symbols
+    # untrusted_str = untrusted_str.translate({13: '\\r', 10: '\\n', 9: '\\t'})
+    # py2 doesn't support the prettier implementation
+    untrusted_str = untrusted_str.replace('\r', '\\r').replace('\t', '\\t').replace('\n', '\\n')
+
+    # Escape all characters under 0x20 with their hex notation
+    return ascii_control_code_regexp.sub(_replace_hex, untrusted_str)
 
 cdef class Vertex3:
     # NOTE: for the most part this behaves as a 2d vector, with z being tacked on

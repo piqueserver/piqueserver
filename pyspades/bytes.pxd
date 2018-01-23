@@ -2,6 +2,10 @@ DEF INT_ERROR = -0xFFFFFFFF >> 1
 DEF LONG_LONG_ERROR = -0xFFFFFFFFFFFFFFFF >> 1
 DEF FLOAT_ERROR = float('nan')
 
+cdef extern from "<sstream>" namespace "std":
+    cdef cppclass stringstream:
+        pass
+
 cdef class ByteReader:
     cdef char * data
     cdef char * pos
@@ -17,7 +21,7 @@ cdef class ByteReader:
     cpdef long long readInt(self, bint unsigned = ?, bint big_endian = ?) \
                             except LONG_LONG_ERROR
     cpdef float readFloat(self, bint big_endian = ?) except? FLOAT_ERROR
-    cpdef readString(self, int size = ?)
+    cpdef bytes readString(self, int size = ?)
     cpdef ByteReader readReader(self, int size = ?)
     cpdef int dataLeft(self)
     cdef void _skip(self, int bytecount)
@@ -27,7 +31,7 @@ cdef class ByteReader:
     cpdef size_t tell(self)
 
 cdef class ByteWriter:
-    cdef void * stream
+    cdef stringstream * stream
 
     cdef void writeSize(self, char * data, int size)
     cpdef write(self, data)

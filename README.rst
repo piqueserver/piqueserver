@@ -10,11 +10,12 @@ An Ace of Spades 0.75 server based on
 -  Gitter: |Join the chat at https://gitter.im/piqueserver/piqueserver|
 -  Matrix: ``#piqueserver:matrix.org`` (`Riot Webchat
    link <https://riot.im/app/#/room/#piqueserver:matrix.org>`__)
--  Slack: Message us for an invite!
+-  Discord: Join with `this invite link <https://discord.gg/w6Te7xC>`__
+-  Slack: Join with `this invite link <https://join.slack.com/t/piqueserver/shared_invite/enQtMjg5MDI3MTkwNTgxLTNhMDkyNDRkNzhiNmQyYjRkOTdjNGNkYzNhNTQ4NzZkY2JhZjQxYzIyMTQ0Y2JlYTI2ZGFjMTFmNjAwZTM2OGU>`__
 -  IRC: ``#piqueserver`` on freenode.net
    (`web <http://webchat.freenode.net/?channels=%23piqueserver>`__)
 
-All of these are bridged together!
+All of these are `bridged <https://matrix.org/docs/guides/faq.html#what-is-matrix>`__ together!
 
 \:tada: Features
 ----------------

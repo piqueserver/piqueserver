@@ -14,6 +14,7 @@ from piqueserver.config import (config, TOML_FORMAT, JSON_FORMAT,
 
 PKG_NAME = 'piqueserver'
 
+
 def get_git_rev():
     if not os.path.exists(".git"):
         return 'snapshot'
@@ -67,11 +68,11 @@ def copy_config():
         copytree(config_source, config.config_dir)
     except Exception as e:  # pylint: disable=broad-except
         print(e)
-        sys.exit(1)
+        return 1
 
     print('Complete! Please edit the files in %s to your liking.' %
-          config.config_dir)
-    sys.exit(0)
+          cfg.config_dir)
+    return 0
 
 
 def update_geoip(target_dir):
@@ -82,7 +83,7 @@ def update_geoip(target_dir):
 
     if not os.path.exists(target_dir):
         print('Configuration directory does not exist')
-        sys.exit(1)
+        return 1
 
     if not os.path.exists(working_directory):
         os.makedirs(working_directory)
@@ -103,12 +104,7 @@ def update_geoip(target_dir):
     print('Cleaning up...')
 
     os.remove(zipped_path)
-    sys.exit(0)
-
-
-def run_server():
-    from piqueserver import server
-    server.run()
+    return 0
 
 
 def main():
@@ -168,12 +164,20 @@ def main():
     # update the config_dir from cli args
     config.config_dir = args.config_dir
 
-    # copy config and update geoip can happen at the same time
-    # note these functions call sys.exit with codes 0 or 1 based on failure or success
-    if args.copy_config:
-        copy_config()
-    if args.update_geoip:
-        update_geoip(config.config_dir)
+    # run the required tasks if args given
+    if args.copy_config or args.update_geoip:
+        if args.copy_config:
+            status = copy_config()
+            if status != 0:
+                sys.exit(status)
+
+        if args.update_geoip:
+            status = update_geoip(cfg.config_dir)
+            if status != 0:
+                sys.exit(status)
+
+        return # if we have done a task, don't run the server
+
 
     # TODO: set config/map/script/log/etc. dirs from config file, thus removing
     # the need for the --config-dir argument and the config file is then a
@@ -197,9 +201,9 @@ def main():
     else:
         config_file = args.config_file
         ext = os.path.splitext(config_file)[1]
-        if ext == 'json':
+        if ext == '.json':
             format_ = JSON_FORMAT
-        elif ext == 'toml':
+        elif ext == '.toml':
             format_ = TOML_FORMAT
         else:
             raise ValueError(
@@ -215,7 +219,9 @@ def main():
     if args.json_parameters:
         config.update_from_dict(json.loads(args.json_parameters))
 
-    run_server()
+
+    from piqueserver import server
+    server.run()
 
 
 if __name__ == "__main__":

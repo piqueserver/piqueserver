@@ -295,9 +295,12 @@ class FeatureProtocol(ServerProtocol):
         try:
             with open(os.path.join(config.config_dir, bans_file.get()), 'r') as f:
                 self.bans.read_list(json.load(f))
-        except FileNotFoundError as e:
-            # if it doesn't exist, then no bans, no error
-            pass
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                # if it doesn't exist, then no bans, no error
+                pass
+            else:
+                raise e
         except IOError as e:
             print('Could not read bans.txt: {}'.format(e))
         except ValueError as e:
