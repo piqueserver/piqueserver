@@ -160,7 +160,7 @@ class TestExampleConfig(unittest.TestCase):
 
     def test_json(self):
         config = ConfigStore()
-        f = StringIO('''
+        f = StringIO(u'''
         {
             "name": "piqueserver instance"
         }
