@@ -12,7 +12,6 @@ from setuptools import setup, Extension
 
 PKG_NAME = "piqueserver"
 PKG_URL = "https://github.com/piqueserver/piqueserver"
-PKG_DOWNLOAD_URL = "https://github.com/piqueserver/piqueserver/archive/v0.1.1.zip"
 
 extra_args = sys.argv[2:]
 
@@ -104,7 +103,6 @@ setup(
     license='GNU General Public License v3',
     long_description=long_description,
     url=PKG_URL,
-    download_url=PKG_DOWNLOAD_URL,
     keywords=['ace of spades', 'aos', 'server',
               'pyspades', 'pysnip', 'piqueserver'],
     classifiers=[
