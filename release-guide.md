@@ -42,6 +42,8 @@ version info.
 
 ## Build the sdist
 
+Prerequisites: Linux computer, `python3.4` (or greater), `pip` (same version as
+the python you're using), `twine`
 
 The source distribution is OS agnostic, so this is the easiest to start with.
 
@@ -69,6 +71,8 @@ twine upload dist/*
 ```
 
 ## Build Linux binary wheels
+
+Prerequisites: same as for sdist, plus `docker`
 
 - make sure docker is running and you have a recent version of the pypa manylinux1 docker image
 
