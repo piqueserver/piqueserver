@@ -91,68 +91,64 @@ def check_passwords(passwords):
 
 # declare configuration options
 bans_config = config.section('bans')
-game_config = config.section('game')
-map_config = config.section('maps')
-server_config = config.section('server')
 logging_config = config.section('logging')
-info_config = config.section('info')
-team1_config = game_config.section('team1')
-team2_config = game_config.section('team2')
+team1_config = config.section('team1')
+team2_config = config.section('team2')
 
 bans_file = bans_config.option('file', default='bans.txt')
-respawn_time_option = game_config.option('respawn_time', default=8)
-respawn_waves = game_config.option('respawn_waves', default=False)
-game_mode = game_config.option('game_mode', default='ctf')
-random_rotation = map_config.option('random_rotation', default=False)
-passwords = server_config.option('passwords', default={}, validate=check_passwords)
+respawn_time_option = config.option('respawn_time', default=8)
+respawn_waves = config.option('respawn_waves', default=False)
+game_mode = config.option('game_mode', default='ctf')
+random_rotation = config.option('random_rotation', default=False)
+passwords = config.option('passwords', default={}, validate=check_passwords)
 logfile = logging_config.option('logfile', default='./logs/log.txt')
-map_rotation = map_config.option('rotation', default=['classicgen', 'random'],
+map_rotation = config.option('rotation', default=['classicgen', 'random'],
         validate=lambda x: type(x) == list)
-default_time_limit = game_config.option('default_time_limit', default=20,
+default_time_limit = config.option('default_time_limit', default=20,
         validate=lambda x: type(x) == int or type(x) == float)
-cap_limit = game_config.option('cap_limit', default=10,
+cap_limit = config.option('cap_limit', default=10,
         validate=lambda x: type(x) == int or type(x) == float)
-advance_on_win = game_config.option('advance_on_win', default=False,
+advance_on_win = config.option('advance_on_win', default=False,
         validate=lambda x: type(x) == bool)
 team1_name = team1_config.option('name', default='Blue')
 team2_name = team2_config.option('name', default='Green')
 team1_color = team1_config.option('color', default=(0, 0, 196))
 team2_color = team2_config.option('color', default=(0, 196, 0))
-friendly_fire = game_config.option('friendly_fire', default=False)
-friendly_fire_on_grief = game_config.option('friendly_fire_on_grief',
+friendly_fire = config.option('friendly_fire', default=False)
+friendly_fire_on_grief = config.option('friendly_fire_on_grief',
         default=True)
-grief_friendly_fire_time = game_config.option('grief_friendly_fire_time',
+grief_friendly_fire_time = config.option('grief_friendly_fire_time',
         default=2)
-spade_teamkills_on_grief = game_config.option('spade_teamkills_on_grief',
+spade_teamkills_on_grief = config.option('spade_teamkills_on_grief',
         default=False)
-time_announcements = game_config.option('time_announcements', default=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+time_announcements = config.option('time_announcements', default=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                                               30, 60, 120, 180, 240, 300, 600,
                                               900, 1200, 1800, 2400, 3000])
 rights = config.option('rights', default={})
-port_option = server_config.option('port', default=32887, validate=lambda n: type(n) == int)
-fall_damage = game_config.option('fall_damage', default=True)
-teamswitch_interval = game_config.option('teamswitch_interval', default=0)
-teamswitch_allowed = game_config.option('teamswitch_allowed', default=True)
-max_players = server_config.option('max_players', default=20)
-melee_damage = game_config.option('melee_damage', default=100)
-max_connections_per_ip = server_config.option('max_connections_per_ip', default=0)
-server_prefix = server_config.option('server_prefix', default='[*]')
-balanced_teams = game_config.option('balanced_teams', default=None)
-login_retries = server_config.option('login_retries', 1)
+port_option = config.option('port', default=32887, validate=lambda n: type(n) == int)
+fall_damage = config.option('fall_damage', default=True)
+teamswitch_interval = config.option('teamswitch_interval', default=0)
+teamswitch_allowed = config.option('teamswitch_allowed', default=True)
+max_players = config.option('max_players', default=20)
+melee_damage = config.option('melee_damage', default=100)
+max_connections_per_ip = config.option('max_connections_per_ip', default=0)
+server_prefix = config.option('server_prefix', default='[*]')
+balanced_teams = config.option('balanced_teams', default=None)
+login_retries = config.option('login_retries', 1)
 default_ban_duration = bans_config.option('default_duration', default=24 * 60)
-speedhack_detect = game_config.option('speedhack_detect', True)
-user_blocks_only = game_config.option('user_blocks_only', False)
+speedhack_detect = config.option('speedhack_detect', True)
+user_blocks_only = config.option('user_blocks_only', False)
 debug_log_enabled = logging_config.option('debug_log', False)
 logging_profile_option = logging_config.option('profile', False)
-set_god_build = game_config.option('set_god_build', False)
+set_god_build = config.option('set_god_build', False)
 ssh_options = config.option('ssh', {})
 irc_options = config.option('irc', {})
 status_server_options = config.option('status_server', {})
 ban_publish = bans_config.option('publish', False)
 ban_publish_port = bans_config.option('publish_port', 32885)
 logging_rotate_daily = logging_config.option('rotate_daily', False)
-tip_frequency = info_config.option('tips_frequency', 0)
-register_master_option = server_config.option('master', False)
+tip_frequency = config.option('tips_frequency', 0)
+register_master_option = config.option('master', False)
 
 # default to http for ip_getter on windows
 # see https://github.com/piqueserver/piqueserver/issues/215
@@ -160,14 +156,14 @@ if sys.platform == 'win32':
     default_ip_getter = 'http://services.buildandshoot.com/getip'
 else:
     default_ip_getter = 'https://services.buildandshoot.com/getip'
-ip_getter_option = server_config.option('ip_getter', default_ip_getter)
-name_option = info_config.option('name', default='piqueserver #%s' % random.randrange(0, 2000))
-motd_option = info_config.option('motd')
-help_option = info_config.option('help')
-rules_option = info_config.option('rules')
-tips_option = info_config.option('tips')
-network_interface = server_config.option('network_interface', default='')
-scripts_option = server_config.option('scripts', [])
+ip_getter_option = config.option('ip_getter', default_ip_getter)
+name_option = config.option('name', default='piqueserver #%s' % random.randrange(0, 2000))
+motd_option = config.option('motd')
+help_option = config.option('help')
+rules_option = config.option('rules')
+tips_option = config.option('tips')
+network_interface = config.option('network_interface', default='')
+scripts_option = config.option('scripts', [])
 ban_subscribe_enabled = bans_config.option('subscribe', False)
 
 web_client._HTTP11ClientFactory.noisy = False
