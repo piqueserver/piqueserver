@@ -1,8 +1,6 @@
 
 # TODO: store config here about location of maps/scripts/game_modes/etc as well
 
-[info]
-
 # server name - displayed on master server
 name = "piqueserver instance"
 
@@ -41,114 +39,7 @@ tips = [
 # how often in minutes the tips should display
 tips_frequency = 5
 
-
-[server]
-
-# set this if the server should register on the master server list
-master = false
-
-# limit max number of players who can join.
-# must be 0 < max_players <= 32
-max_players = 32
-
-# messages from the server in-game will be prefixed with this string
-server_prefix = ""
-
-# limit number of players who can connect from the same ip address
-# 0 disables the limit (default: 0)
-#max_connections_per_ip = 0
-max_connections_per_ip = 3
-
-# port the server will listen on (default: 32887)
-port = 32887
-
-# interface the server will listen on (default: all interfaces)
-# TODO: document enet specific strangeness
-network_interface = ""
-
-# url that is used to request the server's public ip address
-# it should be a url that returns only the requester's public ip in the response body
-# Set to an empty string if you wish to disable ip requesting
-# WARNING: do not change unless you are sure you know what you are doing
-# other tools if the default is down:
-# https://icanhazip.com/
-# https://api.ipify.org
-#ip_getter = "https://services.buildandshoot.com/getip"
-
-# note: scripts are loaded in order entered here. Some scripts may depend on
-# other scripts being loaded before them.
-scripts = [
- "piqueserver.scripts.rollback",
- "piqueserver.scripts.savemap",
- "piqueserver.scripts.protect",
- "piqueserver.scripts.map_extensions",
- "piqueserver.scripts.disco",
- "piqueserver.scripts.votekick",
- "piqueserver.scripts.trusted",
- "piqueserver.scripts.ratio",
- "piqueserver.scripts.passreload",
- "piqueserver.scripts.blockinfo",
- "piqueserver.scripts.squad",
- "piqueserver.scripts.afk"
-]
-
-# number of /login attempts allowed before players are auto-kicked (default: 1)
-login_retries = 3
-
-
-[server.passwords]
-# server management passwords
-# players can login using these to execute privileged commands (kicking,
-# changing maps, etc.)
-# authenticate with: /login <password>
-# supports a list of passwords so you can give different passwords to different
-# people for easy password management.
-# logging in as admin or trusted also disables being votekicked (if that script is enabled)
-admin = [ "adminpass1", "adminpass2", "adminpass3"]
-moderator = [ "modpass"]
-guard = [ "guardpass"]
-trusted = [ "trustedpass"]
-
-
-[bans]
-# default duration in minutes a banned player will be banned for
-default_duration = 1440
-
-#file = "bans.txt"
-
-# TODO: document
-publish = false
-publish_port = 32885
-
-# TODO: document
-subscribe = false
-# urls = [ [ "http://www.blacklist.spadille.net/subscribe.json", []]]
-
-
-# TODO: document
-[rights]
-moderator = [
- "advance", "cancel", "dban", "fog",
- "from", "goto", "hackinfo", "hban",
- "invisible", "ip", "kick", "kickafk",
- "kill", "map", "master", "move",
- "mute", "resetgame", "switch", "teleport",
- "teleport_other", "tpsilent", "togglebuild", "togglekill",
- "togglevotekick", "trust", "undoban", "unmute",
- "unstick", "where", "whowas"
-]
-guard = [
- "cancel", "fog", "from", "goto",
- "hackinfo", "hban", "ip", "kick",
- "kickafk", "kill", "move", "mute",
- "switch", "teleport", "teleport_other", "togglebuild",
- "togglekill", "togglevotekick", "trust", "unmute",
- "unstick", "where", "whowas"
-]
-
-
-[game]
-
+# GAME
 # set the game mode. "ctf" and "tc" are built in game modes; others are custom
 # game modes specified by python module or python script in the config game_modes
 # directory (without the '.py' extension).
@@ -216,7 +107,7 @@ time_announcements = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30, 60, 120, 180, 240, 300
 cap_limit = 10
 
 
-[game.team1]
+[team1]
 # information about the team1
 # name of the team to be displayed in-game
 name = "Blue"
@@ -224,13 +115,11 @@ name = "Blue"
 # TODO: make this support hex and named colors instead of rbg
 color = [ 0, 0, 255]
 
-[game.team2]
+[team2]
 # information about team2 - same settings as for team1
 name = "Green"
 color = [ 0, 255, 0]
 
-
-[maps]
 
 # maps listed in the rotation
 # these names are the name of the map vxl/txt files without the file extensions
@@ -245,6 +134,108 @@ rotation = [
 # if this is false, maps will cycle in order listed in the rotation list
 random_rotation = false
 
+# SERVER
+# set this if the server should register on the master server list
+master = false
+
+# limit max number of players who can join.
+# must be 0 < max_players <= 32
+max_players = 32
+
+# messages from the server in-game will be prefixed with this string
+server_prefix = ""
+
+# limit number of players who can connect from the same ip address
+# 0 disables the limit (default: 0)
+#max_connections_per_ip = 0
+max_connections_per_ip = 3
+
+# port the server will listen on (default: 32887)
+port = 32887
+
+# interface the server will listen on (default: all interfaces)
+# TODO: document enet specific strangeness
+network_interface = ""
+
+# url that is used to request the server's public ip address
+# it should be a url that returns only the requester's public ip in the response body
+# Set to an empty string if you wish to disable ip requesting
+# WARNING: do not change unless you are sure you know what you are doing
+# other tools if the default is down:
+# https://icanhazip.com/
+# https://api.ipify.org
+#ip_getter = "https://services.buildandshoot.com/getip"
+
+# note: scripts are loaded in order entered here. Some scripts may depend on
+# other scripts being loaded before them.
+scripts = [
+ "piqueserver.scripts.rollback",
+ "piqueserver.scripts.savemap",
+ "piqueserver.scripts.protect",
+ "piqueserver.scripts.map_extensions",
+ "piqueserver.scripts.disco",
+ "piqueserver.scripts.votekick",
+ "piqueserver.scripts.trusted",
+ "piqueserver.scripts.ratio",
+ "piqueserver.scripts.passreload",
+ "piqueserver.scripts.blockinfo",
+ "piqueserver.scripts.squad",
+ "piqueserver.scripts.afk"
+]
+
+# number of /login attempts allowed before players are auto-kicked (default: 1)
+login_retries = 3
+
+
+[passwords]
+# server management passwords
+# players can login using these to execute privileged commands (kicking,
+# changing maps, etc.)
+# authenticate with: /login <password>
+# supports a list of passwords so you can give different passwords to different
+# people for easy password management.
+# logging in as admin or trusted also disables being votekicked (if that script is enabled)
+admin = [ "adminpass1", "adminpass2", "adminpass3"]
+moderator = [ "modpass"]
+guard = [ "guardpass"]
+trusted = [ "trustedpass"]
+
+
+[bans]
+# default duration in minutes a banned player will be banned for
+default_duration = 1440
+
+#file = "bans.txt"
+
+# TODO: document
+publish = false
+publish_port = 32885
+
+# TODO: document
+subscribe = false
+# urls = [ [ "http://www.blacklist.spadille.net/subscribe.json", []]]
+
+
+# TODO: document
+[rights]
+moderator = [
+ "advance", "cancel", "dban", "fog",
+ "from", "goto", "hackinfo", "hban",
+ "invisible", "ip", "kick", "kickafk",
+ "kill", "map", "master", "move",
+ "mute", "resetgame", "switch", "teleport",
+ "teleport_other", "tpsilent", "togglebuild", "togglekill",
+ "togglevotekick", "trust", "undoban", "unmute",
+ "unstick", "where", "whowas"
+]
+guard = [
+ "cancel", "fog", "from", "goto",
+ "hackinfo", "hban", "ip", "kick",
+ "kickafk", "kill", "move", "mute",
+ "switch", "teleport", "teleport_other", "togglebuild",
+ "togglekill", "togglevotekick", "trust", "unmute",
+ "unstick", "where", "whowas"
+]
 
 [logging]
 

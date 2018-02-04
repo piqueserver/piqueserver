@@ -1,31 +1,90 @@
 {
-  "info": {
-    "name": "piqueserver instance",
-    "motd": [
-      "Welcome to %(server_name)s",
-      "Map: %(map_name)s by %(map_author)s",
-      "Game mode: %(game_mode)s",
-      "Server powered by piqueserver and buildandshoot.com"
-    ],
-    "help": [
-      "Server name: %(server_name)s",
-      "Map: %(map_name)s by %(map_author)s",
-      "Game mode: %(game_mode)s",
-      "/streak    Shows how many kills in a row you got without dying",
-      "/intel     Tells you who's got the enemy intel",
-      "/votekick  Start a vote to temporarily ban a disruptive player",
-      "/time      Remaining time until forced map reset"
-    ],
-    "rules": [
-      "Cheating isn't welcome. Griefing is frowned upon. Have fun!"
-    ],
-    "tips": [
-      "You are playing %(game_mode)s on %(server_name)s",
-      "Type /help for info & commands"
-    ],
-    "tips_frequency": 5
+  "name": "piqueserver instance",
+  "motd": [
+    "Welcome to %(server_name)s",
+    "Map: %(map_name)s by %(map_author)s",
+    "Game mode: %(game_mode)s",
+    "Server powered by piqueserver and buildandshoot.com"
+  ],
+  "help": [
+    "Server name: %(server_name)s",
+    "Map: %(map_name)s by %(map_author)s",
+    "Game mode: %(game_mode)s",
+    "/streak    Shows how many kills in a row you got without dying",
+    "/intel     Tells you who's got the enemy intel",
+    "/votekick  Start a vote to temporarily ban a disruptive player",
+    "/time      Remaining time until forced map reset"
+  ],
+  "rules": [
+    "Cheating isn't welcome. Griefing is frowned upon. Have fun!"
+  ],
+  "tips": [
+    "You are playing %(game_mode)s on %(server_name)s",
+    "Type /help for info & commands"
+  ],
+  "tips_frequency": 5,
+  "game_mode": "ctf",
+  "default_time_limit": 120,
+  "advance_on_win": true,
+  "respawn_time": 16,
+  "respawn_waves": true,
+  "friendly_fire": false,
+  "friendly_fire_on_grief": true,
+  "grief_friendly_fire_time": 5,
+  "spade_teamkills_on_grief": false,
+  "balanced_teams": 2,
+  "teamswitch_interval": 0,
+  "teamswitch_allowed": true,
+  "speedhack_detect": false,
+  "melee_damage": 80,
+  "fall_damage": true,
+  "user_blocks_only": false,
+  "set_god_build": false,
+  "time_announcements": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    30,
+    60,
+    120,
+    180,
+    240,
+    300,
+    600,
+    900,
+    1200,
+    1800,
+    2400,
+    3000
+  ],
+  "cap_limit": 10,
+  "team1": {
+    "name": "Blue",
+    "color": [
+      0,
+      0,
+      255
+    ]
   },
-  "server": {
+  "team2": {
+    "name": "Green",
+    "color": [
+      0,
+      255,
+      0
+    ],
+    "rotation": [
+      "classicgen",
+      "random"
+    ],
+    "random_rotation": false,
     "master": false,
     "max_players": 32,
     "server_prefix": "",
@@ -46,23 +105,23 @@
       "piqueserver.scripts.squad",
       "piqueserver.scripts.afk"
     ],
-    "login_retries": 3,
-    "passwords": {
-      "admin": [
-        "adminpass1",
-        "adminpass2",
-        "adminpass3"
-      ],
-      "moderator": [
-        "modpass"
-      ],
-      "guard": [
-        "guardpass"
-      ],
-      "trusted": [
-        "trustedpass"
-      ]
-    }
+    "login_retries": 3
+  },
+  "passwords": {
+    "admin": [
+      "adminpass1",
+      "adminpass2",
+      "adminpass3"
+    ],
+    "moderator": [
+      "modpass"
+    ],
+    "guard": [
+      "guardpass"
+    ],
+    "trusted": [
+      "trustedpass"
+    ]
   },
   "bans": {
     "default_duration": 1440,
@@ -129,73 +188,6 @@
       "where",
       "whowas"
     ]
-  },
-  "game": {
-    "game_mode": "ctf",
-    "default_time_limit": 120,
-    "advance_on_win": true,
-    "respawn_time": 16,
-    "respawn_waves": true,
-    "friendly_fire": false,
-    "friendly_fire_on_grief": true,
-    "grief_friendly_fire_time": 5,
-    "spade_teamkills_on_grief": false,
-    "balanced_teams": 2,
-    "teamswitch_interval": 0,
-    "teamswitch_allowed": true,
-    "speedhack_detect": false,
-    "melee_damage": 80,
-    "fall_damage": true,
-    "user_blocks_only": false,
-    "set_god_build": false,
-    "time_announcements": [
-      1,
-      2,
-      3,
-      4,
-      5,
-      6,
-      7,
-      8,
-      9,
-      10,
-      30,
-      60,
-      120,
-      180,
-      240,
-      300,
-      600,
-      900,
-      1200,
-      1800,
-      2400,
-      3000
-    ],
-    "cap_limit": 10,
-    "team1": {
-      "name": "Blue",
-      "color": [
-        0,
-        0,
-        255
-      ]
-    },
-    "team2": {
-      "name": "Green",
-      "color": [
-        0,
-        255,
-        0
-      ]
-    }
-  },
-  "maps": {
-    "rotation": [
-      "classicgen",
-      "random"
-    ],
-    "random_rotation": false
   },
   "logging": {
     "debug_log": false,
