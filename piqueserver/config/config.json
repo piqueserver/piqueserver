@@ -23,6 +23,32 @@
     "Type /help for info & commands"
   ],
   "tips_frequency": 5,
+  "master": false,
+  "max_players": 32,
+  "server_prefix": "",
+  "max_connections_per_ip": 3,
+  "port": 32887,
+  "network_interface": "",
+  "scripts": [
+    "piqueserver.scripts.rollback",
+    "piqueserver.scripts.savemap",
+    "piqueserver.scripts.protect",
+    "piqueserver.scripts.map_extensions",
+    "piqueserver.scripts.disco",
+    "piqueserver.scripts.votekick",
+    "piqueserver.scripts.trusted",
+    "piqueserver.scripts.ratio",
+    "piqueserver.scripts.passreload",
+    "piqueserver.scripts.blockinfo",
+    "piqueserver.scripts.squad",
+    "piqueserver.scripts.afk"
+  ],
+  "login_retries": 3,
+  "rotation": [
+    "classicgen",
+    "random"
+  ],
+  "random_rotation": false,
   "game_mode": "ctf",
   "default_time_limit": 120,
   "advance_on_win": true,
@@ -79,33 +105,7 @@
       0,
       255,
       0
-    ],
-    "rotation": [
-      "classicgen",
-      "random"
-    ],
-    "random_rotation": false,
-    "master": false,
-    "max_players": 32,
-    "server_prefix": "",
-    "max_connections_per_ip": 3,
-    "port": 32887,
-    "network_interface": "",
-    "scripts": [
-      "piqueserver.scripts.rollback",
-      "piqueserver.scripts.savemap",
-      "piqueserver.scripts.protect",
-      "piqueserver.scripts.map_extensions",
-      "piqueserver.scripts.disco",
-      "piqueserver.scripts.votekick",
-      "piqueserver.scripts.trusted",
-      "piqueserver.scripts.ratio",
-      "piqueserver.scripts.passreload",
-      "piqueserver.scripts.blockinfo",
-      "piqueserver.scripts.squad",
-      "piqueserver.scripts.afk"
-    ],
-    "login_retries": 3
+    ]
   },
   "passwords": {
     "admin": [
