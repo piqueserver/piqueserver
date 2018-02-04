@@ -5,6 +5,7 @@ from pyspades.constants import (
 )
 from pyspades.entities import Flag, Base
 
+
 class Team(object):
     score = None
     flag = None
@@ -83,3 +84,9 @@ class Team(object):
         for item in self.protocol.entities:
             if item.team is self:
                 yield item
+
+    def __repr__(self):
+        return "{}(id={}, name={}, color={}, spectator={}, protocol)".format(
+            self.__class__.__name__, self.id,
+            self.name, self.color, self.spectator
+        )
