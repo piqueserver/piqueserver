@@ -365,7 +365,7 @@ class FeatureProtocol(ServerProtocol):
             self.ban_publish = PublishServer(self, ban_publish_port.get())
         if ban_subscribe_enabled.get():
             from piqueserver import bansubscribe
-            self.ban_manager = bansubscribe.BanManager(self, ban_subscribe)
+            self.ban_manager = bansubscribe.BanManager(self)
         # logfile path relative to config dir if not abs path
         l = logfile.get()
         if l.strip():  # catches empty filename
@@ -397,7 +397,7 @@ class FeatureProtocol(ServerProtocol):
         ServerProtocol.__init__(self, port, interface)
         self.host.intercept = self.receive_callback
         try:
-            self.set_map_rotation(config['maps'])
+            self.set_map_rotation(self.config['rotation'])
         except MapNotFound as e:
             print('Invalid map in map rotation (%s), exiting.' % e.map)
             raise SystemExit
@@ -520,14 +520,14 @@ class FeatureProtocol(ServerProtocol):
         """
         Creates and returns a Map object from rotation info
         """
-        return Map(rot_info, os.path.join(cfg.config_dir, 'maps'))
+        return Map(rot_info, os.path.join(config.config_dir, 'maps'))
 
     def set_map_rotation(self, maps, now=True):
         """
         Over-writes the current map rotation with provided one.
         And advances immediately with the new rotation by default.
         """
-        maps = check_rotation(maps, os.path.join(cfg.config_dir, 'maps'))
+        maps = check_rotation(maps, os.path.join(config.config_dir, 'maps'))
         self.maps = maps
         self.map_rotator = self.map_rotator_type(maps)
         if now:
@@ -836,7 +836,7 @@ def run():
         # must be a script with this game mode
         module = None
         try:
-            game_mode_dir = os.ospath.join(config.config_dir, 'game_modes/')
+            game_mode_dir = os.path.join(config.config_dir, 'game_modes/')
             f, filename, desc = imp.find_module(game_mode.get(), [game_mode_dir])
             module = imp.load_module('piqueserver_gamemode_namespace_' + game_mode.get(), f, filename, desc)
         except ImportError as e:
