@@ -604,7 +604,12 @@ class ServerConnection(BaseConnection):
 
     @register_packet_handler(loaders.VersionResponse)
     def on_version_info_recieved(self, contained):
-        self.client_info["client"] = contained.client
+        if contained.client == 'o':
+            self.client_info["client"] = "OpenSpades"
+        elif contained.client == 'B':
+            self.client_info["client"] = "BetterSpades"
+        else:
+            self.client_info["client"] = "Unknown({})".format(contained.client)
         self.client_info["version"] = contained.version
         self.client_info["os_info"] = contained.os_info
 
