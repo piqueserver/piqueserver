@@ -30,14 +30,6 @@ piqueserver\.bansubscribe module
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.cfg module
------------------------
-
-.. automodule:: piqueserver.cfg
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 piqueserver\.commands module
 ----------------------------
 

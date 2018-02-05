@@ -71,7 +71,7 @@ def copy_config():
         return 1
 
     print('Complete! Please edit the files in %s to your liking.' %
-          cfg.config_dir)
+          config.config_dir)
     return 0
 
 
@@ -172,7 +172,7 @@ def main():
                 sys.exit(status)
 
         if args.update_geoip:
-            status = update_geoip(cfg.config_dir)
+            status = update_geoip(config.config_dir)
             if status != 0:
                 sys.exit(status)
 

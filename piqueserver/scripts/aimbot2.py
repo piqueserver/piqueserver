@@ -18,8 +18,8 @@ from pyspades.constants import (
     WEAPON_TOOL, WEAPON_KILL, HEADSHOT_KILL,
     RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON,
 )
-from piqueserver import cfg
 from piqueserver.commands import command, admin, get_player
+from piqueserver.config import config
 
 DISABLED, KICK, BAN, WARN_ADMIN = range(4)
 
@@ -475,7 +475,7 @@ def apply_script(protocol, connection, config):
             self.bullet_loop_stop()
             if collect_data:
                 if self.name is not None:
-                    with open(os.path.join(cfg.config_dir,'aimbot2log.csv'), 'a+') as csvfile:
+                    with open(os.path.join(config.config_dir,'aimbot2log.csv'), 'a+') as csvfile:
                         csvfile.seek(0)
                         fieldnames = ['name', 'rifle_hits', 'rifle_count', 'smg_hits', 'smg_count', 'shotgun_hits', 'shotgun_count']
                         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
