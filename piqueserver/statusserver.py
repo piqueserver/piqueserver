@@ -27,6 +27,17 @@ from twisted.web.resource import Resource
 OVERVIEW_UPDATE_INTERVAL = 1 * 60  # 1 minute
 
 
+def get_client_string(player):
+    client = player.client_info.get("client", "Unknown")
+    os = player.client_info.get("os_info", "Unknown")
+    version = player.client_info.get("version", None)
+    if version:
+        version_string = ".".join(map(str, version))
+    else:
+        version_string = "Unknown"
+    return "{} v{} on {}".format(client, version_string, os)
+
+
 class CommonResource(Resource):
     protocol = None
     isLeaf = True
@@ -51,6 +62,7 @@ class JSONPage(CommonResource):
             player_data = {}
             player_data['name'] = player.name
             player_data['latency'] = player.latency
+            player_data['client'] = get_client_string(player)
             player_data['kills'] = player.kills
             player_data['team'] = player.team.name
 
@@ -83,7 +95,7 @@ class StatusPage(CommonResource):
 
     def render_GET(self, _request):
         status = self.env.get_template('status.html')
-        return status.render(server=self.protocol, reactor=reactor).encode(
+        return status.render(get_client_string=get_client_string, server=self.protocol, reactor=reactor).encode(
             'utf-8', 'replace')
 
 
