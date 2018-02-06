@@ -854,15 +854,13 @@ cdef class VersionResponse(Loader):
 
     cpdef read(self, ByteReader reader):
         magic_no = reader.readByte(True)
-        if magic_no == ord("o"):
-            self.client = "OpenSpades"
-            self.version = (
-                reader.readByte(True),
-                reader.readByte(True),
-                reader.readByte(True),
-            )
-            self.os_info = decode(reader.readString())
-        # There are other magic numbers, but we currently do not implement them
+        self.client = chr(magic_no)
+        self.version = (
+            reader.readByte(True),
+            reader.readByte(True),
+            reader.readByte(True),
+        )
+        self.os_info = decode(reader.readString())
 
     cpdef write(self, ByteWriter writer):
         writer.writeByte(self.id, True)

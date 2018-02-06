@@ -13,19 +13,7 @@ def client(connection, target=None):
         player = get_player(connection.protocol, target)
         who_is = player.name + " is"
 
-    info = player.client_info
-    version = info.get("version", None)
-    if version:
-        version_string = ".".join(map(str, version))
-    else:
-        version_string = "Unknown"
-
-    return "{} connected with {} ({}) on {}".format(
-        who_is,
-        info.get("client", "Unknown"),
-        version_string,
-        info.get("os_info", "Unknown")
-    )
+    return "{} connected with {}".format(who_is, connection.client_string)
 
 
 @command()
