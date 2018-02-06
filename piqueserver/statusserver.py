@@ -62,7 +62,7 @@ class JSONPage(CommonResource):
             player_data = {}
             player_data['name'] = player.name
             player_data['latency'] = player.latency
-            player_data['client'] = get_client_string(player)
+            player_data['client'] = player.client_string
             player_data['kills'] = player.kills
             player_data['team'] = player.team.name
 
@@ -95,7 +95,7 @@ class StatusPage(CommonResource):
 
     def render_GET(self, _request):
         status = self.env.get_template('status.html')
-        return status.render(get_client_string=get_client_string, server=self.protocol, reactor=reactor).encode(
+        return status.render(server=self.protocol, reactor=reactor).encode(
             'utf-8', 'replace')
 
 

@@ -613,6 +613,17 @@ class ServerConnection(BaseConnection):
         self.client_info["version"] = contained.version
         self.client_info["os_info"] = contained.os_info
 
+    @property
+    def client_string(self):
+        client = self.client_info.get("client", "Unknown")
+        os = self.client_info.get("os_info", "Unknown")
+        version = self.client_info.get("version", None)
+        if version:
+            version_string = ".".join(map(str, version))
+        else:
+            version_string = "Unknown"
+        return "{} v{} on {}".format(client, version_string, os)
+
     def is_valid_position(self, x, y, z, distance=None):
         if not self.speedhack_detect:
             return True
