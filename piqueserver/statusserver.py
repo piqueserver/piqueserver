@@ -27,17 +27,6 @@ from twisted.web.resource import Resource
 OVERVIEW_UPDATE_INTERVAL = 1 * 60  # 1 minute
 
 
-def get_client_string(player):
-    client = player.client_info.get("client", "Unknown")
-    os = player.client_info.get("os_info", "Unknown")
-    version = player.client_info.get("version", None)
-    if version:
-        version_string = ".".join(map(str, version))
-    else:
-        version_string = "Unknown"
-    return "{} v{} on {}".format(client, version_string, os)
-
-
 class CommonResource(Resource):
     protocol = None
     isLeaf = True
