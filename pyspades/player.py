@@ -153,6 +153,15 @@ class ServerConnection(BaseConnection):
     @register_packet_handler(loaders.ExistingPlayer)
     @register_packet_handler(loaders.ShortPlayerData)
     def on_new_player_recieved(self, contained):
+        if self.team is not None and not self.team.spectator:
+            # This player has already joined the game as a full player.
+            # Existingplayer may only be sent if in the limbo or spectator
+            # modes. Without this check, they could respawn themselves
+            # instantly on any team they wanted.
+            print("{} tried sending an ExistingPlayer packet while not in"
+                  "limbo or spectator mode".format(self))
+            return
+
         old_team = self.team
         team = self.protocol.teams[contained.team]
 
@@ -180,12 +189,13 @@ class ServerConnection(BaseConnection):
                 self.world_object = None
         # send kill packets for dead players
         for player in self.protocol.players.values():
-            if player.player_id != self.player_id and player.world_object \
-            and player.world_object.dead:
+            if (player.player_id != self.player_id and player.world_object
+                    and player.world_object.dead):
                 kill_action.killer_id = player.player_id
                 kill_action.player_id = player.player_id
                 kill_action.kill_type = FALL_KILL
                 self.send_contained(kill_action)
+
         self.spawn()
 
     @register_packet_handler(loaders.OrientationData)
@@ -1243,3 +1253,9 @@ class ServerConnection(BaseConnection):
 
     def on_animation_update(self, jump, crouch, sneak, sprint):
         pass
+
+    def __repr__(self):
+        return "<{} player_id: {!r}, name: {!r}, address: {!r} at 0x{:h}>".format(
+            self.__class__.__name__, self.player_id, self.name, self.address,
+            id(self)
+        )
