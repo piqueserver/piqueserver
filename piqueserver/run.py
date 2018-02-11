@@ -1,6 +1,7 @@
 from __future__ import print_function, unicode_literals
 
 import os
+import filecmp
 import shutil
 import sys
 import argparse
@@ -37,12 +38,38 @@ def get_git_rev():
     return ret
 
 
+def copytree(src, dst):
+    """
+    A re-implementation of shutil.copytree that doesn't fail if dst already exists.
+    Other properties:
+    Doesn't over-write if src/dst files don't differ.
+    Creates a backup of dst file before over-writing.
+    """
+    if not os.path.exists(dst):
+        os.makedirs(dst)
+    for item in os.listdir(src):
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if os.path.isdir(s):
+            copytree(s, d)
+        else:
+            # create/copy if not exist
+            if not os.path.exists(d):
+                shutil.copy2(s, d)
+            # if src/dst files changed, backup and over-write dst file
+            elif not filecmp.cmp(s, d):
+                shutil.copy2(d, d + '.bak')
+                shutil.copy2(s, d)
+            # skip if unchanged
+            else:
+                pass
+
 def copy_config():
     config_source = os.path.dirname(os.path.abspath(__file__)) + '/config'
     print('Attempting to copy example config to %s (origin: %s).' %
           (cfg.config_dir, config_source))
     try:
-        shutil.copytree(config_source, cfg.config_dir)
+        copytree(config_source, cfg.config_dir)
     except Exception as e:  # pylint: disable=broad-except
         print(e)
         return 1
