@@ -1,11 +1,11 @@
 """
-test pyspades/protocol.py
+test pyspades/server.py
 """
 
 from __future__ import print_function
 
 from twisted.trial import unittest
-from pyspades import protocol
+from pyspades import server
 
 class BaseConnectionTest(unittest.TestCase):
     def test_test(self):
