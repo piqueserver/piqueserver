@@ -1,6 +1,14 @@
 piqueserver package
 ===================
 
+Module contents
+---------------
+
+.. automodule:: piqueserver
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Subpackages
 -----------
 
@@ -8,7 +16,6 @@ Subpackages
 
     piqueserver.core_commands
     piqueserver.game_modes
-    piqueserver.scripts
     piqueserver.web
 
 Submodules
@@ -146,15 +153,6 @@ piqueserver\.version module
 ---------------------------
 
 .. automodule:: piqueserver.version
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: piqueserver
     :members:
     :undoc-members:
     :show-inheritance:

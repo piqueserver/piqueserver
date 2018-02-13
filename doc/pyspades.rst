@@ -1,6 +1,14 @@
 pyspades package
 ================
 
+Module contents
+---------------
+
+.. automodule:: pyspades
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Submodules
 ----------
 
@@ -176,15 +184,6 @@ pyspades\.world module
 ----------------------
 
 .. automodule:: pyspades.world
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: pyspades
     :members:
     :undoc-members:
     :show-inheritance:
