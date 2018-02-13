@@ -14,15 +14,15 @@ However, the unclear division and two locations quickly lead to a large mess,
 and it is currently not possible to know for certain which module exactly
 certains certain functionality. In general, this is the rule of thumb:
 
- * ``pyspades``: Anything that involves sending and recieving of packets and
+ * `pyspades`: Anything that involves sending and recieving of packets and
    acting on those, keeping game state.
 
- * ``piqueserver``: Anything player-facing, for example commands,
+ * `piqueserver`: Anything player-facing, for example commands,
    configuration, etc.
 
 Note however the numerous exceptions to this. For example, parts of the command
-logic are in ``pyspades``, while a lot of server validation logic is in
-``piqueserver``
+logic are in `pyspades`, while a lot of server validation logic is in
+`piqueserver`
 
 Classes
 -------
