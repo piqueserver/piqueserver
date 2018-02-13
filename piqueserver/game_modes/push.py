@@ -11,20 +11,20 @@ How to setup new maps:
     Spawn and CP locations must be configured via extensions in the map's
     map_name.txt metadata. Example:
 
-extensions = {
-    'push': True,
-    'push_spawn_range' : 5,
-    'push_blue_spawn' : (91, 276, 59),
-    'push_blue_cp' : (91, 276, 59),
-    'push_green_spawn' : (78, 86, 59),
-    'push_green_cp' : (78, 86, 59),
-    'water_damage' : 100
-}
+>>> extensions = {
+...     'push': True,
+...     'push_spawn_range' : 5,
+...     'push_blue_spawn' : (91, 276, 59),
+...     'push_blue_cp' : (91, 276, 59),
+...     'push_green_spawn' : (78, 86, 59),
+...     'push_green_cp' : (78, 86, 59),
+...     'water_damage' : 100
+... }
 
 Additional, but optional extensions, to mark each teams build area and prevent
 the enemy from building there (and thereby helping the enemy). The build area
 is defined by x and y of upper left corner, followed by x and y of bottom right
-corner on the map. Example:
+corner on the map. Example::
 
     'push_blue_build_area' : (172, 140, 216, 402),
     'push_green_build_area' : (266, 145, 309, 408),

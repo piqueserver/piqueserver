@@ -33,26 +33,24 @@ class ConfigStore():
 
     Usage example:
 
-    ```
-    config = ConfigStore()
-    config.load_from_dict({'key1': 'value1'})
+    >>> config = ConfigStore()
+    >>> config.load_from_dict({'key1': 'value1'})
 
-    option1 = config.option('key1', default='nothing', validate=lambda x: len(x) > 0)
-    section1 = config.section('section1')
-    nested_option = section1.option('key1', default=0)
+    >>> option1 = config.option('key1', default='nothing',
+    ...                         validate=lambda x: len(x) > 0)
+    >>> section1 = config.section('section1')
+    >>> nested_option = section1.option('key1', default=0)
 
-    print(nested_option.get())
-    option1.set('hello')
+    >>> print(nested_option.get())
+    >>> option1.set('hello')
 
-    # underlying dictionary structure will look like
-    # {
-    #   'key1': 'hello',
-    #   'section1': {
-    #     'key1': 0
-    #   }
-    # }
-    ```
-
+    >>> # underlying dictionary structure will look like
+    >>> # {
+    >>> #   'key1': 'hello',
+    >>> #   'section1': {
+    >>> #     'key1': 0
+    >>> #   }
+    >>> # }
     '''
     def __init__(self):
         self._raw_config = {}

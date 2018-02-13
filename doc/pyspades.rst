@@ -12,14 +12,6 @@ pyspades\.bytes module
     :undoc-members:
     :show-inheritance:
 
-pyspades\.client module
------------------------
-
-.. automodule:: pyspades.client
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pyspades\.collision module
 --------------------------
 
@@ -72,14 +64,6 @@ pyspades\.entities module
 -------------------------
 
 .. automodule:: pyspades.entities
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pyspades\.language module
--------------------------
-
-.. automodule:: pyspades.language
     :members:
     :undoc-members:
     :show-inheritance:

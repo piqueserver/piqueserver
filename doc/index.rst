@@ -10,6 +10,10 @@ Welcome to piqueserver's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   architecture
+   piqueserver
+   pyspades
+
 
 
 Indices and tables
