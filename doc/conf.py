@@ -184,7 +184,7 @@ texinfo_documents = [
 ]
 
 
-# default_role = ":any:"
+default_role = "py:obj"
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
