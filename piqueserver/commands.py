@@ -36,6 +36,10 @@ class CommandError(Exception):
     pass
 
 
+class PermissionDenied(Exception):
+    pass
+
+
 def command(name=None, *aliases, **kwargs):
     """
     Register a new command.
@@ -379,6 +383,8 @@ def handle_command(connection, command, parameters):
         msg = 'Command failed'
     except CommandError as e:
         msg = str(e)
+    except PermissionDenied:
+        msg = "Permission denied"
     except ValueError:
         msg = 'Invalid parameters'
 
