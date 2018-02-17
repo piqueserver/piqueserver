@@ -87,6 +87,7 @@
                     <tr>
                         <th>Name</th>
                         <th>Latency (ms)</th>
+                        <th>Client</th>
                         <th>Team</th>
                         <th>Kills</th>
                     </tr>
@@ -96,6 +97,7 @@
                     <tr>
                         <td>{{player.name}}</td>
                         <td>{{player.latency}}</td>
+                        <td>{{player.client_string}}<td>
                         <td>{{player.team.name}}</td>
                         <td>{{player.kills}}</td>
                     </tr>
@@ -161,6 +163,7 @@
                 $("#playersTable tbody").append("<tr><td>" +
                     player.name + "</td><td>" +
                     player.latency + "</td><td>" +
+                    player.client + "</td><td>" +
                     player.team + "</td><td>" +
                     player.kills + "</td></tr>");
             }

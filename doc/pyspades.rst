@@ -1,6 +1,14 @@
 pyspades package
 ================
 
+Module contents
+---------------
+
+.. automodule:: pyspades
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 Submodules
 ----------
 
@@ -8,14 +16,6 @@ pyspades\.bytes module
 ----------------------
 
 .. automodule:: pyspades.bytes
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pyspades\.client module
------------------------
-
-.. automodule:: pyspades.client
     :members:
     :undoc-members:
     :show-inheritance:
@@ -72,14 +72,6 @@ pyspades\.entities module
 -------------------------
 
 .. automodule:: pyspades.entities
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-pyspades\.language module
--------------------------
-
-.. automodule:: pyspades.language
     :members:
     :undoc-members:
     :show-inheritance:
@@ -192,15 +184,6 @@ pyspades\.world module
 ----------------------
 
 .. automodule:: pyspades.world
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: pyspades
     :members:
     :undoc-members:
     :show-inheritance:

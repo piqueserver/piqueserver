@@ -51,6 +51,7 @@ class JSONPage(CommonResource):
             player_data = {}
             player_data['name'] = player.name
             player_data['latency'] = player.latency
+            player_data['client'] = player.client_string
             player_data['kills'] = player.kills
             player_data['team'] = player.team.name
 

@@ -96,6 +96,7 @@ cdef class ByteReader:
 
     cpdef int readByte(self, bint unsigned = False) except INT_ERROR:
         """read one byte of data as integer
+
         Arguments:
             unsigned (bool): If true, interpret the byte as unsigned
 
@@ -111,6 +112,7 @@ cdef class ByteReader:
     cpdef int readShort(self, bint unsigned = False, bint big_endian = True) \
                         except INT_ERROR:
         """read two bytes of data as integer
+
         Arguments:
             unsigned (bool): If true, interpret the bytes as unsigned
             big_endian (bool, optional): If true, interpret the bytes as big endian
@@ -127,6 +129,7 @@ cdef class ByteReader:
     cpdef long long readInt(self, bint unsigned = False,
                             bint big_endian = True) except LONG_LONG_ERROR:
         """read four bytes of data as integer
+
         Arguments:
             unsigned (bool): If true, interpret the bytes as unsigned
             big_endian (bool, optional): If true, interpret the bytes as big endian
@@ -142,6 +145,7 @@ cdef class ByteReader:
 
     cpdef float readFloat(self, bint big_endian = True) except? FLOAT_ERROR:
         """read four bytes of data as floating point number
+
         Arguments:
             big_endian (bool, optional): If true, interpret the bytes as big endian
 
@@ -153,6 +157,7 @@ cdef class ByteReader:
 
     cpdef bytes readString(self, int size = -1):
         """read a string
+
         Arguments:
             size (int): If set, read ``size`` bytes, else read all bytes available
 

@@ -52,7 +52,7 @@ def copytree(src, dst):
             # create/copy if not exist
             if not os.path.exists(d):
                 shutil.copy2(s, d)
-            # if src/dst files changed, backup and over-write dst file
+            # if src/dst files differ, backup and over-write dst file
             elif not filecmp.cmp(s, d):
                 shutil.copy2(d, d + '.bak')
                 shutil.copy2(s, d)

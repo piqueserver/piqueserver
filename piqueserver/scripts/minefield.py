@@ -1,30 +1,34 @@
 """
 Minefield map extension.
 Copyright (c) 2013 learn_more
-See the file license.txt or http://opensource.org/licenses/MIT for copying permission.
+See the file license.txt or http://opensource.org/licenses/MIT for copying
+permission.
 
-Allows mappers to specify the map bounds, outside of which players will trip mines.
-Breaking blocks (when standing close to the field) also triggers a mine.
+Allows mappers to specify the map bounds, outside of which players will trip
+mines.  Breaking blocks (when standing close to the field) also triggers a
+mine.
 
 example extension from mapname.txt:
 
-extensions = {
-    'minefields' : [
-        #this minefield defines the border:
-        {
-            'border' : 1,
-            'left' : 59,
-            'top' : 154,
-            'right' : 451,
-            'bottom' : 355,
-        },
-        #this specifies an additional minefield (and shows a simpler syntax)
-        {
-            'area' : (183, 126, 224, 233),    #top left
-            'height' : 60    #this specifies until which block mines are enabled (so you can build over it)
-        }
-    ]
-}
+>>> extensions = {
+...     'minefields' : [
+...         #this minefield defines the border:
+...         {
+...             'border' : 1,
+...             'left' : 59,
+...             'top' : 154,
+...             'right' : 451,
+...             'bottom' : 355,
+...         },
+...         # this specifies an additional minefield (and shows a simpler
+...         # syntax)
+...         {
+...             'area' : (183, 126, 224, 233),    #top left
+...             'height' : 60 # this specifies until which block mines are
+...                           # enabled (so you can build over it)
+...         }
+...     ]
+... }
 
 Support thread: http://buildandshoot.com/viewtopic.php?f=19&t=8089
 Script location: https://github.com/learn-more/pysnip/blob/master/scripts/minefield.py

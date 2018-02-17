@@ -9,6 +9,5 @@ from pyspades import mapgenerator
 from twisted.trial import unittest
 
 class TestMapGenerator(unittest.TestCase):
-    pass
-
-
+    def test_dummy(self):
+        pass

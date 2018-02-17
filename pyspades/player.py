@@ -604,9 +604,25 @@ class ServerConnection(BaseConnection):
 
     @register_packet_handler(loaders.VersionResponse)
     def on_version_info_recieved(self, contained):
-        self.client_info["client"] = contained.client
+        if contained.client == 'o':
+            self.client_info["client"] = "OpenSpades"
+        elif contained.client == 'B':
+            self.client_info["client"] = "BetterSpades"
+        else:
+            self.client_info["client"] = "Unknown({})".format(contained.client)
         self.client_info["version"] = contained.version
         self.client_info["os_info"] = contained.os_info
+
+    @property
+    def client_string(self):
+        client = self.client_info.get("client", "Unknown")
+        os = self.client_info.get("os_info", "Unknown")
+        version = self.client_info.get("version", None)
+        if version:
+            version_string = ".".join(map(str, version))
+        else:
+            version_string = "Unknown"
+        return "{} v{} on {}".format(client, version_string, os)
 
     def is_valid_position(self, x, y, z, distance=None):
         if not self.speedhack_detect:
