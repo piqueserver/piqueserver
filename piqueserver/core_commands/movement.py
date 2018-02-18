@@ -17,11 +17,11 @@ def unstick(connection, player=None):
     player.set_location_safe(player.get_location())
 
 
-@command('goto', admin_only=True)
-def go_to(connection, value):
+@command(admin_only=True)
+def move(connection, value):
     """
     Go to a specified sector (e.g. A5) and inform everyone on the server of it
-    /goto <sector>
+    /move <sector>
     If you're invisivible, it will happen silenty
     """
     if connection not in connection.protocol.players:
@@ -29,11 +29,11 @@ def go_to(connection, value):
     move(connection, connection.name, value, silent=connection.invisible)
 
 
-@command('gotos', admin_only=True)
-def go_to_silent(connection, value):
+@command('smove', admin_only=True)
+def silent_move(connection, value):
     """
     Silently go to a specified sector
-    /gotos <sector>
+    /smove <sector>
     """
     if connection not in connection.protocol.players:
         raise KeyError()
