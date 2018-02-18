@@ -21,6 +21,19 @@ class Team(object):
         self.protocol = protocol
         self.color = color
         self.spectator = spectator
+        if self.should_init():
+            self.initialize()
+
+    def should_init(self):
+        """
+        The first time teams are created the protocol lacks some fields required to
+        set flag and base for the CTF mode. Once map_info is set it should be safe
+        to call set_flag and set_base.
+        """
+        return self.protocol.map_info is not None
+
+    def get_init_values(self):
+        return self.id, self.name, self.color, self.spectator, self.protocol
 
     def get_players(self):
         for player in self.protocol.players.values():
