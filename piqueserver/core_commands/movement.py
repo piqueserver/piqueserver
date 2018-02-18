@@ -23,24 +23,23 @@ def silent_move(connection, value, player = None):
     Silently move yourself or of a given player to a specified sector (e.g. A5)
     /smove <sector> [player]
     """
-    move(connection, player, value, True)
+    move(connection, value, player, True)
 
 
 @command(admin_only=True)
 def move(connection, value, player = None, silent = False):
     """
-    Move yourself or of a given player to a specified sector (e.g. A5) and inform everyone on the server of it
+    Move yourself or of a given player to a specified sector (e.g. A5) and inform everyone on the server of it.
     If you're invisivible, it will happen silenty
     /move <sector> [player]
     """
     silent = connection.invisible or silent
-
+    print("test1")
     if player is None:
-	if connection not in connection.protocol.players:
+        if connection not in connection.protocol.players:
             raise ValueError()
-	player = connection.name
-    else:
-	player = get_player(connection.protocol, player)
+        player = connection.name
+    player = get_player(connection.protocol, player)
 
     x, y = coordinates(value)
     x += 32
