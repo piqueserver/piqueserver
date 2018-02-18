@@ -17,36 +17,31 @@ def unstick(connection, player=None):
     player.set_location_safe(player.get_location())
 
 
-@command(admin_only=True)
-def move(connection, value):
+@command('smove', admin_only = True)
+def silent_move(connection, value, player = None):
     """
-    Go to a specified sector (e.g. A5) and inform everyone on the server of it
-    /move <sector>
+    Silently move yourself or of a given player to a specified sector (e.g. A5)
+    /smove <sector> [player]
+    """
+    move(connection, player, value, True)
+
+
+@command(admin_only=True)
+def move(connection, value, player = None, silent = False):
+    """
+    Move yourself or of a given player to a specified sector (e.g. A5) and inform everyone on the server of it
     If you're invisivible, it will happen silenty
+    /move <sector> [player]
     """
-    if connection not in connection.protocol.players:
-        raise KeyError()
-    move(connection, connection.name, value, silent=connection.invisible)
+    silent = connection.invisible or silent
 
+    if player is None:
+	if connection not in connection.protocol.players:
+            raise ValueError()
+	player = connection.name
+    else:
+	player = get_player(connection.protocol, player)
 
-@command('smove', admin_only=True)
-def silent_move(connection, value):
-    """
-    Silently go to a specified sector
-    /smove <sector>
-    """
-    if connection not in connection.protocol.players:
-        raise KeyError()
-    move(connection, connection.name, value, True)
-
-
-@command(admin_only=True)
-def move(connection, player, value, silent=False):
-    """
-    Go to a specified sector
-    /move <player> <sector>
-    """
-    player = get_player(connection.protocol, player)
     x, y = coordinates(value)
     x += 32
     y += 32
