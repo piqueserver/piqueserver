@@ -18,7 +18,6 @@ from pyspades.common import Vertex3, get_color, make_color
 from pyspades.weapon import WEAPONS
 from pyspades.mapgenerator import ProgressiveMapGenerator
 
-create_player = loaders.CreatePlayer()
 set_hp = loaders.SetHP()
 kill_action = loaders.KillAction()
 chat_message = loaders.ChatMessage()
@@ -724,6 +723,7 @@ class ServerConnection(BaseConnection):
         if self.team is None:
             return
         spectator = self.team.spectator
+        create_player = loaders.CreatePlayer()
         if not spectator:
             if pos is None:
                 x, y, z = self.get_spawn_location()
