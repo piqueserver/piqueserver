@@ -25,7 +25,6 @@ set_hp = loaders.SetHP()
 existing_player = loaders.ExistingPlayer()
 kill_action = loaders.KillAction()
 chat_message = loaders.ChatMessage()
-map_data = loaders.MapChunk()
 state_data = loaders.StateData()
 ctf_data = loaders.CTFState()
 tc_data = loaders.TCState()
@@ -1103,6 +1102,7 @@ class ServerConnection(BaseConnection):
         for _ in range(10):
             if not self.map_data.data_left():
                 break
+            map_data = loaders.MapChunk()
             map_data.data = self.map_data.read(8192)
             self.send_contained(map_data)
 
