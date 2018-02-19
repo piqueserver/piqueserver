@@ -26,7 +26,6 @@ existing_player = loaders.ExistingPlayer()
 kill_action = loaders.KillAction()
 chat_message = loaders.ChatMessage()
 state_data = loaders.StateData()
-ctf_data = loaders.CTFState()
 tc_data = loaders.TCState()
 change_weapon = loaders.ChangeWeapon()
 weapon_reload = loaders.WeaponReload()
@@ -981,6 +980,7 @@ class ServerConnection(BaseConnection):
             blue_flag = blue.flag
             green_base = green.base
             green_flag = green.flag
+            ctf_data = loaders.CTFState()
             ctf_data.cap_limit = self.protocol.max_score
             ctf_data.team1_score = blue.score
             ctf_data.team2_score = green.score
