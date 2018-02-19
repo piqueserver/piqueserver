@@ -14,7 +14,7 @@ from six import itervalues
 from six.moves import range
 from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
-from pyspades import contained as loader
+from pyspades import contained as loaders
 from pyspades.constants import *
 
 ATTACKER_TEAM = 1  # 0 = blue, 1 = green
