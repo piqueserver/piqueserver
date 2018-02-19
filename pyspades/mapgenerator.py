@@ -26,12 +26,13 @@ class ProgressiveMapGenerator(object):
     all_data = b''
     pos = 0
 
-    def __init__(self, map_, parent=False):
+    def __init__(self, map_, parent=False, read_size=8192):
         # parent=True enables saving all data sent instead of just
         # deleting it afterwards.
         self.parent = parent
         self.generator = map_.get_generator()
         self.compressor = zlib.compressobj(COMPRESSION_LEVEL)
+        self.read_size = read_size
 
     def get_size(self):
         """get the map size, for display of the loading bar on the client"""
@@ -39,6 +40,19 @@ class ProgressiveMapGenerator(object):
         # magic, we don't actually know what size the file will be when sent
         # over the wire
         return 1.5 * 1024 * 1024  # 2MB
+
+    def __iter__(self):
+        return self
+
+    # Python 3 compatibility
+    def __next__(self):
+        return self.next()
+
+    def next(self):
+        if self.data_left():
+            return read(self.read_size)
+        else:
+            raise StopIteration()
 
     def read(self, size):
         """read size bytes from the map generator"""
@@ -65,7 +79,7 @@ class ProgressiveMapGenerator(object):
     def get_child(self):
         """return a new child generator"""
         if self.parent:
-            return MapGeneratorChild(self)
+            return MapGeneratorChild(self, self.read_size)
         else:
             raise NotImplementedError(
                 "get_child is not implemented for non-parent generators")
@@ -78,12 +92,26 @@ class ProgressiveMapGenerator(object):
 class MapGeneratorChild(object):
     pos = 0
 
-    def __init__(self, generator):
+    def __init__(self, generator, read_size):
         self.parent = generator
+        self.read_size = read_size
 
     def get_size(self):
         """get the size of the parent map generator"""
         return self.parent.get_size()
+
+    def __iter__(self):
+        return self
+
+    # Python 3 compatibility
+    def __next__(self):
+        return self.next()
+
+    def next(self):
+        if self.data_left():
+            return read(self.read_size)
+        else:
+            raise StopIteration()
 
     def read(self, size):
         """read size bytes from the parent map generator, if possible"""
