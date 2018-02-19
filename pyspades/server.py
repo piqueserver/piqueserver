@@ -45,7 +45,6 @@ except NameError:
 
 fog_color = loaders.FogColor()
 world_update = loaders.WorldUpdate()
-intel_capture = loaders.IntelCapture()
 territory_capture = loaders.TerritoryCapture()
 
 class ServerProtocol(BaseProtocol):
@@ -259,6 +258,7 @@ class ServerProtocol(BaseProtocol):
         if self.game_mode == CTF_MODE:
             if player is None:
                 player = list(self.players.values())[0]
+            intel_capture = loaders.IntelCapture()
             intel_capture.player_id = player.player_id
             intel_capture.winning = True
             self.send_contained(intel_capture, save=True)
