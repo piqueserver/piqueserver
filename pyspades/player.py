@@ -26,10 +26,7 @@ set_hp = loaders.SetHP()
 existing_player = loaders.ExistingPlayer()
 kill_action = loaders.KillAction()
 chat_message = loaders.ChatMessage()
-map_data = loaders.MapChunk()
-map_start = loaders.MapStart()
 state_data = loaders.StateData()
-ctf_data = loaders.CTFState()
 tc_data = loaders.TCState()
 change_weapon = loaders.ChangeWeapon()
 weapon_reload = loaders.WeaponReload()
@@ -984,6 +981,7 @@ class ServerConnection(BaseConnection):
             blue_flag = blue.flag
             green_base = green.base
             green_flag = green.flag
+            ctf_data = loaders.CTFState()
             ctf_data.cap_limit = self.protocol.max_score
             ctf_data.team1_score = blue.score
             ctf_data.team2_score = green.score
@@ -1104,6 +1102,7 @@ class ServerConnection(BaseConnection):
         for _ in range(10):
             if not self.map_data.data_left():
                 break
+            map_data = loaders.MapChunk()
             map_data.data = self.map_data.read(8192)
             self.send_contained(map_data)
 
