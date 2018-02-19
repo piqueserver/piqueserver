@@ -22,7 +22,6 @@ set_tool = loaders.SetTool()
 
 restock = loaders.Restock()
 create_player = loaders.CreatePlayer()
-intel_pickup = loaders.IntelPickup()
 intel_capture = loaders.IntelCapture()
 intel_drop = loaders.IntelDrop()
 player_left = loaders.PlayerLeft()
@@ -782,6 +781,7 @@ class ServerConnection(BaseConnection):
         if self.on_flag_take() == False:
             return
         flag.player = self
+        intel_pickup = loaders.IntelPickup()
         intel_pickup.player_id = self.player_id
         self.protocol.send_contained(intel_pickup, save=True)
 
