@@ -43,7 +43,6 @@ try:
 except NameError:
     pass
 
-fog_color = loaders.FogColor()
 world_update = loaders.WorldUpdate()
 intel_capture = loaders.IntelCapture()
 territory_capture = loaders.TerritoryCapture()
@@ -57,7 +56,7 @@ class ServerProtocol(BaseProtocol):
     connections = None
     player_ids = None
     master = False
-    max_score = 10
+    max_score = 1
     map = None
     spade_teamkills_on_grief = False
     friendly_fire = False
@@ -396,6 +395,7 @@ class ServerProtocol(BaseProtocol):
 
     def set_fog_color(self, color):
         self.fog_color = color
+        fog_color = loaders.FogColor()
         fog_color.color = make_color(*color)
         self.send_contained(fog_color, save=True)
 

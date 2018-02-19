@@ -14,8 +14,8 @@ Maintainer: hompy
 from collections import deque
 from twisted.internet.reactor import callLater, seconds
 from twisted.internet.task import LoopingCall
+from pyspades import contained as loaders
 from pyspades.player import set_tool, weapon_reload
-from pyspades.server import fog_color
 from pyspades.common import make_color
 from pyspades.constants import GRENADE_KILL, RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON
 
@@ -57,6 +57,7 @@ def rapid_cycle(player):
 
 
 def send_fog(player, color):
+    fog_color = loaders.FogColor()
     fog_color.color = make_color(*color)
     player.send_contained(fog_color)
 
@@ -172,8 +173,8 @@ def apply_script(protocol, connection, config):
 
         def set_fog_color(self, color):
             self.fog_color = color
+            fog_color = loaders.FogColor()
             fog_color.color = make_color(*color)
-
             self.send_contained(fog_color, save=True, rule=send_fog_rule)
 
     return RampageProtocol, RampageConnection
