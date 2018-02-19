@@ -1,6 +1,6 @@
 from random import choice
 from twisted.internet import reactor
-from pyspades.contained import SetTools, KillAction, InputData, SetColor, WeaponInput
+from pyspades.contained import SetTool, KillAction, InputData, SetColor, WeaponInput
 from pyspades.player import create_player
 from pyspades.constants import (GRENADE_KILL, FALL_KILL, NETWORK_FPS)
 from pyspades.common import (
