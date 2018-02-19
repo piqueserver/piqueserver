@@ -44,7 +44,7 @@ except NameError:
     pass
 
 world_update = loaders.WorldUpdate()
-territory_capture = loaders.TerritoryCapture()
+
 
 class ServerProtocol(BaseProtocol):
     connection_class = ServerConnection
@@ -264,6 +264,7 @@ class ServerProtocol(BaseProtocol):
         elif self.game_mode == TC_MODE:
             if territory is None:
                 territory = self.entities[0]
+            territory_capture = loaders.TerritoryCapture()
             territory_capture.object_index = territory.id
             territory_capture.winning = True
             territory_capture.state = territory.team.id
