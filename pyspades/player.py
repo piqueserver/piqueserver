@@ -20,7 +20,6 @@ from pyspades.mapgenerator import ProgressiveMapGenerator
 
 set_tool = loaders.SetTool()
 block_action = loaders.BlockAction()
-position_data = loaders.PositionData()
 restock = loaders.Restock()
 create_player = loaders.CreatePlayer()
 intel_pickup = loaders.IntelPickup()
@@ -693,6 +692,7 @@ class ServerConnection(BaseConnection):
             x += 0.5
             y += 0.5
             z -= 0.5
+        position_data = loaders.PositionData()
         position_data.x = x
         position_data.y = y
         position_data.z = z
