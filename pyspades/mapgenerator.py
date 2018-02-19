@@ -50,7 +50,7 @@ class ProgressiveMapGenerator(object):
 
     def next(self):
         if self.data_left():
-            return read(self.read_size)
+            return self.read(self.read_size)
         else:
             raise StopIteration()
 
@@ -109,7 +109,7 @@ class MapGeneratorChild(object):
 
     def next(self):
         if self.data_left():
-            return read(self.read_size)
+            return self.read(self.read_size)
         else:
             raise StopIteration()
 
