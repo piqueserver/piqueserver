@@ -43,7 +43,6 @@ try:
 except NameError:
     pass
 
-world_update = loaders.WorldUpdate()
 
 
 class ServerProtocol(BaseProtocol):
@@ -221,6 +220,7 @@ class ServerProtocol(BaseProtocol):
                 position = (0.0, 0.0, 0.0)
                 orientation = (0.0, 0.0, 0.0)
             items.append((position, orientation))
+        world_update = loaders.WorldUpdate()
         world_update.items = items
         self.send_contained(world_update, unsequenced=True)
 
