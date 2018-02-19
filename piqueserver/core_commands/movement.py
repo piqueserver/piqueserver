@@ -21,7 +21,7 @@ def unstick(connection, player=None):
 def move_silent(connection, *args):
     """
     Silently move yourself or of a given player to a specified sector (e.g. A5).
-    If the z coordinate makes the player appear underground, put him at ground level instead
+    If the x/y/z coordinate makes the player appear outside of the world bounds, take the bound instead
     /moves <sector> [player]
     /moves <x> <y> <z> [player]
     """
