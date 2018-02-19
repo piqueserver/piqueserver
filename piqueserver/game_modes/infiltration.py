@@ -78,9 +78,8 @@ class DummyPlayer():
         intel_capture.winning = winning
         self.protocol.send_contained(intel_capture, save=True)
         if winning:
-            self.team = self.team(*self.team.get_init_values())
-            self.team.other = self.team(*self.team.other.get_init_values())
-            self.team.other.other = self.team
+            self.team.initialize()
+            self.team.other.initialize()
             for entity in self.protocol.entities:
                 entity.update()
             for player in list(itervalues(self.protocol.players)):
