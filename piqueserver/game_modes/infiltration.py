@@ -54,6 +54,7 @@ class DummyPlayer():
             return self.player_id is not None
         self.player_id = self.protocol.player_ids.pop()
         self.protocol.player_ids.put_back(self.player_id)  # just borrowing it!
+        create_player = loaders.CreatePlayer()
         create_player.x = 0
         create_player.y = 0
         create_player.z = 63
