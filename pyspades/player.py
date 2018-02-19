@@ -26,7 +26,6 @@ set_hp = loaders.SetHP()
 kill_action = loaders.KillAction()
 chat_message = loaders.ChatMessage()
 tc_data = loaders.TCState()
-change_weapon = loaders.ChangeWeapon()
 weapon_reload = loaders.WeaponReload()
 handshake_init = loaders.HandShakeInit()
 
@@ -897,6 +896,7 @@ class ServerConnection(BaseConnection):
             self.weapon_object.reset()
         self.weapon_object = WEAPONS[weapon](self._on_reload)
         if not local:
+            change_weapon = loaders.ChangeWeapon()
             self.protocol.send_contained(change_weapon, save=True)
             if not no_kill:
                 self.kill(kill_type=CLASS_CHANGE_KILL)
