@@ -25,7 +25,6 @@ create_player = loaders.CreatePlayer()
 set_hp = loaders.SetHP()
 kill_action = loaders.KillAction()
 chat_message = loaders.ChatMessage()
-state_data = loaders.StateData()
 tc_data = loaders.TCState()
 change_weapon = loaders.ChangeWeapon()
 weapon_reload = loaders.WeaponReload()
@@ -967,6 +966,7 @@ class ServerConnection(BaseConnection):
         blue = self.protocol.blue_team
         green = self.protocol.green_team
 
+        state_data = loaders.StateData()
         state_data.player_id = self.player_id
         state_data.fog_color = self.protocol.fog_color
         state_data.team1_color = blue.color
