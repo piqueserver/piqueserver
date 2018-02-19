@@ -1,7 +1,6 @@
 from random import choice
 from twisted.internet import reactor
-from pyspades.contained import SetTool, KillAction, InputData, SetColor, WeaponInput
-from pyspades.player import create_player
+from pyspades.contained import CreatePlayer, SetTool, KillAction, InputData, SetColor, WeaponInput
 from pyspades.constants import (GRENADE_KILL, FALL_KILL, NETWORK_FPS)
 from pyspades.common import (
     prettify_timespan,
@@ -253,6 +252,7 @@ def invisible(connection, player=None):
         player.send_chat("You return to visibility")
         protocol.irc_say('* %s became visible' % player.name)
         x, y, z = player.world_object.position.get()
+        create_player = CreatePlayer()
         create_player.player_id = player.player_id
         create_player.name = player.name
         create_player.x = x
