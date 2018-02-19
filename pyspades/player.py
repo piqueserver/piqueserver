@@ -18,11 +18,11 @@ from pyspades.common import Vertex3, get_color, make_color
 from pyspades.weapon import WEAPONS
 from pyspades.mapgenerator import ProgressiveMapGenerator
 
+create_player = loaders.CreatePlayer()
 set_hp = loaders.SetHP()
 kill_action = loaders.KillAction()
 chat_message = loaders.ChatMessage()
 tc_data = loaders.TCState()
-handshake_init = loaders.HandShakeInit()
 
 
 def check_nan(*values):
@@ -723,7 +723,6 @@ class ServerConnection(BaseConnection):
         if self.team is None:
             return
         spectator = self.team.spectator
-        create_player = loaders.CreatePlayer()
         if not spectator:
             if pos is None:
                 x, y, z = self.get_spawn_location()
@@ -759,6 +758,7 @@ class ServerConnection(BaseConnection):
             self.on_spawn((x, y, z))
 
         if not self.client_info:
+            handshake_init = loaders.HandShakeInit()
             self.protocol.send_contained(handshake_init)
 
     def take_flag(self):
@@ -939,6 +939,7 @@ class ServerConnection(BaseConnection):
         self._send_connection_data()
         self.send_map(ProgressiveMapGenerator(self.protocol.map))
         if not self.client_info:
+            handshake_init = loaders.HandShakeInit()
             self.protocol.send_contained(handshake_init)
 
     def _send_connection_data(self):
