@@ -18,9 +18,7 @@ from pyspades.common import Vertex3, get_color, make_color
 from pyspades.weapon import WEAPONS
 from pyspades.mapgenerator import ProgressiveMapGenerator
 
-chat_message = loaders.ChatMessage()
 tc_data = loaders.TCState()
-
 
 def check_nan(*values):
     for value in values:
@@ -1116,6 +1114,7 @@ class ServerConnection(BaseConnection):
     def send_chat(self, value, global_message=False):
         if self.deaf:
             return
+        chat_message = loaders.ChatMessage()
         if not global_message:
             chat_message.chat_type = CHAT_SYSTEM
             prefix = ''
