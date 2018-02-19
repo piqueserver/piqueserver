@@ -95,6 +95,7 @@ class DummyPlayer():
     def __del__(self):
         if self.player_id is None or self.player_id in self.protocol.players:
             return
+        player_left = loaders.PlayerLeft()
         player_left.player_id = self.player_id
         self.protocol.send_contained(player_left, save=True)
 

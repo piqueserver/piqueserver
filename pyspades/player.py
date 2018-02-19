@@ -18,14 +18,16 @@ from pyspades.common import Vertex3, get_color, make_color
 from pyspades.weapon import WEAPONS
 from pyspades.mapgenerator import ProgressiveMapGenerator
 
+set_tool = loaders.SetTool()
+
 restock = loaders.Restock()
 create_player = loaders.CreatePlayer()
-player_left = loaders.PlayerLeft()
 set_hp = loaders.SetHP()
 existing_player = loaders.ExistingPlayer()
 kill_action = loaders.KillAction()
 chat_message = loaders.ChatMessage()
 map_data = loaders.MapChunk()
+map_start = loaders.MapStart()
 state_data = loaders.StateData()
 ctf_data = loaders.CTFState()
 tc_data = loaders.TCState()
@@ -423,7 +425,6 @@ class ServerConnection(BaseConnection):
         self.on_tool_changed(self.tool)
         if self.filter_visibility_data or self.filter_animation_data:
             return
-        set_tool = loaders.SetTool()
         set_tool.player_id = self.player_id
         set_tool.value = contained.value
         self.protocol.send_contained(set_tool, sender=self)
@@ -834,6 +835,7 @@ class ServerConnection(BaseConnection):
     def on_disconnect(self):
         if self.name is not None:
             self.drop_flag()
+            player_left = loaders.PlayerLeft()
             player_left.player_id = self.player_id
             self.protocol.send_contained(player_left, sender=self,
                                          save=True)
@@ -1086,7 +1088,6 @@ class ServerConnection(BaseConnection):
     def send_map(self, data=None):
         if data is not None:
             self.map_data = data
-            map_start = loaders.MapStart()
             map_start.size = data.get_size()
             self.send_contained(map_start)
         elif self.map_data is None:
