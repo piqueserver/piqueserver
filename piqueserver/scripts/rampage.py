@@ -15,7 +15,6 @@ from collections import deque
 from twisted.internet.reactor import callLater, seconds
 from twisted.internet.task import LoopingCall
 from pyspades import contained as loaders
-from pyspades.player import weapon_reload
 from pyspades.common import make_color
 from pyspades.constants import GRENADE_KILL, RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON
 
@@ -98,6 +97,7 @@ def apply_script(protocol, connection, config):
                 weapon = self.weapon_object
                 was_shooting = weapon.shoot
                 weapon.reset()
+                weapon_reload = loaders.WeaponReload()
                 weapon_reload.player_id = self.player_id
                 weapon_reload.clip_ammo = weapon.current_ammo
                 weapon_reload.reserve_ammo = weapon.current_stock
