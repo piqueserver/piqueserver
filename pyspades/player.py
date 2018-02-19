@@ -27,7 +27,6 @@ existing_player = loaders.ExistingPlayer()
 kill_action = loaders.KillAction()
 chat_message = loaders.ChatMessage()
 map_data = loaders.MapChunk()
-map_start = loaders.MapStart()
 state_data = loaders.StateData()
 ctf_data = loaders.CTFState()
 tc_data = loaders.TCState()
@@ -1087,6 +1086,7 @@ class ServerConnection(BaseConnection):
     def send_map(self, data=None):
         if data is not None:
             self.map_data = data
+            map_start = loaders.MapStart()
             map_start.size = data.get_size()
             self.send_contained(map_start)
         elif self.map_data is None:
