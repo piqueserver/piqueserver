@@ -23,7 +23,6 @@ set_hp = loaders.SetHP()
 kill_action = loaders.KillAction()
 chat_message = loaders.ChatMessage()
 tc_data = loaders.TCState()
-weapon_reload = loaders.WeaponReload()
 handshake_init = loaders.HandShakeInit()
 
 
@@ -1077,6 +1076,7 @@ class ServerConnection(BaseConnection):
         self.set_hp(self.hp - damage, kill_type=FALL_KILL)
 
     def _on_reload(self):
+        weapon_reload = loaders.WeaponReload()
         weapon_reload.player_id = self.player_id
         weapon_reload.clip_ammo = self.weapon_object.current_ammo
         weapon_reload.reserve_ammo = self.weapon_object.current_stock
