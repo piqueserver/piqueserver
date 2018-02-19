@@ -20,7 +20,6 @@ from pyspades.mapgenerator import ProgressiveMapGenerator
 
 create_player = loaders.CreatePlayer()
 set_hp = loaders.SetHP()
-kill_action = loaders.KillAction()
 chat_message = loaders.ChatMessage()
 tc_data = loaders.TCState()
 
@@ -174,6 +173,7 @@ class ServerConnection(BaseConnection):
         for player in self.protocol.players.values():
             if (player.player_id != self.player_id and player.world_object
                     and player.world_object.dead):
+                kill_action = loaders.KillAction()
                 kill_action.killer_id = player.player_id
                 kill_action.player_id = player.player_id
                 kill_action.kill_type = FALL_KILL
@@ -919,6 +919,7 @@ class ServerConnection(BaseConnection):
         self.drop_flag()
         self.hp = None
         self.weapon_object.reset()
+        kill_action = loaders.KillAction()
         kill_action.kill_type = kill_type
         if by is None:
             kill_action.killer_id = kill_action.player_id = self.player_id
