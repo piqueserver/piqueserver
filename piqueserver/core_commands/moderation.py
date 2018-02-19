@@ -1,7 +1,8 @@
 from random import choice
 from twisted.internet import reactor
+from pyspades import contained as loaders
 from pyspades.contained import KillAction, InputData, SetColor, WeaponInput
-from pyspades.player import create_player, set_tool
+from pyspades.player import create_player
 from pyspades.constants import (GRENADE_KILL, FALL_KILL, NETWORK_FPS)
 from pyspades.common import (
     prettify_timespan,
@@ -273,6 +274,7 @@ def invisible(connection, player=None):
         input_data.crouch = world_object.crouch
         input_data.sneak = world_object.sneak
         input_data.sprint = world_object.sprint
+        set_tool = loaders.SetTool()
         set_tool.player_id = player.player_id
         set_tool.value = player.tool
         set_color.player_id = player.player_id
