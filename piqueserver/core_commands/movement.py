@@ -46,27 +46,30 @@ def do_move(connection, args, silent = False):
     position = None
     player = None
     nbArgs = len(args)
+
     #case position is <sector>
-    if(nbArgs == 1 or nbArgs == 2):
+    if nbArgs == 1 or nbArgs == 2:
         x, y = coordinates(args[0])
         x += 32
         y += 32
         z = connection.protocol.map.get_height(x, y) - 2
         position = args[0].upper()
     #case position is <x> <y> <z>
-    if(nbArgs == 3 or nbArgs == 4):
+    elif nbArgs == 3 or nbArgs == 4:
         x = min(max(0, int(args[0])), 511)
         y = min(max(0, int(args[1])), 511)
         z = min(max(0, int(args[2])), connection.protocol.map.get_height(x, y) - 2)
-        position = ('%d %d %d') % (x, y, z)
+        position = '%d %d %d' % (x, y, z)
+    else:
+        return 'Wrong number of parameters!'
 
     #case no player specified
-    if(nbArgs == 1 or nbArgs == 3):
+    if nbArgs == 1 or nbArgs == 3:
         if connection not in connection.protocol.players:
             raise ValueError()
         player = connection.name
     #case player specified
-    elif(nbArgs == 2 or nbArgs == 4):
+    elif nbArgs == 2 or nbArgs == 4:
         player = args[nbArgs - 1]
 
     player = get_player(connection.protocol, player)
