@@ -31,7 +31,6 @@ tc_data = loaders.TCState()
 change_weapon = loaders.ChangeWeapon()
 weapon_reload = loaders.WeaponReload()
 handshake_init = loaders.HandShakeInit()
-version_request = loaders.VersionRequest()
 
 
 def check_nan(*values):
@@ -603,6 +602,7 @@ class ServerConnection(BaseConnection):
 
     @register_packet_handler(loaders.HandShakeReturn)
     def on_handshake_recieved(self, contained):
+        version_request = loaders.VersionRequest()
         self.protocol.send_contained(version_request)
 
     @register_packet_handler(loaders.VersionResponse)
