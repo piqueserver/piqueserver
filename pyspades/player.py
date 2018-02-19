@@ -19,7 +19,6 @@ from pyspades.weapon import WEAPONS
 from pyspades.mapgenerator import ProgressiveMapGenerator
 
 create_player = loaders.CreatePlayer()
-set_hp = loaders.SetHP()
 chat_message = loaders.ChatMessage()
 tc_data = loaders.TCState()
 
@@ -875,6 +874,7 @@ class ServerConnection(BaseConnection):
         if self.hp <= 0:
             self.kill(hit_by, kill_type, grenade)
             return
+        set_hp = loaders.SetHP()
         set_hp.hp = self.hp
         set_hp.not_fall = int(kill_type != FALL_KILL)
         if hit_indicator is None:
