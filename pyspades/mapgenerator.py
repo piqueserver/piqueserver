@@ -101,28 +101,12 @@ class MapGeneratorChild(object):
         return self.parent.get_size()
 
     def __iter__(self):
-        return self
-
-    # Python 3 compatibility
-    def __next__(self):
-        return self.next()
-
-    def next(self):
-        if self.data_left():
-            return self.read()
-        else:
-            raise StopIteration()
-
-    def read(self):
-        """read size bytes from the parent map generator, if possible"""
-        size = self.parent.read_size
-        pos = self.pos
-        if pos + size > self.parent.pos:
-            self.parent.read()
-        data = self.parent.all_data[pos:pos + size]
-        self.pos += len(data)
-        return data
-
-    def data_left(self):
-        """return True if any data is left"""
-        return self.parent.data_left() or self.pos < self.parent.pos
+        while self.parent.data_left() or self.pos < self.parent.pos:
+            size = self.parent.read_size
+            pos = self.pos
+            if pos + size > self.parent.pos:
+                self.parent.read()
+            data = self.parent.all_data[pos:pos + size]
+            self.pos += len(data)
+            yield data
+        raise StopIteration
