@@ -15,7 +15,7 @@ from collections import deque
 from twisted.internet.reactor import callLater, seconds
 from twisted.internet.task import LoopingCall
 from pyspades import contained as loaders
-from pyspades.player import set_tool, weapon_reload
+from pyspades.player import weapon_reload
 from pyspades.common import make_color
 from pyspades.constants import GRENADE_KILL, RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON
 
@@ -42,6 +42,7 @@ S_RAMPAGE_KILLED = "{victim}'s rampage was ended by {killer}"
 
 
 def resend_tool(player):
+    set_tool = loaders.SetTool()
     set_tool.player_id = player.player_id
     set_tool.value = player.tool
     if player.weapon_object.shoot:

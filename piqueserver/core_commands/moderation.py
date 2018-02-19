@@ -1,7 +1,7 @@
 from random import choice
 from twisted.internet import reactor
-from pyspades.contained import KillAction, InputData, SetColor, WeaponInput
-from pyspades.player import create_player, set_tool
+from pyspades.contained import SetTools, KillAction, InputData, SetColor, WeaponInput
+from pyspades.player import create_player
 from pyspades.constants import (GRENADE_KILL, FALL_KILL, NETWORK_FPS)
 from pyspades.common import (
     prettify_timespan,
@@ -10,10 +10,7 @@ from piqueserver.commands import command, CommandError, get_player, join_argumen
 
 
 # aparently, we need to send packets in this file. For now, I give in.
-kill_action = KillAction()
-input_data = InputData()
-set_color = SetColor()
-weapon_input = WeaponInput()
+
 
 
 def get_ban_arguments(connection, arg):
@@ -264,6 +261,7 @@ def invisible(connection, player=None):
         create_player.weapon = player.weapon
         create_player.team = player.team.id
         world_object = player.world_object
+        input_data = InputData()
         input_data.player_id = player.player_id
         input_data.up = world_object.up
         input_data.down = world_object.down
@@ -273,10 +271,13 @@ def invisible(connection, player=None):
         input_data.crouch = world_object.crouch
         input_data.sneak = world_object.sneak
         input_data.sprint = world_object.sprint
+        set_tool = SetTool()
         set_tool.player_id = player.player_id
         set_tool.value = player.tool
+        set_color = SetColor()
         set_color.player_id = player.player_id
         set_color.value = make_color(*player.color)
+        weapon_input = WeaponInput()
         weapon_input.primary = world_object.primary_fire
         weapon_input.secondary = world_object.secondary_fire
         protocol.send_contained(create_player, sender=player, save=True)
