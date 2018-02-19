@@ -18,8 +18,6 @@ from pyspades.common import Vertex3, get_color, make_color
 from pyspades.weapon import WEAPONS
 from pyspades.mapgenerator import ProgressiveMapGenerator
 
-set_tool = loaders.SetTool()
-
 restock = loaders.Restock()
 create_player = loaders.CreatePlayer()
 set_hp = loaders.SetHP()
@@ -419,6 +417,7 @@ class ServerConnection(BaseConnection):
         self.on_tool_changed(self.tool)
         if self.filter_visibility_data or self.filter_animation_data:
             return
+        set_tool = loaders.SetTool()
         set_tool.player_id = self.player_id
         set_tool.value = contained.value
         self.protocol.send_contained(set_tool, sender=self)
