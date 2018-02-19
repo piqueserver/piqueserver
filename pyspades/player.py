@@ -23,7 +23,6 @@ set_tool = loaders.SetTool()
 restock = loaders.Restock()
 create_player = loaders.CreatePlayer()
 set_hp = loaders.SetHP()
-existing_player = loaders.ExistingPlayer()
 kill_action = loaders.KillAction()
 chat_message = loaders.ChatMessage()
 state_data = loaders.StateData()
@@ -951,6 +950,7 @@ class ServerConnection(BaseConnection):
             for player in self.protocol.players.values():
                 if player.name is None:
                     continue
+                existing_player = loaders.ExistingPlayer()
                 existing_player.name = player.name
                 existing_player.player_id = player.player_id
                 existing_player.tool = player.tool or 0
