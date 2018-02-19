@@ -17,43 +17,71 @@ def unstick(connection, player=None):
     player.set_location_safe(player.get_location())
 
 
-@command('smove', admin_only = True)
-def silent_move(connection, value, player = None):
+@command('moves', admin_only = True)
+def move_silent(connection, *args):
     """
-    Silently move yourself or of a given player to a specified sector (e.g. A5)
-    /smove <sector> [player]
+    Silently move yourself or of a given player to a specified sector (e.g. A5).
+    If the z coordinate makes the player appear underground, put him at ground level instead
+    /moves <sector> [player]
+    /moves <x> <y> <z> [player]
     """
-    move(connection, value, player, True)
+    do_move(connection, args, True)
 
 
 @command(admin_only=True)
-def move(connection, value, player = None, silent = False):
+def move(connection, *args):
     """
     Move yourself or of a given player to a specified sector (e.g. A5) and inform everyone on the server of it.
-    If you're invisivible, it will happen silenty
+    If you're invisivible, it will happen silenty.
+    If the x/y/z coordinate makes the player appear outside of the world bounds, take the bound instead
     /move <sector> [player]
+    /move <x> <y> <z> [player]
     """
-    silent = connection.invisible or silent
-    print("test1")
-    if player is None:
+    if connection not in connection.protocol.players:
+            raise ValueError()
+    do_move(connection, args)
+
+
+def do_move(connection, args, silent = False):
+    position = None
+    player = None
+    nbArgs = len(args)
+    #case position is <sector>
+    if(nbArgs == 1 or nbArgs == 2):
+        x, y = coordinates(args[0])
+        x += 32
+        y += 32
+        z = connection.protocol.map.get_height(x, y) - 2
+        position = args[0].upper()
+    #case position is <x> <y> <z>
+    if(nbArgs == 3 or nbArgs == 4):
+        x = min(max(0, int(args[0])), 511)
+        y = min(max(0, int(args[1])), 511)
+        z = min(max(0, int(args[2])), connection.protocol.map.get_height(x, y) - 2)
+        position = ('%d %d %d') % (x, y, z)
+
+    #case no player specified
+    if(nbArgs == 1 or nbArgs == 3):
         if connection not in connection.protocol.players:
             raise ValueError()
         player = connection.name
+    #case player specified
+    elif(nbArgs == 2 or nbArgs == 4):
+        player = args[nbArgs - 1]
+
     player = get_player(connection.protocol, player)
 
-    x, y = coordinates(value)
-    x += 32
-    y += 32
-    player.set_location(
-        (x, y, connection.protocol.map.get_height(x, y) - 2))
+    silent = connection.invisible or silent
+
+    player.set_location((x, y, z))
     if connection is player:
         message = ('%s ' + ('silently ' if silent else '') + 'teleported to '
                    'location %s')
-        message = message % (player.name, value.upper())
+        message = message % (player.name, position)
     else:
         message = ('%s ' + ('silently ' if silent else '') + 'teleported %s '
                    'to location %s')
-        message = message % (connection.name, player.name, value.upper())
+        message = message % (connection.name, player.name, position)
     if silent:
         connection.protocol.irc_say('* ' + message)
     else:

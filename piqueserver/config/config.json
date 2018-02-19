@@ -85,8 +85,8 @@
         "trusted" : ["trustedpass"]
     },
     "rights" : {
-        "moderator" : ["advance", "cancel", "dban", "fog", "from", "hackinfo", "hban", "invisible", "ip", "kick", "kickafk", "kill", "map", "master", "move", "mute", "resetgame", "switch", "teleport", "teleport_other", "tpsilent", "togglebuild", "togglekill", "togglevotekick", "trust", "undoban", "unmute", "unstick", "where", "whowas"],
-        "guard" : ["cancel", "fog", "from", "hackinfo", "hban", "ip", "kick", "kickafk", "kill", "move", "mute", "switch", "teleport", "teleport_other", "togglebuild", "togglekill", "togglevotekick", "trust", "unmute", "unstick", "where", "whowas"]
+        "moderator" : ["advance", "cancel", "dban", "fog", "from", "hackinfo", "hban", "invisible", "ip", "kick", "kickafk", "kill", "map", "master", "move", "moves", "mute", "resetgame", "switch", "teleport", "teleport_other", "tpsilent", "togglebuild", "togglekill", "togglevotekick", "trust", "undoban", "unmute", "unstick", "where", "whowas"],
+        "guard" : ["cancel", "fog", "from", "hackinfo", "hban", "ip", "kick", "kickafk", "kill", "move", "moves", "mute", "switch", "teleport", "teleport_other", "togglebuild", "togglekill", "togglevotekick", "trust", "unmute", "unstick", "where", "whowas"]
     },
     "ssh" : {
         "enabled" : false,
