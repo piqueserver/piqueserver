@@ -19,7 +19,7 @@ from pyspades.weapon import WEAPONS
 from pyspades.mapgenerator import ProgressiveMapGenerator
 
 set_tool = loaders.SetTool()
-block_action = loaders.BlockAction()
+
 restock = loaders.Restock()
 create_player = loaders.CreatePlayer()
 intel_pickup = loaders.IntelPickup()
@@ -515,6 +515,7 @@ class ServerConnection(BaseConnection):
                         self.total_blocks_removed += count
                         self.on_block_removed(*xyz)
             self.last_block_destroy = reactor.seconds()
+        block_action = loaders.BlockAction()
         block_action.x = x
         block_action.y = y
         block_action.z = z
@@ -1059,6 +1060,7 @@ class ServerConnection(BaseConnection):
             if count:
                 self.total_blocks_removed += count
                 self.on_block_removed(n_x, n_y, n_z)
+        block_action = loaders.BlockAction()
         block_action.x = x
         block_action.y = y
         block_action.z = z
