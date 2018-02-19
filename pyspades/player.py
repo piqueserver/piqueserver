@@ -18,7 +18,6 @@ from pyspades.common import Vertex3, get_color, make_color
 from pyspades.weapon import WEAPONS
 from pyspades.mapgenerator import ProgressiveMapGenerator
 
-restock = loaders.Restock()
 create_player = loaders.CreatePlayer()
 set_hp = loaders.SetHP()
 kill_action = loaders.KillAction()
@@ -694,6 +693,7 @@ class ServerConnection(BaseConnection):
         self.blocks = 50
         self.weapon_object.restock()
         if not local:
+            restock = loaders.Restock()
             self.send_contained(restock)
 
     def respawn(self):
