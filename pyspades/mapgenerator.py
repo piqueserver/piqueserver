@@ -30,7 +30,7 @@ class ProgressiveMapGenerator(object):
         # parent=True enables saving all data sent instead of just
         # deleting it afterwards.
         self.parent = parent
-        self.generator = map_.get_generator()
+        self.generator = map_.get_generator(read_size)
         self.compressor = zlib.compressobj(COMPRESSION_LEVEL)
         self.read_size = read_size
 
@@ -50,17 +50,18 @@ class ProgressiveMapGenerator(object):
 
     def next(self):
         if self.data_left():
-            return self.read(self.read_size)
+            return self.read()
         else:
             raise StopIteration()
 
-    def read(self, size):
+    def read(self):
         """read size bytes from the map generator"""
+        size = self.read_size
         data = self.data
         generator = self.generator
         if len(data) < size and generator is not None:
             while True:
-                map_data = generator.get_data(size)
+                map_data = generator.get_data()
                 if generator.done:
                     self.generator = None
                     data += self.compressor.flush()
@@ -79,7 +80,7 @@ class ProgressiveMapGenerator(object):
     def get_child(self):
         """return a new child generator"""
         if self.parent:
-            return MapGeneratorChild(self, self.read_size)
+            return MapGeneratorChild(self)
         else:
             raise NotImplementedError(
                 "get_child is not implemented for non-parent generators")
@@ -92,9 +93,8 @@ class ProgressiveMapGenerator(object):
 class MapGeneratorChild(object):
     pos = 0
 
-    def __init__(self, generator, read_size):
+    def __init__(self, generator):
         self.parent = generator
-        self.read_size = read_size
 
     def get_size(self):
         """get the size of the parent map generator"""
@@ -109,15 +109,16 @@ class MapGeneratorChild(object):
 
     def next(self):
         if self.data_left():
-            return self.read(self.read_size)
+            return self.read()
         else:
             raise StopIteration()
 
-    def read(self, size):
+    def read(self):
         """read size bytes from the parent map generator, if possible"""
+        size = self.parent.read_size
         pos = self.pos
         if pos + size > self.parent.pos:
-            self.parent.read(size)
+            self.parent.read()
         data = self.parent.all_data[pos:pos + size]
         self.pos += len(data)
         return data
