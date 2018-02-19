@@ -22,7 +22,6 @@ set_tool = loaders.SetTool()
 
 restock = loaders.Restock()
 create_player = loaders.CreatePlayer()
-intel_drop = loaders.IntelDrop()
 player_left = loaders.PlayerLeft()
 set_hp = loaders.SetHP()
 existing_player = loaders.ExistingPlayer()
@@ -821,6 +820,7 @@ class ServerConnection(BaseConnection):
                 z = self.protocol.map.get_z(x, y, z)
                 flag.set(x, y, z)
                 flag.player = None
+                intel_drop = loaders.IntelDrop()
                 intel_drop.player_id = self.player_id
                 intel_drop.x = flag.x
                 intel_drop.y = flag.y
