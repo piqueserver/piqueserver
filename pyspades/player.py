@@ -22,7 +22,6 @@ set_tool = loaders.SetTool()
 
 restock = loaders.Restock()
 create_player = loaders.CreatePlayer()
-intel_capture = loaders.IntelCapture()
 intel_drop = loaders.IntelDrop()
 player_left = loaders.PlayerLeft()
 set_hp = loaders.SetHP()
@@ -798,6 +797,7 @@ class ServerConnection(BaseConnection):
             self.protocol.reset_game(self)
             self.protocol.on_game_end()
         else:
+            intel_capture = loaders.IntelCapture()
             intel_capture.player_id = self.player_id
             intel_capture.winning = False
             self.protocol.send_contained(intel_capture, save=True)

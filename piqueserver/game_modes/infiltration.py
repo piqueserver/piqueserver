@@ -14,7 +14,7 @@ from six import itervalues
 from six.moves import range
 from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
-from pyspades.player import create_player, player_left, intel_capture
+from pyspades import contained as loader
 from pyspades.constants import *
 
 ATTACKER_TEAM = 1  # 0 = blue, 1 = green
@@ -74,6 +74,7 @@ class DummyPlayer():
         winning = (self.protocol.max_score not in (0, None) and
                    self.team.score + 1 >= self.protocol.max_score)
         self.team.score += 1
+        intel_capture = loaders.IntelCapture()
         intel_capture.player_id = self.player_id
         intel_capture.winning = winning
         self.protocol.send_contained(intel_capture, save=True)
