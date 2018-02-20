@@ -166,11 +166,45 @@ class TestMapGeneratorChild(TestCase):
         """ MapGeneratorChild shouldn't read ahead of its parent
         """
 
-        # MapGeneratorChild is broken. This results in an infinite loop
-        # map_ = mock_map([urandom(8192*2 + 8191)])
-        # mg = PMG(map_, parent=True)
-        # c = mg.get_child()
-        # for x in c:
-        #     print(c)
+        map_ = mock_map([urandom(8192*2 + 8191)])
+        mg = PMG(map_, parent=True)
+        c = mg.get_child()
+        for x in c:
+            pass
+        assert c.pos <= mg.pos
 
-        pass
+    def test_multi_child_iterable(self):
+        """ MapGeneratorChildren should end up at the same positions
+        """
+
+        map_ = mock_map([urandom(8192*2 + 8191)])
+        mg = PMG(map_, parent=True)
+        c1 = mg.get_child()
+        c2 = mg.get_child()
+        for x in c1:
+            pass
+        for x in c2:
+            pass
+        assert c1.pos == c2.pos
+
+
+    def test_multi_child_iterable(self):
+        """ MapGeneratorChildren should do the same amount of rounds and get the same data
+        """
+
+        map_ = mock_map([urandom(8192*2 + 8191)])
+        mg = PMG(map_, parent=True)
+        c1 = mg.get_child()
+        c2 = mg.get_child()
+        i1 = 0
+        total1 = b''
+        total2 = b''
+        for x in c1:
+            i1 += 1
+            total1 += x
+        i2 = 0
+        for x in c2:
+            i1 += 1
+            total2 += x
+        assert c1.pos == c2.pos
+        assert total1 == total2

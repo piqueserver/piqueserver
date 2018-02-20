@@ -35,9 +35,9 @@ cdef class Generator:
     cdef MapGenerator * generator
     cdef public:
         bint done
-        bint columns
+        int columns
 
-    def __init__(self, VXLData data, read_size=8192):
+    def __init__(self, VXLData data, int read_size=8192):
         self.done = False
         self.generator = create_map_generator(data.map)
         self.columns = read_size
