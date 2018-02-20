@@ -63,7 +63,7 @@ def do_move(connection, args, silent=False):
         z = min(max(0, int(args[2])), connection.protocol.map.get_height(x, y) - 2)
         position = '%d %d %d' % (x, y, z)
     else:
-        raise ValueError()
+        raise ValueError('Wrong number of parameters!')
 
     #case no player specified
     if nbArgs == 1 or nbArgs == 3:
