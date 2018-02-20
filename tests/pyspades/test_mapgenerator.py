@@ -40,6 +40,11 @@ class TestProgressiveMapGenerator(TestCase):
     correctness of these tests.
     """
 
+    # The above should be enough to motivate the lack of tests for REQ-A.1 and
+    # REQ-A.3. The same goes for REQ-C.1 to REQ-C.4
+
+
+    # REQ-A.4
     def test_get_size(self):
         """ get_size returns a constant, hard coded value. This test acts as a
         canary, signaling that the constant has changed.
@@ -47,6 +52,8 @@ class TestProgressiveMapGenerator(TestCase):
         mg = PMG(mock.MagicMock())
         assert mg.get_size() == 1.5*1024*1024
 
+
+    # REQ-A.5
     def test_generator_chunk_size_1(self):
         """ ProgressiveMapGenerator should return chunks in size of its
         read_size parameter when it's left to the default value.
@@ -69,6 +76,7 @@ class TestProgressiveMapGenerator(TestCase):
         assert len(next(mg)) == 10
         assert len(next(mg)) == 10
 
+    # REQ-A.5
     def test_generator_chunk_size_3(self):
         """ When the size of the compressed data is a multiple of read_size,
         the last chunk should be an empty byte array
@@ -108,6 +116,7 @@ class TestProgressiveMapGenerator(TestCase):
         with self.assertRaises(StopIteration):
             next(mg)
 
+    # REQ-B.3
     def test_generator_iterable_1(self):
         """ ProgressiveMapGenerator should be iterable
         """
@@ -119,6 +128,7 @@ class TestProgressiveMapGenerator(TestCase):
         # It's supposed to have a trailing empty byte array in this case
         self.assertSequenceEqual([x for x in mg], data + [b''])
 
+    # REQ-A.2
     def test_generator_parent_1(self):
         """ If ProgressiveMapGenerator is a parent it shouldn't return any data
         """
@@ -128,6 +138,9 @@ class TestProgressiveMapGenerator(TestCase):
 
 class TestMapGeneratorChild(TestCase):
 
+    # REQ-A.2
+    # REQ-A.7
+    # REQ-A.8
     @expectedFailure
     def test_get_child_1(self):
         """ get_child() should raise an exception if the parent flag is not set
@@ -137,6 +150,8 @@ class TestMapGeneratorChild(TestCase):
         mg = PMG(mock.MagicMock())
         mg.get_child()
 
+    # REQ-A.7
+    # REQ-B.1
     def test_get_child_2(self):
         """ get_child() should return a MapGeneratorChild if the parent flag
         is set
@@ -145,6 +160,9 @@ class TestMapGeneratorChild(TestCase):
         mg = PMG(mock.MagicMock(), parent=True)
         assert type(mg.get_child()) is MGC
 
+    # REQ-A.7
+    # REQ-B.1
+    # REQ-B.2
     def test_get_child_3(self):
         """ The child of a ProgressiveMapGenerator must be a MapGeneratorChild
         """
@@ -153,6 +171,7 @@ class TestMapGeneratorChild(TestCase):
         c = mg.get_child()
         assert c.parent is mg
 
+    # REQ-A.7
     def test_generator_child_size_1(self):
         """ The sice of a MapGeneratorChild should be equal to its parents
         size
@@ -162,6 +181,7 @@ class TestMapGeneratorChild(TestCase):
         c = mg.get_child()
         assert mg.get_size() == c.get_size()
 
+    # REQ-A.7
     def test_get_child_iterable_1(self):
         """ MapGeneratorChild shouldn't read ahead of its parent
         """
@@ -173,6 +193,8 @@ class TestMapGeneratorChild(TestCase):
             pass
         assert c.pos <= mg.pos
 
+    # REQ-A.6
+    # REQ-A.7
     def test_multi_child_iterable(self):
         """ MapGeneratorChildren should end up at the same positions
         """
@@ -188,6 +210,8 @@ class TestMapGeneratorChild(TestCase):
         assert c1.pos == c2.pos
 
 
+    # REQ-A.6
+    # REQ-A.7
     def test_multi_child_iterable(self):
         """ MapGeneratorChildren should do the same amount of rounds and get the same data
         """
