@@ -17,13 +17,12 @@ def unstick(connection, player=None):
     player.set_location_safe(player.get_location())
 
 
-@command('moves', admin_only = True)
+@command('moves', admin_only=True)
 def move_silent(connection, *args):
     """
-    Silently move yourself or of a given player to a specified sector (e.g. A5).
+    Silently move yourself or of a given player to a specified sector (e.g. A5)
+    /moves <sector> [player] or /moves <x> <y> <z> [player]
     If the z coordinate makes the player appear underground, put him at ground level instead
-    /moves <sector> [player]
-    /moves <x> <y> <z> [player]
     """
     do_move(connection, args, True)
 
@@ -31,18 +30,18 @@ def move_silent(connection, *args):
 @command(admin_only=True)
 def move(connection, *args):
     """
-    Move yourself or of a given player to a specified sector (e.g. A5) and inform everyone on the server of it.
+    Move yourself or of a given player to a specified sector (e.g. A5)
+    /move <sector> [player] or /move <x> <y> <z> [player]
     If you're invisivible, it will happen silenty.
-    If the x/y/z coordinate makes the player appear outside of the world bounds, take the bound instead
-    /move <sector> [player]
-    /move <x> <y> <z> [player]
+    If the x/y/z coordinate makes the player appear outside of the world bounds,
+    take the bound instead
     """
     if connection not in connection.protocol.players:
-            raise ValueError()
+        raise ValueError()
     do_move(connection, args)
 
 
-def do_move(connection, args, silent = False):
+def do_move(connection, args, silent=False):
     position = None
     player = None
     nbArgs = len(args)
