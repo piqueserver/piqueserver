@@ -20,6 +20,8 @@ from pyspades.constants import *
 from pyspades.loaders cimport Loader
 from pyspades.bytes cimport ByteReader, ByteWriter
 
+cimport cython
+
 cdef inline float limit(float a):
     if a > 512.0:
         return 512.0
@@ -237,6 +239,7 @@ cdef class GrenadePacket(Loader):
         for value in self.velocity:
             reader.writeFloat(value, False)
 
+@cython.freelist(8)
 cdef class SetTool(Loader):
     id = 7
 
@@ -333,6 +336,7 @@ cdef class MoveObject(Loader):
         reader.writeFloat(self.y, False)
         reader.writeFloat(self.z, False)
 
+@cython.freelist(8)
 cdef class CreatePlayer(Loader):
     id = 12
 
@@ -644,6 +648,7 @@ cdef class MapChunk(Loader):
         reader.writeByte(self.id, True)
         reader.write(self.data)
 
+@cython.freelist(8)
 cdef class PlayerLeft(Loader):
     id = 20
 
@@ -695,6 +700,7 @@ cdef class ProgressBar(Loader):
         reader.writeByte(self.rate, False)
         reader.writeFloat(self.progress, False)
 
+@cython.freelist(8)
 cdef class IntelCapture(Loader):
     id = 23
 
@@ -753,6 +759,7 @@ cdef class Restock(Loader):
         reader.writeByte(self.id, True)
         reader.writeByte(self.player_id, True)
 
+@cython.freelist(8)
 cdef class FogColor(Loader):
     id = 27
 
@@ -766,6 +773,7 @@ cdef class FogColor(Loader):
         reader.writeByte(self.id, True)
         reader.writeInt(self.color << 8, True, False)
 
+@cython.freelist(8)
 cdef class WeaponReload(Loader):
     id = 28
 
