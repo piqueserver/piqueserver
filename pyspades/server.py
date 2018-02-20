@@ -54,7 +54,7 @@ class ServerProtocol(BaseProtocol):
     connections = None
     player_ids = None
     master = False
-    max_score = 1
+    max_score = 10
     map = None
     spade_teamkills_on_grief = False
     friendly_fire = False
