@@ -20,9 +20,9 @@ def unstick(connection, player=None):
 @command('moves', admin_only=True)
 def move_silent(connection, *args):
     """
-    Silently move yourself or of a given player to the specified x/y/z coordinates or sector
+    Silently move yourself or a given player to the specified x/y/z coordinates or sector
     /moves <sector> [player] or /moves <x> <y> <z> [player]
-    If the z coordinate makes the player appear underground, put him at ground level instead.
+    If the z coordinate makes the player appear underground, put them at ground level instead.
     If the x/y/z coordinate makes the player appear outside of the world bounds,
     take the bound instead
     """
@@ -32,10 +32,10 @@ def move_silent(connection, *args):
 @command(admin_only=True)
 def move(connection, *args):
     """
-    Move yourself or of a given player to the specified x/y/z coordinates or sector
+    Move yourself or a given player to the specified x/y/z coordinates or sector
     /move <sector> [player] or /move <x> <y> <z> [player]
     If you're invisivible, it will happen silently.
-    If the z coordinate makes the player appear underground, put him at ground level instead.
+    If the z coordinate makes the player appear underground, put them at ground level instead.
     If the x/y/z coordinate makes the player appear outside of the world bounds,
     take the bound instead
     """
@@ -47,17 +47,17 @@ def move(connection, *args):
 def do_move(connection, args, silent=False):
     position = None
     player = None
-    nbArgs = len(args)
+    arg_count = len(args)
 
-    #case position is <sector>
-    if nbArgs == 1 or nbArgs == 2:
+    # the target position is a <sector>
+    if arg_count == 1 or arg_count == 2:
         x, y = coordinates(args[0])
         x += 32
         y += 32
         z = connection.protocol.map.get_height(x, y) - 2
         position = args[0].upper()
-    #case position is <x> <y> <z>
-    elif nbArgs == 3 or nbArgs == 4:
+    # the target position is <x> <y> <z>
+    elif arg_count == 3 or arg_count == 4:
         x = min(max(0, int(args[0])), 511)
         y = min(max(0, int(args[1])), 511)
         z = min(max(0, int(args[2])), connection.protocol.map.get_height(x, y) - 2)
@@ -65,14 +65,14 @@ def do_move(connection, args, silent=False):
     else:
         raise ValueError('Wrong number of parameters!')
 
-    #case no player specified
-    if nbArgs == 1 or nbArgs == 3:
+    # no player specified
+    if arg_count == 1 or arg_count == 3:
         if connection not in connection.protocol.players:
             raise ValueError()
         player = connection.name
-    #case player specified
-    elif nbArgs == 2 or nbArgs == 4:
-        player = args[nbArgs - 1]
+    # player specified
+    elif arg_count == 2 or arg_count == 4:
+        player = args[arg_count - 1]
 
     player = get_player(connection.protocol, player)
 
