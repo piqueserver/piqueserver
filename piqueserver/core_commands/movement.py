@@ -21,7 +21,7 @@ def unstick(connection, player=None):
 def move_silent(connection, *args):
     """
     Silently move yourself or a given player to the specified x/y/z coordinates or sector
-    /moves <sector> [player] or /moves <x> <y> <z> [player]
+    /moves [player] <sector> or /moves [player] <x> <y> <z>
     If the z coordinate makes the player appear underground, put them at ground level instead.
     If the x/y/z coordinate makes the player appear outside of the world bounds,
     take the bound instead
@@ -33,7 +33,7 @@ def move_silent(connection, *args):
 def move(connection, *args):
     """
     Move yourself or a given player to the specified x/y/z coordinates or sector
-    /move <sector> [player] or /move <x> <y> <z> [player]
+    /move [player] <sector> or /move [player] <x> <y> <z>
     If you're invisivible, it will happen silently.
     If the z coordinate makes the player appear underground, put them at ground level instead.
     If the x/y/z coordinate makes the player appear outside of the world bounds,
@@ -49,18 +49,20 @@ def do_move(connection, args, silent=False):
     player = None
     arg_count = len(args)
 
+    initial_index = 1 if arg_count == 2 or arg_count == 4 else 0
+
     # the target position is a <sector>
     if arg_count == 1 or arg_count == 2:
-        x, y = coordinates(args[0])
+        x, y = coordinates(args[initial_index])
         x += 32
         y += 32
         z = connection.protocol.map.get_height(x, y) - 2
         position = args[0].upper()
     # the target position is <x> <y> <z>
     elif arg_count == 3 or arg_count == 4:
-        x = min(max(0, int(args[0])), 511)
-        y = min(max(0, int(args[1])), 511)
-        z = min(max(0, int(args[2])), connection.protocol.map.get_height(x, y) - 2)
+        x = min(max(0, int(args[initial_index])), 511)
+        y = min(max(0, int(args[initial_index + 1])), 511)
+        z = min(max(0, int(args[initial_index + 2])), connection.protocol.map.get_height(x, y) - 2)
         position = '%d %d %d' % (x, y, z)
     else:
         raise ValueError('Wrong number of parameters!')
@@ -72,7 +74,7 @@ def do_move(connection, args, silent=False):
         player = connection.name
     # player specified
     elif arg_count == 2 or arg_count == 4:
-        player = args[arg_count - 1]
+        player = args[0]
 
     player = get_player(connection.protocol, player)
 
