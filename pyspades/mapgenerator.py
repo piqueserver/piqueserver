@@ -26,12 +26,13 @@ class ProgressiveMapGenerator(object):
     all_data = b''
     pos = 0
 
-    def __init__(self, map_, parent=False):
+    def __init__(self, map_, parent=False, read_size=8192):
         # parent=True enables saving all data sent instead of just
         # deleting it afterwards.
         self.parent = parent
-        self.generator = map_.get_generator()
+        self.generator = map_.get_generator(read_size)
         self.compressor = zlib.compressobj(COMPRESSION_LEVEL)
+        self.read_size = read_size
 
     def get_size(self):
         """get the map size, for display of the loading bar on the client"""
@@ -40,13 +41,27 @@ class ProgressiveMapGenerator(object):
         # over the wire
         return 1.5 * 1024 * 1024  # 2MB
 
-    def read(self, size):
+    def __iter__(self):
+        return self
+
+    # Python 3 compatibility
+    def __next__(self):
+        return self.next()
+
+    def next(self):
+        if self.data_left():
+            return self.read()
+        else:
+            raise StopIteration()
+
+    def read(self):
         """read size bytes from the map generator"""
+        size = self.read_size
         data = self.data
         generator = self.generator
         if len(data) < size and generator is not None:
             while True:
-                map_data = generator.get_data(size)
+                map_data = generator.get_data()
                 if generator.done:
                     self.generator = None
                     data += self.compressor.flush()
@@ -85,15 +100,13 @@ class MapGeneratorChild(object):
         """get the size of the parent map generator"""
         return self.parent.get_size()
 
-    def read(self, size):
-        """read size bytes from the parent map generator, if possible"""
-        pos = self.pos
-        if pos + size > self.parent.pos:
-            self.parent.read(size)
-        data = self.parent.all_data[pos:pos + size]
-        self.pos += len(data)
-        return data
-
-    def data_left(self):
-        """return True if any data is left"""
-        return self.parent.data_left() or self.pos < self.parent.pos
+    def __iter__(self):
+        while self.parent.data_left() or self.pos < self.parent.pos:
+            size = self.parent.read_size
+            pos = self.pos
+            if pos + size > self.parent.pos:
+                self.parent.read()
+            data = self.parent.all_data[pos:pos + size]
+            self.pos += len(data)
+            yield data
+        raise StopIteration
