@@ -57,7 +57,7 @@ def do_move(connection, args, silent=False):
         x += 32
         y += 32
         z = connection.protocol.map.get_height(x, y) - 2
-        position = args[0].upper()
+        position = args[initial_index].upper()
     # the target position is <x> <y> <z>
     elif arg_count == 3 or arg_count == 4:
         x = min(max(0, int(args[initial_index])), 511)
