@@ -338,10 +338,12 @@ class ServerProtocol(BaseProtocol):
             if map_obj.get_solid(entity.x, entity.y, entity.z - 1):
                 moved = True
                 entity.z -= 1
+                # while solid in block above (ie. in the space in which the
+                # entity is sitting), move entity up)
                 while map_obj.get_solid(entity.x, entity.y, entity.z - 1):
                     entity.z -= 1
             else:
-                while not map_obj.get_solid(entity.x, entity.y, entity.z):
+                while map_obj.get_solid(entity.x, entity.y, entity.z) == False:
                     moved = True
                     entity.z += 1
             if moved or self.on_update_entity(entity):

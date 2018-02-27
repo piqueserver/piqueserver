@@ -100,9 +100,6 @@ cdef class VXLData:
         for z in xrange(start, 64):
             if get_solid(x, y, z, self.map):
                 return z
-        # should this still return 0 if no solid?
-        # is it guaranteed that there will be solid at the bottom of the map?
-        # it seems that this would set things to the top of the map if there wasn't
         return 0
 
     cpdef int get_height(self, int x, int y):
