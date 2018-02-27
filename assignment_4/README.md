@@ -72,6 +72,64 @@ Starts the server. Like the `FeatureProtocol` constructor, most of the cyclomati
 
     The only possible result of `run()` are that a game server either is started or are not, which will be the case of any of the numerous `try/except` blocks generates an exception, in which case the program might get shut down. The properties of the server are defined in the configuration file, but might get modified during execution of `run()`. For example, if a script are to be loaded but aren't available on the server, the script is ignored.
 
+#### Possible refactorizations 
+
+1. `piqueserver::scripts::badmin.py::score_grief()` One obvious refactorizations would be something like
+   ```python
+   gscore += static_team_blocks(team_blocks)
+   gscore += team_block_ratio(team_blocks, total_blocks)
+   ```
+   where `static_team_blocks` and `team_block_ratio` would be functions that simplified line 131 to 152. This would eliminate 10 `if/elif`-statements
+
+2. `piqueserver::scripts::blockinfo.py::grief_check()` This function could be considerably less complex if the result was just the numbers instead of a string describing the implication of the numbers. I.e., we could just print the metrics from which the string are generated and be done with it. Refactoring out functions as it is now makes little sense (in my humble opinion) but could be done by replacing `if/else`-statements that apply formatting (like the minute/minutes) with functions.
+
+   Similarly, each part of the string could be a function so, for example, the part that deals with generating name-strings that are colored or not depending on input parameters would just be
+   ```python
+   names = get_names(infos, colored=True)
+   ```
+   and the part that adds block-placement to the string would be 
+   ```python
+   message += get_block_placement(names, colored=True)
+   ```
+   and so on. This would probably remove most of the cyclomatic complexity of this function.
+
+3. `piqueserver::server::FeatureProtocol::__init__()` Using proper serialization would reduce a lot of the cyclomatic complexity here. Otherwise, the problem is that each property read from the configuration file has to be verified. Often there are also imports associated with an activated feature in the server. We cold do all the imports in the top of the file (as usual) and create a function for each feature of the `FeatureProtocol` that has to be verified by an `if`-statement:
+   ```python
+   self.ban_publish = self.__set_ban_publish(self, config)
+   self.ban_subscribe = self.__set_ban_subscribe(self, config)
+   ```
+
+4. `pyspades::player::on_block_action_recieved()` There are some issues that could be addressed as follows
+    * the interval is needlessly complex, it could be a single function examining the equipment of the player
+      ```python
+      interval = self.__get_interval(self, contained)
+      ```
+    * The same goes for the `rapid_hack_detect`-routine
+      ```python
+      probable_rapid_hack = self.__get_probable_rapid_hack(self, last_time, current_time)
+      if probable_rapid_hack:
+          print('RAPID HACK:', self.rapids.window)
+          self.on_hack_attempt('Rapid hack detected')
+          return
+      ```
+    * for the "build block" and "remove block" actions we could do something like
+      ```python
+      if value == BUILD_BLOCK and self.__valid_build_block(self, pos, contained)
+          self.on_block_build(x, y, z)
+      elif value == DESTROY_BLOCK and self.__valid_destroy_block(self, pos, contained)
+          count = map.destroy_point(x, y, z)
+      ```
+      where the private methods performed the checks for that now takes that many `if/elif/else`-statements
+
+6. `pyspades::player::on_position_update_recieved()`
+    Split the main part of the function in to two depending on what game mode we are running:
+    ```python
+    if game_mode == CTF_MODE:
+        self.__handle_CTF_MODE(self, contained)
+    elif game_mode == TC_MODE:
+        self.__handle_TC_MODE(self, contained) 
+    ```
+
 ### Tools
 
 ### DIY
