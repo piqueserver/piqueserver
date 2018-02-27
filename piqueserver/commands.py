@@ -384,7 +384,7 @@ def handle_command(connection, command, parameters):
     except CommandError as e:
         msg = str(e)
     except PermissionDenied:
-        msg = "Permission denied"
+        msg = 'You can\'t use this command'
     except ValueError:
         msg = 'Invalid parameters'
 
