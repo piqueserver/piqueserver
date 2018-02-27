@@ -151,13 +151,13 @@ that of Lizard.
 
 |                     |Jonas|David|Safir|Robert|Fredrik|
 |---------------------|-----|-----|-----|------|-------|
-|Planning             |     |     |     |      |       |
-|Discussions          |     |     |     |      |       |
-|Reading documentation|     |     |     |      |       |
+|Planning             |     |     |     |      |    1  |
+|Discussions          |     |     |     |      |    4  |
+|Reading documentation|     |     |     |      |    1  |
 |Configuration        |     |     |     |      |       |
-|Analyzing code/output|     |     |     |      |       |
-|Writing documentation|     |     |     |      |       |
-|Writing code         |     |     |     |      |       |
+|Analyzing code/output|     |     |     |      |    2  |
+|Writing documentation|     |     |     |      |    6  |
+|Writing code         |     |     |     |      |    6  |
 |Running code         |     |     |     |      |       |
 
 ## Overall experience
