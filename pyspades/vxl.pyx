@@ -91,9 +91,18 @@ cdef class VXLData:
         return make_color_tuple(get_color(x, y, z, self.map))
 
     cpdef int get_z(self, int x, int y, int start = 0):
+        '''
+        Returns the first z coordinate that is solid beginning from `start` and
+        moving down.  Useful for getting the coordinate for where something
+        should be after being dropped.
+        '''
+
         for z in xrange(start, 64):
             if get_solid(x, y, z, self.map):
                 return z
+        # should this still return 0 if no solid?
+        # is it guaranteed that there will be solid at the bottom of the map?
+        # it seems that this would set things to the top of the map if there wasn't
         return 0
 
     cpdef int get_height(self, int x, int y):
@@ -106,19 +115,12 @@ cdef class VXLData:
     cpdef tuple get_safe_coords(self, int x, int y, int z):
         '''
         given (x, y, z) coords, return the closest set of coords on the map
-        that is:
-        - within the bounds of the map
-        - not inside a solid
+        that is within the bounds of the map
         '''
 
-        # pull x and y to within bounds
-        x = min(max(0, x), 511)
-        y = min(max(0, y), 511)
-
-        # make sure z is within bounds,
-        # and if solid, move upwards to first non-solid space
-        z = min(max(0, z), 63)
-        z = self.get_z(x, y, start=z)
+        x = 0 if x < 0 else (511 if x > 511 else x)
+        y = 0 if y < 0 else (511 if y > 511 else y)
+        z = 0 if z < 0 else (63 if z > 63 else z)
 
         return (x, y, z)
 

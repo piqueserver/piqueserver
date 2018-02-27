@@ -814,10 +814,13 @@ class ServerConnection(BaseConnection):
                 if player is not self:
                     continue
                 position = self.world_object.position
-                # convert to safe coords so the flag can't be dropped out of
-                # bounds or inside solid
+
+                # convert to safe coords so the flag can't be dropped out of bounds
                 x, y, z = self.protocol.map.get_safe_coords(position.x, position.y, position.z)
+                # or inside solid
+                z = self.protocol.map.get_z(x, y, z)
                 flag.set(x, y, z)
+
                 flag.player = None
                 intel_drop.player_id = self.player_id
                 intel_drop.x = flag.x
