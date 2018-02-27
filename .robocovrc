@@ -1,0 +1,6 @@
+[robocov]
+omit =
+    */test_*.py
+    */tests.py
+    */conftest.py
+    */__init__.py

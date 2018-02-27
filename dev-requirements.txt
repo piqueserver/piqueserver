@@ -6,3 +6,6 @@ pytest
 pytest-cov
 Sphinx
 tox
+rcfile
+termcolor
+
