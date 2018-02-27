@@ -36,6 +36,7 @@ cdef class VXLData:
     cpdef tuple get_random_point(self, int x1, int y1, int x2, int y2)
     cpdef int get_z(self, int x, int y, int start = ?)
     cpdef int get_height(self, int x, int y)
+    cpdef tuple get_safe_coords(self, int x, int y, int z)
     cpdef bint has_neighbors(self, int x, int y, int z)
     cpdef bint is_surface(self, int x, int y, int z)
     cpdef list get_neighbors(self, int x, int y, int z)
