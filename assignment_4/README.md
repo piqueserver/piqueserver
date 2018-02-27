@@ -53,7 +53,18 @@ Starts the server. Like the `FeatureProtocol` constructor, most of the cyclomati
 
 ### Tools
 
-### DYI
+### DIY
+
+Initially we had some issues regarding what you should actually count when calculating
+the complexity by hand. Some of the questions we had were:
+
+* Does `sys.exit(code)` count as an exit point?
+* Do exceptions count as exit points?
+* Do if-statements with multiple clauses count as one of more decisions?
+* Does `with` count as a decision.
+
+Once we knew the answers to these, we all got the same results as each other and
+that of Lizard.
 
 ### Evaluation
 
