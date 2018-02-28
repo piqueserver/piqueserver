@@ -79,6 +79,7 @@ cdef class VXLData:
         if is_valid_position(x, y, z):
             set_point(x, y, z, self.map, 1, make_color(*color))
 
+    # TODO: consider making this function raise error on invalid position
     cpdef get_solid(self, int x, int y, int z):
         if not is_valid_position(x, y, z):
             return None
@@ -90,6 +91,12 @@ cdef class VXLData:
         return make_color_tuple(get_color(x, y, z, self.map))
 
     cpdef int get_z(self, int x, int y, int start = 0):
+        '''
+        Returns the first z coordinate that is solid beginning from `start` and
+        moving down.  Useful for getting the coordinate for where something
+        should be after being dropped.
+        '''
+
         for z in xrange(start, 64):
             if get_solid(x, y, z, self.map):
                 return z
@@ -101,6 +108,18 @@ cdef class VXLData:
             if not get_solid(x, y, z, self.map):
                 return z + 1
         return 0
+
+    cpdef tuple get_safe_coords(self, int x, int y, int z):
+        '''
+        given (x, y, z) coords, return the closest set of coords on the map
+        that is within the bounds of the map
+        '''
+
+        x = 0 if x < 0 else (511 if x > 511 else x)
+        y = 0 if y < 0 else (511 if y > 511 else y)
+        z = 0 if z < 0 else (63 if z > 63 else z)
+
+        return (x, y, z)
 
     cpdef tuple get_random_point(self, int x1, int y1, int x2, int y2):
         cdef int x, y
