@@ -248,29 +248,16 @@ that of Lizard.
 
 ## Effort spent
 
-<<<<<<< HEAD
-|                     |Jonas|David|Safir |Robert|Fredrik|
-|---------------------|-----|-----|------|------|-------|
-|Planning             |     |     |   2  |      |       |
-|Discussions          |     |     |   2  |      |       |
-|Reading documentation|     |     |   0  |      |       |
-|Configuration        |     |     |   0  |      |       |
-|Analyzing code/output|     |     |   3  |      |       |
-|Writing documentation|     |     |   3  |      |       |
-|Writing code         |     |     |   4  |      |       |
-|Running code         |     |     |   2  |      |       |
-=======
 |                     |Jonas|David|Safir|Robert|Fredrik|
-|---------------------|-----|-----|-----|------|-------|
-|Planning             |     |     |     |      |    1  |
-|Discussions          |     |     |     |      |    4  |
-|Reading documentation|     |     |     |      |    1  |
-|Configuration        |     |     |     |      |       |
-|Analyzing code/output|     |     |     |      |    2  |
-|Writing documentation|     |     |     |      |    6  |
-|Writing code         |     |     |     |      |    6  |
-|Running code         |     |     |     |      |       |
->>>>>>> 47e5849c3cd9065a7dc4bd8a57ba466d6e1fee09
+|---------------------|-----|-----|------|------|-------|
+|Planning             |     |     |   2  |      |    1  |
+|Discussions          |     |     |   2  |      |    4  |
+|Reading documentation|     |     |   0  |      |    1  |
+|Configuration        |     |     |   0  |      |       |
+|Analyzing code/output|     |     |   3  |      |    2  |
+|Writing documentation|     |     |   3  |      |    6  |
+|Writing code         |     |     |   4  |      |    6  |
+|Running code         |     |     |   2  |      |       |
 
 ## Overall experience
 
