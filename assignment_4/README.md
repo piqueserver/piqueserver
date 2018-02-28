@@ -59,7 +59,7 @@ The validity of player block construction and destruction are checked here. A lo
    Depending on what branches are taken in `on_block_action_recieved()` a block will either be placed in the world, destroyed in the world or nothing will happen. In the case where a block are destroyed, a block might be added to the players inventory. Likewise in the case where a block is placed in the world, a block will be removed from the players inventory.
 
 5. `pyspades::client::loader_received()` (CCN = 20)  
-Loaders handles various network related stuff, like streaming a map from the server to the client or player position updates. Basically the function takes a domain specific packet as input and handles it. There seems to be a lot of unused code (`if` statements followed by `pass`) which could be removed to lower complexity, but in general, the way the project works now, it needs to be high. However, even though the function evidently handles packets, a lot of the complexity arises from printing messages that look a lot like debug messages. 
+Loaders handles various network related stuff, like streaming a map from the server to the client or player position updates. Basically the function takes a domain specific packet as input and handles it. There seems to be a lot of unused code (`if` statements followed by `pass`) which could be removed to lower complexity, but in general, the way the project works now, it needs to be high. However, even though the function evidently handles packets, a lot of the complexity arises from printing messages that look a lot like debug messages.
 
    `loader_received()` will either load a map in the client (there are two different kind of map loaders, each will result in a map), print a lot of stuff and then do nothing or just do nothing, depending on which branches are taken.
 
@@ -88,7 +88,7 @@ Starts the server. Like the `FeatureProtocol` constructor, most of the cyclomati
 
     The only possible result of `run()` are that a game server either is started or are not, which will be the case of any of the numerous `try/except` blocks generates an exception, in which case the program might get shut down. The properties of the server are defined in the configuration file, but might get modified during execution of `run()`. For example, if a script are to be loaded but aren't available on the server, the script is ignored.
 
-#### Possible refactorizations 
+#### Possible refactorizations
 
 1. `piqueserver::scripts::badmin.py::score_grief()` One obvious refactorizations would be something like
    ```python
@@ -103,7 +103,7 @@ Starts the server. Like the `FeatureProtocol` constructor, most of the cyclomati
    ```python
    names = get_names(infos, colored=True)
    ```
-   and the part that adds block-placement to the string would be 
+   and the part that adds block-placement to the string would be
    ```python
    message += get_block_placement(names, colored=True)
    ```
@@ -143,13 +143,35 @@ Starts the server. Like the `FeatureProtocol` constructor, most of the cyclomati
     if game_mode == CTF_MODE:
         self.__handle_CTF_MODE(self, contained)
     elif game_mode == TC_MODE:
-        self.__handle_TC_MODE(self, contained) 
+        self.__handle_TC_MODE(self, contained)
     ```
 
 ### Tools
 
 ### DIY
+Since we implemented our own full scale tool showing a diff is quite unnecessary since everything is contained to a single file.
 
+[conftest.py](https://github.com/avacore1337/piqueserver/blob/assessment/conftest.py)
+
+
+This is the outcome of our tool
+
+|     File            |outcome|
+|---------------------|---------------------------------|
+| ./piqueserver/networkdict.py| [5/9] |
+| ./piqueserver/statistics.py| [1/15] |
+| ./pyspades/player.py     | [14/229] |
+| ./piqueserver/commands.py  | [4/49] |
+| ./pyspades/types.py        | [5/11] |
+| ./piqueserver/run.py       | [7/39] |
+| ./pyspades/collision.py     | [0/2] |
+| ./piqueserver/config.py   | [16/23] |
+| ./pyspades/protocol.py     | [0/21] |
+| ./piqueserver/scripts/badmin.py      | [5/60] |
+| ./piqueserver/scripts/blockinfo.py   | [4/37] |
+| ./pyspades/mapgenerator.py | [7/15] |
+
+Total branch coverage 68/510
 ### Evaluation
 
 ## Effort spent
