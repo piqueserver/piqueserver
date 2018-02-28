@@ -343,7 +343,8 @@ class ServerProtocol(BaseProtocol):
                 while map_obj.get_solid(entity.x, entity.y, entity.z - 1):
                     entity.z -= 1
             else:
-                while map_obj.get_solid(entity.x, entity.y, entity.z) == False:
+                # get_solid can return None, so a more specific check is used
+                while map_obj.get_solid(entity.x, entity.y, entity.z) is False:
                     moved = True
                     entity.z += 1
             if moved or self.on_update_entity(entity):
