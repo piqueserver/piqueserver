@@ -18,8 +18,6 @@ A server implementation for the game Ace of Spades 0.75. Piqueserver further ext
 
 TODO: new coverage report here
 
-===================== 63 passed, 2 xfailed in 2.47 seconds =====================
-
 ### High cyclomatic complexity functions
 
 We used lizard to generate the cyclomatic complexety for each function in the project and then chose the top 10.
