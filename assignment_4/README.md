@@ -156,14 +156,14 @@ that of Lizard.
 
 |                     |Jonas|David|Safir|Robert|Fredrik|
 |---------------------|-----|-----|------|------|-------|
-|Planning             |     |  1  |   2  |      |    1  |
-|Discussions          |     |  5  |   2  |      |    4  |
-|Reading documentation|     |  2  |   0  |      |    1  |
+|Planning             |  2  |  1  |   2  |      |    1  |
+|Discussions          |  6  |  5  |   2  |      |    4  |
+|Reading documentation|  1  |  2  |   0  |      |    1  |
 |Configuration        |     |  0  |   0  |      |       |
-|Analyzing code/output|     |  7  |   3  |      |    2  |
+|Analyzing code/output|  7  |  7  |   3  |      |    2  |
 |Writing documentation|     |  0  |   3  |      |    6  |
-|Writing code         |     |  2  |   4  |      |    6  |
-|Running code         |     |  1  |   2  |      |       |
+|Writing code         |  4  |  2  |   4  |      |    6  |
+|Running code         |  1  |  1  |   2  |      |       |
 
 ## Overall experience
 
