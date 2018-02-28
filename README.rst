@@ -49,13 +49,13 @@ pip (stable version)
 
 .. code:: bash
 
-    pip install piqueserver
+    pip3 install piqueserver
 
 to install with the optional ssh server
 
 .. code:: bash
 
-    pip install piqueserver[ssh]
+    pip3 install piqueserver[ssh]
 
 git (bleeding edge)
 ~~~~~~~~~~~~~~~~~~~
@@ -63,7 +63,7 @@ git (bleeding edge)
 .. code:: bash
 
     git clone https://github.com/piqueserver/piqueserver
-    virtualenv2 venv
+    virtualenv venv
     source venv/bin/activate
     pip install -r requirements.txt
     python setup.py install
@@ -154,7 +154,7 @@ Use ``pip`` and ``virtualenv`` to setup the development environment:
 
 .. code:: bash
 
-    $ virtualenv -p python2 venv && . ./venv/bin/activate
+    $ virtualenv -p python3 venv && . ./venv/bin/activate
     (venv) $ pip install -r requirements.txt
     (venv) $ ./setup.py install
     (venv) $ deactivate # Deactivate virtualenv

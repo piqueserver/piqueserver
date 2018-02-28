@@ -219,18 +219,18 @@ subscribe = false
 [rights]
 moderator = [
  "advance", "cancel", "dban", "fog",
- "from", "goto", "hackinfo", "hban",
+ "from", "hackinfo", "hban",
  "invisible", "ip", "kick", "kickafk",
- "kill", "map", "master", "move",
+ "kill", "map", "master", "move", "moves",
  "mute", "resetgame", "switch", "teleport",
  "teleport_other", "tpsilent", "togglebuild", "togglekill",
  "togglevotekick", "trust", "undoban", "unmute",
  "unstick", "where", "whowas"
 ]
 guard = [
- "cancel", "fog", "from", "goto",
+ "cancel", "fog", "from",
  "hackinfo", "hban", "ip", "kick",
- "kickafk", "kill", "move", "mute",
+ "kickafk", "kill", "move", "moves", "mute",
  "switch", "teleport", "teleport_other", "togglebuild",
  "togglekill", "togglevotekick", "trust", "unmute",
  "unstick", "where", "whowas"
