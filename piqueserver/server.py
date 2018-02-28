@@ -92,17 +92,15 @@ def check_scripts(scripts):
     '''
     Checks if scripts were included multiple times.
     '''
-    seen = {}
-    dups = set()
+    seen = set()
+    dups = []
     for script in scripts:
-        try:
-            seen[script] += 1
-        except KeyError:
-            seen[script] = 1
-        if seen[script] > 1:
-            dups.add(script)
-    if len(dups) != 0:
-        print("Scripts {} were included multiple times.".format(dups))
+        if script in seen:
+            dups.append(script)
+        else:
+            seen.add(script)
+    if dups:
+        print("Scripts included multiple times: {}".format(dups))
         return False
     return True
 
