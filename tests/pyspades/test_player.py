@@ -9,7 +9,7 @@ from pyspades.player import ServerConnection
 from pyspades.constants import SPADE_TOOL, BLOCK_TOOL, WEAPON_TOOL, \
                                RIFLE_WEAPON, BUILD_BLOCK, DESTROY_BLOCK,\
                                SPADE_DESTROY
-
+from pyspades.constants import *
 
 def get_mock_player(hp=101, blocks=29, tool=BLOCK_TOOL, weapon=None,
                     empty=True):
@@ -35,6 +35,75 @@ def get_mock_block_action(x=11, y=23, z=31, value=BUILD_BLOCK):
     type(cont).value = mock.PropertyMock(return_value=value)
     return cont
 
+def get_mock_position(x=11, y=23, z=31):
+    cont = mock.MagicMock()
+    type(cont).x = mock.PropertyMock(return_value=x)
+    type(cont).y = mock.PropertyMock(return_value=y)
+    type(cont).z = mock.PropertyMock(return_value=z)
+    return cont
+
+class PlayerPosition(TestCase):
+
+    # on_position_update_recieved
+    @mock.patch('pyspades.player.position_data')
+    def setUp(self, gpd): #global position data
+        self.gpd = gpd
+        self.gpd_x = mock.PropertyMock(return_value=0)
+        type(gpd).x = self.gpd_x
+        self.gpd_y = mock.PropertyMock(return_value=0)
+        type(gpd).y = self.gpd_y
+        self.gpd_z = mock.PropertyMock(return_value=0)
+        type(gpd).z = self.gpd_z
+        self.gpd_value = mock.PropertyMock(return_value=0)
+        type(gpd).value = self.gpd_value
+        self.gpd_player_id = mock.PropertyMock(return_value=0)
+        type(gpd).player_id = self.gpd_player_id
+
+    # @patch.object(SomeClass, 'class_method')
+    # ... def test(mock_method):
+    # ...     SomeClass.class_method(3)
+    # ...     mock_method.assert_called_with(3)
+
+    @mock.patch.object(ServerConnection, 'on_hack_attempt')
+    def test_no_hack(self, hack_method):
+        """ Sanitize bad positions to foil hackers.
+        """
+        player.position_data = self.gpd
+        mock_pos = get_mock_position(x=float('nan'))
+        mock_player = get_mock_player()
+        mock_player.on_position_update_recieved(mock_pos)
+
+        hack_method.assert_called_with('Invalid position data received')
+
+    @mock.patch.object(ServerConnection, 'last_position_update')
+    def test_no_move_if_dead(self, last_position_update):
+        """ You can't move if you are dead.
+        """
+        player.position_data = self.gpd
+        mock_pos = get_mock_position()
+        mock_player = get_mock_player(hp=0)
+        mock_player.on_position_update_recieved(mock_pos)
+        last_position_update.assert_not_called()
+
+    @mock.patch.object(ServerConnection, 'is_valid_position')
+    @mock.patch.object(ServerConnection, 'set_location')
+    def test_position_data_remains_unchanged_position_is_invalid(self, set_location, is_valid_position):
+        """ If the position data is invalid for any reason your positon isn't changed.
+        """
+        is_valid_position.return_value = False
+        player.position_data = self.gpd
+        mock_pos = get_mock_position()
+        mock_player = get_mock_player()
+        mock_player.on_position_update_recieved(mock_pos)
+        set_location.assert_called_with()
+
+    def test_no_set_mode(self):
+        """ This path is triggered if neither CTF nor TC mode is set. This is a bug.
+        """
+        player.position_data = self.gpd
+        mock_pos = get_mock_position()
+        mock_player = get_mock_player()
+        mock_player.on_position_update_recieved(mock_pos)
 
 class ServerConnectionTest(TestCase):
 

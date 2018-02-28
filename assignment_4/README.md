@@ -248,6 +248,7 @@ that of Lizard.
 
 ## Effort spent
 
+<<<<<<< HEAD
 |                     |Jonas|David|Safir |Robert|Fredrik|
 |---------------------|-----|-----|------|------|-------|
 |Planning             |     |     |   2  |      |       |
@@ -258,6 +259,18 @@ that of Lizard.
 |Writing documentation|     |     |   3  |      |       |
 |Writing code         |     |     |   4  |      |       |
 |Running code         |     |     |   2  |      |       |
+=======
+|                     |Jonas|David|Safir|Robert|Fredrik|
+|---------------------|-----|-----|-----|------|-------|
+|Planning             |     |     |     |      |    1  |
+|Discussions          |     |     |     |      |    4  |
+|Reading documentation|     |     |     |      |    1  |
+|Configuration        |     |     |     |      |       |
+|Analyzing code/output|     |     |     |      |    2  |
+|Writing documentation|     |     |     |      |    6  |
+|Writing code         |     |     |     |      |    6  |
+|Running code         |     |     |     |      |       |
+>>>>>>> 47e5849c3cd9065a7dc4bd8a57ba466d6e1fee09
 
 ## Overall experience
 
