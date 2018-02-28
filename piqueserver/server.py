@@ -88,6 +88,23 @@ def check_passwords(passwords):
     # always validate - this function is just to warn if default passwords found
     return True
 
+def check_scripts(scripts):
+    '''
+    Checks if scripts were included multiple times.
+    '''
+    seen = {}
+    dups = set()
+    for script in scripts:
+        try:
+            seen[script] += 1
+        except KeyError:
+            seen[script] = 1
+        if seen[script] > 1:
+            dups.add(script)
+    if len(dups) != 0:
+        print("Scripts {} were included multiple times.".format(dups))
+        return False
+    return True
 
 # declare configuration options
 bans_config = config.section('bans')
@@ -163,7 +180,7 @@ help_option = config.option('help')
 rules_option = config.option('rules')
 tips_option = config.option('tips')
 network_interface = config.option('network_interface', default='')
-scripts_option = config.option('scripts', [])
+scripts_option = config.option('scripts', default=[], validate=check_scripts)
 ban_subscribe_enabled = bans_config.option('subscribe', False)
 
 web_client._HTTP11ClientFactory.noisy = False
