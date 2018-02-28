@@ -18,7 +18,7 @@ A server implementation for the game Ace of Spades 0.75. Piqueserver further ext
 platform linux -- Python 3.6.3, pytest-3.4.0, py-1.5.2, pluggy-0.6.0
 rootdir: /home/safe/Code/kth/sofeng/piqueserver, inifile:
 plugins: cov-2.5.1
-collected 65 items                                                             
+collected 65 items
 
 tests/piqueserver/test_commands.py ....                                  [  6%]
 tests/piqueserver/test_config.py ...........                             [ 23%]
