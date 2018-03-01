@@ -4,8 +4,8 @@ Twisted[tls]>=17,<18
 Jinja2>=2,<3
 Pillow>=4.3.0,<5
 pyenet
-ipaddress
 six
+typing
 toml
 
 # from command

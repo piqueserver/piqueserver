@@ -130,9 +130,9 @@ setup(
         'Jinja2>=2,<3',  # status server is part of our 'vanilla' package
         'Pillow>=4.3.0,<5',
         'pyenet',
-        'ipaddress',
         'toml',
-        'six'
+        'six',
+        'typing'
     ],
     extras_require={
         'from': ['pygeoip>=0.3.2,<0.4'],

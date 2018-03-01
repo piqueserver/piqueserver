@@ -63,7 +63,8 @@ from piqueserver.player import FeatureConnection
 # won't be used; just need to be executed
 import piqueserver.core_commands
 
-def check_passwords(passwords):
+from typing import Dict, List, Optional, Tuple
+def check_passwords(passwords: Dict[str, List[str]]) -> bool:
     '''
     Validator function to be run when the passwords configuration item is updated/set.
     Designed to warn if default passwords found in the config.
@@ -92,7 +93,7 @@ PORT = 32887
 
 web_client._HTTP11ClientFactory.noisy = False
 
-def ensure_dir_exists(filename):
+def ensure_dir_exists(filename: str) -> None:
     d = os.path.dirname(filename)
     try:
         os.makedirs(d)
@@ -110,7 +111,7 @@ def random_choice_cycle(choices):
 class FeatureTeam(Team):
     locked = False
 
-    def get_entity_location(self, entity_id):
+    def get_entity_location(self, entity_id: int) -> Tuple[int, int, int]:
         get_location = self.protocol.map_info.get_entity_location
         if get_location is not None:
             result = get_location(self, entity_id)
@@ -131,7 +132,7 @@ class EndCall(object):
         self.kw = kw
         self.call = None
 
-    def set(self, value):
+    def set(self, value: Optional[float]) -> None:
         if value is None:
             if self.call is not None:
                 self.call.cancel()
@@ -150,12 +151,12 @@ class EndCall(object):
         self.cancel()
         self.func(*self.arg, **self.kw)
 
-    def cancel(self):
+    def cancel(self) -> None:
         self.set(None)
         self.protocol.end_calls.remove(self)
         self._active = False
 
-    def active(self):
+    def active(self) -> bool:
         return self._active and (self.call and self.call.active())
 
 
@@ -741,7 +742,7 @@ class FeatureProtocol(ServerProtocol):
         return self.advance_call.getTime() - self.advance_call.seconds()
 
 
-def run():
+def run() -> None:
     """
     runs the server
     """

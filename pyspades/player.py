@@ -7,8 +7,16 @@ import textwrap
 
 from twisted.internet import reactor
 import enet
+from typing import Any, Sequence, Tuple, Union
 
 from pyspades.protocol import BaseConnection
+from pyspades.constants import (
+    RAPID_WINDOW_ENTRIES, ERROR_FULL, ERROR_WRONG_VERSION,
+    ERROR_TOO_MANY_CONNECTIONS, FALL_KILL, CTF_MODE, TC_MODE,
+    MAX_POSITION_RATE, TC_CAPTURE_DISTANCE, WEAPON_TOOL, SPADE_TOOL, MELEE,
+    HIT_TOLERANCE, MELEE_DISTANCE, MELEE_DISTANCE, MELEE_KILL, HEAD,
+    HEADSHOT_KILL, WEAPON_KILL)
+from pyspades.team import Team
 from pyspades.constants import *
 from pyspades.packet import call_packet_handler, register_packet_handler
 from pyspades import contained as loaders
@@ -42,13 +50,14 @@ handshake_init = loaders.HandShakeInit()
 version_request = loaders.VersionRequest()
 
 
-def check_nan(*values):
+def check_nan(*values) -> bool:
     for value in values:
         if math.isnan(value):
             return True
     return False
 
-def parse_command(value):
+
+def parse_command(value: str) -> Tuple[str, Sequence[str]]:
     try:
         splitted = shlex.split(value)
     except ValueError:
@@ -60,29 +69,30 @@ def parse_command(value):
         command = ''
     return command, splitted
 
-class SlidingWindow(object):
-    def __init__(self, entries):
-        self.entries = entries
-        self.window = collections.deque()
 
-    def add(self, value):
+class SlidingWindow(object):
+    def __init__(self, entries: Any) -> None:
+        self.entries = entries
+        self.window = collections.deque()  # type: collections.deque
+
+    def add(self, value) -> None:
         self.window.append(value)
         if len(self.window) <= self.entries:
             return
         self.window.popleft()
 
-    def check(self):
+    def check(self) -> bool:
         return len(self.window) == self.entries
 
-    def get(self):
+    def get(self) -> Any:
         return self.window[0], self.window[-1]
 
 
 class ServerConnection(BaseConnection):
-    address = None
+    address = None  # type: Tuple[int, int]
     player_id = None
     map_packets_sent = 0
-    team = None
+    team = None  # type: Team
     weapon = None
     weapon_object = None
     name = None
@@ -104,7 +114,7 @@ class ServerConnection(BaseConnection):
     speedhack_detect = False
     rapid_hack_detect = False
     timers = None
-    world_object = None
+    world_object = None  # type: world.World
     last_block = None
     map_data = None
     last_position_update = None
@@ -120,7 +130,7 @@ class ServerConnection(BaseConnection):
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
         self.client_info = {}
 
-    def on_connect(self):
+    def on_connect(self) -> None:
         if self.local:
             return
         if self.peer.eventData != self.protocol.version:
@@ -140,7 +150,7 @@ class ServerConnection(BaseConnection):
         if not self.disconnected:
             self._connection_ack()
 
-    def loader_received(self, loader):
+    def loader_received(self, loader) -> None:
         """
         called when a loader i.e. packet is recieved.
         calls the packet handler registered with
@@ -152,7 +162,7 @@ class ServerConnection(BaseConnection):
 
     @register_packet_handler(loaders.ExistingPlayer)
     @register_packet_handler(loaders.ShortPlayerData)
-    def on_new_player_recieved(self, contained):
+    def on_new_player_recieved(self, contained) -> None:
         if self.team is not None and not self.team.spectator:
             # This player has already joined the game as a full player.
             # Existingplayer may only be sent if in the limbo or spectator
@@ -199,7 +209,7 @@ class ServerConnection(BaseConnection):
         self.spawn()
 
     @register_packet_handler(loaders.OrientationData)
-    def on_orientation_update_recieved(self, contained):
+    def on_orientation_update_recieved(self, contained) -> None:
         if not self.hp:
             return
         x, y, z = contained.x, contained.y, contained.z
@@ -215,7 +225,7 @@ class ServerConnection(BaseConnection):
         self.world_object.set_orientation(x, y, z)
 
     @register_packet_handler(loaders.PositionData)
-    def on_position_update_recieved(self, contained):
+    def on_position_update_recieved(self, contained) -> None:
         if not self.hp:
             return
         current_time = reactor.seconds()
@@ -266,7 +276,7 @@ class ServerConnection(BaseConnection):
                     self.check_refill()
 
     @register_packet_handler(loaders.WeaponInput)
-    def on_weapon_input_recieved(self, contained):
+    def on_weapon_input_recieved(self, contained) -> None:
         if not self.hp:
             return
         primary = contained.primary
@@ -286,7 +296,7 @@ class ServerConnection(BaseConnection):
         self.protocol.send_contained(contained, sender=self)
 
     @register_packet_handler(loaders.InputData)
-    def on_input_data_recieved(self, contained):
+    def on_input_data_recieved(self, contained) -> None:
         if not self.hp:
             return
         world_object = self.world_object
@@ -299,7 +309,7 @@ class ServerConnection(BaseConnection):
                 (contained.up, contained.down, contained.left,
                     contained.right) = returned
                 # XXX unsupported
-                #~ self.send_contained(contained)
+                # self.send_contained(contained)
         if not self.freeze_animation:
             world_object.set_walk(contained.up, contained.down,
                                   contained.left, contained.right)
@@ -320,8 +330,9 @@ class ServerConnection(BaseConnection):
             # (contained.primary_fire, contained.secondary_fire,
             # contained.jump, contained.crouch) = returned
             # self.send_contained(contained)
-        returned = self.on_animation_update(contained.jump,
-                                            contained.crouch, contained.sneak, contained.sprint)
+        returned = self.on_animation_update(
+            contained.jump, contained.crouch, contained.sneak,
+            contained.sprint)
         if returned is not None:
             jump, crouch, sneak, sprint = returned
             if (jump != contained.jump or crouch != contained.crouch or
@@ -330,14 +341,15 @@ class ServerConnection(BaseConnection):
                     contained.sprint) = returned
                 self.send_contained(contained)
         if not self.freeze_animation:
-            world_object.set_animation(contained.jump,
-                                       contained.crouch, contained.sneak, contained.sprint)
+            world_object.set_animation(
+                contained.jump, contained.crouch, contained.sneak,
+                contained.sprint)
         if self.filter_visibility_data or self.filter_animation_data:
             return
         self.protocol.send_contained(contained, sender=self)
 
     @register_packet_handler(loaders.WeaponReload)
-    def on_reload_recieved(self, contained):
+    def on_reload_recieved(self, contained) -> None:
         if not self.hp:
             return
         self.weapon_object.reload()
@@ -450,7 +462,7 @@ class ServerConnection(BaseConnection):
                                      save=True)
 
     @register_packet_handler(loaders.BlockAction)
-    def on_block_action_recieved(self, contained):
+    def on_block_action_recieved(self, contained) -> None:
         world_object = self.world_object
         if not self.hp:
             return
