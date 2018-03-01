@@ -18,7 +18,8 @@
 # FIXME: This should be probably moved into it's own URL thing and put into
 # some module with a name describing it's insignificance
 
-def make_server_identifier(ip, port=32887):
+from ipaddress import IPv4Address
+def make_server_identifier(ip: IPv4Address, port: int = 32887) -> str:
     # ip should be an IPv4Address object
     a, b, c, d = ip.exploded.split('.')
     a = int(a)
