@@ -7,7 +7,7 @@ import textwrap
 
 from twisted.internet import reactor
 import enet
-from typing import Any, Optional, Sequence, Tuple, Union, Deque
+from typing import Any, Optional, Sequence, Tuple, Union
 
 from pyspades.protocol import BaseConnection
 from pyspades.constants import (
