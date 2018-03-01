@@ -11,8 +11,10 @@ Welcome to piqueserver's documentation!
    :caption: Contents:
 
    architecture
+   development
    piqueserver
    pyspades
+   release-guide
 
 
 

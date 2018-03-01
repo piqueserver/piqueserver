@@ -7,8 +7,16 @@ import textwrap
 
 from twisted.internet import reactor
 import enet
+from typing import Any, Optional, Sequence, Tuple, Union, Deque
 
 from pyspades.protocol import BaseConnection
+from pyspades.constants import (
+    RAPID_WINDOW_ENTRIES, ERROR_FULL, ERROR_WRONG_VERSION,
+    ERROR_TOO_MANY_CONNECTIONS, FALL_KILL, CTF_MODE, TC_MODE,
+    MAX_POSITION_RATE, TC_CAPTURE_DISTANCE, WEAPON_TOOL, SPADE_TOOL, MELEE,
+    HIT_TOLERANCE, MELEE_DISTANCE, MELEE_DISTANCE, MELEE_KILL, HEAD,
+    HEADSHOT_KILL, WEAPON_KILL)
+from pyspades.team import Team
 from pyspades.constants import *
 from pyspades.packet import call_packet_handler, register_packet_handler
 from pyspades import contained as loaders
@@ -42,13 +50,14 @@ handshake_init = loaders.HandShakeInit()
 version_request = loaders.VersionRequest()
 
 
-def check_nan(*values):
+def check_nan(*values) -> bool:
     for value in values:
         if math.isnan(value):
             return True
     return False
 
-def parse_command(value):
+
+def parse_command(value: str) -> Tuple[str, Sequence[str]]:
     try:
         splitted = shlex.split(value)
     except ValueError:
@@ -60,29 +69,30 @@ def parse_command(value):
         command = ''
     return command, splitted
 
-class SlidingWindow(object):
-    def __init__(self, entries):
-        self.entries = entries
-        self.window = collections.deque()
 
-    def add(self, value):
+class SlidingWindow(object):
+    def __init__(self, entries: Any) -> None:
+        self.entries = entries
+        self.window = collections.deque()  # type: Deque
+
+    def add(self, value) -> None:
         self.window.append(value)
         if len(self.window) <= self.entries:
             return
         self.window.popleft()
 
-    def check(self):
+    def check(self) -> bool:
         return len(self.window) == self.entries
 
-    def get(self):
+    def get(self) -> Any:
         return self.window[0], self.window[-1]
 
 
 class ServerConnection(BaseConnection):
-    address = None
+    address = None  # Tuple[int, int]
     player_id = None
     map_packets_sent = 0
-    team = None
+    team = None  # type: Team
     weapon = None
     weapon_object = None
     name = None
@@ -104,13 +114,13 @@ class ServerConnection(BaseConnection):
     speedhack_detect = False
     rapid_hack_detect = False
     timers = None
-    world_object = None
+    world_object = None  # type: world.World
     last_block = None
     map_data = None
     last_position_update = None
     local = False
 
-    def __init__(self, *arg, **kw):
+    def __init__(self, *arg, **kw) -> None:
         BaseConnection.__init__(self, *arg, **kw)
         protocol = self.protocol
         address = self.peer.address
@@ -120,7 +130,7 @@ class ServerConnection(BaseConnection):
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
         self.client_info = {}
 
-    def on_connect(self):
+    def on_connect(self) -> None:
         if self.local:
             return
         if self.peer.eventData != self.protocol.version:
@@ -140,7 +150,7 @@ class ServerConnection(BaseConnection):
         if not self.disconnected:
             self._connection_ack()
 
-    def loader_received(self, loader):
+    def loader_received(self, loader: enet.Packet) -> None:
         """
         called when a loader i.e. packet is recieved.
         calls the packet handler registered with
@@ -152,7 +162,7 @@ class ServerConnection(BaseConnection):
 
     @register_packet_handler(loaders.ExistingPlayer)
     @register_packet_handler(loaders.ShortPlayerData)
-    def on_new_player_recieved(self, contained):
+    def on_new_player_recieved(self, contained: loaders.ExistingPlayer) -> None:
         if self.team is not None and not self.team.spectator:
             # This player has already joined the game as a full player.
             # Existingplayer may only be sent if in the limbo or spectator
@@ -199,7 +209,7 @@ class ServerConnection(BaseConnection):
         self.spawn()
 
     @register_packet_handler(loaders.OrientationData)
-    def on_orientation_update_recieved(self, contained):
+    def on_orientation_update_recieved(self, contained: loaders.OrientationData) -> None:
         if not self.hp:
             return
         x, y, z = contained.x, contained.y, contained.z
@@ -215,7 +225,7 @@ class ServerConnection(BaseConnection):
         self.world_object.set_orientation(x, y, z)
 
     @register_packet_handler(loaders.PositionData)
-    def on_position_update_recieved(self, contained):
+    def on_position_update_recieved(self, contained: loaders.PositionData) -> None:
         if not self.hp:
             return
         current_time = reactor.seconds()
@@ -266,7 +276,7 @@ class ServerConnection(BaseConnection):
                     self.check_refill()
 
     @register_packet_handler(loaders.WeaponInput)
-    def on_weapon_input_recieved(self, contained):
+    def on_weapon_input_recieved(self, contained: loaders.WeaponInput) -> None:
         if not self.hp:
             return
         primary = contained.primary
@@ -286,7 +296,7 @@ class ServerConnection(BaseConnection):
         self.protocol.send_contained(contained, sender=self)
 
     @register_packet_handler(loaders.InputData)
-    def on_input_data_recieved(self, contained):
+    def on_input_data_recieved(self, contained: loaders.InputData) -> None:
         if not self.hp:
             return
         world_object = self.world_object
@@ -299,7 +309,7 @@ class ServerConnection(BaseConnection):
                 (contained.up, contained.down, contained.left,
                     contained.right) = returned
                 # XXX unsupported
-                #~ self.send_contained(contained)
+                # self.send_contained(contained)
         if not self.freeze_animation:
             world_object.set_walk(contained.up, contained.down,
                                   contained.left, contained.right)
@@ -320,8 +330,9 @@ class ServerConnection(BaseConnection):
             # (contained.primary_fire, contained.secondary_fire,
             # contained.jump, contained.crouch) = returned
             # self.send_contained(contained)
-        returned = self.on_animation_update(contained.jump,
-                                            contained.crouch, contained.sneak, contained.sprint)
+        returned = self.on_animation_update(
+            contained.jump, contained.crouch, contained.sneak,
+            contained.sprint)
         if returned is not None:
             jump, crouch, sneak, sprint = returned
             if (jump != contained.jump or crouch != contained.crouch or
@@ -330,14 +341,15 @@ class ServerConnection(BaseConnection):
                     contained.sprint) = returned
                 self.send_contained(contained)
         if not self.freeze_animation:
-            world_object.set_animation(contained.jump,
-                                       contained.crouch, contained.sneak, contained.sprint)
+            world_object.set_animation(
+                contained.jump, contained.crouch, contained.sneak,
+                contained.sprint)
         if self.filter_visibility_data or self.filter_animation_data:
             return
         self.protocol.send_contained(contained, sender=self)
 
     @register_packet_handler(loaders.WeaponReload)
-    def on_reload_recieved(self, contained):
+    def on_reload_recieved(self, contained) -> None:
         if not self.hp:
             return
         self.weapon_object.reload()
@@ -387,7 +399,7 @@ class ServerConnection(BaseConnection):
         player.hit(hit_amount, self, kill_type)
 
     @register_packet_handler(loaders.GrenadePacket)
-    def on_grenade_recieved(self, contained):
+    def on_grenade_recieved(self, contained: loaders.GrenadePacket) -> None:
         if not self.hp:
             return
         if check_nan(contained.value, *contained.position) or check_nan(*contained.velocity):
@@ -413,7 +425,7 @@ class ServerConnection(BaseConnection):
                                      sender=self)
 
     @register_packet_handler(loaders.SetTool)
-    def on_tool_change_recieved(self, contained):
+    def on_tool_change_recieved(self, contained: loaders.SetTool) -> None:
         if not self.hp:
             return
         if self.on_tool_set_attempt(contained.value) == False:
@@ -435,7 +447,7 @@ class ServerConnection(BaseConnection):
         self.protocol.send_contained(set_tool, sender=self)
 
     @register_packet_handler(loaders.SetColor)
-    def on_color_change_recieved(self, contained):
+    def on_color_change_recieved(self, contained: loaders.SetColor) -> None:
         if not self.hp:
             return
         color = get_color(contained.value)
@@ -450,7 +462,7 @@ class ServerConnection(BaseConnection):
                                      save=True)
 
     @register_packet_handler(loaders.BlockAction)
-    def on_block_action_recieved(self, contained):
+    def on_block_action_recieved(self, contained: loaders.BlockAction) -> None:
         world_object = self.world_object
         if not self.hp:
             return
@@ -553,7 +565,7 @@ class ServerConnection(BaseConnection):
         self.protocol.update_entities()
 
     @register_packet_handler(loaders.ChatMessage)
-    def on_chat_message_recieved(self, contained):
+    def on_chat_message_recieved(self, contained: loaders.ChatMessage) -> None:
         if not self.name:
             return
         value = contained.value
@@ -609,11 +621,11 @@ class ServerConnection(BaseConnection):
         self.set_team(team)
 
     @register_packet_handler(loaders.HandShakeReturn)
-    def on_handshake_recieved(self, contained):
+    def on_handshake_recieved(self, contained: loaders.HandShakeReturn) -> None:
         self.protocol.send_contained(version_request)
 
     @register_packet_handler(loaders.VersionResponse)
-    def on_version_info_recieved(self, contained):
+    def on_version_info_recieved(self, contained: loaders.VersionResponse) -> None:
         if contained.client == 'o':
             self.client_info["client"] = "OpenSpades"
         elif contained.client == 'B':
@@ -634,7 +646,7 @@ class ServerConnection(BaseConnection):
             version_string = "Unknown"
         return "{} v{} on {}".format(client, version_string, os)
 
-    def is_valid_position(self, x, y, z, distance=None):
+    def is_valid_position(self, x: float, y: float, z: float, distance: None = None) -> bool:
         if not self.speedhack_detect:
             return True
         if distance is None:
@@ -698,7 +710,7 @@ class ServerConnection(BaseConnection):
         position_data.z = z
         self.send_contained(position_data)
 
-    def refill(self, local=False):
+    def refill(self, local: bool = False) -> None:
         self.hp = 100
         self.grenades = 3
         self.blocks = 50
@@ -706,12 +718,12 @@ class ServerConnection(BaseConnection):
         if not local:
             self.send_contained(restock)
 
-    def respawn(self):
+    def respawn(self) -> None:
         if self.spawn_call is None:
             self.spawn_call = reactor.callLater(
                 self.get_respawn_time(), self.spawn)
 
-    def get_spawn_location(self):
+    def get_spawn_location(self) -> Tuple[int, int, int]:
         game_mode = self.protocol.game_mode
         if game_mode == TC_MODE:
             try:
@@ -721,7 +733,7 @@ class ServerConnection(BaseConnection):
                 pass
         return self.team.get_random_location(True)
 
-    def get_respawn_time(self):
+    def get_respawn_time(self) -> float:
         if not self.respawn_time:
             return 0
         if self.protocol.respawn_waves:
@@ -730,7 +742,7 @@ class ServerConnection(BaseConnection):
             offset = 0
         return self.respawn_time - offset
 
-    def spawn(self, pos=None):
+    def spawn(self, pos: None = None) -> None:
         self.spawn_call = None
         if self.team is None:
             return
@@ -805,7 +817,7 @@ class ServerConnection(BaseConnection):
             flag.update()
             self.on_flag_capture()
 
-    def drop_flag(self):
+    def drop_flag(self) -> None:
         protocol = self.protocol
         game_mode = protocol.game_mode
         if game_mode == CTF_MODE:
@@ -834,7 +846,7 @@ class ServerConnection(BaseConnection):
                 if self in entity.players:
                     entity.remove_player(self)
 
-    def on_disconnect(self):
+    def on_disconnect(self) -> None:
         if self.name is not None:
             self.drop_flag()
             player_left.player_id = self.player_id
@@ -846,7 +858,7 @@ class ServerConnection(BaseConnection):
             self.protocol.update_master()
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         if self.spawn_call is not None:
             self.spawn_call.cancel()
             self.spawn_call = None
@@ -878,8 +890,8 @@ class ServerConnection(BaseConnection):
                 return
         self.set_hp(self.hp - value, by, kill_type=kill_type)
 
-    def set_hp(self, value, hit_by=None, kill_type=WEAPON_KILL,
-               hit_indicator=None, grenade=None):
+    def set_hp(self, value: Union[int, float], hit_by: Optional['ServerConnection'] = None, kill_type: int = WEAPON_KILL,
+               hit_indicator: Optional[Tuple[float, float, float]] = None, grenade: Optional[world.Grenade] = None) -> None:
         value = int(value)
         self.hp = max(0, min(100, value))
         if self.hp <= 0:
@@ -898,7 +910,7 @@ class ServerConnection(BaseConnection):
         set_hp.source_z = z
         self.send_contained(set_hp)
 
-    def set_weapon(self, weapon, local=False, no_kill=False):
+    def set_weapon(self, weapon: int, local: bool = False, no_kill: bool = False) -> None:
         self.weapon = weapon
         if self.weapon_object is not None:
             self.weapon_object.reset()
@@ -920,7 +932,7 @@ class ServerConnection(BaseConnection):
         else:
             self.kill(kill_type=TEAM_CHANGE_KILL)
 
-    def kill(self, by=None, kill_type=WEAPON_KILL, grenade=None):
+    def kill(self, by: None = None, kill_type: int = WEAPON_KILL, grenade: None = None) -> None:
         if self.hp is None:
             return
         if self.on_kill(by, kill_type, grenade) is False:
@@ -944,13 +956,13 @@ class ServerConnection(BaseConnection):
     def add_score(self, score):
         self.kills += score
 
-    def _connection_ack(self):
+    def _connection_ack(self) -> None:
         self._send_connection_data()
         self.send_map(ProgressiveMapGenerator(self.protocol.map))
         if not self.client_info:
             self.protocol.send_contained(handshake_init)
 
-    def _send_connection_data(self):
+    def _send_connection_data(self) -> None:
         saved_loaders = self.saved_loaders = []
         if self.player_id is None:
             for player in self.protocol.players.values():
@@ -1024,7 +1036,7 @@ class ServerConnection(BaseConnection):
         generated_data = state_data.generate()
         saved_loaders.append(generated_data)
 
-    def grenade_exploded(self, grenade):
+    def grenade_exploded(self, grenade: world.Grenade) -> None:
         if self.name is None or self.team.spectator:
             return
         if grenade.team is not None and grenade.team is not self.team:
@@ -1070,7 +1082,7 @@ class ServerConnection(BaseConnection):
         self.protocol.send_contained(block_action, save=True)
         self.protocol.update_entities()
 
-    def _on_fall(self, damage):
+    def _on_fall(self, damage: int) -> None:
         if not self.hp:
             return
         returned = self.on_fall(damage)
@@ -1086,7 +1098,7 @@ class ServerConnection(BaseConnection):
         weapon_reload.reserve_ammo = self.weapon_object.current_stock
         self.send_contained(weapon_reload)
 
-    def send_map(self, data=None):
+    def send_map(self, data: Optional[ProgressiveMapGenerator] = None) -> None:
         if data is not None:
             self.map_data = data
             map_start.size = data.get_size()
@@ -1108,13 +1120,13 @@ class ServerConnection(BaseConnection):
             map_data.data = self.map_data.read(8192)
             self.send_contained(map_data)
 
-    def continue_map_transfer(self):
+    def continue_map_transfer(self) -> None:
         self.send_map()
 
     def send_data(self, data):
         self.protocol.transport.write(data, self.address)
 
-    def send_chat(self, value, global_message=False):
+    def send_chat(self, value: str, global_message: bool = False) -> None:
         if self.deaf:
             return
         if not global_message:
@@ -1168,16 +1180,16 @@ class ServerConnection(BaseConnection):
     def on_login(self, name):
         pass
 
-    def on_spawn(self, pos):
+    def on_spawn(self, pos: Tuple[float, float, float]) -> None:
         pass
 
-    def on_spawn_location(self, pos):
+    def on_spawn_location(self, pos: Tuple[float, float, float]) -> None:
         pass
 
     def on_chat(self, value, global_message):
         pass
 
-    def on_chat_sent(self, value, global_message):
+    def on_chat_sent(self, value: str, global_message: bool) -> None:
         pass
 
     def on_command(self, command, parameters):
@@ -1192,19 +1204,19 @@ class ServerConnection(BaseConnection):
     def on_team_join(self, team):
         pass
 
-    def on_team_changed(self, old_team):
+    def on_team_changed(self, old_team: Team) -> None:
         pass
 
-    def on_tool_set_attempt(self, tool):
+    def on_tool_set_attempt(self, tool: int) -> None:
         pass
 
-    def on_tool_changed(self, tool):
+    def on_tool_changed(self, tool: int) -> None:
         pass
 
     def on_grenade(self, time_left):
         pass
 
-    def on_grenade_thrown(self, grenade):
+    def on_grenade_thrown(self, grenade: world.Grenade) -> None:
         pass
 
     def on_block_build_attempt(self, x, y, z):
@@ -1228,10 +1240,10 @@ class ServerConnection(BaseConnection):
     def on_refill(self):
         pass
 
-    def on_color_set_attempt(self, color):
+    def on_color_set_attempt(self, color: Tuple[int, int, int]) -> None:
         pass
 
-    def on_color_set(self, color):
+    def on_color_set(self, color: Tuple[int, int, int]) -> None:
         pass
 
     def on_flag_take(self):
@@ -1246,7 +1258,7 @@ class ServerConnection(BaseConnection):
     def on_hack_attempt(self, reason):
         pass
 
-    def on_position_update(self):
+    def on_position_update(self) -> None:
         pass
 
     def on_weapon_set(self, value):
@@ -1258,16 +1270,16 @@ class ServerConnection(BaseConnection):
     def on_reset(self):
         pass
 
-    def on_orientation_update(self, x, y, z):
+    def on_orientation_update(self, x: float, y: float, z: float) -> None:
         pass
 
-    def on_shoot_set(self, fire):
+    def on_shoot_set(self, fire: int) -> None:
         pass
 
     def on_secondary_fire_set(self, secondary):
         pass
 
-    def on_walk_update(self, up, down, left, right):
+    def on_walk_update(self, up: bool, down: bool, left: bool, right: bool) -> None:
         pass
 
     def on_animation_update(self, jump, crouch, sneak, sprint):

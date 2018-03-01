@@ -1,4 +1,5 @@
 import math
+from typing import Callable
 from twisted.internet import reactor
 from pyspades.constants import (RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON,
                                 HEAD, TORSO, ARMS, LEGS, CLIP_TOLERANCE)
@@ -21,14 +22,14 @@ class BaseWeapon(object):
     reload_time = 0.0  # Time between reloading and being able to shoot again
     damage = None  # Dict of damages
 
-    def __init__(self, reload_callback):
+    def __init__(self, reload_callback: Callable) -> None:
         self.reload_callback = reload_callback
         self.reset()
 
-    def restock(self):
+    def restock(self) -> None:
         self.current_stock = self.stock
 
-    def reset(self):
+    def reset(self) -> None:
         self.shoot = False
         if self.reloading:
             self.reload_call.cancel()
@@ -36,7 +37,7 @@ class BaseWeapon(object):
         self.current_ammo = self.ammo
         self.current_stock = self.stock
 
-    def set_shoot(self, value):
+    def set_shoot(self, value: int) -> None:
         if value == self.shoot:
             return
         current_time = reactor.seconds()
@@ -57,7 +58,7 @@ class BaseWeapon(object):
                 ammo - self.current_ammo)
         self.shoot = value
 
-    def reload(self):
+    def reload(self) -> None:
         if self.reloading:
             return
         ammo = self.get_ammo()
@@ -70,7 +71,7 @@ class BaseWeapon(object):
         self.current_ammo = ammo
         self.reload_call = reactor.callLater(self.reload_time, self.on_reload)
 
-    def on_reload(self):
+    def on_reload(self) -> None:
         self.reloading = False
         if self.slow_reload:
             self.current_ammo += 1
@@ -84,7 +85,7 @@ class BaseWeapon(object):
             self.current_stock = new_stock
             self.reload_callback()
 
-    def get_ammo(self, no_max=False):
+    def get_ammo(self, no_max: bool = False) -> int:
         if self.shoot:
             dt = reactor.seconds() - self.shoot_time
             ammo = self.current_ammo - max(0, int(

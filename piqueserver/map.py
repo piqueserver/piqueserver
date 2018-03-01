@@ -21,6 +21,7 @@ import os
 import imp
 import math
 import random
+from typing import List, Optional, Union
 
 from pyspades.vxl import VXLData
 from piqueserver.config import config
@@ -37,7 +38,8 @@ class MapNotFound(Exception):
         return False
 
 
-def check_rotation(maps, load_dir=None):
+def check_rotation(maps: List[Union[str, 'RotationInfo']], load_dir:
+                   Optional[str]=None) -> List['RotationInfo']:
     """
     Checks if provided maps exist in maps dir. and
     returns an array of RotationInfo objects for those maps.
@@ -59,7 +61,7 @@ def check_rotation(maps, load_dir=None):
 class Map(object):
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, rot_info, load_dir):
+    def __init__(self, rot_info: 'RotationInfo', load_dir: str) -> None:
         self.load_information(rot_info, load_dir)
 
         if self.gen_script:
@@ -74,7 +76,7 @@ class Map(object):
 
         print('Map loaded successfully.')
 
-    def load_information(self, rot_info, load_dir):
+    def load_information(self, rot_info: 'RotationInfo', load_dir: str) -> None:
         self.load_dir = load_dir
         try:
             info = imp.load_source(
@@ -121,7 +123,7 @@ class Map(object):
 class RotationInfo(object):
     seed = None
 
-    def __init__(self, name="pyspades"):
+    def __init__(self, name: str = "pyspades") -> None:
         self.full_name = name
 
         splitted = name.split("#")
@@ -130,16 +132,16 @@ class RotationInfo(object):
             self.seed = int(splitted[1])
         self.name = name
 
-    def get_seed(self):
+    def get_seed(self) -> int:
         if self.seed is not None:
             return self.seed
         random.seed()
-        return random.randint(0, math.pow(2, 31))
+        return random.randint(0, int(math.pow(2, 31)))
 
-    def get_map_filename(self, load_dir):
+    def get_map_filename(self, load_dir: str) -> str:
         return os.path.join(load_dir, '%s.vxl' % self.name)
 
-    def get_meta_filename(self, load_dir):
+    def get_meta_filename(self, load_dir: str) -> str:
         return os.path.join(load_dir, '%s.txt' % self.name)
 
     def __str__(self):

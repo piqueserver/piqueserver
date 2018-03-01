@@ -1,12 +1,15 @@
 from math import floor
+from typing import Tuple
+
+ColorTuple = Tuple[float, float, float]
 
 
-def wrap(minimum, maximum, value):
+def wrap(minimum: float, maximum: float, value: float) -> float:
     return value - floor(
         (value - minimum) / (maximum - minimum)) * (maximum - minimum)
 
 
-def hsb_to_rgb(hue, sat, bri):
+def hsb_to_rgb(hue: float, sat: float, bri: float) -> ColorTuple:
     bri_n = bri * 255.0
     if sat == 0.0:
         # greyscale
@@ -42,7 +45,7 @@ def interpolate_rgb(xyz1, xyz2, t):
             int(b1 + (b2 - b1) * t))
 
 
-def interpolate_hsb(xyz1, xyz2, t):
+def interpolate_hsb(xyz1: ColorTuple, xyz2: ColorTuple, t: float) -> ColorTuple:
     (h1, s1, b1) = xyz1
     (h2, s2, b2) = xyz2
     return (h1 + (h2 - h1) * t, s1 + (s2 - s1) * t, b1 + (b2 - b1) * t)
