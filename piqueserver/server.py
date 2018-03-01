@@ -30,17 +30,22 @@ import itertools
 import random
 import time
 from collections import deque
+from ipaddress import ip_network, ip_address, IPv4Address, AddressValueError
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Type
 
 import six
 from six import text_type
 from six.moves import range
 
-from ipaddress import ip_network, ip_address, IPv4Address, AddressValueError
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
 from twisted.python import log
 from twisted.python.logfile import DailyLogFile
 from twisted.web import client as web_client
+from twisted.internet.tcp import Port
+from twisted.internet.defer import Deferred
+
+from enet import Address, Packet, Peer
 
 from piqueserver import cfg
 from piqueserver.config import config as config_store
@@ -52,10 +57,11 @@ from pyspades.constants import (CTF_MODE, TC_MODE)
 from pyspades.master import MAX_SERVER_NAME_SIZE
 from pyspades.tools import make_server_identifier
 from pyspades.bytes import NoDataLeft
+from pyspades.vxl import VXLData
 
 from piqueserver.scheduler import Scheduler
 from piqueserver import commands
-from piqueserver.map import Map, MapNotFound, check_rotation
+from piqueserver.map import Map, MapNotFound, check_rotation, RotationInfo
 from piqueserver.console import create_console
 from piqueserver.networkdict import NetworkDict
 from piqueserver.player import FeatureConnection
@@ -63,7 +69,7 @@ from piqueserver.player import FeatureConnection
 # won't be used; just need to be executed
 import piqueserver.core_commands
 
-from typing import Dict, List, Optional, Tuple
+
 def check_passwords(passwords: Dict[str, List[str]]) -> bool:
     '''
     Validator function to be run when the passwords configuration item is updated/set.
@@ -93,6 +99,7 @@ PORT = 32887
 
 web_client._HTTP11ClientFactory.noisy = False
 
+
 def ensure_dir_exists(filename: str) -> None:
     d = os.path.dirname(filename)
     try:
@@ -102,6 +109,7 @@ def ensure_dir_exists(filename: str) -> None:
             pass
         else:
             raise e
+
 
 def random_choice_cycle(choices):
     while True:
@@ -123,14 +131,14 @@ class FeatureTeam(Team):
 class EndCall(object):
     _active = True
 
-    def __init__(self, protocol, delay, func, *arg, **kw):
+    def __init__(self, protocol, delay: int, func: Callable, *arg, **kw) -> None:
         self.protocol = protocol
         protocol.end_calls.append(self)
         self.delay = delay
         self.func = func
         self.arg = arg
         self.kw = kw
-        self.call = None
+        self.call = None  # type: Deferred
 
     def set(self, value: Optional[float]) -> None:
         if value is None:
@@ -200,7 +208,7 @@ class FeatureProtocol(ServerProtocol):
 
     default_fog = (128, 232, 255)
 
-    def __init__(self, interface, config):
+    def __init__(self, interface: bytes, config: Dict[str, Any]) -> None:
         self.config = config
         if config.get('random_rotation', False):
             self.map_rotator_type = random_choice_cycle
@@ -360,7 +368,7 @@ class FeatureProtocol(ServerProtocol):
             self.get_external_ip(ip_getter)
 
     @inlineCallbacks
-    def get_external_ip(self, ip_getter):
+    def get_external_ip(self, ip_getter: str) -> Iterator[Deferred]:
         print('Retrieving external IP from {!r} to generate server identifier.'.format(ip_getter))
         try:
             ip = yield self.getPage(ip_getter)
@@ -378,7 +386,7 @@ class FeatureProtocol(ServerProtocol):
         print('Server public ip address: {}:{}'.format(ip, self.port))
         print('Public aos identifier: {}'.format(self.identifier))
 
-    def set_time_limit(self, time_limit=None, additive=False):
+    def set_time_limit(self, time_limit: Optional[bool] = None, additive: bool=False) -> int:
         advance_call = self.advance_call
         add_time = 0.0
         if advance_call is not None:
@@ -424,7 +432,7 @@ class FeatureProtocol(ServerProtocol):
         self.advance_call = None
         self.advance_rotation('Time up!')
 
-    def advance_rotation(self, message=None):
+    def advance_rotation(self, message: None = None) -> None:
         """
         Advances to the next map in the rotation. If message is provided
         it will send it to the chat, waits for 10 seconds and then advances.
@@ -443,10 +451,10 @@ class FeatureProtocol(ServerProtocol):
                 irc=True)
             reactor.callLater(10, self.set_map_name, planned_map)
 
-    def get_mode_name(self):
+    def get_mode_name(self) -> str:
         return self.game_mode_name
 
-    def set_map_name(self, rot_info):
+    def set_map_name(self, rot_info: RotationInfo) -> None:
         """
         Sets the map by its name.
         """
@@ -459,13 +467,13 @@ class FeatureProtocol(ServerProtocol):
         self.set_time_limit(self.map_info.time_limit)
         self.update_format()
 
-    def get_map(self, rot_info):
+    def get_map(self, rot_info: RotationInfo) -> Map:
         """
         Creates and returns a Map object from rotation info
         """
         return Map(rot_info, os.path.join(cfg.config_dir, 'maps'))
 
-    def set_map_rotation(self, maps, now=True):
+    def set_map_rotation(self, maps: List[str], now: bool = True) -> None:
         """
         Over-writes the current map rotation with provided one.
         And advances immediately with the new rotation by default.
@@ -479,7 +487,7 @@ class FeatureProtocol(ServerProtocol):
     def get_map_rotation(self):
         return [map_item.full_name for map_item in self.maps]
 
-    def is_indestructable(self, x, y, z):
+    def is_indestructable(self, x: int, y: int, z: int) -> bool:
         if self.user_blocks is not None:
             if (x, y, z) not in self.user_blocks:
                 return True
@@ -492,7 +500,7 @@ class FeatureProtocol(ServerProtocol):
                 return True
         return False
 
-    def update_format(self):
+    def update_format(self) -> None:
         """
         Called when the map (or other variables) have been updated
         """
@@ -506,7 +514,7 @@ class FeatureProtocol(ServerProtocol):
         if self.master_connection is not None:
             self.master_connection.send_server()
 
-    def format(self, value, extra=None):
+    def format(self, value: str, extra: Optional[Dict[str, str]] = None) -> str:
         if extra is None:
             extra = {}
 
@@ -520,7 +528,7 @@ class FeatureProtocol(ServerProtocol):
         format_dict.update(extra)
         return value % format_dict
 
-    def format_lines(self, value):
+    def format_lines(self, value: List[str]) -> List[str]:
         if value is None:
             return
         lines = []
@@ -599,7 +607,7 @@ class FeatureProtocol(ServerProtocol):
         if self.ban_publish is not None:
             self.ban_publish.update()
 
-    def receive_callback(self, address, data):
+    def receive_callback(self, address: Address, data: bytes) -> None:
         """This hook recieves the raw UDP data before it is processed by enet"""
 
         # reply to ASCII HELLO messages with HI so that clients can measure the
@@ -612,7 +620,7 @@ class FeatureProtocol(ServerProtocol):
         if address.host in self.hard_bans:
             return 1
 
-    def data_received(self, peer, packet):
+    def data_received(self, peer: Peer, packet: Packet) -> None:
         ip = peer.address.host
         current_time = reactor.seconds()
         try:
@@ -629,7 +637,7 @@ class FeatureProtocol(ServerProtocol):
             print('(warning: processing %r from %s took %s)' % (
                 packet.data, ip, dt))
 
-    def irc_say(self, msg, me=False):
+    def irc_say(self, msg: str, me: bool = False) -> None:
         if self.irc_relay:
             if me:
                 self.irc_relay.me(msg, do_filter=True)
@@ -673,7 +681,7 @@ class FeatureProtocol(ServerProtocol):
 
     # events
 
-    def on_map_change(self, the_map):
+    def on_map_change(self, the_map: VXLData) -> None:
         self.set_fog_color(
             getattr(self.map_info.info, 'fog', self.default_fog)
         )
@@ -693,7 +701,7 @@ class FeatureProtocol(ServerProtocol):
         elif next(self.win_count) % self.advance_on_win == 0:
             self.advance_rotation('Game finished!')
 
-    def on_advance(self, map_name):
+    def on_advance(self, map_name: str) -> None:
         pass
 
     def on_ban_attempt(self, connection, reason, duration):
@@ -709,7 +717,7 @@ class FeatureProtocol(ServerProtocol):
 
     # useful twisted wrappers
 
-    def listenTCP(self, *arg, **kw):
+    def listenTCP(self, *arg, **kw) -> Port:
         return reactor.listenTCP(
             *arg, interface=self.config.get('network_interface', ''), **kw)
 
@@ -724,19 +732,19 @@ class FeatureProtocol(ServerProtocol):
             **kw)
 
     @inlineCallbacks
-    def getPage(self, url):
+    def getPage(self, url: str) -> Iterator[Deferred]:
         resp = yield self.http_agent.request(b'GET', url.encode())
         body = yield web_client.readBody(resp)
         returnValue(body.decode())
 
     # before-end calls
 
-    def call_end(self, delay, func, *arg, **kw):
+    def call_end(self, delay: int, func: Callable, *arg, **kw) -> EndCall:
         call = EndCall(self, delay, func, *arg, **kw)
         call.set(self.get_advance_time())
         return call
 
-    def get_advance_time(self):
+    def get_advance_time(self) -> float:
         if not self.advance_call:
             return None
         return self.advance_call.getTime() - self.advance_call.seconds()
@@ -800,7 +808,6 @@ def run() -> None:
     for script in script_objects:
         protocol_class, connection_class = script.apply_script(
             protocol_class, connection_class, config)
-
 
     # apply the game_mode script
     game_mode = config.get('game_mode', 'ctf')
