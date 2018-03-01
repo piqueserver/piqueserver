@@ -4,15 +4,15 @@ Development
 Testing
 --------
 
-Testing in piqueserver is performed with `pytest` with `tox` support.
+Testing in piqueserver is performed with ``pytest`` with ``tox`` support.
 
 Tox manages its own virtual environments, so if you have it installed on your
-system, testing is as simple as running `tox`, which will run all tests against
+system, testing is as simple as running ``tox``, which will run all tests against
 all supported python versions (skipping those not available on your system).
 
 
 If you already are in your virtual env and wish to test something quickly,
-`pytest` directly may be useful:
+``pytest`` directly may be useful:
 
 .. code:: bash
 
@@ -34,7 +34,7 @@ If you already are in your virtual env and wish to test something quickly,
 Code Coverage
 -------------
 
-Code coverage is generated with `coverage.py <https://coverage.readthedocs.io/en/latest/>`__ using a `pytest` plugin.
+Code coverage is generated with `coverage.py <https://coverage.readthedocs.io/en/latest/>`__ using a ``pytest`` plugin.
 
 .. code:: bash
 
