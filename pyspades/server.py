@@ -38,15 +38,11 @@ from pyspades import contained as loaders
 from pyspades.common import make_color
 from pyspades.mapgenerator import ProgressiveMapGenerator
 
-try:
-    range = xrange # pylint: disable=redefined-builtin
-except NameError:
-    pass
-
 fog_color = loaders.FogColor()
 world_update = loaders.WorldUpdate()
 intel_capture = loaders.IntelCapture()
 territory_capture = loaders.TerritoryCapture()
+
 
 class ServerProtocol(BaseProtocol):
     connection_class = ServerConnection
