@@ -97,14 +97,14 @@ cdef class VXLData:
         should be after being dropped.
         '''
 
-        for z in xrange(start, 64):
+        for z in range(start, 64):
             if get_solid(x, y, z, self.map):
                 return z
         return 0
 
     cpdef int get_height(self, int x, int y):
         cdef int start = 63
-        for z in xrange(start, -1, -1):
+        for z in range(start, -1, -1):
             if not get_solid(x, y, z, self.map):
                 return z + 1
         return 0
@@ -129,8 +129,8 @@ cdef class VXLData:
 
     def count_land(self, int x1, y1, x2, y2):
         cdef int land = 0
-        for x in xrange(x1, x2):
-            for y in xrange(y1, y2):
+        for x in range(x1, x2):
+            for y in range(y1, y2):
                 if self.get_solid(x, y, 62):
                     land += 1
         return land
@@ -226,8 +226,8 @@ cdef class VXLData:
             a = 255
         else:
             current_z = z
-        for y in xrange(512):
-            for x in xrange(512):
+        for y in range(512):
+            for x in range(512):
                 if z == -1:
                     current_z = self.get_z(x, y)
                 else:
@@ -251,8 +251,8 @@ cdef class VXLData:
         cdef unsigned int r, g, b, a, color, i, new_color
         data = <unsigned int*>(<char*>data_str)
         i = 0
-        for y in xrange(512):
-            for x in xrange(512):
+        for y in range(512):
+            for x in range(512):
                 color = data[i]
                 a = (color & <unsigned int>0xFF000000) >> 24
                 if a != 255:

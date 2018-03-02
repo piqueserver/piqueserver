@@ -63,10 +63,10 @@ cdef class BiomeMap:
         self.height = height
         self.twidth = 512//self.width
         self.theight = 512//self.height
-        self.tmap = [biomes[0] for n in xrange(self.width*self.height)]
+        self.tmap = [biomes[0] for n in range(self.width*self.height)]
         self.gradients = []
 
-        for n in xrange(len(biomes)):
+        for n in range(len(biomes)):
             biomes[n].id = n
             self.gradients.append(biomes[n].gradient)
 
@@ -79,7 +79,7 @@ cdef class BiomeMap:
         self.tmap[(x%self.width)+(y%self.height)*self.width] = val
 
     cpdef noise(self):
-        for idx in xrange(len(self.tmap)):
+        for idx in range(len(self.tmap)):
             self.tmap[idx] = random.choice(self.biomes)
 
     cpdef random_points(self, qty, biome, x=0, y=0, w=None,
@@ -90,7 +90,7 @@ cdef class BiomeMap:
             w = self.width
         if h is None:
             h = self.height
-        for n in xrange(qty):
+        for n in range(qty):
             result.append((random.randint(x,x+w),
                          random.randint(y,y+h),
                          biome))
@@ -125,7 +125,7 @@ cdef class BiomeMap:
     cpdef jitter(self):
         cdef int x
         cdef int y
-        for idx in xrange(len(self.tmap)):
+        for idx in range(len(self.tmap)):
             x = idx % self.width
             y = idx // self.height
             self.tmap[idx] = self.get_repeat(x + random.randint(-1,1),
@@ -138,7 +138,7 @@ cdef class BiomeMap:
 
         # paste a rectangle into each biome's area
 
-        for idx in xrange(len(self.tmap)):
+        for idx in range(len(self.tmap)):
             x = idx % self.width
             y = idx // self.height
             biome = self.tmap[idx]
@@ -167,9 +167,9 @@ cdef class HeightMap:
     def __init__(self, height):
         self.width = 512
         self.height = 512
-        self.hmap = array.array('f',[height for n in xrange(0,
+        self.hmap = array.array('f',[height for n in range(0,
                                     self.width*self.height)])
-        self.cmap = array.array('i',[<int>0xFF00FFFF for n in xrange(0,
+        self.cmap = array.array('i',[<int>0xFF00FFFF for n in range(0,
                                     self.width*self.height)])
 
     cpdef inline double get(self, int x, int y):
@@ -199,7 +199,7 @@ cdef class HeightMap:
         self.cmap[(x%self.width)+(y%self.height)*self.width] = val
 
     cpdef inline fill_col(self, int col):
-        for n in xrange(len(self.cmap)):
+        for n in range(len(self.cmap)):
             self.cmap[n] = col
 
     cpdef mult_repeat(self, int x, int y, double mult):
@@ -208,29 +208,29 @@ cdef class HeightMap:
 
     cpdef seed(self, double jitter, double midpoint):
         cdef double halfjitter = jitter * 0.5
-        for idx in xrange(len(self.hmap)):
+        for idx in range(len(self.hmap)):
             self.hmap[idx] = midpoint + (random.random()*jitter -
                                          halfjitter)
 
     cpdef peaking(self):
         """Adds a "peaking" feel to the map."""
-        for idx in xrange(len(self.hmap)):
+        for idx in range(len(self.hmap)):
             self.hmap[idx] = self.hmap[idx] * self.hmap[idx]
 
     cpdef dipping(self):
         """Adds a "dipping" feel to the map."""
-        for idx in xrange(len(self.hmap)):
+        for idx in range(len(self.hmap)):
             self.hmap[idx] = math.sin(self.hmap[idx]*(math.pi))
 
     cpdef rolling(self):
         """Adds a "rolling" feel to the map."""
-        for idx in xrange(len(self.hmap)):
+        for idx in range(len(self.hmap)):
             self.hmap[idx] = math.sin(self.hmap[idx]*(math.pi/2))
 
     cpdef smoothing(self):
         """Does some simple averaging to bring down the noise level."""
-        for x in xrange(0,self.width):
-            for y in xrange(0,self.height):
+        for x in range(0,self.width):
+            for y in range(0,self.height):
                 top = self.get_repeat(x,y-1)
                 left = self.get_repeat(x-1,y)
                 right = self.get_repeat(x+1,y)
@@ -254,7 +254,7 @@ cdef class HeightMap:
         cdef float botright
         cdef float center
 
-        for iterations in xrange(9): # hardcoded for 512x512
+        for iterations in range(9): # hardcoded for 512x512
             if skip>0:
                 skip-=1
                 span = span >> 1
@@ -262,8 +262,8 @@ cdef class HeightMap:
                 continue
             jitterrange = jittervalue * spanscaling
             jitteroffset = - jitterrange / 2
-            for x in xrange(0,self.width,span):
-                for y in xrange(0,self.height,span):
+            for x in range(0,self.width,span):
+                for y in range(0,self.height,span):
                     halfspan = span >> 1
                     topleft = self.get_repeat(x,y)
                     topright = self.get_repeat((x+span),y)
@@ -309,8 +309,8 @@ cdef class HeightMap:
     cpdef level_against_heightmap(self, HeightMap other, double height):
         """Use another HeightMap as an alpha-mask to force values to a
             specific height"""
-        for x in xrange(0, self.width):
-            for y in xrange(0, self.height):
+        for x in range(0, self.width):
+            for y in range(0, self.height):
                 orig = self.get_repeat(x,y)
                 dist = orig - height
                 self.set_repeat(x,y, orig - dist * other.get_repeat(x,y))
@@ -318,41 +318,41 @@ cdef class HeightMap:
     cpdef blend_heightmaps(self, HeightMap alphamap, HeightMap HeightMap):
         """Blend according to two HeightMaps: one as an alpha-mask,
             the other contains desired heights"""
-        for x in xrange(0, self.width):
-            for y in xrange(0, self.height):
+        for x in range(0, self.width):
+            for y in range(0, self.height):
                 orig = self.get_repeat(x,y)
                 dist = orig - HeightMap.get_repeat(x,y)
                 self.set_repeat(x,y, orig - dist * alphamap.get_repeat(x,y))
 
     cpdef rect_solid(self, int x, int y, int w, int h, double z):
-        for xx in xrange(x, x+w):
-            for yy in xrange(y, y+h):
+        for xx in range(x, x+w):
+            for yy in range(y, y+h):
                 self.set_repeat(xx,yy,z)
 
     cpdef rect_noise(self, int x, int y, int w, int h,
                      double jitter, double midpoint):
         cdef double halfjitter = jitter * 0.5
-        for xx in xrange(x,x+w):
-            for yy in xrange(y,y+h):
+        for xx in range(x,x+w):
+            for yy in range(y,y+h):
                 self.set(xx,yy, midpoint + (random.random()*jitter -
                                          halfjitter))
     cpdef rect_color(self, int x, int y, int w, int h, int col):
-        for xx in xrange(x, x+w):
-            for yy in xrange(y, y+h):
+        for xx in range(x, x+w):
+            for yy in range(y, y+h):
                 self.set_col_repeat(xx,yy,col)
 
     cpdef truncate(self):
         """Truncates the HeightMap to a valid (0-1) range.
         Do this before painting or writing to voxels to avoid crashing."""
-        for idx in xrange(0,len(self.hmap)):
+        for idx in range(0,len(self.hmap)):
             self.hmap[idx] = min(max(self.hmap[idx],0.0),1.0)
 
     cpdef offset_z(self, double qty):
-        for idx in xrange(0,len(self.hmap)):
+        for idx in range(0,len(self.hmap)):
             self.hmap[idx] = self.hmap[idx]+qty
 
     cpdef rescale_z(self, double multiple):
-        for idx in xrange(0,len(self.hmap)):
+        for idx in range(0,len(self.hmap)):
             self.hmap[idx] = self.hmap[idx]*multiple
 
     cpdef paint_gradient_fill(self, gradient):
@@ -385,7 +385,7 @@ cdef class HeightMap:
         """Add noise to the heightmap colors."""
         cdef int idx = 0
 
-        patterns = array.array('i', [random.randint(low,high) for n in xrange(101)])
+        patterns = array.array('i', [random.randint(low,high) for n in range(101)])
 
         while idx<len(self.hmap):
             mid = self.cmap[idx]
@@ -449,8 +449,8 @@ cdef class HeightMap:
         for c in bresenham_line(x,y,x2,y2):
             posx = c[0]
             posy = c[1]
-            for x in xrange(-radius,radius+1):
-                for y in xrange(-radius,radius+1):
+            for x in range(-radius,radius+1):
+                for y in range(-radius,radius+1):
                     self.add_repeat(posx+x,posy+y,depth)
 
     cpdef line_set(self,int x,int y,
@@ -459,8 +459,8 @@ cdef class HeightMap:
         for c in bresenham_line(x,y,x2,y2):
             posx = c[0]
             posy = c[1]
-            for x in xrange(-radius,radius+1):
-                for y in xrange(-radius,radius+1):
+            for x in range(-radius,radius+1):
+                for y in range(-radius,radius+1):
                     self.set_repeat(posx+x,posy+y,height)
 
 
@@ -509,7 +509,7 @@ cdef inline list bresenham_line(int x, int y, int x2, int y2):
         dx,dy = dy,dx
         sx,sy = sy,sx
     d = (2 * dy) - dx
-    for i in xrange(0,dx):
+    for i in range(0,dx):
         if steep: coords.append((y,x))
         else: coords.append((x,y))
         while d >= 0:
@@ -527,7 +527,7 @@ from pyspades.color import *
 class Gradient(object):
     def __init__(self):
         self.steps = []
-        for n in xrange(0,64):
+        for n in range(0,64):
             self.steps.append((0,0,0,0))
 
     def set_step_rgb(self, step, rgb):
@@ -540,7 +540,7 @@ class Gradient(object):
     def rgb(self, start_pos, start_color, end_pos, end_color):
         """Linear interpolation of (0-255) RGB values."""
         dist = end_pos - start_pos
-        for n in xrange(start_pos, end_pos):
+        for n in range(start_pos, end_pos):
             pct = float(n - start_pos) / dist
             self.set_step_rgb(n, interpolate_rgb(start_color,
                                              end_color,
@@ -556,7 +556,7 @@ class Gradient(object):
         end_color = (end_color[0]/360.,
                        end_color[1]/100.,
                        end_color[2]/100.)
-        for n in xrange(start_pos, end_pos):
+        for n in range(start_pos, end_pos):
             pct = float(n - start_pos) / dist
             interp = interpolate_hsb(start_color, end_color, pct)
             self.set_step_hsb(n, interp)

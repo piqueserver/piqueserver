@@ -562,7 +562,7 @@ cdef class TCState(Loader):
     cpdef read(self, ByteReader reader):
         self.territories = []
         cdef unsigned int count = reader.readByte(True)
-        for _ in xrange(count):
+        for _ in range(count):
             self.territories.append(Territory(reader))
 
     def set_entities(self, items):

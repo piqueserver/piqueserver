@@ -391,6 +391,6 @@ cpdef cube_line(x1, y1, z1, x2, y2, z2):
     cdef size_t size = cube_line_c(x1, y1, z1, x2, y2, z2, array)
     cdef size_t i
     cdef list points = []
-    for i in xrange(size):
+    for i in range(size):
         points.append((array[i].x, array[i].y, array[i].z))
     return points
