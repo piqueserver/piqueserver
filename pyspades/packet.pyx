@@ -17,7 +17,6 @@
 
 from pyspades.common import *
 from pyspades.loaders cimport Loader
-from pyspades import debug
 from pyspades.bytes cimport ByteReader, ByteWriter
 
 _client_loaders = {}
