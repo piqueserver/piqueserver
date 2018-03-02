@@ -22,7 +22,6 @@ pyspades - default/featured server
 from __future__ import print_function, unicode_literals
 import sys
 import os
-import errno
 import imp
 import importlib
 import json
@@ -192,11 +191,8 @@ def ensure_dir_exists(filename: str) -> None:
     d = os.path.dirname(filename)
     try:
         os.makedirs(d)
-    except OSError as e:
-        if e.errno == errno.EEXIST:
-            pass
-        else:
-            raise e
+    except FileExistsError:
+        pass
 
 
 def random_choice_cycle(choices):
@@ -312,12 +308,8 @@ class FeatureProtocol(ServerProtocol):
         try:
             with open(os.path.join(config.config_dir, bans_file.get()), 'r') as f:
                 self.bans.read_list(json.load(f))
-        except OSError as e:
-            if e.errno == errno.ENOENT:
-                # if it doesn't exist, then no bans, no error
-                pass
-            else:
-                raise e
+        except FileNotFoundError:
+            pass
         except IOError as e:
             print('Could not read bans.txt: {}'.format(e))
         except ValueError as e:
