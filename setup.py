@@ -131,7 +131,6 @@ setup(
         'Pillow>=4.3.0,<5',
         'pyenet',
         'toml',
-        'six',
         'typing'
     ],
     extras_require={

@@ -1,8 +1,6 @@
 import tempfile
 from pprint import pprint
 
-from six import StringIO
-
 import unittest
 from piqueserver.config import ConfigStore, JSON_FORMAT, TOML_FORMAT
 from io import StringIO

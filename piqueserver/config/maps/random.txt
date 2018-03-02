@@ -1,6 +1,5 @@
 # vi: ft=python
 import random
-from six.moves import range
 from pyspades import mapmaker
 
 name = 'Random'

@@ -5,12 +5,12 @@ import filecmp
 import shutil
 import sys
 import argparse
-import six.moves.urllib as urllib
 import gzip
 import json
 
 from piqueserver.config import (config, TOML_FORMAT, JSON_FORMAT,
                                 MAXMIND_DOWNLOAD, SUPPORTED_PYTHONS)
+import urllib
 
 PKG_NAME = 'piqueserver'
 

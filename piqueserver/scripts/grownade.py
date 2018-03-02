@@ -45,7 +45,6 @@ from struct import unpack
 from random import choice
 from itertools import product
 from collections import deque, namedtuple
-from six.moves import range
 from twisted.internet.reactor import seconds
 from twisted.internet.task import LoopingCall
 from pyspades.contained import BlockAction, SetColor

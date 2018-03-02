@@ -7,7 +7,6 @@ Maintainer: mat^2
 
 import random
 import math
-from six.moves import range
 from pyspades.constants import TC_MODE
 from pyspades.server import Territory
 

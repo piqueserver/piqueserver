@@ -8,7 +8,6 @@ import os
 import time
 import operator
 
-from six.moves import range
 from twisted.internet.task import LoopingCall
 from pyspades.vxl import VXLData
 from pyspades.contained import BlockAction, SetColor

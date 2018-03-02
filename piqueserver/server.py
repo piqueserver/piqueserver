@@ -34,9 +34,6 @@ from pprint import pprint
 from ipaddress import ip_network, ip_address, IPv4Address, AddressValueError
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Type
 
-import six
-from six import text_type
-from six.moves import range
 
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks, returnValue
@@ -648,7 +645,7 @@ class FeatureProtocol(ServerProtocol):
         Ban an ip with an optional reason and duration in minutes. If duration
         is None, ban is permanent.
         """
-        network = ip_network(text_type(ip), strict=False)
+        network = ip_network(str(ip), strict=False)
         for connection in list(self.connections.values()):
             if ip_address(connection.address[0]) in network:
                 name = connection.name

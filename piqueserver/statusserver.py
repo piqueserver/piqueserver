@@ -16,7 +16,7 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-from six import BytesIO
+from io import BytesIO
 
 from PIL import Image
 from jinja2 import Environment, PackageLoader
