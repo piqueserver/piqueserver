@@ -105,6 +105,7 @@ setup(
     url=PKG_URL,
     keywords=['ace of spades', 'aos', 'server',
               'pyspades', 'pysnip', 'piqueserver'],
+    python_requires=">=3.4",
     classifiers=[
         'Intended Audience :: System Administrators',
         'Development Status :: 5 - Production/Stable',
@@ -115,7 +116,6 @@ setup(
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Programming Language :: Python',
         'Programming Language :: Cython',
-        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
         'Framework :: Twisted',
         'Topic :: Games/Entertainment',
