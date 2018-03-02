@@ -35,7 +35,7 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Type
 
 
 from twisted.internet import reactor
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 from twisted.python import log
 from twisted.python.logfile import DailyLogFile
 from twisted.web import client as web_client
@@ -793,7 +793,7 @@ class FeatureProtocol(ServerProtocol):
     def getPage(self, url: str) -> Iterator[Deferred]:
         resp = yield self.http_agent.request(b'GET', url.encode())
         body = yield web_client.readBody(resp)
-        returnValue(body.decode())
+        return body.decode()
 
     # before-end calls
 
