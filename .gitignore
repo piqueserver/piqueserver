@@ -38,6 +38,7 @@ wheelhouse/
 
 # config/userdata
 piqueserver/config/maps/*.txtc
+piqueserver/config/maps/*.saved.vxl
 piqueserver/config/logs/*
 piqueserver/config/data/*
 

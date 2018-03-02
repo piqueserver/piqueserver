@@ -75,7 +75,6 @@ network_interface = ""
 # other scripts being loaded before them.
 scripts = [
  "piqueserver.scripts.rollback",
- "piqueserver.scripts.savemap",
  "piqueserver.scripts.protect",
  "piqueserver.scripts.map_extensions",
  "piqueserver.scripts.disco",
