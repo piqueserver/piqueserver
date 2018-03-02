@@ -504,7 +504,7 @@ class FeatureProtocol(ServerProtocol):
             self.planned_map = next(self.map_rotator)
         planned_map = self.planned_map
         self.planned_map = None
-        self.on_advance(map)
+        self.on_advance(planned_map)
         if message is None:
             self.set_map_name(planned_map)
         else:
