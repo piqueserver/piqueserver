@@ -1,4 +1,3 @@
-from six.moves import range
 from pyspades.constants import *
 from pyspades.collision import vector_collision
 

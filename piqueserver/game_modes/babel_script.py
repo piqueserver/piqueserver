@@ -19,7 +19,6 @@ http://aloha.pk/files/aos/pyspades/feature_server/scripts/babel.py
 """
 
 from random import randint
-from six.moves import range
 from pyspades.constants import (BLUE_BASE, GREEN_BASE, BLUE_FLAG, GREEN_FLAG,
                                 SPADE_TOOL, GRENADE_TOOL, WEAPON_TOOL)
 from twisted.internet import reactor

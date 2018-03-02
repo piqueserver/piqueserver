@@ -6,7 +6,6 @@ Maintainer: hompy
 
 from math import ceil, sin, cos
 from random import uniform, vonmisesvariate
-from six.moves import range
 from twisted.internet import reactor
 from pyspades.contained import GrenadePacket
 from pyspades.common import to_coordinates, Vertex3

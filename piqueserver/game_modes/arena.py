@@ -37,8 +37,6 @@
 
 import random
 import math
-from six import itervalues
-from six.moves import range
 from pyspades.contained import BlockAction, SetColor, BlockLine
 from pyspades import world
 from pyspades.constants import DESTROY_BLOCK, TEAM_CHANGE_KILL, CTF_MODE
@@ -489,7 +487,7 @@ def apply_script(protocol, connection, config):
                 gate.destroy_gate()
 
         def arena_spawn(self):
-            for player in list(itervalues(self.players)):
+            for player in list(self.players.values()):
                 if player.team.spectator:
                     continue
                 if player.world_object is not None and player.world_object.dead:
@@ -500,7 +498,7 @@ def apply_script(protocol, connection, config):
                     player.refill()
 
         def refill_all(self):
-            for player in itervalues(self.players):
+            for player in self.players.values():
                 if player.team.spectator:
                     continue
                 player.refill()

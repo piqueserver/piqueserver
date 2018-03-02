@@ -36,7 +36,6 @@ ToDo:
 """
 
 
-from six.moves import range
 from pyspades.constants import *
 from pyspades.common import make_color
 from pyspades.contained import SetColor, BlockAction

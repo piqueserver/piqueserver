@@ -1,4 +1,3 @@
-from six import text_type
 from ipaddress import ip_network, ip_address
 
 def get_cidr(network):
@@ -24,7 +23,7 @@ class NetworkDict(object):
         return values
 
     def remove(self, key):
-        ip = ip_network(text_type(key), strict=False)
+        ip = ip_network(str(key), strict=False)
         networks = []
         results = []
         for item in self.networks:
@@ -37,13 +36,13 @@ class NetworkDict(object):
         return results
 
     def __setitem__(self, key, value):
-        self.networks.append((ip_network(text_type(key), strict=False), value))
+        self.networks.append((ip_network(str(key), strict=False), value))
 
     def __getitem__(self, key):
         return self.get_entry(key)[1]
 
     def get_entry(self, key):
-        ip = ip_address(text_type(key))
+        ip = ip_address(str(key))
         for entry in self.networks:
             network, _value = entry
             if ip in network:
@@ -54,7 +53,7 @@ class NetworkDict(object):
         return len(self.networks)
 
     def __delitem__(self, key):
-        ip = ip_network(text_type(key), strict=False)
+        ip = ip_network(str(key), strict=False)
         self.networks = [item for item in self.networks if ip not in item]
 
     def pop(self, *arg, **kw):

@@ -21,7 +21,6 @@ import re
 import random
 from itertools import groupby, chain
 from operator import attrgetter
-from six.moves import zip
 
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol

@@ -20,8 +20,6 @@ import json
 import os
 import sys
 
-import six
-
 import piqueserver
 import toml
 
@@ -83,7 +81,7 @@ class ConfigStore():
 
     # https://stackoverflow.com/a/3233356/
     def _nested_update(self, config_dict, updates):
-        for k, v in six.iteritems(updates):
+        for k, v in updates.items():
             if isinstance(v, collections.Mapping):
                 config_dict[k] = self._nested_update(config_dict.get(k, {}), v)
             else:
@@ -158,7 +156,7 @@ class ConfigStore():
         '''
 
         unused = {}
-        for k, v in six.iteritems(self.get_dict()):
+        for k, v in self.get_dict().items():
             if isinstance(v, collections.Mapping):
                 if k in self._sections:
                     section_unused = self._sections[k].check_unused()
