@@ -3,8 +3,6 @@
 test pyspades/common.pyx
 """
 
-from __future__ import print_function
-
 from twisted.trial import unittest
 
 from pyspades.common import escape_control_codes, get_color, to_coordinates, coordinates

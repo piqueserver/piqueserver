@@ -2,8 +2,6 @@
 test pyspades/server.py
 """
 
-from __future__ import print_function
-
 from twisted.trial import unittest
 from pyspades import server
 

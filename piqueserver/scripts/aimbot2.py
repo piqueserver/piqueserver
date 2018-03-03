@@ -3,8 +3,6 @@ Plugin to detect and react to possible aimbot users
 
 maintained by: ?
 """
-# So we can do `x / y` instead of `float(x) / y`
-from __future__ import division
 import os
 import csv
 import re

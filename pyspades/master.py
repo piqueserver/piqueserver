@@ -19,8 +19,6 @@
 Implementation of the 0,75 master server protocol
 """
 
-from __future__ import unicode_literals
-
 from pyspades.loaders import Loader
 from pyspades.protocol import BaseConnection
 from pyspades.constants import MASTER_VERSION

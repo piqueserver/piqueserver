@@ -18,7 +18,6 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 
-from __future__ import print_function
 from twisted.internet.reactor import seconds
 from piqueserver.scheduler import Scheduler
 from piqueserver.commands import command, admin, get_player, join_arguments, CommandError

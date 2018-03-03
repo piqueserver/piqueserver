@@ -1,4 +1,3 @@
-from __future__ import print_function, unicode_literals
 import os
 from piqueserver.commands import command, get_player
 from piqueserver.config import config

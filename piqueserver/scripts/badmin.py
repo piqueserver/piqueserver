@@ -2,7 +2,6 @@
 # He might not always get it right, but he'll get it done, and isn't that what really matters?
 # -Requirements: blockinfo.py (for grief detection), ratio.py (for k/d ratio), aimbot2.py (hit accuracy)
 
-from __future__ import print_function
 from twisted.internet import reactor
 from pyspades.common import prettify_timespan
 from pyspades.constants import *
