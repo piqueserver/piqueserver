@@ -35,15 +35,17 @@ cdef class Generator:
     cdef MapGenerator * generator
     cdef public:
         bint done
+        int columns
 
-    def __init__(self, VXLData data):
+    def __init__(self, VXLData data, int read_size=8192):
         self.done = False
         self.generator = create_map_generator(data.map)
+        self.columns = read_size
 
-    def get_data(self, int columns = 2):
+    def get_data(self):
         if self.done:
             return None
-        value = get_generator_data(self.generator, columns)
+        value = get_generator_data(self.generator, self.columns)
         if not value:
             self.done = True
             return None
@@ -269,8 +271,8 @@ cdef class VXLData:
             print 'VXLData.generate() took %s' % (dt)
         return data
 
-    def get_generator(self):
-        return Generator(self)
+    def get_generator(self, read_size):
+        return Generator(self, read_size)
 
     def __dealloc__(self):
         cdef MapData * map
