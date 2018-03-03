@@ -25,8 +25,6 @@ VV_ENABLED and CHAT_MARKERS below.
 Maintainer: hompy
 """
 
-from __future__ import unicode_literals
-
 import csv
 from io import StringIO
 from collections import deque, defaultdict

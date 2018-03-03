@@ -1,4 +1,3 @@
-from __future__ import print_function, unicode_literals
 from piqueserver.commands import command, join_arguments
 
 @command('servername', admin_only=True)

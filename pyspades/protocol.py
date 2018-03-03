@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import absolute_import
-
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from pyspades.bytes import ByteWriter

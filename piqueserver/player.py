@@ -1,5 +1,3 @@
-from __future__ import print_function, unicode_literals
-
 import math
 from typing import List, Tuple, Optional, Union
 
