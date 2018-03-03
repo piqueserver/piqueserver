@@ -44,6 +44,17 @@ All of these are `bridged <https://matrix.org/docs/guides/faq.html#what-is-matri
 \:rocket: Installation
 ----------------------
 
+Requirements
+~~~~~~~~~~~~
+
+Piqueserver requires python3.4+ (3.5+ on Windows).
+
+We currently provide builds for:
+ - Linux 32 and 64bit, Python 3.4, 3.5, 3.6
+ - Windows 32 and 64bit, Python 3.5, 3.6
+ 
+If your system is not one of the above, you will also need a recent C++ Compiler.
+
 pip (stable version)
 ~~~~~~~~~~~~~~~~~~~~
 
