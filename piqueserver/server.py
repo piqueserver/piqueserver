@@ -158,9 +158,9 @@ user_blocks_only = config.option('user_blocks_only', False)
 debug_log_enabled = logging_config.option('debug_log', False)
 logging_profile_option = logging_config.option('profile', False)
 set_god_build = config.option('set_god_build', False)
-ssh_options = config.option('ssh', {})
+ssh_enabled = config.section('ssh').option('enabled', False)
 irc_options = config.option('irc', {})
-status_server_options = config.option('status_server', {})
+status_server_enabled = config.section('status_server').option('enabled', False)
 ban_publish = bans_config.option('publish', False)
 ban_publish_port = bans_config.option('publish_port', 32885)
 logging_rotate_daily = logging_config.option('rotate_daily', False)
@@ -360,18 +360,16 @@ class FeatureProtocol(ServerProtocol):
             # TODO: make this configurable
             pyspades.debug.open_debug_log(
                 os.path.join(config.config_dir, 'debug.log'))
-        ssh = ssh_options.get()
-        if ssh.get('enabled', False):
+        if ssh_enabled.get():
             from piqueserver.ssh import RemoteConsole
-            self.remote_console = RemoteConsole(self, ssh)
+            self.remote_console = RemoteConsole(self)
         irc = irc_options.get()
         if irc.get('enabled', False):
             from piqueserver.irc import IRCRelay
             self.irc_relay = IRCRelay(self, irc)
-        status = status_server_options.get()
-        if status.get('enabled', False):
+        if status_server_enabled.get():
             from piqueserver.statusserver import StatusServerFactory
-            self.status_server = StatusServerFactory(self, status)
+            self.status_server = StatusServerFactory(self)
         if ban_publish.get():
             from piqueserver.banpublish import PublishServer
             self.ban_publish = PublishServer(self, ban_publish_port.get())

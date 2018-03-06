@@ -62,9 +62,11 @@ def create_remote_factory(namespace, users):
     return f
 
 
+ssh_config = config.section("ssh")
 class RemoteConsole(object):
 
-    def __init__(self, server, config):
-        users = config.get('users', {})
-        factory = create_remote_factory(locals(), users)
-        server.listenTCP(config.get('port', 38827), factory)
+    def __init__(self, server):
+        users = ssh_config.option("users", {})
+        port = ssh_config.option("port", 38827)
+        factory = create_remote_factory(locals(), users.get())
+        server.listenTCP(port.get(), factory)
