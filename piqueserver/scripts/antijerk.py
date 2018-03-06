@@ -12,6 +12,8 @@ chat_pattern_2 = re.compile(".*(esc|escape|alt-f4|alt f4).*(airstrike)",
                             re.IGNORECASE)
 admin_pattern = re.compile(".*(admin)",
                            re.IGNORECASE)
+antijerk_config = config.section("antijerk")
+ban_duration = antijerk_config.option("ban_duration", 15.0)
 
 
 def antijerk_match(player, msg):
@@ -21,9 +23,8 @@ def antijerk_match(player, msg):
 
 
 def apply_script(protocol, connection, config):
-    jerk_ban_duration = config.get('jerk_ban_duration', 15.0)
     def jerk_kick(connection):
-        connection.ban('Autoban: anti-jerk', jerk_ban_duration)
+        connection.ban('Autoban: anti-jerk', ban_duration.get())
 
     class AntiJerkConnection(connection):
 
