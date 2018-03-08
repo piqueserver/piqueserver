@@ -35,7 +35,7 @@ MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCi
 
 # (major, minor) versions of python we are supporting
 # used on startup to emit a warning if not running on a supported version
-SUPPORTED_PYTHONS = ((2, 7), (3, 4), (3, 5), (3, 6))
+SUPPORTED_PYTHONS = ((3, 4), (3, 5), (3, 6))
 
 
 class ConfigStore():
