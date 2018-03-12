@@ -51,7 +51,7 @@ from pyspades.contained import BlockAction, SetColor
 from pyspades.common import make_color
 from pyspades.constants import BUILD_BLOCK
 from piqueserver.commands import command
-from piqueserver import config
+from piqueserver.config import config
 
 FLYING_MODELS = False  # if False grenades exploding in midair will be ignored
 GROW_ON_WATER = False  # if False grenades exploding in water will do nothing
