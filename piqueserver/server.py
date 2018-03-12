@@ -30,7 +30,7 @@ import time
 from collections import deque
 from pprint import pprint
 from ipaddress import ip_network, ip_address, IPv4Address, AddressValueError
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple, Type
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 
 from twisted.internet import reactor
@@ -66,30 +66,6 @@ from piqueserver.config import config
 import piqueserver.core_commands
 
 
-def check_passwords(passwords: Dict[str, List[str]]) -> bool:
-    '''
-    Validator function to be run when the passwords configuration item is updated/set.
-    Designed to warn if default passwords found in the config.
-    '''
-    # default passwords as hardcoded in example config
-    default_passwords = {
-        'admin': ['adminpass1', 'adminpass2', 'adminpass3'],
-        'moderator': ['modpass'],
-        'guard': ['guardpass'],
-        'trusted': ['trustedpass']
-    }
-
-    # check for default password usage
-    for group, passwords in passwords.items():
-        if group in default_passwords:
-            for password in passwords:
-                if password in default_passwords[group]:
-                    print(("WARNING: FOUND DEFAULT PASSWORD '%s'"
-                           " IN GROUP '%s'" % (password, group)))
-
-    # always validate - this function is just to warn if default passwords found
-    return True
-
 def check_scripts(scripts):
     '''
     Checks if scripts were included multiple times.
@@ -106,6 +82,7 @@ def check_scripts(scripts):
         return False
     return True
 
+
 # declare configuration options
 bans_config = config.section('bans')
 logging_config = config.section('logging')
@@ -117,16 +94,17 @@ respawn_time_option = config.option('respawn_time', default=8)
 respawn_waves = config.option('respawn_waves', default=False)
 game_mode = config.option('game_mode', default='ctf')
 random_rotation = config.option('random_rotation', default=False)
-passwords = config.option('passwords', default={}, validate=check_passwords)
+passwords = config.option('passwords', default={})
 logfile = logging_config.option('logfile', default='./logs/log.txt')
 map_rotation = config.option('rotation', default=['classicgen', 'random'],
-        validate=lambda x: type(x) == list)
-default_time_limit = config.option('default_time_limit', default=20,
-        validate=lambda x: type(x) == int or type(x) == float)
+                             validate=lambda x: isinstance(x, list))
+default_time_limit = config.option(
+    'default_time_limit', default=20,
+    validate=lambda x: isinstance(x, (int, float)))
 cap_limit = config.option('cap_limit', default=10,
-        validate=lambda x: type(x) == int or type(x) == float)
+                          validate=lambda x: isinstance(x, (int, float)))
 advance_on_win = config.option('advance_on_win', default=False,
-        validate=lambda x: type(x) == bool)
+                               validate=lambda x: isinstance(x, bool))
 team1_name = team1_config.option('name', default='Blue')
 team2_name = team2_config.option('name', default='Green')
 team1_color = team1_config.option('color', default=(0, 0, 196))
