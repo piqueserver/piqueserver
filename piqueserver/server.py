@@ -375,10 +375,6 @@ class FeatureProtocol(ServerProtocol):
         # TODO: why is this here?
         create_console(self)
 
-        for password in self.passwords.get('admin', []):
-            if not password:
-                self.everyone_is_admin = True
-
         for user_type, func_names in rights.get().items():
             for func_name in func_names:
                 commands.add_rights(user_type, func_name)
