@@ -6,7 +6,7 @@ Maintainer: mat^2
 from piqueserver.config import config
 
 welcome_config = config.section("welcome")
-welcomes_option = config.option("welcomes", {})
+welcomes_option = welcome_config.option("welcomes", {})
 
 
 def apply_script(protocol, connection, config):

@@ -11,7 +11,7 @@ from pyspades.constants import FALL_KILL
 
 medkit_config = config.section("medkit")
 default_medkits = medkit_config.option("medkits", 1)
-medkit_heal_amount = medkit_config.option('medkit_heal_amount', 40)
+medkit_heal_amount = medkit_config.option("medkit_heal_amount", 40)
 
 @command('medkit', 'm')
 def medkit(connection):
