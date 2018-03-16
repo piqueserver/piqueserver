@@ -1,12 +1,14 @@
-from .networking import loaders
-from .world.collision import vector_collision, collision_3d
-from .constants import TC_CAPTURE_DISTANCE
+from pyspades import contained as loaders
+from pyspades.collision import vector_collision, collision_3d
+from pyspades.constants import TC_CAPTURE_DISTANCE
 
 ctf_data = loaders.CTFState()
 tc_data = loaders.TCState()
 
-class IntelBasedGamemode(object):
+
+class IntelBasedGamemode:
     name = "ctf"
+
     def __init__(self, protocol):
         self.protocol = protocol
         self.green_flag = protocol.green_team.flag
@@ -44,13 +46,13 @@ class IntelBasedGamemode(object):
         z = self.protocol.map.get_z(x, y, z)
         flag.set(x, y, z)
         flag.player = None
-        intel_drop =
-        intel_drop.player_id = self.player_id
+        intel_drop = loaders.IntelDrop()
+        intel_drop.player_id = player.player_id
         intel_drop.x = flag.x
         intel_drop.y = flag.y
         intel_drop.z = flag.z
         self.protocol.send_contained(intel_drop, save=True)
-        self.on_flag_drop()
+        player.on_flag_drop()
 
     def get_player_flag(self, player):
         for flag in (self.blue_flag, self.green_flag):
@@ -62,8 +64,10 @@ class IntelBasedGamemode(object):
     def get_target_flag(self, connection):
         return connection.team.other_flag
 
+
 class TerritoryBasedGamemode(object):
     name = "tc"
+
     def __init__(self, protocol):
         self.protocol = protocol
         self.state_loader = loaders.TCState()
