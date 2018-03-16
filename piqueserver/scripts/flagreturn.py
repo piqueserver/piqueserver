@@ -6,12 +6,11 @@ fixed by learn_more
 """
 
 from pyspades.collision import vector_collision
-
+from pyspades.constants import CTF_MODE
 
 def apply_script(protocol, connection, config):
-    game_mode = config.get('game_mode', 'ctf')
 
-    if game_mode != 'ctf':
+    if protocol.game_mode != CTF_MODE:
         return protocol, connection
 
     class ReturnConnection(connection):
