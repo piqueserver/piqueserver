@@ -5,6 +5,7 @@ Maintainer: ?
 """
 
 import re
+from piqueserver.config import config
 
 chat_pattern = re.compile(".*(airstrike).*(esc|escape|alt-f4|alt f4)",
                           re.IGNORECASE)
