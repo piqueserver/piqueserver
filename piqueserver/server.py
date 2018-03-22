@@ -166,10 +166,7 @@ web_client._HTTP11ClientFactory.noisy = False
 
 def ensure_dir_exists(filename: str) -> None:
     d = os.path.dirname(filename)
-    try:
-        os.makedirs(d)
-    except FileExistsError:
-        pass
+    os.makedirs(d, exist_ok=True)
 
 
 def random_choice_cycle(choices):
