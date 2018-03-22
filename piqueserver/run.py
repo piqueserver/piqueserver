@@ -40,8 +40,7 @@ def copytree(src, dst):
     Doesn't over-write if src/dst files don't differ.
     Creates a backup of dst file before over-writing.
     """
-    if not os.path.exists(dst):
-        os.makedirs(dst)
+    os.makedirs(dst, exist_ok=True)
     for item in os.listdir(src):
         s = os.path.join(src, item)
         d = os.path.join(dst, item)
@@ -84,8 +83,7 @@ def update_geoip(target_dir):
         print('Configuration directory does not exist')
         return 1
 
-    if not os.path.exists(working_directory):
-        os.makedirs(working_directory)
+    os.makedirs(working_directory, exist_ok=True)
 
     print('Downloading %s' % MAXMIND_DOWNLOAD)
 
