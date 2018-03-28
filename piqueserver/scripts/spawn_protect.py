@@ -6,11 +6,15 @@ Fixed error by kmsi(kmsiapps@gmail.com) : replaced player to hit_player
 """
 
 from pyspades.common import prettify_timespan
+from piqueserver.config import config
 from twisted.internet import reactor
+
+spawn_protect_config = config.section("spawn_protect")
+protection_time = spawn_protect_config.option("protection_time", 3.0)
 
 
 def apply_script(protocol, connection, config):
-    spawn_protect_time = config.get('spawn_protect_time', 3.0)
+    spawn_protect_time = protection_time.get()
 
     class SpawnProtectConnection(connection):
         spawn_timestamp = None

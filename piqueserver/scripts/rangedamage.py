@@ -4,25 +4,27 @@ Changes the damage values depending on distance.
 Maintainer: ?
 """
 
-from pyspades.constants import *
+from pyspades.constants import (SHOTGUN_WEAPON, SMG_WEAPON, RIFLE_WEAPON)
+from pyspades.collision import distance_3d_vector
 from math import sqrt
+from piqueserver.config import config
 
+range_damage_config = config.section("rangedamange")
+rifle_config = range_damage_config.section("rifle")
+smg_config = range_damage_config.section("smg")
+shotgun_config = range_damage_config.section("shotgun")
 
-def point_distance2(c1, c2):
-    if c1.world_object is not None and c2.world_object is not None:
-        p1 = c1.world_object.position
-        p2 = c2.world_object.position
-        return (p1.x - p2.x)**2 + (p1.y - p2.y)**2 + (p1.z - p2.z)**2
+rifle_pct_per_block = rifle_config.option("pct_per_block", 0)
+rifle_multiplier = rifle_config.option("multiplier", 1)
+
+shotgun_pct_per_block = shotgun_config.option("pct_per_block", 2.5)
+shotgun_multiplier = shotgun_config.option("multiplier", 2)
+
+smg_pct_per_block = smg_config.option("pct_per_block", 1.5)
+smg_multiplier = smg_config.option("multiplier", 1.2)
 
 
 def apply_script(protocol, connection, config):
-    class RangeDamageProtocol(protocol):
-        rifle_pct_per_block = config.get('rifle_pct_per_block', 0)
-        shotgun_pct_per_block = config.get('shotgun_pct_per_block', 2.5)
-        smg_pct_per_block = config.get('smg_pct_per_block', 1.5)
-        rifle_multiplier = config.get('rifle_multiplier', 1)
-        shotgun_multiplier = config.get('shotgun_multiplier', 2)
-        smg_multiplier = config.get('smg_multiplier', 1.2)
 
     class RangeDamageConnection(connection):
 
@@ -32,26 +34,26 @@ def apply_script(protocol, connection, config):
         def on_hit(self, hit_amount, hit_player, type, grenade):
             result = connection.on_hit(self, hit_amount, hit_player, type,
                                        grenade)
-                                       
-            if grenade is None: #Don't reduce damage when using grenade e.g. airstrike
-                if result == False:
-                    return False
+            if result == False:
+                return False
+            if grenade:  # Don't reduce damage when using grenade e.g. airstrike
+                return connection.on_hit(self, hit_amount, hit_player, type, grenade)
+            if self.world_object and hit_player.world_object:
                 if result is not None:
                     hit_amount = result
-                dist = sqrt(point_distance2(self, hit_player))
+                dist = distance_3d_vector(
+                    self.world_object.position, hit_player.world_object.position)
                 if self.weapon == RIFLE_WEAPON:
-                    pct = (100 * self.protocol.rifle_multiplier
-                        - self.protocol.rifle_pct_per_block * dist)
+                    pct = (100 * rifle_multiplier.get()
+                           - rifle_pct_per_block.get() * dist)
                 elif self.weapon == SMG_WEAPON:
-                    pct = (100 * self.protocol.smg_multiplier
-                        - self.protocol.smg_pct_per_block * dist)
+                    pct = (100 * smg_multiplier.get()
+                           - smg_pct_per_block.get() * dist)
                 elif self.weapon == SHOTGUN_WEAPON:
-                    pct = (100 * self.protocol.shotgun_multiplier
-                        - self.protocol.shotgun_pct_per_block * dist)
+                    pct = (100 * shotgun_multiplier.get()
+                           - shotgun_pct_per_block.get() * dist)
                 pct = max(0, pct) / 100.0
                 hit_amount = int(hit_amount * pct)
                 return hit_amount
-            else:
-                return connection.on_hit(self, hit_amount, hit_player, type, grenade)
 
-    return RangeDamageProtocol, RangeDamageConnection
+    return protocol, RangeDamageConnection

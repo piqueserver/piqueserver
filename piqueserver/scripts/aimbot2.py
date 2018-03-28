@@ -101,8 +101,9 @@ NEAR_MISS_COS = cos(NEAR_MISS_ANGLE * (pi / 180.0))
 HEADSHOT_SNAP_ANGLE_COS = cos(HEADSHOT_SNAP_ANGLE * (pi / 180.0))
 
 aimbot_pattern = re.compile(".*(aim|bot|ha(ck|x)|cheat).*", re.IGNORECASE)
-
-
+aimbot_config = config.section("aimbot")
+collect_data = aimbot_config.option("collect_data", False)
+config_dir = config.config_dir
 def point_distance2(c1, c2):
     if c1.world_object is not None and c2.world_object is not None:
         p1 = c1.world_object.position
@@ -181,7 +182,6 @@ def hackinfo_player(player):
 
 
 def apply_script(protocol, connection, config):
-    collect_data = config.get("aimbot_collect_data", False)
     class Aimbot2Protocol(protocol):
 
         def start_votekick(self, payload):
@@ -470,9 +470,9 @@ def apply_script(protocol, connection, config):
         # Data collection stuff
         def on_disconnect(self):
             self.bullet_loop_stop()
-            if collect_data:
+            if collect_data.get():
                 if self.name is not None:
-                    with open(os.path.join(config.config_dir,'aimbot2log.csv'), 'a+') as csvfile:
+                    with open(os.path.join(config_dir,'aimbot2log.csv'), 'a+') as csvfile:
                         csvfile.seek(0)
                         fieldnames = ['name', 'rifle_hits', 'rifle_count', 'smg_hits', 'smg_count', 'shotgun_hits', 'shotgun_count']
                         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)

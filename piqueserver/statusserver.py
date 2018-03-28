@@ -23,8 +23,14 @@ from jinja2 import Environment, PackageLoader
 from twisted.internet import reactor
 from twisted.web import server
 from twisted.web.resource import Resource
+from piqueserver.config import config
+
 
 OVERVIEW_UPDATE_INTERVAL = 1 * 60  # 1 minute
+status_server_config = config.section("status_server")
+port_option = status_server_config.option("port", 32886)
+logging_option = status_server_config.option("logging", False)
+scripts_option = config.option("scripts", [])
 
 
 class CommonResource(Resource):
@@ -68,7 +74,7 @@ class JSONPage(CommonResource):
                 "version": protocol.map_info.version,
                 "author": protocol.map_info.author
             },
-            "scripts": protocol.config.get("scripts", []),
+            "scripts": scripts_option.get(),
             "players": players,
             "maxPlayers": protocol.max_players,
             "scores": {
@@ -105,7 +111,7 @@ class StatusServerFactory(object):
     last_map_name = None
     overview = None
 
-    def __init__(self, protocol, config):
+    def __init__(self, protocol):
         self.env = Environment(loader=PackageLoader('piqueserver.web'))
         self.protocol = protocol
         root = Resource()
@@ -114,12 +120,12 @@ class StatusServerFactory(object):
         root.putChild(b'overview', MapOverview(self))
         site = server.Site(root)
 
-        logging = config.get('logging', False)
+        logging = logging_option.get()
         site.noisy = logging
         if not logging:
             site.log = lambda _: None
 
-        protocol.listenTCP(config.get('port', 32886), site)
+        protocol.listenTCP(port_option.get(), site)
 
     def get_overview(self):
         current_time = reactor.seconds()

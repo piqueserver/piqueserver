@@ -9,11 +9,11 @@
 # as well as kick spectators after so much time as passed.
 #
 # Add these lines to your config:
-# spectator_no_chat - This determines whether spectators can chat or not
+# spectator_control.no_chat - This determines whether spectators can chat or not
 #                     in your server. True disables chat. [True/False]
-# spectator_kick - This determines whether spectators will be kicked after
+# spectator_control.kick - This determines whether spectators will be kicked after
 #                  remaining for so long. True activates this. [True/False]
-# spectator_kick_time - How long a spectator may remain before he is kicked.
+# spectator_control.kick_time - How long a spectator may remain before he is kicked.
 #                       Time is in seconds. Note that setting time to 0
 #                       will cause the script to deactivate or malfunction.
 #
@@ -31,13 +31,14 @@
 
 from math import ceil, floor
 from twisted.internet import reactor
+from piqueserver.config import config
 
+spectator_ctrl_config = config.section("spectator_control")
+no_chat = spectator_ctrl_config.option("no_chat", False)
+kick = spectator_ctrl_config.option("kick", False)
+kick_time = spectator_ctrl_config.option("kick_time", 300) # in seconds
 
 def apply_script(protocol, connection, config):
-    spectator_no_chat = config.get('spectator_no_chat', False)
-    spectator_kick = config.get('spectator_kick', False)
-    spectator_kick_time = config.get('spectator_kick_time', 300)  # in seconds
-
     class SpectatorControlConnection(connection):
         spec_check = None
 
@@ -45,22 +46,22 @@ def apply_script(protocol, connection, config):
             # if no chat is set and they're a spectator and not an admin
             # also, check for the right "specpower" for owners who add additional
             # rights such as guards, mini-mods, etc.
-            if self.team.spectator and spectator_no_chat:
+            if self.team.spectator and no_chat.get():
                 if not self.admin and not self.rights.specpower:  # not an admin
                     self.send_chat('Spectators cannot speak on this server.')
                     return False  # deny
             return connection.on_chat(self, value, global_message)
 
         def on_team_join(self, team):
-            if team.spectator and spectator_kick and spectator_kick_time > 0:
+            if team.spectator and kick.get() and kick_time.get() > 0:
                 if self.rights is None or (not self.admin and not self.rights.specpower):  # not an admin
                     # this check is necessary as you can join spectator from
                     # being a spectator
                     if self.spec_check is None or not self.spec_check.active():
                         self.send_chat(
                             'Warning! Spectators are kicked after %s seconds!' %
-                            (spectator_kick_time))
-                        time = ceil((spectator_kick_time / 4) * 3)
+                            (kick_time.get()))
+                        time = ceil((kick_time.get() / 4) * 3)
                         self.spec_check = reactor.callLater(
                             time, self.check_spec_time, 1)
             elif not team.spectator:
@@ -85,7 +86,7 @@ def apply_script(protocol, connection, config):
                     'WARNING 2. Safety check kept an admin from being spectator-kicked.')
                 return
             if id == 1:
-                seconds = floor(spectator_kick_time / 4)
+                seconds = floor(kick_time.get() / 4)
                 self.send_chat(
                     'Warning! If you do not leave spectator, you will be kicked in %s seconds!' %
                     (seconds))
