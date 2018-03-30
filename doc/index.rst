@@ -15,6 +15,7 @@ Welcome to piqueserver's documentation!
    piqueserver
    pyspades
    release-guide
+   script-options
 
 
 
