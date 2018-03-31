@@ -1,4 +1,4 @@
-piqueserver |Build Status| |Build status| |Coverage Status|
+piccolo |Build Status| |Build status| |Coverage Status|
 ===========================================================
 
 An Ace of Spades 0.75 server based on
@@ -7,13 +7,13 @@ An Ace of Spades 0.75 server based on
 \:point_right: Chat with us!
 ----------------------------
 
--  Gitter: |Join the chat at https://gitter.im/piqueserver/piqueserver|
--  Matrix: ``#piqueserver:matrix.org`` (`Riot Webchat
-   link <https://riot.im/app/#/room/#piqueserver:matrix.org>`__)
+-  Gitter: |Join the chat at https://gitter.im/piccolo/piccolo|
+-  Matrix: ``#piccolo:matrix.org`` (`Riot Webchat
+   link <https://riot.im/app/#/room/#piccolo:matrix.org>`__)
 -  Discord: Join with `this invite link <https://discord.gg/w6Te7xC>`__
--  Slack: Join with `this invite link <https://join.slack.com/t/piqueserver/shared_invite/enQtMjg5MDI3MTkwNTgxLTNhMDkyNDRkNzhiNmQyYjRkOTdjNGNkYzNhNTQ4NzZkY2JhZjQxYzIyMTQ0Y2JlYTI2ZGFjMTFmNjAwZTM2OGU>`__
--  IRC: ``#piqueserver`` on freenode.net
-   (`web <http://webchat.freenode.net/?channels=%23piqueserver>`__)
+-  Slack: Join with `this invite link <https://join.slack.com/t/piccolo/shared_invite/enQtMjg5MDI3MTkwNTgxLTNhMDkyNDRkNzhiNmQyYjRkOTdjNGNkYzNhNTQ4NzZkY2JhZjQxYzIyMTQ0Y2JlYTI2ZGFjMTFmNjAwZTM2OGU>`__
+-  IRC: ``#piccolo`` on freenode.net
+   (`web <http://webchat.freenode.net/?channels=%23piccolo>`__)
 
 All of these are `bridged <https://matrix.org/docs/guides/faq.html#what-is-matrix>`__ together!
 
@@ -47,7 +47,7 @@ All of these are `bridged <https://matrix.org/docs/guides/faq.html#what-is-matri
 Requirements
 ~~~~~~~~~~~~
 
-Piqueserver requires python3.4+ (3.5+ on Windows).
+Piccolo requires python3.4+ (3.5+ on Windows).
 
 We currently provide builds for:
  - Linux 32 and 64bit, Python 3.4, 3.5, 3.6
@@ -60,37 +60,37 @@ pip (stable version)
 
 .. code:: bash
 
-    pip3 install piqueserver
+    pip3 install piccolo
 
 to install with the optional ssh server
 
 .. code:: bash
 
-    pip3 install piqueserver[ssh]
+    pip3 install piccolo[ssh]
 
 git (bleeding edge)
 ~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
 
-    git clone https://github.com/piqueserver/piqueserver
-    cd piqueserver
+    git clone https://github.com/piccolo/piccolo
+    cd piccolo
     python3 -m venv venv
     source venv/bin/activate
     pip install -r requirements.txt
     python setup.py install
-    # now `piqueserver` will be available on the $PATH when venv active
+    # now `piccolo` will be available on the $PATH when venv active
 
 Archlinux
 ~~~~~~~~~
 
-An `AUR package <https://aur.archlinux.org/packages/piqueserver-git/>`__
+An `AUR package <https://aur.archlinux.org/packages/piccolo-git/>`__
 (git master) is available. Install manually or with your favourite AUR
 helper:
 
 .. code:: bash
 
-    pacaur -y piqueserver-git
+    pacaur -y piccolo-git
 
 \:rocket: Running
 -----------------
@@ -99,24 +99,24 @@ Then copy the default configuration as a base to work off
 
 .. code:: bash
 
-    piqueserver --copy-config
+    piccolo --copy-config
 
 A-a-and lift off!
 
 .. code:: bash
 
-    piqueserver
+    piccolo
 
 Custom config location
 ~~~~~~~~~~~~~~~~~~~~~~
 
-If you wish to use a different location to ``~/.config/piqueserver/``
+If you wish to use a different location to ``~/.config/piccolo/``
 for config files, specify a directory with the ``-d`` flag:
 
 .. code:: bash
 
-    piqueserver --copy-config -d custom_dir
-    piqueserver -d custom_dir
+    piccolo --copy-config -d custom_dir
+    piccolo -d custom_dir
 
 \:speech_balloon: FAQ
 ---------------------
@@ -132,7 +132,7 @@ What if PySnip development returns?
 Then they would merge our changes and development would be continued
 there, I guess. The important thing is to keep AoS servers alive.
 
-Why should I use piqueserver instead of PySnip/PySpades?
+Why should I use piccolo instead of PySnip/PySpades?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 -  Multi config installation
@@ -152,7 +152,7 @@ Is that everything?
 ~~~~~~~~~~~~~~~~~~~
 
 Please see also the
-`Wiki <https://github.com/piqueserver/piqueserver/wiki>`__ for more
+`Wiki <https://github.com/piccolo/piccolo/wiki>`__ for more
 information.
 
 \:blush: Contribute
@@ -175,14 +175,14 @@ Use ``python3`` and ``pip`` to setup the development environment:
 
 --------------
 
-Brought to you with :heart: by the `piqueserver
-team <https://github.com/orgs/piqueserver/people>`__.
+Brought to you with :heart: by the `piccolo
+team <https://github.com/orgs/piccolo/people>`__.
 
-.. |Build Status| image:: https://travis-ci.org/piqueserver/piqueserver.svg?branch=master
-   :target: https://travis-ci.org/piqueserver/piqueserver
+.. |Build Status| image:: https://travis-ci.org/piccolo/piccolo.svg?branch=master
+   :target: https://travis-ci.org/piccolo/piccolo
 .. |Build status| image:: https://ci.appveyor.com/api/projects/status/3mayprg9le4lejmm/branch/master?svg=true
-   :target: https://ci.appveyor.com/project/piqueserver/piqueserver/branch/master
-.. |Coverage Status| image:: https://coveralls.io/repos/github/piqueserver/piqueserver/badge.svg?branch=master
-   :target: https://coveralls.io/github/piqueserver/piqueserver?branch=master
-.. |Join the chat at https://gitter.im/piqueserver/piqueserver| image:: https://badges.gitter.im/piqueserver/piqueserver.svg
-   :target: https://gitter.im/piqueserver/piqueserver?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+   :target: https://ci.appveyor.com/project/piccolo/piccolo/branch/master
+.. |Coverage Status| image:: https://coveralls.io/repos/github/piccolo/piccolo/badge.svg?branch=master
+   :target: https://coveralls.io/github/piccolo/piccolo?branch=master
+.. |Join the chat at https://gitter.im/piccolo/piccolo| image:: https://badges.gitter.im/piccolo/piccolo.svg
+   :target: https://gitter.im/piccolo/piccolo?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge

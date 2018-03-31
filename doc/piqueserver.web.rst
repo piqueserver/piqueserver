@@ -1,10 +1,10 @@
-piqueserver\.web package
+piccolo\.web package
 ========================
 
 Module contents
 ---------------
 
-.. automodule:: piqueserver.web
+.. automodule:: piccolo.web
     :members:
     :undoc-members:
     :show-inheritance:

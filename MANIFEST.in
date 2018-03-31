@@ -1,10 +1,10 @@
 recursive-include enet/ *
 recursive-include examples/ * 
-recursive-include piqueserver/ *
-# recursive-include piqueserver/config/ *
+recursive-include piccolo/ *
+# recursive-include piccolo/config/ *
 recursive-include py2exe/ * 
 recursive-include pyspades/ * 
-# recursive-include piqueserver.egg-info/ * 
+# recursive-include piccolo.egg-info/ * 
 
 global-exclude *.pyc
 global-exclude *.pyo
@@ -27,9 +27,9 @@ global-exclude *.la
 global-exclude *.a
 
 # config/userdata
-exclude piqueserver/config/maps/*.txtc
-recursive-exclude piqueserver/config/logs/ *
-recursive-exclude piqueserver/config/data/ *
+exclude piccolo/config/maps/*.txtc
+recursive-exclude piccolo/config/logs/ *
+recursive-exclude piccolo/config/data/ *
 
 # py2exe
 recursive-exclude py2exe/dist/

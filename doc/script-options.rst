@@ -1,7 +1,7 @@
 Script Options
 ==============
 
-piqueserver\.scripts\.afk
+piccolo\.scripts\.afk
 --------------------------------
 Auto-kicks players after they were afk for set time_limit.
 
@@ -10,7 +10,7 @@ Auto-kicks players after they were afk for set time_limit.
    [afk]
    time_limit = 15 # in minutes
 
-piqueserver\.scripts\.aimbot2
+piccolo\.scripts\.aimbot2
 ------------------------------------
 Detects and react to possible aimbot users.
 
@@ -19,7 +19,7 @@ Detects and react to possible aimbot users.
    [aimbot]
    collect_data = true # saves hits and shots of each weapon to a csv file
 
-piqueserver\.scripts\.antijerk
+piccolo\.scripts\.antijerk
 -------------------------------------
 Kicks jerks for 'PRESS ALT-F4 FOR AIRSTRIKES' and so on.
 
@@ -28,7 +28,7 @@ Kicks jerks for 'PRESS ALT-F4 FOR AIRSTRIKES' and so on.
    [antijerk]
    ban_duration = 15 # in minutes
 
-piqueserver\.scripts\.blockinfo
+piccolo\.scripts\.blockinfo
 -----------------------------------
 A tool for identifying griefers. Provides /griefcheck command.
 
@@ -38,7 +38,7 @@ A tool for identifying griefers. Provides /griefcheck command.
    griefcheck_on_votekick = true
    irc_only = false
 
-piqueserver\.scripts\.medkit
+piccolo\.scripts\.medkit
 --------------------------------------
 Gives a specified amount of medkits on spawn.
 
@@ -48,7 +48,7 @@ Gives a specified amount of medkits on spawn.
    medkits = 1 # no. of medkits
    medkit_heal_amount = 40 # how much hp. it gives
 
-piqueserver\.scripts\.rangedamage
+piccolo\.scripts\.rangedamage
 --------------------------------------
 Changes the damage values depending on distance.
 
@@ -66,7 +66,7 @@ Changes the damage values depending on distance.
    pct_per_block = 0
    multiplier = 1
 
-piqueserver\.scripts\.spawn_protect
+piccolo\.scripts\.spawn_protect
 --------------------------------------
 Protects spawned players for a specified amount of seconds.
 
@@ -75,7 +75,7 @@ Protects spawned players for a specified amount of seconds.
    [spawn_protect]
    protection_time = 3 # in seconds
 
-piqueserver\.scripts\.spectatorcontrol
+piccolo\.scripts\.spectatorcontrol
 --------------------------------------
 Lets you set restrictions on spectators.
 

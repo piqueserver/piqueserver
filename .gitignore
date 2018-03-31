@@ -37,10 +37,10 @@ wheelhouse/
 .pytest_cache/*
 
 # config/userdata
-piqueserver/config/maps/*.txtc
-piqueserver/config/maps/*.saved.vxl
-piqueserver/config/logs/*
-piqueserver/config/data/*
+piccolo/config/maps/*.txtc
+piccolo/config/maps/*.saved.vxl
+piccolo/config/logs/*
+piccolo/config/data/*
 
 # py2exe
 py2exe/dist/

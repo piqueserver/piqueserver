@@ -13,7 +13,7 @@ help:
 	@echo "make fixme:   find FIXME, TODO, NOTE, and XXX in the code"
 
 pylint:
-	pylint piqueserver
+	pylint piccolo
 
 fixme:
-	pylint piqueserver pyspades --disable=all --enable=fixme
+	pylint piccolo pyspades --disable=all --enable=fixme

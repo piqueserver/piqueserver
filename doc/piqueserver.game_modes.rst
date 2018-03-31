@@ -1,77 +1,77 @@
-piqueserver\.game\_modes package
+piccolo\.game\_modes package
 ================================
 
 Submodules
 ----------
 
-piqueserver\.game\_modes\.arena module
+piccolo\.game\_modes\.arena module
 --------------------------------------
 
-.. automodule:: piqueserver.game_modes.arena
+.. automodule:: piccolo.game_modes.arena
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.game\_modes\.babel module
+piccolo\.game\_modes\.babel module
 --------------------------------------
 
-.. automodule:: piqueserver.game_modes.babel
+.. automodule:: piccolo.game_modes.babel
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.game\_modes\.babel\_script module
+piccolo\.game\_modes\.babel\_script module
 ----------------------------------------------
 
-.. automodule:: piqueserver.game_modes.babel_script
+.. automodule:: piccolo.game_modes.babel_script
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.game\_modes\.freeforall module
+piccolo\.game\_modes\.freeforall module
 -------------------------------------------
 
-.. automodule:: piqueserver.game_modes.freeforall
+.. automodule:: piccolo.game_modes.freeforall
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.game\_modes\.infiltration module
+piccolo\.game\_modes\.infiltration module
 ---------------------------------------------
 
-.. automodule:: piqueserver.game_modes.infiltration
+.. automodule:: piccolo.game_modes.infiltration
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.game\_modes\.onectf module
+piccolo\.game\_modes\.onectf module
 ---------------------------------------
 
-.. automodule:: piqueserver.game_modes.onectf
+.. automodule:: piccolo.game_modes.onectf
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.game\_modes\.push module
+piccolo\.game\_modes\.push module
 -------------------------------------
 
-.. automodule:: piqueserver.game_modes.push
+.. automodule:: piccolo.game_modes.push
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.game\_modes\.tdm module
+piccolo\.game\_modes\.tdm module
 ------------------------------------
 
-.. automodule:: piqueserver.game_modes.tdm
+.. automodule:: piccolo.game_modes.tdm
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.game\_modes\.tow module
+piccolo\.game\_modes\.tow module
 ------------------------------------
 
-.. automodule:: piqueserver.game_modes.tow
+.. automodule:: piccolo.game_modes.tow
     :members:
     :undoc-members:
     :show-inheritance:
@@ -80,7 +80,7 @@ piqueserver\.game\_modes\.tow module
 Module contents
 ---------------
 
-.. automodule:: piqueserver.game_modes
+.. automodule:: piccolo.game_modes
     :members:
     :undoc-members:
     :show-inheritance:

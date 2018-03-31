@@ -1,10 +1,10 @@
-piqueserver package
+piccolo package
 ===================
 
 Module contents
 ---------------
 
-.. automodule:: piqueserver
+.. automodule:: piccolo
     :members:
     :undoc-members:
     :show-inheritance:
@@ -14,137 +14,137 @@ Subpackages
 
 .. toctree::
 
-    piqueserver.core_commands
-    piqueserver.game_modes
-    piqueserver.web
+    piccolo.core_commands
+    piccolo.game_modes
+    piccolo.web
 
 Submodules
 ----------
 
-piqueserver\.banpublish module
+piccolo\.banpublish module
 ------------------------------
 
-.. automodule:: piqueserver.banpublish
+.. automodule:: piccolo.banpublish
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.bansubscribe module
+piccolo\.bansubscribe module
 --------------------------------
 
-.. automodule:: piqueserver.bansubscribe
+.. automodule:: piccolo.bansubscribe
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.commands module
+piccolo\.commands module
 ----------------------------
 
-.. automodule:: piqueserver.commands
+.. automodule:: piccolo.commands
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.config module
+piccolo\.config module
 --------------------------
 
-.. automodule:: piqueserver.config
+.. automodule:: piccolo.config
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.console module
+piccolo\.console module
 ---------------------------
 
-.. automodule:: piqueserver.console
+.. automodule:: piccolo.console
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.irc module
+piccolo\.irc module
 -----------------------
 
-.. automodule:: piqueserver.irc
+.. automodule:: piccolo.irc
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.map module
+piccolo\.map module
 -----------------------
 
-.. automodule:: piqueserver.map
+.. automodule:: piccolo.map
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.networkdict module
+piccolo\.networkdict module
 -------------------------------
 
-.. automodule:: piqueserver.networkdict
+.. automodule:: piccolo.networkdict
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.player module
+piccolo\.player module
 --------------------------
 
-.. automodule:: piqueserver.player
+.. automodule:: piccolo.player
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.run module
+piccolo\.run module
 -----------------------
 
-.. automodule:: piqueserver.run
+.. automodule:: piccolo.run
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scheduler module
+piccolo\.scheduler module
 -----------------------------
 
-.. automodule:: piqueserver.scheduler
+.. automodule:: piccolo.scheduler
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.server module
+piccolo\.server module
 --------------------------
 
-.. automodule:: piqueserver.server
+.. automodule:: piccolo.server
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.ssh module
+piccolo\.ssh module
 -----------------------
 
-.. automodule:: piqueserver.ssh
+.. automodule:: piccolo.ssh
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.statistics module
+piccolo\.statistics module
 ------------------------------
 
-.. automodule:: piqueserver.statistics
+.. automodule:: piccolo.statistics
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.statusserver module
+piccolo\.statusserver module
 --------------------------------
 
-.. automodule:: piqueserver.statusserver
+.. automodule:: piccolo.statusserver
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.version module
+piccolo\.version module
 ---------------------------
 
-.. automodule:: piqueserver.version
+.. automodule:: piccolo.version
     :members:
     :undoc-members:
     :show-inheritance:

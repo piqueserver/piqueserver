@@ -4,8 +4,8 @@ Architecture
 Overview
 --------
 
-The piqueserver codebase is made up out of two main modules: `pyspades` and
-`piqueserver`. The `piqueserver` module used to be named ``feature_server``.
+The piccolo codebase is made up out of two main modules: `pyspades` and
+`piccolo`. The `piccolo` module used to be named ``feature_server``.
 The original developers wanted to make the pyspades a generic AoS protocol and
 server implementation which the ``feature_server`` module then subclassed and
 specialized.
@@ -17,12 +17,12 @@ certains certain functionality. In general, this is the rule of thumb:
  * `pyspades`: Anything that involves sending and recieving of packets and
    acting on those, keeping game state.
 
- * `piqueserver`: Anything player-facing, for example commands,
+ * `piccolo`: Anything player-facing, for example commands,
    configuration, etc.
 
 Note however the numerous exceptions to this. For example, parts of the command
 logic are in `pyspades`, while a lot of server validation logic is in
-`piqueserver`
+`piccolo`
 
 Classes
 -------

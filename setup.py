@@ -8,18 +8,18 @@ from distutils.command.build_ext import build_ext as _build_ext
 from setuptools import setup, Extension
 
 
-PKG_NAME = "piqueserver"
-PKG_URL = "https://github.com/piqueserver/piqueserver"
+PKG_NAME = "piccolo"
+PKG_URL = "https://github.com/piccolo/piccolo"
 
 extra_args = sys.argv[2:]
 
 with open('README.rst') as f:
     long_description = f.read()
 
-# load version info from the piqueserver module manually
+# load version info from the piccolo module manually
 here = os.path.abspath(os.path.dirname(__file__))
 version = {}
-with open(os.path.join(here, 'piqueserver/version.py')) as f:
+with open(os.path.join(here, 'piccolo/version.py')) as f:
     exec(f.read(), version)
 
 ext_modules = []
@@ -94,7 +94,7 @@ setup(
     version=version['__version__'],
     description='Open-Source server implementation for Ace of Spades ',
     author=('Originally MatPow2 and PySnip contributors,'
-            'now, StackOverflow and piqueserver authors'),
+            'now, StackOverflow and piccolo authors'),
     author_email='nate.shoffner@gmail.com',
     maintainer='noway421',
     maintainer_email='noway@2ch.hk',
@@ -102,7 +102,7 @@ setup(
     long_description=long_description,
     url=PKG_URL,
     keywords=['ace of spades', 'aos', 'server',
-              'pyspades', 'pysnip', 'piqueserver'],
+              'pyspades', 'pysnip', 'piccolo'],
     python_requires=">=3.4",
     classifiers=[
         'Intended Audience :: System Administrators',
@@ -145,11 +145,11 @@ setup(
         ],
     },
     package_dir={
-        PKG_NAME: 'piqueserver',
-        '%s.core_commands' % PKG_NAME: 'piqueserver/core_commands',
-        '%s.web' % PKG_NAME: 'piqueserver/web',
-        '%s.scripts' % PKG_NAME: 'piqueserver/scripts',
-        '%s.game_modes' % PKG_NAME: 'piqueserver/game_modes',
+        PKG_NAME: 'piccolo',
+        '%s.core_commands' % PKG_NAME: 'piccolo/core_commands',
+        '%s.web' % PKG_NAME: 'piccolo/web',
+        '%s.scripts' % PKG_NAME: 'piccolo/scripts',
+        '%s.game_modes' % PKG_NAME: 'piccolo/game_modes',
         'pyspades': 'pyspades',
     },  # some kind of find_packages?
     package_data={"%s.web" % PKG_NAME: ["templates/status.html"]},

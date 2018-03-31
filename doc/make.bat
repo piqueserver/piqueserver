@@ -9,7 +9,7 @@ if "%SPHINXBUILD%" == "" (
 )
 set SOURCEDIR=.
 set BUILDDIR=_build
-set SPHINXPROJ=piqueserver
+set SPHINXPROJ=piccolo
 
 if "%1" == "" goto help
 
