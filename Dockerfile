@@ -28,7 +28,7 @@ RUN apk add --no-cache --virtual .build-deps-cython gcc musl-dev \
 # but a change in .pyx or .c file will.
 # TODO: while this behaviour suits production envs perfectly, make a dev env option
 COPY pyspades/ /usr/src/app/pyspades/
-COPY piqueserver/ /usr/src/app/piqueserver/
+COPY piccolo/ /usr/src/app/piccolo/
 COPY setup.py COPYING.txt CREDITS.txt LICENSE README.rst /usr/src/app/
 
 RUN apk add --no-cache --virtual .build-deps-server gcc musl-dev g++ \
@@ -36,6 +36,6 @@ RUN apk add --no-cache --virtual .build-deps-server gcc musl-dev g++ \
     && apk del .build-deps-server 
 
 # Copy over the rest and default to launching the server
-CMD piqueserver -d /config
+CMD piccolo -d /config
 
 EXPOSE 32887/udp 32887 32886 32885

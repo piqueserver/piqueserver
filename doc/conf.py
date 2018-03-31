@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# piqueserver documentation build configuration file, created by
+# piccolo documentation build configuration file, created by
 # sphinx-quickstart on Sat Dec 30 14:31:44 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -60,9 +60,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'piqueserver'
-copyright = '2017, piqueserver dev team'
-author = 'piqueserver dev team'
+project = 'piccolo'
+copyright = '2017, piccolo dev team'
+author = 'piccolo dev team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -130,7 +130,7 @@ html_sidebars = {
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'piqueserverdoc'
+htmlhelp_basename = 'piccolodoc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -157,8 +157,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'piqueserver.tex', 'piqueserver Documentation',
-     'piqueserver dev team', 'manual'),
+    (master_doc, 'piccolo.tex', 'piccolo Documentation',
+     'piccolo dev team', 'manual'),
 ]
 
 
@@ -167,7 +167,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'piqueserver', 'piqueserver Documentation',
+    (master_doc, 'piccolo', 'piccolo Documentation',
      [author], 1)
 ]
 
@@ -178,8 +178,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'piqueserver', 'piqueserver Documentation',
-     author, 'piqueserver', 'One line description of project.',
+    (master_doc, 'piccolo', 'piccolo Documentation',
+     author, 'piccolo', 'One line description of project.',
      'Miscellaneous'),
 ]
 

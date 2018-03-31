@@ -27,7 +27,7 @@ Ensure we’re ready for release
     tox
 
     # ensure the server is runnable
-    piqueserver -d piqueserver/config
+    piccolo -d piccolo/config
 
 
 Notes before continuing
@@ -63,7 +63,7 @@ with.
 
 IMPORTANT:
 
--  edit ``piqueserver/version.py`` to the new version numbers
+-  edit ``piccolo/version.py`` to the new version numbers
 -  edit ``doc/conf.py`` to the new release and version numbers
 
 -  build and upload the source distribution:

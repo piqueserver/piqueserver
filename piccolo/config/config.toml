@@ -1,0 +1,362 @@
+# TODO: store config here about location of maps/scripts/game_modes/etc as well
+
+# server name - displayed on master server
+name = "piccolo instance"
+
+# messages sent when user joins server
+motd = [
+ "Welcome to %(server_name)s",
+ "Map: %(map_name)s by %(map_author)s",
+ "Game mode: %(game_mode)s",
+ "Server powered by piccolo and buildandshoot.com"
+]
+
+# info displaying when user types the /help command
+# if not defined, /help will display a list of available commands
+# String interpolation is allowed. Possible values are:
+# 'server_name', 'map_name', 'map_author', 'map_description', 'game_mode'
+help = [
+  "Server name: %(server_name)s", "Map: %(map_name)s by %(map_author)s",
+  "Game mode: %(game_mode)s",
+  "/streak    Shows how many kills in a row you got without dying",
+  "/intel     Tells you who's got the enemy intel",
+  "/votekick  Start a vote to temporarily ban a disruptive player",
+  "/time      Remaining time until forced map reset"
+]
+
+# list of messages to send when the user sends the /rules command
+rules = [
+  "Cheating isn't welcome. Griefing is frowned upon. Have fun!"
+]
+
+# random lines from this list are shown at a specified frequency in-game
+tips = [
+  "You are playing %(game_mode)s on %(server_name)s",
+  "Type /help for info & commands"
+]
+
+# how often in minutes the tips should display
+tips_frequency = 5
+
+# SERVER
+# set this if the server should register on the master server list
+master = false
+
+# limit max number of players who can join.
+# must be 0 < max_players <= 32
+max_players = 32
+
+# messages from the server in-game will be prefixed with this string
+server_prefix = ""
+
+# limit number of players who can connect from the same ip address
+# 0 disables the limit (default: 0)
+#max_connections_per_ip = 0
+max_connections_per_ip = 3
+
+# port the server will listen on (default: 32887)
+port = 32887
+
+# interface the server will listen on (default: all interfaces)
+# TODO: document enet specific strangeness
+network_interface = ""
+
+# url that is used to request the server's public ip address
+# it should be a url that returns only the requester's public ip in the response body
+# Set to an empty string if you wish to disable ip requesting
+# WARNING: do not change unless you are sure you know what you are doing
+# other tools if the default is down:
+# https://icanhazip.com/
+# https://api.ipify.org
+#ip_getter = "https://services.buildandshoot.com/getip"
+
+# note: scripts are loaded in order entered here. Some scripts may depend on
+# other scripts being loaded before them.
+scripts = [
+ "piccolo.scripts.rollback",
+ "piccolo.scripts.protect",
+ "piccolo.scripts.map_extensions",
+ "piccolo.scripts.disco",
+ "piccolo.scripts.votekick",
+ "piccolo.scripts.trusted",
+ "piccolo.scripts.ratio",
+ "piccolo.scripts.passreload",
+ "piccolo.scripts.blockinfo",
+ "piccolo.scripts.squad",
+ "piccolo.scripts.afk"
+]
+
+# number of /login attempts allowed before players are auto-kicked (default: 1)
+login_retries = 3
+
+# MAP
+# maps listed in the rotation
+# these names are the name of the map vxl/txt files without the file extensions
+# eg. if you have hallway.txt and hallway.vxl, you can add "hallway" to the rotation
+# Note: you can still load a map in-game that isn't on this rotation list with commands
+rotation = [
+  "classicgen",
+  "random"
+]
+
+# whether next map for a new game will be chosen at random
+# if this is false, maps will cycle in order listed in the rotation list
+random_rotation = false
+
+# GAME
+# set the game mode. "ctf" and "tc" are built in game modes; others are custom
+# game modes specified by python module or python script in the config game_modes
+# directory (without the '.py' extension).
+# Examples: "piccolo.game_modes.push", "mygame" (where you have config/game_modes/mygame.py)
+game_mode = "ctf"
+
+# TODO: document
+default_time_limit = 120
+# TODO: document
+advance_on_win = true
+
+# time in seconds before player respawns
+# TODO: document how spawn time is calculated (it's not always the time given)
+# (default: 8)
+respawn_time = 16
+
+# if respawns should line up with each other (multiple players will respawn at
+# the same time instead of exactly the time from when they died
+respawn_waves = true
+
+# whether friendly fire is allowed by default
+friendly_fire = false
+
+# allow friendly fire if player destroys blocks (helpful if you want to kill
+# griefers
+friendly_fire_on_grief = true
+
+# number of seconds a player is vulnerable to friendly fire if
+# friendly_fire_on_grief enabled
+grief_friendly_fire_time = 5
+
+# If friendly fire should be enabled for the spade too. This is disabled by default,
+# because it frequently causes accidental teamkills
+spade_teamkills_on_grief = false
+
+# If 0, any permutation of teams is allowed. If 1 or greater, team balance is enforced with the algorithm:
+# `abs(team1_players - team2_players) <= balanced_teams`
+# The value is thus the maximum player number difference allowed between teams
+balanced_teams = 2
+
+# time in minutes players must wait before switching teams again
+# 0 disables cooldown time
+teamswitch_interval = 0
+# whether players are allowed to switch teams at all
+teamswitch_allowed = true
+
+# TODO
+speedhack_detect = false
+
+# The amount of damage dealt by a melee hit
+melee_damage = 80
+
+# controls whether players receive damage by falling from height
+fall_damage = true
+
+# disable users ability to affect the map's initial blocks
+user_blocks_only = false
+
+# TODO
+set_god_build = false
+
+# time in seconds remaining when the time remaining should be announced
+time_announcements = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30, 60, 120, 180, 240, 300, 600, 900, 1200, 1800, 2400, 3000]
+
+# number of intel captures to win the game (default: 10)
+cap_limit = 10
+
+
+[team1]
+# information about the team1
+# name of the team to be displayed in-game
+name = "Blue"
+# color of the players
+# TODO: make this support hex and named colors instead of rbg
+color = [ 0, 0, 255]
+
+[team2]
+# information about team2 - same settings as for team1
+name = "Green"
+color = [ 0, 255, 0]
+
+[passwords]
+# server management passwords
+# players can login using these to execute privileged commands (kicking,
+# changing maps, etc.)
+# authenticate with: /login <password>
+# supports a list of passwords so you can give different passwords to different
+# people for easy password management.
+# logging in as admin or trusted also disables being votekicked (if that script is enabled)
+# For security reasons, logins are disabled by default.
+#
+#admin = ["pass1", "pass2"]
+#moderator = ["pass"]
+#guard = ["pass"]
+#trusted = ["pass"]
+
+
+[bans]
+# default duration in minutes a banned player will be banned for
+default_duration = 1440
+
+# location the bans are saved and loaded from
+#file = "bans.txt"
+
+# Ban publish allows you to synchronize bans between servers. When enabled,
+# the server listens on the given port and respnds to any requests with a list
+# of bans
+publish = false
+publish_port = 32885
+
+# Bansubscribe allows you to inherit bans from another server with banpublish enabled.
+subscribe = false
+# urls = [ [ "http://www.blacklist.spadille.net/subscribe.json", []]]
+
+
+[rights]
+# Rights allow you to specify the roles available and what permissions they have
+moderator = [
+ "advance", "cancel", "dban", "fog",
+ "from", "hackinfo", "hban",
+ "invisible", "ip", "kick", "kickafk",
+ "kill", "map", "master", "move", "moves",
+ "mute", "resetgame", "switch", "teleport",
+ "teleport_other", "tpsilent", "togglebuild", "togglekill",
+ "togglevotekick", "trust", "undoban", "unmute",
+ "unstick", "where", "whowas"
+]
+guard = [
+ "cancel", "fog", "from",
+ "hackinfo", "hban", "ip", "kick",
+ "kickafk", "kill", "move", "moves", "mute",
+ "switch", "teleport", "teleport_other", "togglebuild",
+ "togglekill", "togglevotekick", "trust", "unmute",
+ "unstick", "where", "whowas"
+]
+
+[logging]
+
+# enable the debug logging
+debug_log = false
+
+# the logfile to log to if logging enabled
+# relative paths are resolved relative to the config directory; parent
+# directories are created as necessary
+logfile = "./logs/log.txt"
+
+# TODO: document
+rotate_daily = true
+
+profile = false
+
+
+# the web server which provides a json api and webpage to view a summary of the
+# game (including map, players, and server information)
+[status_server]
+enabled = true
+port = 32886
+logging = true
+
+
+# settings for the irc chatbot that can report server events and respond to commands
+# disabled by default
+[irc]
+enabled = false
+nickname = "piccolo"
+username = "piccolo"
+realname = "piccolo"
+server = "irc.quakenet.org"
+port = 6667
+channel = "#MyServerChannel"
+password = ""
+
+# prefixes irc users must use for bot to process as command or to send to game chat
+commandprefix = "!"
+chatprefix = "."
+
+
+
+[ssh]
+# enable the ssh manhole server
+# gives ssh access to a python repl connected to the running server
+# Do not enable unless you are sure you want to use this!
+#enabled = false
+#port = 32887
+
+[ssh.users]
+# user = password
+# pairs for credentials allowed to login to the ssh server
+# WARNING: keep these credentials secure since this gives console access to the server
+# on which piccolo is running!
+#user1 = "ssh_pass_change_this"
+
+
+###############################################################################
+# Script specific config
+#
+# Each section corresponds to the script that uses said section.  These
+# settings are only used by enabled scripts, and will be ignored by the core
+# server.
+###############################################################################
+
+
+# piccolo.scripts.squad
+[squad]
+respawn_time = 32
+size = 4
+auto_squad = false
+
+
+# piccolo.scripts.savemap
+# allows automatically saving a snapshot of the map on server close
+[savemap]
+
+# automatically load the saved map on map load
+load_saved_map = false
+
+
+# piccolo.scripts.rollback
+[rollback]
+rollback_on_game_end = false
+
+
+# piccolo.scripts.afk
+[afk]
+# time in minutes a player must be inactive for to be auto-kicked for afk
+time_limit = 30
+
+
+# piccolo.scripts.votekick
+[votekick]
+
+# percentage of total number of players in the server required to vote to
+# successfully votekick a player
+percentage = 35
+
+# duration in minutes that votekicked player will be banned for
+ban_duration = 30
+
+public_votes = true
+
+
+# TODO: document
+# piccolo.scripts.votemap
+[votemap]
+
+# publically display which map players voted for
+public_votes = true
+
+# extend current map (meaning?)
+extension_time = 15
+
+# players can initiate voting for a new map with /votemap
+player_driven = false
+autoschedule = false
+time = 120
+percentage = 80

@@ -1,9 +1,9 @@
-.. piqueserver documentation master file, created by
+.. piccolo documentation master file, created by
    sphinx-quickstart on Sat Dec 30 14:31:44 2017.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to piqueserver's documentation!
+Welcome to piccolo's documentation!
 =======================================
 
 .. toctree::
@@ -12,7 +12,7 @@ Welcome to piqueserver's documentation!
 
    architecture
    development
-   piqueserver
+   piccolo
    pyspades
    release-guide
    script-options

@@ -4,7 +4,7 @@ Development
 Testing
 --------
 
-Testing in piqueserver is performed with ``pytest`` with ``tox`` support.
+Testing in piccolo is performed with ``pytest`` with ``tox`` support.
 
 Tox manages its own virtual environments, so if you have it installed on your
 system, testing is as simple as running ``tox``, which will run all tests against
@@ -28,7 +28,7 @@ If you already are in your virtual env and wish to test something quickly,
    pytest
 
    # single file
-   pytest tests/piqueserver/test_server.py
+   pytest tests/piccolo/test_server.py
 
 
 Code Coverage
@@ -39,7 +39,7 @@ Code coverage is generated with `coverage.py <https://coverage.readthedocs.io/en
 .. code:: bash
 
    # generate coverage data
-   pytest --cov=piqueserver --cov=pyspades
+   pytest --cov=piccolo --cov=pyspades
 
    # build the report file
    coverage html

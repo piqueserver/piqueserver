@@ -1,9 +1,9 @@
 [run]
 branch = True
 source =
-  piqueserver
+  piccolo
   pyspades
 omit =
-  piqueserver/scripts/*
-  piqueserver/game_modes/*
+  piccolo/scripts/*
+  piccolo/game_modes/*
 plugins = Cython.Coverage

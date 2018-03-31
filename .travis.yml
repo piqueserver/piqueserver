@@ -16,9 +16,9 @@ script:
   - export CYTHON_TRACE=1
   - python setup.py install
   - python setup.py build_ext --inplace
-  - pytest --cov=piqueserver --cov=pyspades
+  - pytest --cov=piccolo --cov=pyspades
   - travis_retry coveralls
-  # - pylint piqueserver
+  # - pylint piccolo
   # - pylint pyspades
 
 notifications:

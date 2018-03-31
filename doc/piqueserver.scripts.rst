@@ -1,365 +1,365 @@
-piqueserver\.scripts package
+piccolo\.scripts package
 ============================
 
 Submodules
 ----------
 
-piqueserver\.scripts\.afk module
+piccolo\.scripts\.afk module
 --------------------------------
 
-.. automodule:: piqueserver.scripts.afk
+.. automodule:: piccolo.scripts.afk
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.aimbot2 module
+piccolo\.scripts\.aimbot2 module
 ------------------------------------
 
-.. automodule:: piqueserver.scripts.aimbot2
+.. automodule:: piccolo.scripts.aimbot2
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.airstrike2 module
+piccolo\.scripts\.airstrike2 module
 ---------------------------------------
 
-.. automodule:: piqueserver.scripts.airstrike2
+.. automodule:: piccolo.scripts.airstrike2
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.antijerk module
+piccolo\.scripts\.antijerk module
 -------------------------------------
 
-.. automodule:: piqueserver.scripts.antijerk
+.. automodule:: piccolo.scripts.antijerk
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.autohelp module
+piccolo\.scripts\.autohelp module
 -------------------------------------
 
-.. automodule:: piqueserver.scripts.autohelp
+.. automodule:: piccolo.scripts.autohelp
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.badmin module
+piccolo\.scripts\.badmin module
 -----------------------------------
 
-.. automodule:: piqueserver.scripts.badmin
+.. automodule:: piccolo.scripts.badmin
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.blockinfo module
+piccolo\.scripts\.blockinfo module
 --------------------------------------
 
-.. automodule:: piqueserver.scripts.blockinfo
+.. automodule:: piccolo.scripts.blockinfo
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.daycycle module
+piccolo\.scripts\.daycycle module
 -------------------------------------
 
-.. automodule:: piqueserver.scripts.daycycle
+.. automodule:: piccolo.scripts.daycycle
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.demolitionman module
+piccolo\.scripts\.demolitionman module
 ------------------------------------------
 
-.. automodule:: piqueserver.scripts.demolitionman
+.. automodule:: piccolo.scripts.demolitionman
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.dirtnade module
+piccolo\.scripts\.dirtnade module
 -------------------------------------
 
-.. automodule:: piqueserver.scripts.dirtnade
+.. automodule:: piccolo.scripts.dirtnade
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.disco module
+piccolo\.scripts\.disco module
 ----------------------------------
 
-.. automodule:: piqueserver.scripts.disco
+.. automodule:: piccolo.scripts.disco
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.flagreturn module
+piccolo\.scripts\.flagreturn module
 ---------------------------------------
 
-.. automodule:: piqueserver.scripts.flagreturn
+.. automodule:: piccolo.scripts.flagreturn
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.geoip module
+piccolo\.scripts\.geoip module
 ----------------------------------
 
-.. automodule:: piqueserver.scripts.geoip
+.. automodule:: piccolo.scripts.geoip
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.grownade module
+piccolo\.scripts\.grownade module
 -------------------------------------
 
-.. automodule:: piqueserver.scripts.grownade
+.. automodule:: piccolo.scripts.grownade
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.map\_extensions module
+piccolo\.scripts\.map\_extensions module
 --------------------------------------------
 
-.. automodule:: piqueserver.scripts.map_extensions
+.. automodule:: piccolo.scripts.map_extensions
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.mapmakingtools module
+piccolo\.scripts\.mapmakingtools module
 -------------------------------------------
 
-.. automodule:: piqueserver.scripts.mapmakingtools
+.. automodule:: piccolo.scripts.mapmakingtools
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.markers module
+piccolo\.scripts\.markers module
 ------------------------------------
 
-.. automodule:: piqueserver.scripts.markers
+.. automodule:: piccolo.scripts.markers
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.match module
+piccolo\.scripts\.match module
 ----------------------------------
 
-.. automodule:: piqueserver.scripts.match
+.. automodule:: piccolo.scripts.match
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.medkit module
+piccolo\.scripts\.medkit module
 -----------------------------------
 
-.. automodule:: piqueserver.scripts.medkit
+.. automodule:: piccolo.scripts.medkit
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.memcheck module
+piccolo\.scripts\.memcheck module
 -------------------------------------
 
-.. automodule:: piqueserver.scripts.memcheck
+.. automodule:: piccolo.scripts.memcheck
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.minefield module
+piccolo\.scripts\.minefield module
 --------------------------------------
 
-.. automodule:: piqueserver.scripts.minefield
+.. automodule:: piccolo.scripts.minefield
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.nointelonwalls module
+piccolo\.scripts\.nointelonwalls module
 -------------------------------------------
 
-.. automodule:: piqueserver.scripts.nointelonwalls
+.. automodule:: piccolo.scripts.nointelonwalls
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.nospadingwalls module
+piccolo\.scripts\.nospadingwalls module
 -------------------------------------------
 
-.. automodule:: piqueserver.scripts.nospadingwalls
+.. automodule:: piccolo.scripts.nospadingwalls
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.paint module
+piccolo\.scripts\.paint module
 ----------------------------------
 
-.. automodule:: piqueserver.scripts.paint
+.. automodule:: piccolo.scripts.paint
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.passreload module
+piccolo\.scripts\.passreload module
 ---------------------------------------
 
-.. automodule:: piqueserver.scripts.passreload
+.. automodule:: piccolo.scripts.passreload
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.protect module
+piccolo\.scripts\.protect module
 ------------------------------------
 
-.. automodule:: piqueserver.scripts.protect
+.. automodule:: piccolo.scripts.protect
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.rampage module
+piccolo\.scripts\.rampage module
 ------------------------------------
 
-.. automodule:: piqueserver.scripts.rampage
+.. automodule:: piccolo.scripts.rampage
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.rangedamage module
+piccolo\.scripts\.rangedamage module
 ----------------------------------------
 
-.. automodule:: piqueserver.scripts.rangedamage
+.. automodule:: piccolo.scripts.rangedamage
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.rapid module
+piccolo\.scripts\.rapid module
 ----------------------------------
 
-.. automodule:: piqueserver.scripts.rapid
+.. automodule:: piccolo.scripts.rapid
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.ratio module
+piccolo\.scripts\.ratio module
 ----------------------------------
 
-.. automodule:: piqueserver.scripts.ratio
+.. automodule:: piccolo.scripts.ratio
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.rollback module
+piccolo\.scripts\.rollback module
 -------------------------------------
 
-.. automodule:: piqueserver.scripts.rollback
+.. automodule:: piccolo.scripts.rollback
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.runningman module
+piccolo\.scripts\.runningman module
 ---------------------------------------
 
-.. automodule:: piqueserver.scripts.runningman
+.. automodule:: piccolo.scripts.runningman
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.savemap module
+piccolo\.scripts\.savemap module
 ------------------------------------
 
-.. automodule:: piqueserver.scripts.savemap
+.. automodule:: piccolo.scripts.savemap
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.smartnade module
+piccolo\.scripts\.smartnade module
 --------------------------------------
 
-.. automodule:: piqueserver.scripts.smartnade
+.. automodule:: piccolo.scripts.smartnade
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.spadenadefix module
+piccolo\.scripts\.spadenadefix module
 -----------------------------------------
 
-.. automodule:: piqueserver.scripts.spadenadefix
+.. automodule:: piccolo.scripts.spadenadefix
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.spawn\_protect module
+piccolo\.scripts\.spawn\_protect module
 -------------------------------------------
 
-.. automodule:: piqueserver.scripts.spawn_protect
+.. automodule:: piccolo.scripts.spawn_protect
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.spectatorcontrol module
+piccolo\.scripts\.spectatorcontrol module
 ---------------------------------------------
 
-.. automodule:: piqueserver.scripts.spectatorcontrol
+.. automodule:: piccolo.scripts.spectatorcontrol
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.squad module
+piccolo\.scripts\.squad module
 ----------------------------------
 
-.. automodule:: piqueserver.scripts.squad
+.. automodule:: piccolo.scripts.squad
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.strongblock module
+piccolo\.scripts\.strongblock module
 ----------------------------------------
 
-.. automodule:: piqueserver.scripts.strongblock
+.. automodule:: piccolo.scripts.strongblock
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.timedmute module
+piccolo\.scripts\.timedmute module
 --------------------------------------
 
-.. automodule:: piqueserver.scripts.timedmute
+.. automodule:: piccolo.scripts.timedmute
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.trusted module
+piccolo\.scripts\.trusted module
 ------------------------------------
 
-.. automodule:: piqueserver.scripts.trusted
+.. automodule:: piccolo.scripts.trusted
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.votekick module
+piccolo\.scripts\.votekick module
 -------------------------------------
 
-.. automodule:: piqueserver.scripts.votekick
+.. automodule:: piccolo.scripts.votekick
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.votemap module
+piccolo\.scripts\.votemap module
 ------------------------------------
 
-.. automodule:: piqueserver.scripts.votemap
+.. automodule:: piccolo.scripts.votemap
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.welcome module
+piccolo\.scripts\.welcome module
 ------------------------------------
 
-.. automodule:: piqueserver.scripts.welcome
+.. automodule:: piccolo.scripts.welcome
     :members:
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.scripts\.zoc module
+piccolo\.scripts\.zoc module
 --------------------------------
 
-.. automodule:: piqueserver.scripts.zoc
+.. automodule:: piccolo.scripts.zoc
     :members:
     :undoc-members:
     :show-inheritance:
@@ -368,7 +368,7 @@ piqueserver\.scripts\.zoc module
 Module contents
 ---------------
 
-.. automodule:: piqueserver.scripts
+.. automodule:: piccolo.scripts
     :members:
     :undoc-members:
     :show-inheritance:
