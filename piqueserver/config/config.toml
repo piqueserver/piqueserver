@@ -222,7 +222,7 @@ subscribe = false
 [rights]
 # Rights allow you to specify the roles available and what permissions they have
 moderator = [
- "advance", "cancel", "dban", "fog",
+ "advancemap", "cancel", "dban", "fog",
  "from", "hackinfo", "hban",
  "invisible", "ip", "kick", "kickafk",
  "kill", "map", "master", "move", "moves",
