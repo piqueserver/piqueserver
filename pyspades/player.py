@@ -6,6 +6,7 @@ from itertools import product
 import textwrap
 
 from twisted.internet import reactor
+from twisted.logger import Logger
 import enet
 from typing import Any, Optional, Sequence, Tuple, Union
 
@@ -15,7 +16,7 @@ from pyspades.constants import (
     ERROR_TOO_MANY_CONNECTIONS, FALL_KILL, CTF_MODE, TC_MODE,
     MAX_POSITION_RATE, TC_CAPTURE_DISTANCE, WEAPON_TOOL, SPADE_TOOL, MELEE,
     HIT_TOLERANCE, MELEE_DISTANCE, MELEE_DISTANCE, MELEE_KILL, HEAD,
-    HEADSHOT_KILL, WEAPON_KILL)
+    HEADSHOT_KILL, WEAPON_KILL, GRENADE_POS_TOLERANCE)
 from pyspades.team import Team
 from pyspades.constants import *
 from pyspades.packet import call_packet_handler, register_packet_handler
@@ -25,6 +26,8 @@ from pyspades import world
 from pyspades.common import Vertex3, get_color, make_color
 from pyspades.weapon import WEAPONS
 from pyspades.mapgenerator import ProgressiveMapGenerator
+
+log = Logger()
 
 set_tool = loaders.SetTool()
 block_action = loaders.BlockAction()
@@ -402,10 +405,20 @@ class ServerConnection(BaseConnection):
     def on_grenade_recieved(self, contained: loaders.GrenadePacket) -> None:
         if not self.hp:
             return
-        if check_nan(contained.value, *contained.position) or check_nan(*contained.velocity):
+        if (check_nan(contained.value, *contained.position) or
+                check_nan(*contained.velocity)):
             self.on_hack_attempt("Invalid grenade data")
             return
         if not self.grenades:
+            log.debug("{player} has no grenades", player=self)
+            return
+        playerpos = self.world_object.position
+        gx, gy, gz = contained.position
+        if not collision_3d(playerpos.x, playerpos.y, playerpos.z,
+                            gx, gy, gz,
+                            GRENADE_POS_TOLERANCE):
+            log.debug("{grenade} too far away from player {player}",
+                      player=self)
             return
         self.grenades -= 1
         if not self.is_valid_position(*contained.position):
