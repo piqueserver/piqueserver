@@ -1,4 +1,15 @@
+import random
+
+from twisted.logger import Logger
+
 from piqueserver.commands import command, join_arguments
+from piqueserver.config import config
+
+log = Logger()
+
+name_option = config.option(
+    'name', default='piqueserver #%s' % random.randrange(0, 2000))
+
 
 @command('servername', admin_only=True)
 def server_name(connection, *arg):
@@ -9,10 +20,9 @@ def server_name(connection, *arg):
     """
     name = join_arguments(arg)
     protocol = connection.protocol
-    protocol.config['name'] = name
-    protocol.update_format()
+    protocol.set_server_name(name)
     message = "%s changed servername to '%s'" % (connection.name, name)
-    print(message)
+    log.info(message)
     connection.protocol.irc_say("* " + message)
     if connection in connection.protocol.players:
         return message
@@ -44,7 +54,7 @@ def version(connection):
 def scripts(connection):
     """
     Tell you which scripts are enabled on this server currently
-    /version
+    /scripts
     """
     scripts = connection.protocol.config.get('scripts', [])
     if len(scripts) > 0:

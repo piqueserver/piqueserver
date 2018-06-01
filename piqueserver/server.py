@@ -505,6 +505,10 @@ class FeatureProtocol(ServerProtocol):
         self.set_time_limit(self.map_info.time_limit)
         self.update_format()
 
+    def set_server_name(self, name: str) -> None:
+        name_option.set(name)
+        self.update_format()
+
     def get_map(self, rot_info: RotationInfo) -> Map:
         """
         Creates and returns a Map object from rotation info
