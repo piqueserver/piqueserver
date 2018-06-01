@@ -21,9 +21,12 @@ import math
 import random
 from typing import List, Optional, Union
 
+from twisted.logger import Logger
+
 from pyspades.vxl import VXLData
 from piqueserver.config import config
 
+log = Logger()
 
 
 class MapNotFound(Exception):
@@ -65,14 +68,14 @@ class Map(object):
         if self.gen_script:
             seed = rot_info.get_seed()
             self.name = '%s #%s' % (rot_info.name, seed)
-            print("Generating map '%s'..." % self.name)
+            log.info("Generating map '%s'..." % self.name)
             random.seed(seed)
             self.data = self.gen_script(rot_info.name, seed)
         else:
-            print("Loading map '%s'..." % self.name)
+            log.info("Loading map '%s'..." % self.name)
             self.load_vxl(rot_info)
 
-        print('Map loaded successfully.')
+        log.info('Map loaded successfully.')
 
     def load_information(self, rot_info: 'RotationInfo', load_dir: str) -> None:
         self.load_dir = load_dir

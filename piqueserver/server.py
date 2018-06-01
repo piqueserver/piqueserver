@@ -37,6 +37,8 @@ from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
 from twisted.python import log
 from twisted.python.logfile import DailyLogFile
+from twisted.logger import Logger, textFileLogObserver
+from twisted.logger import globalLogPublisher
 from twisted.web import client as web_client
 from twisted.internet.tcp import Port
 from twisted.internet.defer import Deferred
@@ -65,6 +67,8 @@ from piqueserver.config import config
 # won't be used; just need to be executed
 import piqueserver.core_commands
 
+log = Logger()
+
 
 def check_scripts(scripts):
     '''
@@ -78,7 +82,7 @@ def check_scripts(scripts):
         else:
             seen.add(script)
     if dups:
-        print("Scripts included multiple times: {}".format(dups))
+        log.warn("Scripts included multiple times: {}".format(dups))
         return False
     return True
 
@@ -111,16 +115,17 @@ team1_color = team1_config.option('color', default=(0, 0, 196))
 team2_color = team2_config.option('color', default=(0, 196, 0))
 friendly_fire = config.option('friendly_fire', default=False)
 friendly_fire_on_grief = config.option('friendly_fire_on_grief',
-        default=True)
+                                       default=True)
 grief_friendly_fire_time = config.option('grief_friendly_fire_time',
-        default=2)
+                                         default=2)
 spade_teamkills_on_grief = config.option('spade_teamkills_on_grief',
-        default=False)
+                                         default=False)
 time_announcements = config.option('time_announcements', default=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                                              30, 60, 120, 180, 240, 300, 600,
-                                              900, 1200, 1800, 2400, 3000])
+                                                                  30, 60, 120, 180, 240, 300, 600,
+                                                                  900, 1200, 1800, 2400, 3000])
 rights = config.option('rights', default={})
-port_option = config.option('port', default=32887, validate=lambda n: type(n) == int)
+port_option = config.option('port', default=32887,
+                            validate=lambda n: type(n) == int)
 fall_damage = config.option('fall_damage', default=True)
 teamswitch_interval = config.option('teamswitch_interval', default=0)
 teamswitch_allowed = config.option('teamswitch_allowed', default=True)
@@ -138,7 +143,8 @@ logging_profile_option = logging_config.option('profile', False)
 set_god_build = config.option('set_god_build', False)
 ssh_enabled = config.section('ssh').option('enabled', False)
 irc_options = config.option('irc', {})
-status_server_enabled = config.section('status_server').option('enabled', False)
+status_server_enabled = config.section(
+    'status_server').option('enabled', False)
 ban_publish = bans_config.option('publish', False)
 ban_publish_port = bans_config.option('publish_port', 32885)
 logging_rotate_daily = logging_config.option('rotate_daily', False)
@@ -152,7 +158,8 @@ if sys.platform == 'win32':
 else:
     default_ip_getter = 'https://services.buildandshoot.com/getip'
 ip_getter_option = config.option('ip_getter', default_ip_getter)
-name_option = config.option('name', default='piqueserver #%s' % random.randrange(0, 2000))
+name_option = config.option(
+    'name', default='piqueserver #%s' % random.randrange(0, 2000))
 motd_option = config.option('motd')
 help_option = config.option('help')
 rules_option = config.option('rules')
@@ -285,14 +292,14 @@ class FeatureProtocol(ServerProtocol):
         except FileNotFoundError:
             pass
         except IOError as e:
-            print('Could not read bans.txt: {}'.format(e))
+            log.error('Could not read bans.txt: {}'.format(e))
         except ValueError as e:
-            print('Could not parse bans.txt: {}'.format(e))
+            log.error('Could not parse bans.txt: {}'.format(e))
 
         self.hard_bans = set()  # possible DDoS'ers are added here
         self.player_memory = deque(maxlen=100)
         if len(self.name) > MAX_SERVER_NAME_SIZE:
-            print('(server name too long; it will be truncated to "%s")' % (
+            log.warn('(server name too long; it will be truncated to "%s")' % (
                 self.name[:MAX_SERVER_NAME_SIZE]))
         self.respawn_time = respawn_time_option.get()
         self.respawn_waves = respawn_waves.get()
@@ -361,9 +368,9 @@ class FeatureProtocol(ServerProtocol):
                 logging_file = DailyLogFile(l, '.')
             else:
                 logging_file = open(l, 'a')
-            log.addObserver(log.FileLogObserver(logging_file).emit)
-            log.msg('pyspades server started on %s' % time.strftime('%c'))
-        log.startLogging(sys.stdout)  # force twisted logging
+            globalLogPublisher.addObserver(textFileLogObserver(logging_file))
+            globalLogPublisher.addObserver(textFileLogObserver(sys.stderr))
+            log.info('piqueserver started on %s' % time.strftime('%c'))
 
         self.start_time = reactor.seconds()
         self.end_calls = []
@@ -380,7 +387,7 @@ class FeatureProtocol(ServerProtocol):
         try:
             self.set_map_rotation(self.config['rotation'])
         except MapNotFound as e:
-            print('Invalid map in map rotation (%s), exiting.' % e.map)
+            log.critical('Invalid map in map rotation (%s), exiting.' % e.map)
             raise SystemExit
 
         self.update_format()
@@ -399,22 +406,23 @@ class FeatureProtocol(ServerProtocol):
 
     @inlineCallbacks
     def get_external_ip(self, ip_getter: str) -> Iterator[Deferred]:
-        print('Retrieving external IP from {!r} to generate server identifier.'.format(ip_getter))
+        log.info(
+            'Retrieving external IP from {!r} to generate server identifier.'.format(ip_getter))
         try:
             ip = yield self.getPage(ip_getter)
             ip = IPv4Address(ip.strip())
         except AddressValueError as e:
-            print('External IP getter service returned invalid data.\n'
-                  'Please check the "ip_getter" setting in your config.')
+            log.warn('External IP getter service returned invalid data.\n'
+                     'Please check the "ip_getter" setting in your config.')
             return
         except Exception as e:
-            print("Getting external IP failed:", e)
+            log.warn("Getting external IP failed: {reason}", reason=e)
             return
 
         self.ip = ip
         self.identifier = make_server_identifier(ip, self.port)
-        print('Server public ip address: {}:{}'.format(ip, self.port))
-        print('Public aos identifier: {}'.format(self.identifier))
+        log.info('Server public ip address: {}:{}'.format(ip, self.port))
+        log.info('Public aos identifier: {}'.format(self.identifier))
 
     def set_time_limit(self, time_limit: Optional[bool] = None, additive: bool=False) -> int:
         advance_call = self.advance_call
@@ -566,7 +574,7 @@ class FeatureProtocol(ServerProtocol):
         return lines
 
     def got_master_connection(self, client):
-        print('Master connection established.')
+        log.info('Master connection established.')
         ServerProtocol.got_master_connection(self, client)
 
     def master_disconnected(self, client=None):
@@ -576,7 +584,7 @@ class FeatureProtocol(ServerProtocol):
                 message = 'Master connection could not be established'
             else:
                 message = 'Master connection lost'
-            print('%s, reconnecting in 60 seconds...' % message)
+            log.info('%s, reconnecting in 60 seconds...' % message)
             self.master_reconnect_call = reactor.callLater(
                 60, self.reconnect_master)
 
@@ -619,7 +627,7 @@ class FeatureProtocol(ServerProtocol):
 
     def remove_ban(self, ip):
         results = self.bans.remove(ip)
-        print('Removing ban:', ip, results)
+        log.info('Removing ban:', ip, results)
         self.save_bans()
 
     def undo_last_ban(self):
@@ -656,13 +664,13 @@ class FeatureProtocol(ServerProtocol):
         except (NoDataLeft, ValueError):
             import traceback
             traceback.print_exc()
-            print(
+            log.info(
                 'IP %s was hardbanned for invalid data or possibly DDoS.' % ip)
             self.hard_bans.add(ip)
             return
         dt = reactor.seconds() - current_time
         if dt > 1.0:
-            print('(warning: processing %r from %s took %s)' % (
+            log.warn('processing %r from %s took %s' % (
                 packet.data, ip, dt))
 
     def irc_say(self, msg: str, me: bool = False) -> None:
@@ -698,12 +706,12 @@ class FeatureProtocol(ServerProtocol):
         if last_time is not None:
             dt = current_time - last_time
             if dt > 1.0:
-                print('(warning: high CPU usage detected - %s)' % dt)
+                logging.warn('high CPU usage detected - %s' % dt)
         self.last_time = current_time
         ServerProtocol.update_world(self)
         time_taken = reactor.seconds() - current_time
         if time_taken > 1.0:
-            print(
+            log.warn(
                 'World update iteration took %s, objects: %s' %
                 (time_taken, self.world.objects))
 
@@ -795,7 +803,8 @@ def run() -> None:
             # this finds and loads scripts directly from the script dir
             # no need for messing with sys.path
             f, filename, desc = imp.find_module(script, [script_dir])
-            module = imp.load_module('piqueserver_script_namespace_' + script, f, filename, desc)
+            module = imp.load_module(
+                'piqueserver_script_namespace_' + script, f, filename, desc)
             script_objects.append(module)
         except ImportError as e:
             # warning: this also catches import errors from inside the script
@@ -804,7 +813,7 @@ def run() -> None:
                 module = importlib.import_module(script)
                 script_objects.append(module)
             except ImportError as e:
-                print("(script '%s' not found: %r)" % (script, e))
+                log.error("(script '%s' not found: %r)" % (script, e))
                 script_names.remove(script)
 
     for script in script_objects:
@@ -817,13 +826,16 @@ def run() -> None:
         module = None
         try:
             game_mode_dir = os.path.join(config.config_dir, 'game_modes/')
-            f, filename, desc = imp.find_module(game_mode.get(), [game_mode_dir])
-            module = imp.load_module('piqueserver_gamemode_namespace_' + game_mode.get(), f, filename, desc)
+            f, filename, desc = imp.find_module(
+                game_mode.get(), [game_mode_dir])
+            module = imp.load_module(
+                'piqueserver_gamemode_namespace_' + game_mode.get(), f, filename, desc)
         except ImportError as e:
             try:
                 module = importlib.import_module(game_mode.get())
             except ImportError as e:
-                print("(game_mode '%s' not found: %r)" % (game_mode.get(), e))
+                log.error("(game_mode '%s' not found: %r)" %
+                          (game_mode.get(), e))
 
         if module:
             protocol_class, connection_class = module.apply_script(
@@ -837,13 +849,13 @@ def run() -> None:
     # either way, the resulting object is not used
     protocol_class(interface, config.get_dict())
 
-    print('Checking for unregistered config items...')
+    log.debug('Checking for unregistered config items...')
     unused = config.check_unused()
     if unused:
-        print('The following config items are not used:')
+        log.warn('The following config items are not used:')
         pprint(unused)
 
-    print('Started server...')
+    log.info('Started server...')
 
     profile = logging_profile_option.get()
     if profile:
