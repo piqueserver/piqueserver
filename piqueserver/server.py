@@ -90,6 +90,7 @@ team1_config = config.section('team1')
 team2_config = config.section('team2')
 
 bans_file = bans_config.option('file', default='bans.txt')
+bans_urls = bans_config.option('urls', [])
 respawn_time_option = config.option('respawn_time', default=8)
 respawn_waves = config.option('respawn_waves', default=False)
 game_mode = config.option('game_mode', default='ctf')
@@ -159,7 +160,6 @@ rules_option = config.option('rules')
 tips_option = config.option('tips')
 network_interface = config.option('network_interface', default='')
 scripts_option = config.option('scripts', default=[], validate=check_scripts)
-ban_subscribe_enabled = bans_config.option('subscribe', False)
 
 web_client._HTTP11ClientFactory.noisy = False
 
@@ -348,7 +348,7 @@ class FeatureProtocol(ServerProtocol):
         if ban_publish.get():
             from piqueserver.banpublish import PublishServer
             self.ban_publish = PublishServer(self, ban_publish_port.get())
-        if ban_subscribe_enabled.get():
+        if bans_urls.get():
             from piqueserver import bansubscribe
             self.ban_manager = bansubscribe.BanManager(self)
         # logfile path relative to config dir if not abs path
