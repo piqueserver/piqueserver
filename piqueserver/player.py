@@ -2,6 +2,7 @@ import math
 from typing import List, Tuple, Optional, Union
 
 from twisted.internet import reactor
+from twisted.logger import Logger
 
 from piqueserver import commands
 
@@ -19,6 +20,9 @@ CHAT_WINDOW_SIZE = 5
 CHAT_PER_SECOND = 0.5
 
 HookValue = Optional[bool]
+
+log = Logger()
+
 
 class FeatureConnection(ServerConnection):
     printable_name = None
@@ -53,8 +57,8 @@ class FeatureConnection(ServerConnection):
                 protocol.remove_ban(client_ip)
                 protocol.save_bans()
             else:
-                print('banned user %s (%s) attempted to join' % (name,
-                                                                 client_ip))
+                log.info('banned user %s (%s) attempted to join' % (name,
+                                                                    client_ip))
                 self.disconnect(ERROR_BANNED)
                 return
 
@@ -63,8 +67,8 @@ class FeatureConnection(ServerConnection):
         if manager is not None:
             reason = manager.get_ban(client_ip)
             if reason is not None:
-                print(('federated banned user (%s) attempted to join, '
-                       'banned for %r') % (client_ip, reason))
+                log.info(('federated banned user (%s) attempted to join, '
+                          'banned for %r') % (client_ip, reason))
                 self.disconnect(ERROR_BANNED)
                 return
 
@@ -78,8 +82,9 @@ class FeatureConnection(ServerConnection):
         self.printable_name = escape_control_codes(name)
         if len(self.printable_name) > 15:
             self.kick(silent=True)
-        print('%s (IP %s, ID %s) entered the game!' % (self.printable_name,
-                                                       self.address[0], self.player_id))
+        log.info('{name} (IP {ip}, ID {pid}) entered the game!',
+                 name=self.printable_name,
+                 ip=self.address[0], pid=self.player_id)
         self.protocol.irc_say('* %s (IP %s, ID %s) entered the game!' %
                               (self.name, self.address[0], self.player_id))
         if self.user_types is None:
@@ -98,16 +103,17 @@ class FeatureConnection(ServerConnection):
 
     def on_disconnect(self) -> None:
         if self.name is not None:
-            print(self.printable_name, 'disconnected!')
+            log.info('{name} disconnected!', name=self.printable_name)
             self.protocol.irc_say('* %s (IP %s) disconnected' %
                                   (self.name, self.address[0]))
             self.protocol.player_memory.append((self.name, self.address[0]))
         else:
-            print('%s disconnected' % self.address[0])
+            log.info('{ip} disconnected', ip=self.address[0])
         ServerConnection.on_disconnect(self)
 
     def on_command(self, command: str, parameters: List[str]) -> None:
         result = commands.handle_command(self, command, parameters)
+        # TODO: Move this logging into command module?
         if result == False:
             parameters = ['***'] * len(parameters)
         log_message = '<%s> /%s %s' % (self.name, command,
@@ -116,7 +122,7 @@ class FeatureConnection(ServerConnection):
             log_message += ' -> %s' % result
             for i in reversed(result.split("\n")):
                 self.send_chat(i)
-        print(escape_control_codes(log_message))
+        log.info(escape_control_codes(log_message))
 
     def _can_build(self) -> bool:
         if not self.can_complete_line_build:
@@ -152,7 +158,8 @@ class FeatureConnection(ServerConnection):
                 # finds coordinates of the first block this line strikes.
                 line_start = c.cast_ray()
                 if line_start:  # if player is pointing at a valid point.  Distant solid blocks will return False
-                    distance = (Vertex3(*line_start) - Vertex3(position.x, position.y, position.z)).length()
+                    distance = (
+                        Vertex3(*line_start) - Vertex3(position.x, position.y, position.z)).length()
                     if distance > 6:
                         self.can_complete_line_build = False
                     else:
@@ -352,8 +359,7 @@ class FeatureConnection(ServerConnection):
                 self.chat_count += 1
             self.last_chat = current_time
 
-        # TODO: replace with logging
-        print(escape_control_codes(message))
+        log.info(escape_control_codes(message))
 
         return value
 
@@ -392,8 +398,8 @@ class FeatureConnection(ServerConnection):
             current_time += 2
 
     def on_hack_attempt(self, reason):
-        print('Hack attempt detected from %s: %s' % (self.printable_name,
-                                                     reason))
+        log.warn('Hack attempt detected from %s: %s' % (self.printable_name,
+                                                        reason))
         self.kick(reason)
 
     def on_user_login(self, user_type, verbose=True):
@@ -410,7 +416,7 @@ class FeatureConnection(ServerConnection):
 
     def timed_out(self):
         if self.name is not None:
-            print('%s timed out' % self.printable_name)
+            log.info('%s timed out' % self.printable_name)
         ServerConnection.timed_out(self)
 
 

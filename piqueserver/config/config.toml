@@ -215,7 +215,6 @@ publish = false
 publish_port = 32885
 
 # Bansubscribe allows you to inherit bans from another server with banpublish enabled.
-subscribe = false
 # urls = [ [ "http://www.blacklist.spadille.net/subscribe.json", []]]
 
 

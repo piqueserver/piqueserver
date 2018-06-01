@@ -15,7 +15,7 @@ from pyspades.constants import (
     RAPID_WINDOW_ENTRIES, ERROR_FULL, ERROR_WRONG_VERSION,
     ERROR_TOO_MANY_CONNECTIONS, FALL_KILL, CTF_MODE, TC_MODE,
     MAX_POSITION_RATE, TC_CAPTURE_DISTANCE, WEAPON_TOOL, SPADE_TOOL, MELEE,
-    HIT_TOLERANCE, MELEE_DISTANCE, MELEE_DISTANCE, MELEE_KILL, HEAD,
+    HIT_TOLERANCE, MELEE_DISTANCE, MELEE_KILL, HEAD,
     HEADSHOT_KILL, WEAPON_KILL, GRENADE_POS_TOLERANCE)
 from pyspades.team import Team
 from pyspades.constants import *
@@ -171,8 +171,8 @@ class ServerConnection(BaseConnection):
             # Existingplayer may only be sent if in the limbo or spectator
             # modes. Without this check, they could respawn themselves
             # instantly on any team they wanted.
-            print("{} tried sending an ExistingPlayer packet while not in"
-                  "limbo or spectator mode".format(self))
+            log.debug("{} tried sending an ExistingPlayer packet while not in"
+                      "limbo or spectator mode".format(self))
             return
 
         old_team = self.team
@@ -497,7 +497,7 @@ class ServerConnection(BaseConnection):
             if self.rapids.check():
                 start, end = self.rapids.get()
                 if end - start < MAX_RAPID_SPEED:
-                    print('RAPID HACK:', self.rapids.window)
+                    log.info('RAPID HACK:', self.rapids.window)
                     self.on_hack_attempt('Rapid hack detected')
             return
         map = self.protocol.map
@@ -701,8 +701,8 @@ class ServerConnection(BaseConnection):
 
         # search for valid locations near the specified point
         for pos in self.protocol.pos_table:
-            if self.is_location_free(x+pos[0], y+pos[1], z+pos[2]):
-                self.set_location((x+pos[0], y+pos[1], z+pos[2]))
+            if self.is_location_free(x + pos[0], y + pos[1], z + pos[2]):
+                self.set_location((x + pos[0], y + pos[1], z + pos[2]))
                 return True
         return False
 
@@ -841,7 +841,8 @@ class ServerConnection(BaseConnection):
                 position = self.world_object.position
 
                 # convert to safe coords so the flag can't be dropped out of bounds
-                x, y, z = self.protocol.map.get_safe_coords(position.x, position.y, position.z)
+                x, y, z = self.protocol.map.get_safe_coords(
+                    position.x, position.y, position.z)
                 # or inside solid
                 z = self.protocol.map.get_z(x, y, z)
                 flag.set(x, y, z)
@@ -1082,7 +1083,7 @@ class ServerConnection(BaseConnection):
         if self.on_block_destroy(x, y, z, GRENADE_DESTROY) == False:
             return
         map = self.protocol.map
-        for n_x, n_y, n_z in product(range(x-1, x+2), range(y-1, y+2), range(z-1, z+2)):
+        for n_x, n_y, n_z in product(range(x - 1, x + 2), range(y - 1, y + 2), range(z - 1, z + 2)):
             count = map.destroy_point(n_x, n_y, n_z)
             if count:
                 self.total_blocks_removed += count
