@@ -3,12 +3,8 @@ import random
 from twisted.logger import Logger
 
 from piqueserver.commands import command, join_arguments
-from piqueserver.config import config
 
 log = Logger()
-
-name_option = config.option(
-    'name', default='piqueserver #%s' % random.randrange(0, 2000))
 
 
 @command('servername', admin_only=True)
@@ -26,6 +22,7 @@ def server_name(connection, *arg):
     connection.protocol.irc_say("* " + message)
     if connection in connection.protocol.players:
         return message
+    return None
 
 
 @command('server')
