@@ -420,6 +420,7 @@ class ServerConnection(BaseConnection):
             Vertex3(*contained.position), None,
             Vertex3(*contained.velocity), self.grenade_exploded)
         grenade.team = self.team
+        log.debug("{player!r} created {grenade!r}", grenade=grenade, player=self)
         self.on_grenade_thrown(grenade)
         if self.filter_visibility_data:
             return
@@ -1290,7 +1291,7 @@ class ServerConnection(BaseConnection):
         pass
 
     def __repr__(self):
-        return "<{} player_id: {!r}, name: {!r}, address: {!r} at 0x{:h}>".format(
+        return "<{} player_id: {!r}, name: {!r}, address: {!r} at 0x{:x}>".format(
             self.__class__.__name__, self.player_id, self.name, self.address,
             id(self)
         )

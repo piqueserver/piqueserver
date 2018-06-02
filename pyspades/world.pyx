@@ -357,6 +357,10 @@ cdef class Grenade(Object):
     def __dealloc__(self):
         destroy_grenade(self.grenade)
 
+    def __repr__(self):
+        rep = "Grenade(fuse={}, position={}, (...), velocity={})"
+        return rep.format(self.fuse, self.position, self.velocity)
+
 cdef class World(object):
     cdef public:
         VXLData map
