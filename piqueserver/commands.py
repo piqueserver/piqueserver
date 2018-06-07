@@ -63,22 +63,19 @@ def command(name=None, *aliases,
         if admin_only:
             function.user_types.add("admin")
 
-        # in py2 you can not modify variables in outer closures, so we need
-        # to assign into a new variable
+        nonlocal name
         if name is None:
-            func_name = function.__name__
-        else:
-            func_name = name
+            name = function.__name__
 
-        function.command_name = func_name
+        function.command_name = name
 
-        _commands[func_name] = function
+        _commands[name] = function
 
         if aliases:
             function.aliases = []
 
             for alias in aliases:
-                _alias_map[alias] = func_name
+                _alias_map[alias] = name
 
         return function
     return decorator
