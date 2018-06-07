@@ -32,7 +32,7 @@ if sys.platform == 'win32':
     class StandardIO(object):
         disconnecting = False
         interval = 0.01
-        input = u''
+        input = ''
 
         def __init__(self, protocol):
             self.protocol = protocol
@@ -42,16 +42,16 @@ if sys.platform == 'win32':
         def get_input(self):
             while msvcrt.kbhit():
                 c = msvcrt.getwch()
-                if c == u'\r':  # new line
-                    c = u'\n'
+                if c == '\r':  # new line
+                    c = '\n'
                     stdout.write(c)
                     self.input += c
                     self.protocol.dataReceived(self.input)
                     self.input = ''
-                elif c in (u'\xE0', u'\x00'):
+                elif c in ('\xE0', '\x00'):
                     # ignore special characters
                     msvcrt.getwch()
-                elif c == u'\x08':  # delete
+                elif c == '\x08':  # delete
                     self.input = self.input[:-1]
                     stdout.write('\x08 \x08')
                 else:

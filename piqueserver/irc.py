@@ -142,7 +142,7 @@ class IRCBot(irc.IRCClient):
             max_len = MAX_IRC_CHAT_SIZE - \
                 len(self.protocol.server_prefix) - 1
             msg = msg[len(self.factory.chatprefix):].strip()
-            message = ("<%s> %s" % (prefix + alias, msg))[:max_len]
+            message = ("<{}> {}".format(prefix + alias, msg))[:max_len]
             print(message)
             self.factory.server.broadcast_chat(message)
         elif msg.startswith(self.factory.commandprefix) and user in self.ops:
@@ -151,7 +151,7 @@ class IRCBot(irc.IRCClient):
             user_input = msg[len(self.factory.commandprefix):]
             result = commands.handle_input(self, user_input)
             if result is not None:
-                self.send("%s: %s" % (user, result))
+                self.send("{}: {}".format(user, result))
 
     @channel
     def userLeft(self, user, irc_channel):
@@ -207,12 +207,12 @@ class IRCClientFactory(protocol.ClientFactory):
         print("Connecting to IRC server...")
 
     def clientConnectionLost(self, connector, reason):
-        print("Lost connection to IRC server (%s), reconnecting in %s seconds" % (
+        print("Lost connection to IRC server ({}), reconnecting in {} seconds".format(
             reason, self.lost_reconnect_delay))
         reactor.callLater(self.lost_reconnect_delay, connector.connect)
 
     def clientConnectionFailed(self, connector, reason):
-        print("Could not connect to IRC server (%s), retrying in %s seconds" % (
+        print("Could not connect to IRC server ({}), retrying in {} seconds".format(
             reason, self.failed_reconnect_delay))
         reactor.callLater(self.failed_reconnect_delay, connector.connect)
 
@@ -244,12 +244,12 @@ class IRCRelay(object):
 
 
 def format_name(player):
-    return '%s #%s' % (player.name, player.player_id)
+    return '{} #{}'.format(player.name, player.player_id)
 
 
 def format_name_color(player):
     return (IRC_TEAM_COLORS.get(player.team.id, '') +
-            '%s #%s' % (player.name, player.player_id))
+            '{} #{}'.format(player.name, player.player_id))
 
 
 @restrict("irc")
@@ -271,14 +271,14 @@ def who(connection):
     separator = '\x0f, ' if connection.colors else ', '
     if not SPLIT_WHO_IN_TEAMS or player_count < SPLIT_THRESHOLD:
         noun = 'player' if player_count == 1 else 'players'
-        msg = 'has %s %s connected: ' % (player_count, noun)
+        msg = 'has {} {} connected: '.format(player_count, noun)
         msg += separator.join(chain.from_iterable(formatted_names))
         connection.me(msg)
     else:
         for team, names in zip(teams, formatted_names):
             name_count = len(names)
             noun = 'player' if name_count == 1 else 'players'
-            msg = 'has %s %s in %s: ' % (name_count, noun, team.name)
+            msg = 'has {} {} in {}: '.format(name_count, noun, team.name)
             msg += separator.join(names)
             connection.me(msg)
 
@@ -286,7 +286,7 @@ def who(connection):
 @restrict("irc")
 @command()
 def score(connection):
-    connection.me("scores: Blue %s - Green %s" % (
+    connection.me("scores: Blue {} - Green {}".format(
         connection.protocol.blue_team.score,
         connection.protocol.green_team.score))
 
@@ -299,12 +299,12 @@ def alias(connection, value=None):
     if value is None:
         alias = aliases.get(unaliased_name)
         if alias:
-            message = 'aliases %s to %s' % (unaliased_name, alias)
+            message = 'aliases {} to {}'.format(unaliased_name, alias)
         else:
             message = "doesn't have an alias for %s" % unaliased_name
     else:
         aliases[unaliased_name] = value
-        message = 'will alias %s to %s' % (unaliased_name, value)
+        message = 'will alias {} to {}'.format(unaliased_name, value)
     connection.me(message)
 
 

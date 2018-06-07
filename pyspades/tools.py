@@ -26,7 +26,7 @@ def make_server_identifier(ip: IPv4Address, port: int = 32887) -> str:
     b = int(b)
     c = int(c)
     d = int(d)
-    return 'aos://%s:%s' % (a | (b << 8) | (c << 16) | (d << 24), port)
+    return 'aos://{}:{}'.format(a | (b << 8) | (c << 16) | (d << 24), port)
 
 
 def get_server_details(value):
@@ -44,4 +44,4 @@ def get_server_details(value):
     b = (host & 0xFF00) >> 8
     c = (host & 0xFF0000) >> 16
     d = (host & 0xFF000000) >> 24
-    return ('%s.%s.%s.%s' % (a, b, c, d), port)
+    return ('{}.{}.{}.{}'.format(a, b, c, d), port)

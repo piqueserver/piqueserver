@@ -269,7 +269,7 @@ class FeatureProtocol(ServerProtocol):
     game_mode = None  # default to None so we can check
     time_announce_schedule = None
 
-    server_version = '%s - %s' % (sys.platform, piqueserver.__version__)
+    server_version = '{} - {}'.format(sys.platform, piqueserver.__version__)
 
     default_fog = (128, 232, 255)
 
@@ -485,7 +485,7 @@ class FeatureProtocol(ServerProtocol):
             self.set_map_name(planned_map)
         else:
             self.send_chat(
-                '%s Next map: %s.' % (message, planned_map.full_name),
+                '{} Next map: {}.'.format(message, planned_map.full_name),
                 irc=True)
             reactor.callLater(10, self.set_map_name, planned_map)
 
@@ -674,7 +674,7 @@ class FeatureProtocol(ServerProtocol):
             return
         dt = reactor.seconds() - current_time
         if dt > 1.0:
-            log.warn('processing %r from %s took %s' % (
+            log.warn('processing {!r} from {} took {}'.format(
                 packet.data, ip, dt))
 
     def irc_say(self, msg: str, me: bool = False) -> None:
@@ -817,7 +817,7 @@ def run() -> None:
                 module = importlib.import_module(script)
                 script_objects.append(module)
             except ImportError as e:
-                log.error("(script '%s' not found: %r)" % (script, e))
+                log.error("(script '{}' not found: {!r})".format(script, e))
                 script_names.remove(script)
 
     for script in script_objects:
