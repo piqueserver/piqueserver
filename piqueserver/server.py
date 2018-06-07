@@ -849,8 +849,8 @@ def run() -> None:
 
     interface = network_interface.get().encode('utf-8')
 
-    # TODO: is this required? Maybe protocol_class needs to be called?
-    # either way, the resulting object is not used
+    # instantiate the protocol class once. It will set timers and hooks to keep
+    # itself running once we start the reactor
     protocol_class(interface, config.get_dict())
 
     log.debug('Checking for unregistered config items...')
