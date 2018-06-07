@@ -210,18 +210,17 @@ inline int get_write_color(MapData * map, int x, int y, int z)
     return iter->second;
 }
 
-inline void write_color(char ** out, int color)
+inline void write_color(char ** pos, int color)
 {
    // assume color is ARGB native, but endianness is unknown
    // file format endianness is ARGB little endian, i.e. B,G,R,A
-   **out = (char)(color >> 0);
-   *out += 1;
-   **out = (char) (color >> 8);
-   *out += 1;
-   **out = (char) (color >> 16);
-   *out += 1;
-   **out = (char) (color >> 24);
-   *out += 1;
+   (*pos)[0] = color & 0xFF;
+   (*pos)[1] = (color >> 8) & 0xFF;
+   (*pos)[2] = (color >> 16) & 0xFF;
+   (*pos)[3] = (color >> 24) & 0xFF;
+
+   // wind the cursor forward 4 bytes
+   *pos += 4;
 }
 
 char * out_global = 0;
