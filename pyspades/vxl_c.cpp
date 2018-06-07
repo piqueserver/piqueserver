@@ -393,13 +393,11 @@ int sunblock(MapData * map, int x, int y, int z)
 void update_shadows(MapData * map)
 {
     int x, y, z;
-    int a;
-    unsigned int color;
     for (map_type<int, int>::iterator iter = map->colors.begin();
         iter != map->colors.end(); ++iter) {
         get_xyz(iter->first, &x, &y, &z);
-        color = iter->second;
-        a = sunblock(map, x, y, z);
+        unsigned int color = iter->second;
+        int a = sunblock(map, x, y, z);
         iter->second = (color & 0x00FFFFFF) | (a << 24);
     }
 }
@@ -441,25 +439,15 @@ PyObject * get_generator_data(MapGenerator * generator, int columns)
          }
          k = 0;
          while (k < MAP_Z) {
-            int z;
-
-            int air_start;
-            int top_colors_start;
-            int top_colors_end; // exclusive
-            int bottom_colors_start;
-            int bottom_colors_end; // exclusive
-            int top_colors_len;
-            int bottom_colors_len;
-            int colors;
             // find the air region
-            air_start = k;
+            int air_start = k;
             while (k < MAP_Z && !map->geometry[get_pos(i, j, k)])
                ++k;
             // find the top region
-            top_colors_start = k;
+            int top_colors_start = k;
             while (k < MAP_Z && is_surface(map, i, j, k))
                ++k;
-            top_colors_end = k;
+            int top_colors_end = k; // exlusive
 
             // now skip past the solid voxels
             while (k < MAP_Z && map->geometry[get_pos(i, j, k)] &&
@@ -472,26 +460,27 @@ PyObject * get_generator_data(MapGenerator * generator, int columns)
             // which we encode as air-color-solid-0, 0-color-solid-air
 
             // so figure out if we have any bottom colors at this point
-            bottom_colors_start = k;
+            int bottom_colors_start = k;
 
-            z = k;
+            int z = k;
             while (z < MAP_Z && is_surface(map, i,j, z))
                ++z;
 
-            if (z == MAP_Z)
-               ; // in this case, the bottom colors of this span are empty, because we'l emit as top colors
+            if (z == MAP_Z){
+               // in this case, the bottom colors of this span are empty, because we'll emit as top colors
+            }
             else {
                // otherwise, these are real bottom colors so we can write them
                while (is_surface(map, i,j,k))
                   ++k;
             }
-            bottom_colors_end = k;
+            int bottom_colors_end = k; // exclusive
 
             // now we're ready to write a span
-            top_colors_len    = top_colors_end    - top_colors_start;
-            bottom_colors_len = bottom_colors_end - bottom_colors_start;
+            int top_colors_len    = top_colors_end    - top_colors_start;
+            int bottom_colors_len = bottom_colors_end - bottom_colors_start;
 
-            colors = top_colors_len + bottom_colors_len;
+            int colors = top_colors_len + bottom_colors_len;
 
             if (k == MAP_Z)
             {
