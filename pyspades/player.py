@@ -137,6 +137,8 @@ class ServerConnection(BaseConnection):
         if self.local:
             return
         if self.peer.eventData != self.protocol.version:
+            log.debug("{player} kicked: wrong protocol version {version}",
+                      player=self, version=self.peer.eventData)
             self.disconnect(ERROR_WRONG_VERSION)
             return
         max_players = min(32, self.protocol.max_players)
@@ -151,6 +153,7 @@ class ServerConnection(BaseConnection):
                 self.disconnect(ERROR_TOO_MANY_CONNECTIONS)
                 return
         if not self.disconnected:
+            log.debug("sending map data to {player}", player=self)
             self._connection_ack()
 
     def loader_received(self, loader: enet.Packet) -> None:
@@ -1112,6 +1115,7 @@ class ServerConnection(BaseConnection):
             return
 
         if not self.map_data.data_left():
+            log.debug("done sending map data to {player}", player=self)
             self.map_data = None
             for data in self.saved_loaders:
                 packet = enet.Packet(bytes(data), enet.PACKET_FLAG_RELIABLE)
