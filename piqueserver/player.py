@@ -57,7 +57,7 @@ class FeatureConnection(ServerConnection):
                 protocol.remove_ban(client_ip)
                 protocol.save_bans()
             else:
-                log.info('banned user %s (%s) attempted to join' % (name,
+                log.info('banned user {} ({}) attempted to join'.format(name,
                                                                     client_ip))
                 self.disconnect(ERROR_BANNED)
                 return
@@ -116,7 +116,7 @@ class FeatureConnection(ServerConnection):
         # TODO: Move this logging into command module?
         if result == False:
             parameters = ['***'] * len(parameters)
-        log_message = '<%s> /%s %s' % (self.name, command,
+        log_message = '<{}> /{} {}'.format(self.name, command,
                                        ' '.join(parameters))
         if result:
             log_message += ' -> %s' % result
@@ -366,7 +366,7 @@ class FeatureConnection(ServerConnection):
     def kick(self, reason=None, silent=False):
         if not silent:
             if reason is not None:
-                message = '%s was kicked: %s' % (self.name, reason)
+                message = '{} was kicked: {}'.format(self.name, reason)
             else:
                 message = '%s was kicked' % self.name
             self.protocol.send_chat(message, irc=True)
@@ -378,9 +378,9 @@ class FeatureConnection(ServerConnection):
         reason = ': ' + reason if reason is not None else ''
         duration = duration or None
         if duration is None:
-            message = '%s permabanned%s' % (self.name, reason)
+            message = '{} permabanned{}'.format(self.name, reason)
         else:
-            message = '%s banned for %s%s' % (self.name,
+            message = '{} banned for {}{}'.format(self.name,
                                               prettify_timespan(duration * 60), reason)
         if self.protocol.on_ban_attempt(self, reason, duration):
             self.protocol.send_chat(message, irc=True)
@@ -398,7 +398,7 @@ class FeatureConnection(ServerConnection):
             current_time += 2
 
     def on_hack_attempt(self, reason):
-        log.warn('Hack attempt detected from %s: %s' % (self.printable_name,
+        log.warn('Hack attempt detected from {}: {}'.format(self.printable_name,
                                                         reason))
         self.kick(reason)
 

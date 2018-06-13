@@ -1150,7 +1150,7 @@ class ServerConnection(BaseConnection):
         lines = textwrap.wrap(value, MAX_CHAT_SIZE - len(prefix) - 1)
 
         for line in lines:
-            chat_message.value = '%s%s' % (prefix, line)
+            chat_message.value = '{}{}'.format(prefix, line)
             self.send_contained(chat_message)
 
     def send_chat_warning(self, message):

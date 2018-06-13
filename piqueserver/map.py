@@ -67,7 +67,7 @@ class Map(object):
 
         if self.gen_script:
             seed = rot_info.get_seed()
-            self.name = '%s #%s' % (rot_info.name, seed)
+            self.name = '{} #{}'.format(rot_info.name, seed)
             log.info("Generating map '%s'..." % self.name)
             random.seed(seed)
             self.data = self.gen_script(rot_info.name, seed)
