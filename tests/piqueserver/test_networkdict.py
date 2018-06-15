@@ -16,11 +16,20 @@ class TestNetworkDict(unittest.TestCase):
             ["(unknown)", "178.63.171.105", ": Hack", 1511716248.032651],
             ["Ken Kaneki", "177.222.250.65", ": kaneki afk", 1511718856.598152],
             ["panic-recover", "172.17.0.1", ": 10", 1512040137.320614],
-            ["panic-recover", "172.17.0.1", ": who", 1512043319.372366]
+            ["panic-recover", "172.17.0.2", ": who", 1512043319.372366]
         ]
         networkdict = NetworkDict()
         networkdict.read_list(ban_list)
         self.assertEqual(ban_list, networkdict.make_list())
+
+    def test_overwrite(self):
+        """test if adding new info to an IP updates it"""
+        networkdict = NetworkDict()
+        value1 = ("hi", 123, "asd")
+        value2 = ("hmm", 125, "asd")
+        networkdict["127.0.0.1"] = value1
+        networkdict["127.0.0.1"] = value2
+        self.assertEqual(networkdict["127.0.0.1"], value2)
 
     def test_get_set(self):
         networkdict = NetworkDict()
@@ -41,6 +50,15 @@ class TestNetworkDict(unittest.TestCase):
             'GOD', ': esp hacker', 1511717871.435394]
         del networkdict["177.47.27.223"]
         self.assertRaises(KeyError, lambda: networkdict["177.47.27.223"])
+
+    def test_pop(self):
+        networkdict = NetworkDict()
+        networkdict["1.1.1.1"] = [
+            'GOD', ': esp hacker', 1511717871.435394]
+        networkdict["2.2.2.2"] = [
+            'whoa', 'being 1337', 1511717871.435394]
+        self.assertEqual(networkdict.pop()[1][0], "whoa")
+        self.assertRaises(KeyError, lambda: networkdict["2.2.2.2"])
 
     def test_contains_nonexisting(self):
         networkdict = NetworkDict()
