@@ -9,7 +9,7 @@ import json
 
 from piqueserver.config import (config, TOML_FORMAT, JSON_FORMAT,
                                 MAXMIND_DOWNLOAD, SUPPORTED_PYTHONS)
-import urllib
+import urllib.request
 
 PKG_NAME = 'piqueserver'
 
