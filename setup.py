@@ -126,7 +126,7 @@ setup(
         'Cython>=0.27,<1',
         'Twisted[tls]>=17,<18',
         'Jinja2>=2,<3',  # status server is part of our 'vanilla' package
-        'Pillow>=4.3.0,<5',
+        'Pillow>=5.1.0,<6',
         'pyenet',
         'toml',
         'typing'
