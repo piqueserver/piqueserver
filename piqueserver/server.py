@@ -289,8 +289,9 @@ class FeatureProtocol(ServerProtocol):
         try:
             with open(os.path.join(config.config_dir, bans_file.get()), 'r') as f:
                 self.bans.read_list(json.load(f))
+            log.debug("loaded {count} bans", count=len(self.bans))
         except FileNotFoundError:
-            pass
+            log.debug("skip loading bans: file unavailable", count=len(self.bans))
         except IOError as e:
             log.error('Could not read bans.txt: {}'.format(e))
         except ValueError as e:
@@ -631,7 +632,8 @@ class FeatureProtocol(ServerProtocol):
 
     def remove_ban(self, ip):
         results = self.bans.remove(ip)
-        log.info('Removing ban:', ip, results)
+        log.info('Removing ban: {ip} {results}',
+                 ip=ip, results=results)
         self.save_bans()
 
     def undo_last_ban(self):
@@ -642,8 +644,14 @@ class FeatureProtocol(ServerProtocol):
     def save_bans(self):
         ban_file = os.path.join(config.config_dir, 'bans.txt')
         ensure_dir_exists(ban_file)
+
+        start_time = reactor.seconds()
         with open(ban_file, 'w') as f:
             json.dump(self.bans.make_list(), f, indent=2)
+        log.debug("saving {count} bans took {time} seconds",
+                  count=len(self.bans),
+                  time=reactor.seconds() - start_time)
+
         if self.ban_publish is not None:
             self.ban_publish.update()
 
@@ -710,7 +718,7 @@ class FeatureProtocol(ServerProtocol):
         if last_time is not None:
             dt = current_time - last_time
             if dt > 1.0:
-                logging.warn('high CPU usage detected - %s' % dt)
+                log.warn('high CPU usage detected - %s' % dt)
         self.last_time = current_time
         ServerProtocol.update_world(self)
         time_taken = reactor.seconds() - current_time
