@@ -274,6 +274,20 @@ class FeatureProtocol(ServerProtocol):
     default_fog = (128, 232, 255)
 
     def __init__(self, interface: bytes, config_dict: Dict[str, Any]) -> None:
+        # logfile path relative to config dir if not abs path
+        log_filename = logfile.get()
+        if log_filename.strip():  # catches empty filename
+            if not os.path.isabs(log_filename):
+                log_filename = os.path.join(config.config_dir, log_filename)
+            ensure_dir_exists(log_filename)
+            if logging_rotate_daily.get():
+                logging_file = DailyLogFile(log_filename, '.')
+            else:
+                logging_file = open(log_filename, 'a')
+            globalLogPublisher.addObserver(textFileLogObserver(logging_file))
+            globalLogPublisher.addObserver(textFileLogObserver(sys.stderr))
+            log.info('piqueserver started on %s' % time.strftime('%c'))
+
         self.config = config_dict
         if random_rotation:
             self.map_rotator_type = random_choice_cycle
@@ -359,20 +373,6 @@ class FeatureProtocol(ServerProtocol):
         if bans_urls.get():
             from piqueserver import bansubscribe
             self.ban_manager = bansubscribe.BanManager(self)
-        # logfile path relative to config dir if not abs path
-        l = logfile.get()
-        if l.strip():  # catches empty filename
-            if not os.path.isabs(l):
-                l = os.path.join(config.config_dir, l)
-            ensure_dir_exists(l)
-            if logging_rotate_daily.get():
-                logging_file = DailyLogFile(l, '.')
-            else:
-                logging_file = open(l, 'a')
-            globalLogPublisher.addObserver(textFileLogObserver(logging_file))
-            globalLogPublisher.addObserver(textFileLogObserver(sys.stderr))
-            log.info('piqueserver started on %s' % time.strftime('%c'))
-
         self.start_time = reactor.seconds()
         self.end_calls = []
         # TODO: why is this here?
