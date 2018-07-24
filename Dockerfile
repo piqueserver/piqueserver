@@ -36,6 +36,9 @@ RUN apk add --no-cache --virtual .build-deps-server gcc musl-dev g++ \
     && apk del .build-deps-server \
     && cd / && rm -rf /usr/src/app
 
+# We need ssl support for fetching server's IP
+RUN apk add --no-cache openssl
+
 # Copy over the rest and default to launching the server
 CMD piqueserver -d /config
 
