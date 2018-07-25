@@ -27,8 +27,6 @@ HIT_PERCENT = WARN_ADMIN
 KILLS_IN_TIME = WARN_ADMIN
 MULTIPLE_BULLETS = WARN_ADMIN
 
-DETECT_DAMAGE_HACK = True
-
 # Minimum amount of time that must pass between admin warnings that are
 # triggered by the same detection method. Time is in seconds.
 WARN_INTERVAL_MINIMUM = 300
@@ -381,18 +379,12 @@ def apply_script(protocol, connection, config):
                         self.multiple_bullets_eject()
                         return False
             elif self.weapon == SMG_WEAPON:
-                if not (hit_amount in SMG_DAMAGE) and DETECT_DAMAGE_HACK:
+                self.smg_hits += 1
+                if self.multiple_bullets_count >= SMG_MULTIPLE_BULLETS_MAX:
+                    self.multiple_bullets_eject()
                     return False
-                else:
-                    self.smg_hits += 1
-                    if self.multiple_bullets_count >= SMG_MULTIPLE_BULLETS_MAX:
-                        self.multiple_bullets_eject()
-                        return False
             elif self.weapon == SHOTGUN_WEAPON:
-                if not (hit_amount in SHOTGUN_DAMAGE) and DETECT_DAMAGE_HACK:
-                    return False
-                elif shotgun_use:
-                    self.shotgun_hits += 1
+                self.shotgun_hits += 1
 
             return connection.on_hit(
                 self, hit_amount, hit_player, hit_type, grenade)
