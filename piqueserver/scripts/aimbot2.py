@@ -371,13 +371,10 @@ def apply_script(protocol, connection, config):
             if hit_type == HEADSHOT_KILL:
                 self.multiple_bullets_count += 1
             if self.weapon == RIFLE_WEAPON:
-                if not (hit_amount in RIFLE_DAMAGE) and DETECT_DAMAGE_HACK:
+                self.rifle_hits += 1
+                if self.multiple_bullets_count >= RIFLE_MULTIPLE_BULLETS_MAX:
+                    self.multiple_bullets_eject()
                     return False
-                else:
-                    self.rifle_hits += 1
-                    if self.multiple_bullets_count >= RIFLE_MULTIPLE_BULLETS_MAX:
-                        self.multiple_bullets_eject()
-                        return False
             elif self.weapon == SMG_WEAPON:
                 self.smg_hits += 1
                 if self.multiple_bullets_count >= SMG_MULTIPLE_BULLETS_MAX:
