@@ -23,9 +23,7 @@ from jinja2 import Environment, PackageLoader
 from twisted.internet import reactor
 from twisted.web import server
 from twisted.web.resource import Resource
-from twisted.web.static import File
 from piqueserver.config import config
-
 
 OVERVIEW_UPDATE_INTERVAL = 1 * 60  # 1 minute
 status_server_config = config.section("status_server")
@@ -119,7 +117,6 @@ class StatusServerFactory(object):
         root.putChild(b'json', JSONPage(self))
         root.putChild(b'', StatusPage(self))
         root.putChild(b'overview', MapOverview(self))
-        root.putChild(b'assets', File("./web/assets/"))
         site = server.Site(root)
 
         logging = logging_option.get()
