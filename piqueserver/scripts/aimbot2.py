@@ -81,11 +81,6 @@ HEADSHOT_SNAP_ANGLE = 90.0
 # of an enemy
 NEAR_MISS_ANGLE = 10.0
 
-# Valid damage values for each gun
-RIFLE_DAMAGE = (33, 49, 100)
-SMG_DAMAGE = (18, 29, 75)
-SHOTGUN_DAMAGE = (16, 27, 37)
-
 # Approximate size of player's heads in blocks
 HEAD_RADIUS = 0.7
 
