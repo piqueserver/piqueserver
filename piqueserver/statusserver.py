@@ -25,6 +25,7 @@ from twisted.web import server
 from twisted.web.resource import Resource
 from piqueserver.config import config
 
+
 OVERVIEW_UPDATE_INTERVAL = 1 * 60  # 1 minute
 status_server_config = config.section("status_server")
 port_option = status_server_config.option("port", 32886)
