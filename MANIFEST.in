@@ -31,10 +31,6 @@ exclude piqueserver/config/maps/*.txtc
 recursive-exclude piqueserver/config/logs/ *
 recursive-exclude piqueserver/config/data/ *
 
-# py2exe
-recursive-exclude py2exe/dist/
-exclude py2exe/*.zip
-
 exclude pyspades/bytes.cpp
 exclude pyspades/common.cpp
 exclude pyspades/contained.cpp
@@ -43,13 +39,3 @@ exclude pyspades/mapmaker.cpp
 exclude pyspades/packet.cpp
 exclude pyspades/vxl.cpp
 exclude pyspades/world.cpp
-
-
-# enet
-exclude enet/pyenet/enet.c
-# exclude enet/pyenet/__init__.py
-exclude enet/pyenet/enet-pyspades.pyx
-recursive-exclude enet/pyenet/enet/ *
-recursive-exclude enet/pyenet/build/ *
-exclude enet/enet-*.tar.gz
-
