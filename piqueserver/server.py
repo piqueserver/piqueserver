@@ -658,15 +658,35 @@ class FeatureProtocol(ServerProtocol):
     def receive_callback(self, address: Address, data: bytes) -> None:
         """This hook recieves the raw UDP data before it is processed by enet"""
 
-        # reply to ASCII HELLO messages with HI so that clients can measure the
-        # connection latency
-        if data == b'HELLO':
-            self.host.socket.send(address, b'HI')
-            return 1
+        # exceptions get swallowed in the pyenet C stuff, so we catch anything
+        # for now. This should ideally get fixed in pyenet instead.
+        try:
+            # reply to ASCII HELLO messages with HI so that clients can measure the
+            # connection latency
+            if data == b'HELLO':
+                self.host.socket.send(address, b'HI')
+                return 1
+            # reply to ASCII HELLOLAN messages with server data for LAN discovery
+            elif data == b'HELLOLAN':
+                entry = {
+                    "name": self.name,
+                    "players_current": self.get_player_count(),
+                    "players_max": self.max_players,
+                    "map": self.map_info.short_name,
+                    "game_mode": self.get_mode_name(),
+                    "game_version": "0.75"
+                }
+                payload = json.dumps(entry).encode()
+                self.host.socket.send(address, payload)
+                return 1
 
-        # This drop the connection of any ip in hard_bans
-        if address.host in self.hard_bans:
-            return 1
+            # This drop the connection of any ip in hard_bans
+            if address.host in self.hard_bans:
+                return 1
+        except Exception as e:
+            print("error in callback query")
+            import traceback
+            traceback.print_exc()
 
     def data_received(self, peer: Peer, packet: Packet) -> None:
         ip = peer.address.host
