@@ -134,7 +134,7 @@ max_players = config.option('max_players', default=20)
 melee_damage = config.option('melee_damage', default=100)
 max_connections_per_ip = config.option('max_connections_per_ip', default=0)
 server_prefix = config.option('server_prefix', default='[*]')
-balanced_teams = config.option('balanced_teams', default=None)
+balanced_teams = config.option('balanced_teams', default=2)
 login_retries = config.option('login_retries', 1)
 default_ban_duration = bans_config.option('default_duration', default=24 * 60)
 speedhack_detect = config.option('speedhack_detect', True)
@@ -556,26 +556,26 @@ class FeatureProtocol(ServerProtocol):
             self.master_connection.send_server()
 
     def format(self, value: str, extra: Optional[Dict[str, str]] = None) -> str:
-        if extra is None:
-            extra = {}
-
         map_info = self.map_info
         format_dict = {
             'map_name': map_info.name,
             'map_author': map_info.author,
             'map_description': map_info.description,
-            'game_mode': self.get_mode_name()
+            'game_mode': self.get_mode_name(),
+            'server_name': self.name,
         }
-        format_dict.update(extra)
-        return value % format_dict
+        if extra:
+            format_dict.update(extra)
+        # format with both old-style and new string formatting to stay
+        # compatible with older configs
+        return value.format(**format_dict) % format_dict
 
     def format_lines(self, value: List[str]) -> List[str]:
         if value is None:
             return
         lines = []
-        extra = {'server_name': self.name}
         for line in value:
-            lines.append(self.format(line, extra))
+            lines.append(self.format(line))
         return lines
 
     def got_master_connection(self, client):

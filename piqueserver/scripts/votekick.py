@@ -58,8 +58,8 @@ S_REASON = 'Reason: {reason}'
 
 # register options
 VOTEKICK_CONFIG = config.section('votekick')
-REQUIRED_PERCENTAGE_OPTION = VOTEKICK_CONFIG.option('percentage', 25.0)
-BAN_DURATION_OPTION = VOTEKICK_CONFIG.option('ban_duration', 15.0)
+REQUIRED_PERCENTAGE_OPTION = VOTEKICK_CONFIG.option('percentage', 35.0)
+BAN_DURATION_OPTION = VOTEKICK_CONFIG.option('ban_duration', 30.0)
 PUBLIC_VOTES_OPTION = VOTEKICK_CONFIG.option('public_votes', True)
 
 class VotekickFailure(Exception):

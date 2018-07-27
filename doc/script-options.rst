@@ -38,6 +38,22 @@ A tool for identifying griefers. Provides /griefcheck command.
    griefcheck_on_votekick = true
    irc_only = false
 
+piqueserver\.scripts\.votekick
+-----------------------------------
+Allows users to start votekicks
+
+.. code-block:: guess
+
+    [votekick]
+    # percentage of total number of players in the server required to vote to
+    # successfully votekick a player
+    percentage = 35
+
+    # duration in minutes that votekicked player will be banned for
+    ban_duration = 30
+
+    public_votes = true
+
 piqueserver\.scripts\.medkit
 --------------------------------------
 Gives a specified amount of medkits on spawn.
@@ -86,3 +102,13 @@ Lets you set restrictions on spectators.
    kick = false # determines whether spectators will be kicked after remaining for so long
    kick_time = 300 # how long a spectator may remain before they are kicked; time in seconds
 
+piqueserve\.scripts\.rollback
+++++++++++++++++++++
+
+Rollback rolls back the map to it's original state by placing and removing
+changed blocks. This takes ages. Use with care.
+
+.. code-block:: guess
+
+    [rollback]
+    rollback_on_game_end = false

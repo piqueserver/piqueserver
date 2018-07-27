@@ -150,8 +150,8 @@ teamswitch_interval = 0
 # whether players are allowed to switch teams at all
 teamswitch_allowed = true
 
-# TODO
-speedhack_detect = false
+# attempt to detect speedhacking. This might cause false positives.
+speedhack_detect = true
 
 # The amount of damage dealt by a melee hit
 melee_damage = 80
@@ -195,10 +195,10 @@ color = [ 0, 255, 0]
 # logging in as admin or trusted also disables being votekicked (if that script is enabled)
 # For security reasons, logins are disabled by default.
 #
-#admin = ["pass1", "pass2"]
-#moderator = ["pass"]
-#guard = ["pass"]
-#trusted = ["pass"]
+#admin = ["adminpass1", "adminpass2"]
+#moderator = ["modpass"]
+#guard = ["guardpass"]
+#trusted = ["trustedpass"]
 
 
 [bans]
