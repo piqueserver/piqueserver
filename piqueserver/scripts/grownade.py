@@ -1,22 +1,27 @@
 """
 Turns your grenades into magical kv6-growing seeds. Or beans!
 
-Use /model <filename> to load model files. These must be placed inside a folder
-named 'kv6' in the config directory. A full path would look like this:
-"~/config/kv6/intel.kv6". Then you load it with/model some_model
+Use ``/model <filename>`` to load model files. These must be placed inside a
+folder named :file:`kv6/` in the config directory. A full path would look like
+this: :file:`~/config/kv6/{filename}.kv6`. Then it can be loaded with ``/model
+some_model``
 
-Wildcards and subfolders are allowed. Some examples:
+Wildcards and subfolders are allowed. Some examples::
 
-/model building*
-Loads all models that start with "building", like "building1" and "buildingred"
+    /model building*
 
-/model my_trees/*
+Loads all models that start with "building", like "building1" and
+"buildingred"::
+
+    /model my_trees/*
+
 Loads all models inside a folder named "my_trees"
 
 When you have many models loaded, each grenade will pick a random one to grow.
-To stop littering the map with random objects just type /model again.
+To stop littering the map with random objects just type ``/model``.
 
----
+Pivot
+^^^^^
 
 THE PIVOT POINT in kv6 files determines the first block to be placed. The rest
 of the model will then follow, growing around it.
@@ -30,13 +35,21 @@ tree trunk, so that it grows up and not into the ground.
 
 Works best with 0.75 kv6 models.
 
----
-
 You can adjust FLYING_MODELS and GROW_ON_WATER to allow growing in the air and
 on water, respectively. These are disabled by default so you can fly high and
 sprinkle tree-growing grenades without worrying about unseemly oddities.
 
-Maintainer: hompy
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+    [grownade]
+
+    flying_models = False # if False grenades exploding in midair will be ignored
+    grow_on_water = False # if False grenades exploding in water will do nothing
+
+.. codeauthor:: hompy
 """
 
 import os
@@ -53,11 +66,12 @@ from pyspades.constants import BUILD_BLOCK
 from piqueserver.commands import command
 from piqueserver.config import config
 
-FLYING_MODELS = False  # if False grenades exploding in midair will be ignored
-GROW_ON_WATER = False  # if False grenades exploding in water will do nothing
+grownade_section = config.section("grownade")
+FLYING_MODELS = grownade_section.option("flying_models")
+GROW_ON_WATER = grownade_section.option("grow_on_water")
 
 KV6_DIR = "./"+config.config_dir+'/kv6'
-LOWEST_Z = 63 if GROW_ON_WATER else 62
+LOWEST_Z = 63 if GROW_ON_WATER.get() else 62
 GROW_INTERVAL = 0.3
 
 S_NO_KV6_FOLDER = "You haven't created a kv6 folder yet!"
@@ -303,7 +317,7 @@ def apply_script(protocol, connection, config):
                 return
             x, y, z = (int(n) for n in grenade.position.get())
             map = self.protocol.map
-            if (not FLYING_MODELS and not map.get_solid(x, y, z + 1) and
+            if (not FLYING_MODELS.get() and not map.get_solid(x, y, z + 1) and
                     not z == LOWEST_Z == 63):
                 return
             model = choice(self.grenade_models)
