@@ -11,6 +11,7 @@ Welcome to piqueserver's documentation!
    :caption: Contents:
 
    configuration
+   included-scripts
    architecture
    development
    piqueserver
