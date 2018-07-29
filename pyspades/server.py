@@ -316,14 +316,17 @@ class ServerProtocol(BaseProtocol):
     def master_disconnected(self, client=None):
         self.master_connection = None
 
-    def update_master(self):
-        if self.master_connection is None:
-            return
+    def get_player_count(self):
         count = 0
         for connection in self.connections.values():
             if connection.player_id is not None:
                 count += 1
-        self.master_connection.set_count(count)
+        return count
+
+    def update_master(self):
+        if self.master_connection is None:
+            return
+        self.master_connection.set_count(self.get_player_count())
 
     def update_entities(self):
         map_obj = self.map
