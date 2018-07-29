@@ -109,8 +109,9 @@ def apply_script(protocol, connection, config):
             attacker_count = attacker_count or ATTACKER_TO_DEFENDER_RATIO
             if ((attacker_count > defender_count and team is attacker) or
                     (attacker_count < defender_count and team is defender)):
-                self.send_chat(S_TEAM_FULL)
-                return False
+                if abs(attacker_count - defender_count) > ATTACKER_TO_DEFENDER_RATIO:
+                    self.send_chat(S_TEAM_FULL)
+                    return False
             return connection.on_team_join(self, team)
 
         def on_team_changed(self, old_team):
