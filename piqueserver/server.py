@@ -568,6 +568,7 @@ class FeatureProtocol(ServerProtocol):
             format_dict.update(extra)
         # format with both old-style and new string formatting to stay
         # compatible with older configs
+        # NOTE: deprecated
         return value.format(**format_dict) % format_dict
 
     def format_lines(self, value: List[str]) -> List[str]:

@@ -1,23 +1,42 @@
 # TODO: store config here about location of maps/scripts/game_modes/etc as well
 
-# server name - displayed on master server
+
+# Base Configuration Options
+# ==========================
+
+# These are the base configuration options available in piqueserver.
+
+# General information and server configuration.
+
+# name
+# ++++
+#
+# The Name of the server, as displayed on the master server list.
+# This config option supports :ref:`substitution`.
 name = "piqueserver instance"
 
-# messages sent when user joins server
+# motd
+# ++++
+
+# A list of lines which should be sent when the player joins::
+# This config option supports :ref:`substitution`.
 motd = [
- "Welcome to %(server_name)s",
- "Map: %(map_name)s by %(map_author)s",
- "Game mode: %(game_mode)s",
- "Server powered by piqueserver and buildandshoot.com"
+    "Welcome to {server_name}! See /help for commands.",
+    "you are playing {game_mode}",
+    "Map is {map_name} by {map_author}.",
+    "Map description: {map_description}.",
+    "(server powered by piqueserver)",
 ]
+
+# TODO: port the remaining rst docs from here down
 
 # info displaying when user types the /help command
 # if not defined, /help will display a list of available commands
 # String interpolation is allowed. Possible values are:
-# 'server_name', 'map_name', 'map_author', 'map_description', 'game_mode'
+# 'server_name', 'map_name', 'map_author', 'map_description', 'game_mode'::
 help = [
-  "Server name: %(server_name)s", "Map: %(map_name)s by %(map_author)s",
-  "Game mode: %(game_mode)s",
+  "Server name: {server_name}", "Map: {map_name} by {map_author}",
+  "Game mode: {game_mode}",
   "/streak    Shows how many kills in a row you got without dying",
   "/intel     Tells you who's got the enemy intel",
   "/votekick  Start a vote to temporarily ban a disruptive player",
@@ -31,7 +50,7 @@ rules = [
 
 # random lines from this list are shown at a specified frequency in-game
 tips = [
-  "You are playing %(game_mode)s on %(server_name)s",
+  "You are playing {game_mode} on {server_name}",
   "Type /help for info & commands"
 ]
 

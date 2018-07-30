@@ -1,6 +1,8 @@
 Configuring Piqueserver
 =======================
 
+
+
 Piqueserver is configured through a config file, usually named
 :file:`config.toml`.  Piqueserver uses the configuration language TOML (Tom's
 Obvious Markup Language). A detailed description of TOML can be found `in the
@@ -16,7 +18,7 @@ TOML Syntax
 -----------
 
 TOML files are plaintext files. They can be edited with any plaintext editor of
-your choice, such as Notepad++ on windows, editor on mac and, nano or gedit on
+your choice, such as Notepad++ on windows, editor on MacOS, or nano or gedit on
 Linux.
 
 Configuration is case-sensitive. This means that your settings will not apply
@@ -35,8 +37,7 @@ There are a number of types of values::
     motd = """
     a longer text
     that can stretch
-    over more lines
-    (useful for the MOTD!)"""
+    over more lines"""
 
     list = ["a", "list",
             "of", "values"]
@@ -75,9 +76,11 @@ noted in the documentation for the relevant option.
 .. versionadded:: 1.0.0
     The ``{name}`` format was added. The older, ``%(name)s`` format is deprecated.
 
+
 Options
 -------
 
-.. toctree::
-    config-options
-    script-options
+All the below configuration options can be specified in the toml config. The
+values given in the examples are the values in the default config.
+
+.. autotoml:: piqueserver/config/config.toml
