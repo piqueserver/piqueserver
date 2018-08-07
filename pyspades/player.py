@@ -633,10 +633,13 @@ class ServerConnection(BaseConnection):
 
     @register_packet_handler(loaders.VersionResponse)
     def on_version_info_recieved(self, contained: loaders.VersionResponse) -> None:
+        # TODO: Make this a dict lookup instead
         if contained.client == 'o':
             self.client_info["client"] = "OpenSpades"
         elif contained.client == 'B':
             self.client_info["client"] = "BetterSpades"
+        elif contained.client == 'a':
+            self.client_info["client"] = "ACE"
         else:
             self.client_info["client"] = "Unknown({})".format(contained.client)
         self.client_info["version"] = contained.version
