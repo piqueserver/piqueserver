@@ -2,7 +2,7 @@
 Runs the garbage collector at a given interval and displays any uncollected
 garbage found.
 
-Maintainer: mat^2
+.. codeauthor:: mat^2
 """
 
 from twisted.internet import reactor

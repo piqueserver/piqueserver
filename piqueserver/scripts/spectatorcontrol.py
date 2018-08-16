@@ -1,33 +1,35 @@
-# Script by Tocksman made for Goon Haven
-# Short bit of documentation:
-#
-# This script will hopefully give server owners some control over what
-# spectators do on there server. As of now since the release of v0.75,
-# Goon Haven has had issues with spectators idling and using global chat
-# to send information to a team so that they may know enemy positions
-# or what the enemy is doing, etc. This script can block spectator chat
-# as well as kick spectators after so much time as passed.
-#
-# Add these lines to your config:
-# spectator_control.no_chat - This determines whether spectators can chat or not
-#                     in your server. True disables chat. [True/False]
-# spectator_control.kick - This determines whether spectators will be kicked after
-#                  remaining for so long. True activates this. [True/False]
-# spectator_control.kick_time - How long a spectator may remain before he is kicked.
-#                       Time is in seconds. Note that setting time to 0
-#                       will cause the script to deactivate or malfunction.
-#
-# Additionally, server owners who also give out "guard" or "mini-mod"
-# positions can add the right "specpower" to the group rights in commands.py
-# to have the guards/minimods be immune to the spectator kick and chat
-# restrictions.
-#
-#
-# Oh, and admins are also automatically immune to spectator kick and chat
-# restrictions.
-#
-# Hope you enjoy!
-# Tocksman
+"""
+Script by Tocksman made for Goon Haven
+Short bit of documentation:
+
+This script will hopefully give server owners some control over what
+spectators do on there server. As of now since the release of v0.75,
+Goon Haven has had issues with spectators idling and using global chat
+to send information to a team so that they may know enemy positions
+or what the enemy is doing, etc. This script can block spectator chat
+as well as kick spectators after so much time as passed.
+
+Add these lines to your config:
+spectator_control.no_chat - This determines whether spectators can chat or not
+                    in your server. True disables chat. [True/False]
+spectator_control.kick - This determines whether spectators will be kicked after
+                 remaining for so long. True activates this. [True/False]
+spectator_control.kick_time - How long a spectator may remain before he is kicked.
+                      Time is in seconds. Note that setting time to 0
+                      will cause the script to deactivate or malfunction.
+
+Additionally, server owners who also give out "guard" or "mini-mod"
+positions can add the right "specpower" to the group rights in commands.py
+to have the guards/minimods be immune to the spectator kick and chat
+restrictions.
+
+
+Oh, and admins are also automatically immune to spectator kick and chat
+restrictions.
+
+Hope you enjoy!
+Tocksman
+"""
 
 from math import ceil, floor
 from twisted.internet import reactor

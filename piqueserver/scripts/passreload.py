@@ -1,5 +1,13 @@
-# passreload.py
-# written by Danke
+"""
+Allows reloading config on the fly
+
+Commands
+^^^^^^^^
+
+* ``/reloadconfig``
+
+.. codeauthor:: Danke
+"""
 
 import json
 import os.path

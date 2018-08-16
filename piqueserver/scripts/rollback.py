@@ -1,7 +1,22 @@
 """
-Progressively roll backs map to their original state (or to another map).
+Rollback rolls back the map to it's original state by placing and removing
+changed blocks. This takes ages. Use with care.
 
-Maintainer: hompy
+Commands
+^^^^^^^^
+* ``/rollmap``
+* ``/rollback``
+* ``/rollbackcancel``
+
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+    [rollback]
+    rollback_on_game_end = false
+
+.. codeauthor:: hompy
 """
 
 import os

@@ -8,7 +8,7 @@ Use /unlink [player] to toggle yourself or someone from being linked.
 
 May not work well with squads.
 
-Maintainer: hompy
+.. codeauthor:: hompy
 """
 
 from random import choice

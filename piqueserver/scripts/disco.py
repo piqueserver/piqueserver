@@ -1,7 +1,12 @@
 """
 Ever wanted a disco in Ace of Spades?
 
-Maintainer: mat^2
+Commands
+^^^^^^^^
+
+* ``/disco``
+
+.. codeauthor:: mat^2
 """
 
 from twisted.internet.task import LoopingCall

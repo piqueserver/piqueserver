@@ -1,7 +1,15 @@
 """
 Kicks a player if inactive for too long.
 
-Maintainer: hompy
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [afk]
+   time_limit = 15 # in minutes
+
+.. codeauthor:: hompy
 """
 
 from operator import attrgetter

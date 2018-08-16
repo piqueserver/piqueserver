@@ -1,8 +1,21 @@
 """
 Gives a specified amount of medkits on spawn
 
-Author: Booboorocks998
-Maintainer: mat^2
+Commands
+^^^^^^^^
+
+* ``/medkit or /m``
+
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [medkit]
+   medkits = 1 # no. of medkits
+   medkit_heal_amount = 40 # how much hp. it gives
+
+.. codeauthor:: Booboorocks998 & mat^2
 """
 
 from piqueserver.commands import command

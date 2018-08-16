@@ -1,9 +1,19 @@
 """
 A tool for identifying griefers.
 
-Maintainer: hompy
+.. note::
+  "blockinfo" must be AFTER "votekick" in the config script list
 
-Note: "blockinfo" must be AFTER "votekick" in the config.txt script list
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [blockinfo]
+   griefcheck_on_votekick = true
+   irc_only = false
+
+.. codeauthor:: hompy
 """
 
 from twisted.internet.reactor import seconds

@@ -1,7 +1,7 @@
 """
 Makes grenades create blocks.
 
-Maintainer: hompy
+.. codeauthor:: hompy
 """
 
 from pyspades.contained import BlockAction

@@ -1,21 +1,31 @@
-# maintained by triplefox
+"""
+Allows users to start votekicks
 
-# Copyright (c) James Hofmann 2012.
+Commands
+^^^^^^^^
 
-# This file is part of pyspades.
+* ``/votekick <player> <reason>``
+* ``/y``
+* ``/togglevotekick or /tvk``
+* ``/cancel``
 
-# pyspades is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+Options
+^^^^^^^
 
-# pyspades is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+.. code-block:: guess
 
-# You should have received a copy of the GNU General Public License
-# along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
+    [votekick]
+    # percentage of total number of players in the server required to vote to
+    # successfully votekick a player
+    percentage = 35
+
+    # duration in minutes that votekicked player will be banned for
+    ban_duration = 30
+
+    public_votes = true
+
+.. codeauthor:: James Hofmann a.k.a triplefox
+"""
 
 
 from twisted.internet.reactor import seconds

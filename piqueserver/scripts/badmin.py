@@ -1,6 +1,19 @@
-# Badmin is an bot admin.  He'll do a variety of common admin tasks so you don't have to.
-# He might not always get it right, but he'll get it done, and isn't that what really matters?
-# -Requirements: blockinfo.py (for grief detection), ratio.py (for k/d ratio), aimbot2.py (hit accuracy)
+"""
+Badmin is an bot admin. 
+
+It automates common admin tasks such as:
+
+* Banning greifers
+* Banning aimbots
+* Banning racists
+
+Since it is automate it won't always get it right.
+
+.. note::
+  It is dependant on blockinfo.py (for grief detection), ratio.py (for k/d ratio), aimbot2.py (hit accuracy) scripts.
+
+.. codeauthor:: ?
+"""
 
 from twisted.internet import reactor
 from pyspades.common import prettify_timespan

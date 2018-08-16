@@ -1,7 +1,15 @@
 """
 Saves current map on shutdown (and optionally loads it again on startup)
 
-Maintainer: mat^2
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+    [savemap]
+    load_saved_map = false
+
+.. codeauthor:: mat^2
 """
 
 import os

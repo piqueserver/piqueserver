@@ -1,7 +1,9 @@
 """
-spadenadefix.py - blocks spade-nade bug
-by kmsi(kmsiapps@gmail.com)
+Prevents spade-nade bug
+
 version 2(2017.12.23)
+
+.. codeauthor:: kmsi<kmsiapps@gmail.com>
 """
 
 from pyspades.constants import SPADE_TOOL

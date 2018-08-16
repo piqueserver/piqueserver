@@ -1,7 +1,13 @@
 """
 Airstrikes. Boom!
 
-Maintainer: hompy
+Commands
+^^^^^^^^
+
+* ``/airstrike or /a``
+* ``/givestrike <player>``
+
+.. codeauthor:: hompy
 """
 
 from math import ceil, sin, cos

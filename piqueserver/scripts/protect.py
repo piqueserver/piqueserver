@@ -1,7 +1,7 @@
 """
 Protects areas against block destroying/building.
 
-Maintainer: hompy
+.. codeauthor:: hompy
 """
 
 from piqueserver.commands import command, admin

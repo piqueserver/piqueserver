@@ -22,7 +22,13 @@ Admins can disable or enable placing of new markers using /togglemarkers.
 Any functionality can be disabled switching off SHADOW_INTEL, REVEAL_ENEMIES,
 VV_ENABLED and CHAT_MARKERS below.
 
-Maintainer: hompy
+Commands
+^^^^^^^^
+* ``/clear``
+* ``/togglemarkers``
+* ``/markers``
+
+.. codeauthor:: hompy
 """
 
 import csv

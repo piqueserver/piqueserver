@@ -2,7 +2,12 @@
 Adds the ability to 'trust' certain players, i.e. they cannot be votekicked
 or rubberbanded.
 
-Maintainer: mat^2 / hompy
+Commands
+^^^^^^^^
+
+* ``/trust <player>``
+
+.. codeauthor:: mat^2 & hompy
 """
 
 from piqueserver.commands import command, admin, get_player

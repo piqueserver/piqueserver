@@ -1,7 +1,15 @@
 """
-Plugin to detect and react to possible aimbot users
+Detects and react to possible aimbot users.
 
-maintained by: ?
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [aimbot]
+   collect_data = true # saves hits and shots of each weapon to a csv file
+
+.. codeauthor:: ?
 """
 import os
 import csv
