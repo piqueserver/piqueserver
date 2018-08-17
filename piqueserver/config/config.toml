@@ -240,7 +240,7 @@ guard = [
 ]
 
 [logging]
-
+loglevel = "info"
 # enable the debug logging
 debug_log = false
 
