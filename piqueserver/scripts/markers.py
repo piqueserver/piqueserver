@@ -24,9 +24,10 @@ VV_ENABLED and CHAT_MARKERS below.
 
 Commands
 ^^^^^^^^
-* ``/clear``
-* ``/togglemarkers``
-* ``/markers``
+
+* ``/clear`` clears all markers *admin only*
+* ``/togglemarkers <player>`` toggles a player's ability to place markers *admin only*
+* ``/markers`` gives instructions
 
 .. codeauthor:: hompy
 """

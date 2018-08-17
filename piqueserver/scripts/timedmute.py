@@ -4,7 +4,7 @@ Allows muting players for a set amount of time.
 Commands
 ^^^^^^^^
 
-* ``/tm <player> <seconds> <reason>``
+* ``/tm <player> <seconds> <reason>`` mute a player for set amount of time *admin only*
 
 .. note::
   Default time 5 minutes, default reason None

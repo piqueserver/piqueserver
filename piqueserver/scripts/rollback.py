@@ -4,9 +4,11 @@ changed blocks. This takes ages. Use with care.
 
 Commands
 ^^^^^^^^
-* ``/rollmap``
-* ``/rollback``
-* ``/rollbackcancel``
+
+* ``/rollmap <map name>`` ? *admin only*
+* ``/rollmap <map name> <coordinates>`` ? *admin only*
+* ``/rollback`` starts a rollback on the current map *admin only*
+* ``/rollbackcancel`` cancel an on-going rollback *admin only*
 
 Options
 ^^^^^^^

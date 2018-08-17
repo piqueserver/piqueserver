@@ -8,6 +8,11 @@ mine.
 .. note::
    This script conflicts with `smartnade` script.
 
+Commands
+^^^^^^^^
+
+* ``/minedebug`` toggles debug mode *admin only*
+
 example extension from mapname.txt:
 
 >>> extensions = {

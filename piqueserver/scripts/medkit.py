@@ -4,7 +4,7 @@ Gives a specified amount of medkits on spawn
 Commands
 ^^^^^^^^
 
-* ``/medkit or /m``
+* ``/medkit or /m`` utilizes available medkits to heal
 
 Options
 ^^^^^^^

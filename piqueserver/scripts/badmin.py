@@ -9,6 +9,12 @@ It automates common admin tasks such as:
 
 Since it is automate it won't always get it right.
 
+Commands
+^^^^^^^^
+
+* ``/badmin`` shows which badmin options are enabled/disabled *admin only*
+* ``/investigate <player>`` shows a player's grief score, K/D ratio and hit accuracy *admin only*
+
 .. note::
   It is dependant on blockinfo.py (for grief detection), ratio.py (for k/d ratio), aimbot2.py (hit accuracy) scripts.
 
@@ -22,6 +28,7 @@ from pyspades.collision import distance_3d_vector
 from piqueserver.commands import command, admin, get_player
 import re
 
+# TODO: convert settings to config options
 BADMIN_VERSION = 9
 # Settings for auto-aimbot
 SCORE_AIMBOT_ENABLED = True

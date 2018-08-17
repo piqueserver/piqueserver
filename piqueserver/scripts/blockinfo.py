@@ -4,6 +4,11 @@ A tool for identifying griefers.
 .. note::
   "blockinfo" must be AFTER "votekick" in the config script list
 
+Commands
+^^^^^^^^
+
+* ``/griefcheck or /gc <player> <minutes>`` gives you when, how many and whos blocks a player destroyed *admin only*
+
 Options
 ^^^^^^^
 

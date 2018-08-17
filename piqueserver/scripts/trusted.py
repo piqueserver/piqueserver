@@ -5,7 +5,7 @@ or rubberbanded.
 Commands
 ^^^^^^^^
 
-* ``/trust <player>``
+* ``/trust <player>`` gives trusted status to a player
 
 .. codeauthor:: mat^2 & hompy
 """

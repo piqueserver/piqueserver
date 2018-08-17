@@ -1,6 +1,12 @@
 """
 Allows players to vote for maps.
 
+Commands
+^^^^^^^^
+
+* ``/votemap`` initiates map voting
+* ``/vote <map name>`` vote for a map 
+
 .. code-block:: guess
 
     [votemap]

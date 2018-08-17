@@ -6,7 +6,7 @@ Gets a player's location info using a geoip database.
 
 Commands
 ^^^^^^^^
-* ``/from <player>``
+* ``/from <player>`` get player's location info
 
 .. codeauthor:: ?
 """

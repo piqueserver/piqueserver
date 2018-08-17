@@ -4,10 +4,11 @@ Allows users to start votekicks
 Commands
 ^^^^^^^^
 
-* ``/votekick <player> <reason>``
-* ``/y``
-* ``/togglevotekick or /tvk``
-* ``/cancel``
+* ``/votekick <player> <reason>`` start votekick against a player
+* ``/y`` votes yes
+* ``/togglevotekick or /tvk`` toggles votekicks on/off globally
+* ``/togglevotekick or /tvk <player>`` toggles votekicks on/off for specific players
+* ``/cancel`` cancels a votekick
 
 Options
 ^^^^^^^

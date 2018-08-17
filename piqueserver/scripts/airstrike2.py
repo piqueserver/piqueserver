@@ -4,8 +4,8 @@ Airstrikes. Boom!
 Commands
 ^^^^^^^^
 
-* ``/airstrike or /a``
-* ``/givestrike <player>``
+* ``/airstrike or /a`` allows a player to call an airstike
+* ``/givestrike <player>`` gives a player the ability to call an airstike immediately *admin only*
 
 .. codeauthor:: hompy
 """

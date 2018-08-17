@@ -5,11 +5,11 @@ on IRC and a custom timer.
 Commands
 ^^^^^^^^
 
-* ``/timer``
-* ``/stoptimer``
-* ``/startrecord``
-* ``/stoprecord``
-* ``/saverecord``
+* ``/timer`` starts timer *admin only*
+* ``/stoptimer`` stops timer *admin only*
+* ``/startrecord`` starts a fresh records *admin only*
+* ``/stoprecord`` clears the current record *admin only*
+* ``/saverecord`` save record to a file *admin only*
 
 .. codeauthor: mat^2
 """

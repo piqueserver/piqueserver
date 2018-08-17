@@ -1,6 +1,12 @@
 """
 Protects areas against block destroying/building.
 
+Commands
+^^^^^^^^
+
+* ``/protect <area coordinates>`` puts an area under protected status *admin only*
+* ``/protect`` clears all protected areas *admin only*
+
 .. codeauthor:: hompy
 """
 

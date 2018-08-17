@@ -7,7 +7,7 @@ Shows K/D ratio
 Commands
 ^^^^^^^^
 
-* ``/ratio <player>``
+* ``/ratio <player>`` shows K/D ratio
 
 .. codeauthor:: TheGrandmaster & mat^2
 """

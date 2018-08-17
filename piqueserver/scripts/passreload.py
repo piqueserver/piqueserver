@@ -4,7 +4,7 @@ Allows reloading config on the fly
 Commands
 ^^^^^^^^
 
-* ``/reloadconfig``
+* ``/reloadconfig`` reloads the config (also updates rights) *admin only*
 
 .. codeauthor:: Danke
 """

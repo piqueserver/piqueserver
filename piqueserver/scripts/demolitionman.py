@@ -4,7 +4,7 @@ Restocks the user when reloading / throwing a nade.
 Commands
 ^^^^^^^^
 
-* ``/toggledemo``
+* ``/toggledemo`` toggles demolition
 
 .. codeauthor:: learn_more (MIT LICENSE)
 """

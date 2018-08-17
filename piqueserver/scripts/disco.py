@@ -4,7 +4,7 @@ Ever wanted a disco in Ace of Spades?
 Commands
 ^^^^^^^^
 
-* ``/disco``
+* ``/disco`` toggles disco
 
 .. codeauthor:: mat^2
 """
