@@ -1,11 +1,11 @@
 """
-Detects and react to possible aimbot users.
+Detects and reacts to possible aimbot users.
 
 Commands
 ^^^^^^^^
 
 * ``/accuracy <player>`` shows player's accuracy per weapon
-* ``/hackinfo <player>`` shows player's accuracy, K/D ratio and snaps *admin only*
+* ``/hackinfo <player>`` shows player's accuracy, K/D ratio and how often their cross-hair snaps onto another players head *admin only*
 
 Options
 ^^^^^^^

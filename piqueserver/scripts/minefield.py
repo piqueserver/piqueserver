@@ -5,7 +5,7 @@ Allows mappers to specify the map bounds, outside of which players will trip
 mines.  Breaking blocks (when standing close to the field) also triggers a
 mine.
 
-.. note::
+.. warning::
    This script conflicts with `smartnade` script.
 
 Commands

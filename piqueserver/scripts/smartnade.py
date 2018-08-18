@@ -1,7 +1,7 @@
 """
 Smartnade script
 
-.. note::
+.. warning::
    This script conflicts with `minefield` script.
 
 .. codeauthor:: ?

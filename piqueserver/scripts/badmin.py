@@ -3,11 +3,11 @@ Badmin is an bot admin.
 
 It automates common admin tasks such as:
 
-* Banning greifers
-* Banning aimbots
+* Banning griefers
+* Banning aimbotters
 * Banning racists
 
-Since it is automate it won't always get it right.
+Since it is automatic it won't always get it right.
 
 Commands
 ^^^^^^^^
@@ -16,7 +16,7 @@ Commands
 * ``/investigate <player>`` shows a player's grief score, K/D ratio and hit accuracy *admin only*
 
 .. note::
-  It is dependant on blockinfo.py (for grief detection), ratio.py (for k/d ratio), aimbot2.py (hit accuracy) scripts.
+  It depends on the blockinfo.py (for grief detection), ratio.py (for k/d ratio), aimbot2.py (hit accuracy) scripts.
 
 .. codeauthor:: ?
 """
