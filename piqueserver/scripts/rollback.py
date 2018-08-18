@@ -100,7 +100,7 @@ def apply_script(protocol, connection, config):
             self.packet_generator = self.create_rollback_generator(
                 self.map, map, start_x, start_y, end_x, end_y, ignore_indestructable)
             self.rollback_in_progress = True
-            self.rollback_start_time = time.time()
+            self.rollback_start_time = time.monotonic()
             self.rollback_last_chat = self.rollback_start_time
             self.rollback_rows = 0
             self.rollback_total_rows = end_x - start_x
@@ -139,9 +139,9 @@ def apply_script(protocol, connection, config):
                     sent_total += sent * len(self.connections)
                     rows += (sent == 0)
                 self.rollback_rows += rows
-                if (time.time() - self.rollback_last_chat >
+                if (time.monotonic() - self.rollback_last_chat >
                         self.rollback_time_between_progress_updates):
-                    self.rollback_last_chat = time.time()
+                    self.rollback_last_chat = time.monotonic()
                     progress = float(self.rollback_rows) / \
                         self.rollback_total_rows
                     if progress < 1.0:
@@ -150,7 +150,7 @@ def apply_script(protocol, connection, config):
                     else:
                         self.send_chat(S_ROLLBACK_COLOR_PASS)
             except (StopIteration):
-                elapsed = time.time() - self.rollback_start_time
+                elapsed = time.monotonic() - self.rollback_start_time
                 message = S_ROLLBACK_TIME_TAKEN.format(seconds=elapsed)
                 self.end_rollback(message)
 
