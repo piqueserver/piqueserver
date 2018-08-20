@@ -240,6 +240,8 @@ guard = [
 ]
 
 [logging]
+# set log level
+# various log levels in decending order: debug, info, warn, error, critical
 loglevel = "info"
 # enable the debug logging
 debug_log = false

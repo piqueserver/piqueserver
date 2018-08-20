@@ -275,7 +275,9 @@ Logging
 Piqueserver can log events that happen to a text file::
 
     [logging]
-
+    # set log level
+    # log levels in decending order: debug, info, warn, error, critical
+    loglevel = "info"
     # the logfile to log to
     # relative paths are resolved relative to the config directory; parent
     # directories are created as necessary
