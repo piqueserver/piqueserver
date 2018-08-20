@@ -296,9 +296,12 @@ class FeatureProtocol(ServerProtocol):
             else:
                 logging_file = open(log_filename, 'a')
             predicate = LogLevelFilterPredicate(LogLevel.levelWithName(loglevel.get()))
-            observer = FilteringLogObserver(textFileLogObserver(sys.stderr), [predicate])
-            globalLogPublisher.addObserver(textFileLogObserver(logging_file))
-            globalLogPublisher.addObserver(observer)
+            observers = [
+                FilteringLogObserver(textFileLogObserver(sys.stderr), [predicate]),
+                FilteringLogObserver(textFileLogObserver(logging_file), [predicate])
+            ]
+            for observer in observers:
+                globalLogPublisher.addObserver(observer)
             log.info('piqueserver started on %s' % time.strftime('%c'))
 
         self.config = config_dict
