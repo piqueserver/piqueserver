@@ -88,6 +88,15 @@ def check_scripts(scripts):
     return True
 
 
+def validate_team_name(name):
+    if len(name) > 9:
+        log.warn("Team name's length exceeds 9 character limit. More info: https://git.io/fN2cI")
+        # TODO: Once issue #345 is sorted out, we can do a proper validation
+        # for now we just warn
+        # return False
+    return True
+
+
 # declare configuration options
 bans_config = config.section('bans')
 logging_config = config.section('logging')
@@ -112,8 +121,8 @@ cap_limit = config.option('cap_limit', default=10,
                           validate=lambda x: isinstance(x, (int, float)))
 advance_on_win = config.option('advance_on_win', default=False,
                                validate=lambda x: isinstance(x, bool))
-team1_name = team1_config.option('name', default='Blue')
-team2_name = team2_config.option('name', default='Green')
+team1_name = team1_config.option('name', default='Blue', validate=validate_team_name)
+team2_name = team2_config.option('name', default='Green', validate=validate_team_name)
 team1_color = team1_config.option('color', default=(0, 0, 196))
 team2_color = team2_config.option('color', default=(0, 196, 0))
 friendly_fire = config.option('friendly_fire', default=False)
@@ -329,8 +338,8 @@ class FeatureProtocol(ServerProtocol):
         elif self.game_mode is None:
             raise NotImplementedError('invalid game mode: %s' % game_mode)
         self.game_mode_name = game_mode.get().split('.')[-1]
-        self.team1_name = team1_name.get()
-        self.team2_name = team2_name.get()
+        self.team1_name = team1_name.get()[:9]
+        self.team2_name = team2_name.get()[:9]
         self.team1_color = tuple(team1_color.get())
         self.team2_color = tuple(team2_color.get())
         self.friendly_fire = friendly_fire.get()
