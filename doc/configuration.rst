@@ -80,4 +80,3 @@ Options
 
 .. toctree::
     config-options
-    script-options
