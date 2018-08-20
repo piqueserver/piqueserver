@@ -39,7 +39,7 @@ from twisted.python import log
 from twisted.python.logfile import DailyLogFile
 from twisted.logger import Logger, textFileLogObserver
 from twisted.logger import FilteringLogObserver, LogLevelFilterPredicate, LogLevel
-from twisted.logger import globalLogPublisher
+from twisted.logger import globalLogBeginner
 from twisted.web import client as web_client
 from twisted.internet.tcp import Port
 from twisted.internet.defer import Deferred
@@ -300,8 +300,7 @@ class FeatureProtocol(ServerProtocol):
                 FilteringLogObserver(textFileLogObserver(sys.stderr), [predicate]),
                 FilteringLogObserver(textFileLogObserver(logging_file), [predicate])
             ]
-            for observer in observers:
-                globalLogPublisher.addObserver(observer)
+            globalLogBeginner.beginLoggingTo(observers)
             log.info('piqueserver started on %s' % time.strftime('%c'))
 
         self.config = config_dict
