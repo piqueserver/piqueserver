@@ -140,11 +140,11 @@ cdef class VXLData:
             return 0
         set_point(x, y, z, self.map, 0, 0)
         count = 1
-        start = time.time()
+        start = time.monotonic()
         for node_x, node_y, node_z in self.get_neighbors(x, y, z):
             if node_z < 62:
                 count += self.check_node(node_x, node_y, node_z, True)
-        taken = time.time() - start
+        taken = time.monotonic() - start
         if taken > 0.1:
             print 'destroying block at', x, y, z, 'took:', taken
         return count
@@ -262,9 +262,9 @@ cdef class VXLData:
                 i += 1
 
     def generate(self):
-        start = time.time()
+        start = time.monotonic()
         data = save_vxl(self.map)
-        dt = time.time() - start
+        dt = time.monotonic() - start
         if dt > 1.0:
             print 'VXLData.generate() took %s' % (dt)
         return data
