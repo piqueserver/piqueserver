@@ -156,6 +156,11 @@ piqueserver\.scripts\.ratio script
 
 .. automodule:: piqueserver.scripts.ratio
 
+piqueserver\.scripts\.analyze script
+++++++++++++++++++++++++++++++++++++
+
+.. automodule:: piqueserver.scripts.analyze
+
 piqueserver\.scripts\.rollback script
 +++++++++++++++++++++++++++++++++++++
 

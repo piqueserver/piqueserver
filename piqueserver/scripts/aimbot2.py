@@ -1,7 +1,21 @@
 """
-Plugin to detect and react to possible aimbot users
+Detects and reacts to possible aimbot users.
 
-maintained by: ?
+Commands
+^^^^^^^^
+
+* ``/accuracy <player>`` shows player's accuracy per weapon
+* ``/hackinfo <player>`` shows player's accuracy, K/D ratio and how often their cross-hair snaps onto another players head *admin only*
+
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [aimbot]
+   collect_data = true # saves hits and shots of each weapon to a csv file
+
+.. codeauthor:: ?
 """
 import os
 import csv

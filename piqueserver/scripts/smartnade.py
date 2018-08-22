@@ -1,8 +1,11 @@
-'''
+"""
 Smartnade script
 
-Warning: conflicts with `minefield` script.
-'''
+.. warning::
+   This script conflicts with `minefield` script.
+
+.. codeauthor:: ?
+"""
 
 
 SMARTNADE_DELAY = 0.5

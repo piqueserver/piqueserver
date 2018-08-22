@@ -2,7 +2,21 @@
 Zones of control: Dropped intel and tents exert influence
 over nearby area, restricting player ability to destroy.
 
-Maintainer: ?
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [zoc]
+   radius = 32
+   attack_distance = 64
+   block_undo = 10
+   block_cost = 5
+   points_per_tick = 1
+   point_cap = 30
+   grenade_cost = 30
+
+.. codeauthor: ?
 """
 
 from collections import deque

@@ -1,6 +1,16 @@
-# Timed mute: !tm <player> <seconds> <reason>
-# default time 5 minutes, default reason None
-# by topologist June 30th 2012
+"""
+Allows muting players for a set amount of time.
+
+Commands
+^^^^^^^^
+
+* ``/tm <player> <seconds> <reason>`` mute a player for set amount of time *admin only*
+
+.. note::
+  Default time 5 minutes, default reason None
+
+.. codeauthor: topologist
+"""
 
 from piqueserver.scheduler import Scheduler
 from piqueserver.commands import command, get_player, join_arguments

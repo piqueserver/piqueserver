@@ -2,7 +2,16 @@
 Match script, useful for public matches. Features verbose announcements
 on IRC and a custom timer.
 
-Maintainer: mat^2
+Commands
+^^^^^^^^
+
+* ``/timer`` starts timer *admin only*
+* ``/stoptimer`` stops timer *admin only*
+* ``/startrecord`` starts a fresh records *admin only*
+* ``/stoprecord`` clears the current record *admin only*
+* ``/saverecord`` save record to a file *admin only*
+
+.. codeauthor: mat^2
 """
 import os
 

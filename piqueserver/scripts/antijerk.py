@@ -1,7 +1,15 @@
 """
 Kicks jerks for 'PRESS ALT-F4 FOR AIRSTRIKES' and so on.
 
-Maintainer: ?
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [antijerk]
+   ban_duration = 15 # in minutes
+
+.. codeauthor:: ?
 """
 
 import re

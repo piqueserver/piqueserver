@@ -1,7 +1,15 @@
 """
 Gives Ace of Spades a daycycle (using the fog).
 
-Maintainer: hompy
+Commands
+^^^^^^^^
+
+* ``/dayspeed <speed>`` sets day speed *admin only*
+* ``/dayspeed`` gets day speed *admin only*
+* ``/daytime <time>`` sets day time *admin only*
+* ``/daytime`` gets day time
+
+.. codeauthor:: hompy
 """
 
 from math import modf

@@ -1,7 +1,15 @@
 """
 Greets specified people entering with messages
 
-Maintainer: mat^2
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [welcome]
+   welcomes = { nota = "Hi notafile", feik = "Hi feik" }
+
+.. codeauthor: mat^2
 """
 from piqueserver.config import config
 

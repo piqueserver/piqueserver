@@ -1,9 +1,12 @@
 """
-Demolition man script.
-Copyright (c) 2013 learn_more
-See the file license.txt or http://opensource.org/licenses/MIT for copying permission.
-
 Restocks the user when reloading / throwing a nade.
+
+Commands
+^^^^^^^^
+
+* ``/toggledemo`` toggles demolition
+
+.. codeauthor:: learn_more (MIT LICENSE)
 """
 
 from piqueserver.commands import command, admin

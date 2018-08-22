@@ -1,6 +1,25 @@
-# Badmin is an bot admin.  He'll do a variety of common admin tasks so you don't have to.
-# He might not always get it right, but he'll get it done, and isn't that what really matters?
-# -Requirements: blockinfo.py (for grief detection), ratio.py (for k/d ratio), aimbot2.py (hit accuracy)
+"""
+Badmin is an bot admin. 
+
+It automates common admin tasks such as:
+
+* Banning griefers
+* Banning aimbotters
+* Banning racists
+
+Since it is automatic it won't always get it right.
+
+Commands
+^^^^^^^^
+
+* ``/badmin`` shows which badmin options are enabled/disabled *admin only*
+* ``/investigate <player>`` shows a player's grief score, K/D ratio and hit accuracy *admin only*
+
+.. note::
+  It depends on the blockinfo.py (for grief detection), ratio.py (for k/d ratio), aimbot2.py (hit accuracy) scripts.
+
+.. codeauthor:: ?
+"""
 
 from twisted.internet import reactor
 from pyspades.common import prettify_timespan
@@ -9,6 +28,7 @@ from pyspades.collision import distance_3d_vector
 from piqueserver.commands import command, admin, get_player
 import re
 
+# TODO: convert settings to config options
 BADMIN_VERSION = 9
 # Settings for auto-aimbot
 SCORE_AIMBOT_ENABLED = True

@@ -1,7 +1,22 @@
 """
 BF-like squad system.
 
-Maintainer: Triplefox
+Commands
+^^^^^^^^
+
+* ``/squad <key>`` to join a squad
+* ``/follow <player>`` to spawn near a specific player
+
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+    [squad]
+    respawn_time = 10 # in seconds
+    auto_squad = true
+
+.. codeauthor:: Triplefox
 """
 
 import random
