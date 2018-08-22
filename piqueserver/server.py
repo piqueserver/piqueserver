@@ -38,7 +38,8 @@ from twisted.internet.defer import inlineCallbacks
 from twisted.python import log
 from twisted.python.logfile import DailyLogFile
 from twisted.logger import Logger, textFileLogObserver
-from twisted.logger import globalLogPublisher
+from twisted.logger import FilteringLogObserver, LogLevelFilterPredicate, LogLevel
+from twisted.logger import globalLogBeginner
 from twisted.web import client as web_client
 from twisted.internet.tcp import Port
 from twisted.internet.defer import Deferred
@@ -110,6 +111,7 @@ game_mode = config.option('game_mode', default='ctf')
 random_rotation = config.option('random_rotation', default=False)
 passwords = config.option('passwords', default={})
 logfile = logging_config.option('logfile', default='./logs/log.txt')
+loglevel = logging_config.option('loglevel', default='info')
 map_rotation = config.option('rotation', default=['classicgen', 'random'],
                              validate=lambda x: isinstance(x, list))
 default_time_limit = config.option(
@@ -293,8 +295,12 @@ class FeatureProtocol(ServerProtocol):
                 logging_file = DailyLogFile(log_filename, '.')
             else:
                 logging_file = open(log_filename, 'a')
-            globalLogPublisher.addObserver(textFileLogObserver(logging_file))
-            globalLogPublisher.addObserver(textFileLogObserver(sys.stderr))
+            predicate = LogLevelFilterPredicate(LogLevel.levelWithName(loglevel.get()))
+            observers = [
+                FilteringLogObserver(textFileLogObserver(sys.stderr), [predicate]),
+                FilteringLogObserver(textFileLogObserver(logging_file), [predicate])
+            ]
+            globalLogBeginner.beginLoggingTo(observers)
             log.info('piqueserver started on %s' % time.strftime('%c'))
 
         self.config = config_dict
