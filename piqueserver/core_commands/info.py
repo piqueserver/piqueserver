@@ -1,4 +1,4 @@
-from piqueserver.commands import command, _commands, has_permission, get_player
+from piqueserver.commands import command, _commands, has_permission, get_player, get_command_help
 
 
 @command()
@@ -45,17 +45,40 @@ def rules(connection):
     connection.send_lines(lines)
 
 
-@command("help")
-def help_command(connection):
+@command("cmdlist")
+def cmd_list(connection):
     """
     Print all available commands
-    /help
+    /cmdlist
     """
-    if connection.protocol.help is not None and not connection.admin:
-        connection.send_lines(connection.protocol.help)
-    else:
-
+    # Compact and simple output for admins
+    if connection.admin:
         names = [command.command_name for command in _commands.values()
                  if has_permission(command, connection)]
-
         return 'Available commands: %s' % (', '.join(names))
+    # More helpful output for regular players
+    lines = []
+    for cmd in _commands.values():
+        if not has_permission(cmd, connection):
+            continue
+        desc, _, _ = get_command_help(cmd)
+        lines.append("/{} {}".format(cmd.command_name, desc))
+    connection.send_lines(lines)
+
+
+@command("help")
+def help_command(connection, command_name=None):
+    """
+    Gives description and usage info for a command
+    /help <command_name>
+    """
+    # Querying usage for a specific command
+    if command_name:
+        if command_name not in _commands:
+            return 'Unknown command'
+        command_func = _commands[command_name]
+        desc, usage, _ = get_command_help(command_func)
+        return 'Description: {}\n Usage: {}'.format(desc, usage)
+    # Output help if present in config
+    if connection.protocol.help:
+        return connection.send_lines(connection.protocol.help)
