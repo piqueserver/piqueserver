@@ -173,7 +173,14 @@ ip_getter_option = config.option('ip_getter', default_ip_getter)
 name_option = config.option(
     'name', default='piqueserver #%s' % random.randrange(0, 2000))
 motd_option = config.option('motd')
-help_option = config.option('help')
+help_option = config.option('help', default=[
+    'Server name: %(server_name)s',
+    'Map: %(map_name)s by %(map_author)s',
+    'Game mode: %(game_mode)s',
+    '/cmdlist Prints all avalable commands',
+    '/help <command_name> Gives description and usage info for a command',
+    '/help Prints this message',
+    ])
 rules_option = config.option('rules')
 tips_option = config.option('tips')
 network_interface = config.option('network_interface', default='')
