@@ -1,5 +1,5 @@
 recursive-include piqueserver/ *
-# recursive-include piqueserver/config/ *
+recursive-include piqueserver/config/ *
 recursive-include pyspades/ * 
 # recursive-include piqueserver.egg-info/ * 
 
