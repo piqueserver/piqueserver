@@ -79,6 +79,10 @@ class VotekickFailure(Exception):
 
 @command('votekick')
 def start_votekick(connection, *args):
+    """
+    Starts an votekick against a player
+    /votekick <player name or id> <reason>
+    """
     protocol = connection.protocol
     if connection not in protocol.players:
         raise KeyError()
@@ -110,6 +114,10 @@ def start_votekick(connection, *args):
 
 @command('cancel')
 def cancel_votekick(connection):
+    """
+    Cancels an ongoing vote
+    /cancel
+    """
     protocol = connection.protocol
     votekick = protocol.votekick
     if not votekick:
@@ -125,6 +133,10 @@ def cancel_votekick(connection):
 
 @command('y')
 def vote_yes(connection):
+    """
+    Vote yes on an ongoing vote
+    /y
+    """
     protocol = connection.protocol
     if connection not in protocol.players:
         raise KeyError()
@@ -139,6 +151,10 @@ def vote_yes(connection):
 
 @command('tvk', admin_only=True)
 def togglevotekick(connection, *args):
+    """
+    Toggles votekicking for a player or the whole server
+    /tvk <player> or /tvk
+    """
     protocol = connection.protocol
     if len(args) == 0:
         protocol.votekick_enabled = not protocol.votekick_enabled
