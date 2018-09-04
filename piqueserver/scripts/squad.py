@@ -40,6 +40,10 @@ AUTO_SQUAD_OPTION = squad_config.option('auto_squad', True)
 
 @command()
 def follow(self, playerkey=None):
+    """
+    Lets you spawn near a specific player in your squad
+    /follow <player>
+    """
     if playerkey is None:
         squad_pref = None
         squad = self.squad
@@ -59,6 +63,10 @@ def follow(self, playerkey=None):
 
 @command()
 def squad(self, squadkey=None):
+    """
+    Lets you join a squad. If you die you respawn near your squad mates.
+    /squad <key>
+    """
     if self.protocol.squad_size <= 1:
         return 'Squads are disabled on this server.'
 
