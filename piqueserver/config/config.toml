@@ -17,7 +17,7 @@ motd = [
 help = [
   "Server name: %(server_name)s", "Map: %(map_name)s by %(map_author)s",
   "Game mode: %(game_mode)s",
-  "/cmdlist Prints all avalable commands",
+  "/commands Prints all available commands",
   "/help <command_name> Gives description and usage info for a command",
   "/help Prints this message"
 ]

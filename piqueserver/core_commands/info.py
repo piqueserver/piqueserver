@@ -45,11 +45,11 @@ def rules(connection):
     connection.send_lines(lines)
 
 
-@command("cmdlist")
-def cmd_list(connection):
+@command()
+def commands(connection):
     """
     Print all available commands
-    /cmdlist
+    /commands
     """
     # Compact and simple output for admins
     if connection.admin:
