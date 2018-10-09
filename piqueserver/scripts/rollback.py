@@ -27,6 +27,7 @@ Options
 import os
 import time
 import operator
+import copy
 
 from twisted.internet.task import LoopingCall
 from pyspades.vxl import VXLData
@@ -246,7 +247,7 @@ def apply_script(protocol, connection, config):
                 yield packets_sent
 
         def on_map_change(self, map):
-            self.rollback_map = map.copy()
+            self.rollback_map = copy.copy(map)
             protocol.on_map_change(self, map)
 
         def on_map_leave(self):
