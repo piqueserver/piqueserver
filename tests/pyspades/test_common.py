@@ -3,11 +3,24 @@
 test pyspades/common.pyx
 """
 
-from math import isclose
+import math
 
 from twisted.trial import unittest
 
 from pyspades import common
+
+
+def assert_math_isclose(first, second, rel_tol=1e-09, abs_tol=0.0, msg=None):
+    if math.isclose(first, second, rel_tol=rel_tol, abs_tol=abs_tol):
+        return
+    standardMsg = (
+        '{!r} != {!r} with relative tolerance of {:.3g}'
+        ' and absolute tolerance of {:.3g}'
+        ).format(first, second, rel_tol, abs_tol)
+    if msg:
+        raise AssertionError("{} : {}".format(standardMsg, msg))
+    else:
+        raise AssertionError(standardMsg)
 
 class TestCommonThings(unittest.TestCase):
 
@@ -82,7 +95,7 @@ class TestVertex3(unittest.TestCase):
         v_3 = common.Vertex3(0, -10, 0)
         self.assertEqual(v_3.length(), 10)
         v_4 = common.Vertex3(10, -10.5, 500)
-        self.assertTrue(isclose(v_4.length(), 500.210205078125))
+        assert_math_isclose(v_4.length(), 500.210205078125)
         self.assertEqual(v_3.normal().get(), (0, -1, 0))
         v_3.normalize()
         self.assertEqual(v_3.get(), (0, -1, 0))
