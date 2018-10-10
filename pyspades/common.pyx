@@ -113,7 +113,6 @@ def escape_control_codes(untrusted_str):
 cdef class Vertex3:
     # NOTE: for the most part this behaves as a 2d vector, with z being tacked on
     # so it's useful for orientation math
-
     def __init__(self, *arg, is_ref = False):
         cdef float x, y, z
         if not is_ref:
@@ -121,12 +120,12 @@ cdef class Vertex3:
                 x, y, z = arg
             else:
                 x = y = z = 0.0
-            self.value = create_vector(x, y, z)
+            self.value = new Vector(x, y, z)
         self.is_ref = is_ref
 
     def __dealloc__(self):
         if not self.is_ref:
-            destroy_vector(self.value)
+            del self.value
             self.value = NULL
 
     def copy(self):
@@ -166,7 +165,7 @@ cdef class Vertex3:
         cdef Vector * a = (<Vertex3>self).value
         return create_vertex3(a.x * k, a.y * k, a.z * k)
 
-    def __div__(self, float k):
+    def __truediv__(self, float k):
         cdef Vector * a = (<Vertex3>self).value
         return create_vertex3(a.x / k, a.y / k, a.z / k)
 
@@ -298,9 +297,10 @@ cdef class Vertex3:
         cdef Vector * a = self.value
         return create_vertex3(+a.x, +a.y, +a.z)
 
-    def __str__(self):
+    def __repr__(self):
         cdef Vector * a = self.value
-        return "(%s %s %s)" % (a.x, a.y, a.z)
+        # "5 decimal places ought to be enough for anyone (tm)"
+        return "Vertex3({:.5f}, {:.5f}, {:.5f})".format(a.x, a.y, a.z)
 
     # properties for python wrapper
     property x:
