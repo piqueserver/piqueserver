@@ -288,6 +288,9 @@ cdef class Character(Object):
         def __set__(self, value):
             self.player.secondary_fire = value
 
+    def __repr__(self):
+        return f"Character(pos={self.position}, orientation={self.orientation})"
+
 cdef class Grenade(Object):
     cdef public:
         Vertex3 position, velocity
@@ -358,7 +361,7 @@ cdef class Grenade(Object):
         destroy_grenade(self.grenade)
 
     def __repr__(self):
-        rep = "Grenade(fuse={}, position={}, (...), velocity={})"
+        rep = "Grenade(fuse={:.3f}, position={}, (...), velocity={})"
         return rep.format(self.fuse, self.position, self.velocity)
 
 cdef class World(object):

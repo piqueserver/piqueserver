@@ -118,7 +118,7 @@ class ServerConnection(BaseConnection):
     speedhack_detect = False
     rapid_hack_detect = False
     timers = None
-    world_object = None  # type: world.World
+    world_object = None  # type: world.Character
     last_block = None
     map_data = None
     last_position_update = None
@@ -424,7 +424,8 @@ class ServerConnection(BaseConnection):
             Vertex3(*contained.position), None,
             Vertex3(*contained.velocity), self.grenade_exploded)
         grenade.team = self.team
-        log.debug("{player!r} created {grenade!r}", grenade=grenade, player=self)
+        log.debug("{player!r} ({world_object!r}) created {grenade!r}",
+                  grenade=grenade, world_object=self.world_object, player=self)
         self.on_grenade_thrown(grenade)
         if self.filter_visibility_data:
             return
