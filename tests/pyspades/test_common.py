@@ -10,7 +10,7 @@ from twisted.trial import unittest
 from pyspades import common
 
 
-def assert_math_isclose(first, second, rel_tol=1e-09, abs_tol=0.0, msg=None):
+def assert_math_isclose(first, second, rel_tol=1e-06, abs_tol=0.0, msg=None):
     if math.isclose(first, second, rel_tol=rel_tol, abs_tol=abs_tol):
         return
     standardMsg = (
