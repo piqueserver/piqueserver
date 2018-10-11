@@ -100,18 +100,17 @@ int validate_hit(float shooter_x, float shooter_y, float shooter_z,
                  float ox, float oy, float oz,
                  float tolerance)
 {
-    float cx, cy, cz, r, x, y;
     Orientation o;
     get_orientation(&o, orientation_x, orientation_y, orientation_z);
     ox -= shooter_x;
     oy -= shooter_y;
     oz -= shooter_z;
-    cz = ox * o.f.x + oy * o.f.y + oz * o.f.z;
-    r = 1.f/cz;
-    cx = ox * o.s.x + oy * o.s.y + oz * o.s.z;
-    x = cx * r;
-    cy = ox * o.h.x + oy * o.h.y + oz * o.h.z;
-    y = cy * r;
+    float cz = ox * o.f.x + oy * o.f.y + oz * o.f.z;
+    float r = 1.f/cz;
+    float cx = ox * o.s.x + oy * o.s.y + oz * o.s.z;
+    float x = cx * r;
+    float cy = ox * o.h.x + oy * o.h.y + oz * o.h.z;
+    float y = cy * r;
     r *= tolerance;
     int ret = (x-r < 0 && x+r > 0 && y-r < 0 && y+r > 0);
 #if 0
@@ -158,13 +157,11 @@ long isvoxelsolidwrap(long x, long y, long z)
 //same as isvoxelsolid but water is empty
 long clipworld(long x, long y, long z)
 {
-    int sz;
-
     if (x < 0 || x >= 512 || y < 0 || y >= 512)
         return 0;
     if (z < 0)
         return 0;
-    sz = (int)z;
+    int sz = (int)z;
     if(sz == 63)
         sz=62;
     else if (sz >= 63)
@@ -178,7 +175,7 @@ long can_see(MapData * map, float x0, float y0, float z0, float x1, float y1,
              float z1)
 {
     Vector f, g;
-    LongVector a, c, d, p, i;
+    LongVector a, c, d;
     long cnt = 0;
 
     ftol(x0-.5f,&a.x); ftol(y0-.5f,&a.y); ftol(z0-.5f,&a.z);
@@ -208,6 +205,8 @@ long can_see(MapData * map, float x0, float y0, float z0, float x1, float y1,
     }
     else
         f.z = g.z = 0;
+
+    LongVector p, i;
 
     ftol(f.x*g.z - f.z*g.x,&p.x); ftol(g.x,&i.x);
     ftol(f.y*g.z - f.z*g.y,&p.y); ftol(g.y,&i.y);
@@ -240,12 +239,13 @@ long cast_ray(MapData * map, float x0, float y0, float z0, float x1, float y1,
     x1 = x0 + x1 * length;
     y1 = y0 + y1 * length;
     z1 = z0 + z1 * length;
-    Vector f, g;
-    LongVector a, c, d, p, i;
+    LongVector a, c, d;
     long cnt = 0;
 
     ftol(x0-.5f,&a.x); ftol(y0-.5f,&a.y); ftol(z0-.5f,&a.z);
     ftol(x1-.5f,&c.x); ftol(y1-.5f,&c.y); ftol(z1-.5f,&c.z);
+
+    Vector f, g;
 
     if (c.x <  a.x) {
         d.x = -1; f.x = x0-a.x; g.x = (x0-x1)*1024; cnt += a.x-c.x;
@@ -271,6 +271,8 @@ long cast_ray(MapData * map, float x0, float y0, float z0, float x1, float y1,
     }
     else
         f.z = g.z = 0;
+
+    LongVector p, i;
 
     ftol(f.x*g.z - f.z*g.x,&p.x); ftol(g.x,&i.x);
     ftol(f.y*g.z - f.z*g.y,&p.y); ftol(g.y,&i.y);
@@ -304,25 +306,26 @@ long cast_ray(MapData * map, float x0, float y0, float z0, float x1, float y1,
 size_t cube_line(int x1, int y1, int z1, int x2, int y2, int z2,
                  LongVector * cube_array)
 {
-	LongVector c, d;
-	long ixi, iyi, izi, dx, dy, dz, dxi, dyi, dzi;
-	size_t count = 0;
-
 	//Note: positions MUST be rounded towards -inf
+    LongVector c;
 	c.x = x1;
 	c.y = y1;
 	c.z = z1;
 
+	LongVector d;
 	d.x = x2 - x1;
 	d.y = y2 - y1;
 	d.z = z2 - z1;
 
+	long ixi, iyi, izi;
 	if (d.x < 0) ixi = -1;
 	else ixi = 1;
 	if (d.y < 0) iyi = -1;
 	else iyi = 1;
 	if (d.z < 0) izi = -1;
 	else izi = 1;
+
+    long dx, dy, dz, dxi, dyi, dzi;
 
 	// LongVector is a vector of `long` ints so we use `labs` explicitly
 	if ((labs(d.x) >= labs(d.y)) && (labs(d.x) >= labs(d.z)))
@@ -353,8 +356,10 @@ size_t cube_line(int x1, int y1, int z1, int x2, int y2, int z2,
 	if (iyi >= 0) dy = dyi-dy;
 	if (izi >= 0) dz = dzi-dz;
 
+
 	while (1)
 	{
+        size_t count = 0;
 		cube_array[count] = c;
 
 		if(count++ == CUBE_ARRAY_LENGTH)
@@ -396,12 +401,10 @@ size_t cube_line(int x1, int y1, int z1, int x2, int y2, int z2,
 
 void reposition_player(PlayerType * p, Vector * position)
 {
-    float f; /* FIXME meaningful name */
-
     p->e = p->p = *position;
-    f = p->lastclimb-ftotclk; /* FIXME meaningful name */
-    if(f>-0.25f)
-        p->e.z += (f+0.25f)/0.25f;
+    float f = p->lastclimb - ftotclk; /* FIXME meaningful name */
+    if(f > -0.25f)
+        p->e.z += (f + 0.25f) / 0.25f;
 }
 
 inline void set_orientation_vectors(Vector * o, Vector * s, Vector * h)
@@ -452,13 +455,11 @@ int try_uncrouch(PlayerType * p)
 //player movement with autoclimb
 void boxclipmove(PlayerType * p)
 {
-	float offset, m, f, nx, ny, nz, z;
-	long climb = 0;
+	float f = fsynctics*32.f;
+	float nx = f*p->v.x+p->p.x;
+	float ny = f*p->v.y+p->p.y;
 
-	f = fsynctics*32.f;
-	nx = f*p->v.x+p->p.x;
-	ny = f*p->v.y+p->p.y;
-
+    float offset, m;
 	if(p->crouch)
 	{
 		offset = 0.45f;
@@ -470,31 +471,47 @@ void boxclipmove(PlayerType * p)
 		m = 1.35f;
 	}
 
-	nz = p->p.z + offset;
+	float nz = p->p.z + offset;
 
-	if(p->v.x < 0) f = -0.45f;
-	else f = 0.45f;
-	z=m;
-	while(z>=-1.36f && !clipbox(nx+f, p->p.y-0.45f, nz+z) && !clipbox(nx+f, p->p.y+0.45f, nz+z))
+    long climb = 0;
+
+	if(p->v.x < 0) {
+        f = -0.45f;
+    }
+	else {
+        f = 0.45f;
+    }
+	float z = m;
+
+	while(z>=-1.36f && !clipbox(nx+f, p->p.y-0.45f, nz+z) && !clipbox(nx+f, p->p.y+0.45f, nz+z)) {
 		z-=0.9f;
-	if(z<-1.36f) p->p.x = nx;
+    }
+	if(z<-1.36f) {
+        p->p.x = nx;
+    }
 	else if(!p->crouch && p->f.z<0.5f && !p->sprint)
 	{
-		z=0.35f;
+		z = 0.35f;
+
 		while(z>=-2.36f && !clipbox(nx+f, p->p.y-0.45f, nz+z) && !clipbox(nx+f, p->p.y+0.45f, nz+z))
 			z-=0.9f;
+
 		if(z<-2.36f)
 		{
 			p->p.x = nx;
-			climb=1;
+			climb = 1;
 		}
 		else p->v.x = 0;
 	}
 	else p->v.x = 0;
 
-	if(p->v.y < 0) f = -0.45f;
-	else f = 0.45f;
-	z=m;
+	if(p->v.y < 0) {
+        f = -0.45f;
+    }
+	else {
+        f = 0.45f;
+    }
+	z = m;
 	while(z>=-1.36f && !clipbox(p->p.x-0.45f, ny+f, nz+z) && !clipbox(p->p.x+0.45f, ny+f, nz+z))
 		z-=0.9f;
 	if(z<-1.36f) p->p.y = ny;
@@ -524,7 +541,7 @@ void boxclipmove(PlayerType * p)
 	else
 	{
 		if(p->v.z < 0)
-			m=-m;
+			m =- m;
 		nz += p->v.z*fsynctics*32.f;
 	}
 
@@ -550,8 +567,6 @@ void boxclipmove(PlayerType * p)
 
 long move_player(PlayerType *p)
 {
-	float f, f2;
-
 	//move player and perform simple physics (gravity, momentum, friction)
 	if(p->jump)
 	{
@@ -559,7 +574,7 @@ long move_player(PlayerType *p)
 		p->v.z = -0.36f;
 	}
 
-	f = fsynctics; //player acceleration scalar
+	float f = fsynctics; //player acceleration scalar
 	if(p->airborne)
 		f *= 0.1f;
 	else if(p->crouch)
@@ -602,7 +617,7 @@ long move_player(PlayerType *p)
 		f = fsynctics*4.f + 1; //ground friction
 	p->v.x /= f;
 	p->v.y /= f;
-	f2 = p->v.z;
+	float f2 = p->v.z;
 	boxclipmove(p);
 	//hit ground... check if hurt
 	if(!p->v.z && (f2 > FALL_SLOW_DOWN))
@@ -654,13 +669,13 @@ int move_grenade(GrenadeType * g)
     lp.y = (long)floor(g->p.y);
     lp.z = (long)floor(g->p.z);
 
-    int ret = 0;
-
-    if(clipworld(lp.x, lp.y, lp.z))  //hit a wall
-    {
+    if(!clipworld(lp.x, lp.y, lp.z)) {
+        return 0; // we didn't hit anything, no collision
+    }
+    else {  //hit a wall
         #define BOUNCE_SOUND_THRESHOLD 0.1f
 
-        ret = 1;
+        int ret = 1;
         if(fabs(g->v.x) > BOUNCE_SOUND_THRESHOLD ||
            fabs(g->v.y) > BOUNCE_SOUND_THRESHOLD ||
            fabs(g->v.z) > BOUNCE_SOUND_THRESHOLD)
@@ -680,8 +695,8 @@ int move_grenade(GrenadeType * g)
         g->v.x *= 0.36f;
         g->v.y *= 0.36f;
         g->v.z *= 0.36f;
+        return ret;
     }
-    return ret;
 }
 
 // C interface
