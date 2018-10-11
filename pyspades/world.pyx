@@ -58,7 +58,6 @@ cdef extern from "world_c.cpp":
     void update_timer(float value, float dt)
     void reorient_player(PlayerType * p, Vector * vector)
     int move_player(PlayerType * p)
-    void set_globals(MapData * map)
     int try_uncrouch(PlayerType * p)
     GrenadeType * create_grenade(Vector * p, Vector * v)
     int move_grenade(GrenadeType * grenade)
