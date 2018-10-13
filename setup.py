@@ -103,7 +103,7 @@ setup(
     url=PKG_URL,
     keywords=['ace of spades', 'aos', 'server',
               'pyspades', 'pysnip', 'piqueserver'],
-    python_requires=">=3.4",
+    python_requires=">=3.5",
     classifiers=[
         'Intended Audience :: System Administrators',
         'Development Status :: 5 - Production/Stable',
@@ -124,7 +124,7 @@ setup(
     setup_requires=['Cython>=0.27,<1'],
     install_requires=[
         'Cython>=0.27,<1',
-        'Twisted[tls]>=17,<18',
+        'Twisted[tls]>=17,<19',
         'Jinja2>=2,<3',  # status server is part of our 'vanilla' package
         'Pillow>=5.1.0,<6',
         'pyenet',
