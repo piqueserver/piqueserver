@@ -58,7 +58,6 @@ cdef extern from "world_c.cpp":
     void update_timer(float value, float dt)
     void reorient_player(PlayerType * p, Vector * vector)
     int move_player(PlayerType * p)
-    void set_globals(MapData * map)
     int try_uncrouch(PlayerType * p)
     GrenadeType * create_grenade(Vector * p, Vector * v)
     int move_grenade(GrenadeType * grenade)
@@ -288,6 +287,9 @@ cdef class Character(Object):
         def __set__(self, value):
             self.player.secondary_fire = value
 
+    def __repr__(self):
+        return f"Character(pos={self.position}, orientation={self.orientation})"
+
 cdef class Grenade(Object):
     cdef public:
         Vertex3 position, velocity
@@ -358,7 +360,7 @@ cdef class Grenade(Object):
         destroy_grenade(self.grenade)
 
     def __repr__(self):
-        rep = "Grenade(fuse={}, position={}, (...), velocity={})"
+        rep = "Grenade(fuse={:.3f}, position={}, (...), velocity={})"
         return rep.format(self.fuse, self.position, self.velocity)
 
 cdef class World(object):
