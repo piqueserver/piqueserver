@@ -33,8 +33,6 @@ port_option = status_server_config.option("port", 32886)
 logging_option = status_server_config.option("logging", False)
 scripts_option = config.option("scripts", [])
 
-print(piqueserver.web.__file__)
-
 
 class CommonResource(Resource):
     protocol = None
