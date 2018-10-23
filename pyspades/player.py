@@ -181,10 +181,12 @@ class ServerConnection(BaseConnection):
 
         old_team = self.team
         team = self.protocol.teams[contained.team]
+        log.debug("{user} wants to join {team} (id {teamid})",
+                  user=self, team=team, teamid=contained.team)
 
         ret = self.on_team_join(team)
         if ret is False:
-            team = self.protocol.spectator_team
+            team = self.protocol.team_spectator
         elif ret is not None:
             team = ret
 
