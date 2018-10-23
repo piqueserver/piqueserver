@@ -40,19 +40,19 @@ read methods
 
 // byte
 
-inline char read_byte(char * data)
+inline int8_t read_byte(char * data)
 {
     return data[0];
 }
 
-inline unsigned char read_ubyte(char * data)
+inline uint8_t read_ubyte(char * data)
 {
     return ((unsigned char*)data)[0];
 }
 
 // short
 
-inline short read_short(char * data, int big_endian)
+inline int16_t read_short(char * data, int big_endian)
 {
     unsigned char * bytes = (unsigned char*)data;
     if (big_endian)
@@ -65,14 +65,14 @@ inline short read_short(char * data, int big_endian)
     }
 }
 
-inline unsigned short read_ushort(char * data, int big_endian)
+inline uint16_t read_ushort(char * data, int big_endian)
 {
     return (unsigned short)read_short(data, big_endian);
 }
 
 // int
 
-inline int read_int(char * data, int big_endian)
+inline int32_t read_int(char * data, int big_endian)
 {
     unsigned char * bytes = (unsigned char*)data;
     if (big_endian)
@@ -85,7 +85,7 @@ inline int read_int(char * data, int big_endian)
     }
 }
 
-inline unsigned int read_uint(char * data, int big_endian)
+inline uint32_t read_uint(char * data, int big_endian)
 {
     return (unsigned int)read_int(data, big_endian);
 }
@@ -103,19 +103,19 @@ write methods
 
 // byte
 
-inline void write_byte(stringstream * ss, char value)
+inline void write_byte(stringstream * ss, int8_t value)
 {
     ss->put(value);
 }
 
-inline void write_ubyte(stringstream * ss, unsigned char value)
+inline void write_ubyte(stringstream * ss, uint8_t value)
 {
     ss->put((char)value);
 }
 
 // short
 
-inline void write_short(stringstream * ss, short value, int big_endian)
+inline void write_short(stringstream * ss, int16_t value, int big_endian)
 {
     if (big_endian)
     {
@@ -129,7 +129,7 @@ inline void write_short(stringstream * ss, short value, int big_endian)
     }
 }
 
-inline void write_ushort(stringstream * ss, unsigned short value, 
+inline void write_ushort(stringstream * ss, uint16_t value,
                          int big_endian)
 {
     write_short(ss, (short)value, big_endian);
@@ -137,7 +137,7 @@ inline void write_ushort(stringstream * ss, unsigned short value,
 
 // int
 
-inline void write_int(stringstream * ss, int value, int big_endian)
+inline void write_int(stringstream * ss, int32_t value, int big_endian)
 {
     if (big_endian)
     {
@@ -155,7 +155,7 @@ inline void write_int(stringstream * ss, int value, int big_endian)
     }
 }
 
-inline void write_uint(stringstream * ss, unsigned int value, 
+inline void write_uint(stringstream * ss, uint32_t value,
                                int big_endian)
 {
     write_int(ss, (int)value, big_endian);
