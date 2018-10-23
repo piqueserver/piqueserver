@@ -25,13 +25,32 @@ def assert_math_isclose(first, second, rel_tol=1e-06, abs_tol=0.0, msg=None):
 class TestCommonThings(unittest.TestCase):
 
     def test_get_color(self):
-        self.assertEqual(common.get_color(0xFFFFFF), (0xFF, 0xFF, 0xFF))
+        self.assertEqual(common.get_color(0xAABBCC), (0xAA, 0xBB, 0xCC))
+
+    def test_make_color(self):
+        self.assertEqual(common.make_color(0xAA, 0xBB, 0xCC), (0xAABBCC))
 
     def test_to_coords(self):
         self.assertEqual(common.to_coordinates(511, 511), "H8")
 
     def test_from_coords(self):
         self.assertEqual(common.coordinates("H8"), (448, 448))
+        self.assertRaises(ValueError, lambda: common.coordinates(None))
+        self.assertRaises(ValueError, lambda: common.coordinates("H"))
+        self.assertRaises(ValueError, lambda: common.coordinates("H33"))
+        self.assertRaises(ValueError, lambda: common.coordinates("HA"))
+
+    def test_prettify_timespan(self):
+        self.assertEqual(common.prettify_timespan(123456),
+                         "1 day, 10 hours, 17 minutes")
+        self.assertEqual(common.prettify_timespan(131),
+                         "2 minutes")
+        self.assertEqual(common.prettify_timespan(131, get_seconds=True),
+                         "2 minutes, 11 seconds")
+        # This is wrong and should be fixed
+        self.assertEqual(common.prettify_timespan(1),
+                         "minute")
+        # Should be: "1 second"
 
     def test_escape_control_codes(self):
         test_cases = [
