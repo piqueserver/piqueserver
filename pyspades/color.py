@@ -1,4 +1,5 @@
 from math import floor
+import colorsys
 from typing import Tuple
 
 ColorTuple = Tuple[float, float, float]
@@ -10,31 +11,8 @@ def wrap(minimum: float, maximum: float, value: float) -> float:
 
 
 def hsb_to_rgb(hue: float, sat: float, bri: float) -> ColorTuple:
-    bri_n = bri * 255.0
-    if sat == 0.0:
-        # greyscale
-        r, g, b = bri_n, bri_n, bri_n
-    else:
-        hue_n = wrap(0.0, 1.0, hue) * 6  # wrap hue
-        hue_i = floor(hue_n)  # get integer part
-        hue_f = hue_n - hue_i  # fractional part
-        if hue_i % 2 == 0:
-            hue_f = 1.0 - hue_f
-        m = bri_n * (1.0 - sat)
-        n = bri_n * (1.0 - (sat * hue_f))
-        if hue_i == 0 or hue_i == 6:
-            r, g, b = bri_n, n, m
-        elif hue_i == 1:
-            r, g, b = n, bri_n, m
-        elif hue_i == 2:
-            r, g, b = m, bri_n, n
-        elif hue_i == 3:
-            r, g, b = m, n, bri_n
-        elif hue_i == 4:
-            r, g, b = n, m, bri_n
-        elif hue_i == 5:
-            r, g, b = bri_n, m, n
-    return int(r), int(g), int(b)
+    r, g, b = colorsys.hsv_to_rgb(hue, sat, bri)
+    return int(r * 255), int(g * 255), int(b * 255)
 
 
 def interpolate_rgb(xyz1, xyz2, t):
