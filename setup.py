@@ -66,7 +66,7 @@ class build_ext(_build_ext):
 
         from Cython.Build import cythonize
 
-        compiler_directives = {}
+        compiler_directives = {'language_level':3, 'embedsignature': True}
         if linetrace:
             compiler_directives['linetrace'] = True
 
