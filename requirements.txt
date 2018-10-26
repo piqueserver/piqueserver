@@ -1,6 +1,6 @@
 # core
 Cython>=0.27,<1
-Twisted[tls]>=17,<18
+Twisted[tls]>=17
 Jinja2>=2,<3
 Pillow>=5.1.0,<6
 pyenet

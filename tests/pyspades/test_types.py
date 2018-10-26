@@ -39,10 +39,9 @@ class TestMultikeyDict(unittest.TestCase):
         self.assertEqual(dic[1], 2)
         self.assertIs(dic[1], dic['bar'])
 
-    @unittest.expectedFailure
     def test_identity(self):
         dic = MultikeyDict()
-        lst = ["hi"]
+        lst = ("hi", )
         dic["key", ("tup", "le")] = lst
         self.assertIs(dic["key"], lst)
         self.assertIs(dic["tup", "le"], lst)

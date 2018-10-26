@@ -85,19 +85,9 @@ class ServerProtocol(BaseProtocol):
         self.entities = []
         self.players = MultikeyDict()
         self.player_ids = IDPool()
-        self.team_spectator = self.team_class(-1, self.spectator_name,
-                                              (0, 0, 0), True, self)
-        self.team_1 = self.team_class(0, self.team1_name, self.team1_color,
-                                      False, self)
-        self.team_2 = self.team_class(1, self.team2_name, self.team2_color,
-                                      False, self)
-        self.teams = {
-            -1: self.spectator_team,
-            0: self.team_1,
-            1: self.team_2
-        }
-        self.team_1.other = self.team_2
-        self.team_2.other = self.team_1
+
+        self._create_teams()
+
         self.world = world.World()
         self.set_master()
 
@@ -112,6 +102,24 @@ class ServerProtocol(BaseProtocol):
         self.pos_table.sort(key=lambda vec: abs(vec[0] * 1.03) +
                             abs(vec[1] * 1.02) +
                             abs(vec[2] * 1.01))
+
+    def _create_teams(self):
+        """create the teams
+        This Method is seperate to simplify unit testing
+        """
+        self.team_spectator = self.team_class(-1, self.spectator_name,
+                                              (0, 0, 0), True, self)
+        self.team_1 = self.team_class(0, self.team1_name, self.team1_color,
+                                      False, self)
+        self.team_2 = self.team_class(1, self.team2_name, self.team2_color,
+                                      False, self)
+        self.teams = {
+            -1: self.team_spectator,
+            0: self.team_1,
+            1: self.team_2
+        }
+        self.team_1.other = self.team_2
+        self.team_2.other = self.team_1
 
     @property
     def blue_team(self):

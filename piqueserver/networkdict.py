@@ -23,14 +23,17 @@ class NetworkDict(object):
         return values
 
     def remove(self, key):
+        """remove a key from the networkdict and return the removed items"""
         ip = ip_network(str(key), strict=False)
         networks = []
         results = []
         for item in self.networks:
             network, _value = item
-            if ip in network:
+            if ip in network or ip == network:
+                # this value should be removed
                 results.append(item)
             else:
+                # keep this value in the networkdict
                 networks.append(item)
         self.networks = networks
         return results

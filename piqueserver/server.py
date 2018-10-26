@@ -35,7 +35,7 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
-from twisted.python import log
+from twisted.internet.task import coiterate, LoopingCall
 from twisted.python.logfile import DailyLogFile
 from twisted.logger import Logger, textFileLogObserver
 from twisted.logger import FilteringLogObserver, LogLevelFilterPredicate, LogLevel
@@ -427,6 +427,10 @@ class FeatureProtocol(ServerProtocol):
         if ip_getter:
             self.get_external_ip(ip_getter)
 
+        self.vacuum_loop = LoopingCall(self.vacuum_bans)
+        # Run the vacuum every 6 hours, and kick it off it right now
+        self.vacuum_loop.start(60 * 60 * 6, True)
+
     @inlineCallbacks
     def get_external_ip(self, ip_getter: str) -> Iterator[Deferred]:
         log.info(
@@ -447,7 +451,8 @@ class FeatureProtocol(ServerProtocol):
         log.info('Server public ip address: {}:{}'.format(ip, self.port))
         log.info('Public aos identifier: {}'.format(self.identifier))
 
-    def set_time_limit(self, time_limit: Optional[bool] = None, additive: bool=False) -> int:
+    def set_time_limit(self, time_limit: Optional[bool] = None, additive:
+                       bool=False) -> Optional[int]:
         advance_call = self.advance_call
         add_time = 0.0
         if advance_call is not None:
@@ -657,6 +662,39 @@ class FeatureProtocol(ServerProtocol):
         log.info('Removing ban: {ip} {results}',
                  ip=ip, results=results)
         self.save_bans()
+
+
+    def vacuum_bans(self):
+        """remove any bans that might have expired. This takes a while, so it is
+        split up over the event loop"""
+
+        def do_vacuum_bans():
+            """do the actual clearing of bans"""
+
+            bans_count = len(self.bans)
+            log.debug("starting ban vacuum with {count} bans",
+                      count=bans_count)
+            start_time = time.time()
+
+            # create a copy of the items, so we don't have issues modifying
+            # while iteraing
+            for ban in list(self.bans.iteritems()):
+                ban_exipry = ban[1][2]
+                if ban_exipry is None:
+                    # entry never expires
+                    continue
+                if ban[1][2] < start_time:
+                    # expired
+                    del self.bans[ban[0]]
+                yield
+            log.debug("ban vacuum took {time} seconds, removed {count} bans",
+                      count=bans_count - len(self.bans),
+                      time=time.time() - start_time)
+            self.save_bans()
+
+        # TODO: use cooperate() here instead, once you figure out why it's
+        # swallowing errors. Perhaps try add an errback?
+        coiterate(do_vacuum_bans())
 
     def undo_last_ban(self):
         result = self.bans.pop()
