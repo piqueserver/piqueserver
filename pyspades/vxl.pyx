@@ -146,7 +146,7 @@ cdef class VXLData:
                 count += self.check_node(node_x, node_y, node_z, True)
         taken = time.monotonic() - start
         if taken > 0.1:
-            print 'destroying block at', x, y, z, 'took:', taken
+            print('destroying block at', x, y, z, 'took:', taken)
         return count
 
     def remove_point(self, int x, int y, int z):
@@ -266,7 +266,7 @@ cdef class VXLData:
         data = save_vxl(self.map)
         dt = time.monotonic() - start
         if dt > 1.0:
-            print 'VXLData.generate() took %s' % (dt)
+            print('VXLData.generate() took {}'.format(dt))
         return data
 
     def get_generator(self):

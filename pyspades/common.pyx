@@ -71,7 +71,7 @@ def prettify_timespan(total, get_seconds = False):
     return text
 
 def open_debugger(name, locals):
-    print '%s, opening debugger' % name
+    print('{}, opening debugger'.format(name))
     import code
     code.interact(local = locals)
 
