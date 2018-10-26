@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from vxl cimport VXLData, MapData
+from .vxl cimport VXLData, MapData
 
 cdef extern from "classicgen_c.cpp":
     void genland(unsigned long seed, MapData * mapdata)
