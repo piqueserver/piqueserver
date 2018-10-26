@@ -359,7 +359,7 @@ class FeatureConnection(ServerConnection):
                 self.chat_count += 1
             self.last_chat = current_time
 
-        log.info(escape_control_codes(message))
+        log.info("<{name}> {message}", name=escape_control_codes(self.name), message=escape_control_codes(value))
 
         return value
 
