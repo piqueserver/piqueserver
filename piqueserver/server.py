@@ -35,7 +35,7 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
-from twisted.internet.task import coiterate, LoopingCall
+from twisted.internet.task import coiterate, LoopingCall, deferLater
 from twisted.python.logfile import DailyLogFile
 from twisted.logger import Logger, textFileLogObserver
 from twisted.logger import FilteringLogObserver, LogLevelFilterPredicate, LogLevel
@@ -50,7 +50,7 @@ from enet import Address, Packet, Peer
 import pyspades.debug
 from pyspades.server import (ServerProtocol, Team)
 from pyspades.common import encode
-from pyspades.constants import (CTF_MODE, TC_MODE)
+from pyspades.constants import (CTF_MODE, TC_MODE, ERROR_KICKED)
 from pyspades.master import MAX_SERVER_NAME_SIZE
 from pyspades.tools import make_server_identifier
 from pyspades.bytes import NoDataLeft
@@ -96,6 +96,9 @@ def validate_team_name(name):
         # return False
     return True
 
+# TODO: move to a better place if reusable
+def sleep(secs):
+    return deferLater(reactor, secs, lambda: None)
 
 # declare configuration options
 bans_config = config.section('bans')
@@ -430,6 +433,7 @@ class FeatureProtocol(ServerProtocol):
         self.vacuum_loop = LoopingCall(self.vacuum_bans)
         # Run the vacuum every 6 hours, and kick it off it right now
         self.vacuum_loop.start(60 * 60 * 6, True)
+        reactor.addSystemEventTrigger('before', 'shutdown', self.shutdown)
 
     @inlineCallbacks
     def get_external_ip(self, ip_getter: str) -> Iterator[Deferred]:
@@ -639,6 +643,21 @@ class FeatureProtocol(ServerProtocol):
                 self.master_reconnect_call = None
             if has_connection:
                 self.master_connection.disconnect()
+
+    @inlineCallbacks
+    def shutdown(self):
+        """
+        Notifies players and disconnects them before a shutdown. 
+        """
+        # send shutdown notification
+        self.broadcast_chat("Server shutting down in 3sec.")
+        for i in range(1,4):
+            self.broadcast_chat(str(i)+"...")
+            yield sleep(1)
+
+        # disconnect all players
+        for connection in list(self.connections.values()):
+            connection.disconnect(ERROR_KICKED)
 
     def add_ban(self, ip, reason, duration, name=None):
         """
