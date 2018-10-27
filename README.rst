@@ -170,7 +170,7 @@ Use ``python3`` and ``pip`` to setup the development environment:
     $ python3 -m venv venv && source venv/bin/activate
     (venv) $ pip install -r requirements.txt
     (venv) $ pip install -r dev-requirements.txt # includes dev tools
-    (venv) $ python setup.py install
+    (venv) $ python setup.py develop             # install in-place
     (venv) $ deactivate # Deactivate virtualenv
 
 --------------
