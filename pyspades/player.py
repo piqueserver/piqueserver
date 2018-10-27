@@ -678,6 +678,9 @@ class ServerConnection(BaseConnection):
                 math.fabs(y - position.y) < distance and
                 math.fabs(z - position.z) < distance)
 
+    # backwards compatability
+    is_valid_position = check_speedhack
+
     def check_refill(self):
         last_refill = self.last_refill
         if (last_refill is None or
