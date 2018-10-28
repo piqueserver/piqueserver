@@ -651,13 +651,14 @@ class FeatureProtocol(ServerProtocol):
         """
         # send shutdown notification
         self.broadcast_chat("Server shutting down in 3sec.")
-        for i in range(1,4):
+        for i in range(1, 4):
             self.broadcast_chat(str(i)+"...")
             yield sleep(1)
 
         # disconnect all players
         for connection in list(self.connections.values()):
             connection.disconnect(ERROR_KICKED)
+            yield sleep(0.1)
 
     def add_ban(self, ip, reason, duration, name=None):
         """
