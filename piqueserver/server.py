@@ -50,7 +50,7 @@ from enet import Address, Packet, Peer
 import pyspades.debug
 from pyspades.server import (ServerProtocol, Team)
 from pyspades.common import encode
-from pyspades.constants import (CTF_MODE, TC_MODE, ERROR_UNDEFINED)
+from pyspades.constants import (CTF_MODE, TC_MODE, ERROR_SHUTDOWN)
 from pyspades.master import MAX_SERVER_NAME_SIZE
 from pyspades.tools import make_server_identifier
 from pyspades.bytes import NoDataLeft
@@ -657,7 +657,7 @@ class FeatureProtocol(ServerProtocol):
 
         # disconnect all players
         for connection in list(self.connections.values()):
-            connection.disconnect(ERROR_UNDEFINED)
+            connection.disconnect(ERROR_SHUTDOWN)
             yield sleep(0.1)
 
     def add_ban(self, ip, reason, duration, name=None):
