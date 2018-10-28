@@ -30,6 +30,7 @@ from pyspades.mapgenerator import ProgressiveMapGenerator
 from piqueserver.config import config
 
 log = Logger()
+# distance the server tolerates between the place it thinks the client is to where the client actually is.
 rubberband_distance = config.option('rubberband_distance', default=10)
 
 
