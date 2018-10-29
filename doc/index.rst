@@ -17,6 +17,8 @@ Welcome to piqueserver's documentation!
    piqueserver
    pyspades
    release-guide
+   command-line
+   docker
 
 
 
