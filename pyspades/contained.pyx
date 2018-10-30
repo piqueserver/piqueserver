@@ -951,3 +951,41 @@ cdef class VersionResponse(Loader):
         writer.writeByte(self.id, True)
 
 register_packet(VersionResponse)
+
+
+cdef class FeatureExchange(Loader):
+    """This packet describes the features of one participant to the other.
+    Features are key-value data, with a numbered ID and arbitrary bytes as
+    data
+
+    THIS PACKET IS CURRENTLY INOFFICIAL AND MAY BE CHANGED AT ANY TIME
+    """
+    id = 40
+
+    cdef public:
+        list features
+
+    cpdef read(self, ByteReader reader):
+        self.features = []
+        while reader.dataLeft():
+            feat_id = reader.readByte(True)
+            count = reader.readByte(True)
+            data = reader.read(count)
+            self.features.append((feat_id, data))
+
+
+    cpdef write(self, ByteWriter writer):
+        for feat_id, value in self.features:
+            count = len(value)
+            if not 0 <= feat_id <= 255:
+                raise ValueError(
+                    "feature IDs must be 0-255, not {}".format(feat_id))
+            if count > 255:
+                raise ValueError(
+                    "feature values length must be 0-255, not {}".format(count))
+
+            writer.writeByte(feat_id, True)
+            writer.writeByte(count, True)
+            writer.write(value)
+
+register_packet(FeatureExchange)
