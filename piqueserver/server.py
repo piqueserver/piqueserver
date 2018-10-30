@@ -701,7 +701,7 @@ class FeatureProtocol(ServerProtocol):
             """do the actual clearing of bans"""
 
             bans_count = len(self.bans)
-            log.debug("starting ban vacuum with {count} bans",
+            log.info("starting ban vacuum with {count} bans",
                       count=bans_count)
             start_time = time.time()
 
