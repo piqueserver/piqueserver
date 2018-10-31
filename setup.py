@@ -51,15 +51,7 @@ for name in ext_names:
     if name in ['pyspades.vxl', 'pyspades.world', 'pyspades.mapmaker']:
         extra["extra_compile_args"] = ['-std=c++11']
 
-        if sys.platform == "win32":
-            # Python aparently redifines hypot to _hypot. This fixes that.
-            extra["extra_compile_args"].extend(['-include', 'cmath'])
-
     extra['define_macros'] = []
-
-    if sys.platform == "win32":
-        # nobody is using 32-bit in 2017. right? right? please
-        extra["define_macros"].append(("MS_WIN64", None))
 
     if linetrace:
         extra['define_macros'].append(('CYTHON_TRACE', '1'))
