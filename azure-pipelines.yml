@@ -37,4 +37,4 @@ jobs:
 
   - script: |
       pytest --cov=piqueserver --cov=pyspades
-      displayName: 'Test'
+    displayName: 'Test'
