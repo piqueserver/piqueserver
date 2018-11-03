@@ -13,3 +13,6 @@ pygeoip>=0.3.2,<0.4
 # ssh
 cryptography
 pyasn1
+
+# windows specific
+pypiwin32; platform_system=="Windows"
