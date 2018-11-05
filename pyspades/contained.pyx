@@ -84,7 +84,7 @@ cdef class PositionData(Loader):
 
     cpdef write(self, ByteWriter writer):
         writer.writeByte(self.id, True)
-        write_position(reader, self.x, self.y, self.z)
+        write_position(writer, self.x, self.y, self.z)
 
 register_packet(PositionData)
 
@@ -296,7 +296,7 @@ cdef class SetColor(Loader):
     cpdef write(self, ByteWriter writer):
         writer.writeByte(self.id, True)
         writer.writeByte(self.player_id, True)
-        write_color(reader, self.value)
+        write_color(writer, self.value)
 
 register_packet(SetColor)
 
@@ -324,7 +324,7 @@ cdef class ExistingPlayer(Loader):
         writer.writeByte(self.weapon, True)
         writer.writeByte(self.tool, True)
         writer.writeInt(self.kills, True, False)
-        write_color(reader, self.color)
+        write_color(writer, self.color)
         writer.writeString(encode(self.name))
 
 register_packet(ExistingPlayer)
@@ -393,7 +393,7 @@ cdef class CreatePlayer(Loader):
         writer.writeByte(self.player_id, True)
         writer.writeByte(self.weapon, True)
         writer.writeByte(self.team, False)
-        write_position(reader, self.x, self.y, self.z)
+        write_position(writer, self.x, self.y, self.z)
         writer.writeString(encode(self.name))
 
 register_packet(CreatePlayer)
@@ -503,22 +503,22 @@ cdef class CTFState(Loader):
 
         if self.team2_has_intel:
             writer.writeByte(self.team1_carrier, True)
-            reader.pad(11)
+            writer.pad(11)
         else:
-            write_position(reader, self.team1_flag_x, self.team1_flag_y,
+            write_position(writer, self.team1_flag_x, self.team1_flag_y,
                 self.team1_flag_z)
 
         if self.team1_has_intel:
             writer.writeByte(self.team2_carrier, True)
-            reader.pad(11)
+            writer.pad(11)
         else:
-            write_position(reader, self.team2_flag_x, self.team2_flag_y,
+            write_position(writer, self.team2_flag_x, self.team2_flag_y,
                 self.team2_flag_z)
 
-        write_position(reader, self.team1_base_x, self.team1_base_y,
+        write_position(writer, self.team1_base_x, self.team1_base_y,
             self.team1_base_z)
 
-        write_position(reader, self.team2_base_x, self.team2_base_y,
+        write_position(writer, self.team2_base_x, self.team2_base_y,
             self.team2_base_z)
 
 DEF MAX_TERRITORIES = 16
@@ -535,7 +535,7 @@ cdef class Territory(Loader):
         self.state = reader.readByte(True)
 
     cpdef write(self, ByteWriter writer):
-        write_position(reader, self.x, self.y, self.z)
+        write_position(writer, self.x, self.y, self.z)
         writer.writeByte(self.state, True)
 
 cdef class ObjectTerritory(Loader):
@@ -543,7 +543,7 @@ cdef class ObjectTerritory(Loader):
         object item
 
     cpdef write(self, ByteWriter writer):
-        write_position(reader, self.item.x, self.item.y, self.item.z)
+        write_position(writer, self.item.x, self.item.y, self.item.z)
         team = self.item.team
         cdef int state
         if team is None:
@@ -576,8 +576,8 @@ cdef class TCState(Loader):
         cdef Loader territory
         writer.writeByte(len(self.territories), True)
         for territory in self.territories:
-            territory.write(reader)
-        reader.pad((MAX_TERRITORIES - len(self.territories)) * TERRITORY_SIZE)
+            territory.write(writer)
+        writer.pad((MAX_TERRITORIES - len(self.territories)) * TERRITORY_SIZE)
 
 modes = {
     CTF_MODE : CTFState,
@@ -620,13 +620,13 @@ cdef class StateData(Loader):
     cpdef write(self, ByteWriter writer):
         writer.writeByte(self.id, True)
         writer.writeByte(self.player_id, True)
-        write_team_color(reader, self.fog_color)
-        write_team_color(reader, self.team1_color)
-        write_team_color(reader, self.team2_color)
+        write_team_color(writer, self.fog_color)
+        write_team_color(writer, self.team1_color)
+        write_team_color(writer, self.team2_color)
         writer.writeString(encode(self.team1_name), 10)
         writer.writeString(encode(self.team2_name), 10)
         writer.writeByte(self.state.id, True)
-        self.state.write(reader)
+        self.state.write(writer)
 
 register_packet(StateData)
 
@@ -805,7 +805,7 @@ cdef class IntelDrop(Loader):
     cpdef write(self, ByteWriter writer):
         writer.writeByte(self.id, True)
         writer.writeByte(self.player_id, True)
-        write_position(reader, self.x, self.y, self.z)
+        write_position(writer, self.x, self.y, self.z)
 
 register_packet(IntelDrop)
 
