@@ -15,7 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from pyspades.common import *
 from pyspades.loaders cimport Loader
 from pyspades.bytes cimport ByteReader, ByteWriter
 
