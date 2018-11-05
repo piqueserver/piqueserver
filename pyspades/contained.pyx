@@ -27,8 +27,8 @@ This module contains the definitions and registrations for the various packets u
 # Other things that should probably be done here is using cython.freelist(n) to
 # speed up allocation for packets
 
-from pyspades.common import *
-from pyspades.constants import *
+from pyspades.common import encode, decode
+from pyspades.constants import NEUTRAL_TEAM, CTF_MODE, TC_MODE
 from pyspades.loaders cimport Loader
 from pyspades.bytes cimport ByteReader, ByteWriter
 from pyspades.packet import register_packet
