@@ -19,10 +19,8 @@ import math
 import time
 from pyspades.vxl cimport VXLData, MapData
 from pyspades.common cimport Vertex3, create_proxy_vector
+from libc.math cimport sqrt, sin, cos, acos
 from pyspades.constants import *
-
-cdef extern from "math.h":
-    double fabs(double x)
 
 cdef extern from "common_c.h":
     struct LongVector:
