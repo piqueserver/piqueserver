@@ -41,6 +41,7 @@ piqueserver/config/maps/*.txtc
 piqueserver/config/maps/*.saved.vxl
 piqueserver/config/logs/*
 piqueserver/config/data/*
+piqueserver/config/bans.txt
 
 # py2exe
 py2exe/dist/

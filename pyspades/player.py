@@ -27,8 +27,12 @@ from pyspades import world
 from pyspades.common import Vertex3, get_color, make_color
 from pyspades.weapon import WEAPONS
 from pyspades.mapgenerator import ProgressiveMapGenerator
+from piqueserver.config import config
 
 log = Logger()
+# distance the server tolerates between the place it thinks the client is to where the client actually is.
+rubberband_distance = config.option('rubberband_distance', default=10)
+
 
 set_tool = loaders.SetTool()
 block_action = loaders.BlockAction()
@@ -250,7 +254,7 @@ class ServerConnection(BaseConnection):
             self.on_hack_attempt(
                 'Invalid position data received')
             return
-        if not self.is_valid_position(x, y, z):
+        if not self.check_speedhack(x, y, z):
             # vanilla behaviour
             self.set_location()
             return
@@ -417,7 +421,7 @@ class ServerConnection(BaseConnection):
         if not self.grenades:
             return
         self.grenades -= 1
-        if not self.is_valid_position(*contained.position):
+        if not self.check_speedhack(*contained.position):
             contained.position = self.world_object.position.get()
         if self.on_grenade(contained.value) == False:
             return
@@ -665,15 +669,18 @@ class ServerConnection(BaseConnection):
             version_string = "Unknown"
         return "{} v{} on {}".format(client, version_string, os)
 
-    def is_valid_position(self, x: float, y: float, z: float, distance: None = None) -> bool:
+    def check_speedhack(self, x: float, y: float, z: float, distance: None = None) -> bool:
         if not self.speedhack_detect:
             return True
         if distance is None:
-            distance = RUBBERBAND_DISTANCE
+            distance = rubberband_distance.get()
         position = self.world_object.position
         return (math.fabs(x - position.x) < distance and
                 math.fabs(y - position.y) < distance and
                 math.fabs(z - position.z) < distance)
+
+    # backwards compatability
+    is_valid_position = check_speedhack
 
     def check_refill(self):
         last_refill = self.last_refill

@@ -61,10 +61,9 @@ with.
     source venv/bin/activate
     pip install -r requirements.txt -r dev-requirements.txt
 
-IMPORTANT:
 
--  edit ``piqueserver/version.py`` to the new version numbers
--  edit ``doc/conf.py`` to the new release and version numbers
+-  IMPORTANT: update ``piqueserver/version.py`` with the new version numbers (this should be the
+   single source of version info for piqueserver).
 
 -  build and upload the source distribution:
 
