@@ -16,13 +16,9 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from math import pi
+from libc.math cimport sqrt, sin, cos, acos
 import re
 
-cdef extern from "math.h":
-    double sqrt(double x)
-    double sin(double x)
-    double cos(double x)
-    double acos(double x)
 
 def get_color(color):
     b = color & 0xFF
