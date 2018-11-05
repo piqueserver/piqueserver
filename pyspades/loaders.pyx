@@ -28,13 +28,13 @@ cdef class Loader:
             raise NotImplementedError('read() not implemented')
         read_python(reader)
 
-    cpdef write(self, ByteWriter reader):
+    cpdef write(self, ByteWriter writer):
         write_python = getattr(self, 'write', None)
         if write_python is None:
             raise NotImplementedError('write() not implemented')
-        write_python(reader)
+        write_python(writer)
 
     cpdef ByteWriter generate(self):
-        cdef ByteWriter reader = ByteWriter()
-        self.write(reader)
-        return reader
+        cdef ByteWriter writer = ByteWriter()
+        self.write(writer)
+        return writer
