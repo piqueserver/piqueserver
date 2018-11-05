@@ -521,7 +521,7 @@ cdef inline list bresenham_line(int x, int y, int x2, int y2):
     return coords
 
 
-from pyspades.color import *
+from pyspades.color import hsb_to_rgb, interpolate_hsb, interpolate_rgb
 
 
 class Gradient(object):
