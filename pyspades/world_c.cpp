@@ -356,10 +356,10 @@ size_t cube_line(int x1, int y1, int z1, int x2, int y2, int z2,
 	if (iyi >= 0) dy = dyi-dy;
 	if (izi >= 0) dz = dzi-dz;
 
+    size_t count = 0;
 
-	while (1)
+    while (1)
 	{
-        size_t count = 0;
 		cube_array[count] = c;
 
 		if(count++ == CUBE_ARRAY_LENGTH)
