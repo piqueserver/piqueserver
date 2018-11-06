@@ -1,7 +1,7 @@
 """
-Extensions to the map metadata (e.g. water damage).
+Provides extensions to the map metadata (e.g. water damage).
 
-Maintainer: ?
+.. codeauthor:: ?
 """
 
 

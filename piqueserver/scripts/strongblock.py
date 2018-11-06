@@ -4,7 +4,7 @@ Blocks built by players are twice as hard to break.
 * You can remove your own blocks as if they weren't strong.
 * Dirt-colored or buried blocks (those that turn into dirt) become normal blocks.
 
-Maintainer: hompy
+.. codeauthor:: hompy
 """
 
 from collections import namedtuple

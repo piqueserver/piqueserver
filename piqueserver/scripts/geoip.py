@@ -1,3 +1,16 @@
+"""
+Gets a player's location info using a geoip database.
+
+.. note::
+  This script depends on `pygeoip` package and `piqueserver --update-geoip` needs to be executed after installing the package.
+
+Commands
+^^^^^^^^
+* ``/from <player>`` get player's location info
+
+.. codeauthor:: ?
+"""
+
 import os
 from piqueserver.commands import command, get_player
 from piqueserver.config import config

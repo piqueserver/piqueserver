@@ -47,10 +47,10 @@ All of these are `bridged <https://matrix.org/docs/guides/faq.html#what-is-matri
 Requirements
 ~~~~~~~~~~~~
 
-Piqueserver requires python3.4+ (3.5+ on Windows).
+Piqueserver requires python3.5+
 
 We currently provide builds for:
- - Linux 32 and 64bit, Python 3.4, 3.5, 3.6
+ - Linux 32 and 64bit, Python 3.5, 3.6
  - Windows 32 and 64bit, Python 3.5, 3.6
  
 If your system is not one of the above, you will also need a recent C++ Compiler.
@@ -170,7 +170,7 @@ Use ``python3`` and ``pip`` to setup the development environment:
     $ python3 -m venv venv && source venv/bin/activate
     (venv) $ pip install -r requirements.txt
     (venv) $ pip install -r dev-requirements.txt # includes dev tools
-    (venv) $ python setup.py install
+    (venv) $ python setup.py develop             # install in-place
     (venv) $ deactivate # Deactivate virtualenv
 
 --------------

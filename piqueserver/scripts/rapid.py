@@ -10,7 +10,7 @@ players.
 
 Set ALWAYS_RAPID to TRUE to automatically get rapid when you login.
 
-Mantainer: hompy
+.. codeauthor:: hompy
 """
 
 from twisted.internet.reactor import callLater

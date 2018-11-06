@@ -35,10 +35,11 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 from twisted.internet import reactor
 from twisted.internet.defer import inlineCallbacks
-from twisted.python import log
+from twisted.internet.task import coiterate, LoopingCall, deferLater
 from twisted.python.logfile import DailyLogFile
 from twisted.logger import Logger, textFileLogObserver
-from twisted.logger import globalLogPublisher
+from twisted.logger import FilteringLogObserver, LogLevelFilterPredicate, LogLevel
+from twisted.logger import globalLogBeginner
 from twisted.web import client as web_client
 from twisted.internet.tcp import Port
 from twisted.internet.defer import Deferred
@@ -49,7 +50,7 @@ from enet import Address, Packet, Peer
 import pyspades.debug
 from pyspades.server import (ServerProtocol, Team)
 from pyspades.common import encode
-from pyspades.constants import (CTF_MODE, TC_MODE)
+from pyspades.constants import (CTF_MODE, TC_MODE, ERROR_SHUTDOWN)
 from pyspades.master import MAX_SERVER_NAME_SIZE
 from pyspades.tools import make_server_identifier
 from pyspades.bytes import NoDataLeft
@@ -87,6 +88,18 @@ def check_scripts(scripts):
     return True
 
 
+def validate_team_name(name):
+    if len(name) > 9:
+        log.warn("Team name's length exceeds 9 character limit. More info: https://git.io/fN2cI")
+        # TODO: Once issue #345 is sorted out, we can do a proper validation
+        # for now we just warn
+        # return False
+    return True
+
+# TODO: move to a better place if reusable
+def sleep(secs):
+    return deferLater(reactor, secs, lambda: None)
+
 # declare configuration options
 bans_config = config.section('bans')
 logging_config = config.section('logging')
@@ -101,6 +114,7 @@ game_mode = config.option('game_mode', default='ctf')
 random_rotation = config.option('random_rotation', default=False)
 passwords = config.option('passwords', default={})
 logfile = logging_config.option('logfile', default='./logs/log.txt')
+loglevel = logging_config.option('loglevel', default='info')
 map_rotation = config.option('rotation', default=['classicgen', 'random'],
                              validate=lambda x: isinstance(x, list))
 default_time_limit = config.option(
@@ -110,8 +124,8 @@ cap_limit = config.option('cap_limit', default=10,
                           validate=lambda x: isinstance(x, (int, float)))
 advance_on_win = config.option('advance_on_win', default=False,
                                validate=lambda x: isinstance(x, bool))
-team1_name = team1_config.option('name', default='Blue')
-team2_name = team2_config.option('name', default='Green')
+team1_name = team1_config.option('name', default='Blue', validate=validate_team_name)
+team2_name = team2_config.option('name', default='Green', validate=validate_team_name)
 team1_color = team1_config.option('color', default=(0, 0, 196))
 team2_color = team2_config.option('color', default=(0, 196, 0))
 friendly_fire = config.option('friendly_fire', default=False)
@@ -134,7 +148,7 @@ max_players = config.option('max_players', default=20)
 melee_damage = config.option('melee_damage', default=100)
 max_connections_per_ip = config.option('max_connections_per_ip', default=0)
 server_prefix = config.option('server_prefix', default='[*]')
-balanced_teams = config.option('balanced_teams', default=None)
+balanced_teams = config.option('balanced_teams', default=2)
 login_retries = config.option('login_retries', 1)
 default_ban_duration = bans_config.option('default_duration', default=24 * 60)
 speedhack_detect = config.option('speedhack_detect', True)
@@ -162,7 +176,14 @@ ip_getter_option = config.option('ip_getter', default_ip_getter)
 name_option = config.option(
     'name', default='piqueserver #%s' % random.randrange(0, 2000))
 motd_option = config.option('motd')
-help_option = config.option('help')
+help_option = config.option('help', default=[
+    'Server name: %(server_name)s',
+    'Map: %(map_name)s by %(map_author)s',
+    'Game mode: %(game_mode)s',
+    '/commands Prints all available commands',
+    '/help <command_name> Gives description and usage info for a command',
+    '/help Prints this message',
+    ])
 rules_option = config.option('rules')
 tips_option = config.option('tips')
 network_interface = config.option('network_interface', default='')
@@ -274,6 +295,24 @@ class FeatureProtocol(ServerProtocol):
     default_fog = (128, 232, 255)
 
     def __init__(self, interface: bytes, config_dict: Dict[str, Any]) -> None:
+        # logfile path relative to config dir if not abs path
+        log_filename = logfile.get()
+        if log_filename.strip():  # catches empty filename
+            if not os.path.isabs(log_filename):
+                log_filename = os.path.join(config.config_dir, log_filename)
+            ensure_dir_exists(log_filename)
+            if logging_rotate_daily.get():
+                logging_file = DailyLogFile(log_filename, '.')
+            else:
+                logging_file = open(log_filename, 'a')
+            predicate = LogLevelFilterPredicate(LogLevel.levelWithName(loglevel.get()))
+            observers = [
+                FilteringLogObserver(textFileLogObserver(sys.stderr), [predicate]),
+                FilteringLogObserver(textFileLogObserver(logging_file), [predicate])
+            ]
+            globalLogBeginner.beginLoggingTo(observers)
+            log.info('piqueserver started on %s' % time.strftime('%c'))
+
         self.config = config_dict
         if random_rotation:
             self.map_rotator_type = random_choice_cycle
@@ -289,8 +328,9 @@ class FeatureProtocol(ServerProtocol):
         try:
             with open(os.path.join(config.config_dir, bans_file.get()), 'r') as f:
                 self.bans.read_list(json.load(f))
+            log.debug("loaded {count} bans", count=len(self.bans))
         except FileNotFoundError:
-            pass
+            log.debug("skip loading bans: file unavailable", count=len(self.bans))
         except IOError as e:
             log.error('Could not read bans.txt: {}'.format(e))
         except ValueError as e:
@@ -310,8 +350,8 @@ class FeatureProtocol(ServerProtocol):
         elif self.game_mode is None:
             raise NotImplementedError('invalid game mode: %s' % game_mode)
         self.game_mode_name = game_mode.get().split('.')[-1]
-        self.team1_name = team1_name.get()
-        self.team2_name = team2_name.get()
+        self.team1_name = team1_name.get()[:9]
+        self.team2_name = team2_name.get()[:9]
         self.team1_color = tuple(team1_color.get())
         self.team2_color = tuple(team2_color.get())
         self.friendly_fire = friendly_fire.get()
@@ -358,20 +398,6 @@ class FeatureProtocol(ServerProtocol):
         if bans_urls.get():
             from piqueserver import bansubscribe
             self.ban_manager = bansubscribe.BanManager(self)
-        # logfile path relative to config dir if not abs path
-        l = logfile.get()
-        if l.strip():  # catches empty filename
-            if not os.path.isabs(l):
-                l = os.path.join(config.config_dir, l)
-            ensure_dir_exists(l)
-            if logging_rotate_daily.get():
-                logging_file = DailyLogFile(l, '.')
-            else:
-                logging_file = open(l, 'a')
-            globalLogPublisher.addObserver(textFileLogObserver(logging_file))
-            globalLogPublisher.addObserver(textFileLogObserver(sys.stderr))
-            log.info('piqueserver started on %s' % time.strftime('%c'))
-
         self.start_time = reactor.seconds()
         self.end_calls = []
         # TODO: why is this here?
@@ -404,6 +430,11 @@ class FeatureProtocol(ServerProtocol):
         if ip_getter:
             self.get_external_ip(ip_getter)
 
+        self.vacuum_loop = LoopingCall(self.vacuum_bans)
+        # Run the vacuum every 6 hours, and kick it off it right now
+        self.vacuum_loop.start(60 * 60 * 6, True)
+        reactor.addSystemEventTrigger('before', 'shutdown', self.shutdown)
+
     @inlineCallbacks
     def get_external_ip(self, ip_getter: str) -> Iterator[Deferred]:
         log.info(
@@ -424,7 +455,8 @@ class FeatureProtocol(ServerProtocol):
         log.info('Server public ip address: {}:{}'.format(ip, self.port))
         log.info('Public aos identifier: {}'.format(self.identifier))
 
-    def set_time_limit(self, time_limit: Optional[bool] = None, additive: bool=False) -> int:
+    def set_time_limit(self, time_limit: Optional[bool] = None, additive:
+                       bool=False) -> Optional[int]:
         advance_call = self.advance_call
         add_time = 0.0
         if advance_call is not None:
@@ -555,26 +587,26 @@ class FeatureProtocol(ServerProtocol):
             self.master_connection.send_server()
 
     def format(self, value: str, extra: Optional[Dict[str, str]] = None) -> str:
-        if extra is None:
-            extra = {}
-
         map_info = self.map_info
         format_dict = {
             'map_name': map_info.name,
             'map_author': map_info.author,
             'map_description': map_info.description,
-            'game_mode': self.get_mode_name()
+            'game_mode': self.get_mode_name(),
+            'server_name': self.name,
         }
-        format_dict.update(extra)
-        return value % format_dict
+        if extra:
+            format_dict.update(extra)
+        # format with both old-style and new string formatting to stay
+        # compatible with older configs
+        return value.format(**format_dict) % format_dict
 
     def format_lines(self, value: List[str]) -> List[str]:
         if value is None:
             return
         lines = []
-        extra = {'server_name': self.name}
         for line in value:
-            lines.append(self.format(line, extra))
+            lines.append(self.format(line))
         return lines
 
     def got_master_connection(self, client):
@@ -612,6 +644,22 @@ class FeatureProtocol(ServerProtocol):
             if has_connection:
                 self.master_connection.disconnect()
 
+    @inlineCallbacks
+    def shutdown(self):
+        """
+        Notifies players and disconnects them before a shutdown. 
+        """
+        # send shutdown notification
+        self.broadcast_chat("Server shutting down in 3sec.")
+        for i in range(1, 4):
+            self.broadcast_chat(str(i)+"...")
+            yield sleep(1)
+
+        # disconnect all players
+        for connection in list(self.connections.values()):
+            connection.disconnect(ERROR_SHUTDOWN)
+            yield sleep(0.1)
+
     def add_ban(self, ip, reason, duration, name=None):
         """
         Ban an ip with an optional reason and duration in minutes. If duration
@@ -631,8 +679,42 @@ class FeatureProtocol(ServerProtocol):
 
     def remove_ban(self, ip):
         results = self.bans.remove(ip)
-        log.info('Removing ban:', ip, results)
+        log.info('Removing ban: {ip} {results}',
+                 ip=ip, results=results)
         self.save_bans()
+
+
+    def vacuum_bans(self):
+        """remove any bans that might have expired. This takes a while, so it is
+        split up over the event loop"""
+
+        def do_vacuum_bans():
+            """do the actual clearing of bans"""
+
+            bans_count = len(self.bans)
+            log.debug("starting ban vacuum with {count} bans",
+                      count=bans_count)
+            start_time = time.time()
+
+            # create a copy of the items, so we don't have issues modifying
+            # while iteraing
+            for ban in list(self.bans.iteritems()):
+                ban_exipry = ban[1][2]
+                if ban_exipry is None:
+                    # entry never expires
+                    continue
+                if ban[1][2] < start_time:
+                    # expired
+                    del self.bans[ban[0]]
+                yield
+            log.debug("ban vacuum took {time} seconds, removed {count} bans",
+                      count=bans_count - len(self.bans),
+                      time=time.time() - start_time)
+            self.save_bans()
+
+        # TODO: use cooperate() here instead, once you figure out why it's
+        # swallowing errors. Perhaps try add an errback?
+        coiterate(do_vacuum_bans())
 
     def undo_last_ban(self):
         result = self.bans.pop()
@@ -642,23 +724,49 @@ class FeatureProtocol(ServerProtocol):
     def save_bans(self):
         ban_file = os.path.join(config.config_dir, 'bans.txt')
         ensure_dir_exists(ban_file)
+
+        start_time = reactor.seconds()
         with open(ban_file, 'w') as f:
             json.dump(self.bans.make_list(), f, indent=2)
+        log.debug("saving {count} bans took {time} seconds",
+                  count=len(self.bans),
+                  time=reactor.seconds() - start_time)
+
         if self.ban_publish is not None:
             self.ban_publish.update()
 
     def receive_callback(self, address: Address, data: bytes) -> None:
         """This hook recieves the raw UDP data before it is processed by enet"""
 
-        # reply to ASCII HELLO messages with HI so that clients can measure the
-        # connection latency
-        if data == b'HELLO':
-            self.host.socket.send(address, b'HI')
-            return 1
+        # exceptions get swallowed in the pyenet C stuff, so we catch anything
+        # for now. This should ideally get fixed in pyenet instead.
+        try:
+            # reply to ASCII HELLO messages with HI so that clients can measure the
+            # connection latency
+            if data == b'HELLO':
+                self.host.socket.send(address, b'HI')
+                return 1
+            # reply to ASCII HELLOLAN messages with server data for LAN discovery
+            elif data == b'HELLOLAN':
+                entry = {
+                    "name": self.name,
+                    "players_current": self.get_player_count(),
+                    "players_max": self.max_players,
+                    "map": self.map_info.short_name,
+                    "game_mode": self.get_mode_name(),
+                    "game_version": "0.75"
+                }
+                payload = json.dumps(entry).encode()
+                self.host.socket.send(address, payload)
+                return 1
 
-        # This drop the connection of any ip in hard_bans
-        if address.host in self.hard_bans:
-            return 1
+            # This drop the connection of any ip in hard_bans
+            if address.host in self.hard_bans:
+                return 1
+        except Exception as e:
+            print("error in callback query")
+            import traceback
+            traceback.print_exc()
 
     def data_received(self, peer: Peer, packet: Packet) -> None:
         ip = peer.address.host
@@ -710,7 +818,7 @@ class FeatureProtocol(ServerProtocol):
         if last_time is not None:
             dt = current_time - last_time
             if dt > 1.0:
-                logging.warn('high CPU usage detected - %s' % dt)
+                log.warn('high CPU usage detected - %s' % dt)
         self.last_time = current_time
         ServerProtocol.update_world(self)
         time_taken = reactor.seconds() - current_time

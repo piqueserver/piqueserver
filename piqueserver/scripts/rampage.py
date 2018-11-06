@@ -8,7 +8,7 @@ lines disappear from the killfeed 10 seconds after they appear.
 
 Intended for use in frantic last team standing or free for all matches.
 
-Maintainer: hompy
+.. codeauthor:: hompy
 """
 
 from collections import deque

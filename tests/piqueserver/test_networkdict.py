@@ -33,7 +33,7 @@ class TestNetworkDict(unittest.TestCase):
 
     def test_get_set(self):
         networkdict = NetworkDict()
-        networkdict["177.47.27.223"] = [
+        networkdict["177.47.27.223/24"] = [
             'GOD', ': esp hacker', 1511717871.435394]
         try:
             networkdict["177.47.27.223"]
@@ -59,6 +59,17 @@ class TestNetworkDict(unittest.TestCase):
             'whoa', 'being 1337', 1511717871.435394]
         self.assertEqual(networkdict.pop()[1][0], "whoa")
         self.assertRaises(KeyError, lambda: networkdict["2.2.2.2"])
+
+    def test_remove(self):
+        networkdict = NetworkDict()
+        networkdict["177.47.27.223"] = [
+            'GOD', ': esp hacker', 1511717871.435394]
+        removed = networkdict.remove("177.47.27.223")
+        self.assertRaises(KeyError, lambda: networkdict["177.47.27.223"])
+        self.assertEqual(len(networkdict), 0)
+        self.assertEqual(str(removed[0][0]), "177.47.27.223/32")
+        self.assertEqual(removed[0][1],
+            ['GOD', ': esp hacker', 1511717871.435394])
 
     def test_contains_nonexisting(self):
         networkdict = NetworkDict()

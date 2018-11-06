@@ -85,19 +85,9 @@ class ServerProtocol(BaseProtocol):
         self.entities = []
         self.players = MultikeyDict()
         self.player_ids = IDPool()
-        self.team_spectator = self.team_class(-1, self.spectator_name,
-                                              (0, 0, 0), True, self)
-        self.team_1 = self.team_class(0, self.team1_name, self.team1_color,
-                                      False, self)
-        self.team_2 = self.team_class(1, self.team2_name, self.team2_color,
-                                      False, self)
-        self.teams = {
-            -1: self.spectator_team,
-            0: self.team_1,
-            1: self.team_2
-        }
-        self.team_1.other = self.team_2
-        self.team_2.other = self.team_1
+
+        self._create_teams()
+
         self.world = world.World()
         self.set_master()
 
@@ -112,6 +102,24 @@ class ServerProtocol(BaseProtocol):
         self.pos_table.sort(key=lambda vec: abs(vec[0] * 1.03) +
                             abs(vec[1] * 1.02) +
                             abs(vec[2] * 1.01))
+
+    def _create_teams(self):
+        """create the teams
+        This Method is seperate to simplify unit testing
+        """
+        self.team_spectator = self.team_class(-1, self.spectator_name,
+                                              (0, 0, 0), True, self)
+        self.team_1 = self.team_class(0, self.team1_name, self.team1_color,
+                                      False, self)
+        self.team_2 = self.team_class(1, self.team2_name, self.team2_color,
+                                      False, self)
+        self.teams = {
+            -1: self.team_spectator,
+            0: self.team_1,
+            1: self.team_2
+        }
+        self.team_1.other = self.team_2
+        self.team_2.other = self.team_1
 
     @property
     def blue_team(self):
@@ -316,14 +324,17 @@ class ServerProtocol(BaseProtocol):
     def master_disconnected(self, client=None):
         self.master_connection = None
 
-    def update_master(self):
-        if self.master_connection is None:
-            return
+    def get_player_count(self):
         count = 0
         for connection in self.connections.values():
             if connection.player_id is not None:
                 count += 1
-        self.master_connection.set_count(count)
+        return count
+
+    def update_master(self):
+        if self.master_connection is None:
+            return
+        self.master_connection.set_count(self.get_player_count())
 
     def update_entities(self):
         map_obj = self.map

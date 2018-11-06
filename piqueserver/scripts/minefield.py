@@ -1,12 +1,17 @@
 """
 Minefield map extension.
-Copyright (c) 2013 learn_more
-See the file license.txt or http://opensource.org/licenses/MIT for copying
-permission.
 
 Allows mappers to specify the map bounds, outside of which players will trip
 mines.  Breaking blocks (when standing close to the field) also triggers a
 mine.
+
+.. warning::
+   This script conflicts with `smartnade` script.
+
+Commands
+^^^^^^^^
+
+* ``/minedebug`` toggles debug mode *admin only*
 
 example extension from mapname.txt:
 
@@ -30,10 +35,7 @@ example extension from mapname.txt:
 ...     ]
 ... }
 
-Support thread: http://buildandshoot.com/viewtopic.php?f=19&t=8089
-Script location: https://github.com/learn-more/pysnip/blob/master/scripts/minefield.py
-
-Warning: conflicts with `smartnade` script.
+.. codeauthor:: learn_more (MIT LICENSE)
 """
 # todo: reset intel in minefield
 

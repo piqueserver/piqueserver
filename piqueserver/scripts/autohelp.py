@@ -1,7 +1,7 @@
 """
 Helps Deuces automagically when they ask in the chat for help.
 
-Maintainer: ?
+.. codeauthor:: ?
 """
 
 import re

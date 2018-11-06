@@ -1,26 +1,24 @@
-#ifndef COMMON_C_H
-#define COMMON_C_H
+// vi: set ft=cpp
+#pragma once
 
-struct Vector
+class Vector
 {
+public:
     float x, y, z;
+
+    Vector() {
+        x = 0.0, y =0.0, z = 0.0;
+    }
+    Vector(float x, float y, float z)
+        : x(x), y(y), z(z) {}
+    void set(float x, float y, float z) {
+        this->x = x;
+        this->y = y;
+        this->z = z;
+    }
 };
 
 struct LongVector
 {
     long x, y, z;
 };
-
-inline Vector * create_vector(float x, float y, float z)
-{
-    Vector * v = new Vector;
-    v->x = x; v->y = y; v->z = z;
-    return v;
-}
-
-inline void destroy_vector(Vector * v)
-{
-    delete v;
-}
-
-#endif /* COMMON_C_H */

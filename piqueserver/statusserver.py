@@ -24,6 +24,7 @@ from twisted.internet import reactor
 from twisted.web import server
 from twisted.web.resource import Resource
 from piqueserver.config import config
+import piqueserver.web
 
 
 OVERVIEW_UPDATE_INTERVAL = 1 * 60  # 1 minute

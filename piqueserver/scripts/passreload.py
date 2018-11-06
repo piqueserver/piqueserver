@@ -1,5 +1,13 @@
-# passreload.py
-# written by Danke
+"""
+Allows reloading config on the fly
+
+Commands
+^^^^^^^^
+
+* ``/reloadconfig`` reloads the config (also updates rights) *admin only*
+
+.. codeauthor:: Danke
+"""
 
 import json
 import os.path

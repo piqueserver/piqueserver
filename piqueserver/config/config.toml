@@ -12,16 +12,14 @@ motd = [
 ]
 
 # info displaying when user types the /help command
-# if not defined, /help will display a list of available commands
 # String interpolation is allowed. Possible values are:
 # 'server_name', 'map_name', 'map_author', 'map_description', 'game_mode'
 help = [
   "Server name: %(server_name)s", "Map: %(map_name)s by %(map_author)s",
   "Game mode: %(game_mode)s",
-  "/streak    Shows how many kills in a row you got without dying",
-  "/intel     Tells you who's got the enemy intel",
-  "/votekick  Start a vote to temporarily ban a disruptive player",
-  "/time      Remaining time until forced map reset"
+  "/commands Prints all available commands",
+  "/help <command_name> Gives description and usage info for a command",
+  "/help Prints this message"
 ]
 
 # list of messages to send when the user sends the /rules command
@@ -150,8 +148,11 @@ teamswitch_interval = 0
 # whether players are allowed to switch teams at all
 teamswitch_allowed = true
 
-# TODO
-speedhack_detect = false
+# attempt to detect speedhacking. This might cause false positives.
+speedhack_detect = true
+
+# distance the server tolerates between the place it thinks the client is to where the client actually is.
+rubberband_distance = 10
 
 # The amount of damage dealt by a melee hit
 melee_damage = 80
@@ -195,10 +196,10 @@ color = [ 0, 255, 0]
 # logging in as admin or trusted also disables being votekicked (if that script is enabled)
 # For security reasons, logins are disabled by default.
 #
-#admin = ["pass1", "pass2"]
-#moderator = ["pass"]
-#guard = ["pass"]
-#trusted = ["pass"]
+#admin = ["adminpass1", "adminpass2"]
+#moderator = ["modpass"]
+#guard = ["guardpass"]
+#trusted = ["trustedpass"]
 
 
 [bans]
@@ -240,7 +241,9 @@ guard = [
 ]
 
 [logging]
-
+# set log level
+# various log levels in decending order: debug, info, warn, error, critical
+loglevel = "info"
 # enable the debug logging
 debug_log = false
 

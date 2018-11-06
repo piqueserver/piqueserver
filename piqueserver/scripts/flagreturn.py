@@ -1,8 +1,7 @@
 """
 Makes the flag returnable in Quake-like fashion.
 
-Maintainer: mat^2
-fixed by learn_more
+.. codeauthor:: mat^2 & learn_more
 """
 
 from pyspades.collision import vector_collision

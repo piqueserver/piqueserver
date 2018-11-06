@@ -1,7 +1,13 @@
 """
 Protects areas against block destroying/building.
 
-Maintainer: hompy
+Commands
+^^^^^^^^
+
+* ``/protect <area coordinates>`` puts an area under protected status *admin only*
+* ``/protect`` clears all protected areas *admin only*
+
+.. codeauthor:: hompy
 """
 
 from piqueserver.commands import command, admin

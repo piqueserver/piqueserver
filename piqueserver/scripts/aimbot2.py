@@ -1,7 +1,21 @@
 """
-Plugin to detect and react to possible aimbot users
+Detects and reacts to possible aimbot users.
 
-maintained by: ?
+Commands
+^^^^^^^^
+
+* ``/accuracy <player>`` shows player's accuracy per weapon
+* ``/hackinfo <player>`` shows player's accuracy, K/D ratio and how often their cross-hair snaps onto another players head *admin only*
+
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [aimbot]
+   collect_data = true # saves hits and shots of each weapon to a csv file
+
+.. codeauthor:: ?
 """
 import os
 import csv
@@ -26,8 +40,6 @@ HEADSHOT_SNAP = WARN_ADMIN
 HIT_PERCENT = WARN_ADMIN
 KILLS_IN_TIME = WARN_ADMIN
 MULTIPLE_BULLETS = WARN_ADMIN
-
-DETECT_DAMAGE_HACK = True
 
 # Minimum amount of time that must pass between admin warnings that are
 # triggered by the same detection method. Time is in seconds.
@@ -82,11 +94,6 @@ HEADSHOT_SNAP_ANGLE = 90.0
 # A near miss occurs when the player is NEAR_MISS_ANGLE degrees or less off
 # of an enemy
 NEAR_MISS_ANGLE = 10.0
-
-# Valid damage values for each gun
-RIFLE_DAMAGE = (33, 49, 100)
-SMG_DAMAGE = (18, 29, 75)
-SHOTGUN_DAMAGE = (16, 27, 37)
 
 # Approximate size of player's heads in blocks
 HEAD_RADIUS = 0.7
@@ -373,26 +380,17 @@ def apply_script(protocol, connection, config):
             if hit_type == HEADSHOT_KILL:
                 self.multiple_bullets_count += 1
             if self.weapon == RIFLE_WEAPON:
-                if not (hit_amount in RIFLE_DAMAGE) and DETECT_DAMAGE_HACK:
+                self.rifle_hits += 1
+                if self.multiple_bullets_count >= RIFLE_MULTIPLE_BULLETS_MAX:
+                    self.multiple_bullets_eject()
                     return False
-                else:
-                    self.rifle_hits += 1
-                    if self.multiple_bullets_count >= RIFLE_MULTIPLE_BULLETS_MAX:
-                        self.multiple_bullets_eject()
-                        return False
             elif self.weapon == SMG_WEAPON:
-                if not (hit_amount in SMG_DAMAGE) and DETECT_DAMAGE_HACK:
+                self.smg_hits += 1
+                if self.multiple_bullets_count >= SMG_MULTIPLE_BULLETS_MAX:
+                    self.multiple_bullets_eject()
                     return False
-                else:
-                    self.smg_hits += 1
-                    if self.multiple_bullets_count >= SMG_MULTIPLE_BULLETS_MAX:
-                        self.multiple_bullets_eject()
-                        return False
             elif self.weapon == SHOTGUN_WEAPON:
-                if not (hit_amount in SHOTGUN_DAMAGE) and DETECT_DAMAGE_HACK:
-                    return False
-                elif shotgun_use:
-                    self.shotgun_hits += 1
+                self.shotgun_hits += 1
 
             return connection.on_hit(
                 self, hit_amount, hit_player, hit_type, grenade)

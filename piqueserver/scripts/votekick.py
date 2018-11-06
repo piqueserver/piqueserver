@@ -1,21 +1,32 @@
-# maintained by triplefox
+"""
+Allows users to start votekicks
 
-# Copyright (c) James Hofmann 2012.
+Commands
+^^^^^^^^
 
-# This file is part of pyspades.
+* ``/votekick <player> <reason>`` start votekick against a player
+* ``/y`` votes yes
+* ``/togglevotekick or /tvk`` toggles votekicks on/off globally
+* ``/togglevotekick or /tvk <player>`` toggles votekicks on/off for specific players
+* ``/cancel`` cancels a votekick
 
-# pyspades is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+Options
+^^^^^^^
 
-# pyspades is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+.. code-block:: guess
 
-# You should have received a copy of the GNU General Public License
-# along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
+    [votekick]
+    # percentage of total number of players in the server required to vote to
+    # successfully votekick a player
+    percentage = 35
+
+    # duration in minutes that votekicked player will be banned for
+    ban_duration = 30
+
+    public_votes = true
+
+.. codeauthor:: James Hofmann a.k.a triplefox
+"""
 
 
 from twisted.internet.reactor import seconds
@@ -58,8 +69,8 @@ S_REASON = 'Reason: {reason}'
 
 # register options
 VOTEKICK_CONFIG = config.section('votekick')
-REQUIRED_PERCENTAGE_OPTION = VOTEKICK_CONFIG.option('percentage', 25.0)
-BAN_DURATION_OPTION = VOTEKICK_CONFIG.option('ban_duration', 15.0)
+REQUIRED_PERCENTAGE_OPTION = VOTEKICK_CONFIG.option('percentage', 35.0)
+BAN_DURATION_OPTION = VOTEKICK_CONFIG.option('ban_duration', 30.0)
 PUBLIC_VOTES_OPTION = VOTEKICK_CONFIG.option('public_votes', True)
 
 class VotekickFailure(Exception):
@@ -68,6 +79,10 @@ class VotekickFailure(Exception):
 
 @command('votekick')
 def start_votekick(connection, *args):
+    """
+    Starts an votekick against a player
+    /votekick <player name or id> <reason>
+    """
     protocol = connection.protocol
     if connection not in protocol.players:
         raise KeyError()
@@ -99,6 +114,10 @@ def start_votekick(connection, *args):
 
 @command('cancel')
 def cancel_votekick(connection):
+    """
+    Cancels an ongoing vote
+    /cancel
+    """
     protocol = connection.protocol
     votekick = protocol.votekick
     if not votekick:
@@ -114,6 +133,10 @@ def cancel_votekick(connection):
 
 @command('y')
 def vote_yes(connection):
+    """
+    Vote yes on an ongoing vote
+    /y
+    """
     protocol = connection.protocol
     if connection not in protocol.players:
         raise KeyError()
@@ -128,6 +151,10 @@ def vote_yes(connection):
 
 @command('tvk', admin_only=True)
 def togglevotekick(connection, *args):
+    """
+    Toggles votekicking for a player or the whole server
+    /tvk <player> or /tvk
+    """
     protocol = connection.protocol
     if len(args) == 0:
         protocol.votekick_enabled = not protocol.votekick_enabled

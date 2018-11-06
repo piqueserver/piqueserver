@@ -1,7 +1,24 @@
 """
 Changes the damage values depending on distance.
 
-Maintainer: ?
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [rangedamange.rifle]
+   pct_per_block = 0 # percentage per block?
+   multiplier = 1
+
+   [rangedamange.smg]
+   pct_per_block = 0
+   multiplier = 1
+
+   [rangedamange.shotgun]
+   pct_per_block = 0
+   multiplier = 1
+
+.. codeauthor:: ?
 """
 
 from pyspades.constants import (SHOTGUN_WEAPON, SMG_WEAPON, RIFLE_WEAPON)

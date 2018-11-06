@@ -1,8 +1,15 @@
 """
-K/D ratio script.
+Shows K/D ratio
 
-Author: TheGrandmaster
-Maintainer: mat^2
+.. note::
+   "ratio" must be AFTER "votekick" in the config script list
+
+Commands
+^^^^^^^^
+
+* ``/ratio <player>`` shows K/D ratio
+
+.. codeauthor:: TheGrandmaster & mat^2
 """
 
 from piqueserver.commands import command, get_player

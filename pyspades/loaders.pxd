@@ -19,5 +19,5 @@ from pyspades.bytes cimport ByteWriter, ByteReader
 
 cdef class Loader:
     cpdef read(self, ByteReader reader)
-    cpdef write(self, ByteWriter reader)
+    cpdef write(self, ByteWriter writer)
     cpdef ByteWriter generate(self)

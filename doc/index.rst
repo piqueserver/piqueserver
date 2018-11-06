@@ -10,12 +10,13 @@ Welcome to piqueserver's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   configuration
+   included-scripts
    architecture
    development
    piqueserver
    pyspades
    release-guide
-   script-options
 
 
 

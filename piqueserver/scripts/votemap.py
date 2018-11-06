@@ -1,19 +1,25 @@
-# Copyright (c) James Hofmann 2012.
+"""
+Allows players to vote for maps.
 
-# This file is part of pyspades.
+Commands
+^^^^^^^^
 
-# pyspades is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+* ``/votemap`` initiates map voting
+* ``/vote <map name>`` vote for a map 
 
-# pyspades is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+.. code-block:: guess
 
-# You should have received a copy of the GNU General Public License
-# along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
+    [votemap]
+    public_votes = true
+    extension_time = 15
+    player_driven = false
+    autoschedule = false
+    time = 120
+    percentage = 80
+
+.. codeauthor:: James Hofmann a.k.a triplefox (GPL LICENSE)
+"""
+
 
 import random
 from twisted.internet import reactor

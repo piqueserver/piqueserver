@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from vxl cimport VXLData, MapData
+from .vxl cimport VXLData, MapData
 
 cdef extern from "classicgen_c.cpp":
     void genland(unsigned long seed, MapData * mapdata)
@@ -414,9 +414,9 @@ cdef class HeightMap:
             down = swap[((x)%self.width)+((y+1)%self.height)*self.width]
             mid = swap[((x)%self.width)+((y)%self.height)*self.width]
 
-            r = (get_r(left) + get_r(right) + get_r(up) + get_r(down) + get_r(mid))/5
-            g = (get_g(left) + get_g(right) + get_g(up) + get_g(down) + get_g(mid))/5
-            b = (get_b(left) + get_b(right) + get_b(up) + get_b(down) + get_b(mid))/5
+            r = (get_r(left) + get_r(right) + get_r(up) + get_r(down) + get_r(mid))//5
+            g = (get_g(left) + get_g(right) + get_g(up) + get_g(down) + get_g(mid))//5
+            b = (get_b(left) + get_b(right) + get_b(up) + get_b(down) + get_b(mid))//5
 
             self.set_col_repeat(x,y,make_color(r,g,b))
 
@@ -521,7 +521,7 @@ cdef inline list bresenham_line(int x, int y, int x2, int y2):
     return coords
 
 
-from pyspades.color import *
+from pyspades.color import hsb_to_rgb, interpolate_hsb, interpolate_rgb
 
 
 class Gradient(object):

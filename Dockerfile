@@ -33,7 +33,11 @@ COPY setup.py COPYING.txt CREDITS.txt LICENSE README.rst /usr/src/app/
 
 RUN apk add --no-cache --virtual .build-deps-server gcc musl-dev g++ \
     && STDCPP_STATIC=1 python ./setup.py install \
-    && apk del .build-deps-server 
+    && apk del .build-deps-server \
+    && cd / && rm -rf /usr/src/app
+
+# We need ssl support for fetching server's IP
+RUN apk add --no-cache openssl
 
 # Copy over the rest and default to launching the server
 CMD piqueserver -d /config

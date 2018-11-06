@@ -4,6 +4,7 @@ import random
 import shlex
 from itertools import product
 import textwrap
+import re
 
 from twisted.internet import reactor
 from twisted.logger import Logger
@@ -26,8 +27,12 @@ from pyspades import world
 from pyspades.common import Vertex3, get_color, make_color
 from pyspades.weapon import WEAPONS
 from pyspades.mapgenerator import ProgressiveMapGenerator
+from piqueserver.config import config
 
 log = Logger()
+# distance the server tolerates between the place it thinks the client is to where the client actually is.
+rubberband_distance = config.option('rubberband_distance', default=10)
+
 
 set_tool = loaders.SetTool()
 block_action = loaders.BlockAction()
@@ -117,7 +122,7 @@ class ServerConnection(BaseConnection):
     speedhack_detect = False
     rapid_hack_detect = False
     timers = None
-    world_object = None  # type: world.World
+    world_object = None  # type: world.Character
     last_block = None
     map_data = None
     last_position_update = None
@@ -180,10 +185,12 @@ class ServerConnection(BaseConnection):
 
         old_team = self.team
         team = self.protocol.teams[contained.team]
+        log.debug("{user} wants to join {team} (id {teamid})",
+                  user=self, team=team, teamid=contained.team)
 
         ret = self.on_team_join(team)
         if ret is False:
-            team = self.protocol.spectator_team
+            team = self.protocol.team_spectator
         elif ret is not None:
             team = ret
 
@@ -247,7 +254,7 @@ class ServerConnection(BaseConnection):
             self.on_hack_attempt(
                 'Invalid position data received')
             return
-        if not self.is_valid_position(x, y, z):
+        if not self.check_speedhack(x, y, z):
             # vanilla behaviour
             self.set_location()
             return
@@ -414,7 +421,7 @@ class ServerConnection(BaseConnection):
         if not self.grenades:
             return
         self.grenades -= 1
-        if not self.is_valid_position(*contained.position):
+        if not self.check_speedhack(*contained.position):
             contained.position = self.world_object.position.get()
         if self.on_grenade(contained.value) == False:
             return
@@ -423,7 +430,8 @@ class ServerConnection(BaseConnection):
             Vertex3(*contained.position), None,
             Vertex3(*contained.velocity), self.grenade_exploded)
         grenade.team = self.team
-        log.debug("{player!r} created {grenade!r}", grenade=grenade, player=self)
+        log.debug("{player!r} ({world_object!r}) created {grenade!r}",
+                  grenade=grenade, world_object=self.world_object, player=self)
         self.on_grenade_thrown(grenade)
         if self.filter_visibility_data:
             return
@@ -633,14 +641,22 @@ class ServerConnection(BaseConnection):
 
     @register_packet_handler(loaders.VersionResponse)
     def on_version_info_recieved(self, contained: loaders.VersionResponse) -> None:
+        self.client_info["version"] = contained.version
+        self.client_info["os_info"] = contained.os_info
+        # TODO: Make this a dict lookup instead
         if contained.client == 'o':
             self.client_info["client"] = "OpenSpades"
         elif contained.client == 'B':
             self.client_info["client"] = "BetterSpades"
+            # BetterSpades currently sends the client name in the OS info to
+            # deal with old scripts that don't recognize the 'B' indentifier
+            match = re.match(r"\ABetterSpades \((.*)\)\Z", contained.os_info)
+            if match:
+                self.client_info["os_info"] = match.groups()[0]
+        elif contained.client == 'a':
+            self.client_info["client"] = "ACE"
         else:
             self.client_info["client"] = "Unknown({})".format(contained.client)
-        self.client_info["version"] = contained.version
-        self.client_info["os_info"] = contained.os_info
 
     @property
     def client_string(self):
@@ -653,15 +669,18 @@ class ServerConnection(BaseConnection):
             version_string = "Unknown"
         return "{} v{} on {}".format(client, version_string, os)
 
-    def is_valid_position(self, x: float, y: float, z: float, distance: None = None) -> bool:
+    def check_speedhack(self, x: float, y: float, z: float, distance: None = None) -> bool:
         if not self.speedhack_detect:
             return True
         if distance is None:
-            distance = RUBBERBAND_DISTANCE
+            distance = rubberband_distance.get()
         position = self.world_object.position
         return (math.fabs(x - position.x) < distance and
                 math.fabs(y - position.y) < distance and
                 math.fabs(z - position.z) < distance)
+
+    # backwards compatability
+    is_valid_position = check_speedhack
 
     def check_refill(self):
         last_refill = self.last_refill

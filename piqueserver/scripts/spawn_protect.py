@@ -1,8 +1,15 @@
 """
 Protects spawned players for a specified amount of seconds.
 
-Maintainer: ?
-Fixed error by kmsi(kmsiapps@gmail.com) : replaced player to hit_player
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [spawn_protect]
+   protection_time = 3 # in seconds
+
+.. codeauthor:: ? & kmsi <kmsiapps@gmail.com>
 """
 
 from pyspades.common import prettify_timespan

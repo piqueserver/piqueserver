@@ -357,8 +357,7 @@ def god_build(connection, player=None):
         player = connection
     else:
         raise ValueError()
-    if not player.god:
-        return 'Placing god blocks is only allowed in god mode'
+
     player.god_build = not player.god_build
 
     message = ('now placing god blocks' if player.god_build else
