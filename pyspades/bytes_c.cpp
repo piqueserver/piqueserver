@@ -23,13 +23,13 @@
 #include "Python.h"
 using namespace std;
 
-stringstream * create_stream()
+stringstream *create_stream()
 {
-    stringstream * ss = new stringstream(stringstream::out | stringstream::binary);
+    stringstream *ss = new stringstream(stringstream::out | stringstream::binary);
     return ss;
 }
 
-void delete_stream(stringstream * ss)
+void delete_stream(stringstream *ss)
 {
     delete ss;
 }
@@ -40,21 +40,21 @@ read methods
 
 // byte
 
-inline int8_t read_byte(char * data)
+inline int8_t read_byte(char *data)
 {
     return data[0];
 }
 
-inline uint8_t read_ubyte(char * data)
+inline uint8_t read_ubyte(char *data)
 {
-    return ((unsigned char*)data)[0];
+    return ((unsigned char *)data)[0];
 }
 
 // short
 
-inline int16_t read_short(char * data, int big_endian)
+inline int16_t read_short(char *data, int big_endian)
 {
-    unsigned char * bytes = (unsigned char*)data;
+    unsigned char *bytes = (unsigned char *)data;
     if (big_endian)
     {
         return (bytes[0] << 8) | bytes[1];
@@ -65,16 +65,16 @@ inline int16_t read_short(char * data, int big_endian)
     }
 }
 
-inline uint16_t read_ushort(char * data, int big_endian)
+inline uint16_t read_ushort(char *data, int big_endian)
 {
     return (unsigned short)read_short(data, big_endian);
 }
 
 // int
 
-inline int32_t read_int(char * data, int big_endian)
+inline int32_t read_int(char *data, int big_endian)
 {
-    unsigned char * bytes = (unsigned char*)data;
+    unsigned char *bytes = (unsigned char *)data;
     if (big_endian)
     {
         return (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
@@ -85,16 +85,16 @@ inline int32_t read_int(char * data, int big_endian)
     }
 }
 
-inline uint32_t read_uint(char * data, int big_endian)
+inline uint32_t read_uint(char *data, int big_endian)
 {
     return (unsigned int)read_int(data, big_endian);
 }
 
 // float
 
-inline double read_float(char * data, int big_endian)
+inline double read_float(char *data, int big_endian)
 {
-    return _PyFloat_Unpack4((const unsigned char*)data, !big_endian);
+    return _PyFloat_Unpack4((const unsigned char *)data, !big_endian);
 }
 
 /*
@@ -103,19 +103,19 @@ write methods
 
 // byte
 
-inline void write_byte(stringstream * ss, int8_t value)
+inline void write_byte(stringstream *ss, int8_t value)
 {
     ss->put(value);
 }
 
-inline void write_ubyte(stringstream * ss, uint8_t value)
+inline void write_ubyte(stringstream *ss, uint8_t value)
 {
     ss->put((char)value);
 }
 
 // short
 
-inline void write_short(stringstream * ss, int16_t value, int big_endian)
+inline void write_short(stringstream *ss, int16_t value, int big_endian)
 {
     if (big_endian)
     {
@@ -129,7 +129,7 @@ inline void write_short(stringstream * ss, int16_t value, int big_endian)
     }
 }
 
-inline void write_ushort(stringstream * ss, uint16_t value,
+inline void write_ushort(stringstream *ss, uint16_t value,
                          int big_endian)
 {
     write_short(ss, (short)value, big_endian);
@@ -137,7 +137,7 @@ inline void write_ushort(stringstream * ss, uint16_t value,
 
 // int
 
-inline void write_int(stringstream * ss, int32_t value, int big_endian)
+inline void write_int(stringstream *ss, int32_t value, int big_endian)
 {
     if (big_endian)
     {
@@ -155,43 +155,43 @@ inline void write_int(stringstream * ss, int32_t value, int big_endian)
     }
 }
 
-inline void write_uint(stringstream * ss, uint32_t value,
-                               int big_endian)
+inline void write_uint(stringstream *ss, uint32_t value,
+                       int big_endian)
 {
     write_int(ss, (int)value, big_endian);
 }
 
 // float
 
-inline void write_float(stringstream * ss, double value, int big_endian)
+inline void write_float(stringstream *ss, double value, int big_endian)
 {
     char out[4];
     _PyFloat_Pack4(value, (unsigned char *)&out, !big_endian);
     ss->write(out, 4);
 }
 
-inline void write_string(stringstream * ss, char * data, size_t size)
+inline void write_string(stringstream *ss, char *data, size_t size)
 {
     ss->write(data, size);
     ss->put(0);
 }
 
-inline void write(stringstream * ss, char * data, size_t size)
+inline void write(stringstream *ss, char *data, size_t size)
 {
     ss->write(data, size);
 }
 
-inline void rewind_stream(stringstream * ss, int bytes)
+inline void rewind_stream(stringstream *ss, int bytes)
 {
     ss->seekp(-bytes, stringstream::cur);
 }
 
-inline size_t get_stream_size(stringstream * ss)
+inline size_t get_stream_size(stringstream *ss)
 {
     return ss->str().length();
 }
 
-inline size_t get_stream_pos(stringstream * ss)
+inline size_t get_stream_pos(stringstream *ss)
 {
     streampos pos = ss->tellp();
     if (pos == (streampos)-1)
@@ -199,7 +199,7 @@ inline size_t get_stream_pos(stringstream * ss)
     return pos;
 }
 
-inline PyObject * get_stream(stringstream * ss)
+inline PyObject *get_stream(stringstream *ss)
 {
     const string tmp = ss->str();
     return PyBytes_FromStringAndSize(tmp.c_str(), tmp.length());
