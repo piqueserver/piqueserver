@@ -47,10 +47,8 @@ class TestCommonThings(unittest.TestCase):
                          "2 minutes")
         self.assertEqual(common.prettify_timespan(131, get_seconds=True),
                          "2 minutes, 11 seconds")
-        # This is wrong and should be fixed
         self.assertEqual(common.prettify_timespan(1),
-                         "minute")
-        # Should be: "1 second"
+                         "1 second")
 
     def test_escape_control_codes(self):
         test_cases = [
