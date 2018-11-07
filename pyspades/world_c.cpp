@@ -18,8 +18,8 @@
 
 */
 
-#include "vxl_c.h"
 #include "constants_c.h"
+#include "vxl_c.h"
 
 // from vxl.h
 #define CHUNK 1023 //zlib buffer size
@@ -43,8 +43,8 @@
 
 // common.h
 #define CUBE_ARRAY_LENGTH 64
-#include <cmath>
 #include "common_c.h"
+#include <cmath>
 
 enum damage_index
 {

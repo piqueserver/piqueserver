@@ -24,8 +24,8 @@ Ken Silverman
 http://moonedit.com/tom/vox1_en.htm#genland
 */
 
-#include "vxl_c.h"
 #include "constants_c.h"
+#include "vxl_c.h"
 
 #define OCTMAX 10 //how many sub functions(10)
 #define EPS 0.1f  //color smoothing (0.1)
@@ -80,8 +80,8 @@ static inline float fgrad(int h, float x, float y, float z)
         return (x + y);
     case 13:
         return (-x + y);
-        //case 12: return(   y+z);
-        //case 13: return(  -y+z);
+    //case 12: return(   y+z);
+    //case 13: return(  -y+z);
     case 14:
         return (y - z);
     case 15:
@@ -124,7 +124,7 @@ static void noiseinit()
         noisep15[i] = noisep[i] & 15;
 }
 
-double noise3d (double fx, double fy, double fz, int mask)
+double noise3d(double fx, double fy, double fz, int mask)
 {
     int i, l[6], a[4];
     float p[3], f[8];
@@ -157,8 +157,8 @@ double noise3d (double fx, double fy, double fz, int mask)
     // clang-format on
 }
 
-vcol buf[VSID*VSID];
-vcol amb[VSID*VSID]; // ambient
+vcol buf[VSID * VSID];
+vcol amb[VSID * VSID]; // ambient
 
 inline int get_height_pos(int x, int y)
 {
@@ -174,6 +174,7 @@ inline int get_height(int x, int y, int def)
 
 inline int get_lowest_height(int x, int y)
 {
+    // clang-format off
     int z = get_height(x, y, 63);
     z = max(get_height(x - 1, y, z),
         max(get_height(x + 1, y, z),
@@ -181,6 +182,7 @@ inline int get_lowest_height(int x, int y)
         max(get_height(x, y + 1, z),
             z))));
     return z;
+    // clang-format on
 }
 
 void genland(unsigned int seed, MapData *map)

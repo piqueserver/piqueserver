@@ -17,10 +17,10 @@
     along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "Python.h"
 #include <iostream>
 #include <sstream>
 #include <string>
-#include "Python.h"
 using namespace std;
 
 stringstream *create_stream()

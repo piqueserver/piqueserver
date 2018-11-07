@@ -18,8 +18,8 @@
 
 */
 
-#include "Python.h"
 #include "vxl_c.h"
+#include "Python.h"
 #include <vector>
 
 using namespace std;
