@@ -130,6 +130,7 @@ double noise3d (double fx, double fy, double fz, int mask)
     float p[3], f[8];
 
     //if (mask > 255) mask = 255; //Checked before call
+    // clang-format off
     l[0] = floor(fx); p[0] = fx-((float)l[0]); l[0] &= mask; l[3] = (l[0]+1)&mask;
     l[1] = floor(fy); p[1] = fy-((float)l[1]); l[1] &= mask; l[4] = (l[1]+1)&mask;
     l[2] = floor(fz); p[2] = fz-((float)l[2]); l[2] &= mask; l[5] = (l[2]+1)&mask;
@@ -153,6 +154,7 @@ double noise3d (double fx, double fy, double fz, int mask)
     f[0] = (f[2]-f[0])*p[1] + f[0];
     f[1] = (f[3]-f[1])*p[1] + f[1];
     return((f[1]-f[0])*p[0] + f[0]);
+    // clang-format on
 }
 
 vcol buf[VSID*VSID];

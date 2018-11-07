@@ -533,11 +533,7 @@ int try_uncrouch(PlayerType *p)
     float z2 = p->p.z - 1.35f;
 
     //first check if player can lower feet (in midair)
-    if (p->airborne && !(
-                           clipbox(x1, y1, z1) ||
-                           clipbox(x1, y2, z1) ||
-                           clipbox(x2, y1, z1) ||
-                           clipbox(x2, y2, z1)))
+    if (p->airborne && !(clipbox(x1, y1, z1) || clipbox(x1, y2, z1) || clipbox(x2, y1, z1) || clipbox(x2, y2, z1)))
         return (1);
     //then check if they can raise their head
     else if (!(clipbox(x1, y1, z2) ||
