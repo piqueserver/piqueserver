@@ -47,6 +47,7 @@ def to_coordinates(x, y):
 
 def prettify_timespan(total, get_seconds = False):
     total = int(total)
+    if total < 60: get_seconds = True
     days = total // (1440 * 60)
     total -= days * 1440 * 60
     hours = total // (60 * 60)
