@@ -239,7 +239,7 @@ class ServerProtocol(BaseProtocol):
         self.players = MultikeyDict()
         if self.connections:
             data = ProgressiveMapGenerator(self.map, parent=True)
-            for connection in self.connections.values():
+            for connection in list(self.connections.values()):
                 if connection.player_id is None:
                     continue
                 if connection.map_data is not None:
