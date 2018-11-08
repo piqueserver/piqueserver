@@ -808,7 +808,7 @@ class ServerConnection(BaseConnection):
             self.on_spawn((x, y, z))
 
         if not self.client_info:
-            self.protocol.send_contained(handshake_init)
+            self.send_contained(handshake_init)
 
     def take_flag(self):
         if not self.hp:
@@ -987,7 +987,7 @@ class ServerConnection(BaseConnection):
         self._send_connection_data()
         self.send_map(ProgressiveMapGenerator(self.protocol.map))
         if not self.client_info:
-            self.protocol.send_contained(handshake_init)
+            self.send_contained(handshake_init)
 
     def _send_connection_data(self) -> None:
         saved_loaders = self.saved_loaders = []
