@@ -193,7 +193,7 @@ class BaseMarker():
         self.lines.append(line)
 
     def build(self, sender=None):
-        sender = sender or self.protocol.send_contained
+        sender = sender or self.protocol.broadcast_contained
         self.send_color(sender)
         for line in self.lines:
             self.send_line(sender, *line)
@@ -203,7 +203,7 @@ class BaseMarker():
     def destroy(self, sender=None):
         # breaking a single block would make it come tumbling down, so we have
         # to destroy them all at once
-        sender = sender or self.protocol.send_contained
+        sender = sender or self.protocol.broadcast_contained
         for block in self.blocks:
             self.send_block_remove(sender, *block)
 
@@ -643,13 +643,13 @@ def apply_script(protocol, connection, config):
 
         def send_markers(self):
             def is_self(player): return player is self
-            send_me = partial(self.protocol.send_contained, rule=is_self)
+            send_me = partial(self.protocol.broadcast_contained, rule=is_self)
             for marker in self.protocol.markers:
                 marker.build(send_me)
 
         def destroy_markers(self):
             def is_self(player): return player is self
-            send_me = partial(self.protocol.send_contained, rule=is_self)
+            send_me = partial(self.protocol.broadcast_contained, rule=is_self)
             for marker in self.protocol.markers:
                 marker.destroy(send_me)
 
@@ -679,7 +679,7 @@ def apply_script(protocol, connection, config):
                             chat_message.player_id = self.player_id
                             chat_message.value = S_SPOTTED.format(
                                 coords=coords)
-                            self.protocol.send_contained(
+                            self.protocol.broadcast_contained(
                                 chat_message, team=self.team)
                             self.make_marker(Enemy, location)
                             presses.clear()

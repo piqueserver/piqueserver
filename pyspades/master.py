@@ -78,7 +78,7 @@ class MasterConnection(BaseConnection):
 
     def set_count(self, value):
         add_server.count = value
-        self.send_contained(add_server)
+        self.broadcast_contained(add_server)
 
     def send_server(self):
         protocol = self.server_protocol
@@ -88,7 +88,7 @@ class MasterConnection(BaseConnection):
         add_server.map = protocol.map_info.short_name[:MAX_MAP_NAME_SIZE].encode()
         add_server.port = protocol.host.address.port
         add_server.max_players = protocol.max_players
-        self.send_contained(add_server)
+        self.broadcast_contained(add_server)
 
     def on_disconnect(self):
         if self.defer is not None:

@@ -28,10 +28,10 @@ def rebuild_block(player, x, y, z, color):
     block_action.y = y
     block_action.z = z
     block_action.value = DESTROY_BLOCK
-    player.send_contained(block_action)
+    player.broadcast_contained(block_action)
     block_action.value = BUILD_BLOCK
-    player.send_contained(set_color)
-    player.send_contained(block_action)
+    player.broadcast_contained(set_color)
+    player.broadcast_contained(block_action)
 
 
 def check_if_buried(protocol, x, y, z):

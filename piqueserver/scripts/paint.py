@@ -50,9 +50,9 @@ def paint_block(protocol, player, x, y, z, color):
     block_action.z = z
     block_action.player_id = player.player_id
     block_action.value = DESTROY_BLOCK
-    protocol.send_contained(block_action, save=True)
+    protocol.broadcast_contained(block_action, save=True)
     block_action.value = BUILD_BLOCK
-    protocol.send_contained(block_action, save=True)
+    protocol.broadcast_contained(block_action, save=True)
     return True
 
 

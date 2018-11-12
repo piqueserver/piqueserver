@@ -44,7 +44,7 @@ class BaseConnection(object):
     def loader_received(self, loader):
         raise NotImplementedError('loader_received() not implemented')
 
-    def send_contained(self, contained, sequence=False):
+    def broadcast_contained(self, contained, sequence=False):
         if self.disconnected:
             return
         if sequence:

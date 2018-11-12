@@ -250,7 +250,7 @@ def invisible(connection, player=None):
         kill_action = KillAction()
         kill_action.kill_type = choice([GRENADE_KILL, FALL_KILL])
         kill_action.player_id = kill_action.killer_id = player.player_id
-        reactor.callLater(1.0 / NETWORK_FPS, protocol.send_contained,
+        reactor.callLater(1.0 / NETWORK_FPS, protocol.broadcast_contained,
                           kill_action, sender=player)
     else:
         player.send_chat("You return to visibility")
@@ -279,11 +279,11 @@ def invisible(connection, player=None):
         set_color.value = make_color(*player.color)
         weapon_input.primary = world_object.primary_fire
         weapon_input.secondary = world_object.secondary_fire
-        protocol.send_contained(create_player, sender=player, save=True)
-        protocol.send_contained(set_tool, sender=player)
-        protocol.send_contained(set_color, sender=player, save=True)
-        protocol.send_contained(input_data, sender=player)
-        protocol.send_contained(weapon_input, sender=player)
+        protocol.broadcast_contained(create_player, sender=player, save=True)
+        protocol.broadcast_contained(set_tool, sender=player)
+        protocol.broadcast_contained(set_color, sender=player, save=True)
+        protocol.broadcast_contained(input_data, sender=player)
+        protocol.broadcast_contained(weapon_input, sender=player)
     if connection is not player and connection in protocol.players:
         if player.invisible:
             return '%s is now invisible' % player.name

@@ -183,7 +183,7 @@ def apply_script(protocol, connection, config):
             set_color = SetColor()
             set_color.value = make_color(*NON_SURFACE_COLOR)
             set_color.player_id = 31
-            self.send_contained(set_color, save=True)
+            self.broadcast_contained(set_color, save=True)
             old = cur.copy()
             check_protected = hasattr(protocol, 'protected')
             for x in range(start_x, end_x):
@@ -223,7 +223,7 @@ def apply_script(protocol, connection, config):
                         if action is not None:
                             block_action.z = z
                             block_action.value = action
-                            self.send_contained(block_action, save=True)
+                            self.broadcast_contained(block_action, save=True)
                             yield 1
                 yield 0
             last_color = None
@@ -234,14 +234,14 @@ def apply_script(protocol, connection, config):
                 packets_sent = 0
                 if color != last_color:
                     set_color.value = make_color(*color)
-                    self.send_contained(set_color, save=True)
+                    self.broadcast_contained(set_color, save=True)
                     packets_sent += 1
                     last_color = color
                 cur.set_point(x, y, z, color)
                 block_action.x = x
                 block_action.y = y
                 block_action.z = z
-                self.send_contained(block_action, save=True)
+                self.broadcast_contained(block_action, save=True)
                 packets_sent += 1
                 yield packets_sent
 

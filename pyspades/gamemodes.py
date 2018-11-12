@@ -51,7 +51,7 @@ class IntelBasedGamemode:
         intel_drop.x = flag.x
         intel_drop.y = flag.y
         intel_drop.z = flag.z
-        self.protocol.send_contained(intel_drop, save=True)
+        self.protocol.broadcast_contained(intel_drop, save=True)
         player.on_flag_drop()
 
     def get_player_flag(self, player):

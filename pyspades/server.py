@@ -136,7 +136,7 @@ class ServerProtocol(BaseProtocol):
         """alias to team_spectator for backwards-compatibility"""
         return self.team_spectator
 
-    def send_contained(self, contained, unsequenced=False, sender=None,
+    def broadcast_contained(self, contained, unsequenced=False, sender=None,
                        team=None, save=False, rule=None):
         if unsequenced:
             flags = enet.PACKET_FLAG_UNSEQUENCED
@@ -226,7 +226,7 @@ class ServerProtocol(BaseProtocol):
                 orientation = (0.0, 0.0, 0.0)
             items.append((position, orientation))
         world_update.items = items
-        self.send_contained(world_update, unsequenced=True)
+        self.broadcast_contained(world_update, unsequenced=True)
 
     def set_map(self, map_obj):
         self.map = map_obj
@@ -263,14 +263,14 @@ class ServerProtocol(BaseProtocol):
                 player = list(self.players.values())[0]
             intel_capture.player_id = player.player_id
             intel_capture.winning = True
-            self.send_contained(intel_capture, save=True)
+            self.broadcast_contained(intel_capture, save=True)
         elif self.game_mode == TC_MODE:
             if territory is None:
                 territory = self.entities[0]
             territory_capture.object_index = territory.id
             territory_capture.winning = True
             territory_capture.state = territory.team.id
-            self.send_contained(territory_capture)
+            self.broadcast_contained(territory_capture)
             self.reset_tc()
         for entity in self.entities:
             entity.update()
@@ -405,7 +405,7 @@ class ServerProtocol(BaseProtocol):
     def set_fog_color(self, color):
         self.fog_color = color
         fog_color.color = make_color(*color)
-        self.send_contained(fog_color, save=True)
+        self.broadcast_contained(fog_color, save=True)
 
     def get_fog_color(self):
         return self.fog_color

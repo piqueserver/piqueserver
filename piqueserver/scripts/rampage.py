@@ -45,9 +45,9 @@ def resend_tool(player):
     set_tool.player_id = player.player_id
     set_tool.value = player.tool
     if player.weapon_object.shoot:
-        player.protocol.send_contained(set_tool)
+        player.protocol.broadcast_contained(set_tool)
     else:
-        player.send_contained(set_tool)
+        player.broadcast_contained(set_tool)
 
 
 def rapid_cycle(player):
@@ -58,7 +58,7 @@ def rapid_cycle(player):
 
 def send_fog(player, color):
     fog_color.color = make_color(*color)
-    player.send_contained(fog_color)
+    player.broadcast_contained(fog_color)
 
 
 def fog_switch(player, colorgetter_a, colorgetter_b):
@@ -100,7 +100,7 @@ def apply_script(protocol, connection, config):
                 weapon_reload.clip_ammo = weapon.current_ammo
                 weapon_reload.reserve_ammo = weapon.current_stock
                 weapon.set_shoot(was_shooting)
-                self.send_contained(weapon_reload)
+                self.broadcast_contained(weapon_reload)
             send_fog(self, RAMPAGE_FOG_COLOR)
             if ANNOUNCE_RAMPAGE:
                 message = S_RAMPAGE_START.format(player=self.name)
@@ -174,6 +174,6 @@ def apply_script(protocol, connection, config):
             self.fog_color = color
             fog_color.color = make_color(*color)
 
-            self.send_contained(fog_color, save=True, rule=send_fog_rule)
+            self.broadcast_contained(fog_color, save=True, rule=send_fog_rule)
 
     return RampageProtocol, RampageConnection
