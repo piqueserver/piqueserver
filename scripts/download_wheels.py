@@ -1,10 +1,15 @@
 #!/usr/bin/python3
 """
-This script downloads wheels from appveyor.
-Usage:
-python download_wheels.py <build_id>
-when build_id is not provided it defaults to latest build.
+usage: download_wheels.py [-h] [--buildid BUILDID] [--pool POOL] [--dir DIR]
 
+Downloads wheels from AppVeyor
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --buildid BUILDID, -id BUILDID
+                        AppVeyor build id
+  --pool POOL, -p POOL  Multiprocess pool size
+  --dir DIR, -d DIR     Directory to download the files into.
 """
 import argparse
 from urllib import request
