@@ -1,7 +1,6 @@
 from typing import Tuple
 import abc
 from piqueserver.config import config
-from piqueserver.player import FeatureConnection
 
 Details = Tuple[str, str]  # username, password
 
@@ -18,7 +17,7 @@ class BaseAuthBackend(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def has_permision(self, connection: FeatureConnection, action: str) -> bool:
+    def has_permision(self, connection, action: str) -> bool:
         pass
 
 
@@ -36,7 +35,7 @@ class ConfigAuthBackend(BaseAuthBackend):
                 return user_type
         raise AuthError
 
-    def has_permision(self, connection: FeatureConnection, action: str) -> bool:
+    def has_permision(self, connection, action: str) -> bool:
         return connection.admin or action in connection.rights
 
 auth = ConfigAuthBackend()
