@@ -38,3 +38,5 @@ class ConfigAuthBackend(BaseAuthBackend):
 
     def has_permision(self, connection: FeatureConnection, action: str) -> bool:
         return connection.admin or action in connection.rights
+
+auth = ConfigAuthBackend()
