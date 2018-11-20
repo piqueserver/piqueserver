@@ -16,20 +16,35 @@ set_color = SetColor()
 weapon_input = WeaponInput()
 
 
-def get_ban_arguments(connection, arg):
-    duration = None
-    if len(arg):
-        try:
-            duration = int(arg[0])
-            arg = arg[1:]
-        except (IndexError, ValueError):
-            pass
-    if duration is None:
-        if len(arg) > 0 and arg[0] == "perma":
-            arg = arg[1:]
-        else:
-            duration = connection.protocol.default_ban_time
-    reason = join_arguments(arg)
+def has_digits(s: str) -> bool:
+    return any(char.isdigit() for char in s)
+
+
+def get_ban_arguments(connection, args):
+    """
+    Parses duration and reason from arguments.
+    It handles duration in two ways: interger mintues and human-friendly duration.
+    It also handles cases where duration or reason are none.
+    Note: It returns duration in seconds.
+    """
+    default_duration = connection.protocol.default_ban_time
+    reason = None
+    if len(args) < 1:
+        return default_duration, reason
+    if len(args) > 1:
+        reason = join_arguments(args[1:])
+    if args[0] == "perma":
+        return None, reason
+
+    if args[0].isdigit():  # all digits == duration in minutes
+        duration = int(args[0]) * 60
+    elif has_digits(args[0]):  # if it contains some digits maybe duration?
+        duration = parse(args[0])
+        if not duration:
+            raise ValueError("Invalid duration")
+    else:  # maybe just one long reason
+        duration = default_duration
+        reason = join_arguments(args[:])
     return duration, reason
 
 
