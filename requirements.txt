@@ -6,6 +6,7 @@ Pillow>=5.1.0,<6
 pyenet
 typing
 toml
+timeparse-plus
 
 # from command
 pygeoip>=0.3.2,<0.4

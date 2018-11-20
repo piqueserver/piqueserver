@@ -63,7 +63,7 @@ from piqueserver.map import Map, MapNotFound, check_rotation, RotationInfo
 from piqueserver.console import create_console
 from piqueserver.networkdict import NetworkDict
 from piqueserver.player import FeatureConnection
-from piqueserver.config import config
+from piqueserver.config import config, cast_duration
 
 # won't be used; just need to be executed
 import piqueserver.core_commands
@@ -118,8 +118,8 @@ loglevel = logging_config.option('loglevel', default='info')
 map_rotation = config.option('rotation', default=['classicgen', 'random'],
                              validate=lambda x: isinstance(x, list))
 default_time_limit = config.option(
-    'default_time_limit', default=20,
-    validate=lambda x: isinstance(x, (int, float)))
+    'default_time_limit', default="20min",
+    cast=lambda x: cast_duration(x)/60)
 cap_limit = config.option('cap_limit', default=10,
                           validate=lambda x: isinstance(x, (int, float)))
 advance_on_win = config.option('advance_on_win', default=False,
@@ -150,7 +150,7 @@ max_connections_per_ip = config.option('max_connections_per_ip', default=0)
 server_prefix = config.option('server_prefix', default='[*]')
 balanced_teams = config.option('balanced_teams', default=2)
 login_retries = config.option('login_retries', 1)
-default_ban_duration = bans_config.option('default_duration', default=24 * 60)
+default_ban_duration = bans_config.option('default_duration', default="1day", cast=cast_duration)
 speedhack_detect = config.option('speedhack_detect', True)
 user_blocks_only = config.option('user_blocks_only', False)
 debug_log_enabled = logging_config.option('debug_log', False)
@@ -472,7 +472,7 @@ class FeatureProtocol(ServerProtocol):
         if additive:
             time_limit = min(time_limit + add_time, self.default_time_limit)
 
-        seconds = time_limit * 60.0
+        seconds = time_limit * 60
         self.advance_call = reactor.callLater(seconds, self._time_up)
 
         for call in self.end_calls[:]:

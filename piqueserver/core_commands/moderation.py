@@ -7,7 +7,7 @@ from pyspades.common import (
     prettify_timespan,
     make_color)
 from piqueserver.commands import command, CommandError, get_player, join_arguments
-
+from pytimeparse import parse
 
 # aparently, we need to send packets in this file. For now, I give in.
 kill_action = KillAction()
@@ -48,12 +48,13 @@ def kick(connection, value, *arg):
 @command(admin_only=True)
 def ban(connection, value, *arg):
     """
-    Ban a given player forever or for a limited amount of time
+    Ban a given player forever or for a limited amount of time.
+    It takes duration in minutes.
     /ban <player> [duration] [reason]
     """
     duration, reason = get_ban_arguments(connection, arg)
     player = get_player(connection.protocol, value)
-    player.ban(reason, duration)
+    player.ban(reason, duration * 60)
 
 
 @command(admin_only=True)
@@ -62,7 +63,7 @@ def hban(connection, value, *arg):
     Ban a given player for an hour
     /hban <player> [reason]
     """
-    duration = 60
+    duration = parse("1hour")
     reason = join_arguments(arg)
     player = get_player(connection.protocol, value)
     player.ban(reason, duration)
@@ -74,7 +75,7 @@ def dban(connection, value, *arg):
     Ban a given player for one day
     /dban <player> [reason]
     """
-    duration = 1440
+    duration = parse("1day")
     reason = join_arguments(arg)
     player = get_player(connection.protocol, value)
     player.ban(reason, duration)
@@ -86,7 +87,7 @@ def wban(connection, value, *arg):
     Ban a given player for one week
     /wban <player> [reason]
     """
-    duration = 10080
+    duration = parse("1week")
     reason = join_arguments(arg)
     player = get_player(connection.protocol, value)
     player.ban(reason, duration)
@@ -112,7 +113,7 @@ def banip(connection, ip, *arg):
     """
     duration, reason = get_ban_arguments(connection, arg)
     try:
-        connection.protocol.add_ban(ip, reason, duration)
+        connection.protocol.add_ban(ip, reason, duration * 60)
     except ValueError:
         return 'Invalid IP address/network'
     reason = ': ' + reason if reason is not None else ''
