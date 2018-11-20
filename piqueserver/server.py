@@ -662,7 +662,7 @@ class FeatureProtocol(ServerProtocol):
 
     def add_ban(self, ip, reason, duration, name=None):
         """
-        Ban an ip with an optional reason and duration in minutes. If duration
+        Ban an ip with an optional reason and duration in seconds. If duration
         is None, ban is permanent.
         """
         network = ip_network(str(ip), strict=False)
@@ -671,7 +671,7 @@ class FeatureProtocol(ServerProtocol):
                 name = connection.name
                 connection.kick(silent=True)
         if duration:
-            duration = reactor.seconds() + duration * 60
+            duration = reactor.seconds() + duration
         else:
             duration = None
         self.bans[ip] = (name or '(unknown)', reason, duration)
