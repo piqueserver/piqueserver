@@ -13,7 +13,7 @@ Options
 """
 
 import re
-from piqueserver.config import config
+from piqueserver.config import config, cast_duration
 
 chat_pattern = re.compile(".*(airstrike).*(esc|escape|alt-f4|alt f4)",
                           re.IGNORECASE)
@@ -22,7 +22,7 @@ chat_pattern_2 = re.compile(".*(esc|escape|alt-f4|alt f4).*(airstrike)",
 admin_pattern = re.compile(".*(admin)",
                            re.IGNORECASE)
 antijerk_config = config.section("antijerk")
-ban_duration = antijerk_config.option("ban_duration", 15.0)
+ban_duration = antijerk_config.option("ban_duration", default="15min", cast=cast_duration)
 
 
 def antijerk_match(player, msg):
