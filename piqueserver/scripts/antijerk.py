@@ -7,7 +7,7 @@ Options
 .. code-block:: guess
 
    [antijerk]
-   ban_duration = 15 # in minutes
+   ban_duration = "15min"
 
 .. codeauthor:: ?
 """
