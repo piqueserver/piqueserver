@@ -1,28 +1,51 @@
-from twisted.trial import unittest
+import unittest
 from unittest.mock import Mock
+from piqueserver.core_commands.moderation import get_ban_arguments
 
-from piqueserver import core_commands
 
-
-class DummyTest(unittest.TestCase):
-    def test_get_ban_argument(self):
-        conn = Mock()
-        conn.protocol = Mock()
-        conn.protocol.default_ban_time = 1423
-        dur, reas = core_commands.get_ban_arguments(conn, ["120", "123"])
-        self.assertEqual(dur, 120)
-        self.assertEqual(reas, "123")
-
-        dur, reas = core_commands.get_ban_arguments(conn, [])
-        self.assertEqual(dur, 1423)
-        self.assertEqual(reas, None)
-
-        dur, reas = core_commands.get_ban_arguments(conn, ["hi", "you"])
-        self.assertEqual(dur, 1423)
-        self.assertEqual(reas, "hi you")
-
-        # Does this make sense? Not sure it does
-        # This is what the code does atm, anyway
-        dur, reas = core_commands.get_ban_arguments(conn, ["perma", "you"])
-        self.assertEqual(dur, None)
-        self.assertEqual(reas, "you")
+class TestCoreCommands(unittest.TestCase):
+    def test_get_ban_arguments(self):
+        connection = Mock()
+        connection.protocol.default_ban_time = 9001
+        self.assertEqual(connection.protocol.default_ban_time, 9001)
+        test_cases = [
+            {
+                "name": "Simple",
+                "expect": (20*60, "too twenty"),
+                "args": ["20", "too twenty"]
+            },
+            {
+                "name": "Only reason",
+                "expect": (9001, "blah blah blah blah"),
+                "args": ["blah", "blah", "blah", "blah"]
+            },
+            {
+                "name": "Perma",
+                "expect": (None, "tabs"),
+                "args": ["perma", "tabs"]
+            },
+            {
+                "name": "No args",
+                "expect": (9001, None),
+                "args": []
+            },
+            {
+                "name": "Simple duration",
+                "expect": (60*60, "ab"),
+                "args": ["1hour", "ab"]
+            },
+            {
+                "name": "Invalid duration",
+                "expect": (),
+                "args": ["1dia", "?"],
+                "ex": ValueError
+            },
+        ]
+        for case in test_cases:
+            print(case["name"])
+            if "ex" in case:
+                with self.assertRaises(case["ex"]):
+                    get_ban_arguments(connection, case["args"])
+                continue
+            got = get_ban_arguments(connection, case["args"])
+            self.assertTupleEqual(got, case["expect"])
