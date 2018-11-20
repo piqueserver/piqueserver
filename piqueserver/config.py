@@ -22,6 +22,7 @@ import sys
 
 import piqueserver
 import toml
+from pytimeparse import parse
 
 # supported config format constants to avoid typos
 DEFAULT_FORMAT = 'TOML'
@@ -288,3 +289,12 @@ class _Option():
 
 # the global instance to be used across all the codebase
 config = ConfigStore()
+
+
+def cast_duration(d) -> int:
+    if isinstance(d, str):
+        return parse(d)
+    elif isinstance(d, int):
+        return d
+    else:
+        raise ValueError()
