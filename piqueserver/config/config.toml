@@ -109,7 +109,7 @@ random_rotation = false
 game_mode = "ctf"
 
 # TODO: document
-default_time_limit = 120
+default_time_limit = "2hours"
 # TODO: document
 advance_on_win = true
 

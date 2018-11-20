@@ -119,7 +119,7 @@ map_rotation = config.option('rotation', default=['classicgen', 'random'],
                              validate=lambda x: isinstance(x, list))
 default_time_limit = config.option(
     'default_time_limit', default="20min",
-    validate=lambda x: cast_duration(x)/60)
+    cast=lambda x: cast_duration(x)/60)
 cap_limit = config.option('cap_limit', default=10,
                           validate=lambda x: isinstance(x, (int, float)))
 advance_on_win = config.option('advance_on_win', default=False,
@@ -472,7 +472,7 @@ class FeatureProtocol(ServerProtocol):
         if additive:
             time_limit = min(time_limit + add_time, self.default_time_limit)
 
-        seconds = time_limit * 60.0
+        seconds = time_limit * 60
         self.advance_call = reactor.callLater(seconds, self._time_up)
 
         for call in self.end_calls[:]:
