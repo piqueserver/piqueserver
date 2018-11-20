@@ -381,7 +381,7 @@ class FeatureConnection(ServerConnection):
             message = '{} permabanned{}'.format(self.name, reason)
         else:
             message = '{} banned for {}{}'.format(self.name,
-                                              prettify_timespan(duration * 60), reason)
+                                              prettify_timespan(duration), reason)
         if self.protocol.on_ban_attempt(self, reason, duration):
             self.protocol.send_chat(message, irc=True)
             self.protocol.on_ban(self, reason, duration)
