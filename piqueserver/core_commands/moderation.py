@@ -69,7 +69,7 @@ def ban(connection, value, *arg):
     """
     duration, reason = get_ban_arguments(connection, arg)
     player = get_player(connection.protocol, value)
-    player.ban(reason, duration * 60)
+    player.ban(reason, duration)
 
 
 @command(admin_only=True)
@@ -124,11 +124,11 @@ def pban(connection, value, *arg):
 def banip(connection, ip, *arg):
     """
     Ban an ip
-    /banip <ip> [reason]
+    /banip <ip> [duration] [reason]
     """
     duration, reason = get_ban_arguments(connection, arg)
     try:
-        connection.protocol.add_ban(ip, reason, duration * 60)
+        connection.protocol.add_ban(ip, reason, duration)
     except ValueError:
         return 'Invalid IP address/network'
     reason = ': ' + reason if reason is not None else ''
@@ -137,7 +137,7 @@ def banip(connection, ip, *arg):
         return 'IP/network %s permabanned%s' % (ip, reason)
     else:
         return 'IP/network %s banned for %s%s' % (
-            ip, prettify_timespan(duration * 60), reason)
+            ip, prettify_timespan(duration), reason)
 
 
 @command(admin_only=True)
@@ -318,7 +318,7 @@ def godsilent(connection, player=None):
     elif connection not in connection.protocol.players:
         return 'Unknown player: ' + player
 
-    connection.god = not connection.god # toggle godmode
+    connection.god = not connection.god  # toggle godmode
 
     if connection.protocol.set_god_build:
         connection.god_build = connection.god
@@ -330,15 +330,18 @@ def godsilent(connection, player=None):
             return 'You have silently entered god mode'
         else:
             # TODO: Do not send this if the specified player is the one who called the command
-            connection.send_chat('Someone has made you silently enter godmode!')
+            connection.send_chat(
+                'Someone has made you silently enter godmode!')
             return 'You made ' + connection.name + ' silently enter god mode'
     else:
         if player is None:
             return 'You have silently returned to being a mere human'
         else:
             # TODO: Do not send this if the specified player is the one who called the command
-            connection.send_chat('Someone has made you silently return to being a mere human')
+            connection.send_chat(
+                'Someone has made you silently return to being a mere human')
             return 'You made ' + connection.name + ' silently return to being a mere human'
+
 
 @command(admin_only=True)
 def god(connection, player=None):
@@ -351,7 +354,7 @@ def god(connection, player=None):
     elif connection not in connection.protocol.players:
         return 'Unknown player'
 
-    connection.god = not connection.god # toggle godmode
+    connection.god = not connection.god  # toggle godmode
 
     if connection.god:
         message = '%s entered GOD MODE!' % connection.name
