@@ -2,7 +2,7 @@ import tempfile
 from pprint import pprint
 
 import unittest
-from piqueserver.config import ConfigStore, JSON_FORMAT, TOML_FORMAT
+from piqueserver.config import ConfigStore, JSON_FORMAT, TOML_FORMAT, cast_duration
 from io import StringIO
 
 SIMPLE_TOML_CONFIG = u"""
@@ -252,3 +252,36 @@ class TestExampleConfig(unittest.TestCase):
                     }
                 }
         self.assertEqual(one, two)
+
+
+class TestCasts(unittest.TestCase):
+    def test_duration_cast(self):
+        test_cases = [
+            {
+                "name": "Direct seconds",
+                "input": 10,
+                "expect": 10
+            },
+            {
+                "name": "Duration",
+                "input": "10sec",
+                "expect": 10
+            },
+            {
+                "name": "Invalid type",
+                "input": [],
+                "ex": ValueError
+            },
+            {
+                "name": "Invalid Duration",
+                "input": "1dia",
+                "ex": ValueError
+            }
+        ]
+        for case in test_cases:
+            if "ex" in case:
+                with self.assertRaises(case["ex"]):
+                    cast_duration(case["input"])
+                continue
+            got = cast_duration(case["input"])
+            self.assertEqual(got, case["expect"])
