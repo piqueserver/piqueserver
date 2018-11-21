@@ -1,9 +1,15 @@
 import unittest
 from unittest.mock import Mock
-from piqueserver.core_commands.moderation import get_ban_arguments
+from piqueserver.core_commands.moderation import get_ban_arguments, has_digits
 
 
 class TestCoreCommands(unittest.TestCase):
+    def test_has_digits(self):
+        test_cases = [("1day", True), ("day", False), ("  1", True)]
+        for case in test_cases:
+            input, expect = case
+            self.assertEqual(has_digits(input), expect)
+
     def test_get_ban_arguments(self):
         connection = Mock()
         connection.protocol.default_ban_time = 9001
@@ -11,7 +17,7 @@ class TestCoreCommands(unittest.TestCase):
         test_cases = [
             {
                 "name": "Simple",
-                "expect": (20*60, "too twenty"),
+                "expect": (20 * 60, "too twenty"),
                 "args": ["20", "too twenty"]
             },
             {
@@ -31,7 +37,7 @@ class TestCoreCommands(unittest.TestCase):
             },
             {
                 "name": "Simple duration",
-                "expect": (60*60, "ab"),
+                "expect": (60 * 60, "ab"),
                 "args": ["1hour", "ab"]
             },
             {

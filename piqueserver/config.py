@@ -72,7 +72,7 @@ class ConfigStore():
 
         # these are for config that isn't ever stored in the config file (yet)
         self.config_dir = DEFAULT_CONFIG_DIR
-        self.config_file = os.path.join(DEFAULT_CONFIG_DIR,"config.toml")
+        self.config_file = os.path.join(DEFAULT_CONFIG_DIR, "config.toml")
 
     def _validate_all(self):
         for option in self._options.values():
@@ -292,9 +292,11 @@ config = ConfigStore()
 
 
 def cast_duration(d) -> int:
-    if isinstance(d, str):
-        return parse(d)
-    elif isinstance(d, int):
+    if isinstance(d, int):
         return d
-    else:
-        raise ValueError()
+    if not isinstance(d, str):
+        raise ValueError("Invalid type")
+    seconds = parse(d)
+    if seconds is None:
+        raise ValueError("Invalid duration")
+    return seconds
