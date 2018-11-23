@@ -1,5 +1,5 @@
 
-.PHONY: all help fixme install pylint clean develop
+.PHONY: all help fixme install pylint clean develop wheels
 
 all: help
 
@@ -13,6 +13,7 @@ help:
 	@echo "make fixme:   find FIXME, TODO, NOTE, and XXX in the code"
 	@echo "make clean:   remove all build artifacts after building inplace"
 	@echo "make develop: run setup.py develop to build inplace for development"
+	@echo "make wheels:  run the docker script to build the wheels"
 
 pylint:
 	pylint piqueserver
@@ -27,3 +28,6 @@ clean:
 
 develop:
 	python setup.py develop
+
+wheels:
+	./scripts/build_wheels.sh

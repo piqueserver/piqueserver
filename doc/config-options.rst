@@ -215,6 +215,12 @@ If ``true``, attempt to detect if users are speedhacking. This is not 100%
 accurate, so it might be a good idea to disable it for serviers where the users
 are trusted.
 
+rubberband_distance
++++++++++++++++++++
+
+Distance the server tolerates between the place it thinks the client is to where the client actually is.
+Default 10.
+
 melee_damage
 ++++++++++++
 

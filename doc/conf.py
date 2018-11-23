@@ -61,17 +61,24 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'piqueserver'
-copyright = '2017, piqueserver dev team'
+copyright = '2018, piqueserver dev team'
 author = 'piqueserver dev team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-# The short X.Y version.
-version = '0.1.3'
+
+# read version info from the piqueserver project
+here = os.path.abspath(os.path.dirname(__file__))
+_version = {}
+with open(os.path.join(here, '../piqueserver/version.py')) as f:
+    exec(f.read(), _version)
+
+# The short X.Y.Z version.
+version = '{}.{}.{}'.format(*_version['__version_info__'])
 # The full version, including alpha/beta/rc tags.
-release = '0.1.3'
+release = _version['__version__']
 
 # show authors on the script pages
 show_authors = True

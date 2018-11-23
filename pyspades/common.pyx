@@ -16,13 +16,9 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 from math import pi
+from libc.math cimport sqrt, sin, cos, acos
 import re
 
-cdef extern from "math.h":
-    double sqrt(double x)
-    double sin(double x)
-    double cos(double x)
-    double acos(double x)
 
 def get_color(color):
     b = color & 0xFF
@@ -51,6 +47,7 @@ def to_coordinates(x, y):
 
 def prettify_timespan(total, get_seconds = False):
     total = int(total)
+    if total < 60: get_seconds = True
     days = total // (1440 * 60)
     total -= days * 1440 * 60
     hours = total // (60 * 60)
@@ -71,7 +68,7 @@ def prettify_timespan(total, get_seconds = False):
     return text
 
 def open_debugger(name, locals):
-    print '%s, opening debugger' % name
+    print('{}, opening debugger'.format(name))
     import code
     code.interact(local = locals)
 

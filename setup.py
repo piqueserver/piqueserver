@@ -51,15 +51,7 @@ for name in ext_names:
     if name in ['pyspades.vxl', 'pyspades.world', 'pyspades.mapmaker']:
         extra["extra_compile_args"] = ['-std=c++11']
 
-        if sys.platform == "win32":
-            # Python aparently redifines hypot to _hypot. This fixes that.
-            extra["extra_compile_args"].extend(['-include', 'cmath'])
-
     extra['define_macros'] = []
-
-    if sys.platform == "win32":
-        # nobody is using 32-bit in 2017. right? right? please
-        extra["define_macros"].append(("MS_WIN64", None))
 
     if linetrace:
         extra['define_macros'].append(('CYTHON_TRACE', '1'))
@@ -74,7 +66,7 @@ class build_ext(_build_ext):
 
         from Cython.Build import cythonize
 
-        compiler_directives = {}
+        compiler_directives = {'language_level': 3, 'embedsignature': True}
         if linetrace:
             compiler_directives['linetrace'] = True
 
@@ -123,6 +115,7 @@ setup(
 
     setup_requires=['Cython>=0.27,<1'],
     install_requires=[
+        'pypiwin32;platform_system=="Windows"',
         'Cython>=0.27,<1',
         'Twisted[tls]>=17,<19',
         'Jinja2>=2,<3',  # status server is part of our 'vanilla' package
