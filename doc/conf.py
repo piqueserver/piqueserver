@@ -45,9 +45,15 @@ extensions = [
     'sphinx.ext.imgmath',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages',
-    'sphinxcontrib.spelling'
+    'sphinx.ext.githubpages'
     ]
+
+# Only enable spelling extension if installed
+try:
+    import sphinxcontrib.spelling
+    extensions.append('sphinxcontrib.spelling')
+except:
+    pass
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

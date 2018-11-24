@@ -1,4 +1,4 @@
-\Configuring Piqueserver
+Configuring Piqueserver
 =======================
 
 Piqueserver is configured through a config file, usually named
