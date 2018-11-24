@@ -27,13 +27,55 @@ bad practice.
 -  All files must end with their respective
    `EOL <https://en.wikipedia.org/wiki/Newline>`__ character, as
    mentioned above
--  No trailing whitespaces and/or tabs
--  Blank lines are allowed, but be careful to not use more than 2
-   together
--  Indentation rules are not decided yet, use the one of the file you
-   are editing
--  In case it's a new file, prefer 4 whitespaces over tabs
--  `NEVER USE BOTH SPACES AND TABS, NEVER <http://imgur.com/VyMu86F>`__
+-  Use `autopep8 <https://pypi.org/project/autopep8/>`_ to format python source files.
+-  Use `clang-format <https://clang.llvm.org/docs/ClangFormat.html>`_ to format C/C++ source files. We have a custom ``.clang-format`` file at the root of the repository.
+
+
+Testing
+--------
+
+Testing in piqueserver is performed with ``pytest`` with ``tox`` support.
+
+Tox manages its own virtual environments, so if you have it installed on your
+system, testing is as simple as running ``tox``, which will run all tests against
+all supported python versions (skipping those not available on your system).
+
+
+If you already are in your virtual env and wish to test something quickly,
+``pytest`` directly may be useful:
+
+.. code:: bash
+
+   # make sure the venv is setup and all deps are installed
+   python -m venv venv && source venv/bin/activate
+   pip install -r requirements.txt -r dev-requirements.txt
+
+   # build the cython extensions inplace
+   # otherwise pytest has issues
+   python setup.py build_ext --inplace
+
+   # and test away!
+   pytest
+
+   # single file
+   pytest tests/piqueserver/test_server.py
+
+
+Code Coverage
+-------------
+
+Code coverage is generated with `coverage.py <https://coverage.readthedocs.io/en/latest/>`__ using a ``pytest`` plugin.
+
+.. code:: bash
+
+   # generate coverage data
+   pytest --cov=piqueserver --cov=pyspades
+
+   # build the report file
+   coverage html
+
+   # view at htmlcov/index.html
+
 
 Work-flow recommendations
 -------------------------
@@ -47,6 +89,7 @@ Work-flow recommendations
 * **e.g.:** ``implement anti-cheating optimizations``
 * See also: `Closing issues via commit
   messages <https://help.github.com/articles/closing-issues-via-commit-messages/>`__
+
 
 Finding history
 ---------------

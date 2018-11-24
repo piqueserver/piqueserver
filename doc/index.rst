@@ -22,7 +22,7 @@ Welcome to piqueserver's documentation!
    porting
    contributing-user
    installation
-   contributing-developer
+   contributing
 
 
 Indices and tables
