@@ -1,5 +1,5 @@
 """
-The map generator is responsible for generatoring the map bytes that get sent
+The map generator is responsible for generating the map bytes that get sent
 to the client on connect
 """
 import zlib

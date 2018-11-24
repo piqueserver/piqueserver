@@ -82,7 +82,7 @@ cdef class ByteReader:
         """read a number of bytes
 
         Arguments:
-            bytecount (int, optional): The number of bytes to read. If ommited, all bytes available are read
+            bytecount (int, optional): The number of bytes to read. If omitted, all bytes available are read
 
         Returns:
             bytes: ``bytecount`` bytes of data
@@ -186,7 +186,7 @@ cdef class ByteReader:
         """get the current position in the buffer
 
         Returns:
-            int: The current postion in bytes"""
+            int: The current position in bytes"""
         return self.pos - self.data
 
     cpdef int dataLeft(self):

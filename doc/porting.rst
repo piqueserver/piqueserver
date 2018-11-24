@@ -14,7 +14,7 @@ Automated port to Python 3
 
 Since Piqueserver doesn't support Python 2 anymore we have to port the scripts to Python 3.
 Most of the porting can be automated with tools like `2to3 <https://docs.python.org/3.0/library/2to3.html>`_.
-We can later fix issues releated to py2->py3 as they arise.
+We can later fix issues related to py2->py3 as they arise.
 
 
 Fix feature_server module imports
@@ -43,10 +43,10 @@ This constant in `feature_server/map.py` is no longer, along with potentially ot
     map_dir = os.path.join(config.config_dir, 'maps')
 
 
-Fix player releated imports
+Fix player related imports
 ---------------------------
 
-Most of the player releated stuff from `pyspades.server` has been moved to `pyspades.player`.
+Most of the player related stuff from `pyspades.server` has been moved to `pyspades.player`.
 
 .. code:: python
 
@@ -76,7 +76,7 @@ Which can get messy and cause bugs. In piqueserver those instances are no longer
 
 Debugging import errors
 ---------------------------
-Import errors in scripts causes piqueserver to throw `NotImplementedError` which is vauge(sorry!). 
+Import errors in scripts causes piqueserver to throw `NotImplementedError` which is vague(sorry!). 
 For debugging those import errors use python(shell) or ipython they'll point you to which exact import is causing issues.
 
 .. code:: python
@@ -101,7 +101,7 @@ For debugging those import errors use python(shell) or ipython they'll point you
 Final
 ------
 Try out the script and see if anything breaks.
-If the errors seem py2->py3 releated refer to `this cheatsheet <http://python-future.org/compatible_idioms.html>`_.
+If the errors seem py2->py3 related refer to `this cheatsheet <http://python-future.org/compatible_idioms.html>`_.
 Piqueserver team has done a `giant port of scripts <https://github.com/piqueserver/piqueserver/pull/181>`_ in v0.1.1 it can be used as a reference.
 If you get stuck please `reach out to the piqueserver team <https://github.com/piqueserver/piqueserver#point_right-chat-with-us>`_ we are happy to help!
 

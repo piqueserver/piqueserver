@@ -1,4 +1,4 @@
-Configuring Piqueserver
+\Configuring Piqueserver
 =======================
 
 Piqueserver is configured through a config file, usually named
@@ -69,7 +69,7 @@ are available when substitution is available for a config option::
         "(server powered by piqueserver)",
     ]
 
-Individual config options might have additional subsitutions available. This is
+Individual config options might have additional substitutions available. This is
 noted in the documentation for the relevant option.
 
 .. versionadded:: 1.0.0

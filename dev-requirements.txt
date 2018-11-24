@@ -6,3 +6,4 @@ pytest-cov
 Sphinx
 tox
 sphinx_rtd_theme
+sphinxcontrib-spelling

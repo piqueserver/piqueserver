@@ -52,7 +52,7 @@ HIT_PERCENT_BAN_DURATION = 1440
 KILLS_IN_TIME_BAN_DURATION = 2880
 MULTIPLE_BULLETS_BAN_DURATION = 10080
 
-# If more than or equal to this number of weapon hit packets are recieved
+# If more than or equal to this number of weapon hit packets are received
 # from the client in half the weapon delay time, then an aimbot is detected.
 # This method of detection should have 100% detection and no false positives
 # with the current aimbot.

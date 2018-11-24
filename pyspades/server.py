@@ -105,7 +105,7 @@ class ServerProtocol(BaseProtocol):
 
     def _create_teams(self):
         """create the teams
-        This Method is seperate to simplify unit testing
+        This Method is separate to simplify unit testing
         """
         self.team_spectator = self.team_class(-1, self.spectator_name,
                                               (0, 0, 0), True, self)

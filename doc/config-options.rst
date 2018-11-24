@@ -6,7 +6,7 @@ These are the base configuration options available in piqueserver.
 General
 -------
 
-This section contains general information and configration for the server
+This section contains general information and configuration for the server
 
 name
 ++++
@@ -212,7 +212,7 @@ detect_speedhack
 ++++++++++++++++
 
 If ``true``, attempt to detect if users are speedhacking. This is not 100%
-accurate, so it might be a good idea to disable it for serviers where the users
+accurate, so it might be a good idea to disable it for servers where the users
 are trusted.
 
 rubberband_distance
@@ -240,7 +240,7 @@ player may gain that role by typing::
     /login <password>
 
 Any name may be used for a role, but there are two special roles:
-``admin`` and ``trusted``. Users with the ``admin`` role have the maxiumum rights
+``admin`` and ``trusted``. Users with the ``admin`` role have the maximum rights
 available, while ``trusted`` users are not affected by votekicks and similar.
 
 Each account can have a list of passwords. It is usually a good idea to give
@@ -302,7 +302,7 @@ ssh
 +++
 
 This section controls `SSH`_ "manhole" access to the server. This allows you
-access to a python shell. This is maily useful for debugging. If you don't know
+access to a python shell. This is mainly useful for debugging. If you don't know
 what you are doing, you should leave it disabled::
 
     [ssh]
