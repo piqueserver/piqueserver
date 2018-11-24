@@ -20,6 +20,7 @@ Welcome to piqueserver's documentation!
    command-line
    docker
    porting
+   contributing-user
 
 
 
