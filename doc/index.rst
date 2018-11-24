@@ -21,6 +21,7 @@ Welcome to piqueserver's documentation!
    docker
    porting
    contributing-user
+   installation
 
 
 
