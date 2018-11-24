@@ -314,7 +314,7 @@ class FeatureProtocol(ServerProtocol):
             log.info('piqueserver started on %s' % time.strftime('%c'))
 
         self.config = config_dict
-        if random_rotation:
+        if random_rotation.get():
             self.map_rotator_type = random_choice_cycle
         else:
             self.map_rotator_type = itertools.cycle  # pylint: disable=redefined-variable-type
