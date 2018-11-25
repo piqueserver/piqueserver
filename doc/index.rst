@@ -22,7 +22,7 @@ Welcome to piqueserver's documentation!
    pyspades
    contributing
    release-guide
-
+   other
 
 Indices and tables
 ==================
