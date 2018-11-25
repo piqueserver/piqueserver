@@ -16,11 +16,11 @@ Welcome to piqueserver's documentation!
    command-line
    docker
    porting
-   contributing-user
+   contributing
    architecture
    piqueserver
    pyspades
-   contributing
+   contributing-developer
    release-guide
    other
 
