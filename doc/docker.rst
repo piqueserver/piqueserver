@@ -19,7 +19,7 @@ You can either use the published image on Docker Hub or build it locally.
 Running
 -------
 
-Get your config. ready. It should have the following structure:
+Get your config ready. It should have the following structure:
 
 .. code:: bash
 
