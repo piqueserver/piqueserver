@@ -22,3 +22,7 @@ External tools
 --------------
 
 - `aos-to-address <https://noway.github.io/aos-to-address/>`_ by noway421 - Convert AoS URIs to their respective IP addresses
+
+.. note::
+
+   The `PySpades wiki <https://github.com/infogulch/pyspades/wiki>`_ has some legacy information that might be helpful.
