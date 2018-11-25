@@ -65,5 +65,5 @@ Tricky bit for windows is to get Cython working.
 
     cd piqueserver
     pip3 install -r requirements.txt
-    python3 setup.py install
+    python setup.py install
 
