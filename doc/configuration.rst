@@ -75,6 +75,38 @@ noted in the documentation for the relevant option.
 .. versionadded:: 1.0.0
     The ``{name}`` format was added. The older, ``%(name)s`` format is deprecated.
 
+
+Config directory structure
+--------------------------
+
+The configuration directory follows a strict structure.
+
+By default the configuration directory lives at ``$XDG_CONFIG_HOME/piqueserver/`` with a fallback to ``$HOME/.config/piqueserver/``, as specified by the `XDG Base Directory Specification <https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html>`_.
+
+This can be overridden by the `-d` command line option.
+
+.. code:: bash
+
+    .
+    ├── bans.txt               # Player bans get stored in this file; it is created automatically.
+    ├── config.toml            # The main configuration file. By default piqueserver will look for config.toml in the config directory.
+    │                          # This can be overridden by the -c command line option.
+    ├── game_modes             # Scripts that are specifically game modes will be stored here.
+    │   └── buildandsplat.py   # Your custom game mode script
+    ├── logs                   # This directory contains logs output by the server.
+    │   └── log.txt            # The main server logfile; If you disable daily rotation of log files all logs go here.
+    ├── maps                   # Any map files should be stored in here. Where a map is specified by name in "rotation" config option
+    │   ├── classicgen.txt     # the server will look for  a .txt or .txt/.vxl file with that name.
+    │   └── random.txt
+    ├── scripts                # You can add other scripts not included with piqueserver here.
+    │   │                      # The server will load any scripts listed in "scripts" config option by name from here.
+    │   └── showhp.py          # For example, if "showhp" is listed in the "scripts" config option, then scripts/showhp.py will be loaded.
+    │
+    └── data                   # Various other data files are stored here.
+        └── GeoLiteCity.dat    # Currently it's only used for the geoip data file required by the /from command in-game.
+
+
+
 Options
 -------
 
