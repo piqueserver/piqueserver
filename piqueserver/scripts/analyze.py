@@ -5,7 +5,7 @@ Commands
 ^^^^^^^^
 
 * ``/analyze or /an <target>`` to show a detailed analysis of a players shots if they hit someone. 
-  Shows hit player, distance, dT in miliseconds (Delta Time- Time since previous shot that hit someone. 
+  Shows hit player, distance, dT in milliseconds (Delta Time- Time since previous shot that hit someone. 
   Useful for detecting multiple bullet or rapid hacks), weapon, which body part it hit, and a basic counter that displays the number of hits of that type.
 
 * ``/analyze or /an`` to disable it

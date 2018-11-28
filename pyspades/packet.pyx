@@ -66,7 +66,7 @@ def register_packet(loader=None, server=True, client=True, extension=None):
     # lifetime, but only time will tell
 
     def register(cls):
-        # Having to handle the two loader dicts seperate isn't very nice, but I
+        # Having to handle the two loader dicts separate isn't very nice, but I
         # you can't avoid it whithout making things more complicated somewhere
         # else.
         # This is needed because certain packets (e.g. HitPacket and SetHP) in

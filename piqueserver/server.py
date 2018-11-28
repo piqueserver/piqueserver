@@ -736,7 +736,7 @@ class FeatureProtocol(ServerProtocol):
             self.ban_publish.update()
 
     def receive_callback(self, address: Address, data: bytes) -> None:
-        """This hook recieves the raw UDP data before it is processed by enet"""
+        """This hook receives the raw UDP data before it is processed by enet"""
 
         # exceptions get swallowed in the pyenet C stuff, so we catch anything
         # for now. This should ideally get fixed in pyenet instead.

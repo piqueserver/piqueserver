@@ -52,7 +52,7 @@ def command(name=None, *aliases,
     ... def some_command(x):
     ...     pass
 
-    Optional mames and aliases:
+    Optional names and aliases:
 
     >>> @command("name", "alias1", "alias2")
     ... def some_command(x):
@@ -237,7 +237,7 @@ def update_rights(rights: Dict):
 def admin(func: Callable) -> Callable:
     """
     Shorthand for @restrict("admin"). Mainly exists for backwards
-    compability with pyspades scripts.
+    compatibility with pyspades scripts.
 
     >>> @admin
     ... @command()

@@ -34,7 +34,7 @@ def move(connection, *args):
     """
     Move yourself or a given player to the specified x/y/z coordinates or sector
     /move [player] <sector> or /move [player] <x> <y> <z>
-    If you're invisivible, it will happen silently.
+    If you're invisible, it will happen silently.
     If the z coordinate makes the player appear underground, put them at ground level instead.
     If the x/y/z coordinate makes the player appear outside of the world bounds,
     take the bound instead
