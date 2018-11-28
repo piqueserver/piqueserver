@@ -18,6 +18,7 @@ class BaseAuthBackend(abc.ABC):
 
     @abc.abstractmethod
     def has_permision(self, connection, action: str) -> bool:
+        """Checks if a player has permission to perfom specific action."""
         pass
 
 
@@ -26,16 +27,17 @@ class ConfigAuthBackend(BaseAuthBackend):
     authentication"""
 
     def __init__(self):
-        self.passwords = config.option('passwords', default={}).get()
+        self.passwords = config.option('passwords', default={})
 
     def login(self, details: Details) -> str:
         _, password = details
-        for user_type, passwords in self.passwords.items():
+        for user_type, passwords in self.passwords.get().items():
             if password in passwords:
                 return user_type
         raise AuthError
 
     def has_permision(self, connection, action: str) -> bool:
         return connection.admin or action in connection.rights
+
 
 auth = ConfigAuthBackend()
