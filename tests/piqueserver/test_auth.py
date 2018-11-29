@@ -28,7 +28,7 @@ class TestConfigAuthBackend(unittest.TestCase):
         connection = MockConnection()
         connection.admin = True
         auth = ConfigAuthBackend()
-        has = auth.has_permision(connection, "ban")
+        has = auth.has_permission(connection, "ban")
         self.assertTrue(has)
 
     def test_has_permission_rights(self):
@@ -37,5 +37,5 @@ class TestConfigAuthBackend(unittest.TestCase):
         auth = ConfigAuthBackend()
         for case in [("ban", False), ("hban", True), ("kick", True)]:
             action, expected = case
-            got = auth.has_permision(connection, action)
+            got = auth.has_permission(connection, action)
             self.assertEqual(got, expected)

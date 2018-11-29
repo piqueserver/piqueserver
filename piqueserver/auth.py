@@ -17,13 +17,13 @@ class BaseAuthBackend(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def has_permision(self, connection, action: str) -> bool:
+    def has_permission(self, connection, action: str) -> bool:
         """Checks if a player has permission to perfom specific action."""
         pass
 
 
 class ConfigAuthBackend(BaseAuthBackend):
-    """Auth backend that uses the [passwords] section of the connfig for
+    """Auth backend that uses the [passwords] section of the config for
     authentication"""
 
     def __init__(self):
@@ -36,7 +36,7 @@ class ConfigAuthBackend(BaseAuthBackend):
                 return user_type
         raise AuthError
 
-    def has_permision(self, connection, action: str) -> bool:
+    def has_permission(self, connection, action: str) -> bool:
         return connection.admin or action in connection.rights
 
 
