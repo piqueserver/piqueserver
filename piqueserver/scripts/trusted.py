@@ -11,6 +11,7 @@ Commands
 """
 
 from piqueserver.commands import command, admin, get_player
+from piqueserver.auth import auth
 
 S_GRANTED = '{player} is now trusted'
 S_GRANTED_SELF = "You've been granted trust, and can't be votekicked"
@@ -21,6 +22,7 @@ S_RESULT_TRUSTED = 'Trusted user'
 @command(admin_only=True)
 def trust(connection, player):
     player = get_player(connection.protocol, player)
+    auth.set_user_type(player, 'trusted')
     player.on_user_login('trusted', False)
     player.send_chat(S_GRANTED_SELF)
     return S_GRANTED.format(player=player.name)

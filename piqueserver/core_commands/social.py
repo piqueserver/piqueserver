@@ -1,5 +1,5 @@
 from piqueserver.commands import command, get_player, join_arguments
-from piqueserver.auth import auth, AuthError
+from piqueserver.auth import auth, notify_login, retries_left, log_failed_attempt, AuthError
 
 
 @command()
@@ -12,24 +12,20 @@ def login(connection, password):
     if connection not in connection.protocol.players:
         raise KeyError()
     try:
-        user_type = auth.login(("", password))
+        user_type = auth.login((connection.name, password))
         if user_type in connection.user_types:
             return "You're already logged in as {}".format(user_type)
-        return connection.on_user_login(user_type, True)
+        auth.set_user_type(connection, user_type)
+        notify_login(connection, user_type)
     except AuthError:
-        # TODO: refactor login retries & limit retries based on ip
-        # update login retries
-        if connection.login_retries is None:
-            connection.login_retries = connection.protocol.login_retries - 1
-        else:
-            connection.login_retries -= 1
-        # kick if out of retries
-        if not connection.login_retries:
+        # kick if out of login attempts
+        log_failed_attempt(connection)
+        left = retries_left(connection)
+        if left < 1:
             connection.kick('Ran out of login attempts')
             return
         # notify with login retries
-        return 'Invalid password - you have {} tries left'.format(
-            connection.login_retries)
+        return 'Invalid password - you have {} tries left'.format(left)
 
 
 @command()

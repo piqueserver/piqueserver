@@ -15,6 +15,7 @@ import os.path
 from piqueserver import commands
 from piqueserver.commands import command
 from piqueserver.config import config
+from piqueserver.auth import auth
 
 # TODO: build an entire config reload core script
 
@@ -35,9 +36,10 @@ def reloadconfig(connection):
 def apply_script(protocol, connection, config):
     class PassreloadProtocol(protocol):
         def reload_passes(self):
-            for password in self.passwords.get('admin', []):
-                if not password:
-                    self.everyone_is_admin = True
-            commands.update_rights(config.get('rights', {}))
+            for conn in list(self.connections.values()):
+                for user_type in conn.user_types:
+                    # updates connections's rights set
+                    auth.set_user_type(conn, user_type)
+
 
     return PassreloadProtocol, connection

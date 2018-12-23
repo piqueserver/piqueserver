@@ -28,7 +28,7 @@ from pyspades.common import encode
 from pyspades.types import AttributeSet
 from piqueserver import commands
 from piqueserver.commands import command, restrict
-
+from piqueserver.auth import auth
 
 MAX_IRC_CHAT_SIZE = MAX_CHAT_SIZE * 2
 IRC_TEAM_COLORS = {0: '\x0302', 1: '\x0303'}
@@ -192,7 +192,7 @@ class IRCClientFactory(protocol.ClientFactory):
         self.user_types = AttributeSet(['admin', 'irc'])
         self.rights = AttributeSet()
         for user_type in self.user_types:
-            self.rights.update(commands.get_rights(user_type))
+            self.rights.update(auth.get_rights(user_type))
         self.server = server
         self.nickname = config.get('nickname',
                                    'piqueserver%s' % random.randrange(0, 99))
