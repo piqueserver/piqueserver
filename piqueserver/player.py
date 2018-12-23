@@ -403,16 +403,7 @@ class FeatureConnection(ServerConnection):
         self.kick(reason)
 
     def on_user_login(self, user_type, verbose=True):
-        if user_type == 'admin':
-            self.admin = True
-            self.speedhack_detect = False
-        self.user_types.add(user_type)
-        rights = set(commands.get_rights(user_type))
-        self.rights.update(rights)
-        if verbose:
-            message = ' logged in as %s' % (user_type)
-            self.send_chat('You' + message)
-            self.protocol.irc_say("* " + self.name + message)
+        pass
 
     def timed_out(self):
         if self.name is not None:
