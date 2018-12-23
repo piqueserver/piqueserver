@@ -43,7 +43,7 @@ def notify_login(connection, user_type: str) -> None:
     connection.send_chat(message.format('You'))
     connection.protocol.irc_say(message.format('* ' + connection.name))
 
-_login_retries: Dict[str, int] = defaultdict(login_retries.get)
+_login_retries = defaultdict(login_retries.get) # type: Dict[str, int]
 
 def retries_left(connection) -> int:
     return _login_retries[connection.address[0]]
@@ -56,8 +56,8 @@ class ConfigAuthBackend(BaseAuthBackend):
     authentication"""
 
     def __init__(self):
-        self.passwords: _Option = config.option('passwords', default={})
-        self.rights: _Option = config.option('rights', default={})
+        self.passwords = config.option('passwords', default={}) # type: _Option
+        self.rights = config.option('rights', default={}) # type: _Option
 
     def login(self, details: Details) -> str:
         _, password = details
