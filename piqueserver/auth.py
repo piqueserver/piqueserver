@@ -2,6 +2,7 @@ from typing import Tuple, Dict, List
 from collections import defaultdict
 import abc
 from piqueserver.config import config, _Option
+login_retries = config.option('login_retries', 3)
 
 Details = Tuple[str, str]  # username, password
 
@@ -13,7 +14,7 @@ class AuthError(Exception):
 class BaseAuthBackend(abc.ABC):
     @abc.abstractmethod
     def login(self, details: Details) -> str:
-        """Verifies details and returns an user_role. 
+        """Verifies details and returns an user_role.
         Raises AuthError if details are incorrect."""
         pass
 
@@ -34,6 +35,21 @@ class BaseAuthBackend(abc.ABC):
         connection.user_types.add(user_type)
         rights = set(self.get_rights(user_type))
         connection.rights.update(rights)
+
+
+def notify_login(connection, user_type: str) -> None:
+    connection.on_user_login(user_type, True)
+    message = '{} logged in as ' + user_type
+    connection.send_chat(message.format('You'))
+    connection.protocol.irc_say(message.format('* ' + connection.name))
+
+_login_retries: Dict[str, int] = defaultdict(login_retries.get)
+
+def retries_left(connection) -> int:
+    return _login_retries[connection.address[0]]
+
+def log_failed_attempt(connection):
+    _login_retries[connection.address[0]] -= 1
 
 class ConfigAuthBackend(BaseAuthBackend):
     """Auth backend that uses the [passwords] section of the config for
