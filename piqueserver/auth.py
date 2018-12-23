@@ -1,6 +1,7 @@
-from typing import Tuple
+from typing import Tuple, Dict, List
+from collections import defaultdict
 import abc
-from piqueserver.config import config
+from piqueserver.config import config, _Option
 
 Details = Tuple[str, str]  # username, password
 
@@ -21,13 +22,26 @@ class BaseAuthBackend(abc.ABC):
         """Checks if a player has permission to perfom specific action."""
         pass
 
+    @abc.abstractmethod
+    def get_rights(self, user_type: str) -> List[str]:
+        """Returns list of actions an user type can perform"""
+        pass
+
+    def set_user_type(self, connection, user_type: str) -> None:
+        if user_type == 'admin':
+            connection.admin = True
+            connection.speedhack_detect = False
+        connection.user_types.add(user_type)
+        rights = set(self.get_rights(user_type))
+        connection.rights.update(rights)
 
 class ConfigAuthBackend(BaseAuthBackend):
     """Auth backend that uses the [passwords] section of the config for
     authentication"""
 
     def __init__(self):
-        self.passwords = config.option('passwords', default={})
+        self.passwords: _Option = config.option('passwords', default={})
+        self.rights: _Option = config.option('rights', default={})
 
     def login(self, details: Details) -> str:
         _, password = details
@@ -38,6 +52,10 @@ class ConfigAuthBackend(BaseAuthBackend):
 
     def has_permission(self, connection, action: str) -> bool:
         return connection.admin or action in connection.rights
+
+    def get_rights(self, user_type: str) -> List[str]:
+        rights = self.rights.get()
+        return rights.get(user_type, [])
 
 
 auth = ConfigAuthBackend()
