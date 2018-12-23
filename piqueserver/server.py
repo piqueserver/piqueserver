@@ -138,7 +138,6 @@ spade_teamkills_on_grief = config.option('spade_teamkills_on_grief',
 time_announcements = config.option('time_announcements', default=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                                                                   30, 60, 120, 180, 240, 300, 600,
                                                                   900, 1200, 1800, 2400, 3000])
-rights = config.option('rights', default={})
 port_option = config.option('port', default=32887,
                             validate=lambda n: type(n) == int)
 fall_damage = config.option('fall_damage', default=True)
@@ -149,7 +148,6 @@ melee_damage = config.option('melee_damage', default=100)
 max_connections_per_ip = config.option('max_connections_per_ip', default=0)
 server_prefix = config.option('server_prefix', default='[*]')
 balanced_teams = config.option('balanced_teams', default=2)
-login_retries = config.option('login_retries', 1)
 default_ban_duration = bans_config.option('default_duration', default=24 * 60)
 speedhack_detect = config.option('speedhack_detect', True)
 user_blocks_only = config.option('user_blocks_only', False)
@@ -368,7 +366,6 @@ class FeatureProtocol(ServerProtocol):
         self.server_prefix = server_prefix.get()
         self.time_announcements = time_announcements.get()
         self.balanced_teams = balanced_teams.get()
-        self.login_retries = login_retries.get()
 
         # voting configuration
         self.default_ban_time = default_ban_duration.get()
@@ -402,10 +399,6 @@ class FeatureProtocol(ServerProtocol):
         self.end_calls = []
         # TODO: why is this here?
         create_console(self)
-
-        for user_type, func_names in rights.get().items():
-            for func_name in func_names:
-                commands.add_rights(user_type, func_name)
 
         port = self.port = port_option.get()
         ServerProtocol.__init__(self, port, interface)
