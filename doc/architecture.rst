@@ -12,9 +12,9 @@ specialized.
 
 However, the unclear division and two locations quickly lead to a large mess,
 and it is currently not possible to know for certain which module exactly
-certains certain functionality. In general, this is the rule of thumb:
+contains certain functionality. In general, this is the rule of thumb:
 
- * `pyspades`: Anything that involves sending and recieving of packets and
+ * `pyspades`: Anything that involves sending and receiving of packets and
    acting on those, keeping game state.
 
  * `piqueserver`: Anything player-facing, for example commands,

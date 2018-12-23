@@ -312,7 +312,7 @@ class FeatureProtocol(ServerProtocol):
             log.info('piqueserver started on %s' % time.strftime('%c'))
 
         self.config = config_dict
-        if random_rotation:
+        if random_rotation.get():
             self.map_rotator_type = random_choice_cycle
         else:
             self.map_rotator_type = itertools.cycle  # pylint: disable=redefined-variable-type
@@ -729,7 +729,7 @@ class FeatureProtocol(ServerProtocol):
             self.ban_publish.update()
 
     def receive_callback(self, address: Address, data: bytes) -> None:
-        """This hook recieves the raw UDP data before it is processed by enet"""
+        """This hook receives the raw UDP data before it is processed by enet"""
 
         # exceptions get swallowed in the pyenet C stuff, so we catch anything
         # for now. This should ideally get fixed in pyenet instead.

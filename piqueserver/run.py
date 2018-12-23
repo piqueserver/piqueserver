@@ -108,7 +108,7 @@ def main():
     if (sys.version_info.major, sys.version_info.minor) not in SUPPORTED_PYTHONS:
         print('Warning: you are running on an unsupported Python version.\n'
               'The server may not run correctly.\n'
-              'Please see https://github.com/piqueserver/piqueserver/wiki/Supported-Environments for more information.')
+              'Please see https://piqueserver.readthedocs.io/en/v1.0.0/supported-python-environments.html for more information.')
 
     description = '%s is an open-source Python server implementation ' \
                   'for the voxel-based game "Ace of Spades".' % PKG_NAME

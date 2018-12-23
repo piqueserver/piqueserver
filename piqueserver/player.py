@@ -316,7 +316,7 @@ class FeatureConnection(ServerConnection):
 
     def on_chat(self, value: str, global_message: bool) -> Union[str, bool]:
         """
-        notifies when the server recieves a chat message
+        notifies when the server receives a chat message
 
         return False to block sending the message
         """

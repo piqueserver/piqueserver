@@ -52,7 +52,7 @@ def command(name=None, *aliases,
     ... def some_command(x):
     ...     pass
 
-    Optional mames and aliases:
+    Optional names and aliases:
 
     >>> @command("name", "alias1", "alias2")
     ... def some_command(x):
@@ -188,6 +188,19 @@ def format_command_error(command_func: Callable, message: str, exception:
         return "{}\nUsage: {}".format(message, command_help.usage)
     else:
         return message
+
+
+def admin(func: Callable) -> Callable:
+    """
+    Shorthand for @restrict("admin"). Mainly exists for backwards
+    compatibility with pyspades scripts.
+
+    >>> @admin
+    ... @command()
+    ... def some_command(x):
+    ...     pass
+    """
+    return restrict('admin')(func)
 
 
 def get_player(protocol, value: str, spectators=True):

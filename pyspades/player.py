@@ -163,7 +163,7 @@ class ServerConnection(BaseConnection):
 
     def loader_received(self, loader: enet.Packet) -> None:
         """
-        called when a loader i.e. packet is recieved.
+        called when a loader i.e. packet is received.
         calls the packet handler registered with
         @register_packet_handler
         """
