@@ -22,7 +22,7 @@ Options
 import random
 from piqueserver.commands import command, get_player
 from piqueserver import commands
-from piqueserver.config import config
+from piqueserver.config import config, cast_duration
 from piqueserver.server import respawn_time_option
 
 SQUAD_NAMES = set([
@@ -33,7 +33,7 @@ SQUAD_NAMES = set([
 
 squad_config = config.section('squad')
 RESPAWN_TIME_OPTION = squad_config.option('respawn_time',
-        default=respawn_time_option.get())
+        default=respawn_time_option.get(), cast=cast_duration)
 SIZE_OPTION = squad_config.option('size', 0)
 AUTO_SQUAD_OPTION = squad_config.option('auto_squad', True)
 

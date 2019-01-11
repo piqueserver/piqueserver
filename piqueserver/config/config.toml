@@ -203,8 +203,8 @@ color = [ 0, 255, 0]
 
 
 [bans]
-# default duration in minutes a banned player will be banned for
-default_duration = 1440
+# default duration a banned player will be banned for
+default_duration = "1day"
 
 # location the bans are saved and loaded from
 #file = "bans.txt"
@@ -341,7 +341,7 @@ time_limit = "30min"
 # successfully votekick a player
 percentage = 35
 
-# duration in minutes that votekicked player will be banned for
+# duration that votekicked player will be banned for
 ban_duration = "30min"
 
 public_votes = true

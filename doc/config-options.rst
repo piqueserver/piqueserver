@@ -198,10 +198,10 @@ a block when :ref:`friendly_fire_on_grief` is enabled.
 teamswitch_interval
 +++++++++++++++++++
 
-Forces players to wait a number of minutes before being able to switch back
+Forces players to wait a set duration before being able to switch back
 again after they switched teams.
 
-0 disables the cooldown.
+"0sec" disables the cooldown.
 
 teamswitch_allowed
 ++++++++++++++++++

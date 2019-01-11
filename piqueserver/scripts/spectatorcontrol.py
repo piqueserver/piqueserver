@@ -29,19 +29,19 @@ Options
    [spectator_control]
    no_chat = false # determines whether spectators can chat or not in your server
    kick = false # determines whether spectators will be kicked after remaining for so long
-   kick_time = 300 # how long a spectator may remain before they are kicked; time in seconds
+   kick_time = "5min" # how long a spectator may remain before they are kicked
 
 .. codeauthor:: Tocksman (made for Goon Haven)
 """
 
 from math import ceil, floor
 from twisted.internet import reactor
-from piqueserver.config import config
+from piqueserver.config import config, cast_duration
 
 spectator_ctrl_config = config.section("spectator_control")
 no_chat = spectator_ctrl_config.option("no_chat", False)
 kick = spectator_ctrl_config.option("kick", False)
-kick_time = spectator_ctrl_config.option("kick_time", 300) # in seconds
+kick_time = spectator_ctrl_config.option("kick_time", default="5min", cast=cast_duration)
 
 def apply_script(protocol, connection, config):
     class SpectatorControlConnection(connection):

@@ -295,7 +295,7 @@ class FeatureConnection(ServerConnection):
                     self.send_chat('Switching teams is not allowed')
                     return False
                 if (self.last_switch is not None and
-                        reactor.seconds() - self.last_switch < teamswitch_interval * 60):
+                        reactor.seconds() - self.last_switch < teamswitch_interval):
                     self.send_chat(
                         'You must wait before switching teams again')
                     return False

@@ -7,17 +7,17 @@ Options
 .. code-block:: guess
 
    [spawn_protect]
-   protection_time = 3 # in seconds
+   protection_time = "3sec"
 
 .. codeauthor:: ? & kmsi <kmsiapps@gmail.com>
 """
 
 from pyspades.common import prettify_timespan
-from piqueserver.config import config
+from piqueserver.config import config, cast_duration
 from twisted.internet import reactor
 
 spawn_protect_config = config.section("spawn_protect")
-protection_time = spawn_protect_config.option("protection_time", 3.0)
+protection_time = spawn_protect_config.option("protection_time", default="3sec", cast=cast_duration)
 
 
 def apply_script(protocol, connection, config):
