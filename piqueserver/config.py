@@ -292,6 +292,10 @@ config = ConfigStore()
 
 
 def cast_duration(d) -> int:
+    """
+    casts duration(1min, 1hr) into seconds.
+    If input is an int it returns that unmodified.
+    """
     if isinstance(d, int):
         return d
     if not isinstance(d, str):

@@ -108,7 +108,7 @@ team2_config = config.section('team2')
 
 bans_file = bans_config.option('file', default='bans.txt')
 bans_urls = bans_config.option('urls', [])
-respawn_time_option = config.option('respawn_time', default=8)
+respawn_time_option = config.option('respawn_time', default="8sec", cast=cast_duration)
 respawn_waves = config.option('respawn_waves', default=False)
 game_mode = config.option('game_mode', default='ctf')
 random_rotation = config.option('random_rotation', default=False)
@@ -132,7 +132,7 @@ friendly_fire = config.option('friendly_fire', default=False)
 friendly_fire_on_grief = config.option('friendly_fire_on_grief',
                                        default=True)
 grief_friendly_fire_time = config.option('grief_friendly_fire_time',
-                                         default=2)
+                                         default='2sec', cast=cast_duration)
 spade_teamkills_on_grief = config.option('spade_teamkills_on_grief',
                                          default=False)
 time_announcements = config.option('time_announcements', default=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
@@ -142,7 +142,7 @@ rights = config.option('rights', default={})
 port_option = config.option('port', default=32887,
                             validate=lambda n: type(n) == int)
 fall_damage = config.option('fall_damage', default=True)
-teamswitch_interval = config.option('teamswitch_interval', default=0)
+teamswitch_interval = config.option('teamswitch_interval', default="0sec", cast=cast_duration)
 teamswitch_allowed = config.option('teamswitch_allowed', default=True)
 max_players = config.option('max_players', default=20)
 melee_damage = config.option('melee_damage', default=100)
@@ -163,7 +163,7 @@ status_server_enabled = config.section(
 ban_publish = bans_config.option('publish', False)
 ban_publish_port = bans_config.option('publish_port', 32885)
 logging_rotate_daily = logging_config.option('rotate_daily', False)
-tip_frequency = config.option('tips_frequency', 0)
+tip_frequency = config.option('tips_frequency', default="5sec", cast=lambda x: cast_duration(x)/60)
 register_master_option = config.option('master', False)
 
 # default to http for ip_getter on windows
