@@ -82,7 +82,7 @@ setup(
     name=PKG_NAME,
     packages=[PKG_NAME, '%s.web' % PKG_NAME,
         '%s.scripts' % PKG_NAME, '%s.game_modes' % PKG_NAME,
-        '%s.core_commands' % PKG_NAME, 'pyspades'],
+        '%s.core_commands' % PKG_NAME, 'pyspades', 'pytimeparse'],
     version=version['__version__'],
     description='Open-Source server implementation for Ace of Spades ',
     author=('Originally MatPow2 and PySnip contributors,'
@@ -144,6 +144,7 @@ setup(
         '%s.scripts' % PKG_NAME: 'piqueserver/scripts',
         '%s.game_modes' % PKG_NAME: 'piqueserver/game_modes',
         'pyspades': 'pyspades',
+        'pytimeparse': 'pytimeparse'
     },  # some kind of find_packages?
     package_data={"%s.web" % PKG_NAME: ["templates/status.html"]},
     include_package_data=True,
