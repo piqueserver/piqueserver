@@ -31,7 +31,7 @@ from pyspades.constants import (
 )
 from piqueserver.commands import command, admin, get_player
 from piqueserver.config import config
-from pytimeparse import parse
+from piqueserver.utils import parse
 
 DISABLED, KICK, BAN, WARN_ADMIN = range(4)
 

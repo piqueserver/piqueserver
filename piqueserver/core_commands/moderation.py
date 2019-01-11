@@ -7,7 +7,7 @@ from pyspades.common import (
     prettify_timespan,
     make_color)
 from piqueserver.commands import command, CommandError, get_player, join_arguments
-from pytimeparse import parse
+from piqueserver.utils import parse
 
 # aparently, we need to send packets in this file. For now, I give in.
 kill_action = KillAction()
