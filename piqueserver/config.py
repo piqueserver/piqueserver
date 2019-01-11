@@ -22,7 +22,7 @@ import sys
 
 import piqueserver
 import toml
-from pytimeparse import parse
+from piqueserver.utils import parse
 
 # supported config format constants to avoid typos
 DEFAULT_FORMAT = 'TOML'
