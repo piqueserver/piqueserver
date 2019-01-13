@@ -14,7 +14,7 @@ Commands
 '''
 
 import os
-from piqueserver.commands import command, get_player
+from piqueserver.commands import command, restrict, get_player
 from piqueserver.config import config
 
 # optional commands
