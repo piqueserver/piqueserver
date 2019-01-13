@@ -11,13 +11,6 @@ Commands
 * ``/from <player>`` get player's location info
 
 .. codeauthor:: ?
-
-Updates
-^^^^^^^
-    v1.2
-    Author: bieito98
-    Date: 13-01-2019
-    Comment: support for new GeoLite database format and API version (GeoLite2-City.mmdb & geoip2)
 '''
 
 import os
@@ -38,6 +31,7 @@ except (IOError, OSError):
     )
 finally:
 
+    @restrict('admin')
     @command('from')
     def where_from(connection, value=None):
         # Get player IP address
@@ -60,13 +54,7 @@ finally:
         raw_items.extend(record.subdivisions)
         raw_items.append(record.city)
 
-        items = []
-        for raw_item in raw_items:
-            name = raw_item.name
-            if name:
-                items.append(name)
-
-        items.reverse()
+        items = (raw_item.name for raw_item in reversed(raw_items))
 
         return '%s is from %s (%s)' % (player.name, ', '.join(items),
                                        record.country.iso_code)
