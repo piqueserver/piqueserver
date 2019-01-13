@@ -31,7 +31,7 @@ JSON_FORMAT = 'JSON'
 # global constants we need to know at the start
 _path = os.environ.get('XDG_CONFIG_HOME', '~/.config') + '/piqueserver'
 DEFAULT_CONFIG_DIR = os.path.expanduser(_path)
-MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
+MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz'
 
 # (major, minor) versions of python we are supporting
 # used on startup to emit a warning if not running on a supported version

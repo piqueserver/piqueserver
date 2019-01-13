@@ -4,7 +4,7 @@ import filecmp
 import shutil
 import sys
 import argparse
-import gzip
+import tarfile
 import json
 
 from piqueserver.config import (config, TOML_FORMAT, JSON_FORMAT,
@@ -58,6 +58,7 @@ def copytree(src, dst):
             else:
                 pass
 
+
 def copy_config():
     config_source = os.path.dirname(os.path.abspath(__file__)) + '/config'
     print('Attempting to copy example config to %s (origin: %s).' %
@@ -77,7 +78,7 @@ def update_geoip(target_dir):
     working_directory = os.path.join(target_dir, 'data/')
     zipped_path = os.path.join(working_directory,
                                os.path.basename(MAXMIND_DOWNLOAD))
-    extracted_path = os.path.join(working_directory, 'GeoLiteCity.dat')
+    extracted_path = os.path.join(working_directory, 'GeoLite2-City')
 
     if not os.path.exists(target_dir):
         print('Configuration directory does not exist')
@@ -92,10 +93,12 @@ def update_geoip(target_dir):
     print('Download Complete')
     print('Unpacking...')
 
-    with gzip.open(zipped_path, 'rb') as gz:
-        d = gz.read()
-        with open(extracted_path, 'wb') as ex:
-            ex.write(d)
+    with tarfile.open(zipped_path, 'r:gz') as tar:
+        non_standard_path = os.path.join(working_directory, tar.next().name)
+        tar.extractall(working_directory)
+        if os.path.exists(extracted_path):
+            shutil.rmtree(extracted_path)
+        os.rename(non_standard_path, extracted_path)
 
     print('Unpacking Complete')
     print('Cleaning up...')
@@ -164,8 +167,7 @@ def main():
             if status != 0:
                 sys.exit(status)
 
-        return # if we have done a task, don't run the server
-
+        return  # if we have done a task, don't run the server
 
     # TODO: set config/map/script/log/etc. dirs from config file, thus removing
     # the need for the --config-dir argument and the config file is then a
@@ -206,7 +208,6 @@ def main():
     # update config with cli overrides
     if args.json_parameters:
         config.update_from_dict(json.loads(args.json_parameters))
-
 
     from piqueserver import server
     server.run()
