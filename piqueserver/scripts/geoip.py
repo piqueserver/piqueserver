@@ -16,6 +16,7 @@ Commands
 import os
 from piqueserver.commands import command, restrict, get_player
 from piqueserver.config import config
+from itertools import chain
 
 # optional commands
 try:
@@ -49,12 +50,9 @@ finally:
             return 'Player location could not be determined.'
 
         # Extract info
-        raw_items = []
-        raw_items.append(record.country)
-        raw_items.extend(record.subdivisions)
-        raw_items.append(record.city)
+        raw_items = chain((record.city,), reversed(record.subdivisions), (record.country,))
 
-        items = (raw_item.name for raw_item in reversed(raw_items))
+        items = (raw_item.name for raw_item in reversed(raw_items) if raw_item.name is not None)
 
         return '%s is from %s (%s)' % (player.name, ', '.join(items),
                                        record.country.iso_code)
