@@ -52,7 +52,7 @@ finally:
         # Extract info
         raw_items = chain((record.city,), reversed(record.subdivisions), (record.country,))
 
-        items = (raw_item.name for raw_item in reversed(raw_items) if raw_item.name is not None)
+        items = (raw_item.name for raw_item in raw_items if raw_item.name is not None)
 
         return '%s is from %s (%s)' % (player.name, ', '.join(items),
                                        record.country.iso_code)
