@@ -77,10 +77,11 @@ def copy_config():
 
 
 def update_geoip(target_dir):
+    db_filename = 'GeoLite2-City.mmdb'
     working_directory = os.path.join(target_dir, 'data/')
     zipped_path = os.path.join(working_directory,
                                os.path.basename(MAXMIND_DOWNLOAD))
-    extracted_path = os.path.join(working_directory, 'GeoLite2-City')
+    extracted_path = os.path.join(working_directory, db_filename)
 
     if not os.path.exists(target_dir):
         print('Configuration directory does not exist')
@@ -101,7 +102,7 @@ def update_geoip(target_dir):
         file_resp.content).hexdigest()
     if calculated_sum != downloaded_sum:
         print('md5 sums do not match')
-        return 2
+        return 1
 
     print('OK')
     print('Saving file...')
@@ -110,16 +111,16 @@ def update_geoip(target_dir):
 
     print('Unpacking...')
     with tarfile.open(zipped_path, 'r:gz') as tar:
-        non_standard_path = os.path.join(working_directory, tar.next().name)
-        tar.extractall(working_directory)
-        if os.path.exists(extracted_path):
-            shutil.rmtree(extracted_path)
-        os.rename(non_standard_path, extracted_path)
+        comp_path = os.path.join(tar.next().name, db_filename)
+        db = tar.extractfile(comp_path)
+        with open(extracted_path, 'wb') as ex:
+            ex.write(db.read())
 
     print('Unpacking Complete')
-    print('Cleaning up...')
 
+    print('Cleaning up...')
     os.remove(zipped_path)
+
     return 0
 
 

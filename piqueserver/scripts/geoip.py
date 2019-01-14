@@ -22,7 +22,7 @@ try:
     import geoip2.database
     import geoip2.errors
     database = geoip2.database.Reader(os.path.join(
-        config.config_dir, 'data/GeoLite2-City/GeoLite2-City.mmdb'))
+        config.config_dir, 'data/GeoLite2-City.mmdb'))
 except ImportError:
     print("('/from' command disabled. Please install geoip2 to enable.)")
 except (IOError, OSError):
