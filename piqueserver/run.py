@@ -10,7 +10,7 @@ import json
 from piqueserver.config import (config, TOML_FORMAT, JSON_FORMAT,
                                 MAXMIND_DOWNLOAD, MAXMIND_DOWNLOAD_MD5,
                                 SUPPORTED_PYTHONS)
-import requests
+import urllib.request
 import hashlib
 
 PKG_NAME = 'piqueserver'
@@ -90,16 +90,16 @@ def update_geoip(target_dir):
     os.makedirs(working_directory, exist_ok=True)
 
     print('Downloading %s' % MAXMIND_DOWNLOAD)
-    file_resp = requests.get(MAXMIND_DOWNLOAD, verify=True, stream=False)
+    file_data = urllib.request.urlopen(MAXMIND_DOWNLOAD).read()
 
     print('Downloading %s' % MAXMIND_DOWNLOAD_MD5)
-    sum_resp = requests.get(MAXMIND_DOWNLOAD_MD5, verify=True, stream=False)
+    sum_data = urllib.request.urlopen(MAXMIND_DOWNLOAD_MD5).read()
     print('Download Complete')
 
     # Both files are downloaded, but not stored before integrity check
     print('Checking integrity...')
-    downloaded_sum, calculated_sum = sum_resp.text, hashlib.md5(
-        file_resp.content).hexdigest()
+    downloaded_sum = sum_data.decode()
+    calculated_sum = hashlib.md5(file_data).hexdigest()
     if calculated_sum != downloaded_sum:
         print('md5 sums do not match')
         return 1
@@ -107,7 +107,7 @@ def update_geoip(target_dir):
     print('OK')
     print('Saving file...')
     with open(zipped_path, 'wb') as f:
-        f.write(file_resp.content)
+        f.write(file_data)
 
     print('Unpacking...')
     with tarfile.open(zipped_path, 'r:gz') as tar:
