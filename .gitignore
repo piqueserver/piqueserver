@@ -65,6 +65,7 @@ htmlcov
 
 # IDEs and text editors
 .vscode
+.idea
 *~
 *.swp
 *.swo

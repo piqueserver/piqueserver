@@ -125,7 +125,7 @@ setup(
         'typing'
     ],
     extras_require={
-        'from': ['pygeoip>=0.3.2,<0.4'],
+        'from': ['geoip2>=2.9,<3.0'],
         # 'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
         'ssh': [
             'cryptography>=2.1.4,<2.2',

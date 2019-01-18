@@ -31,7 +31,8 @@ JSON_FORMAT = 'JSON'
 # global constants we need to know at the start
 _path = os.environ.get('XDG_CONFIG_HOME', '~/.config') + '/piqueserver'
 DEFAULT_CONFIG_DIR = os.path.expanduser(_path)
-MAXMIND_DOWNLOAD = 'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
+MAXMIND_DOWNLOAD = 'https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz'
+MAXMIND_DOWNLOAD_MD5 = MAXMIND_DOWNLOAD + '.md5'
 
 # (major, minor) versions of python we are supporting
 # used on startup to emit a warning if not running on a supported version
@@ -71,7 +72,7 @@ class ConfigStore():
 
         # these are for config that isn't ever stored in the config file (yet)
         self.config_dir = DEFAULT_CONFIG_DIR
-        self.config_file = os.path.join(DEFAULT_CONFIG_DIR,"config.toml")
+        self.config_file = os.path.join(DEFAULT_CONFIG_DIR, "config.toml")
 
     def _validate_all(self):
         for option in self._options.values():

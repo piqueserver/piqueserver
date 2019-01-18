@@ -4,12 +4,14 @@ import filecmp
 import shutil
 import sys
 import argparse
-import gzip
+import tarfile
 import json
 
 from piqueserver.config import (config, TOML_FORMAT, JSON_FORMAT,
-                                MAXMIND_DOWNLOAD, SUPPORTED_PYTHONS)
+                                MAXMIND_DOWNLOAD, MAXMIND_DOWNLOAD_MD5,
+                                SUPPORTED_PYTHONS)
 import urllib.request
+import hashlib
 
 PKG_NAME = 'piqueserver'
 
@@ -58,6 +60,7 @@ def copytree(src, dst):
             else:
                 pass
 
+
 def copy_config():
     config_source = os.path.dirname(os.path.abspath(__file__)) + '/config'
     print('Attempting to copy example config to %s (origin: %s).' %
@@ -74,10 +77,11 @@ def copy_config():
 
 
 def update_geoip(target_dir):
+    db_filename = 'GeoLite2-City.mmdb'
     working_directory = os.path.join(target_dir, 'data/')
     zipped_path = os.path.join(working_directory,
                                os.path.basename(MAXMIND_DOWNLOAD))
-    extracted_path = os.path.join(working_directory, 'GeoLiteCity.dat')
+    extracted_path = os.path.join(working_directory, db_filename)
 
     if not os.path.exists(target_dir):
         print('Configuration directory does not exist')
@@ -86,21 +90,37 @@ def update_geoip(target_dir):
     os.makedirs(working_directory, exist_ok=True)
 
     print('Downloading %s' % MAXMIND_DOWNLOAD)
+    file_data = urllib.request.urlopen(MAXMIND_DOWNLOAD).read()
 
-    urllib.request.urlretrieve(MAXMIND_DOWNLOAD, zipped_path)
-
+    print('Downloading %s' % MAXMIND_DOWNLOAD_MD5)
+    sum_data = urllib.request.urlopen(MAXMIND_DOWNLOAD_MD5).read()
     print('Download Complete')
-    print('Unpacking...')
 
-    with gzip.open(zipped_path, 'rb') as gz:
-        d = gz.read()
+    # Both files are downloaded, but not stored before integrity check
+    print('Checking integrity...')
+    downloaded_sum = sum_data.decode()
+    calculated_sum = hashlib.md5(file_data).hexdigest()
+    if calculated_sum != downloaded_sum:
+        print('md5 sums do not match')
+        return 1
+
+    print('OK')
+    print('Saving file...')
+    with open(zipped_path, 'wb') as f:
+        f.write(file_data)
+
+    print('Unpacking...')
+    with tarfile.open(zipped_path, 'r:gz') as tar:
+        comp_path = os.path.join(tar.next().name, db_filename)
+        db = tar.extractfile(comp_path)
         with open(extracted_path, 'wb') as ex:
-            ex.write(d)
+            ex.write(db.read())
 
     print('Unpacking Complete')
-    print('Cleaning up...')
 
+    print('Cleaning up...')
     os.remove(zipped_path)
+
     return 0
 
 
@@ -164,8 +184,7 @@ def main():
             if status != 0:
                 sys.exit(status)
 
-        return # if we have done a task, don't run the server
-
+        return  # if we have done a task, don't run the server
 
     # TODO: set config/map/script/log/etc. dirs from config file, thus removing
     # the need for the --config-dir argument and the config file is then a
@@ -206,7 +225,6 @@ def main():
     # update config with cli overrides
     if args.json_parameters:
         config.update_from_dict(json.loads(args.json_parameters))
-
 
     from piqueserver import server
     server.run()
