@@ -418,8 +418,3 @@ class FeatureConnection(ServerConnection):
         if self.name is not None:
             log.info('%s timed out' % self.printable_name)
         ServerConnection.timed_out(self)
-
-
-def encode_lines(value):
-    if value is not None:
-        return [encode(line) for line in value]
