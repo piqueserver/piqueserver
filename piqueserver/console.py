@@ -17,6 +17,8 @@
 
 import sys
 
+from typing import List
+
 from twisted.internet import reactor
 from twisted.protocols.basic import LineReceiver
 
@@ -87,6 +89,15 @@ class ConsoleInput(LineReceiver):
         result = commands.handle_input(self, line.decode())
         if result is not None:
             print(result)
+
+    # methods used to emulate the behaviour of regular Connection objects to
+    # prevent errors when command writers didn't test that their scripts would
+    # work when run on the console
+    def send_chat(self, value: str, _):
+        print(value)
+
+    def send_lines(self, lines: List[str]):
+        print("\n".join(lines))
 
 
 def create_console(protocol):
