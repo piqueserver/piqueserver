@@ -18,6 +18,7 @@
 import sys
 
 from typing import List
+import traceback
 
 from twisted.internet import reactor
 from twisted.protocols.basic import LineReceiver
@@ -86,9 +87,14 @@ class ConsoleInput(LineReceiver):
         if not line:
             return
 
-        result = commands.handle_input(self, line.decode())
-        if result is not None:
-            print(result)
+        try:
+            result = commands.handle_input(self, line.decode())
+        # pylint: disable=broad-except
+        except Exception:
+            traceback.print_exc()
+        else:
+            if result is not None:
+                print(result)
 
     # methods used to emulate the behaviour of regular Connection objects to
     # prevent errors when command writers didn't test that their scripts would
