@@ -143,7 +143,7 @@ setup(
         '%s.web' % PKG_NAME: 'piqueserver/web',
         '%s.scripts' % PKG_NAME: 'piqueserver/scripts',
         '%s.game_modes' % PKG_NAME: 'piqueserver/game_modes',
-        'pyspades': 'pyspades'
+        'pyspades': 'pyspades',
     },  # some kind of find_packages?
     package_data={"%s.web" % PKG_NAME: ["templates/status.html"]},
     include_package_data=True,

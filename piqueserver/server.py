@@ -163,7 +163,7 @@ status_server_enabled = config.section(
 ban_publish = bans_config.option('publish', False)
 ban_publish_port = bans_config.option('publish_port', 32885)
 logging_rotate_daily = logging_config.option('rotate_daily', False)
-tip_frequency = config.option('tips_frequency', 0)
+tip_frequency = config.option('tips_frequency', default="5sec", cast=lambda x: cast_duration(x)/60)
 register_master_option = config.option('master', False)
 
 # default to http for ip_getter on windows

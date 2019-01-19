@@ -64,7 +64,6 @@ def kick(connection, value, *arg):
 def ban(connection, value, *arg):
     """
     Ban a given player forever or for a limited amount of time.
-    It takes duration in minutes.
     /ban <player> [duration] [reason]
     """
     duration, reason = get_ban_arguments(connection, arg)

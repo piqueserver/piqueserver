@@ -13,7 +13,7 @@ Options
 .. code-block:: guess
 
     [squad]
-    respawn_time = 10 # in seconds
+    respawn_time = "10sec"
     auto_squad = true
 
 .. codeauthor:: Triplefox

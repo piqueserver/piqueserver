@@ -25,7 +25,7 @@ S_AFK_KICKED = ('{num_players} players kicked, {num_connections} connections '
 S_AFK_KICK_REASON = 'Inactive for {time}'
 
 afk_config = config.section('afk')
-time_limit_option = afk_config.option('time_limit', default="5min", cast=cast_duration)
+time_limit_option = afk_config.option('time_limit', default="1hour", cast=cast_duration)
 
 def afk(connection, player):
     player = get_player(connection.protocol, player)
