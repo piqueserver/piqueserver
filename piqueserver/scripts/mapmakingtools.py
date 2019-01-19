@@ -30,7 +30,7 @@ def set_color(prt, color, player_id=32):
     c = SetColor()
     c.player_id = player_id
     c.value = color
-    prt.send_contained(c)
+    prt.broadcast_contained(c)
 
 
 def add_block(
@@ -58,7 +58,7 @@ def add_block(
             block_action.x = x
             block_action.y = y
             block_action.z = z
-            prt.send_contained(block_action)
+            prt.broadcast_contained(block_action)
             prt.map.set_point(x, y, z, get_color_tuple(color))
 
 
@@ -80,7 +80,7 @@ def remove_block(prt, x, y, z, mirror_x=False, mirror_y=False):
             block_action.y = y
             block_action.z = z
             prt.map.remove_point(x, y, z)
-            prt.send_contained(block_action)
+            prt.broadcast_contained(block_action)
             return True
     return False
 

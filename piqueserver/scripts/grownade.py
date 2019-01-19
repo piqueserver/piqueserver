@@ -224,7 +224,7 @@ class BuildQueue:
                 set_color = SetColor()
                 set_color.value = make_color(*color)
                 set_color.player_id = 32
-                self.protocol.send_contained(set_color, save=True)
+                self.protocol.broadcast_contained(set_color, save=True)
                 last_color = color
             if not self.protocol.map.get_solid(x, y, z):
                 block_action = BlockAction()
@@ -233,7 +233,7 @@ class BuildQueue:
                 block_action.x = x
                 block_action.y = y
                 block_action.z = z
-                self.protocol.send_contained(block_action, save=True)
+                self.protocol.broadcast_contained(block_action, save=True)
                 self.protocol.map.set_point(x, y, z, color)
                 blocks_left -= 1
         self.protocol.update_entities()

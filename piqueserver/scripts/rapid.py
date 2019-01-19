@@ -53,7 +53,7 @@ def resend_tool(player):
     set_tool.player_id = player.player_id
     set_tool.value = player.tool
     if player.weapon_object.shoot:
-        player.protocol.send_contained(set_tool)
+        player.protocol.broadcast_contained(set_tool)
     else:
         player.send_contained(set_tool)
 

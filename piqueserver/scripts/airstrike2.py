@@ -178,7 +178,7 @@ def apply_script(protocol, connection, config):
             grenade_packet.player_id = self.player_id
             grenade_packet.position = position.get()
             grenade_packet.velocity = velocity.get()
-            self.protocol.send_contained(grenade_packet)
+            self.protocol.broadcast_contained(grenade_packet)
 
         def airstrike_exploded(self, grenade):
             grenade.velocity.normalize()

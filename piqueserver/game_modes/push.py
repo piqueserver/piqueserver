@@ -204,7 +204,7 @@ def apply_script(protocol, connection, config):
             set_color.player_id = self.player_id
             set_color.value = make_color(*color)
             self.send_contained(set_color)
-            self.protocol.send_contained(set_color, save=True)
+            self.protocol.broadcast_contained(set_color, save=True)
 
         def build_block(self, x, y, z, looped=False):
             if ((x < 0 or x > 511 or
@@ -218,7 +218,7 @@ def apply_script(protocol, connection, config):
                 block_action.z = z
                 block_action.value = BUILD_BLOCK
                 block_action.player_id = self.player_id
-                self.protocol.send_contained(block_action, save=True)
+                self.protocol.broadcast_contained(block_action, save=True)
 
         def on_line_build_attempt(self, points):
             can_build = connection.on_line_build_attempt(self, points)
