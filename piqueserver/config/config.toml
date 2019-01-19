@@ -108,9 +108,9 @@ random_rotation = false
 # Examples: "piqueserver.game_modes.push", "mygame" (where you have config/game_modes/mygame.py)
 game_mode = "ctf"
 
-# TODO: document
+# default time limit to set per map. When the time limit runs out, the map rotation is advanced
 default_time_limit = "2hours"
-# TODO: document
+# advances the map rotation when the game ends, if set to true
 advance_on_win = true
 
 # time in seconds before player respawns
@@ -163,7 +163,7 @@ fall_damage = true
 # disable users ability to affect the map's initial blocks
 user_blocks_only = false
 
-# TODO
+# puts the player into god build mode automatically when entering god mode, if set to true
 set_god_build = false
 
 # time in seconds remaining when the time remaining should be announced
@@ -252,7 +252,7 @@ debug_log = false
 # directories are created as necessary
 logfile = "./logs/log.txt"
 
-# TODO: document
+# writes a new log file each day
 rotate_daily = true
 
 profile = false
