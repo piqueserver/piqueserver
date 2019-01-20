@@ -76,6 +76,7 @@ cdef class Grenade
 cdef class Character
 
 cdef class Object:
+    """an object in present in the World"""
     cdef public:
         object name
         World world
@@ -87,15 +88,23 @@ cdef class Object:
             self.name = 'object'
 
     def initialize(self, *arg, **kw):
+        """hook called on Object creation
+
+        Arguments passed to ``__init__`` will be passed here too.
+        """
         pass
 
     cdef int update(self, double dt) except -1:
+        '''update this object, giving it a "Tick"'''
         return 0
 
     def delete(self):
+        """remove this object from the World"""
         self.world.delete_object(self)
 
 cdef class Character(Object):
+    """Represents the position, orientation and velocity of the player object in
+    the world"""
     cdef:
         PlayerType * player
     cdef public:
@@ -116,6 +125,7 @@ cdef class Character(Object):
             self.orientation.set_vector(orientation)
 
     def set_crouch(self, bint value):
+        """set if the player is crouching"""
         if value == self.player.crouch:
             return
         if value:
@@ -125,21 +135,27 @@ cdef class Character(Object):
         self.player.crouch = value
 
     def set_animation(self, jump, crouch, sneak, sprint):
+        """set all of the player's movement statuses: jump, crouch, sneak and
+        sprint"""
         self.player.jump = jump
         self.set_crouch(crouch)
         self.player.sneak = sneak
         self.player.sprint = sprint
 
     def set_weapon(self, is_primary):
+        """set the primary weapon of the player"""
         self.player.weapon = is_primary
 
     def set_walk(self, up, down, left, right):
+        """set the current status of the movement buttons"""
         self.player.mf = up
         self.player.mb = down
         self.player.ml = left
         self.player.mr = right
 
     def set_position(self, x, y, z, reset = False):
+        """set the current position of the player. If ``reset=True`` is passed,
+        reset velocity, keys, mouse buttons and movement status as well"""
         self.position.set(x, y, z)
         self.player.p.x = self.player.e.x = x
         self.player.p.y = self.player.e.y = y
@@ -151,15 +167,20 @@ cdef class Character(Object):
             self.up = self.down = self.left = self.right = False
 
     def set_orientation(self, x, y, z):
+        """set the current orientation of the Player"""
         cdef Vertex3 v = Vertex3(x, y, z)
         reorient_player(self.player, v.value)
 
     cpdef int can_see(self, float x, float y, float z):
+        """return if the player can see a given coordinate. This only considers
+        the map voxels, not any other objects"""
         cdef Vertex3 position = self.position
         return can_see(self.world.map, position.x, position.y, position.z,
             x, y, z)
 
     cpdef cast_ray(self, length = 32.0):
+        """cast a ray ``length`` number of blocks in the direction the player is
+        facing, If a voxel is hit, return it's coordinates, otherwise `None`"""
         cdef Vertex3 position = self.position
         cdef Vertex3 direction = self.orientation.copy().normal()
         cdef long x, y, z
@@ -169,6 +190,9 @@ cdef class Character(Object):
         return None
 
     def validate_hit(self, Character other, part, float tolerance):
+        """check if a given hit is within a given tolerance of hitting another
+        player. This is primarily used to prevent players from shooting at
+        things they aren't facing at"""
         cdef Vertex3 position1 = self.position
         cdef Vertex3 orientation = self.orientation
         cdef Vertex3 position2 = other.position
@@ -193,6 +217,8 @@ cdef class Character(Object):
         return True
 
     def set_dead(self, value):
+        """set the player's alive status. Also resets mouse buttons, movement
+        stats and keys"""
         self.player.alive = not value
         self.player.mf = False
         self.player.mb = False
@@ -308,11 +334,18 @@ cdef class Grenade(Object):
         self.callback = callback
 
     cdef int hit_test(self, Vertex3 position):
+        """check if the grenade can hit something in a given position. This is
+        used to check if the player should be damaged"""
         cdef Vector * nade = self.position.value
         return can_see(self.world.map, position.x, position.y, position.z,
                        nade.x, nade.y, nade.z)
 
     cpdef get_next_collision(self, double dt):
+        """calculate the position of the grenade ahead of time.
+
+        Returns:
+            eta, x, y, z: the ETA and the location of the next collision
+        """
         if self.velocity.is_zero():
             return None
         cdef double eta = 0.0
@@ -329,6 +362,9 @@ cdef class Grenade(Object):
         return eta, x, y, z
 
     cpdef double get_damage(self, Vertex3 player_position):
+        """Calculate the damage given to a player standing at
+        ``player_position``. Also performs a check to see if the player is
+        behind cover."""
         cdef Vector * position = self.position.value
         cdef double diff_x, diff_y, diff_z
         diff_x = player_position.x - position.x
@@ -362,6 +398,7 @@ cdef class Grenade(Object):
         return rep.format(self.fuse, self.position, self.velocity)
 
 cdef class World(object):
+    """controls the map of the World and the Objects inside of it"""
     cdef public:
         VXLData map
         list objects
@@ -391,6 +428,8 @@ cdef class World(object):
 # utility functions
 
 cpdef cube_line(x1, y1, z1, x2, y2, z2):
+    """create a cube line from one point to another with the same algorithm as
+    the client uses"""
     cdef LongVector array[CUBE_ARRAY_LENGTH]
     cdef size_t size = cube_line_c(x1, y1, z1, x2, y2, z2, array)
     cdef size_t i
