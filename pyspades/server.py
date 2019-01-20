@@ -138,6 +138,21 @@ class ServerProtocol(BaseProtocol):
 
     def send_contained(self, contained, unsequenced=False, sender=None,
                        team=None, save=False, rule=None):
+        """send a Contained `Loader` to all or a selection of connected
+        players
+
+        Parameters:
+            contained: the `Loader` object to send
+            unsequenced: set the enet ``UNSEQUENCED`` flag on this packet
+            sender: if set to a connection object, do not send this packet to
+                that player, as they are the sender.
+            team: if set to a team, only send the packet to that team
+            save: if the player has not downloaded the map yet, save this
+                packet and send it when the map transfer has completed
+            rule: if set to a callable, this function is called with the player
+                as parameter to determine if a given player should receive the
+                packet
+        """
         if unsequenced:
             flags = enet.PACKET_FLAG_UNSEQUENCED
         else:
@@ -151,7 +166,7 @@ class ServerProtocol(BaseProtocol):
                 continue
             if team is not None and player.team is not team:
                 continue
-            if rule is not None and rule(player) == False:
+            if rule is not None and not rule(player):
                 continue
             if player.saved_loaders is not None:
                 if save:
