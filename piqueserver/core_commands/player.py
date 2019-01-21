@@ -13,7 +13,7 @@ def client(connection, target=None):
         player = get_player(connection.protocol, target)
         who_is = player.name + " is"
 
-    return "{} connected with {}".format(who_is, connection.client_string)
+    return "{} connected with {}".format(who_is, player.client_string)
 
 
 @command()
