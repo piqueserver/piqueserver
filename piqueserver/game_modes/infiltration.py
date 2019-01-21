@@ -59,7 +59,7 @@ class DummyPlayer():
         create_player.player_id = self.player_id
         create_player.name = self.team.name
         create_player.team = self.team.id
-        self.protocol.send_contained(create_player, save=True)
+        self.protocol.broadcast_contained(create_player, save=True)
         return True
 
     def score(self):
@@ -74,7 +74,7 @@ class DummyPlayer():
         self.team.score += 1
         intel_capture.player_id = self.player_id
         intel_capture.winning = winning
-        self.protocol.send_contained(intel_capture, save=True)
+        self.protocol.broadcast_contained(intel_capture, save=True)
         if winning:
             self.team.initialize()
             self.team.other.initialize()
@@ -93,7 +93,7 @@ class DummyPlayer():
         if self.player_id is None or self.player_id in self.protocol.players:
             return
         player_left.player_id = self.player_id
-        self.protocol.send_contained(player_left, save=True)
+        self.protocol.broadcast_contained(player_left, save=True)
 
 
 def apply_script(protocol, connection, config):

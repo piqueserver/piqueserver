@@ -195,7 +195,7 @@ class Gate(object):
         set_color = SetColor()
         set_color.value = make_color(*self.color)
         set_color.player_id = block_line.player_id = 32
-        self.protocol_obj.send_contained(set_color, save=True)
+        self.protocol_obj.broadcast_contained(set_color, save=True)
         for block_line_ in self.blocks:
             start_block, end_block = block_line_
             points = world.cube_line(*(start_block + end_block))
@@ -207,7 +207,7 @@ class Gate(object):
                     map_.set_point(x, y, z, self.color)
             block_line.x1, block_line.y1, block_line.z1 = start_block
             block_line.x2, block_line.y2, block_line.z2 = end_block
-            self.protocol_obj.send_contained(block_line, save=True)
+            self.protocol_obj.broadcast_contained(block_line, save=True)
 
     def destroy_gate(self):
         map_ = self.protocol_obj.map
@@ -218,7 +218,7 @@ class Gate(object):
             if map_.get_solid(*block):
                 map_.remove_point(*block)
                 block_action.x, block_action.y, block_action.z = block
-                self.protocol_obj.send_contained(block_action, save=True)
+                self.protocol_obj.broadcast_contained(block_action, save=True)
         for block_line_ in self.blocks:  # avoid desyncs
             start_block, end_block = block_line_
             points = world.cube_line(*(start_block + end_block))

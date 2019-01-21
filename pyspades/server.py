@@ -136,8 +136,8 @@ class ServerProtocol(BaseProtocol):
         """alias to team_spectator for backwards-compatibility"""
         return self.team_spectator
 
-    def send_contained(self, contained, unsequenced=False, sender=None,
-                       team=None, save=False, rule=None):
+    def broadcast_contained(self, contained, unsequenced=False, sender=None,
+                            team=None, save=False, rule=None):
         """send a Contained `Loader` to all or a selection of connected
         players
 
@@ -173,6 +173,9 @@ class ServerProtocol(BaseProtocol):
                     player.saved_loaders.append(data)
             else:
                 player.peer.send(0, packet)
+
+    # backwards compatability
+    send_contained = broadcast_contained
 
     def reset_tc(self):
         self.entities = self.get_cp_entities()
