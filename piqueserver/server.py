@@ -343,12 +343,21 @@ class FeatureProtocol(ServerProtocol):
                 self.name[:MAX_SERVER_NAME_SIZE]))
         self.respawn_time = respawn_time_option.get()
         self.respawn_waves = respawn_waves.get()
-        if game_mode.get() == 'ctf':
+
+        # since AoS only supports CTF and TC at a protocol level, we need to get
+        # the base game mode if we are using a custom game mode.
+        game_mode_name = game_mode.get()
+        if game_mode_name == 'ctf':
             self.game_mode = CTF_MODE
         elif game_mode.get() == 'tc':
             self.game_mode = TC_MODE
-        elif self.game_mode is None:
-            raise NotImplementedError('invalid game mode: %s' % game_mode)
+        elif self.game_mode not in [CTF_MODE, TC_MODE]:
+            raise ValueError(
+                'invalid game mode: custom game mode "{}" does not set '
+                'protocol.game_mode to one of TC_MODE or CTF_MODE. Are '
+                'you sure the thing you have specified is a game mode?'.format(
+                    game_mode_name))
+
         self.game_mode_name = game_mode.get().split('.')[-1]
         self.team1_name = team1_name.get()[:9]
         self.team2_name = team2_name.get()[:9]
@@ -647,7 +656,7 @@ class FeatureProtocol(ServerProtocol):
     @inlineCallbacks
     def shutdown(self):
         """
-        Notifies players and disconnects them before a shutdown. 
+        Notifies players and disconnects them before a shutdown.
         """
         # send shutdown notification
         self.broadcast_chat("Server shutting down in 3sec.")
