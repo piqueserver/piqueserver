@@ -167,6 +167,11 @@ def main():
         action='store_true',
         help='download the latest geoip database')
 
+    arg_parser.add_argument(
+        '--version',
+        action='store_true',
+        help='show the version and exit')
+
     args = arg_parser.parse_args()
 
     # update the config_dir from cli args
@@ -185,6 +190,11 @@ def main():
                 sys.exit(status)
 
         return  # if we have done a task, don't run the server
+
+    if args.version:
+        import piqueserver
+        print("piqueserver", piqueserver.__version__)
+        return
 
     # TODO: set config/map/script/log/etc. dirs from config file, thus removing
     # the need for the --config-dir argument and the config file is then a
