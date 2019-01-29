@@ -99,7 +99,8 @@ class MapOverview(CommonResource):
 
     def render_GET(self, request):
         overview = self.parent.get_overview()
-        request.setHeader("content-type", 'png/image')
+        request.setHeader("content-type", 'image/png')
+        request.setHeader("Access-Control-Allow-Origin", '*')
         request.setHeader("content-length", str(len(overview)))
         if request.method == "HEAD":
             return ''
