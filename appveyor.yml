@@ -8,7 +8,6 @@ environment:
   PATH: '%PYTHON%;%PYTHON%\Scripts;%PATH%'
   matrix:
   - PYTHON: C:\Python36-x64
-    DO_EXE: whynot
   - PYTHON: C:\Python35-x64
   - PYTHON: C:\Python37-x64
   - PYTHON: C:\Python36
