@@ -20,6 +20,11 @@ GAME_VERSION = 3
 RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON = range(3)
 TORSO, HEAD, ARMS, LEGS, MELEE = range(5)
 SPADE_TOOL, BLOCK_TOOL, WEAPON_TOOL, GRENADE_TOOL = range(4)
+# BUILD_BLOCK: place a single block
+# DESTROY_BLOCK: destroy a single block
+# SPADE_DESTROY: destroy the block as well as the blocks directly above and
+#   below it (spade right-click)
+# GRENADE_DESTROY: destroy a 3x3 area around the block
 BUILD_BLOCK, DESTROY_BLOCK, SPADE_DESTROY, GRENADE_DESTROY = range(4)
 BLUE_FLAG, GREEN_FLAG, BLUE_BASE, GREEN_BASE = range(4)
 CHAT_ALL, CHAT_TEAM, CHAT_SYSTEM = range(3)
