@@ -5,7 +5,7 @@ Commands
 ^^^^^^^^
 
 * ``/votemap`` initiates map voting
-* ``/vote <map name>`` vote for a map 
+* ``/vote <map name>`` vote for a map
 
 .. code-block:: guess
 
@@ -239,8 +239,8 @@ def apply_script(protocol, connection, config):
             else:
                 return verify
 
-        def set_map_name(self, *arg, **kw):
-            protocol.set_map_name(self, *arg, **kw)
+        def on_advance(self, *arg, **kw):
+            protocol.on_advance(self, *arg, **kw)
             self.end_votes()
 
         def end_votes(self):
