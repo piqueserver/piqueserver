@@ -33,8 +33,8 @@ from ipaddress import ip_network, ip_address, IPv4Address, AddressValueError
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 
-from twisted.internet import reactor
-from twisted.internet.defer import inlineCallbacks
+from twisted.internet import reactor, threads
+from twisted.internet.defer import inlineCallbacks, Deferred, ensureDeferred
 from twisted.internet.task import coiterate, LoopingCall, deferLater
 from twisted.python.logfile import DailyLogFile
 from twisted.logger import Logger, textFileLogObserver
@@ -42,7 +42,6 @@ from twisted.logger import FilteringLogObserver, LogLevelFilterPredicate, LogLev
 from twisted.logger import globalLogBeginner
 from twisted.web import client as web_client
 from twisted.internet.tcp import Port
-from twisted.internet.defer import Deferred
 
 from enet import Address, Packet, Peer
 
@@ -416,22 +415,19 @@ class FeatureProtocol(ServerProtocol):
             for func_name in func_names:
                 commands.add_rights(user_type, func_name)
 
-        port = self.port = port_option.get()
-        ServerProtocol.__init__(self, port, interface)
+        self.port = port_option.get()
+        ServerProtocol.__init__(self, self.port, interface)
         self.host.intercept = self.receive_callback
+
         try:
             self.set_map_rotation(self.config['rotation'])
         except MapNotFound as e:
             log.critical('Invalid map in map rotation (%s), exiting.' % e.map)
             raise SystemExit
 
-        self.update_format()
-        self.tip_frequency = tip_frequency.get()
-        if self.tips is not None and self.tip_frequency > 0:
-            reactor.callLater(self.tip_frequency * 60, self.send_tip)
-
-        self.master = register_master_option.get()
-        self.set_master()
+        map_load_d = self.advance_rotation()
+        # discard the result of the map advance for now
+        map_load_d.addCallback(lambda x: self._post_init())
 
         self.http_agent = web_client.Agent(reactor)
 
@@ -442,7 +438,18 @@ class FeatureProtocol(ServerProtocol):
         self.vacuum_loop = LoopingCall(self.vacuum_bans)
         # Run the vacuum every 6 hours, and kick it off it right now
         self.vacuum_loop.start(60 * 60 * 6, True)
+
         reactor.addSystemEventTrigger('before', 'shutdown', self.shutdown)
+
+    def _post_init(self):
+        """called after the map has been loaded"""
+        self.update_format()
+        self.tip_frequency = tip_frequency.get()
+        if self.tips is not None and self.tip_frequency > 0:
+            reactor.callLater(self.tip_frequency * 60, self.send_tip)
+
+        self.master = register_master_option.get()
+        self.set_master()
 
     @inlineCallbacks
     def get_external_ip(self, ip_getter: str) -> Iterator[Deferred]:
@@ -511,10 +518,13 @@ class FeatureProtocol(ServerProtocol):
         self.advance_call = None
         self.advance_rotation('Time up!')
 
-    def advance_rotation(self, message: None = None) -> None:
+    def advance_rotation(self, message: Optional[str] = None) -> Deferred:
         """
         Advances to the next map in the rotation. If message is provided
         it will send it to the chat, waits for 10 seconds and then advances.
+
+        Returns:
+            Deferred that fires when the map has been loaded
         """
         self.set_time_limit(False)
         if self.planned_map is None:
@@ -522,22 +532,26 @@ class FeatureProtocol(ServerProtocol):
         planned_map = self.planned_map
         self.planned_map = None
         self.on_advance(planned_map)
-        if message is None:
-            self.set_map_name(planned_map)
-        else:
-            self.send_chat(
-                '{} Next map: {}.'.format(message, planned_map.full_name),
-                irc=True)
-            reactor.callLater(10, self.set_map_name, planned_map)
+
+        async def do_advance():
+            if message is not None:
+                self.send_chat(
+                    '{} Next map: {}.'.format(message, planned_map.full_name),
+                    irc=True)
+                await sleep(10)
+
+            await self.set_map_name(planned_map)
+
+        return ensureDeferred(do_advance())
 
     def get_mode_name(self) -> str:
         return self.game_mode_name
 
-    def set_map_name(self, rot_info: RotationInfo) -> None:
+    async def set_map_name(self, rot_info: RotationInfo) -> None:
         """
         Sets the map by its name.
         """
-        map_info = self.get_map(rot_info)
+        map_info = await self.make_map(rot_info)
         if self.map_info:
             self.on_map_leave()
         self.map_info = map_info
@@ -550,22 +564,27 @@ class FeatureProtocol(ServerProtocol):
         name_option.set(name)
         self.update_format()
 
-    def get_map(self, rot_info: RotationInfo) -> Map:
+    def make_map(self, rot_info: RotationInfo) -> Deferred:
         """
-        Creates and returns a Map object from rotation info
-        """
-        return Map(rot_info, os.path.join(config.config_dir, 'maps'))
+        Creates and returns a Map object from rotation info in a new thread
 
-    def set_map_rotation(self, maps: List[str], now: bool = True) -> None:
+        Returns:
+            Deferred that resolves to a `Map` object.
+        """
+        # we must do this in a new thread, since map generation might take so
+        # long that clients time out.
+        return threads.deferToThread(
+            Map, rot_info, os.path.join(config.config_dir, 'maps'))
+
+    def set_map_rotation(self, maps: List[str]) -> None:
         """
         Over-writes the current map rotation with provided one.
-        And advances immediately with the new rotation by default.
+        `FeatureProtocol.advance_rotation` still needs to be called to actually
+        change the map,
         """
         maps = check_rotation(maps, os.path.join(config.config_dir, 'maps'))
         self.maps = maps
         self.map_rotator = self.map_rotator_type(maps)
-        if now:
-            self.advance_rotation()
 
     def get_map_rotation(self):
         return [map_item.full_name for map_item in self.maps]
@@ -604,6 +623,7 @@ class FeatureProtocol(ServerProtocol):
             'game_mode': self.get_mode_name(),
             'server_name': self.name,
         }
+
         if extra:
             format_dict.update(extra)
         # format with both old-style and new string formatting to stay
@@ -716,7 +736,7 @@ class FeatureProtocol(ServerProtocol):
                     # expired
                     del self.bans[ban[0]]
                 yield
-            log.debug("ban vacuum took {time} seconds, removed {count} bans",
+            log.debug("ban vacuum took {time:.2f} seconds, removed {count} bans",
                       count=bans_count - len(self.bans),
                       time=time.time() - start_time)
             self.save_bans()
@@ -737,14 +757,14 @@ class FeatureProtocol(ServerProtocol):
         start_time = reactor.seconds()
         with open(ban_file, 'w') as f:
             json.dump(self.bans.make_list(), f, indent=2)
-        log.debug("saving {count} bans took {time} seconds",
+        log.debug("saving {count} bans took {time:.2f} seconds",
                   count=len(self.bans),
                   time=reactor.seconds() - start_time)
 
         if self.ban_publish is not None:
             self.ban_publish.update()
 
-    def receive_callback(self, address: Address, data: bytes) -> None:
+    def receive_callback(self, address: Address, data: bytes) -> int:
         """This hook receives the raw UDP data before it is processed by enet"""
 
         # exceptions get swallowed in the pyenet C stuff, so we catch anything
@@ -757,11 +777,17 @@ class FeatureProtocol(ServerProtocol):
                 return 1
             # reply to ASCII HELLOLAN messages with server data for LAN discovery
             elif data == b'HELLOLAN':
+                # we might receive a HELLOLAN before the map has been loaded
+                # if so, return a dummy string instead
+                if self.map_info:
+                    map_name = self.map_info.short_name
+                else:
+                    map_name = "loading..."
                 entry = {
                     "name": self.name,
                     "players_current": self.get_player_count(),
                     "players_max": self.max_players,
-                    "map": self.map_info.short_name,
+                    "map": map_name,
                     "game_mode": self.get_mode_name(),
                     "game_version": "0.75"
                 }
@@ -772,10 +798,11 @@ class FeatureProtocol(ServerProtocol):
             # This drop the connection of any ip in hard_bans
             if address.host in self.hard_bans:
                 return 1
-        except Exception as e:
-            print("error in callback query")
+        except Exception:
             import traceback
             traceback.print_exc()
+
+        return 0
 
     def data_received(self, peer: Peer, packet: Packet) -> None:
         ip = peer.address.host
