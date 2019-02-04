@@ -24,6 +24,7 @@
             </button>
             <div class="navbar-collapse collapse" id="navbarSupportedContent">
                 <div class="navbar-nav mr-auto">
+                    <a class="nav-item nav-link" href="#info">Info</a>
                     <a class="nav-item nav-link" href="#map">Map</a>
                     <a class="nav-item nav-link" href="#players">Players</a>
                     </ul>
@@ -119,7 +120,7 @@
     </div>
     <!-- /.container -->
     <script id="jsondata" type="text/json">
-        {"uptime": {{(reactor.seconds() - server.start_time)|int}} }
+        {"start_time": {{ server.start_time | int }} }
     </script>
 
     <script type="text/javascript">
@@ -127,7 +128,7 @@
             var days = Math.floor((totalSeconds % 31536000) / 86400);
             var hours = Math.floor(((totalSeconds % 31536000) % 86400) / 3600);
             var minutes = Math.floor((((totalSeconds % 31536000) % 86400) % 3600) / 60);
-            var seconds = (((totalSeconds % 31536000) % 86400) % 3600) % 60;
+            var seconds = Math.floor((((totalSeconds % 31536000) % 86400) % 3600) % 60);
 
 
             var dayStr = (days > 0 ? days : 0) + " day";
@@ -142,10 +143,11 @@
             return [dayStr, hoursStr, minutesStr, secondsStr].join(", ");
         }
 
-        var uptime = JSON.parse($("#jsondata").text()).uptime
+        var start_time = JSON.parse($("#jsondata").text()).start_time
 
         function displayUptime() {
-            $('#uptime').html(prettifyTimespan(uptime));
+            // js counts time in milliseconds
+            $('#uptime').html(prettifyTimespan((Date.now() / 1000 ) - start_time));
         }
 
         function reloadOverview() {
@@ -187,7 +189,6 @@
         setInterval(reloadOverview, 10000);
 
         setInterval(function () {
-            uptime += 1;
             displayUptime();
         }, 1000);
 
