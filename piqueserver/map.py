@@ -19,6 +19,7 @@ import os
 import imp
 import math
 import random
+import time
 from typing import List, Optional, Union
 
 from twisted.logger import Logger
@@ -65,17 +66,20 @@ class Map(object):
     def __init__(self, rot_info: 'RotationInfo', load_dir: str) -> None:
         self.load_information(rot_info, load_dir)
 
+        # we want to count how long a map load or generate takes
+        start_time = time.monotonic()
         if self.gen_script:
             seed = rot_info.get_seed()
             self.name = '{} #{}'.format(rot_info.name, seed)
-            log.info("Generating map '%s'..." % self.name)
+            log.info("Generating map '{mapname}'...", mapname=self.name)
             random.seed(seed)
             self.data = self.gen_script(rot_info.name, seed)
         else:
             log.info("Loading map '%s'..." % self.name)
             self.load_vxl(rot_info)
 
-        log.info('Map loaded successfully.')
+        log.info('Map loaded successfully. (took {duration:.2f}s)',
+                 duration=time.monotonic() - start_time)
 
     def load_information(self, rot_info: 'RotationInfo', load_dir: str) -> None:
         self.load_dir = load_dir
