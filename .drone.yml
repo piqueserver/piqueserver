@@ -33,3 +33,7 @@ steps:
       - /tmp/cache:/cache
 
 
+volumes:
+  - name: cache
+    host:
+      path: /tmp/cache
