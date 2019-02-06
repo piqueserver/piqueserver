@@ -11,24 +11,28 @@ steps:
   settings:
     restore: true
     mount:
-      - /root/.cache
+      - ./pip_cache
     volumes:
       - /tmp/cache:/cache
+
 - name: all
   image: python:3.7.2-stretch
   commands:
+  - mkdir pip_cache
+  - export XDG_CACHE_HOME=`pwd`/pip_cache
   - pip install -r requirements.txt -vvv
   - pip install -r dev-requirements.txt -vvv
   - export CYTHON_TRACE=1
   - python setup.py develop
   - pytest
   - python setup.py bdist_wheel
+
 - name: rebuild-cache
   image: drillster/drone-volume-cache
   settings:
     rebuild: true
     mount:
-      - /root/.cache
+      - ./pip_cache
     volumes:
       - /tmp/cache:/cache
 
