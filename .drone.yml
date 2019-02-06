@@ -13,9 +13,8 @@ steps:
     path: /tmp/cache
   commands:
   - export XDG_CACHE_HOME=/tmp/cache
-  - apt install libssl-dev libffi-dev libjpeg-dev zlib1g-dev
-  - pip install -r requirements.txt
-  - pip install -r dev-requirements.txt
+  - pip install -r requirements.txt -vvv
+  - pip install -r dev-requirements.txt -vvv
   - export CYTHON_TRACE=1
   - python setup.py develop
   - pytest
