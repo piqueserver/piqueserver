@@ -1,0 +1,21 @@
+kind: pipeline
+name: arm64
+
+platform:
+  os: linux
+  arch: arm64
+
+steps:
+- name: all
+  image: python:3.7.2-stretch
+  volumes:
+  - name: cache
+    path: /tmp/cache
+  commands:
+  - export XDG_CACHE_HOME=/tmp/cache
+  - apt install libssl-dev libffi-dev libjpeg-dev zlib1g-dev
+  - pip install -r requirements.txt
+  - pip install -r dev-requirements.txt
+  - export CYTHON_TRACE=1
+  - python setup.py develop
+  - pytest
