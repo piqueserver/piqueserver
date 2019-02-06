@@ -12,7 +12,7 @@ steps:
   - name: cache
     path: /tmp/cache
   commands:
-  - pip show cvxopt
+  - python -m site
   - export XDG_CACHE_HOME=/tmp/cache
   - pip install -r requirements.txt -vvv
   - pip install -r dev-requirements.txt -vvv
