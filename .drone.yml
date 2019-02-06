@@ -12,9 +12,13 @@ steps:
   - name: cache
     path: /tmp/cache
   commands:
+  - echo "[global]\nextra-index-url=https://www.piwheels.org/simple" > /etc/pip.conf
   - export XDG_CACHE_HOME=/tmp/cache
   - pip install -r requirements.txt -vvv
   - pip install -r dev-requirements.txt -vvv
   - export CYTHON_TRACE=1
   - python setup.py develop
   - pytest
+  - python setup.py bdist_wheel
+
+
