@@ -8,11 +8,12 @@ platform:
 steps:
 - name: restore-cache
   image: drillster/drone-volume-cache
-  restore: true
-  mount:
-    - /root/.cache
-  volumes:
-    - /tmp/cache:/cache
+  settings:
+    restore: true
+    mount:
+      - /root/.cache
+    volumes:
+      - /tmp/cache:/cache
 - name: all
   image: python:3.7.2-stretch
   commands:
