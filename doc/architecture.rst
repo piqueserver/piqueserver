@@ -59,6 +59,10 @@ needed::
            ...
 
        return ScriptNameProtocol, ScriptNameConnection
+       
+The application of these scripts is performed in a loop, ``apply_script`` always being 
+called with the classes returned by the last invocation. This way, the final class
+created inherits from all extension classes.
 
 This is a terrible idea for a number of reasons, but just the way things work currently:
 
