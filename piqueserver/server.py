@@ -925,7 +925,7 @@ def run() -> None:
     (protocol_class, connection_class) = extensions.apply_scripts(script_objects, config, FeatureProtocol, FeatureConnection)
 
     # apply the game_mode script
-    extensions.apply_gamemode_script(game_mode.get(), config, protocol_class, connection_class, log=log)
+    (protocol_class, connection_class) = extensions.apply_gamemode_script(game_mode.get(), config, protocol_class, connection_class, log=log)
 
     protocol_class.connection_class = connection_class
 

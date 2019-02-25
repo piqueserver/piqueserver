@@ -84,3 +84,4 @@ def apply_gamemode_script(current_game_mode, config, protocol_class, connection_
             protocol_class, connection_class = module.apply_script(
                 protocol_class, connection_class, config.get_dict())
 
+    return (protocol_class, connection_class)
