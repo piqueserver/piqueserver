@@ -48,14 +48,12 @@ from enet import Address, Packet, Peer
 
 import pyspades.debug
 from pyspades.server import (ServerProtocol, Team)
-from pyspades.common import encode
 from pyspades.constants import (CTF_MODE, TC_MODE, ERROR_SHUTDOWN)
 from pyspades.master import MAX_SERVER_NAME_SIZE
 from pyspades.tools import make_server_identifier
 from pyspades.bytes import NoDataLeft
 from pyspades.vxl import VXLData
 
-import piqueserver
 from piqueserver.scheduler import Scheduler
 from piqueserver import commands
 from piqueserver.map import Map, MapNotFound, check_rotation, RotationInfo
@@ -65,7 +63,7 @@ from piqueserver.player import FeatureConnection
 from piqueserver.config import config
 
 # won't be used; just need to be executed
-import piqueserver.core_commands
+import piqueserver.core_commands  # pylint: disable=unused-import
 
 log = Logger()
 
@@ -139,7 +137,7 @@ time_announcements = config.option('time_announcements', default=[1, 2, 3, 4, 5,
                                                                   900, 1200, 1800, 2400, 3000])
 rights = config.option('rights', default={})
 port_option = config.option('port', default=32887,
-                            validate=lambda n: type(n) == int)
+                            validate=lambda n: isinstance(n, int))
 fall_damage = config.option('fall_damage', default=True)
 teamswitch_interval = config.option('teamswitch_interval', default=0)
 teamswitch_allowed = config.option('teamswitch_allowed', default=True)
@@ -289,8 +287,6 @@ class FeatureProtocol(ServerProtocol):
     game_mode = None  # default to None so we can check
     time_announce_schedule = None
 
-    server_version = '{} - {}'.format(sys.platform, piqueserver.__version__)
-
     default_fog = (128, 232, 255)
 
     def __init__(self, interface: bytes, config_dict: Dict[str, Any]) -> None:
@@ -316,7 +312,7 @@ class FeatureProtocol(ServerProtocol):
         if random_rotation.get():
             self.map_rotator_type = random_choice_cycle
         else:
-            self.map_rotator_type = itertools.cycle  # pylint: disable=redefined-variable-type
+            self.map_rotator_type = itertools.cycle
         self.default_time_limit = default_time_limit.get()
         self.default_cap_limit = cap_limit.get()
         self.advance_on_win = int(advance_on_win.get())
@@ -462,7 +458,7 @@ class FeatureProtocol(ServerProtocol):
             log.warn('External IP getter service returned invalid data.\n'
                      'Please check the "ip_getter" setting in your config.')
             return
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             log.warn("Getting external IP failed: {reason}", reason=e)
             return
 
@@ -471,7 +467,7 @@ class FeatureProtocol(ServerProtocol):
         log.info('Server public ip address: {}:{}'.format(ip, self.port))
         log.info('Public aos identifier: {}'.format(self.identifier))
 
-    def set_time_limit(self, time_limit: Optional[bool] = None, additive:
+    def set_time_limit(self, time_limit: Optional[int] = None, additive:
                        bool=False) -> Optional[int]:
         advance_call = self.advance_call
         add_time = 0.0
@@ -483,7 +479,7 @@ class FeatureProtocol(ServerProtocol):
         if not time_limit:
             for call in self.end_calls[:]:
                 call.set(None)
-            return
+            return None
 
         if additive:
             time_limit = min(time_limit + add_time, self.default_time_limit)
