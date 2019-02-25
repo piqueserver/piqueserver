@@ -50,10 +50,37 @@ def load_scripts(config, scripts_option, log=None):
 
     return script_objects
 
-
-def apply_scripts(scripts, config):
+def apply_scripts(scripts, config, protocol_class, connection_class):
     '''
     Applies scripts to the server
     Returns protocol and connection class
     '''
+
+    for script in scripts:
+        protocol_class, connection_class = script.apply_script(
+            protocol_class, connection_class, config.get_dict())
+
+    return (protocol_class, connection_class)
+
+def apply_gamemode_script(current_game_mode, config, protocol_class, connection_class, log=None):
+    if current_game_mode not in ('ctf', 'tc'):
+        # must be a script with this game mode
+        module = None
+        try:
+            game_mode_dir = os.path.join(config.config_dir, 'game_modes/')
+            f, filename, desc = imp.find_module(
+                current_game_mode, [game_mode_dir])
+            module = imp.load_module(
+                'piqueserver_gamemode_namespace_' + current_game_mode, f, filename, desc)
+        except ImportError as e:
+            try:
+                module = importlib.import_module(current_game_mode)
+            except ImportError as e:
+                if (log != None):
+                    log.error("(game_mode '%s' not found: %r)" %
+                              (current_game_mode, e))
+
+        if module:
+            protocol_class, connection_class = module.apply_script(
+                protocol_class, connection_class, config.get_dict())
 
