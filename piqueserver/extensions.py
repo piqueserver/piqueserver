@@ -51,9 +51,14 @@ def load_scripts(config, scripts_option, log=None):
     return script_objects
 
 
-def apply_scripts(scripts, config):
+def apply_scripts(scripts, config, protocol_class, connection_class):
     '''
     Applies scripts to the server
     Returns protocol and connection class
     '''
 
+    for script in scripts:
+        protocol_class, connection_class = script.apply_script(
+            protocol_class, connection_class, config.get_dict())
+
+    return (protocol_class, connection_class)

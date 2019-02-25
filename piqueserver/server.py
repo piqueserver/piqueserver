@@ -920,16 +920,9 @@ def run() -> None:
     runs the server
     """
 
-    # apply scripts
-
-    protocol_class = FeatureProtocol
-    connection_class = FeatureConnection
-
+    # load and apply scripts
     script_objects = extensions.load_scripts(config, scripts_option, log=log)
-
-    for script in script_objects:
-        protocol_class, connection_class = script.apply_script(
-            protocol_class, connection_class, config.get_dict())
+    (protocol_class, connection_class) = extensions.apply_scripts(script_objects, config, FeatureProtocol, FeatureConnection)
 
     # apply the game_mode script
     if game_mode.get() not in ('ctf', 'tc'):
