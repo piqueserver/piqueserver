@@ -925,27 +925,7 @@ def run() -> None:
     protocol_class = FeatureProtocol
     connection_class = FeatureConnection
 
-    script_objects = []
-    script_names = scripts_option.get()
-    script_dir = os.path.join(config.config_dir, 'scripts/')
-
-    for script in script_names[:]:
-        try:
-            # this finds and loads scripts directly from the script dir
-            # no need for messing with sys.path
-            f, filename, desc = imp.find_module(script, [script_dir])
-            module = imp.load_module(
-                'piqueserver_script_namespace_' + script, f, filename, desc)
-            script_objects.append(module)
-        except ImportError as e:
-            # warning: this also catches import errors from inside the script
-            # module it tried to load
-            try:
-                module = importlib.import_module(script)
-                script_objects.append(module)
-            except ImportError as e:
-                log.error("(script '{}' not found: {!r})".format(script, e))
-                script_names.remove(script)
+    script_objects = extensions.load_scripts(config, scripts_option)
 
     for script in script_objects:
         protocol_class, connection_class = script.apply_script(
