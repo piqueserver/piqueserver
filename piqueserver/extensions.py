@@ -5,7 +5,9 @@ import imp
 
 def check_scripts(scripts):
     '''
-    Checks if scripts were included multiple times.
+    Ensures that there are no duplicate scripts in scripts
+    :param scripts: list of scripts
+    :return: True if there is no duplicate scripts, False otherwise
     '''
     seen = set()
     dups = []
@@ -20,13 +22,15 @@ def check_scripts(scripts):
     return True
 
 
-def load_scripts(config, scripts_option, log=None):
+def load_scripts(config, script_names, log=None):
     '''
-    Loads all scripts from script/ folder
-    Returns a list of script modules
+    Loads all scripts from the script/ folder
+    :param config: A config object containing the config directory
+    :param script_names: An list of script names
+    :param log: A logger object for logging
+    :return: A list of script modules
     '''
     script_objects = []
-    script_names = scripts_option.get()
     script_dir = os.path.join(config.config_dir, 'scripts/')
 
     for script in script_names[:]:
@@ -52,8 +56,12 @@ def load_scripts(config, scripts_option, log=None):
 
 def apply_scripts(scripts, config, protocol_class, connection_class):
     '''
-    Applies scripts to the server
-    Returns protocol and connection class
+    Applies scripts to the specified protocol and connection class instances
+    :param scripts: List of scripts to apply
+    :param config: Config object which holds a dict
+    :param protocol_class: The protocol class  instanceto update
+    :param connection_class: The connection class instance to update
+    :return: The updated protocol and connection class instances
     '''
 
     for script in scripts:
@@ -63,6 +71,14 @@ def apply_scripts(scripts, config, protocol_class, connection_class):
     return (protocol_class, connection_class)
 
 def apply_gamemode_script(current_game_mode, config, protocol_class, connection_class, log=None):
+    '''
+    :param current_game_mode: The current game mode of the server
+    :param config: A configuration object containing the directory where the game mode scripts are located
+    :param protocol_class: The protocol class instance to update
+    :param connection_class: The connection class instance to update
+    :param log: A log object for logging
+    :return: The updated progocol and connection class instances
+    '''
     if current_game_mode not in ('ctf', 'tc'):
         # must be a script with this game mode
         module = None
@@ -84,3 +100,4 @@ def apply_gamemode_script(current_game_mode, config, protocol_class, connection_
             protocol_class, connection_class = module.apply_script(
                 protocol_class, connection_class, config.get_dict())
 
+    return (protocol_class, connection_class)
