@@ -63,29 +63,12 @@ from piqueserver.console import create_console
 from piqueserver.networkdict import NetworkDict
 from piqueserver.player import FeatureConnection
 from piqueserver.config import config
+from piqueserver import extensions
 
 # won't be used; just need to be executed
 import piqueserver.core_commands
 
 log = Logger()
-
-
-def check_scripts(scripts):
-    '''
-    Checks if scripts were included multiple times.
-    '''
-    seen = set()
-    dups = []
-    for script in scripts:
-        if script in seen:
-            dups.append(script)
-        else:
-            seen.add(script)
-    if dups:
-        log.warn("Scripts included multiple times: {}".format(dups))
-        return False
-    return True
-
 
 def validate_team_name(name):
     if len(name) > 9:
@@ -186,7 +169,7 @@ help_option = config.option('help', default=[
 rules_option = config.option('rules')
 tips_option = config.option('tips')
 network_interface = config.option('network_interface', default='')
-scripts_option = config.option('scripts', default=[], validate=check_scripts)
+scripts_option = config.option('scripts', default=[], validate=extensions.check_scripts)
 
 web_client._HTTP11ClientFactory.noisy = False
 

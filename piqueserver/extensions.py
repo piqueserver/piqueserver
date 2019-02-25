@@ -1,7 +1,6 @@
 
 import os
 
-
 def check_scripts(scripts):
     '''
     Checks if scripts were included multiple times.
@@ -14,7 +13,7 @@ def check_scripts(scripts):
         else:
             seen.add(script)
     if dups:
-        log.warn("Scripts included multiple times: {}".format(dups))
+        #log.warn("Scripts included multiple times: {}".format(dups)) TODO: Pass logger object to this function
         return False
     return True
 
