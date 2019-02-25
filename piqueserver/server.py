@@ -925,7 +925,7 @@ def run() -> None:
     protocol_class = FeatureProtocol
     connection_class = FeatureConnection
 
-    script_objects = extensions.load_scripts(config, scripts_option)
+    script_objects = extensions.load_scripts(config, scripts_option, log=log)
 
     for script in script_objects:
         protocol_class, connection_class = script.apply_script(
