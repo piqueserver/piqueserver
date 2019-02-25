@@ -925,25 +925,7 @@ def run() -> None:
     (protocol_class, connection_class) = extensions.apply_scripts(script_objects, config, FeatureProtocol, FeatureConnection)
 
     # apply the game_mode script
-    if game_mode.get() not in ('ctf', 'tc'):
-        # must be a script with this game mode
-        module = None
-        try:
-            game_mode_dir = os.path.join(config.config_dir, 'game_modes/')
-            f, filename, desc = imp.find_module(
-                game_mode.get(), [game_mode_dir])
-            module = imp.load_module(
-                'piqueserver_gamemode_namespace_' + game_mode.get(), f, filename, desc)
-        except ImportError as e:
-            try:
-                module = importlib.import_module(game_mode.get())
-            except ImportError as e:
-                log.error("(game_mode '%s' not found: %r)" %
-                          (game_mode.get(), e))
-
-        if module:
-            protocol_class, connection_class = module.apply_script(
-                protocol_class, connection_class, config.get_dict())
+    extensions.apply_gamemode_script(game_mode.get(), config, protocol_class, connection_class, log=log)
 
     protocol_class.connection_class = connection_class
 
