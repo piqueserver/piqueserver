@@ -63,29 +63,12 @@ from piqueserver.console import create_console
 from piqueserver.networkdict import NetworkDict
 from piqueserver.player import FeatureConnection
 from piqueserver.config import config
+from piqueserver import extensions
 
 # won't be used; just need to be executed
 import piqueserver.core_commands
 
 log = Logger()
-
-
-def check_scripts(scripts):
-    '''
-    Checks if scripts were included multiple times.
-    '''
-    seen = set()
-    dups = []
-    for script in scripts:
-        if script in seen:
-            dups.append(script)
-        else:
-            seen.add(script)
-    if dups:
-        log.warn("Scripts included multiple times: {}".format(dups))
-        return False
-    return True
-
 
 def validate_team_name(name):
     if len(name) > 9:
@@ -186,7 +169,7 @@ help_option = config.option('help', default=[
 rules_option = config.option('rules')
 tips_option = config.option('tips')
 network_interface = config.option('network_interface', default='')
-scripts_option = config.option('scripts', default=[], validate=check_scripts)
+scripts_option = config.option('scripts', default=[], validate=extensions.check_scripts)
 
 web_client._HTTP11ClientFactory.noisy = False
 
@@ -942,27 +925,7 @@ def run() -> None:
     protocol_class = FeatureProtocol
     connection_class = FeatureConnection
 
-    script_objects = []
-    script_names = scripts_option.get()
-    script_dir = os.path.join(config.config_dir, 'scripts/')
-
-    for script in script_names[:]:
-        try:
-            # this finds and loads scripts directly from the script dir
-            # no need for messing with sys.path
-            f, filename, desc = imp.find_module(script, [script_dir])
-            module = imp.load_module(
-                'piqueserver_script_namespace_' + script, f, filename, desc)
-            script_objects.append(module)
-        except ImportError as e:
-            # warning: this also catches import errors from inside the script
-            # module it tried to load
-            try:
-                module = importlib.import_module(script)
-                script_objects.append(module)
-            except ImportError as e:
-                log.error("(script '{}' not found: {!r})".format(script, e))
-                script_names.remove(script)
+    script_objects = extensions.load_scripts(config, scripts_option, log=log)
 
     for script in script_objects:
         protocol_class, connection_class = script.apply_script(
