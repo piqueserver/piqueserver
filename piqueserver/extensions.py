@@ -23,8 +23,8 @@ def check_scripts(scripts):
 
 def load_scripts(script_names, script_dir, log=None):
     '''
-    Loads all scripts from the script/ folder
-    :param script_names: An list of script names
+    Loads all scripts from the script_dir folder
+    :param script_names: A list of script names
     :param script_dir: Path to scripts directory
     :param log: A logger object for logging
     :return: A list of script modules
@@ -55,9 +55,9 @@ def load_scripts(script_names, script_dir, log=None):
 def apply_scripts(scripts, config, protocol_class, connection_class):
     '''
     Applies scripts to the specified protocol and connection class instances
-    :param scripts: List of scripts to apply
+    :param scripts: List of scripts modules to apply
     :param config: Config object which holds a dict
-    :param protocol_class: The protocol class  instanceto update
+    :param protocol_class: The protocol class instance to update
     :param connection_class: The connection class instance to update
     :return: The updated protocol and connection class instances
     '''

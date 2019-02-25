@@ -920,14 +920,15 @@ def run() -> None:
     runs the server
     """
 
-    # load and apply scripts
+    # load and apply regular scripts
     script_names = scripts_option.get()
     script_dir = os.path.join(config.config_dir, 'scripts/')
     script_objects = extensions.load_scripts(script_names, script_dir, log=log)
     (protocol_class, connection_class) = extensions.apply_scripts(script_objects, config, FeatureProtocol, FeatureConnection)
 
-    # apply the game_mode script
-    (protocol_class, connection_class) = extensions.apply_gamemode_script(game_mode.get(), config, protocol_class, connection_class, log=log)
+    # load and apply the game_mode script
+    game_mode_name = game_mode.get()
+    (protocol_class, connection_class) = extensions.apply_gamemode_script(game_mode_name, config, protocol_class, connection_class, log=log)
 
     protocol_class.connection_class = connection_class
 

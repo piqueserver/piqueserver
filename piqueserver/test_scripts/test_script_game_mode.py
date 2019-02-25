@@ -11,13 +11,13 @@ from pyspades.constants import CTF_MODE
 def apply_script(protocol, connection, config):
 
     class TestScriptGameModeProtocol(protocol):
-        game_mode = CTF_MODE
-
+        # game_mode = CTF_MODE
+        game_mode = "testing"
         def test_true(self):
             return True
 
     class TestScriptGameModeConnection(connection):
-
+        killing = False
         def test_false(self):
             return False
 
