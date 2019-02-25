@@ -31,3 +31,6 @@ develop:
 
 wheels:
 	./scripts/build_wheels.sh
+
+test: 
+	python -m pytest

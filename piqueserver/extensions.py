@@ -21,17 +21,15 @@ def check_scripts(scripts):
         return False
     return True
 
-
-def load_scripts(config, script_names, log=None):
+def load_scripts(script_names, script_dir, log=None):
     '''
     Loads all scripts from the script/ folder
-    :param config: A config object containing the config directory
     :param script_names: An list of script names
+    :param script_dir: Path to scripts directory
     :param log: A logger object for logging
     :return: A list of script modules
     '''
     script_objects = []
-    script_dir = os.path.join(config.config_dir, 'scripts/')
 
     for script in script_names[:]:
         try:

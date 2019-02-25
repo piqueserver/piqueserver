@@ -921,7 +921,9 @@ def run() -> None:
     """
 
     # load and apply scripts
-    script_objects = extensions.load_scripts(config, scripts_option.get(), log=log)
+    script_names = scripts_option.get()
+    script_dir = os.path.join(config.config_dir, 'scripts/')
+    script_objects = extensions.load_scripts(script_names, script_dir, log=log)
     (protocol_class, connection_class) = extensions.apply_scripts(script_objects, config, FeatureProtocol, FeatureConnection)
 
     # apply the game_mode script
