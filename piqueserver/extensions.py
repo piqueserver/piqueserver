@@ -21,20 +21,18 @@ def check_scripts(scripts):
         else:
             seen.add(script)
     if dups:
-        #log.warn("Scripts included multiple times: {}".format(dups)) TODO: Pass logger object to this function
+        log.warn("Scripts included multiple times: {}".format(dups))
         return False
     return True
 
-
-def load_scripts(config, script_names):
+def load_scripts(script_names, script_dir):
     '''
-    Loads all scripts from the script/ folder
-    :param config: A config object containing the config directory
-    :param script_names: An list of script names
+    Loads all scripts from the script_dir folder
+    :param script_names: A list of script names
+    :param script_dir: Path to scripts directory
     :return: A list of script modules
     '''
     script_objects = []
-    script_dir = os.path.join(config.config_dir, 'scripts/')
 
     for script in script_names[:]:
         try:
@@ -59,9 +57,9 @@ def load_scripts(config, script_names):
 def apply_scripts(scripts, config, protocol_class, connection_class):
     '''
     Applies scripts to the specified protocol and connection class instances
-    :param scripts: List of scripts to apply
+    :param scripts: List of scripts modules to apply
     :param config: Config object which holds a dict
-    :param protocol_class: The protocol class  instanceto update
+    :param protocol_class: The protocol class instance to update
     :param connection_class: The connection class instance to update
     :return: The updated protocol and connection class instances
     '''
