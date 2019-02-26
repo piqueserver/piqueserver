@@ -61,29 +61,13 @@ from piqueserver.console import create_console
 from piqueserver.networkdict import NetworkDict
 from piqueserver.player import FeatureConnection
 from piqueserver.config import config, cast_duration
+from piqueserver import extensions
 
 # won't be used; just need to be executed
 import piqueserver.core_commands  # pylint: disable=unused-import
 
+
 log = Logger()
-
-
-def check_scripts(scripts):
-    '''
-    Checks if scripts were included multiple times.
-    '''
-    seen = set()
-    dups = []
-    for script in scripts:
-        if script in seen:
-            dups.append(script)
-        else:
-            seen.add(script)
-    if dups:
-        log.warn("Scripts included multiple times: {}".format(dups))
-        return False
-    return True
-
 
 def validate_team_name(name):
     if len(name) > 9:
@@ -184,7 +168,7 @@ help_option = config.option('help', default=[
 rules_option = config.option('rules')
 tips_option = config.option('tips')
 network_interface = config.option('network_interface', default='')
-scripts_option = config.option('scripts', default=[], validate=check_scripts)
+scripts_option = config.option('scripts', default=[], validate=extensions.check_scripts)
 
 web_client._HTTP11ClientFactory.noisy = False
 
@@ -933,57 +917,17 @@ def run() -> None:
     runs the server
     """
 
-    # apply scripts
-
-    protocol_class = FeatureProtocol
-    connection_class = FeatureConnection
-
-    script_objects = []
+    # load and apply regular scripts
     script_names = scripts_option.get()
     script_dir = os.path.join(config.config_dir, 'scripts/')
+    script_objects = extensions.load_scripts_regular_extension(script_names, script_dir)
+    (protocol_class, connection_class) = extensions.apply_scripts(script_objects, config, FeatureProtocol, FeatureConnection)
 
-    for script in script_names[:]:
-        try:
-            # this finds and loads scripts directly from the script dir
-            # no need for messing with sys.path
-            f, filename, desc = imp.find_module(script, [script_dir])
-            module = imp.load_module(
-                'piqueserver_script_namespace_' + script, f, filename, desc)
-            script_objects.append(module)
-        except ImportError as e:
-            # warning: this also catches import errors from inside the script
-            # module it tried to load
-            try:
-                module = importlib.import_module(script)
-                script_objects.append(module)
-            except ImportError as e:
-                log.error("(script '{}' not found: {!r})".format(script, e))
-                script_names.remove(script)
-
-    for script in script_objects:
-        protocol_class, connection_class = script.apply_script(
-            protocol_class, connection_class, config.get_dict())
-
-    # apply the game_mode script
-    if game_mode.get() not in ('ctf', 'tc'):
-        # must be a script with this game mode
-        module = None
-        try:
-            game_mode_dir = os.path.join(config.config_dir, 'game_modes/')
-            f, filename, desc = imp.find_module(
-                game_mode.get(), [game_mode_dir])
-            module = imp.load_module(
-                'piqueserver_gamemode_namespace_' + game_mode.get(), f, filename, desc)
-        except ImportError as e:
-            try:
-                module = importlib.import_module(game_mode.get())
-            except ImportError as e:
-                log.error("(game_mode '%s' not found: %r)" %
-                          (game_mode.get(), e))
-
-        if module:
-            protocol_class, connection_class = module.apply_script(
-                protocol_class, connection_class, config.get_dict())
+    # load and apply the game_mode script
+    game_mode_name = game_mode.get()
+    game_mode_dir = os.path.join(config.config_dir, 'game_modes/')
+    game_mode_object = extensions.load_script_game_mode(game_mode_name, game_mode_dir)
+    (protocol_class, connection_class) = extensions.apply_scripts(game_mode_object, config, protocol_class, connection_class)
 
     protocol_class.connection_class = connection_class
 
