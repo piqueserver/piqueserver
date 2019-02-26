@@ -70,17 +70,22 @@ import piqueserver.core_commands
 
 log = Logger()
 
+
 def validate_team_name(name):
     if len(name) > 9:
-        log.warn("Team name's length exceeds 9 character limit. More info: https://git.io/fN2cI")
+        log.warn(
+            "Team name's length exceeds 9 character limit. More info: https://git.io/fN2cI")
         # TODO: Once issue #345 is sorted out, we can do a proper validation
         # for now we just warn
         # return False
     return True
 
 # TODO: move to a better place if reusable
+
+
 def sleep(secs):
     return deferLater(reactor, secs, lambda: None)
+
 
 # declare configuration options
 bans_config = config.section('bans')
@@ -106,8 +111,14 @@ cap_limit = config.option('cap_limit', default=10,
                           validate=lambda x: isinstance(x, (int, float)))
 advance_on_win = config.option('advance_on_win', default=False,
                                validate=lambda x: isinstance(x, bool))
-team1_name = team1_config.option('name', default='Blue', validate=validate_team_name)
-team2_name = team2_config.option('name', default='Green', validate=validate_team_name)
+team1_name = team1_config.option(
+    'name',
+    default='Blue',
+    validate=validate_team_name)
+team2_name = team2_config.option(
+    'name',
+    default='Green',
+    validate=validate_team_name)
 team1_color = team1_config.option('color', default=(0, 0, 196))
 team2_color = team2_config.option('color', default=(0, 196, 0))
 friendly_fire = config.option('friendly_fire', default=False)
@@ -117,12 +128,34 @@ grief_friendly_fire_time = config.option('grief_friendly_fire_time',
                                          default=2)
 spade_teamkills_on_grief = config.option('spade_teamkills_on_grief',
                                          default=False)
-time_announcements = config.option('time_announcements', default=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                                                                  30, 60, 120, 180, 240, 300, 600,
-                                                                  900, 1200, 1800, 2400, 3000])
+time_announcements = config.option(
+    'time_announcements',
+    default=[
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        30,
+        60,
+        120,
+        180,
+        240,
+        300,
+        600,
+        900,
+        1200,
+        1800,
+        2400,
+        3000])
 rights = config.option('rights', default={})
 port_option = config.option('port', default=32887,
-                            validate=lambda n: type(n) == int)
+                            validate=lambda n: isinstance(n, int))
 fall_damage = config.option('fall_damage', default=True)
 teamswitch_interval = config.option('teamswitch_interval', default=0)
 teamswitch_allowed = config.option('teamswitch_allowed', default=True)
@@ -165,11 +198,14 @@ help_option = config.option('help', default=[
     '/commands Prints all available commands',
     '/help <command_name> Gives description and usage info for a command',
     '/help Prints this message',
-    ])
+])
 rules_option = config.option('rules')
 tips_option = config.option('tips')
 network_interface = config.option('network_interface', default='')
-scripts_option = config.option('scripts', default=[], validate=extensions.check_scripts)
+scripts_option = config.option(
+    'scripts',
+    default=[],
+    validate=extensions.check_scripts)
 
 web_client._HTTP11ClientFactory.noisy = False
 
@@ -199,7 +235,13 @@ class FeatureTeam(Team):
 class EndCall(object):
     _active = True
 
-    def __init__(self, protocol, delay: int, func: Callable, *arg, **kw) -> None:
+    def __init__(
+            self,
+            protocol,
+            delay: int,
+            func: Callable,
+            *arg,
+            **kw) -> None:
         self.protocol = protocol
         protocol.end_calls.append(self)
         self.delay = delay
@@ -287,11 +329,13 @@ class FeatureProtocol(ServerProtocol):
                 logging_file = DailyLogFile(log_filename, '.')
             else:
                 logging_file = open(log_filename, 'a')
-            predicate = LogLevelFilterPredicate(LogLevel.levelWithName(loglevel.get()))
+            predicate = LogLevelFilterPredicate(
+                LogLevel.levelWithName(loglevel.get()))
             observers = [
-                FilteringLogObserver(textFileLogObserver(sys.stderr), [predicate]),
-                FilteringLogObserver(textFileLogObserver(logging_file), [predicate])
-            ]
+                FilteringLogObserver(
+                    textFileLogObserver(
+                        sys.stderr), [predicate]), FilteringLogObserver(
+                    textFileLogObserver(logging_file), [predicate])]
             globalLogBeginner.beginLoggingTo(observers)
             log.info('piqueserver started on %s' % time.strftime('%c'))
 
@@ -312,7 +356,10 @@ class FeatureProtocol(ServerProtocol):
                 self.bans.read_list(json.load(f))
             log.debug("loaded {count} bans", count=len(self.bans))
         except FileNotFoundError:
-            log.debug("skip loading bans: file unavailable", count=len(self.bans))
+            log.debug(
+                "skip loading bans: file unavailable",
+                count=len(
+                    self.bans))
         except IOError as e:
             log.error('Could not read bans.txt: {}'.format(e))
         except ValueError as e:
@@ -455,7 +502,7 @@ class FeatureProtocol(ServerProtocol):
         log.info('Public aos identifier: {}'.format(self.identifier))
 
     def set_time_limit(self, time_limit: Optional[bool] = None, additive:
-                       bool=False) -> Optional[int]:
+                       bool = False) -> Optional[int]:
         advance_call = self.advance_call
         add_time = 0.0
         if advance_call is not None:
@@ -597,7 +644,8 @@ class FeatureProtocol(ServerProtocol):
         if self.master_connection is not None:
             self.master_connection.send_server()
 
-    def format(self, value: str, extra: Optional[Dict[str, str]] = None) -> str:
+    def format(self, value: str,
+               extra: Optional[Dict[str, str]] = None) -> str:
         map_info = self.map_info
         format_dict = {
             'map_name': map_info.name,
@@ -664,7 +712,7 @@ class FeatureProtocol(ServerProtocol):
         # send shutdown notification
         self.broadcast_chat("Server shutting down in 3sec.")
         for i in range(1, 4):
-            self.broadcast_chat(str(i)+"...")
+            self.broadcast_chat(str(i) + "...")
             yield sleep(1)
 
         # disconnect all players
@@ -695,7 +743,6 @@ class FeatureProtocol(ServerProtocol):
                  ip=ip, results=results)
         self.save_bans()
 
-
     def vacuum_bans(self):
         """remove any bans that might have expired. This takes a while, so it is
         split up over the event loop"""
@@ -719,9 +766,11 @@ class FeatureProtocol(ServerProtocol):
                     # expired
                     del self.bans[ban[0]]
                 yield
-            log.debug("ban vacuum took {time:.2f} seconds, removed {count} bans",
-                      count=bans_count - len(self.bans),
-                      time=time.time() - start_time)
+            log.debug(
+                "ban vacuum took {time:.2f} seconds, removed {count} bans",
+                count=bans_count - len(
+                    self.bans),
+                time=time.time() - start_time)
             self.save_bans()
 
         # TODO: use cooperate() here instead, once you figure out why it's
@@ -758,7 +807,8 @@ class FeatureProtocol(ServerProtocol):
             if data == b'HELLO':
                 self.host.socket.send(address, b'HI')
                 return 1
-            # reply to ASCII HELLOLAN messages with server data for LAN discovery
+            # reply to ASCII HELLOLAN messages with server data for LAN
+            # discovery
             elif data == b'HELLOLAN':
                 # we might receive a HELLOLAN before the map has been loaded
                 # if so, return a dummy string instead
@@ -923,14 +973,18 @@ def run() -> None:
     # load and apply regular scripts
     script_names = scripts_option.get()
     script_dir = os.path.join(config.config_dir, 'scripts/')
-    script_objects = extensions.load_scripts_regular_extension(script_names, script_dir)
-    (protocol_class, connection_class) = extensions.apply_scripts(script_objects, config, FeatureProtocol, FeatureConnection)
+    script_objects = extensions.load_scripts_regular_extension(
+        script_names, script_dir)
+    (protocol_class, connection_class) = extensions.apply_scripts(
+        script_objects, config, FeatureProtocol, FeatureConnection)
 
     # load and apply the game_mode script
     game_mode_name = game_mode.get()
     game_mode_dir = os.path.join(config.config_dir, 'game_modes/')
-    game_mode_object = extensions.load_script_game_mode(game_mode_name, game_mode_dir)
-    (protocol_class, connection_class) = extensions.apply_scripts(game_mode_object, config, protocol_class, connection_class)
+    game_mode_object = extensions.load_script_game_mode(
+        game_mode_name, game_mode_dir)
+    (protocol_class, connection_class) = extensions.apply_scripts(
+        game_mode_object, config, protocol_class, connection_class)
 
     protocol_class.connection_class = connection_class
 
