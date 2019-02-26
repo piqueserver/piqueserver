@@ -7,7 +7,7 @@ from twisted.logger import Logger
 
 log = Logger()
 
-def check_scripts(scripts):
+def check_scripts(script_names):
     '''
     Ensures that there are no duplicate scripts in scripts
     :param scripts: list of scripts
@@ -15,7 +15,7 @@ def check_scripts(scripts):
     '''
     seen = set()
     dups = []
-    for script in scripts:
+    for script in script_names:
         if script in seen:
             dups.append(script)
         else:
@@ -25,6 +25,11 @@ def check_scripts(scripts):
         return False
     return True
 
+def check_game_mode(game_mode_name):
+    '''
+    Check if the game_mode is not a default one.
+    '''
+    return game_mode_name not in ('ctf', 'tc')
 
 def load_scripts(script_names, script_dir, script_type):
     '''
@@ -55,6 +60,21 @@ def load_scripts(script_names, script_dir, script_type):
                 script_names.remove(script)
 
     return script_objects
+
+def load_scripts_regular_extension(script_names, script_dir):
+    '''
+    Wrapper that load scripts in the case of regular extension scripts
+    '''
+    return load_scripts(script_names, script_dir, 'script')
+
+def load_script_game_mode(script_name, script_dir):
+    '''
+    Wrapper that load scripts in the case of the game mode script
+    '''
+    if check_game_mode(script_name):
+        return load_scripts(script_name, script_dir, 'gamemode')
+    return []
+
 
 def apply_scripts(scripts, config, protocol_class, connection_class):
     '''

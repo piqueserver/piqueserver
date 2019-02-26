@@ -923,14 +923,14 @@ def run() -> None:
     # load and apply regular scripts
     script_names = scripts_option.get()
     script_dir = os.path.join(config.config_dir, 'scripts/')
-    script_objects = extensions.load_scripts(script_names, script_dir, 'script')
+    script_objects = extensions.load_scripts_regular_extension(script_names, script_dir)
     (protocol_class, connection_class) = extensions.apply_scripts(script_objects, config, FeatureProtocol, FeatureConnection)
 
     # load and apply the game_mode script
     game_mode_name = game_mode.get()
     if game_mode_name not in ('ctf', 'tc'):
         game_mode_dir = os.path.join(config.config_dir, 'game_modes/')
-        game_mode_object = extensions.load_scripts(game_mode_name, game_mode_dir, 'gamemode')
+        game_mode_object = extensions.load_script_game_mode(game_mode_name, game_mode_dir)
         (protocol_class, connection_class) = extensions.apply_scripts(game_mode_object, config, protocol_class, connection_class)
 
     protocol_class.connection_class = connection_class
