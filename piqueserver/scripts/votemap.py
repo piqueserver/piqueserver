@@ -11,10 +11,9 @@ Commands
 
     [votemap]
     public_votes = true
-    extension_time = 15
+    extension_time = "15min"
     player_driven = false
     autoschedule = false
-    time = 120
     percentage = 80
 
 .. codeauthor:: James Hofmann a.k.a triplefox (GPL LICENSE)
@@ -28,14 +27,16 @@ from pyspades.common import prettify_timespan
 from piqueserver.map import check_rotation
 from piqueserver.scheduler import Scheduler
 from piqueserver.commands import command
-from piqueserver.config import config
+from piqueserver.config import config, cast_duration
 
 votemap_config = config.section('votemap')
 
 VOTEMAP_AUTOSCHEDULE_OPTION = votemap_config.option('autoschedule', 180)
-VOTEMAP_PUBLIC_VOTES_OPTION = votemap_config.option( 'public_votes', True)
-VOTEMAP_TIME_OPTION = votemap_config.option('time', 120)
-VOTEMAP_EXTENSION_TIME_OPTION = votemap_config.option('extension_time', 15)
+VOTEMAP_PUBLIC_VOTES_OPTION = votemap_config.option('public_votes', True)
+# godwhoa: This option gets loaded into votemap_time but that doesn't get used anywhere.
+VOTEMAP_TIME_OPTION = votemap_config.option('time', default="2min", cast=cast_duration)
+VOTEMAP_EXTENSION_TIME_OPTION = votemap_config.option('extension_time', default="15min",
+    cast=lambda x: cast_duration(x)/60)
 VOTEMAP_PLAYER_DRIVEN_OPTION = votemap_config.option('player_driven', False)
 VOTEMAP_PERCENTAGE_OPTION = votemap_config.option('percentage', 80)
 

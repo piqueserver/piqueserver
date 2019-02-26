@@ -31,6 +31,7 @@ from pyspades.constants import (
 )
 from piqueserver.commands import command, admin, get_player
 from piqueserver.config import config
+from piqueserver.utils import parse
 
 DISABLED, KICK, BAN, WARN_ADMIN = range(4)
 
@@ -47,10 +48,10 @@ WARN_INTERVAL_MINIMUM = 300
 
 # These controls are only used if banning is enabled
 # Time is given in minutes. Set to 0 for a permaban
-HEADSHOT_SNAP_BAN_DURATION = 1400
-HIT_PERCENT_BAN_DURATION = 1440
-KILLS_IN_TIME_BAN_DURATION = 2880
-MULTIPLE_BULLETS_BAN_DURATION = 10080
+HEADSHOT_SNAP_BAN_DURATION = parse("23hours")
+HIT_PERCENT_BAN_DURATION = parse("1day")
+KILLS_IN_TIME_BAN_DURATION = parse("2day")
+MULTIPLE_BULLETS_BAN_DURATION = parse("1week")
 
 # If more than or equal to this number of weapon hit packets are received
 # from the client in half the weapon delay time, then an aimbot is detected.

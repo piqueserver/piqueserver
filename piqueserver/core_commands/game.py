@@ -1,6 +1,8 @@
 import math
 import re
 from twisted.internet import reactor
+from piqueserver.config import cast_duration
+from pyspades.common import prettify_timespan
 from piqueserver.commands import command, CommandError, get_player, get_team, get_truthy
 
 
@@ -215,15 +217,17 @@ def global_chat(connection, value=None):
 
 
 @command('timelimit', admin_only=True)
-def set_time_limit(connection, value):
+def set_time_limit(connection, duration):
     """
     Set this game time limit
     /timelimit <duration>
     """
-    value = float(value)
+    limit = cast_duration(duration)
+    span = prettify_timespan(limit)
     protocol = connection.protocol
-    protocol.set_time_limit(value)
-    protocol.send_chat('Time limit set to %s' % value, irc=True)
+    # takes time in minutes
+    protocol.set_time_limit(limit/60)
+    protocol.send_chat('Time limit set to {}'.format(span), irc=True)
 
 
 @command(admin_only=True)

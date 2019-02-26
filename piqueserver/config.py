@@ -22,6 +22,7 @@ import sys
 
 import piqueserver
 import toml
+from piqueserver.utils import parse
 
 # supported config format constants to avoid typos
 DEFAULT_FORMAT = 'TOML'
@@ -289,3 +290,18 @@ class _Option():
 
 # the global instance to be used across all the codebase
 config = ConfigStore()
+
+
+def cast_duration(d) -> int:
+    """
+    casts duration(1min, 1hr) into seconds.
+    If input is an int it returns that unmodified.
+    """
+    if isinstance(d, int):
+        return d
+    if not isinstance(d, str):
+        raise ValueError("Invalid type")
+    seconds = parse(d)
+    if seconds is None:
+        raise ValueError("Invalid duration")
+    return seconds

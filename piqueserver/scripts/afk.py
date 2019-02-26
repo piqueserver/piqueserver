@@ -7,7 +7,7 @@ Options
 .. code-block:: guess
 
    [afk]
-   time_limit = 15 # in minutes
+   time_limit = "15min"
 
 .. codeauthor:: hompy
 """
@@ -16,7 +16,7 @@ from operator import attrgetter
 from twisted.internet import reactor
 from pyspades.common import prettify_timespan
 from piqueserver.commands import command, get_player, admin
-from piqueserver.config import config
+from piqueserver.config import config, cast_duration
 
 S_AFK_CHECK = '{player} has been inactive for {time}'
 S_NO_PLAYERS_INACTIVE = 'No players or connections inactive for {time}'
@@ -25,8 +25,7 @@ S_AFK_KICKED = ('{num_players} players kicked, {num_connections} connections '
 S_AFK_KICK_REASON = 'Inactive for {time}'
 
 afk_config = config.section('afk')
-time_limit_option = afk_config.option('time_limit', default=None, cast=lambda
-        n:None if n is None else n*60.0)
+time_limit_option = afk_config.option('time_limit', default="1hour", cast=cast_duration)
 
 def afk(connection, player):
     player = get_player(connection.protocol, player)
@@ -103,7 +102,7 @@ def apply_script(protocol, connection, config):
             return connection.on_user_login(self, user_type, verbose)
 
         def on_connect(self):
-            if time_limit and not self.local:
+            if not self.local:
                 self.afk_kick_call = reactor.callLater(
                     time_limit, self.afk_kick)
             self.last_activity = reactor.seconds()

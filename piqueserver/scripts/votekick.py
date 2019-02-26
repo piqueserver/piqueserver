@@ -20,8 +20,8 @@ Options
     # successfully votekick a player
     percentage = 35
 
-    # duration in minutes that votekicked player will be banned for
-    ban_duration = 30
+    # duration that votekicked player will be banned for
+    ban_duration = "30min"
 
     public_votes = true
 
@@ -32,7 +32,7 @@ Options
 from twisted.internet.reactor import seconds
 from piqueserver.scheduler import Scheduler
 from piqueserver.commands import command, admin, get_player, join_arguments, CommandError
-from piqueserver.config import config
+from piqueserver.config import config, cast_duration
 
 REQUIRE_REASON = True
 
@@ -70,7 +70,7 @@ S_REASON = 'Reason: {reason}'
 # register options
 VOTEKICK_CONFIG = config.section('votekick')
 REQUIRED_PERCENTAGE_OPTION = VOTEKICK_CONFIG.option('percentage', 35.0)
-BAN_DURATION_OPTION = VOTEKICK_CONFIG.option('ban_duration', 30.0)
+BAN_DURATION_OPTION = VOTEKICK_CONFIG.option('ban_duration', default="30min", cast=cast_duration)
 PUBLIC_VOTES_OPTION = VOTEKICK_CONFIG.option('public_votes', True)
 
 class VotekickFailure(Exception):
@@ -170,15 +170,15 @@ def togglevotekick(connection, *args):
 
 
 class Votekick(object):
-    duration = 120.0  # 2 minutes
-    interval = 2 * 60.0  # 3 minutes
-    ban_duration = 15.0
-    public_votes = True
+    timeout = 120.0  # 2 minutes
+    interval = 120.0  # 2 minutes
+    ban_duration = BAN_DURATION_OPTION.get()
+    public_votes = PUBLIC_VOTES_OPTION.get()
     schedule = None
 
-    def _get_votes_remaining(self):
+    @property
+    def votes_remaining(self) -> int:
         return self.protocol.get_required_votes() - len(self.votes) + 1
-    votes_remaining = property(_get_votes_remaining)
 
     @classmethod
     def start(cls, instigator, victim, reason=None):
@@ -229,7 +229,7 @@ class Votekick(object):
         instigator.send_chat(S_ANNOUNCE_SELF.format(victim=victim.name))
 
         schedule = Scheduler(protocol)
-        schedule.call_later(self.duration, self.end, S_RESULT_TIMED_OUT)
+        schedule.call_later(self.timeout, self.end, S_RESULT_TIMED_OUT)
         schedule.loop_call(30.0, self.send_chat_update)
         self.schedule = schedule
 
@@ -281,8 +281,6 @@ class Votekick(object):
 
 
 def apply_script(protocol, connection, config):
-    Votekick.ban_duration = BAN_DURATION_OPTION.get()
-    Votekick.public_votes = PUBLIC_VOTES_OPTION.get()
 
     class VotekickProtocol(protocol):
         votekick = None
