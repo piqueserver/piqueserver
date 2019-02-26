@@ -295,7 +295,7 @@ class FeatureConnection(ServerConnection):
                     self.send_chat('Switching teams is not allowed')
                     return False
                 if (self.last_switch is not None and
-                        reactor.seconds() - self.last_switch < teamswitch_interval * 60):
+                        reactor.seconds() - self.last_switch < teamswitch_interval):
                     self.send_chat(
                         'You must wait before switching teams again')
                     return False
@@ -381,7 +381,7 @@ class FeatureConnection(ServerConnection):
             message = '{} permabanned{}'.format(self.name, reason)
         else:
             message = '{} banned for {}{}'.format(self.name,
-                                              prettify_timespan(duration * 60), reason)
+                                              prettify_timespan(duration), reason)
         if self.protocol.on_ban_attempt(self, reason, duration):
             self.protocol.send_chat(message, irc=True)
             self.protocol.on_ban(self, reason, duration)

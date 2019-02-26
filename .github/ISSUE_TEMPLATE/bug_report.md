@@ -20,8 +20,9 @@ Steps to reproduce the behavior:
 **Expected behavior**
 A description of what you expected to happen.
 
-**Stack Trace**
+**Stack Trace or logs**
 <!-- If an error is displayed on the console, please upload it to gist.github.com, pastebin or a similar service and post the link here -->
+<!-- If you face issues with script or map loading, please attach the startup logs -->
 
 **Server (please complete the following information):**
  - OS/Version: [e.g. Ubuntu 18.04]

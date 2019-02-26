@@ -1,4 +1,5 @@
 import random
+import sys
 
 from twisted.logger import Logger
 
@@ -44,7 +45,9 @@ def version(connection):
     Tell you this server's piqueserver version
     /version
     """
-    return 'Server version is "%s"' % connection.protocol.server_version
+    import piqueserver
+    return 'Server version is "{}" on "{}"'.format(
+        piqueserver.__version__, sys.platform)
 
 
 @command()
@@ -54,10 +57,9 @@ def scripts(connection):
     /scripts
     """
     scripts = connection.protocol.config.get('scripts', [])
-    if len(scripts) > 0:
-        return 'Scripts enabled: %s' % (', '.join(scripts))
-    else:
+    if not scripts:
         return 'No scripts are enabled currently'
+    return 'Scripts enabled: %s' % (', '.join(scripts))
 
 
 @command('togglemaster', 'master', admin_only=True)

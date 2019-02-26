@@ -33,8 +33,8 @@ tips = [
   "Type /help for info & commands"
 ]
 
-# how often in minutes the tips should display
-tips_frequency = 5
+# how often the tips should display
+tips_frequency = "5min"
 
 # SERVER
 # set this if the server should register on the master server list
@@ -108,15 +108,15 @@ random_rotation = false
 # Examples: "piqueserver.game_modes.push", "mygame" (where you have config/game_modes/mygame.py)
 game_mode = "ctf"
 
-# TODO: document
-default_time_limit = 120
-# TODO: document
+# default time limit to set per map. When the time limit runs out, the map rotation is advanced
+default_time_limit = "2hours"
+# advances the map rotation when the game ends, if set to true
 advance_on_win = true
 
-# time in seconds before player respawns
+# time before player respawns
 # TODO: document how spawn time is calculated (it's not always the time given)
-# (default: 8)
-respawn_time = 16
+# (default: 8 seconds)
+respawn_time = "16sec"
 
 # if respawns should line up with each other (multiple players will respawn at
 # the same time instead of exactly the time from when they died
@@ -129,9 +129,9 @@ friendly_fire = false
 # griefers
 friendly_fire_on_grief = true
 
-# number of seconds a player is vulnerable to friendly fire if
+# duration a player is vulnerable to friendly fire if
 # friendly_fire_on_grief enabled
-grief_friendly_fire_time = 5
+grief_friendly_fire_time = "5sec"
 
 # If friendly fire should be enabled for the spade too. This is disabled by default,
 # because it frequently causes accidental teamkills
@@ -142,9 +142,9 @@ spade_teamkills_on_grief = false
 # The value is thus the maximum player number difference allowed between teams
 balanced_teams = 2
 
-# time in minutes players must wait before switching teams again
-# 0 disables cooldown time
-teamswitch_interval = 0
+# time players must wait before switching teams again
+# 0sec disables cooldown time
+teamswitch_interval = "0sec"
 # whether players are allowed to switch teams at all
 teamswitch_allowed = true
 
@@ -163,7 +163,7 @@ fall_damage = true
 # disable users ability to affect the map's initial blocks
 user_blocks_only = false
 
-# TODO
+# puts the player into god build mode automatically when entering god mode, if set to true
 set_god_build = false
 
 # time in seconds remaining when the time remaining should be announced
@@ -196,15 +196,15 @@ color = [ 0, 255, 0]
 # logging in as admin or trusted also disables being votekicked (if that script is enabled)
 # For security reasons, logins are disabled by default.
 #
-#admin = ["adminpass1", "adminpass2"]
+admin = ["adminpass1", "adminpass2"]
 #moderator = ["modpass"]
 #guard = ["guardpass"]
 #trusted = ["trustedpass"]
 
 
 [bans]
-# default duration in minutes a banned player will be banned for
-default_duration = 1440
+# default duration a banned player will be banned for
+default_duration = "1day"
 
 # location the bans are saved and loaded from
 #file = "bans.txt"
@@ -252,7 +252,7 @@ debug_log = false
 # directories are created as necessary
 logfile = "./logs/log.txt"
 
-# TODO: document
+# writes a new log file each day
 rotate_daily = true
 
 profile = false
@@ -310,7 +310,7 @@ chatprefix = "."
 
 # piqueserver.scripts.squad
 [squad]
-respawn_time = 32
+respawn_time = "32sec"
 size = 4
 auto_squad = false
 
@@ -330,8 +330,8 @@ rollback_on_game_end = false
 
 # piqueserver.scripts.afk
 [afk]
-# time in minutes a player must be inactive for to be auto-kicked for afk
-time_limit = 30
+# duration player must be inactive for to be auto-kicked for afk
+time_limit = "30min"
 
 
 # piqueserver.scripts.votekick
@@ -341,8 +341,8 @@ time_limit = 30
 # successfully votekick a player
 percentage = 35
 
-# duration in minutes that votekicked player will be banned for
-ban_duration = 30
+# duration that votekicked player will be banned for
+ban_duration = "30min"
 
 public_votes = true
 
@@ -355,10 +355,9 @@ public_votes = true
 public_votes = true
 
 # extend current map (meaning?)
-extension_time = 15
+extension_time = "15min"
 
 # players can initiate voting for a new map with /votemap
 player_driven = false
 autoschedule = false
-time = 120
 percentage = 80

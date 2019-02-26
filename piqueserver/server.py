@@ -48,25 +48,24 @@ from enet import Address, Packet, Peer
 
 import pyspades.debug
 from pyspades.server import (ServerProtocol, Team)
-from pyspades.common import encode
 from pyspades.constants import (CTF_MODE, TC_MODE, ERROR_SHUTDOWN)
 from pyspades.master import MAX_SERVER_NAME_SIZE
 from pyspades.tools import make_server_identifier
 from pyspades.bytes import NoDataLeft
 from pyspades.vxl import VXLData
 
-import piqueserver
 from piqueserver.scheduler import Scheduler
 from piqueserver import commands
 from piqueserver.map import Map, MapNotFound, check_rotation, RotationInfo
 from piqueserver.console import create_console
 from piqueserver.networkdict import NetworkDict
 from piqueserver.player import FeatureConnection
-from piqueserver.config import config
+from piqueserver.config import config, cast_duration
 from piqueserver import extensions
 
 # won't be used; just need to be executed
-import piqueserver.core_commands
+import piqueserver.core_commands  # pylint: disable=unused-import
+
 
 log = Logger()
 
@@ -90,7 +89,7 @@ team2_config = config.section('team2')
 
 bans_file = bans_config.option('file', default='bans.txt')
 bans_urls = bans_config.option('urls', [])
-respawn_time_option = config.option('respawn_time', default=8)
+respawn_time_option = config.option('respawn_time', default="8sec", cast=cast_duration)
 respawn_waves = config.option('respawn_waves', default=False)
 game_mode = config.option('game_mode', default='ctf')
 random_rotation = config.option('random_rotation', default=False)
@@ -100,8 +99,8 @@ loglevel = logging_config.option('loglevel', default='info')
 map_rotation = config.option('rotation', default=['classicgen', 'random'],
                              validate=lambda x: isinstance(x, list))
 default_time_limit = config.option(
-    'default_time_limit', default=20,
-    validate=lambda x: isinstance(x, (int, float)))
+    'default_time_limit', default="20min",
+    cast=lambda x: cast_duration(x)/60)
 cap_limit = config.option('cap_limit', default=10,
                           validate=lambda x: isinstance(x, (int, float)))
 advance_on_win = config.option('advance_on_win', default=False,
@@ -114,7 +113,7 @@ friendly_fire = config.option('friendly_fire', default=False)
 friendly_fire_on_grief = config.option('friendly_fire_on_grief',
                                        default=True)
 grief_friendly_fire_time = config.option('grief_friendly_fire_time',
-                                         default=2)
+                                         default='2sec', cast=cast_duration)
 spade_teamkills_on_grief = config.option('spade_teamkills_on_grief',
                                          default=False)
 time_announcements = config.option('time_announcements', default=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
@@ -122,9 +121,9 @@ time_announcements = config.option('time_announcements', default=[1, 2, 3, 4, 5,
                                                                   900, 1200, 1800, 2400, 3000])
 rights = config.option('rights', default={})
 port_option = config.option('port', default=32887,
-                            validate=lambda n: type(n) == int)
+                            validate=lambda n: isinstance(n, int))
 fall_damage = config.option('fall_damage', default=True)
-teamswitch_interval = config.option('teamswitch_interval', default=0)
+teamswitch_interval = config.option('teamswitch_interval', default="0sec", cast=cast_duration)
 teamswitch_allowed = config.option('teamswitch_allowed', default=True)
 max_players = config.option('max_players', default=20)
 melee_damage = config.option('melee_damage', default=100)
@@ -132,7 +131,7 @@ max_connections_per_ip = config.option('max_connections_per_ip', default=0)
 server_prefix = config.option('server_prefix', default='[*]')
 balanced_teams = config.option('balanced_teams', default=2)
 login_retries = config.option('login_retries', 1)
-default_ban_duration = bans_config.option('default_duration', default=24 * 60)
+default_ban_duration = bans_config.option('default_duration', default="1day", cast=cast_duration)
 speedhack_detect = config.option('speedhack_detect', True)
 user_blocks_only = config.option('user_blocks_only', False)
 debug_log_enabled = logging_config.option('debug_log', False)
@@ -145,7 +144,7 @@ status_server_enabled = config.section(
 ban_publish = bans_config.option('publish', False)
 ban_publish_port = bans_config.option('publish_port', 32885)
 logging_rotate_daily = logging_config.option('rotate_daily', False)
-tip_frequency = config.option('tips_frequency', 0)
+tip_frequency = config.option('tips_frequency', default="5sec", cast=lambda x: cast_duration(x)/60)
 register_master_option = config.option('master', False)
 
 # default to http for ip_getter on windows
@@ -272,8 +271,6 @@ class FeatureProtocol(ServerProtocol):
     game_mode = None  # default to None so we can check
     time_announce_schedule = None
 
-    server_version = '{} - {}'.format(sys.platform, piqueserver.__version__)
-
     default_fog = (128, 232, 255)
 
     def __init__(self, interface: bytes, config_dict: Dict[str, Any]) -> None:
@@ -299,7 +296,7 @@ class FeatureProtocol(ServerProtocol):
         if random_rotation.get():
             self.map_rotator_type = random_choice_cycle
         else:
-            self.map_rotator_type = itertools.cycle  # pylint: disable=redefined-variable-type
+            self.map_rotator_type = itertools.cycle
         self.default_time_limit = default_time_limit.get()
         self.default_cap_limit = cap_limit.get()
         self.advance_on_win = int(advance_on_win.get())
@@ -445,7 +442,7 @@ class FeatureProtocol(ServerProtocol):
             log.warn('External IP getter service returned invalid data.\n'
                      'Please check the "ip_getter" setting in your config.')
             return
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-except
             log.warn("Getting external IP failed: {reason}", reason=e)
             return
 
@@ -454,7 +451,7 @@ class FeatureProtocol(ServerProtocol):
         log.info('Server public ip address: {}:{}'.format(ip, self.port))
         log.info('Public aos identifier: {}'.format(self.identifier))
 
-    def set_time_limit(self, time_limit: Optional[bool] = None, additive:
+    def set_time_limit(self, time_limit: Optional[int] = None, additive:
                        bool=False) -> Optional[int]:
         advance_call = self.advance_call
         add_time = 0.0
@@ -466,12 +463,12 @@ class FeatureProtocol(ServerProtocol):
         if not time_limit:
             for call in self.end_calls[:]:
                 call.set(None)
-            return
+            return None
 
         if additive:
             time_limit = min(time_limit + add_time, self.default_time_limit)
 
-        seconds = time_limit * 60.0
+        seconds = time_limit * 60
         self.advance_call = reactor.callLater(seconds, self._time_up)
 
         for call in self.end_calls[:]:
@@ -674,7 +671,7 @@ class FeatureProtocol(ServerProtocol):
 
     def add_ban(self, ip, reason, duration, name=None):
         """
-        Ban an ip with an optional reason and duration in minutes. If duration
+        Ban an ip with an optional reason and duration in seconds. If duration
         is None, ban is permanent.
         """
         network = ip_network(str(ip), strict=False)
@@ -683,7 +680,7 @@ class FeatureProtocol(ServerProtocol):
                 name = connection.name
                 connection.kick(silent=True)
         if duration:
-            duration = reactor.seconds() + duration * 60
+            duration = reactor.seconds() + duration
         else:
             duration = None
         self.bans[ip] = (name or '(unknown)', reason, duration)

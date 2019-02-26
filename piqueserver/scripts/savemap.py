@@ -15,7 +15,7 @@ Options
 import os
 from twisted.internet import reactor, threads
 from twisted.internet.defer import ensureDeferred
-from twisted.logger  import Logger()
+from twisted.logger  import Logger
 from pyspades.vxl import VXLData
 from piqueserver.config import config
 
