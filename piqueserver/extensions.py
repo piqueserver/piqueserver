@@ -3,6 +3,10 @@ import os
 import importlib
 import imp
 
+from twisted.logger import Logger
+
+log = Logger()
+
 def check_scripts(scripts):
     '''
     Ensures that there are no duplicate scripts in scripts
@@ -17,17 +21,17 @@ def check_scripts(scripts):
         else:
             seen.add(script)
     if dups:
-        #log.warn("Scripts included multiple times: {}".format(dups)) TODO: Pass logger object to this function
+        log.warn("Scripts included multiple times: {}".format(dups))
         return False
     return True
 
-def load_scripts(script_names, script_dir, script_type, log=None):
+
+def load_scripts(script_names, script_dir, script_type):
     '''
     Loads all scripts from the script_dir folder
     :param script_names: A list of script names
     :param script_dir: Path to scripts directory
     :param script_type: A string; "script" for regular scripts and "gamemode" for game_mode script
-    :param log: A logger object for logging
     :return: A list of script modules
     '''
     script_objects = []
@@ -47,8 +51,7 @@ def load_scripts(script_names, script_dir, script_type, log=None):
                 module = importlib.import_module(script)
                 script_objects.append(module)
             except ImportError as e:
-                if (log != None):
-                    log.error("(" + script_type + "'{}' not found: {!r})".format(script, e))
+                log.error("(" + script_type + "'{}' not found: {!r})".format(script, e))
                 script_names.remove(script)
 
     return script_objects
