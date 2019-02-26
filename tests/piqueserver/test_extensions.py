@@ -18,7 +18,7 @@ class TestExtensions(unittest.TestCase):
     curr_dir = os.getcwd()
     script_dir = os.path.join(curr_dir, 'piqueserver/test_scripts/')
     # Load modules
-    script_objects = extensions.load_scripts(script_names, script_dir)
+    script_objects = extensions.load_scripts(script_names, script_dir, 'testscript')
 
     def test_checkscripts(self):
         scripts = []
