@@ -4,8 +4,8 @@ Shows a detailed analysis of a players shots
 Commands
 ^^^^^^^^
 
-* ``/analyze or /an <target>`` to show a detailed analysis of a players shots if they hit someone. 
-  Shows hit player, distance, dT in milliseconds (Delta Time- Time since previous shot that hit someone. 
+* ``/analyze or /an <target>`` to show a detailed analysis of a players shots if they hit someone.
+  Shows hit player, distance, dT in milliseconds (Delta Time- Time since previous shot that hit someone.
   Useful for detecting multiple bullet or rapid hacks), weapon, which body part it hit, and a basic counter that displays the number of hits of that type.
 
 * ``/analyze or /an`` to disable it
@@ -27,27 +27,28 @@ def analyze_shot(connection, player=None):
     if player is None:
         if connection.name in protocol.analyzers:
             del protocol.analyzers[connection.name]
-            connection.send_chat('You are no longer analyzing anyone.')
-        else:
-            connection.send_chat('Please enter a target player to analyze.')
-    elif player is not None:
-        player = get_player(protocol, player)
-        if player not in protocol.players:
-            raise ValueError()
-        else:
-            if connection.name in protocol.analyzers and player.name == protocol.analyzers[connection.name]:
-                del protocol.analyzers[connection.name]
-                connection.send_chat('You are no longer analyzing anyone.')
-            elif connection.name in protocol.analyzers and player.name != protocol.analyzers[connection.name]:
-                connection.send_chat('You are no longer analyzing %s.  You are now analyzing %s.' % (
-                    protocol.analyzers[connection.name], player.name))
-                protocol.analyzers[connection.name] = player.name
-                connection.hs, connection.bs, connection.ls = 0, 0, 0
-            elif not connection.name in protocol.analyzers:
-                protocol.analyzers[connection.name] = player.name
-                connection.send_chat(
-                    'You are now analyzing %s' % (player.name))
-                connection.hs, connection.bs, connection.ls = 0, 0, 0
+            return 'You are no longer analyzing anyone.'
+
+        return 'Please enter a target player to analyze.'
+
+    player = get_player(protocol, player)
+    if player not in protocol.players:
+        raise ValueError()  # FIXME: proper error
+
+    if connection.name in protocol.analyzers:
+        if player.name == protocol.analyzers[connection.name]:
+            del protocol.analyzers[connection.name]
+            return 'You are no longer analyzing anyone.'
+
+        protocol.analyzers[connection.name] = player.name
+        connection.hs, connection.bs, connection.ls = 0, 0, 0
+        return (
+            'You are no longer analyzing {}. You are now analyzing {}.'.format(
+                protocol.analyzers[connection.name], player.name))
+
+    protocol.analyzers[connection.name] = player.name
+    connection.hs, connection.bs, connection.ls = 0, 0, 0
+    return 'You are now analyzing {}'.format(player.name)
 
 body_damage_values = [49, 29, 27]
 limb_damage_values = [33, 18, 16]
