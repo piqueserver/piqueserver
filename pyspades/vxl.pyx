@@ -90,6 +90,11 @@ cdef class VXLData:
             return None
         return make_color_tuple(get_color(x, y, z, self.map))
 
+    def is_valid_position(self, int x, int y, int z):
+        """return if the value is a valid position within the bounds of the
+        map"""
+        return is_valid_position(x, y, z)
+
     cpdef int get_z(self, int x, int y, int start = 0):
         '''
         Returns the first z coordinate that is solid beginning from `start` and

@@ -15,9 +15,9 @@ from pyspades.protocol import BaseConnection
 from pyspades.constants import (
     RAPID_WINDOW_ENTRIES, ERROR_FULL, ERROR_WRONG_VERSION,
     ERROR_TOO_MANY_CONNECTIONS, FALL_KILL, CTF_MODE, TC_MODE,
-    MAX_POSITION_RATE, TC_CAPTURE_DISTANCE, WEAPON_TOOL, SPADE_TOOL, MELEE,
-    HIT_TOLERANCE, MELEE_DISTANCE, MELEE_KILL, HEAD,
-    HEADSHOT_KILL, WEAPON_KILL)
+    MAX_POSITION_RATE, TC_CAPTURE_DISTANCE, WEAPON_TOOL, SPADE_TOOL,
+    BLOCK_TOOL, MELEE, HIT_TOLERANCE, MELEE_DISTANCE, MELEE_KILL, HEAD,
+    HEADSHOT_KILL, WEAPON_KILL, MAX_BLOCK_DISTANCE)
 from pyspades.team import Team
 from pyspades.constants import *
 from pyspades.packet import call_packet_handler, register_packet_handler
@@ -137,6 +137,7 @@ class ServerConnection(BaseConnection):
         self.respawn_time = protocol.respawn_time
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
         self.client_info = {}
+        self.line_build_start_pos = None
 
     def on_connect(self) -> None:
         if self.local:
@@ -295,12 +296,26 @@ class ServerConnection(BaseConnection):
         primary = contained.primary
         secondary = contained.secondary
         if self.world_object.primary_fire != primary:
+            # player has pressed or released primary fire
             if self.tool == WEAPON_TOOL:
                 self.weapon_object.set_shoot(primary)
             if self.tool == WEAPON_TOOL or self.tool == SPADE_TOOL:
                 self.on_shoot_set(primary)
+
         if self.world_object.secondary_fire != secondary:
+            # player has pressed or released secondary fire
             self.on_secondary_fire_set(secondary)
+
+            if secondary and self.tool == BLOCK_TOOL:
+                # hook into here to save the start location of the line build.
+                # This is needed so we can check if the player was actually at
+                # the starting location of the line build when it was started.
+                # this is inspired by 1AmYF's fbpatch2.py script
+                position = self.world_object.position
+                self.line_build_start_pos = position.copy()
+                self.on_line_build_start()
+
+        # remember the current state of the mouse buttons
         self.world_object.primary_fire = primary
         self.world_object.secondary_fire = secondary
         if self.filter_weapon_input:
@@ -554,25 +569,47 @@ class ServerConnection(BaseConnection):
     @register_packet_handler(loaders.BlockLine)
     def on_block_line_recieved(self, contained):
         if not self.hp:
-            return
+            return  # dead players can't build
+
+        map_ = self.protocol.map
+
         x1, y1, z1 = (contained.x1, contained.y1, contained.z1)
         x2, y2, z2 = (contained.x2, contained.y2, contained.z2)
         pos = self.world_object.position
+        start_pos = self.line_build_start_pos
+
+        if (not map_.is_valid_position(x1, y1, z1)
+                or not map_.is_valid_position(x2, y2, z2)):
+            return  # coordinates are out of bounds
+
+        # ensure that the player is currently within tolerance of the location
+        # that the line build ended at
         if not collision_3d(pos.x, pos.y, pos.z, x2, y2, z2,
                             MAX_BLOCK_DISTANCE):
             return
+
+        # ensure that the player was within tolerance of the location
+        # that the line build started at
+        if not collision_3d(start_pos.x, start_pos.y, start_pos.z, x1, y1, z1,
+                            MAX_BLOCK_DISTANCE):
+            return
+
         points = world.cube_line(x1, y1, z1, x2, y2, z2)
+
         if not points:
             return
+
         if len(points) > (self.blocks + BUILD_TOLERANCE):
             return
-        map = self.protocol.map
-        if self.on_line_build_attempt(points) == False:
+
+        if self.on_line_build_attempt(points) is False:
             return
+
         for point in points:
             x, y, z = point
-            if not map.build_point(x, y, z, self.color):
+            if not map_.build_point(x, y, z, self.color):
                 break
+
         self.blocks -= len(points)
         self.on_line_build(points)
         contained.player_id = self.player_id
@@ -1252,6 +1289,10 @@ class ServerConnection(BaseConnection):
 
     def on_block_build(self, x, y, z):
         pass
+
+    def on_line_build_start(self):
+        """called when the player has pressed the mouse button to start
+        line-building"""
 
     def on_line_build_attempt(self, points):
         pass
