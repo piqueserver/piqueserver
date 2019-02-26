@@ -3,6 +3,10 @@ import os
 import importlib
 import imp
 
+from twisted.logger import Logger
+
+log = Logger()
+
 def check_scripts(scripts):
     '''
     Ensures that there are no duplicate scripts in scripts
@@ -22,12 +26,11 @@ def check_scripts(scripts):
     return True
 
 
-def load_scripts(config, script_names, log=None):
+def load_scripts(config, script_names):
     '''
     Loads all scripts from the script/ folder
     :param config: A config object containing the config directory
     :param script_names: An list of script names
-    :param log: A logger object for logging
     :return: A list of script modules
     '''
     script_objects = []
@@ -48,8 +51,7 @@ def load_scripts(config, script_names, log=None):
                 module = importlib.import_module(script)
                 script_objects.append(module)
             except ImportError as e:
-                if (log != None):
-                    log.error("(script '{}' not found: {!r})".format(script, e))
+                log.error("(script '{}' not found: {!r})".format(script, e))
                 script_names.remove(script)
 
     return script_objects
@@ -70,13 +72,12 @@ def apply_scripts(scripts, config, protocol_class, connection_class):
 
     return (protocol_class, connection_class)
 
-def apply_gamemode_script(current_game_mode, config, protocol_class, connection_class, log=None):
+def apply_gamemode_script(current_game_mode, config, protocol_class, connection_class):
     '''
     :param current_game_mode: The current game mode of the server
     :param config: A configuration object containing the directory where the game mode scripts are located
     :param protocol_class: The protocol class instance to update
     :param connection_class: The connection class instance to update
-    :param log: A log object for logging
     :return: The updated progocol and connection class instances
     '''
     if current_game_mode not in ('ctf', 'tc'):
@@ -92,8 +93,7 @@ def apply_gamemode_script(current_game_mode, config, protocol_class, connection_
             try:
                 module = importlib.import_module(current_game_mode)
             except ImportError as e:
-                if (log != None):
-                    log.error("(game_mode '%s' not found: %r)" %
+                log.error("(game_mode '%s' not found: %r)" %
                               (current_game_mode, e))
 
         if module:

@@ -921,11 +921,11 @@ def run() -> None:
     """
 
     # load and apply scripts
-    script_objects = extensions.load_scripts(config, scripts_option.get(), log=log)
+    script_objects = extensions.load_scripts(config, scripts_option.get())
     (protocol_class, connection_class) = extensions.apply_scripts(script_objects, config, FeatureProtocol, FeatureConnection)
 
     # apply the game_mode script
-    (protocol_class, connection_class) = extensions.apply_gamemode_script(game_mode.get(), config, protocol_class, connection_class, log=log)
+    (protocol_class, connection_class) = extensions.apply_gamemode_script(game_mode.get(), config, protocol_class, connection_class)
 
     protocol_class.connection_class = connection_class
 
