@@ -237,7 +237,19 @@ cdef class Vertex3:
         cdef Vector * a = self.value
         return sqrt(a.x * a.x + a.y * a.y + a.z * a.z)
 
+    def distance(self, Vertex3 other):
+        """calculate euclidean (straight line) distance between two `Vertex3` as
+        points in 3d space. Equivalent to ``(a - b).length()``."""
+        cdef Vector * a = self.value
+        cdef Vector * b = other.value
+        x = a.x - b.x
+        y = a.y - b.y
+        z = a.z - b.z
+        return sqrt(x**2 + y**2 + z**2)
+
     def length_sqr(self):
+        """calculate the square length of the vertex3. This is a bit faster than
+        getting the length, as it avoids the expensive `sqrt` call."""
         cdef Vector * a = self.value
         return a.x * a.x + a.y * a.y + a.z * a.z
 
