@@ -141,6 +141,7 @@ setup(
         PKG_NAME: 'piqueserver',
         '%s.core_commands' % PKG_NAME: 'piqueserver/core_commands',
         '%s.web' % PKG_NAME: 'piqueserver/web',
+        '%s.utils' % PKG_NAME: 'piqueserver/utils',
         '%s.scripts' % PKG_NAME: 'piqueserver/scripts',
         '%s.game_modes' % PKG_NAME: 'piqueserver/game_modes',
         'pyspades': 'pyspades',

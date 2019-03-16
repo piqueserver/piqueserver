@@ -229,8 +229,13 @@ def main():
 
     config.config_file = config_file
     print('Loading config from {!r}'.format(config_file))
-    with open(config_file) as fobj:
-        config.load_from_file(fobj, format_=format_)
+    try:
+        with open(config_file) as fobj:
+            config.load_from_file(fobj, format_=format_)
+    except FileNotFoundError as e:
+        print("Could not open Config file")
+        print(e)
+        return
 
     # update config with cli overrides
     if args.json_parameters:
