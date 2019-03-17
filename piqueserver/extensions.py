@@ -117,7 +117,7 @@ def load_script_game_mode(script_name, script_dir):
 
     '''
     if check_game_mode(script_name):
-        return load_scripts(script_name, script_dir, 'gamemode')
+        return load_scripts([script_name], script_dir, 'gamemode')
     return []
 
 
