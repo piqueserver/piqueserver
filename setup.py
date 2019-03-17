@@ -80,7 +80,7 @@ class build_ext(_build_ext):
 
 setup(
     name=PKG_NAME,
-    packages=[PKG_NAME, '%s.web' % PKG_NAME,
+    packages=[PKG_NAME, '%s.web' % PKG_NAME, '%s.utils' % PKG_NAME,
         '%s.scripts' % PKG_NAME, '%s.game_modes' % PKG_NAME,
         '%s.core_commands' % PKG_NAME, 'pyspades'],
     version=version['__version__'],
