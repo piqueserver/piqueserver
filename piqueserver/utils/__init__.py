@@ -1,1 +1,1 @@
-from .timeparse import timeparse as parse
+from ._timeparse import timeparse

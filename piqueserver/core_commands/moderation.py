@@ -7,7 +7,7 @@ from pyspades.common import (
     prettify_timespan,
     make_color)
 from piqueserver.commands import command, CommandError, get_player, join_arguments
-from piqueserver.utils import parse
+from piqueserver.utils import timeparse
 
 # aparently, we need to send packets in this file. For now, I give in.
 kill_action = KillAction()
@@ -39,7 +39,7 @@ def get_ban_arguments(connection, args):
     if args[0].isdigit():  # all digits == duration in minutes
         duration = int(args[0]) * 60
     elif has_digits(args[0]):  # if it contains some digits maybe duration?
-        duration = parse(args[0])
+        duration = timeparse(args[0])
         if not duration:
             raise ValueError("Invalid duration")
     else:  # maybe just one long reason
@@ -77,7 +77,7 @@ def hban(connection, value, *arg):
     Ban a given player for an hour
     /hban <player> [reason]
     """
-    duration = parse("1hour")
+    duration = timeparse("1hour")
     reason = join_arguments(arg)
     player = get_player(connection.protocol, value)
     player.ban(reason, duration)
@@ -89,7 +89,7 @@ def dban(connection, value, *arg):
     Ban a given player for one day
     /dban <player> [reason]
     """
-    duration = parse("1day")
+    duration = timeparse("1day")
     reason = join_arguments(arg)
     player = get_player(connection.protocol, value)
     player.ban(reason, duration)
@@ -101,7 +101,7 @@ def wban(connection, value, *arg):
     Ban a given player for one week
     /wban <player> [reason]
     """
-    duration = parse("1week")
+    duration = timeparse("1week")
     reason = join_arguments(arg)
     player = get_player(connection.protocol, value)
     player.ban(reason, duration)

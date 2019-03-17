@@ -11,7 +11,7 @@ Unit tests for the `timeparse` module.
 import doctest
 import re
 import unittest
-from piqueserver.utils import timeparse
+from piqueserver.utils import _timeparse as timeparse
 
 class TestTimeparse(unittest.TestCase):
     '''

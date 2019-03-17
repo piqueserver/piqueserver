@@ -22,7 +22,7 @@ import sys
 
 import piqueserver
 import toml
-from piqueserver.utils import parse
+from piqueserver.utils import timeparse
 
 # supported config format constants to avoid typos
 DEFAULT_FORMAT = 'TOML'
@@ -301,7 +301,7 @@ def cast_duration(d) -> int:
         return d
     if not isinstance(d, str):
         raise ValueError("Invalid type")
-    seconds = parse(d)
+    seconds = timeparse(d)
     if seconds is None:
         raise ValueError("Invalid duration")
     return seconds
