@@ -235,7 +235,7 @@ def main():
     except FileNotFoundError as e:
         print("Could not open Config file")
         print(e)
-        return
+        return e.errno
 
     # update config with cli overrides
     if args.json_parameters:
