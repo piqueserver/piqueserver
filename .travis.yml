@@ -17,6 +17,7 @@ script:
   - python setup.py develop
   - pytest --cov=piqueserver --cov=pyspades
   - travis_retry coveralls
+  - ./scripts/smoketest -t 25
   # - pylint piqueserver
   # - pylint pyspades
 
