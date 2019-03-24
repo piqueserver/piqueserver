@@ -16,7 +16,7 @@ from pyspades.player import create_player, player_left, intel_capture
 from pyspades.constants import *
 
 ATTACKER_TEAM = 1  # 0 = blue, 1 = green
-ATTACKER_TO_DEFENDER_RATIO = 2.0
+ATTACKER_TO_DEFENDER_RATIO = 1.6
 ATTACKER_SCORE_MULTIPLIER = 10
 DEFENDER_SCORE_INTERVAL = 30  # seconds
 ON_FLAG_TAKE_FLASHES_FOG = True
