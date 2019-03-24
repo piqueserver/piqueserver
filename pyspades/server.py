@@ -228,10 +228,12 @@ class ServerProtocol(BaseProtocol):
 
     def update_network(self):
         items = []
+        highest_player_id = 0
         for i in range(32):
             position = orientation = None
             try:
                 player = self.players[i]
+                highest_player_id = i
                 if (not player.filter_visibility_data and
                         not player.team.spectator):
                     world_object = player.world_object
@@ -243,7 +245,9 @@ class ServerProtocol(BaseProtocol):
                 position = (0.0, 0.0, 0.0)
                 orientation = (0.0, 0.0, 0.0)
             items.append((position, orientation))
-        world_update.items = items
+        # we only want to send as many items of the player list as needed, so
+        # we slice it off at the highest player id
+        world_update.items = items[:highest_player_id+1]
         self.send_contained(world_update, unsequenced=True)
 
     def set_map(self, map_obj):
