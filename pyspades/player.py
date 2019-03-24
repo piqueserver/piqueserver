@@ -514,7 +514,7 @@ class ServerConnection(BaseConnection):
             if self.rapids.check():
                 start, end = self.rapids.get()
                 if end - start < MAX_RAPID_SPEED:
-                    log.info('RAPID HACK:', self.rapids.window)
+                    log.info('RAPID HACK: {window}', window=self.rapids.window)
                     self.on_hack_attempt('Rapid hack detected')
             return
         map = self.protocol.map
