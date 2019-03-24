@@ -22,23 +22,10 @@
 #include "vxl_c.h"
 
 // from vxl.h
-#define CHUNK 1023 //zlib buffer size
-#define VSIDSQM (VSIDSQ - 1)
-#define MAXSCANDIST 128
-#define MAXSCANSQ (MAXSCANDIST * MAXSCANDIST)
-#define VOXSIZ (VSIDSQ * MAXZDIM)
-#define SCPITCH 128
-#define SQRT 0.70710678f
-#define MINERANGE 3
 #define MAXZDIM 64 //Maximum .VXL dimensions in z direction (height)
-#define MAXZDIMM (MAXZDIM - 1)
-#define MAXZDIMMM (MAXZDIM - 2)
-#define PORT 32887
-#define GRID_SIZE 64
 #define FALL_SLOW_DOWN 0.24f
 #define FALL_DAMAGE_VELOCITY 0.58f
 #define FALL_DAMAGE_SCALAR 4096
-#define MINERANGE 3
 #define WEAPON_PRIMARY 1
 
 // common.h
@@ -158,7 +145,7 @@ long isvoxelsolidwrap(long x, long y, long z)
         return 0;
     else if (z >= 64)
         return 1;
-    return get_solid((int)x & VSIDM, (int)y & VSIDM, z, global_map);
+    return get_solid((int)x & VXL_MAX_SIZEM, (int)y & VSIDM, z, global_map);
 }
 
 //same as isvoxelsolid but water is empty
@@ -394,106 +381,120 @@ long cast_ray(MapData *map, float x0, float y0, float z0, float x1, float y1,
 size_t cube_line(int x1, int y1, int z1, int x2, int y2, int z2,
                  LongVector *cube_array)
 {
-    //Note: positions MUST be rounded towards -inf
-    LongVector c;
-    c.x = x1;
-    c.y = y1;
-    c.z = z1;
+    printf("pre!\n");
+    // Note: positions MUST be rounded towards -inf
+    // Cursor starts at the starting location
+    LongVector cursor;
+    cursor.x = x1;
+    cursor.y = y1;
+    cursor.z = z1;
 
-    LongVector d;
-    d.x = x2 - x1;
-    d.y = y2 - y1;
-    d.z = z2 - z1;
+    // distance to move in each axis
+    LongVector dist;
+    dist.x = x2 - x1;
+    dist.y = y2 - y1;
+    dist.z = z2 - z1;
 
-    long ixi, iyi, izi;
-    if (d.x < 0)
-        ixi = -1;
-    else
-        ixi = 1;
-    if (d.y < 0)
-        iyi = -1;
-    else
-        iyi = 1;
-    if (d.z < 0)
-        izi = -1;
-    else
-        izi = 1;
+    // direction to move in each axis
+    LongVector dir;
+    dir.x = dist.x < 0 ? -1 : 1;
+    dir.y = dist.y < 0 ? -1 : 1;
+    dir.z = dist.z < 0 ? -1 : 1;
 
     long dx, dy, dz, dxi, dyi, dzi;
 
-    // LongVector is a vector of `long` ints so we use `labs` explicitly
-    if ((labs(d.x) >= labs(d.y)) && (labs(d.x) >= labs(d.z)))
+    using std::abs;
+
+    if ((abs(dist.x) >= abs(dist.y)) && (abs(dist.x) >= abs(dist.z)))
     {
         dxi = 1024;
         dx = 512;
-        dyi = (long)(!d.y ? 0x3fffffff / VSID : labs(d.x * 1024 / d.y));
+        dyi = (long)(!dist.y ? 0x3fffffff / VXL_MAX_SIZE : abs(dist.x * 1024 / dist.y));
         dy = dyi / 2;
-        dzi = (long)(!d.z ? 0x3fffffff / VSID : labs(d.x * 1024 / d.z));
+        dzi = (long)(!dist.z ? 0x3fffffff / VXL_MAX_SIZE : abs(dist.x * 1024 / dist.z));
         dz = dzi / 2;
     }
-    else if (labs(d.y) >= labs(d.z))
+    else if (abs(dist.y) >= abs(dist.z))
     {
         dyi = 1024;
         dy = 512;
-        dxi = (long)(!d.x ? 0x3fffffff / VSID : labs(d.y * 1024 / d.x));
+        dxi = (long)(!dist.x ? 0x3fffffff / VXL_MAX_SIZE : abs(dist.y * 1024 / dist.x));
         dx = dxi / 2;
-        dzi = (long)(!d.z ? 0x3fffffff / VSID : labs(d.y * 1024 / d.z));
+        dzi = (long)(!dist.z ? 0x3fffffff / VXL_MAX_SIZE : abs(dist.y * 1024 / dist.z));
         dz = dzi / 2;
     }
     else
     {
         dzi = 1024;
         dz = 512;
-        dxi = (long)(!d.x ? 0x3fffffff / VSID : labs(d.z * 1024 / d.x));
+        dxi = (long)(!dist.x ? 0x3fffffff / VXL_MAX_SIZE : abs(dist.z * 1024 / dist.x));
         dx = dxi / 2;
-        dyi = (long)(!d.y ? 0x3fffffff / VSID : labs(d.z * 1024 / d.y));
+        dyi = (long)(!dist.y ? 0x3fffffff / VXL_MAX_SIZE : abs(dist.z * 1024 / dist.y));
         dy = dyi / 2;
     }
-    if (ixi >= 0)
+    if (dir.x >= 0)
         dx = dxi - dx;
-    if (iyi >= 0)
+    if (dir.y >= 0)
         dy = dyi - dy;
-    if (izi >= 0)
+    if (dir.z >= 0)
         dz = dzi - dz;
 
     size_t count = 0;
+    printf("start!\n");
 
     while (1)
     {
-        cube_array[count] = c;
+        cube_array[count] = cursor;
 
-        if (count++ == CUBE_ARRAY_LENGTH)
+        printf("count %lu\n", count);
+        printf("cursor %ld %ld %ld\n", cursor.x, cursor.y, cursor.z);
+        printf("dxi %ld dx %ld\n", dxi, dx);
+        printf("dyi %ld dy %ld\n", dyi, dy);
+        printf("dzi %ld dz %ld\n", dzi, dz);
+        count++;
+
+        if (count >= CUBE_ARRAY_LENGTH)
             return count;
 
-        if (c.x == x2 &&
-            c.y == y2 &&
-            c.z == z2)
+        if (cursor.x == x2 &&
+            cursor.y == y2 &&
+            cursor.z == z2) {
+            printf("end\n");
+            // we have reached the end block
             return count;
+        }
 
+        printf("dz-dx %ld dz-dy %ld\n", dz - dx, dz - dy);
         if ((dz <= dx) && (dz <= dy))
         {
-            c.z += izi;
-            if (c.z < 0 || c.z >= MAXZDIM)
+            printf("z inc\n");
+            cursor.z += dir.z;
+            if (cursor.z < 0 || cursor.z >= MAXZDIM)
+                // we have reached the z bounds of the map
                 return count;
             dz += dzi;
         }
         else
         {
+            printf("dx-dy %ld\n", dx - dy);
             if (dx < dy)
             {
-                c.x += ixi;
-                if ((unsigned long)c.x >= VSID)
+                printf("x inc\n");
+                cursor.x += dir.x;
+                if ((unsigned long)cursor.x >= VXL_MAX_SIZE)
                     return count;
                 dx += dxi;
             }
             else
             {
-                c.y += iyi;
-                if ((unsigned long)c.y >= VSID)
+                printf("y inc\n");
+                cursor.y += dir.y;
+                if ((unsigned long)cursor.y >= VXL_MAX_SIZE)
                     return count;
                 dy += dyi;
             }
         }
+        printf("\n");
     }
 }
 
@@ -691,7 +692,7 @@ long move_player(PlayerType *p)
         f *= 1.3f;
 
     if ((p->mf || p->mb) && (p->ml || p->mr))
-        f *= SQRT; //if strafe + forward/backwards then limit diagonal velocity
+        f *= sqrt(2) / 2; //if strafe + forward/backwards then limit diagonal velocity
 
     if (p->mf)
     {
