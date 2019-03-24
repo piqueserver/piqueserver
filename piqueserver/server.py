@@ -413,13 +413,14 @@ class FeatureProtocol(ServerProtocol):
 
         ip_getter = ip_getter_option.get()
         if ip_getter:
-            self.get_external_ip(ip_getter)
+            ensureDeferred(self.get_external_ip(ip_getter))
 
         self.vacuum_loop = LoopingCall(self.vacuum_bans)
         # Run the vacuum every 6 hours, and kick it off it right now
         self.vacuum_loop.start(60 * 60 * 6, True)
 
-        reactor.addSystemEventTrigger('before', 'shutdown', self.shutdown)
+        reactor.addSystemEventTrigger(
+            'before', 'shutdown', lambda: ensureDeferred(self.shutdown()))
 
     def _post_init(self):
         """called after the map has been loaded"""
@@ -431,12 +432,11 @@ class FeatureProtocol(ServerProtocol):
         self.master = register_master_option.get()
         self.set_master()
 
-    @inlineCallbacks
-    def get_external_ip(self, ip_getter: str) -> Iterator[Deferred]:
+    async def get_external_ip(self, ip_getter: str) -> Iterator[Deferred]:
         log.info(
             'Retrieving external IP from {!r} to generate server identifier.'.format(ip_getter))
         try:
-            ip = yield self.getPage(ip_getter)
+            ip = await self.getPage(ip_getter)
             ip = IPv4Address(ip.strip())
         except AddressValueError as e:
             log.warn('External IP getter service returned invalid data.\n'
@@ -653,21 +653,25 @@ class FeatureProtocol(ServerProtocol):
             if has_connection:
                 self.master_connection.disconnect()
 
-    @inlineCallbacks
-    def shutdown(self):
+    async def shutdown(self):
         """
         Notifies players and disconnects them before a shutdown.
         """
+        if not self.connections:
+            # exit instantly if nobody is connected anyway
+            return
+
         # send shutdown notification
+        log.info("disconnecting players")
         self.broadcast_chat("Server shutting down in 3sec.")
-        for i in range(1, 4):
+        for i in range(3, 0, -1):
             self.broadcast_chat(str(i)+"...")
-            yield sleep(1)
+            await sleep(1)
 
         # disconnect all players
         for connection in list(self.connections.values()):
             connection.disconnect(ERROR_SHUTDOWN)
-            yield sleep(0.1)
+            await sleep(0.1)
 
     def add_ban(self, ip, reason, duration, name=None):
         """
@@ -893,10 +897,9 @@ class FeatureProtocol(ServerProtocol):
                 0),
             **kw)
 
-    @inlineCallbacks
-    def getPage(self, url: str) -> Iterator[Deferred]:
-        resp = yield self.http_agent.request(b'GET', url.encode())
-        body = yield web_client.readBody(resp)
+    async def getPage(self, url: str) -> Iterator[Deferred]:
+        resp = await self.http_agent.request(b'GET', url.encode())
+        body = await web_client.readBody(resp)
         return body.decode()
 
     # before-end calls
