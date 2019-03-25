@@ -2,10 +2,10 @@
 Cython>=0.27,<1
 Twisted[tls]>=17
 Jinja2>=2,<3
-Pillow>=5.1.0,<6
 pyenet
 typing
 toml
+pypng==0.0.19
 
 # from command
 pygeoip>=0.3.2,<0.4

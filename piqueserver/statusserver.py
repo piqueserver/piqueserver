@@ -18,7 +18,7 @@
 import json
 from io import BytesIO
 
-from PIL import Image
+import png
 from jinja2 import Environment, PackageLoader
 from twisted.internet import reactor
 from twisted.web import server
@@ -135,9 +135,9 @@ class StatusServerFactory(object):
                 self.last_map_name != self.protocol.map_info.name or
                 current_time - self.last_overview > OVERVIEW_UPDATE_INTERVAL):
             overview = self.protocol.map.get_overview(rgba=True)
-            image = Image.frombytes('RGBA', (512, 512), overview)
+            w = png.Writer(512, 512, alpha=True)
             data = BytesIO()
-            image.save(data, 'png')
+            w.write_array(data, overview)
             self.overview = data.getvalue()
             self.last_overview = current_time
             self.last_map_name = self.protocol.map_info.name

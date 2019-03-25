@@ -128,14 +128,14 @@ setup(
         'Cython>=0.27,<1',
         'Twisted[tls]>=17,<19',
         'Jinja2>=2,<3',  # status server is part of our 'vanilla' package
-        'Pillow>=5.1.0,<6',
+        'pypng==0.0.19',
         'pyenet',
         'toml',
         'typing'
     ],
     extras_require={
         'from': ['geoip2>=2.9,<3.0'],
-        # 'statusserver': ['Jinja2>=2.8,<2.9', 'Pillow>=3.4.2,<3.5'],
+        # 'statusserver': ['Jinja2>=2.8,<2.9', 'pypng==0.0.19'],
         'ssh': [
             'cryptography>=2.1.4,<2.2',
             'pyasn1>=0.4.2,<0.5'
