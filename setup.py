@@ -5,11 +5,10 @@ import os
 from distutils.core import run_setup
 # build_ext is subclassed, so we import it with a _ to avoid a collision
 from distutils.command.build_ext import build_ext as _build_ext
-from setuptools import setup, Extension
+from setuptools import setup, Extension, find_packages
 
 
 PKG_NAME = "piqueserver"
-PKG_URL = "https://github.com/piqueserver/piqueserver"
 
 extra_args = sys.argv[2:]
 
@@ -21,8 +20,6 @@ here = os.path.abspath(os.path.dirname(__file__))
 version = {}
 with open(os.path.join(here, 'piqueserver/version.py')) as f:
     exec(f.read(), version)
-
-ext_modules = []
 
 ext_names = [
     'pyspades.vxl',
@@ -42,6 +39,14 @@ if static:
 
 linetrace = os.environ.get('CYTHON_TRACE') == '1'
 
+# Compile the server with support for
+# AddressSanitizer/UndefinedBehaviourSanitizer
+# TODO: clean up compile options code and actually make this compile with asan
+USE_ASAN = os.environ.get('USE_ASAN') == '1'
+USE_UBSAN = os.environ.get('USE_UBSAN') == '1'
+
+ext_modules = []
+
 for name in ext_names:
     if static:
         extra = {'extra_link_args': ['-static-libstdc++', '-static-libgcc']}
@@ -57,7 +62,8 @@ for name in ext_names:
         extra['define_macros'].append(('CYTHON_TRACE', '1'))
 
     ext_modules.append(Extension(name, ['./%s.pyx' % name.replace('.', '/')],
-                                 language='c++', include_dirs=['./pyspades'], **extra))
+                                 language='c++', include_dirs=['./pyspades'],
+                                 **extra))
 
 
 class build_ext(_build_ext):
@@ -65,6 +71,11 @@ class build_ext(_build_ext):
     def run(self):
 
         from Cython.Build import cythonize
+
+        if USE_ASAN:
+            from Cython.Compiler import Options
+            # make asan/valgrind's memory leak results better
+            Options.generate_cleanup_code = True
 
         compiler_directives = {'language_level': 3, 'embedsignature': True}
         if linetrace:
@@ -80,9 +91,7 @@ class build_ext(_build_ext):
 
 setup(
     name=PKG_NAME,
-    packages=[PKG_NAME, '%s.web' % PKG_NAME, '%s.utils' % PKG_NAME,
-        '%s.scripts' % PKG_NAME, '%s.game_modes' % PKG_NAME,
-        '%s.core_commands' % PKG_NAME, 'pyspades'],
+    packages=find_packages(exclude=("tests", "tests.*")),
     version=version['__version__'],
     description='Open-Source server implementation for Ace of Spades ',
     author=('Originally MatPow2 and PySnip contributors,'
@@ -92,7 +101,7 @@ setup(
     maintainer_email='noway@2ch.hk',
     license='GNU General Public License v3',
     long_description=long_description,
-    url=PKG_URL,
+    url="https://github.com/piqueserver/piqueserver",
     keywords=['ace of spades', 'aos', 'server',
               'pyspades', 'pysnip', 'piqueserver'],
     python_requires=">=3.5",
@@ -137,15 +146,6 @@ setup(
             '%s=%s.run:main' % (PKG_NAME, PKG_NAME)
         ],
     },
-    package_dir={
-        PKG_NAME: 'piqueserver',
-        '%s.core_commands' % PKG_NAME: 'piqueserver/core_commands',
-        '%s.web' % PKG_NAME: 'piqueserver/web',
-        '%s.utils' % PKG_NAME: 'piqueserver/utils',
-        '%s.scripts' % PKG_NAME: 'piqueserver/scripts',
-        '%s.game_modes' % PKG_NAME: 'piqueserver/game_modes',
-        'pyspades': 'pyspades',
-    },  # some kind of find_packages?
     package_data={"%s.web" % PKG_NAME: ["templates/status.html"]},
     include_package_data=True,
 
