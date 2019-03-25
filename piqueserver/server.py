@@ -671,7 +671,9 @@ class FeatureProtocol(ServerProtocol):
         # disconnect all players
         for connection in list(self.connections.values()):
             connection.disconnect(ERROR_SHUTDOWN)
-            await sleep(0.1)
+
+        # give the connections some time to terminate
+        await sleep(0.2)
 
     def add_ban(self, ip, reason, duration, name=None):
         """
