@@ -15,7 +15,6 @@ import hashlib
 
 PKG_NAME = 'piqueserver'
 
-
 def get_git_rev():
     if not os.path.exists(".git"):
         return 'snapshot'
@@ -240,6 +239,10 @@ def main():
     # update config with cli overrides
     if args.json_parameters:
         config.update_from_dict(json.loads(args.json_parameters))
+
+    import asyncio
+    from twisted.internet import asyncioreactor
+    asyncioreactor.install(asyncio.get_event_loop())
 
     from piqueserver import server
     server.run()

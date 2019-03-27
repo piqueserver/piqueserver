@@ -32,7 +32,6 @@ from pprint import pprint
 from ipaddress import ip_network, ip_address, IPv4Address, AddressValueError
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
-
 from twisted.internet import reactor, threads
 from twisted.internet.defer import inlineCallbacks, Deferred, ensureDeferred
 from twisted.internet.task import coiterate, LoopingCall, deferLater
@@ -378,15 +377,16 @@ class FeatureProtocol(ServerProtocol):
             from piqueserver.irc import IRCRelay
             self.irc_relay = IRCRelay(self, irc)
         if status_server_enabled.get():
-            from piqueserver.statusserver import StatusServerFactory
-            self.status_server = StatusServerFactory(self)
+            from piqueserver.statusserver import StatusServer
+            self.status_server = StatusServer(self)
+            ensureDeferred(self.status_server.listen())
         if ban_publish.get():
             from piqueserver.banpublish import PublishServer
             self.ban_publish = PublishServer(self, ban_publish_port.get())
         if bans_urls.get():
             from piqueserver import bansubscribe
             self.ban_manager = bansubscribe.BanManager(self)
-        self.start_time = reactor.seconds()
+        self.start_time = time.time()
         self.end_calls = []
         # TODO: why is this here?
         create_console(self)
