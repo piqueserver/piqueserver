@@ -9,7 +9,6 @@ import json
 import time
 import png
 from io import BytesIO
-
 from aiohttp.abc import AbstractAccessLogger
 from twisted.logger import Logger
 
@@ -19,7 +18,8 @@ status_server_config = config.section("status_server")
 host_option = status_server_config.option("host", "0.0.0.0")
 port_option = status_server_config.option("port", 32886)
 logging_option = status_server_config.option("logging", False)
-interval_option = status_server_config.option("update_interval", default="1min", cast=cast_duration)
+interval_option = status_server_config.option(
+    "update_interval", default="1min", cast=cast_duration)
 scripts_option = config.option("scripts", [])
 
 
@@ -43,6 +43,10 @@ class AccessLogger(AbstractAccessLogger):
             time=time * 1000,
             status=response.status)
 
+
+async def set_default_headers(request, response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
 
 def current_state(protocol):
     """Gathers data on current server/game state from protocol class"""
@@ -115,10 +119,8 @@ class StatusServer(object):
                 time.time() - self.last_update > interval_option.get()):
             self.update_cached_overview()
 
-        access_control_header = MultiDict([('Access-Control-Allow-Origin', '*')])
         return web.Response(body=self.cached_overview,
-                            content_type='image/png',
-                            headers=access_control_header)
+                            content_type='image/png')
 
     async def index(self, request):
         rendered = self.status_template.render(server=self.protocol)
@@ -128,6 +130,7 @@ class StatusServer(object):
         """Starts the status server on configured host/port"""
         print("StatusServer")
         app = web.Application()
+        app.on_response_prepare.append(set_default_headers)
         app.add_routes([
             web.get('/json', self.json),
             web.get('/overview', self.overview),
