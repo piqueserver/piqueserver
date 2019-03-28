@@ -48,6 +48,7 @@ async def set_default_headers(request, response):
     response.headers['Access-Control-Allow-Origin'] = '*'
     response.headers['Access-Control-Allow-Credentials'] = 'true'
 
+
 def current_state(protocol):
     """Gathers data on current server/game state from protocol class"""
     players = []
@@ -126,9 +127,7 @@ class StatusServer(object):
         rendered = self.status_template.render(server=self.protocol)
         return web.Response(body=rendered, content_type='text/html')
 
-    async def listen(self):
-        """Starts the status server on configured host/port"""
-        print("StatusServer")
+    def create_app(self):
         app = web.Application()
         app.on_response_prepare.append(set_default_headers)
         app.add_routes([
@@ -136,6 +135,11 @@ class StatusServer(object):
             web.get('/overview', self.overview),
             web.get('/', self.index)
         ])
+        return app
+
+    async def listen(self):
+        """Starts the status server on configured host/port"""
+        app = self.create_app()
         logger = Logger() if logging_option.get() else None
         log_class = AccessLogger if logging_option.get() else None
         runner = web.AppRunner(app,
