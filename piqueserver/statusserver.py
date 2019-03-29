@@ -1,5 +1,5 @@
 import asyncio
-from twisted.internet.defer import ensureDeferred, Deferred
+from twisted.internet.defer import Deferred
 import aiohttp
 from aiohttp import web
 from multidict import MultiDict
@@ -11,6 +11,7 @@ import png
 from io import BytesIO
 from aiohttp.abc import AbstractAccessLogger
 from twisted.logger import Logger
+from piqueserver.utils import as_deferred, as_future
 
 from piqueserver.config import config, cast_duration
 
@@ -21,14 +22,6 @@ logging_option = status_server_config.option("logging", False)
 interval_option = status_server_config.option(
     "update_interval", default="1min", cast=cast_duration)
 scripts_option = config.option("scripts", [])
-
-
-def as_future(d):
-    return d.asFuture(asyncio.get_event_loop())
-
-
-def as_deferred(f):
-    return Deferred.fromFuture(asyncio.ensure_future(f))
 
 
 class AccessLogger(AbstractAccessLogger):
