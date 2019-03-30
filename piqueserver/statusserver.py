@@ -47,12 +47,13 @@ def current_state(protocol):
     players = []
 
     for player in protocol.players.values():
-        player_data = {}
-        player_data['name'] = player.name
-        player_data['latency'] = player.latency
-        player_data['client'] = player.client_string
-        player_data['kills'] = player.kills
-        player_data['team'] = player.team.name
+        player_data = {
+            'name': player.name,
+            'latency': player.latency,
+            'client': player.client_string,
+            'kills': player.kills,
+            'team': player.team.name
+        }
 
         players.append(player_data)
 
