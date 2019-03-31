@@ -6,6 +6,7 @@ pyenet
 typing
 toml
 pypng==0.0.19
+aiohttp>=3.3.0,<3.6.0
 
 # from command
 pygeoip>=0.3.2,<0.4

@@ -129,6 +129,7 @@ setup(
         'Twisted[tls]>=17,<19',
         'Jinja2>=2,<3',  # status server is part of our 'vanilla' package
         'pypng==0.0.19',
+        'aiohttp>=3.3.0,<3.6.0',
         'pyenet',
         'toml',
         'typing'
