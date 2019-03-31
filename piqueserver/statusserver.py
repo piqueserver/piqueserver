@@ -28,7 +28,7 @@ import png
 from io import BytesIO
 from aiohttp.abc import AbstractAccessLogger
 from twisted.logger import Logger
-from piqueserver.utils import as_deferred, as_future
+from piqueserver.utils import as_deferred
 
 from piqueserver.config import config, cast_duration
 
