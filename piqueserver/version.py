@@ -17,14 +17,18 @@ async def fetch_latest_release():
 
 async def notify_updates():
     log = Logger()
+
+    log.debug("checking latest version")
     try:
         release = await fetch_latest_release()
-        latest_version = release["tag_name"]
-        date = datetime.strptime(release["published_at"], "%Y-%m-%dT%H:%M:%SZ")
-        formated = date.strftime("%b %-d %Y")
-        if version.parse(latest_version) > version.parse(__version__):
-            # git.io url points towards /latest release page
-            log.info("New release available: {version} ({date}): https://git.io/fjIDk",
-                     version=latest_version, date=formated)
-    except Exception:  # pylint: disable=broad-except
-        pass
+    except IOError as e:
+        log.warn("could not fetch latest version: {err}", err=e)
+        return None
+
+    latest_version = release["tag_name"]
+    date = datetime.strptime(release["published_at"], "%Y-%m-%dT%H:%M:%SZ")
+    formated = date.strftime("%b %-d %Y")
+    if version.parse(latest_version) > version.parse(__version__):
+        # git.io url points towards /latest release page
+        log.info("New release available: {version} ({date}): https://git.io/fjIDk",
+                 version=latest_version, date=formated)
