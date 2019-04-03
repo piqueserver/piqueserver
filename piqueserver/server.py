@@ -147,12 +147,7 @@ logging_rotate_daily = logging_config.option('rotate_daily', False)
 tip_frequency = config.option('tips_frequency', default="5sec", cast=lambda x: cast_duration(x)/60)
 register_master_option = config.option('master', False)
 
-# default to http for ip_getter on windows
-# see https://github.com/piqueserver/piqueserver/issues/215
-if sys.platform == 'win32':
-    default_ip_getter = 'http://services.buildandshoot.com/getip'
-else:
-    default_ip_getter = 'https://services.buildandshoot.com/getip'
+default_ip_getter = 'https://services.buildandshoot.com/getip'
 ip_getter_option = config.option('ip_getter', default_ip_getter)
 name_option = config.option(
     'name', default='piqueserver #%s' % random.randrange(0, 2000))
