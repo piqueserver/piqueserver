@@ -39,8 +39,9 @@ from twisted.python.logfile import DailyLogFile
 from twisted.logger import Logger, textFileLogObserver
 from twisted.logger import FilteringLogObserver, LogLevelFilterPredicate, LogLevel
 from twisted.logger import globalLogBeginner
-from twisted.web import client as web_client
 from twisted.internet.tcp import Port
+import aiohttp
+from piqueserver.utils import as_deferred
 
 from enet import Address, Packet, Peer
 
@@ -168,8 +169,6 @@ rules_option = config.option('rules')
 tips_option = config.option('tips')
 network_interface = config.option('network_interface', default='')
 scripts_option = config.option('scripts', default=[], validate=extensions.check_scripts)
-
-web_client._HTTP11ClientFactory.noisy = False
 
 
 def ensure_dir_exists(filename: str) -> None:
@@ -409,11 +408,9 @@ class FeatureProtocol(ServerProtocol):
         # discard the result of the map advance for now
         map_load_d.addCallback(lambda x: self._post_init())
 
-        self.http_agent = web_client.Agent(reactor)
-
         ip_getter = ip_getter_option.get()
         if ip_getter:
-            ensureDeferred(self.get_external_ip(ip_getter))
+            ensureDeferred(as_deferred(self.get_external_ip(ip_getter)))
 
         self.vacuum_loop = LoopingCall(self.vacuum_bans)
         # Run the vacuum every 6 hours, and kick it off it right now
@@ -436,8 +433,10 @@ class FeatureProtocol(ServerProtocol):
         log.info(
             'Retrieving external IP from {!r} to generate server identifier.'.format(ip_getter))
         try:
-            ip = await self.getPage(ip_getter)
-            ip = IPv4Address(ip.strip())
+            async with aiohttp.ClientSession() as session:
+                async with session.get(ip_getter) as response:
+                    ip = await response.text()
+                    ip = IPv4Address(ip.strip())
         except AddressValueError as e:
             log.warn('External IP getter service returned invalid data.\n'
                      'Please check the "ip_getter" setting in your config.')
@@ -899,10 +898,6 @@ class FeatureProtocol(ServerProtocol):
                 0),
             **kw)
 
-    async def getPage(self, url: str) -> Iterator[Deferred]:
-        resp = await self.http_agent.request(b'GET', url.encode())
-        body = await web_client.readBody(resp)
-        return body.decode()
 
     # before-end calls
 
