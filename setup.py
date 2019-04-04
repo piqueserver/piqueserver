@@ -104,7 +104,7 @@ setup(
     url="https://github.com/piqueserver/piqueserver",
     keywords=['ace of spades', 'aos', 'server',
               'pyspades', 'pysnip', 'piqueserver'],
-    python_requires=">=3.5",
+    python_requires=">=3.5.3",
     classifiers=[
         'Intended Audience :: System Administrators',
         'Development Status :: 5 - Production/Stable',
