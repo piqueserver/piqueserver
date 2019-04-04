@@ -329,6 +329,7 @@ class FeatureConnection(ServerConnection):
             else:
                 message = '%s was kicked' % self.name
             self.protocol.send_chat(message, irc=True)
+            log.info(message)
         # FIXME: Client should handle disconnect events the same way in both
         # main and initial loading network loops
         self.disconnect(ERROR_KICKED)
