@@ -86,7 +86,14 @@ def apply_script(protocol, connection, config):
         def reset_afk_kick_call(self):
             self.last_activity = reactor.seconds()
             if self.afk_kick_call and self.afk_kick_call.active():
-                self.afk_kick_call.reset(time_limit)
+                # In Twisted==18.9.0, reset() is broken when using
+                # AsyncIOReactor
+                # Hence, the following code does not work:
+                # self.afk_kick_call.reset(time_limit)
+                # It has been temporarily replaced with the equivalent:
+                self.afk_kick_call.cancel()
+                self.afk_kick_call = reactor.callLater(
+                    time_limit, self.afk_kick)
 
         def on_disconnect(self):
             if self.afk_kick_call and self.afk_kick_call.active():
