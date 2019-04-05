@@ -403,3 +403,13 @@ IP getting is disabled.
 
 Note: this url must return solely the ip address in the response body.
 
+release_notifications
++++++++++++++++++++++
+
+Check github for new releases and notify admins if so. Default True.
+
+Optionally override the service used to fetch the server's public ip address.
+Eg. `"https://api.ipify.org"`. If this is set to an empty string,
+IP getting is disabled.
+
+Note: this url must return solely the ip address in the response body.
