@@ -1,15 +1,10 @@
 from datetime import datetime
+from typing import Optional, Dict, Any
+from twisted.logger import Logger
 import aiohttp
 from packaging import version
-from twisted.internet.task import LoopingCall
-from twisted.internet.defer import ensureDeferred
-from twisted.logger import Logger
-from piqueserver.config import config, cast_duration
 from piqueserver.version import __version__
-from piqueserver.utils import as_deferred
 
-
-notify = config.option("release_notifications", default=True)
 
 log = Logger()
 
@@ -29,16 +24,8 @@ def format_release(release) -> str:
     return "New release available: {} ({}): https://git.io/fjIDk".format(latest_version, formated)
 
 
-_subscribers = []
-
-
-def on_new_release(func):
-    _subscribers.append(func)
-    return func
-
-
-async def check_for_releases():
-    """Checks for new releases and notifies subcribers"""
+async def check_for_releases() -> Optional[Dict[str, Any]]:
+    """Checks for new release and returns it if new release is found."""
 
     log.debug("checking latest version")
     try:
@@ -49,21 +36,5 @@ async def check_for_releases():
 
     latest_version = release["tag_name"]
     if version.parse(latest_version) > version.parse(__version__):
-        for subscriber in _subscribers:
-            subscriber(release)
-
-# register default log based notifier
-on_new_release(lambda release: log.info(format_release(release)))
-
-
-def watch_for_releases():
-    """Starts a looping for `check_for_releases` with interval of 24hrs.
-     Quick exits if `release_notification` is `False`.
-     """
-    if not notify.get():
-        return
-
-    def f():
-        return ensureDeferred(as_deferred(check_for_releases()))
-    call = LoopingCall(f)
-    call.start(86400)  # every day
+        return release
+    return None

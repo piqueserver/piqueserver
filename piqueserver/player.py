@@ -5,7 +5,7 @@ from twisted.internet import reactor
 from twisted.logger import Logger
 
 from piqueserver import commands
-from piqueserver.release import on_new_release, format_release
+from piqueserver.release import format_release
 import pyspades
 from pyspades.constants import (ERROR_BANNED, DESTROY_BLOCK, SPADE_DESTROY,
                                 GRENADE_DESTROY, ERROR_KICKED, BLOCK_TOOL)
@@ -45,7 +45,6 @@ class FeatureConnection(ServerConnection):
     user_types = None
     rights = None
     can_complete_line_build = True
-    new_release_msg = ""
 
     def on_connect(self) -> None:
         protocol = self.protocol
@@ -363,17 +362,16 @@ class FeatureConnection(ServerConnection):
                                                             reason))
         self.kick(reason)
 
-    @on_new_release
-    def new_release_handle(self, release):
-        self.new_release_msg = format_release(release)
-
     def on_user_login(self, user_type, verbose=True):
         if user_type == 'admin':
             self.admin = True
             self.speedhack_detect = False
+
         # notify of new release to admin on /login
-        if user_type == 'admin' and self.new_release_msg != "":
-            self.send_chat(self.new_release_msg)
+        new_release = self.protocol.new_release
+        if user_type == 'admin' and new_release:
+            self.send_chat(format_release(new_release))
+
         self.user_types.add(user_type)
         rights = set(commands.get_rights(user_type))
         self.rights.update(rights)
