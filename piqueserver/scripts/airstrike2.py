@@ -87,7 +87,12 @@ class Nag(object):
 
     def start_or_reset(self):
         if self.call and self.call.active():
-            self.call.reset(ZOOMV_TIME)
+            # In Twisted==18.9.0, reset() is broken when using
+            # AsyncIOReactor
+            # self.call.reset(ZOOMV_TIME)
+            self.call.cancel()
+            self.call = reactor.callLater(
+                ZOOMV_TIME, self.f, *self.args, **self.kw)
         else:
             self.call = reactor.callLater(
                 self.seconds, self.f, *self.args, **self.kw)

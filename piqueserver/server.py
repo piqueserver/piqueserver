@@ -210,7 +210,11 @@ class EndCall(object):
             if value <= 0.0:
                 self.cancel()
             elif self.call:
-                self.call.reset(value)
+                # In Twisted==18.9.0, reset() is broken when using
+                # AsyncIOReactor
+                # self.call.reset(value)
+                self.call.cancel()
+                self.call = reactor.callLater(value, self.fire)
             else:
                 self.call = reactor.callLater(value, self.fire)
 
