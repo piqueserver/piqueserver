@@ -700,10 +700,11 @@ class ServerConnection(BaseConnection):
         client = self.client_info.get("client", "Unknown")
         os = self.client_info.get("os_info", "Unknown")
         version = self.client_info.get("version", None)
-        if version:
-            version_string = ".".join(map(str, version))
-        else:
-            version_string = "Unknown"
+        version_string = "Unknown" if version is None else ".".join(map(str, version))
+        if client == os == version_string == "Unknown":
+            client = "Probably Voxlap"
+            os = "Windows"
+            version_string = "0.75"
         return "{} v{} on {}".format(client, version_string, os)
 
     def check_speedhack(self, x: float, y: float, z: float, distance: None = None) -> bool:
