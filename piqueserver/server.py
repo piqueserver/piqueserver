@@ -42,7 +42,7 @@ from twisted.logger import globalLogBeginner
 from twisted.internet.tcp import Port
 import aiohttp
 from piqueserver.utils import as_deferred
-from piqueserver.version import notify_updates
+from piqueserver.release import watch_for_releases
 from enet import Address, Packet, Peer
 
 
@@ -412,7 +412,7 @@ class FeatureProtocol(ServerProtocol):
         if ip_getter:
             ensureDeferred(as_deferred(self.get_external_ip(ip_getter)))
 
-        ensureDeferred(as_deferred(notify_updates()))
+        watch_for_releases()
 
         self.vacuum_loop = LoopingCall(self.vacuum_bans)
         # Run the vacuum every 6 hours, and kick it off it right now
