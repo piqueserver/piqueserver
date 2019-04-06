@@ -725,7 +725,9 @@ class FeatureProtocol(ServerProtocol):
         while True:
             self.new_release = await check_for_releases()
             if self.new_release:
+                log.info("#" * 60)
                 log.info(format_release(self.new_release))
+                log.info("#" * 60)
             await asyncio.sleep(86400)  # 24 hrs
 
     def vacuum_bans(self):

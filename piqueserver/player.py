@@ -363,6 +363,9 @@ class FeatureConnection(ServerConnection):
         self.kick(reason)
 
     def on_user_login(self, user_type, verbose=True):
+        log.info("'{username}' logged in as {user_type}", username=self.name,
+                 user_type=user_type)
+
         if user_type == 'admin':
             self.admin = True
             self.speedhack_detect = False
@@ -370,7 +373,9 @@ class FeatureConnection(ServerConnection):
         # notify of new release to admin on /login
         new_release = self.protocol.new_release
         if user_type == 'admin' and new_release:
+            self.send_chat("!" * 30)
             self.send_chat(format_release(new_release))
+            self.send_chat("!" * 30)
 
         self.user_types.add(user_type)
         rights = set(commands.get_rights(user_type))
