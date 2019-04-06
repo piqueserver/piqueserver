@@ -19,7 +19,7 @@ async def fetch_latest_release() -> Dict[str, Any]:
 def format_release(release: Dict[str, Any]) -> str:
     latest_version = release["tag_name"]
     date = datetime.strptime(release["published_at"], "%Y-%m-%dT%H:%M:%SZ")
-    formated = date.strftime("%b %-d %Y")
+    formated = date.strftime("%b %d %Y")
     # git.io url points towards /latest release page
     return "New release available: {} ({}): https://git.io/fjIDk".format(latest_version, formated)
 

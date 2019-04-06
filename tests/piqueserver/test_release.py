@@ -16,7 +16,7 @@ class TestVersionCheck(unittest.TestCase):
     def test_format_release(self):
         release = {"tag_name": "v1.0.0",
                    "published_at": "2019-04-06T13:04:26Z"}
-        expected = "New release available: v1.0.0 (Apr 6 2019): https://git.io/fjIDk"
+        expected = "New release available: v1.0.0 (Apr 06 2019): https://git.io/fjIDk"
         formatted = format_release(release)
         self.assertEqual(formatted, expected)
 
