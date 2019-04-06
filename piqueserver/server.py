@@ -40,9 +40,10 @@ from twisted.logger import Logger, textFileLogObserver
 from twisted.logger import FilteringLogObserver, LogLevelFilterPredicate, LogLevel
 from twisted.logger import globalLogBeginner
 from twisted.internet.tcp import Port
+import asyncio
 import aiohttp
 from piqueserver.utils import as_deferred
-
+from piqueserver.release import check_for_releases, format_release
 from enet import Address, Packet, Peer
 
 
@@ -69,17 +70,22 @@ import piqueserver.core_commands  # pylint: disable=unused-import
 
 log = Logger()
 
+
 def validate_team_name(name):
     if len(name) > 9:
-        log.warn("Team name's length exceeds 9 character limit. More info: https://git.io/fN2cI")
+        log.warn(
+            "Team name's length exceeds 9 character limit. More info: https://git.io/fN2cI")
         # TODO: Once issue #345 is sorted out, we can do a proper validation
         # for now we just warn
         # return False
     return True
 
 # TODO: move to a better place if reusable
+
+
 def sleep(secs):
     return deferLater(reactor, secs, lambda: None)
+
 
 # declare configuration options
 bans_config = config.section('bans')
@@ -89,7 +95,8 @@ team2_config = config.section('team2')
 
 bans_file = bans_config.option('file', default='bans.txt')
 bans_urls = bans_config.option('urls', [])
-respawn_time_option = config.option('respawn_time', default="8sec", cast=cast_duration)
+respawn_time_option = config.option(
+    'respawn_time', default="8sec", cast=cast_duration)
 respawn_waves = config.option('respawn_waves', default=False)
 game_mode = config.option('game_mode', default='ctf')
 random_rotation = config.option('random_rotation', default=False)
@@ -105,8 +112,10 @@ cap_limit = config.option('cap_limit', default=10,
                           validate=lambda x: isinstance(x, (int, float)))
 advance_on_win = config.option('advance_on_win', default=False,
                                validate=lambda x: isinstance(x, bool))
-team1_name = team1_config.option('name', default='Blue', validate=validate_team_name)
-team2_name = team2_config.option('name', default='Green', validate=validate_team_name)
+team1_name = team1_config.option(
+    'name', default='Blue', validate=validate_team_name)
+team2_name = team2_config.option(
+    'name', default='Green', validate=validate_team_name)
 team1_color = team1_config.option('color', default=(0, 0, 196))
 team2_color = team2_config.option('color', default=(0, 196, 0))
 friendly_fire = config.option('friendly_fire', default=False)
@@ -123,7 +132,8 @@ rights = config.option('rights', default={})
 port_option = config.option('port', default=32887,
                             validate=lambda n: isinstance(n, int))
 fall_damage = config.option('fall_damage', default=True)
-teamswitch_interval = config.option('teamswitch_interval', default="0sec", cast=cast_duration)
+teamswitch_interval = config.option(
+    'teamswitch_interval', default="0sec", cast=cast_duration)
 teamswitch_allowed = config.option('teamswitch_allowed', default=True)
 max_players = config.option('max_players', default=20)
 melee_damage = config.option('melee_damage', default=100)
@@ -131,7 +141,8 @@ max_connections_per_ip = config.option('max_connections_per_ip', default=0)
 server_prefix = config.option('server_prefix', default='[*]')
 balanced_teams = config.option('balanced_teams', default=2)
 login_retries = config.option('login_retries', 1)
-default_ban_duration = bans_config.option('default_duration', default="1day", cast=cast_duration)
+default_ban_duration = bans_config.option(
+    'default_duration', default="1day", cast=cast_duration)
 speedhack_detect = config.option('speedhack_detect', True)
 user_blocks_only = config.option('user_blocks_only', False)
 debug_log_enabled = logging_config.option('debug_log', False)
@@ -144,7 +155,8 @@ status_server_enabled = config.section(
 ban_publish = bans_config.option('publish', False)
 ban_publish_port = bans_config.option('publish_port', 32885)
 logging_rotate_daily = logging_config.option('rotate_daily', False)
-tip_frequency = config.option('tips_frequency', default="5sec", cast=lambda x: cast_duration(x)/60)
+tip_frequency = config.option(
+    'tips_frequency', default="5sec", cast=lambda x: cast_duration(x)/60)
 register_master_option = config.option('master', False)
 
 default_ip_getter = 'https://services.buildandshoot.com/getip'
@@ -159,11 +171,12 @@ help_option = config.option('help', default=[
     '/commands Prints all available commands',
     '/help <command_name> Gives description and usage info for a command',
     '/help Prints this message',
-    ])
+])
 rules_option = config.option('rules')
 tips_option = config.option('tips')
 network_interface = config.option('network_interface', default='')
-scripts_option = config.option('scripts', default=[], validate=extensions.check_scripts)
+scripts_option = config.option(
+    'scripts', default=[], validate=extensions.check_scripts)
 
 
 def ensure_dir_exists(filename: str) -> None:
@@ -281,10 +294,13 @@ class FeatureProtocol(ServerProtocol):
                 logging_file = DailyLogFile(log_filename, '.')
             else:
                 logging_file = open(log_filename, 'a')
-            predicate = LogLevelFilterPredicate(LogLevel.levelWithName(loglevel.get()))
+            predicate = LogLevelFilterPredicate(
+                LogLevel.levelWithName(loglevel.get()))
             observers = [
-                FilteringLogObserver(textFileLogObserver(sys.stderr), [predicate]),
-                FilteringLogObserver(textFileLogObserver(logging_file), [predicate])
+                FilteringLogObserver(
+                    textFileLogObserver(sys.stderr), [predicate]),
+                FilteringLogObserver(
+                    textFileLogObserver(logging_file), [predicate])
             ]
             globalLogBeginner.beginLoggingTo(observers)
             log.info('piqueserver started on %s' % time.strftime('%c'))
@@ -306,7 +322,8 @@ class FeatureProtocol(ServerProtocol):
                 self.bans.read_list(json.load(f))
             log.debug("loaded {count} bans", count=len(self.bans))
         except FileNotFoundError:
-            log.debug("skip loading bans: file unavailable", count=len(self.bans))
+            log.debug("skip loading bans: file unavailable",
+                      count=len(self.bans))
         except IOError as e:
             log.error('Could not read bans.txt: {}'.format(e))
         except ValueError as e:
@@ -411,6 +428,12 @@ class FeatureProtocol(ServerProtocol):
         if ip_getter:
             ensureDeferred(as_deferred(self.get_external_ip(ip_getter)))
 
+        self.new_release = None
+        notify_new_releases = config.option(
+            "release_notifications", default=True)
+        if notify_new_releases.get():
+            ensureDeferred(as_deferred(self.watch_for_releases()))
+
         self.vacuum_loop = LoopingCall(self.vacuum_bans)
         # Run the vacuum every 6 hours, and kick it off it right now
         self.vacuum_loop.start(60 * 60 * 6, True)
@@ -450,7 +473,7 @@ class FeatureProtocol(ServerProtocol):
         log.info('Public aos identifier: {}'.format(self.identifier))
 
     def set_time_limit(self, time_limit: Optional[int] = None, additive:
-                       bool=False) -> Optional[int]:
+                       bool = False) -> Optional[int]:
         advance_call = self.advance_call
         add_time = 0.0
         if advance_call is not None:
@@ -696,6 +719,15 @@ class FeatureProtocol(ServerProtocol):
                  ip=ip, results=results)
         self.save_bans()
 
+    async def watch_for_releases(self):
+        """Starts a loop for `check_for_releases` and updates `self.new_release`."""
+        while True:
+            self.new_release = await check_for_releases()
+            if self.new_release:
+                log.info("#" * 60)
+                log.info(format_release(self.new_release))
+                log.info("#" * 60)
+            await asyncio.sleep(86400)  # 24 hrs
 
     def vacuum_bans(self):
         """remove any bans that might have expired. This takes a while, so it is
@@ -706,7 +738,7 @@ class FeatureProtocol(ServerProtocol):
 
             bans_count = len(self.bans)
             log.info("starting ban vacuum with {count} bans",
-                      count=bans_count)
+                     count=bans_count)
             start_time = time.time()
 
             # create a copy of the items, so we don't have issues modifying
@@ -897,7 +929,6 @@ class FeatureProtocol(ServerProtocol):
                 0),
             **kw)
 
-
     # before-end calls
 
     def call_end(self, delay: int, func: Callable, *arg, **kw) -> EndCall:
@@ -919,14 +950,18 @@ def run() -> None:
     # load and apply regular scripts
     script_names = scripts_option.get()
     script_dir = os.path.join(config.config_dir, 'scripts/')
-    script_objects = extensions.load_scripts_regular_extension(script_names, script_dir)
-    (protocol_class, connection_class) = extensions.apply_scripts(script_objects, config, FeatureProtocol, FeatureConnection)
+    script_objects = extensions.load_scripts_regular_extension(
+        script_names, script_dir)
+    (protocol_class, connection_class) = extensions.apply_scripts(
+        script_objects, config, FeatureProtocol, FeatureConnection)
 
     # load and apply the game_mode script
     game_mode_name = game_mode.get()
     game_mode_dir = os.path.join(config.config_dir, 'game_modes/')
-    game_mode_object = extensions.load_script_game_mode(game_mode_name, game_mode_dir)
-    (protocol_class, connection_class) = extensions.apply_scripts(game_mode_object, config, protocol_class, connection_class)
+    game_mode_object = extensions.load_script_game_mode(
+        game_mode_name, game_mode_dir)
+    (protocol_class, connection_class) = extensions.apply_scripts(
+        game_mode_object, config, protocol_class, connection_class)
 
     protocol_class.connection_class = connection_class
 

@@ -5,7 +5,7 @@ from twisted.internet import reactor
 from twisted.logger import Logger
 
 from piqueserver import commands
-
+from piqueserver.release import format_release
 import pyspades
 from pyspades.constants import (ERROR_BANNED, DESTROY_BLOCK, SPADE_DESTROY,
                                 GRENADE_DESTROY, ERROR_KICKED, BLOCK_TOOL)
@@ -58,7 +58,7 @@ class FeatureConnection(ServerConnection):
                 protocol.save_bans()
             else:
                 log.info('banned user {} ({}) attempted to join'.format(name,
-                                                                    client_ip))
+                                                                        client_ip))
                 self.disconnect(ERROR_BANNED)
                 return
 
@@ -117,7 +117,7 @@ class FeatureConnection(ServerConnection):
         if result == False:
             parameters = ['***'] * len(parameters)
         log_message = '<{}> /{} {}'.format(self.name, command,
-                                       ' '.join(parameters))
+                                           ' '.join(parameters))
         if result:
             log_message += ' -> %s' % result
             for i in reversed(result.split("\n")):
@@ -318,7 +318,8 @@ class FeatureConnection(ServerConnection):
                 self.chat_count += 1
             self.last_chat = current_time
 
-        log.info("<{name}> {message}", name=escape_control_codes(self.name), message=escape_control_codes(value))
+        log.info("<{name}> {message}", name=escape_control_codes(
+            self.name), message=escape_control_codes(value))
 
         return value
 
@@ -341,7 +342,7 @@ class FeatureConnection(ServerConnection):
             message = '{} permabanned{}'.format(self.name, reason)
         else:
             message = '{} banned for {}{}'.format(self.name,
-                                              prettify_timespan(duration), reason)
+                                                  prettify_timespan(duration), reason)
         if self.protocol.on_ban_attempt(self, reason, duration):
             self.protocol.send_chat(message, irc=True)
             self.protocol.on_ban(self, reason, duration)
@@ -359,13 +360,24 @@ class FeatureConnection(ServerConnection):
 
     def on_hack_attempt(self, reason):
         log.warn('Hack attempt detected from {}: {}'.format(self.printable_name,
-                                                        reason))
+                                                            reason))
         self.kick(reason)
 
     def on_user_login(self, user_type, verbose=True):
+        log.info("'{username}' logged in as {user_type}", username=self.name,
+                 user_type=user_type)
+
         if user_type == 'admin':
             self.admin = True
             self.speedhack_detect = False
+
+        # notify of new release to admin on /login
+        new_release = self.protocol.new_release
+        if user_type == 'admin' and new_release:
+            self.send_chat("!" * 30)
+            self.send_chat(format_release(new_release))
+            self.send_chat("!" * 30)
+
         self.user_types.add(user_type)
         rights = set(commands.get_rights(user_type))
         self.rights.update(rights)

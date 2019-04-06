@@ -196,7 +196,7 @@ color = [ 0, 255, 0]
 # logging in as admin or trusted also disables being votekicked (if that script is enabled)
 # For security reasons, logins are disabled by default.
 #
-admin = ["adminpass1", "adminpass2"]
+# admin = ["adminpass1", "adminpass2"]
 #moderator = ["modpass"]
 #guard = ["guardpass"]
 #trusted = ["trustedpass"]

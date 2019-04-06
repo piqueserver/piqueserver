@@ -132,7 +132,8 @@ setup(
         'aiohttp>=3.3.0,<3.6.0',
         'pyenet',
         'toml',
-        'typing'
+        'typing',
+        'packaging>=19.0'
     ],
     extras_require={
         'from': ['geoip2>=2.9,<3.0'],
