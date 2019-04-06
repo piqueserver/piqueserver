@@ -9,14 +9,14 @@ from piqueserver.version import __version__
 log = Logger()
 
 
-async def fetch_latest_release():
+async def fetch_latest_release() -> Dict[str, Any]:
     endpoint = "https://api.github.com/repos/piqueserver/piqueserver/releases/latest"
     async with aiohttp.ClientSession() as session:
         async with session.get(endpoint) as response:
             return await response.json()
 
 
-def format_release(release) -> str:
+def format_release(release: Dict[str, Any]) -> str:
     latest_version = release["tag_name"]
     date = datetime.strptime(release["published_at"], "%Y-%m-%dT%H:%M:%SZ")
     formated = date.strftime("%b %-d %Y")
