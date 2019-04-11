@@ -92,7 +92,7 @@ def decode(value):
     if value is not None:
         if value[0] == 0xFF:
             try:
-                return (value[1:]).decode('utf-8', 'strict')
+                return value[1:].decode('utf-8', 'strict')
             except UnicodeError: # fallback...
                 pass
         return value.decode('cp437', 'replace')
