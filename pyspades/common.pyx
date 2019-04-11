@@ -79,12 +79,22 @@ def crc32(data):
 # Ace of Spades uses the CP437 character set for chat and Windows-1252 for
 # player list
 
+# OpenSpades (and others) use 0xFF as a magic byte indicating the string is UTF-8 encoded
+
 def encode(value):
     if value is not None:
-        return value.encode('cp437', 'replace')
+        try:
+            return value.encode('cp437', 'strict')
+        except UnicodeError:
+            return b'\xFF' + value.encode('utf-8', 'replace')
 
 def decode(value):
     if value is not None:
+        if value[0] == 0xFF:
+            try:
+                return (value[1:]).decode('utf-8', 'strict')
+            except UnicodeError: # fallback...
+                pass
         return value.decode('cp437', 'replace')
 
 # Printing untrusted ASCII control codes to the console can have a number of
