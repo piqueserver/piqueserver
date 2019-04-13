@@ -132,7 +132,6 @@ setup(
         'aiohttp>=3.3.0,<3.6.0',
         'pyenet',
         'toml',
-        'typing',
         'packaging>=19.0'
     ],
     extras_require={
