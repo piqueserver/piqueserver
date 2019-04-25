@@ -951,3 +951,34 @@ cdef class VersionResponse(Loader):
         writer.writeByte(self.id, True)
 
 register_packet(VersionResponse)
+
+
+cdef class ProtocolExtensionInfo(Loader):
+    """packet used to exchange the list of supported protocol extensions between
+    server and client
+
+    extensions is a list of (extension_id, version) tuples
+    """
+    id = 60
+
+    cdef public:
+        list extensions
+
+    cpdef read(self, ByteReader reader):
+        extension_count = reader.readByte(True)
+        extensions = []
+        for _ in range(extension_count):
+            extensions.append(
+                (reader.readByte(True), reader.readByte(True))
+            )
+        self.extensions = extensions
+
+    cpdef write(self, ByteWriter writer):
+        writer.writeByte(self.id, True)
+
+        writer.writeByte(len(self.extensions), True)
+
+        for ext in self.extensions:
+            writer.writeByte(ext[0], ext[1])
+
+register_packet(ProtocolExtensionInfo)

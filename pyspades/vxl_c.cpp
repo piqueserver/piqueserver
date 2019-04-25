@@ -21,6 +21,8 @@
 #include "vxl_c.h"
 #include "Python.h"
 #include <vector>
+#include <iostream>
+#include <exception>
 
 using namespace std;
 
@@ -36,38 +38,77 @@ void inline limit(int *value, int min, int max)
     }
 }
 
-MapData *load_vxl(unsigned char *v)
+/* Create new empty map
+ * Wrapper, to make usage with cython easier
+ */
+MapData* new_vxl() {
+    return new MapData;
+}
+
+MapData* load_vxl(uint8_t* data, size_t len)
 {
+    uint8_t* v = data;
+    uint8_t* data_end = data + len;
     MapData *map = new MapData;
-    if (v == NULL)
+    if (v == NULL) {
         return map;
-    int x, y, z;
-    for (y = 0; y < 512; ++y)
+    }
+
+    for (int y = 0; y < 512; ++y)
     {
-        for (x = 0; x < 512; ++x)
+        for (int x = 0; x < 512; ++x)
         {
-            for (z = 0; z < 64; ++z)
+            // VXL files are made of a sequence of independent columns
+            // these columns use a kind of run-length encoding to save
+            // space. This means that empty voxels do not use space.
+
+            // set the whole column to be solid, we will remove the empty parts
+            // of this column later
+            for (int z = 0; z < 64; ++z)
             {
                 map->geometry[get_pos(x, y, z)] = 1;
             }
-            z = 0;
+
+            int z = 0;
+
             for (;;)
             {
-                int *color;
-                int i;
+                /* Each VXL column is made up a series of spans. Spans describe
+                 * a sequence of the following (top to bottom):
+                 *
+                 * open voxels (0+)
+                 * top colored voxels (1+)
+                 * hidden voxels (0+)
+                 * bottom colored voxels (0+)
+                 */
+                // The total length of this span in 4 byte chunks
                 int number_4byte_chunks = v[0];
+                // Start and end of the top color run
                 int top_color_start = v[1];
                 int top_color_end = v[2]; // inclusive
+
+                // The length of the bottom color run start will be calculated.
+                // The end of the bottom color is also the start of the next air run.
                 int bottom_color_start;
-                int bottom_color_end; // exclusive
+                int bottom_color_end = v[3]; // exclusive
+
                 int len_top;
-                int len_bottom;
-                for (i = z; i < top_color_start; i++)
+                int len_bottom = top_color_end - top_color_start + 1;
+
+                // Clear the voxels up to the top solid run
+                for (int i = z; i < top_color_start; i++) {
                     map->geometry[get_pos(x, y, i)] = 0;
-                color = (int *)(v + 4);
-                for (z = top_color_start; z <= top_color_end; z++)
+                }
+
+                int* color = (int *)(v + 4);
+                for (z = top_color_start; z <= top_color_end; z++) {
+                    if(color >= reinterpret_cast<int *>(data_end)) {
+                        delete map;
+                        throw std::invalid_argument(
+                                "expected color but found EOF while parsing map data");
+                    }
                     map->colors[get_pos(x, y, z)] = *color++;
-                len_bottom = top_color_end - top_color_start + 1;
+                }
 
                 // check for end of data marker
                 if (number_4byte_chunks == 0)
@@ -83,7 +124,6 @@ MapData *load_vxl(unsigned char *v)
                 // now skip the v pointer past the data to the beginning of the next span
                 v += v[0] * 4;
 
-                bottom_color_end = v[3]; // aka air start
                 bottom_color_start = bottom_color_end - len_top;
                 for (z = bottom_color_start; z < bottom_color_end; ++z)
                 {

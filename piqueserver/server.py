@@ -536,10 +536,15 @@ class FeatureProtocol(ServerProtocol):
 
         async def do_advance():
             if message is not None:
+                log.info("advancing to map '{name}' ({reason}) in 10 seconds",
+                         name=planned_map.full_name, reason=message)
                 self.send_chat(
                     '{} Next map: {}.'.format(message, planned_map.full_name),
                     irc=True)
                 await sleep(10)
+            else:
+                log.info("advancing to map '{name}'",
+                         name=planned_map.full_name)
 
             await self.set_map_name(planned_map)
 
