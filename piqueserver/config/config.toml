@@ -1,5 +1,3 @@
-# TODO: store config here about location of maps/scripts/game_modes/etc as well
-
 # server name - displayed on master server
 name = "piqueserver instance"
 
@@ -113,13 +111,11 @@ default_time_limit = "2hours"
 # advances the map rotation when the game ends, if set to true
 advance_on_win = true
 
-# time before player respawns
-# TODO: document how spawn time is calculated (it's not always the time given)
+# time between player respawn waves
 # (default: 8 seconds)
 respawn_time = "16sec"
 
-# if respawns should line up with each other (multiple players will respawn at
-# the same time instead of exactly the time from when they died
+# if respawns should happen in waves, or respawn_time seconds after the players death
 respawn_waves = true
 
 # whether friendly fire is allowed by default
@@ -178,7 +174,6 @@ cap_limit = 10
 # name of the team to be displayed in-game
 name = "Blue"
 # color of the players
-# TODO: make this support hex and named colors instead of rbg
 color = [ 0, 0, 255]
 
 [team2]
@@ -196,7 +191,7 @@ color = [ 0, 255, 0]
 # logging in as admin or trusted also disables being votekicked (if that script is enabled)
 # For security reasons, logins are disabled by default.
 #
-# admin = ["adminpass1", "adminpass2"]
+#admin = ["adminpass1", "adminpass2"]
 #moderator = ["modpass"]
 #guard = ["guardpass"]
 #trusted = ["trustedpass"]
@@ -347,7 +342,6 @@ ban_duration = "30min"
 public_votes = true
 
 
-# TODO: document
 # piqueserver.scripts.votemap
 [votemap]
 
