@@ -357,7 +357,7 @@ def handle_command(connection, command, parameters):
     if not has_permission(command_func, connection):
         return "You can't use this command"
 
-    argspec = inspect.getargspec(command_func)
+    argspec = inspect.getfullargspec(command_func)
     min_params = len(argspec.args) - 1 - len(argspec.defaults or ())
     max_params = len(argspec.args) - 1 if argspec.varargs is None else None
     len_params = len(parameters)
