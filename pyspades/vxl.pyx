@@ -55,15 +55,15 @@ cdef class Generator:
 cdef class VXLData:
     def __init__(self, fp = None):
         cdef unsigned char * c_data
-        cdef size_t c_len
         if fp is not None:
             data = fp.read()
             c_data = data
-            c_len = len(data)
         else:
             c_data = NULL
-            c_len = 0
-        self.map = load_vxl(c_data, c_len)
+        self.map = load_vxl(c_data)
+
+    def load_vxl(self, c_data = None):
+        self.map = load_vxl(c_data)
 
     def copy(self):
         cdef VXLData map = VXLData()

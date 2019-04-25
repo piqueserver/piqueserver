@@ -5,11 +5,11 @@ import shlex
 from itertools import product
 import textwrap
 import re
-from typing import Any, Optional, Sequence, Tuple, Union, Dict
 
 from twisted.internet import reactor
 from twisted.logger import Logger
 import enet
+from typing import Any, Optional, Sequence, Tuple, Union
 
 from pyspades.protocol import BaseConnection
 from pyspades.constants import (
@@ -137,7 +137,6 @@ class ServerConnection(BaseConnection):
         self.respawn_time = protocol.respawn_time
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
         self.client_info = {}
-        self.proto_extensions = {}  # type: Dict[int, int]
         self.line_build_start_pos = None
 
     def on_connect(self) -> None:
@@ -172,10 +171,6 @@ class ServerConnection(BaseConnection):
         if self.player_id is None:
             return
         call_packet_handler(self, loader)
-
-    @register_packet_handler(loaders.ProtocolExtensionInfo)
-    def on_new_player_recieved(self, contained: loaders.ProtocolExtensionInfo) -> None:
-        self.proto_extensions = dict(contained.extensions)
 
     @register_packet_handler(loaders.ExistingPlayer)
     @register_packet_handler(loaders.ShortPlayerData)
@@ -1031,9 +1026,6 @@ class ServerConnection(BaseConnection):
         self.send_map(ProgressiveMapGenerator(self.protocol.map))
         if not self.client_info:
             self.send_contained(handshake_init)
-        ext_info = loaders.ProtocolExtensionInfo()
-        ext_info.extensions = []
-        self.send_contained(ext_info)
 
     def _send_connection_data(self) -> None:
         saved_loaders = self.saved_loaders = []

@@ -11,10 +11,7 @@
 #define MAP_X 512
 #define MAP_Y 512
 #define MAP_Z 64
-// Works
 #define get_pos(x, y, z) ((x) + (y)*MAP_Y + (z)*MAP_X * MAP_Y)
-// Breaks
-// #define get_pos(x, y, z) ((z) + (x) * MAP_Z + (y) * MAP_Z * MAP_X)
 #define DEFAULT_COLOR 0xFF674028
 
 struct MapData

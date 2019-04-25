@@ -11,8 +11,7 @@ cdef extern from "vxl_c.cpp":
     MapGenerator * create_map_generator(MapData * original)
     void delete_map_generator(MapGenerator * generator)
     object get_generator_data(MapGenerator * generator, int columns)
-    MapData * load_vxl(unsigned char * v, size_t len) except +
-    MapData * new_vxl()
+    MapData * load_vxl(unsigned char * v)
     MapData * copy_map(MapData * map)
     void delete_vxl(MapData * map)
     object save_vxl(MapData * map)

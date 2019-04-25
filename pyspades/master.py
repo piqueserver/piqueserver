@@ -32,7 +32,6 @@ MAX_MAP_NAME_SIZE = 20
 MAX_GAME_MODE_SIZE = 7
 
 HOST = 'master.buildandshoot.com'
-HOST = 'localhost'
 
 
 class AddServer(Loader):
@@ -101,7 +100,7 @@ class MasterConnection(BaseConnection):
         self.disconnect_callback = None
 
 
-def get_master_connection(protocol, host, port):
+def get_master_connection(protocol):
     defer = Deferred()
     connection = protocol.connect(MasterConnection, HOST, PORT, MASTER_VERSION)
     connection.server_protocol = protocol
