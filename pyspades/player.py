@@ -174,7 +174,7 @@ class ServerConnection(BaseConnection):
         call_packet_handler(self, loader)
 
     @register_packet_handler(loaders.ProtocolExtensionInfo)
-    def on_new_player_recieved(self, contained: loaders.ProtocolExtensionInfo) -> None:
+    def on_ext_info_received(self, contained: loaders.ProtocolExtensionInfo) -> None:
         self.proto_extensions = dict(contained.extensions)
 
     @register_packet_handler(loaders.ExistingPlayer)
