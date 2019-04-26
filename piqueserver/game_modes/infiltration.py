@@ -1,22 +1,46 @@
 """
-Attackers get ATTACKER_SCORE_MULTIPLIER points for taking and capturing
-the intel.
+Infiltration is an asymetric intel-based game mode where one team, the
+attackers, tries to infiltrate the defenders base and steal the intel.
+Defenders receive points for keeping the intel out of the attackers hands and
+attackers recieve points for capturing the intel.
 
-Defenders gain 1 point for every DEFENDER_SCORE_INTERVAL seconds that the intel
-remains untouched.
+Options
+^^^^^^^
 
-To use set game_mode to 'infiltration' in config.txt, do NOT add to script list.
+.. code-block:: guess
+    [infiltration]
+    # Attackers get attacker_score_multiplier points for taking and capturing
+    # the intel.
+    attacker_score_multiplier = 10
 
-Maintainer: TheGrandmaster / hompy
+    # Defenders gain 1 point for every defender_score_interval seconds that the
+    # intel remains untouched.
+    defender_score_interval = "30sec"
+
+    # The ratio of attackers to defenders. Be aware that setting this
+    # incorrectly might prevent players from joining
+    attacker_ratio = 1.6
+
+Originally created by: TheGrandmaster / hompy
 """
 
 from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
 from pyspades.player import create_player, player_left, intel_capture
-from pyspades.constants import *
+from pyspades.constants import CTF_MODE, RIFLE_WEAPON
+
+from piqueserver.config import config, cast_duration
 
 ATTACKER_TEAM = 1  # 0 = blue, 1 = green
-ATTACKER_TO_DEFENDER_RATIO = 1.6
+
+INFIL_CONFIG = config.section("infiltration")
+ATTACKER_RATIO_OPTION = INFIL_CONFIG.option(
+    "attacker_ratio", default=1.6, cast=int)
+ATTACKER_SCORE_MULTIPLIER_OPTION = INFIL_CONFIG.option(
+    "attacker_score_multiplier", default=10, cast=int)
+DEFENDER_SCORE_INTERVAL_OPTION = INFIL_CONFIG.option(
+    "defender_score_interval", default="30sec", cast=cast_duration)
+
 ATTACKER_SCORE_MULTIPLIER = 10
 DEFENDER_SCORE_INTERVAL = 30  # seconds
 ON_FLAG_TAKE_FLASHES_FOG = True
@@ -33,16 +57,14 @@ S_OBJECTIVES = {
 
 
 class DummyPlayer():
-    protocol = None
-    team = None
-    player_id = None
-
     def __init__(self, protocol, team):
         self.protocol = protocol
         self.team = team
+        self.player_id = None
         self.acquire_player_id()
 
     def acquire_player_id(self):
+        """temporarily borrow a player ID to score"""
         max_players = min(32, self.protocol.max_players)
         if len(self.protocol.connections) >= max_players:
             try:
@@ -102,14 +124,16 @@ def apply_script(protocol, connection, config):
         def on_team_join(self, team):
             attacker = self.protocol.attacker
             defender = self.protocol.defender
+
+            attacker_ratio = ATTACKER_RATIO_OPTION.get()
             attacker_count = attacker.count() + (1 if team is attacker else 0)
             defender_count = ((defender.count() +
                                (1 if team is defender else 0)) *
-                              ATTACKER_TO_DEFENDER_RATIO)
-            attacker_count = attacker_count or ATTACKER_TO_DEFENDER_RATIO
+                              attacker_ratio)
+            attacker_count = attacker_count or attacker_ratio
             if ((attacker_count > defender_count and team is attacker) or
                     (attacker_count < defender_count and team is defender)):
-                if abs(attacker_count - defender_count) > ATTACKER_TO_DEFENDER_RATIO:
+                if abs(attacker_count - defender_count) > attacker_ratio:
                     self.send_chat(S_TEAM_FULL)
                     return False
             return connection.on_team_join(self, team)
@@ -117,20 +141,23 @@ def apply_script(protocol, connection, config):
         def on_team_changed(self, old_team):
             if self.team and self.team.id in S_OBJECTIVES:
                 self.send_chat(S_OBJECTIVES[self.team.id])
+                self.send_chat_status(S_OBJECTIVES[self.team.id])
             connection.on_team_changed(self, old_team)
 
         def on_login(self, name):
             if self.team and self.team.id in S_OBJECTIVES:
                 self.send_chat(S_OBJECTIVES[self.team.id])
+                self.send_chat_status(S_OBJECTIVES[self.team.id])
             connection.on_login(self, name)
 
         def on_flag_capture(self):
-            if ATTACKER_SCORE_MULTIPLIER > 1:
+            score_multiplier = ATTACKER_SCORE_MULTIPLIER_OPTION.get()
+            if score_multiplier > 1:
                 dummy = DummyPlayer(self.protocol, self.team)
                 self.protocol.attacker_dummy = dummy
                 if self.protocol.attacker_dummy_calls is None:
                     self.protocol.attacker_dummy_calls = []
-                for i in range(ATTACKER_SCORE_MULTIPLIER - 1):
+                for i in range(score_multiplier - 1):
                     delay = i * 0.1
                     dummy_call = callLater(delay,
                                            self.protocol.attacker_dummy_score)
@@ -189,7 +216,8 @@ def apply_script(protocol, connection, config):
         def start_defender_score_loop(self):
             if self.defender_score_loop.running:
                 self.defender_score_loop.stop()
-            self.defender_score_loop.start(DEFENDER_SCORE_INTERVAL, now=False)
+            score_interval = DEFENDER_SCORE_INTERVAL_OPTION.get()
+            self.defender_score_loop.start(score_interval, now=False)
 
         def defender_score_cycle(self):
             dummy = DummyPlayer(self, self.defender)
