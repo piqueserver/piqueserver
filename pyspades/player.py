@@ -1,37 +1,37 @@
-import math
 import collections
+import math
 import random
-import shlex
-from itertools import product
-import textwrap
 import re
-from typing import Any, Optional, Sequence, Tuple, Union, Dict
+import shlex
+import textwrap
+from itertools import product
+from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
+import enet
 from twisted.internet import reactor
 from twisted.logger import Logger
-import enet
 
-from pyspades.protocol import BaseConnection
-from pyspades.constants import (
-    RAPID_WINDOW_ENTRIES, ERROR_FULL, ERROR_WRONG_VERSION,
-    ERROR_TOO_MANY_CONNECTIONS, FALL_KILL, CTF_MODE, TC_MODE,
-    MAX_POSITION_RATE, TC_CAPTURE_DISTANCE, WEAPON_TOOL, SPADE_TOOL,
-    BLOCK_TOOL, MELEE, HIT_TOLERANCE, MELEE_DISTANCE, MELEE_KILL, HEAD,
-    HEADSHOT_KILL, WEAPON_KILL, MAX_BLOCK_DISTANCE)
-from pyspades.team import Team
-from pyspades.constants import *
-from pyspades.packet import call_packet_handler, register_packet_handler
 from pyspades import contained as loaders
-from pyspades.collision import vector_collision, collision_3d
 from pyspades import world
+from pyspades.collision import collision_3d, vector_collision
 from pyspades.common import Vertex3, get_color, make_color
-from pyspades.weapon import WEAPONS
+from pyspades.constants import *
+from pyspades.constants import (BLOCK_TOOL, CTF_MODE, ERROR_FULL,
+                                ERROR_TOO_MANY_CONNECTIONS,
+                                ERROR_WRONG_VERSION, FALL_KILL, HEAD,
+                                HEADSHOT_KILL, HIT_TOLERANCE,
+                                MAX_BLOCK_DISTANCE, MAX_POSITION_RATE, MELEE,
+                                MELEE_DISTANCE, MELEE_KILL,
+                                RAPID_WINDOW_ENTRIES, SPADE_TOOL,
+                                TC_CAPTURE_DISTANCE, TC_MODE, WEAPON_KILL,
+                                WEAPON_TOOL)
 from pyspades.mapgenerator import ProgressiveMapGenerator
-from piqueserver.config import config
+from pyspades.packet import call_packet_handler, register_packet_handler
+from pyspades.protocol import BaseConnection
+from pyspades.team import Team
+from pyspades.weapon import WEAPONS
 
 log = Logger()
-# distance the server tolerates between the place it thinks the client is to where the client actually is.
-rubberband_distance = config.option('rubberband_distance', default=10)
 
 
 set_tool = loaders.SetTool()
@@ -120,6 +120,7 @@ class ServerConnection(BaseConnection):
     freeze_animation = False
     filter_weapon_input = False
     speedhack_detect = False
+    rubberband_distance = 10
     rapid_hack_detect = False
     timers = None
     world_object = None  # type: world.Character
@@ -211,6 +212,8 @@ class ServerConnection(BaseConnection):
         self.set_weapon(contained.weapon, True)
         if self.protocol.speedhack_detect:
             self.speedhack_detect = True
+        if self.protocol.rubberband_distance is not None:
+            self.rubberband_distance = self.protocol.rubberband_distance
         self.rapid_hack_detect = True
         if team.spectator:
             if self.world_object is not None:
@@ -705,7 +708,8 @@ class ServerConnection(BaseConnection):
         client = self.client_info.get("client", "Unknown")
         os = self.client_info.get("os_info", "Unknown")
         version = self.client_info.get("version", None)
-        version_string = "Unknown" if version is None else ".".join(map(str, version))
+        version_string = "Unknown" if version is None else ".".join(
+            map(str, version))
         if client == os == version_string == "Unknown":
             client = "Probably Voxlap"
             os = "Windows"
@@ -716,7 +720,7 @@ class ServerConnection(BaseConnection):
         if not self.speedhack_detect:
             return True
         if distance is None:
-            distance = rubberband_distance.get()
+            distance = self.rubberband_distance
         position = self.world_object.position
         return (math.fabs(x - position.x) < distance and
                 math.fabs(y - position.y) < distance and
