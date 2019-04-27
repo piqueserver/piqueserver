@@ -636,10 +636,7 @@ class FeatureProtocol(ServerProtocol):
     def format_lines(self, value: List[str]) -> List[str]:
         if value is None:
             return
-        lines = []
-        for line in value:
-            lines.append(self.format(line))
-        return lines
+        return [self.format(line) for line in value]
 
     def got_master_connection(self, client):
         log.info('Master connection established.')
