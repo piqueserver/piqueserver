@@ -19,54 +19,49 @@
 """
 pyspades - default/featured server
 """
-import sys
-import os
+import asyncio
 import imp
 import importlib
-import json
 import itertools
+import json
+import os
 import random
+import sys
 import time
 from collections import deque
+from ipaddress import AddressValueError, IPv4Address, ip_address, ip_network
 from pprint import pprint
-from ipaddress import ip_network, ip_address, IPv4Address, AddressValueError
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
-from twisted.internet import reactor, threads
-from twisted.internet.defer import inlineCallbacks, Deferred, ensureDeferred
-from twisted.internet.task import coiterate, LoopingCall, deferLater
-from twisted.python.logfile import DailyLogFile
-from twisted.logger import Logger, textFileLogObserver
-from twisted.logger import FilteringLogObserver, LogLevelFilterPredicate, LogLevel
-from twisted.logger import globalLogBeginner
-from twisted.internet.tcp import Port
-import asyncio
 import aiohttp
-from piqueserver.utils import as_deferred
-from piqueserver.release import check_for_releases, format_release
 from enet import Address, Packet, Peer
-
-
-import pyspades.debug
-from pyspades.server import (ServerProtocol, Team)
-from pyspades.constants import (CTF_MODE, TC_MODE, ERROR_SHUTDOWN)
-from pyspades.master import MAX_SERVER_NAME_SIZE
-from pyspades.tools import make_server_identifier
-from pyspades.bytes import NoDataLeft
-from pyspades.vxl import VXLData
-
-from piqueserver.scheduler import Scheduler
-from piqueserver import commands
-from piqueserver.map import Map, MapNotFound, check_rotation, RotationInfo
-from piqueserver.console import create_console
-from piqueserver.networkdict import NetworkDict
-from piqueserver.player import FeatureConnection
-from piqueserver.config import config, cast_duration
-from piqueserver import extensions
+from twisted.internet import reactor, threads
+from twisted.internet.defer import Deferred, ensureDeferred, inlineCallbacks
+from twisted.internet.task import LoopingCall, coiterate, deferLater
+from twisted.internet.tcp import Port
+from twisted.logger import (FilteringLogObserver, Logger, LogLevel,
+                            LogLevelFilterPredicate, globalLogBeginner,
+                            textFileLogObserver)
+from twisted.python.logfile import DailyLogFile
 
 # won't be used; just need to be executed
 import piqueserver.core_commands  # pylint: disable=unused-import
-
+import pyspades.debug
+from piqueserver import commands, extensions
+from piqueserver.config import cast_duration, config
+from piqueserver.console import create_console
+from piqueserver.map import Map, MapNotFound, RotationInfo, check_rotation
+from piqueserver.networkdict import NetworkDict
+from piqueserver.player import FeatureConnection
+from piqueserver.release import check_for_releases, format_release
+from piqueserver.scheduler import Scheduler
+from piqueserver.utils import as_deferred
+from pyspades.bytes import NoDataLeft
+from pyspades.constants import CTF_MODE, ERROR_SHUTDOWN, TC_MODE
+from pyspades.master import MAX_SERVER_NAME_SIZE
+from pyspades.server import ServerProtocol, Team
+from pyspades.tools import make_server_identifier
+from pyspades.vxl import VXLData
 
 log = Logger()
 
@@ -144,6 +139,7 @@ login_retries = config.option('login_retries', 1)
 default_ban_duration = bans_config.option(
     'default_duration', default="1day", cast=cast_duration)
 speedhack_detect = config.option('speedhack_detect', True)
+rubberband_distance = config.option('rubberband_distance', default=10)
 user_blocks_only = config.option('user_blocks_only', False)
 debug_log_enabled = logging_config.option('debug_log', False)
 logging_profile_option = logging_config.option('profile', False)
@@ -376,6 +372,7 @@ class FeatureProtocol(ServerProtocol):
         self.default_ban_time = default_ban_duration.get()
 
         self.speedhack_detect = speedhack_detect.get()
+        self.rubberband_distance = rubberband_distance.get()
         if user_blocks_only.get():
             self.user_blocks = set()
         self.set_god_build = set_god_build.get()
