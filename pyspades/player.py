@@ -187,7 +187,7 @@ class ServerConnection(BaseConnection):
             # modes. Without this check, they could respawn themselves
             # instantly on any team they wanted.
             log.debug("{} tried sending an ExistingPlayer packet while not in"
-                      "limbo or spectator mode".format(self))
+                      " limbo or spectator mode".format(self))
             return
 
         old_team = self.team
