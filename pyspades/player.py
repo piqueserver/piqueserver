@@ -703,6 +703,15 @@ class ServerConnection(BaseConnection):
         else:
             self.client_info["client"] = "Unknown({})".format(contained.client)
 
+        # send extension info to clients that support this packet.
+        # skip openspades <= 0.1.3 https://github.com/piqueserver/piqueserver/issues/504
+        if contained.client == 'o' and contained.version <= (0, 1, 3):
+            pass
+        else:
+            ext_info = loaders.ProtocolExtensionInfo()
+            ext_info.extensions = []
+            self.send_contained(ext_info)
+
     @property
     def client_string(self):
         client = self.client_info.get("client", "Unknown")
@@ -1035,9 +1044,6 @@ class ServerConnection(BaseConnection):
         self.send_map(ProgressiveMapGenerator(self.protocol.map))
         if not self.client_info:
             self.send_contained(handshake_init)
-        ext_info = loaders.ProtocolExtensionInfo()
-        ext_info.extensions = []
-        self.send_contained(ext_info)
 
     def _send_connection_data(self) -> None:
         saved_loaders = self.saved_loaders = []
