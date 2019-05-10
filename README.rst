@@ -62,12 +62,6 @@ pip (stable version)
 
     pip3 install piqueserver
 
-to install with the optional ssh server
-
-.. code:: bash
-
-    pip3 install piqueserver[ssh]
-
 git (bleeding edge)
 ~~~~~~~~~~~~~~~~~~~
 
