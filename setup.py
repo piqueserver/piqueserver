@@ -136,7 +136,7 @@ setup(
     install_requires=[
         'pypiwin32;platform_system=="Windows"',
         'Cython>=0.27,<1',
-        'Twisted[tls]>=17,<19',
+        'Twisted[tls]',
         'Jinja2>=2,<3',
         'pypng==0.0.19',
         'aiohttp>=3.3.0,<3.6.0',
