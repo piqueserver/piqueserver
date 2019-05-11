@@ -1,12 +1,17 @@
 """
 Airstrikes. Boom!
 
-Maintainer: hompy
+Commands
+^^^^^^^^
+
+* ``/airstrike or /a`` allows a player to call an airstike
+* ``/givestrike <player>`` gives a player the ability to call an airstike immediately *admin only*
+
+.. codeauthor:: hompy
 """
 
 from math import ceil, sin, cos
 from random import uniform, vonmisesvariate
-from six.moves import range
 from twisted.internet import reactor
 from pyspades.contained import GrenadePacket
 from pyspades.common import to_coordinates, Vertex3
@@ -82,7 +87,12 @@ class Nag(object):
 
     def start_or_reset(self):
         if self.call and self.call.active():
-            self.call.reset(ZOOMV_TIME)
+            # In Twisted==18.9.0, reset() is broken when using
+            # AsyncIOReactor
+            # self.call.reset(ZOOMV_TIME)
+            self.call.cancel()
+            self.call = reactor.callLater(
+                ZOOMV_TIME, self.f, *self.args, **self.kw)
         else:
             self.call = reactor.callLater(
                 self.seconds, self.f, *self.args, **self.kw)
@@ -173,7 +183,7 @@ def apply_script(protocol, connection, config):
             grenade_packet.player_id = self.player_id
             grenade_packet.position = position.get()
             grenade_packet.velocity = velocity.get()
-            self.protocol.send_contained(grenade_packet)
+            self.protocol.broadcast_contained(grenade_packet)
 
         def airstrike_exploded(self, grenade):
             grenade.velocity.normalize()

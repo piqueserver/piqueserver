@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from pyspades.common import *
-
 cdef class Loader:
     def __init__(self, ByteReader reader = None):
         if reader is not None:
@@ -28,13 +26,13 @@ cdef class Loader:
             raise NotImplementedError('read() not implemented')
         read_python(reader)
 
-    cpdef write(self, ByteWriter reader):
+    cpdef write(self, ByteWriter writer):
         write_python = getattr(self, 'write', None)
         if write_python is None:
             raise NotImplementedError('write() not implemented')
-        write_python(reader)
+        write_python(writer)
 
     cpdef ByteWriter generate(self):
-        cdef ByteWriter reader = ByteWriter()
-        self.write(reader)
-        return reader
+        cdef ByteWriter writer = ByteWriter()
+        self.write(writer)
+        return writer

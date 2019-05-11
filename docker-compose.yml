@@ -1,0 +1,15 @@
+version: '3.6'
+
+services:
+    piqueserver:
+        # image: TODO
+        volumes:
+            - config:/config
+        ports:
+            - "32887:32887"
+            - "32886:32886"
+            - "32885:32885"
+            - "32887:32887/udp"
+
+volumes:
+    config:

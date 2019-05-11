@@ -1,18 +1,15 @@
 """
 Makes the flag returnable in Quake-like fashion.
 
-Maintainer: mat^2
-fixed by learn_more
+.. codeauthor:: mat^2 & learn_more
 """
 
-from six import itervalues
 from pyspades.collision import vector_collision
-
+from pyspades.constants import CTF_MODE
 
 def apply_script(protocol, connection, config):
-    game_mode = config.get('game_mode', 'ctf')
 
-    if game_mode != 'ctf':
+    if protocol.game_mode != CTF_MODE:
         return protocol, connection
 
     class ReturnConnection(connection):
@@ -41,7 +38,7 @@ def apply_script(protocol, connection, config):
 
         def set_map(self, map):
             protocol.set_map(self, map)
-            for team in itervalues(self.teams):
+            for team in self.teams.values():
                 if team.spectator:
                     continue
                 team.flag.out = False

@@ -17,18 +17,12 @@
 
 import sys
 from os import path
-import errno
-try:
-    from twisted.cred import portal, checkers
-    from twisted.conch import manhole, manhole_ssh
-    from twisted.conch.ssh import keys
-except ImportError as e:
-    print("ERROR: piqueserver was not installed with the [ssh] option")
-    print("but SSH was enabled in the settings")
-    print(e)
-    sys.exit(1)
 
-from piqueserver import cfg
+from twisted.cred import portal, checkers
+from twisted.conch import manhole, manhole_ssh
+from twisted.conch.ssh import keys
+
+from piqueserver.config import config
 
 
 def create_remote_factory(namespace, users):
@@ -45,7 +39,7 @@ def create_remote_factory(namespace, users):
     p.registerChecker(
         checkers.InMemoryUsernamePasswordDatabaseDontUse(**users))
     f = manhole_ssh.ConchFactory(p)
-    ssh_key_base_path = path.join(cfg.config_dir, "ssh-keys")
+    ssh_key_base_path = path.join(config.config_dir, "ssh-keys")
     ssh_pubkey_path = path.join(ssh_key_base_path,
                                 "ssh_host_rsa_key.pub")
     ssh_privkey_path = path.join(ssh_key_base_path,
@@ -53,22 +47,21 @@ def create_remote_factory(namespace, users):
     try:
         f.publicKeys[b"ssh-rsa"] = keys.Key.fromFile(ssh_pubkey_path)
         f.privateKeys[b"ssh-rsa"] = keys.Key.fromFile(ssh_privkey_path)
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            print("ERROR: You don't have any keys in the host key location")
-            print("Generate one with:")
-            print("  mkdir {}".format(ssh_key_base_path))
-            print("  ssh-keygen -f {} -t rsa".format(ssh_privkey_path))
-            print("make sure to specify no password")
-            sys.exit(1)
-        else:
-            raise e
+    except FileNotFoundError:
+        print("ERROR: You don't have any keys in the host key location")
+        print("Generate one with:")
+        print("  mkdir {}".format(ssh_key_base_path))
+        print("  ssh-keygen -f {} -t rsa".format(ssh_privkey_path))
+        print("make sure to specify no password")
+        sys.exit(1)
     return f
 
 
+ssh_config = config.section("ssh")
 class RemoteConsole(object):
 
-    def __init__(self, server, config):
-        users = config.get('users', {})
-        factory = create_remote_factory(locals(), users)
-        server.listenTCP(config.get('port', 38827), factory)
+    def __init__(self, server):
+        users = ssh_config.option("users", {})
+        port = ssh_config.option("port", 38827)
+        factory = create_remote_factory(locals(), users.get())
+        server.listenTCP(port.get(), factory)

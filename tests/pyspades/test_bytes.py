@@ -1,8 +1,6 @@
 """
 tests for bytes.pyx
 """
-from __future__ import print_function
-
 from twisted.trial import unittest
 
 from pyspades.bytes import ByteReader, ByteWriter

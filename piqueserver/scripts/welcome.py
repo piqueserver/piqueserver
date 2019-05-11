@@ -1,12 +1,24 @@
 """
 Greets specified people entering with messages
 
-Maintainer: mat^2
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [welcome]
+   welcomes = { nota = "Hi notafile", feik = "Hi feik" }
+
+.. codeauthor: mat^2
 """
+from piqueserver.config import config
+
+welcome_config = config.section("welcome")
+welcomes_option = welcome_config.option("welcomes", {})
 
 
 def apply_script(protocol, connection, config):
-    welcomes = config.get('welcomes', {})
+    welcomes = welcomes_option.get()
 
     class EnterConnection(connection):
 

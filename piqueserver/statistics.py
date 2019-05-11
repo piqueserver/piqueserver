@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
-
 import json
 
 from twisted.internet.protocol import (ReconnectingClientFactory,
@@ -173,7 +171,7 @@ if __name__ == '__main__':
             print('Adding death to', name)
 
         def check_user(self, name, password):
-            print('Checking user name/pass (%s, %s)' % (name, password))
+            print('Checking user name/pass ({}, {})'.format(name, password))
             # TODO: pylint thinks this function should have an argument
             #       check it out
             return succeed()  # pylint: disable=no-value-for-parameter

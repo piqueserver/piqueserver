@@ -4,11 +4,10 @@ Blocks built by players are twice as hard to break.
 * You can remove your own blocks as if they weren't strong.
 * Dirt-colored or buried blocks (those that turn into dirt) become normal blocks.
 
-Maintainer: hompy
+.. codeauthor:: hompy
 """
 
 from collections import namedtuple
-from six import iteritems
 from pyspades.contained import BlockAction, SetColor
 from pyspades.common import make_color
 from pyspades.color import rgb_distance
@@ -58,7 +57,7 @@ def apply_script(protocol, connection, config):
 
         def on_disconnect(self):
             strong_blocks = self.protocol.strong_blocks
-            for xyz, strong_block in iteritems(strong_blocks):
+            for xyz, strong_block in strong_blocks.items():
                 if strong_block.owner is self:
                     strong_blocks[xyz] = strong_block._replace(owner=None)
             connection.on_disconnect(self)

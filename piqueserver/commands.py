@@ -18,25 +18,30 @@
 # pylint: disable=too-many-lines
 # pylint: disable=wildcard-import,unused-wildcard-import
 
-from __future__ import print_function, unicode_literals
-
 import traceback
 import inspect
 import warnings
 from collections import namedtuple
 import textwrap
+from typing import Dict, List, Callable
+
 from pyspades.player import parse_command
 
 _commands = {}
 _alias_map = {}
-_rights = {}
+_rights = {}  # type: Dict[str, List[str]]
 
 
 class CommandError(Exception):
     pass
 
 
-def command(name=None, *aliases, **kwargs):
+class PermissionDenied(Exception):
+    pass
+
+
+def command(name=None, *aliases,
+            admin_only=False) -> Callable[[Callable], Callable]:
     """
     Register a new command.
 
@@ -47,39 +52,36 @@ def command(name=None, *aliases, **kwargs):
     ... def some_command(x):
     ...     pass
 
-    Optional mames and aliases:
+    Optional names and aliases:
 
     >>> @command("name", "alias1", "alias2")
     ... def some_command(x):
     ...     pass
     """
-    def decorator(function):
+    def decorator(function) -> Callable[..., str]:
         function.user_types = set()
-        if kwargs.get('admin_only', False):
+        if admin_only:
             function.user_types.add("admin")
 
-        # in py2 you can not modify variables in outer closures, so we need
-        # to assign into a new variable
+        nonlocal name
         if name is None:
-            func_name = function.__name__
-        else:
-            func_name = name
+            name = function.__name__
 
-        function.command_name = func_name
+        function.command_name = name
 
-        _commands[func_name] = function
+        _commands[name] = function
 
         if aliases:
             function.aliases = []
 
             for alias in aliases:
-                _alias_map[alias] = func_name
+                _alias_map[alias] = name
 
         return function
     return decorator
 
 
-def add(func):
+def add(func: Callable) -> None:
     """
     Function to add a command from scripts. Deprecated
     """
@@ -89,7 +91,7 @@ def add(func):
     command()(func)
 
 
-def name(name):
+def name(name: str) -> Callable:
     """
     Give the command a new name. Deprecated
     """
@@ -97,13 +99,13 @@ def name(name):
         '@name is deprecated, use @command("name")',
         DeprecationWarning)
 
-    def dec(func):
+    def dec(func: Callable) -> Callable:
         func.__name__ = name
         return func
     return dec
 
 
-def alias(name):
+def alias(name: str) -> Callable:
     """
     add a new alias to a command. Deprecated
     """
@@ -111,7 +113,7 @@ def alias(name):
         '@alias is deprecated, use @command("name", "alias1", "alias2")',
         DeprecationWarning)
 
-    def dec(func):
+    def dec(func: Callable) -> Callable:
         try:
             func.aliases.append(name)
         except AttributeError:
@@ -120,7 +122,7 @@ def alias(name):
     return dec
 
 
-def restrict(*user_types):
+def restrict(*user_types: List[str]) -> Callable:
     """
     restrict the command to only be used by a specific type of user
 
@@ -129,7 +131,7 @@ def restrict(*user_types):
     ... def some_command(x):
     ...     pass
     """
-    def decorator(function):
+    def decorator(function: Callable) -> Callable:
         function.user_types = set(*user_types)
         return function
     return decorator
@@ -149,7 +151,7 @@ def has_permission(f, connection):
 CommandHelp = namedtuple("CommandHelp", ["description", "usage", "info"])
 
 
-def get_command_help(command_func):
+def get_command_help(command_func: Callable) -> CommandHelp:
     doc = command_func.__doc__
     if not doc:
         return CommandHelp("", "", "")
@@ -182,7 +184,8 @@ def get_command_help(command_func):
     return CommandHelp(desc, usage, info)
 
 
-def format_command_error(command_func, message, exception=None):
+def format_command_error(command_func: Callable, message: str, exception:
+                         Exception=None) -> str:
     """format a help message for a given command"""
     command_help = get_command_help(command_func)
 
@@ -196,7 +199,7 @@ def format_command_error(command_func, message, exception=None):
 # various places and that made things more confusing than the needed to be
 
 
-def add_rights(user_type, command_name):
+def add_rights(user_type: str, command_name: str) -> None:
     """
     Give the user type a new right
 
@@ -205,7 +208,7 @@ def add_rights(user_type, command_name):
     _rights.setdefault(user_type, []).append(command_name)
 
 
-def get_rights(user_type):
+def get_rights(user_type: str) -> List[str]:
     """
     Get a list of rights a specific user type has.
 
@@ -219,7 +222,7 @@ def get_rights(user_type):
     return r
 
 
-def update_rights(rights):
+def update_rights(rights: Dict):
     """
     Update the rights of all users according to the input dictionary. This
     is currently only here for when the config needs to be reloaded.
@@ -231,10 +234,10 @@ def update_rights(rights):
     _rights.update(rights)
 
 
-def admin(func):
+def admin(func: Callable) -> Callable:
     """
     Shorthand for @restrict("admin"). Mainly exists for backwards
-    compability with pyspades scripts.
+    compatibility with pyspades scripts.
 
     >>> @admin
     ... @command()
@@ -247,7 +250,7 @@ def admin(func):
 # implementation of the commands
 
 
-def get_player(protocol, value, spectators=True):
+def get_player(protocol, value: str, spectators=True):
     """
     Get a player connection object by name or ID.
 
@@ -354,7 +357,7 @@ def handle_command(connection, command, parameters):
     if not has_permission(command_func, connection):
         return "You can't use this command"
 
-    argspec = inspect.getargspec(command_func)
+    argspec = inspect.getfullargspec(command_func)
     min_params = len(argspec.args) - 1 - len(argspec.defaults or ())
     max_params = len(argspec.args) - 1 if argspec.varargs is None else None
     len_params = len(parameters)
@@ -379,6 +382,8 @@ def handle_command(connection, command, parameters):
         msg = 'Command failed'
     except CommandError as e:
         msg = str(e)
+    except PermissionDenied:
+        msg = 'You can\'t use this command'
     except ValueError:
         msg = 'Invalid parameters'
 

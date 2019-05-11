@@ -1,12 +1,17 @@
 """
 Minefield map extension.
-Copyright (c) 2013 learn_more
-See the file license.txt or http://opensource.org/licenses/MIT for copying
-permission.
 
 Allows mappers to specify the map bounds, outside of which players will trip
 mines.  Breaking blocks (when standing close to the field) also triggers a
 mine.
+
+.. warning::
+   This script conflicts with `smartnade` script.
+
+Commands
+^^^^^^^^
+
+* ``/minedebug`` toggles debug mode *admin only*
 
 example extension from mapname.txt:
 
@@ -30,10 +35,7 @@ example extension from mapname.txt:
 ...     ]
 ... }
 
-Support thread: http://buildandshoot.com/viewtopic.php?f=19&t=8089
-Script location: https://github.com/learn-more/pysnip/blob/master/scripts/minefield.py
-
-Warning: conflicts with `smartnade` script.
+.. codeauthor:: learn_more (MIT LICENSE)
 """
 # todo: reset intel in minefield
 
@@ -122,15 +124,15 @@ class Minefield:
         block_action.player_id = 32
         protocol.map.set_point(x, y, z, color)
         block_action.value = DESTROY_BLOCK
-        protocol.send_contained(block_action, save=True)
+        protocol.broadcast_contained(block_action, save=True)
         block_action.value = BUILD_BLOCK
-        protocol.send_contained(block_action, save=True)
+        protocol.broadcast_contained(block_action, save=True)
 
     def updateColor(self, protocol, color):
         set_color = SetColor()
         set_color.value = make_color(*color)
         set_color.player_id = 32
-        protocol.send_contained(set_color, save=True)
+        protocol.broadcast_contained(set_color, save=True)
         return color
 
     def spawnDecal(self, connection, x, y, z):
@@ -163,7 +165,7 @@ class Minefield:
         grenade_packet.player_id = 32
         grenade_packet.position = position.get()
         grenade_packet.velocity = velocity.get()
-        protocol.send_contained(grenade_packet)
+        protocol.broadcast_contained(grenade_packet)
         if z >= 61.5:
             callLater(fuse + 0.1, self.spawnDecal, connection, x, y, z)
 

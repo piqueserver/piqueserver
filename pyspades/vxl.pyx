@@ -79,6 +79,7 @@ cdef class VXLData:
         if is_valid_position(x, y, z):
             set_point(x, y, z, self.map, 1, make_color(*color))
 
+    # TODO: consider making this function raise error on invalid position
     cpdef get_solid(self, int x, int y, int z):
         if not is_valid_position(x, y, z):
             return None
@@ -89,18 +90,41 @@ cdef class VXLData:
             return None
         return make_color_tuple(get_color(x, y, z, self.map))
 
+    def is_valid_position(self, int x, int y, int z):
+        """return if the value is a valid position within the bounds of the
+        map"""
+        return is_valid_position(x, y, z)
+
     cpdef int get_z(self, int x, int y, int start = 0):
-        for z in xrange(start, 64):
+        '''
+        Returns the first z coordinate that is solid beginning from `start` and
+        moving down.  Useful for getting the coordinate for where something
+        should be after being dropped.
+        '''
+
+        for z in range(start, 64):
             if get_solid(x, y, z, self.map):
                 return z
         return 0
 
     cpdef int get_height(self, int x, int y):
         cdef int start = 63
-        for z in xrange(start, -1, -1):
+        for z in range(start, -1, -1):
             if not get_solid(x, y, z, self.map):
                 return z + 1
         return 0
+
+    cpdef tuple get_safe_coords(self, int x, int y, int z):
+        '''
+        given (x, y, z) coords, return the closest set of coords on the map
+        that is within the bounds of the map
+        '''
+
+        x = 0 if x < 0 else (511 if x > 511 else x)
+        y = 0 if y < 0 else (511 if y > 511 else y)
+        z = 0 if z < 0 else (63 if z > 63 else z)
+
+        return (x, y, z)
 
     cpdef tuple get_random_point(self, int x1, int y1, int x2, int y2):
         cdef int x, y
@@ -110,8 +134,8 @@ cdef class VXLData:
 
     def count_land(self, int x1, y1, x2, y2):
         cdef int land = 0
-        for x in xrange(x1, x2):
-            for y in xrange(y1, y2):
+        for x in range(x1, x2):
+            for y in range(y1, y2):
                 if self.get_solid(x, y, 62):
                     land += 1
         return land
@@ -121,13 +145,13 @@ cdef class VXLData:
             return 0
         set_point(x, y, z, self.map, 0, 0)
         count = 1
-        start = time.time()
+        start = time.monotonic()
         for node_x, node_y, node_z in self.get_neighbors(x, y, z):
             if node_z < 62:
                 count += self.check_node(node_x, node_y, node_z, True)
-        taken = time.time() - start
+        taken = time.monotonic() - start
         if taken > 0.1:
-            print 'destroying block at', x, y, z, 'took:', taken
+            print('destroying block at', x, y, z, 'took:', taken)
         return count
 
     def remove_point(self, int x, int y, int z):
@@ -207,8 +231,8 @@ cdef class VXLData:
             a = 255
         else:
             current_z = z
-        for y in xrange(512):
-            for x in xrange(512):
+        for y in range(512):
+            for x in range(512):
                 if z == -1:
                     current_z = self.get_z(x, y)
                 else:
@@ -232,8 +256,8 @@ cdef class VXLData:
         cdef unsigned int r, g, b, a, color, i, new_color
         data = <unsigned int*>(<char*>data_str)
         i = 0
-        for y in xrange(512):
-            for x in xrange(512):
+        for y in range(512):
+            for x in range(512):
                 color = data[i]
                 a = (color & <unsigned int>0xFF000000) >> 24
                 if a != 255:
@@ -243,11 +267,11 @@ cdef class VXLData:
                 i += 1
 
     def generate(self):
-        start = time.time()
+        start = time.monotonic()
         data = save_vxl(self.map)
-        dt = time.time() - start
+        dt = time.monotonic() - start
         if dt > 1.0:
-            print 'VXLData.generate() took %s' % (dt)
+            print('VXLData.generate() took {}'.format(dt))
         return data
 
     def get_generator(self):

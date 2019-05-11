@@ -1,16 +1,15 @@
 # core
 Cython>=0.27,<1
-Twisted[tls]>=17,<18
+Twisted[tls]
 Jinja2>=2,<3
-Pillow>=4.3.0,<5
 pyenet
-ipaddress
-six
 toml
+pypng==0.0.19
+aiohttp>=3.3.0,<3.6.0
+packaging>=19.0
 
 # from command
-pygeoip>=0.3.2,<0.4
+geoip2>=2.9,<3.0
 
-# ssh
-cryptography>=2.1.4,<2.2
-pyasn1>=0.4.2,<0.5
+# windows specific
+pypiwin32; platform_system=="Windows"

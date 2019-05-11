@@ -1,4 +1,4 @@
-from piqueserver.commands import command, get_player
+from piqueserver.commands import command, get_player, PermissionDenied
 
 @command("client", "cli")
 def client(connection, target=None):
@@ -13,7 +13,7 @@ def client(connection, target=None):
         player = get_player(connection.protocol, target)
         who_is = player.name + " is"
 
-    return "{} connected with {}".format(who_is, connection.client_string)
+    return "{} connected with {}".format(who_is, player.client_string)
 
 
 @command()
@@ -57,7 +57,7 @@ def kill(connection, value=None):
         player = connection
     else:
         if not connection.rights.kill and not connection.admin:
-            return "You can't use this command"
+            raise PermissionDenied()
         player = get_player(connection.protocol, value, False)
     player.kill()
     if connection is not player:

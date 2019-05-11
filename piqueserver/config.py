@@ -17,14 +17,27 @@
 
 import collections
 import json
+import os
+import sys
 
-import six
+import piqueserver
 import toml
+from piqueserver.utils import timeparse
 
-
+# supported config format constants to avoid typos
 DEFAULT_FORMAT = 'TOML'
 TOML_FORMAT = 'TOML'
 JSON_FORMAT = 'JSON'
+
+# global constants we need to know at the start
+_path = os.environ.get('XDG_CONFIG_HOME', '~/.config') + '/piqueserver'
+DEFAULT_CONFIG_DIR = os.path.expanduser(_path)
+MAXMIND_DOWNLOAD = 'https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz'
+MAXMIND_DOWNLOAD_MD5 = MAXMIND_DOWNLOAD + '.md5'
+
+# (major, minor) versions of python we are supporting
+# used on startup to emit a warning if not running on a supported version
+SUPPORTED_PYTHONS = ((3, 5), (3, 6), (3, 7))
 
 
 class ConfigStore():
@@ -52,10 +65,15 @@ class ConfigStore():
     >>> #   }
     >>> # }
     '''
+
     def __init__(self):
         self._raw_config = {}
         self._options = {}
         self._sections = {}
+
+        # these are for config that isn't ever stored in the config file (yet)
+        self.config_dir = DEFAULT_CONFIG_DIR
+        self.config_file = os.path.join(DEFAULT_CONFIG_DIR, "config.toml")
 
     def _validate_all(self):
         for option in self._options.values():
@@ -65,7 +83,7 @@ class ConfigStore():
 
     # https://stackoverflow.com/a/3233356/
     def _nested_update(self, config_dict, updates):
-        for k, v in six.iteritems(updates):
+        for k, v in updates.items():
             if isinstance(v, collections.Mapping):
                 config_dict[k] = self._nested_update(config_dict.get(k, {}), v)
             else:
@@ -94,7 +112,8 @@ class ConfigStore():
         elif format_ == JSON_FORMAT:
             d = json.load(fobj)
         else:
-            raise ValueError('Unsupported config file format: {}'.format(format_))
+            raise ValueError(
+                'Unsupported config file format: {}'.format(format_))
         self.update_from_dict(d)
 
     def load_from_dict(self, config):
@@ -121,7 +140,8 @@ class ConfigStore():
         elif format_ == JSON_FORMAT:
             json.dump(self._raw_config, fobj, indent=2)
         else:
-            raise ValueError('Unsupported config file format: {}'.format(format_))
+            raise ValueError(
+                'Unsupported config file format: {}'.format(format_))
 
     def _get(self, name, default=None):
         if name not in self._raw_config:
@@ -131,7 +151,29 @@ class ConfigStore():
     def _set(self, name, value):
         self._raw_config[name] = value
 
-    def option(self, name, cast=None, default=None, validate=None):
+    def check_unused(self):
+        '''
+        Return the subset of the underlying dictionary that doesn't have any
+        corresponding registered options.
+        '''
+
+        unused = {}
+        for k, v in self.get_dict().items():
+            if isinstance(v, collections.Mapping):
+                if k in self._sections:
+                    section_unused = self._sections[k].check_unused()
+                    if section_unused:
+                        unused[k] = section_unused
+                else:
+                    if k not in self._options:
+                        unused[k] = v
+            else:
+                if k not in self._options:
+                    unused[k] = v
+
+        return unused
+
+    def option(self, name, default=None, cast=None, validate=None):
         '''
         Register and return a new option object.
         '''
@@ -148,24 +190,25 @@ class ConfigStore():
         return section
 
 
-class _Section():
+class _Section(ConfigStore):
     '''
     Represents a section of a configstore. Can be nested arbitarily.
     '''
+
     def __init__(self, store, name):
         self._store = store
         self._name = name
         self._sections = {}
         self._options = {}
 
-    def _validate_all(self):
-        for option in self._options.values():
-            option._validate(option.get())
-        for section in self._sections.values():
-            section._validate_all()
-
     def get_dict(self):
         return self._store.get_dict().get(self._name, {})
+
+    def load_from_file(self, fobj, format_=DEFAULT_FORMAT):
+        raise NotImplementedError()
+
+    def update_from_file(self, fobj, format_=DEFAULT_FORMAT):
+        raise NotImplementedError()
 
     def load_from_dict(self, config):
         self._store._set(self._name, config)
@@ -174,6 +217,9 @@ class _Section():
         d = self._store._get(self._name, {})
         d.update(config)
         self._store._set(self._name, d)
+
+    def dump_to_file(self, fobj, format_=DEFAULT_FORMAT):
+        raise NotImplementedError()
 
     def _get(self, name, default):
         section = self._store._get(self._name, {})
@@ -187,28 +233,12 @@ class _Section():
         section[name] = value
         self._store._set(self._name, section)
 
-    def section(self, name):
-        '''
-        Registers and returns a new Section object which is a subsection of this section.
-        '''
-        section = _Section(self, name)
-        self._sections[name] = section
-        return section
-
-    def option(self, name, cast=None, default=None, validate=None):
-        '''
-        Registers and returns a new Option object which is an option in this section.
-        '''
-        option = _Option(self, name, default, cast, validate)
-        self._options[name] = option
-        return option
-
-
 
 class _Option():
     '''
     configuration option object, backed by a configuration store
     '''
+
     def __init__(self, store, name, default, cast, validate):
         '''
         store: a ConfigStore or Section object. Must provide `get()` and `set(value)` methods
@@ -216,7 +246,7 @@ class _Option():
         cast: a transformation function that will be called whenever you retrieve the option's value.
         validate: a function that takes the casted value and should return bool indicating whether it is a valid value
         '''
-        self._store = store # ConfigStore object
+        self._store = store  # ConfigStore object
         self._name = name
         self._default = default
         self._cast = cast
@@ -224,7 +254,6 @@ class _Option():
 
         # get and validate on declaration to make sure all is good
         self._validate(self.get())
-
 
     def _validate(self, value):
         '''
@@ -234,7 +263,8 @@ class _Option():
         '''
         if self._validate_func is not None:
             if not self._validate_func(value):
-                raise ValueError('Failed to validate {!r} config option'.format(self._name))
+                raise ValueError(
+                    'Failed to validate {!r} config option'.format(self._name))
         return value
 
     def get(self):
@@ -258,4 +288,20 @@ class _Option():
         self._store._set(self._name, value)
 
 
+# the global instance to be used across all the codebase
 config = ConfigStore()
+
+
+def cast_duration(d) -> int:
+    """
+    casts duration(1min, 1hr) into seconds.
+    If input is an int it returns that unmodified.
+    """
+    if isinstance(d, int):
+        return d
+    if not isinstance(d, str):
+        raise ValueError("Invalid type")
+    seconds = timeparse(d)
+    if seconds is None:
+        raise ValueError("Invalid duration")
+    return seconds

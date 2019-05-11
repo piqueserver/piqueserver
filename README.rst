@@ -12,7 +12,7 @@ An Ace of Spades 0.75 server based on
    link <https://riot.im/app/#/room/#piqueserver:matrix.org>`__)
 -  Discord: Join with `this invite link <https://discord.gg/w6Te7xC>`__
 -  Slack: Join with `this invite link <https://join.slack.com/t/piqueserver/shared_invite/enQtMjg5MDI3MTkwNTgxLTNhMDkyNDRkNzhiNmQyYjRkOTdjNGNkYzNhNTQ4NzZkY2JhZjQxYzIyMTQ0Y2JlYTI2ZGFjMTFmNjAwZTM2OGU>`__
--  IRC: ``#piqueserver`` on freenode.net
+-  (disabled due to spam) IRC`: ``#piqueserver`` on freenode.net
    (`web <http://webchat.freenode.net/?channels=%23piqueserver>`__)
 
 All of these are `bridged <https://matrix.org/docs/guides/faq.html#what-is-matrix>`__ together!
@@ -44,18 +44,23 @@ All of these are `bridged <https://matrix.org/docs/guides/faq.html#what-is-matri
 \:rocket: Installation
 ----------------------
 
+Requirements
+~~~~~~~~~~~~
+
+Piqueserver requires python3.5.3 and above
+
+We currently provide builds for:
+ - Linux 32 and 64bit, Python 3.5, 3.6
+ - Windows 32 and 64bit, Python 3.5, 3.6
+ 
+If your system is not one of the above, you will also need a recent C++ Compiler.
+
 pip (stable version)
 ~~~~~~~~~~~~~~~~~~~~
 
 .. code:: bash
 
-    pip install piqueserver
-
-to install with the optional ssh server
-
-.. code:: bash
-
-    pip install piqueserver[ssh]
+    pip3 install piqueserver
 
 git (bleeding edge)
 ~~~~~~~~~~~~~~~~~~~
@@ -63,10 +68,12 @@ git (bleeding edge)
 .. code:: bash
 
     git clone https://github.com/piqueserver/piqueserver
-    virtualenv2 venv
+    cd piqueserver
+    python3 -m venv venv
     source venv/bin/activate
     pip install -r requirements.txt
     python setup.py install
+    # now `piqueserver` will be available on the $PATH when venv active
 
 Archlinux
 ~~~~~~~~~
@@ -150,13 +157,14 @@ Don't be shy and submit us a PR or an issue! Help is always appreciated
 \:wrench: Development
 ---------------------
 
-Use ``pip`` and ``virtualenv`` to setup the development environment:
+Use ``python3`` and ``pip`` to setup the development environment:
 
 .. code:: bash
 
-    $ virtualenv -p python2 venv && . ./venv/bin/activate
+    $ python3 -m venv venv && source venv/bin/activate
     (venv) $ pip install -r requirements.txt
-    (venv) $ ./setup.py install
+    (venv) $ pip install -r dev-requirements.txt # includes dev tools
+    (venv) $ python setup.py develop             # install in-place
     (venv) $ deactivate # Deactivate virtualenv
 
 --------------

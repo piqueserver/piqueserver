@@ -8,11 +8,10 @@ Use /unlink [player] to toggle yourself or someone from being linked.
 
 May not work well with squads.
 
-Maintainer: hompy
+.. codeauthor:: hompy
 """
 
 from random import choice
-from six.moves import filter
 from twisted.internet.reactor import seconds
 from pyspades.world import Grenade
 from pyspades.contained import GrenadePacket
@@ -188,7 +187,7 @@ def apply_script(protocol, connection, config):
             grenade_packet.player_id = self.player_id
             grenade_packet.position = position.get()
             grenade_packet.velocity = (0.0, 0.0, 0.0)
-            protocol.send_contained(grenade_packet)
+            protocol.broadcast_contained(grenade_packet)
             self.kill(kill_type=GRENADE_KILL)
 
     class RunningManProtocol(protocol):

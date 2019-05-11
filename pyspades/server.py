@@ -15,8 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
-
 import random
 from itertools import product
 import enet
@@ -37,11 +35,6 @@ from pyspades.bytes import ByteWriter
 from pyspades import contained as loaders
 from pyspades.common import make_color
 from pyspades.mapgenerator import ProgressiveMapGenerator
-
-try:
-    range = xrange # pylint: disable=redefined-builtin
-except NameError:
-    pass
 
 
 
@@ -88,19 +81,9 @@ class ServerProtocol(BaseProtocol):
         self.entities = []
         self.players = MultikeyDict()
         self.player_ids = IDPool()
-        self.team_spectator = self.team_class(-1, self.spectator_name,
-                                              (0, 0, 0), True, self)
-        self.team_1 = self.team_class(0, self.team1_name, self.team1_color,
-                                      False, self)
-        self.team_2 = self.team_class(1, self.team2_name, self.team2_color,
-                                      False, self)
-        self.teams = {
-            -1: self.spectator_team,
-            0: self.team_1,
-            1: self.team_2
-        }
-        self.team_1.other = self.team_2
-        self.team_2.other = self.team_1
+
+        self._create_teams()
+
         self.world = world.World()
         self.set_master()
 
@@ -115,6 +98,24 @@ class ServerProtocol(BaseProtocol):
         self.pos_table.sort(key=lambda vec: abs(vec[0] * 1.03) +
                             abs(vec[1] * 1.02) +
                             abs(vec[2] * 1.01))
+
+    def _create_teams(self):
+        """create the teams
+        This Method is separate to simplify unit testing
+        """
+        self.team_spectator = self.team_class(-1, self.spectator_name,
+                                              (0, 0, 0), True, self)
+        self.team_1 = self.team_class(0, self.team1_name, self.team1_color,
+                                      False, self)
+        self.team_2 = self.team_class(1, self.team2_name, self.team2_color,
+                                      False, self)
+        self.teams = {
+            -1: self.team_spectator,
+            0: self.team_1,
+            1: self.team_2
+        }
+        self.team_1.other = self.team_2
+        self.team_2.other = self.team_1
 
     @property
     def blue_team(self):
@@ -131,8 +132,23 @@ class ServerProtocol(BaseProtocol):
         """alias to team_spectator for backwards-compatibility"""
         return self.team_spectator
 
-    def send_contained(self, contained, unsequenced=False, sender=None,
-                       team=None, save=False, rule=None):
+    def broadcast_contained(self, contained, unsequenced=False, sender=None,
+                            team=None, save=False, rule=None):
+        """send a Contained `Loader` to all or a selection of connected
+        players
+
+        Parameters:
+            contained: the `Loader` object to send
+            unsequenced: set the enet ``UNSEQUENCED`` flag on this packet
+            sender: if set to a connection object, do not send this packet to
+                that player, as they are the sender.
+            team: if set to a team, only send the packet to that team
+            save: if the player has not downloaded the map yet, save this
+                packet and send it when the map transfer has completed
+            rule: if set to a callable, this function is called with the player
+                as parameter to determine if a given player should receive the
+                packet
+        """
         if unsequenced:
             flags = enet.PACKET_FLAG_UNSEQUENCED
         else:
@@ -146,13 +162,16 @@ class ServerProtocol(BaseProtocol):
                 continue
             if team is not None and player.team is not team:
                 continue
-            if rule is not None and rule(player) == False:
+            if rule is not None and not rule(player):
                 continue
             if player.saved_loaders is not None:
                 if save:
                     player.saved_loaders.append(data)
             else:
                 player.peer.send(0, packet)
+
+    # backwards compatability
+    send_contained = broadcast_contained
 
     def reset_tc(self):
         self.entities = self.get_cp_entities()
@@ -205,10 +224,12 @@ class ServerProtocol(BaseProtocol):
 
     def update_network(self):
         items = []
+        highest_player_id = 0
         for i in range(32):
             position = orientation = None
             try:
                 player = self.players[i]
+                highest_player_id = i
                 if (not player.filter_visibility_data and
                         not player.team.spectator):
                     world_object = player.world_object
@@ -221,7 +242,9 @@ class ServerProtocol(BaseProtocol):
                 orientation = (0.0, 0.0, 0.0)
             items.append((position, orientation))
         world_update = loaders.WorldUpdate()
-        world_update.items = items
+        # we only want to send as many items of the player list as needed, so
+        # we slice it off at the highest player id
+        world_update.items = items[:highest_player_id+1]
         self.send_contained(world_update, unsequenced=True)
 
     def set_map(self, map_obj):
@@ -235,7 +258,7 @@ class ServerProtocol(BaseProtocol):
         self.players = MultikeyDict()
         if self.connections:
             data = ProgressiveMapGenerator(self.map, parent=True)
-            for connection in self.connections.values():
+            for connection in list(self.connections.values()):
                 if connection.player_id is None:
                     continue
                 if connection.map_data is not None:
@@ -322,14 +345,17 @@ class ServerProtocol(BaseProtocol):
     def master_disconnected(self, client=None):
         self.master_connection = None
 
-    def update_master(self):
-        if self.master_connection is None:
-            return
+    def get_player_count(self):
         count = 0
         for connection in self.connections.values():
             if connection.player_id is not None:
                 count += 1
-        self.master_connection.set_count(count)
+        return count
+
+    def update_master(self):
+        if self.master_connection is None:
+            return
+        self.master_connection.set_count(self.get_player_count())
 
     def update_entities(self):
         map_obj = self.map
@@ -338,10 +364,13 @@ class ServerProtocol(BaseProtocol):
             if map_obj.get_solid(entity.x, entity.y, entity.z - 1):
                 moved = True
                 entity.z -= 1
+                # while solid in block above (ie. in the space in which the
+                # entity is sitting), move entity up)
                 while map_obj.get_solid(entity.x, entity.y, entity.z - 1):
                     entity.z -= 1
             else:
-                while not map_obj.get_solid(entity.x, entity.y, entity.z):
+                # get_solid can return None, so a more specific check is used
+                while map_obj.get_solid(entity.x, entity.y, entity.z) is False:
                     moved = True
                     entity.z += 1
             if moved or self.on_update_entity(entity):

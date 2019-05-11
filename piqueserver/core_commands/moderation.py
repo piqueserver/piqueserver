@@ -6,26 +6,41 @@ from pyspades.common import (
     prettify_timespan,
     make_color)
 from piqueserver.commands import command, CommandError, get_player, join_arguments
-
+from piqueserver.utils import timeparse
 
 # aparently, we need to send packets in this file. For now, I give in.
 
 
 
-def get_ban_arguments(connection, arg):
-    duration = None
-    if len(arg):
-        try:
-            duration = int(arg[0])
-            arg = arg[1:]
-        except (IndexError, ValueError):
-            pass
-    if duration is None:
-        if len(arg) > 0 and arg[0] == "perma":
-            arg = arg[1:]
-        else:
-            duration = connection.protocol.default_ban_time
-    reason = join_arguments(arg)
+def has_digits(s: str) -> bool:
+    return any(char.isdigit() for char in s)
+
+
+def get_ban_arguments(connection, args):
+    """
+    Parses duration and reason from arguments.
+    It handles duration in two ways: interger mintues and human-friendly duration.
+    It also handles cases where duration or reason are none.
+    Note: It returns duration in seconds.
+    """
+    default_duration = connection.protocol.default_ban_time
+    reason = None
+    if len(args) < 1:
+        return default_duration, reason
+    if len(args) > 1:
+        reason = join_arguments(args[1:])
+    if args[0] == "perma":
+        return None, reason
+
+    if args[0].isdigit():  # all digits == duration in minutes
+        duration = int(args[0]) * 60
+    elif has_digits(args[0]):  # if it contains some digits maybe duration?
+        duration = timeparse(args[0])
+        if not duration:
+            raise ValueError("Invalid duration")
+    else:  # maybe just one long reason
+        duration = default_duration
+        reason = join_arguments(args[:])
     return duration, reason
 
 
@@ -44,7 +59,7 @@ def kick(connection, value, *arg):
 @command(admin_only=True)
 def ban(connection, value, *arg):
     """
-    Ban a given player forever or for a limited amount of time
+    Ban a given player forever or for a limited amount of time.
     /ban <player> [duration] [reason]
     """
     duration, reason = get_ban_arguments(connection, arg)
@@ -58,7 +73,7 @@ def hban(connection, value, *arg):
     Ban a given player for an hour
     /hban <player> [reason]
     """
-    duration = 60
+    duration = timeparse("1hour")
     reason = join_arguments(arg)
     player = get_player(connection.protocol, value)
     player.ban(reason, duration)
@@ -70,7 +85,7 @@ def dban(connection, value, *arg):
     Ban a given player for one day
     /dban <player> [reason]
     """
-    duration = 1440
+    duration = timeparse("1day")
     reason = join_arguments(arg)
     player = get_player(connection.protocol, value)
     player.ban(reason, duration)
@@ -82,7 +97,7 @@ def wban(connection, value, *arg):
     Ban a given player for one week
     /wban <player> [reason]
     """
-    duration = 10080
+    duration = timeparse("1week")
     reason = join_arguments(arg)
     player = get_player(connection.protocol, value)
     player.ban(reason, duration)
@@ -104,7 +119,7 @@ def pban(connection, value, *arg):
 def banip(connection, ip, *arg):
     """
     Ban an ip
-    /banip <ip> [reason]
+    /banip <ip> [duration] [reason]
     """
     duration, reason = get_ban_arguments(connection, arg)
     try:
@@ -117,7 +132,7 @@ def banip(connection, ip, *arg):
         return 'IP/network %s permabanned%s' % (ip, reason)
     else:
         return 'IP/network %s banned for %s%s' % (
-            ip, prettify_timespan(duration * 60), reason)
+            ip, prettify_timespan(duration), reason)
 
 
 @command(admin_only=True)
@@ -246,7 +261,7 @@ def invisible(connection, player=None):
         kill_action = KillAction()
         kill_action.kill_type = choice([GRENADE_KILL, FALL_KILL])
         kill_action.player_id = kill_action.killer_id = player.player_id
-        reactor.callLater(1.0 / NETWORK_FPS, protocol.send_contained,
+        reactor.callLater(1.0 / NETWORK_FPS, protocol.broadcast_contained,
                           kill_action, sender=player)
     else:
         player.send_chat("You return to visibility")
@@ -280,13 +295,93 @@ def invisible(connection, player=None):
         weapon_input = WeaponInput()
         weapon_input.primary = world_object.primary_fire
         weapon_input.secondary = world_object.secondary_fire
-        protocol.send_contained(create_player, sender=player, save=True)
-        protocol.send_contained(set_tool, sender=player)
-        protocol.send_contained(set_color, sender=player, save=True)
-        protocol.send_contained(input_data, sender=player)
-        protocol.send_contained(weapon_input, sender=player)
+        protocol.broadcast_contained(create_player, sender=player, save=True)
+        protocol.broadcast_contained(set_tool, sender=player)
+        protocol.broadcast_contained(set_color, sender=player, save=True)
+        protocol.broadcast_contained(input_data, sender=player)
+        protocol.broadcast_contained(weapon_input, sender=player)
     if connection is not player and connection in protocol.players:
         if player.invisible:
             return '%s is now invisible' % player.name
         else:
             return '%s is now visible' % player.name
+
+
+@command('godsilent', 'gods', admin_only=True)
+def godsilent(connection, player=None):
+    """
+    Silently go into god mode
+    /godsilent [player]
+    """
+    if player is not None:
+        connection = get_player(connection.protocol, player)
+    elif connection not in connection.protocol.players:
+        return 'Unknown player: ' + player
+
+    connection.god = not connection.god  # toggle godmode
+
+    if connection.protocol.set_god_build:
+        connection.god_build = connection.god
+    else:
+        connection.god_build = False
+
+    if connection.god:
+        if player is None:
+            return 'You have silently entered god mode'
+        else:
+            # TODO: Do not send this if the specified player is the one who called the command
+            connection.send_chat(
+                'Someone has made you silently enter godmode!')
+            return 'You made ' + connection.name + ' silently enter god mode'
+    else:
+        if player is None:
+            return 'You have silently returned to being a mere human'
+        else:
+            # TODO: Do not send this if the specified player is the one who called the command
+            connection.send_chat(
+                'Someone has made you silently return to being a mere human')
+            return 'You made ' + connection.name + ' silently return to being a mere human'
+
+
+@command(admin_only=True)
+def god(connection, player=None):
+    """
+    Go into god mode and inform everyone on the server of it
+    /god [player]
+    """
+    if player:
+        connection = get_player(connection.protocol, player)
+    elif connection not in connection.protocol.players:
+        return 'Unknown player'
+
+    connection.god = not connection.god  # toggle godmode
+
+    if connection.god:
+        message = '%s entered GOD MODE!' % connection.name
+    else:
+        message = '%s returned to being a mere human' % connection.name
+    connection.protocol.send_chat(message, irc=True)
+
+
+@command('godbuild', admin_only=True)
+def god_build(connection, player=None):
+    """
+    Place blocks that can be destroyed only by players with godmode activated
+    /godbuild [player]
+    """
+    protocol = connection.protocol
+    if player is not None:
+        player = get_player(protocol, player)
+    elif connection in protocol.players:
+        player = connection
+    else:
+        raise ValueError()
+
+    player.god_build = not player.god_build
+
+    message = ('now placing god blocks' if player.god_build else
+               'no longer placing god blocks')
+    player.send_chat("You're %s" % message)
+    if connection is not player and connection in protocol.players:
+        connection.send_chat('%s is %s' % (player.name, message))
+    protocol.irc_say('* %s is %s' % (player.name, message))

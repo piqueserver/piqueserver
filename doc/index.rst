@@ -10,11 +10,19 @@ Welcome to piqueserver's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   installation
+   configuration
+   included-scripts
+   command-line
+   docker
+   porting
+   contributing
    architecture
    piqueserver
    pyspades
-
-
+   contributing-developer
+   release-guide
+   other
 
 Indices and tables
 ==================

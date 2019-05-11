@@ -15,15 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
-
 import os
 import imp
 import math
 import random
+import time
+from typing import List, Optional, Union
+
+from twisted.logger import Logger
 
 from pyspades.vxl import VXLData
-from piqueserver import cfg
+from piqueserver.config import config
+
+log = Logger()
 
 
 class MapNotFound(Exception):
@@ -36,14 +40,15 @@ class MapNotFound(Exception):
         return False
 
 
-def check_rotation(maps, load_dir=None):
+def check_rotation(maps: List[Union[str, 'RotationInfo']], load_dir:
+                   Optional[str]=None) -> List['RotationInfo']:
     """
     Checks if provided maps exist in maps dir. and
     returns an array of RotationInfo objects for those maps.
     Raises MapNotFound exception if maps are not found.
     """
     if load_dir is None:
-        load_dir = os.path.join(cfg.config_dir, 'maps')
+        load_dir = os.path.join(config.config_dir, 'maps')
     infos = []
     for the_map in maps:
         if not isinstance(the_map, RotationInfo):
@@ -58,22 +63,25 @@ def check_rotation(maps, load_dir=None):
 class Map(object):
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, rot_info, load_dir):
+    def __init__(self, rot_info: 'RotationInfo', load_dir: str) -> None:
         self.load_information(rot_info, load_dir)
 
+        # we want to count how long a map load or generate takes
+        start_time = time.monotonic()
         if self.gen_script:
             seed = rot_info.get_seed()
-            self.name = '%s #%s' % (rot_info.name, seed)
-            print("Generating map '%s'..." % self.name)
+            self.name = '{} #{}'.format(rot_info.name, seed)
+            log.info("Generating map '{mapname}'...", mapname=self.name)
             random.seed(seed)
             self.data = self.gen_script(rot_info.name, seed)
         else:
-            print("Loading map '%s'..." % self.name)
+            log.info("Loading map '%s'..." % self.name)
             self.load_vxl(rot_info)
 
-        print('Map loaded successfully.')
+        log.info('Map loaded successfully. (took {duration:.2f}s)',
+                 duration=time.monotonic() - start_time)
 
-    def load_information(self, rot_info, load_dir):
+    def load_information(self, rot_info: 'RotationInfo', load_dir: str) -> None:
         self.load_dir = load_dir
         try:
             info = imp.load_source(
@@ -120,7 +128,7 @@ class Map(object):
 class RotationInfo(object):
     seed = None
 
-    def __init__(self, name="pyspades"):
+    def __init__(self, name: str = "pyspades") -> None:
         self.full_name = name
 
         splitted = name.split("#")
@@ -129,16 +137,16 @@ class RotationInfo(object):
             self.seed = int(splitted[1])
         self.name = name
 
-    def get_seed(self):
+    def get_seed(self) -> int:
         if self.seed is not None:
             return self.seed
         random.seed()
-        return random.randint(0, math.pow(2, 31))
+        return random.randint(0, int(math.pow(2, 31)))
 
-    def get_map_filename(self, load_dir):
+    def get_map_filename(self, load_dir: str) -> str:
         return os.path.join(load_dir, '%s.vxl' % self.name)
 
-    def get_meta_filename(self, load_dir):
+    def get_meta_filename(self, load_dir: str) -> str:
         return os.path.join(load_dir, '%s.txt' % self.name)
 
     def __str__(self):

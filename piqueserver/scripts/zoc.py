@@ -2,16 +2,39 @@
 Zones of control: Dropped intel and tents exert influence
 over nearby area, restricting player ability to destroy.
 
-Maintainer: ?
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [zoc]
+   radius = 32
+   attack_distance = 64
+   block_undo = 10
+   block_cost = 5
+   points_per_tick = 1
+   point_cap = 30
+   grenade_cost = 30
+
+.. codeauthor: ?
 """
 
 from collections import deque
-from six import itervalues
-from six.moves import range
 from twisted.internet.task import LoopingCall
 from pyspades.constants import GRENADE_DESTROY, SPADE_DESTROY, CTF_MODE, TC_MODE
+from piqueserver.config import config
 
 BK_FREE, BK_FRIENDLY, BK_ENEMY_FAR, BK_ENEMY_NEAR, BK_UNDO = range(5)
+
+zoc_config = config.section("zoc")
+zoc_radius = zoc_config.option("radius", 32)
+zoc_attack_distance = zoc_config.option("attack_distance", 64)
+zoc_block_undo = zoc_config.option("block_undo", 10)
+
+zoc_block_cost = zoc_config.option("block_cost", 5)
+zoc_points_per_tick = zoc_config.option("points_per_tick", 1)
+zoc_point_cap = zoc_config.option("point_cap", 6 * zoc_block_cost.get())
+zoc_grenade_cost = zoc_config.option("grenade_cost", zoc_point_cap.get())
 
 
 def apply_script(protocol, connection, config):
@@ -37,11 +60,11 @@ def apply_script(protocol, connection, config):
                         "You're too far away to attack this area!")
                     return False
                 elif zoc == BK_FRIENDLY:
-                    cost = self.protocol.zoc_block_cost
+                    cost = zoc_block_cost.get()
                     if mode == SPADE_DESTROY:
                         cost *= 3
                     elif mode == GRENADE_DESTROY:
-                        cost = self.protocol.zoc_grenade_cost
+                        cost = zoc_grenade_cost.get()
                     if self.zoc_destruction_points < cost:
                         self.send_chat("Stop destroying your territory! " +
                                        "Go fight the enemy!")
@@ -66,7 +89,7 @@ def apply_script(protocol, connection, config):
 
         def on_block_build(self, x, y, z):
             self.block_undo.append((x, y, z))
-            if len(self.block_undo) > self.protocol.zoc_block_undo:
+            if len(self.block_undo) > zoc_block_undo.get():
                 self.block_undo.popleft()
             return connection.on_block_build(self, x, y, z)
 
@@ -81,7 +104,7 @@ def apply_script(protocol, connection, config):
                         p_x, p_y, _ = self.world_object.position.get()
                         dist_sq = (p_x - x) * (p_x - x) +\
                                   (p_y - y) * (p_y - y)
-                        if self.protocol.zoc_attack_distance < dist_sq:
+                        if zoc_attack_distance.get()**2 < dist_sq:
                             return BK_ENEMY_FAR
                         else:
                             return BK_ENEMY_NEAR
@@ -91,15 +114,6 @@ def apply_script(protocol, connection, config):
 
         zone_cache = None
 
-        zoc_radius = config.get('zoc_radius', 32)
-        zoc_attack_distance = config.get('zoc_attack_distance', 64)
-        zoc_attack_distance = zoc_attack_distance * zoc_attack_distance
-        zoc_block_undo = config.get('zoc_block_undo', 10)
-
-        zoc_block_cost = config.get('zoc_block_cost', 5)
-        zoc_points_per_tick = config.get('zoc_points_per_tick', 1)
-        zoc_point_cap = config.get('zoc_point_cap', 6 * zoc_block_cost)
-        zoc_grenade_cost = config.get('zoc_grenade_cost', zoc_point_cap)
 
         def __init__(self, *arg, **kw):
             # we update the zones with a slow loop
@@ -111,17 +125,17 @@ def apply_script(protocol, connection, config):
 
         def _build_zoc(self, x, y, team):
             return {'team': team,
-                    'left': x - self.zoc_radius,
-                    'right': x + self.zoc_radius,
-                    'top': y - self.zoc_radius,
-                    'bottom': y + self.zoc_radius}
+                    'left': x - zoc_radius.get(),
+                    'right': x + zoc_radius.get(),
+                    'top': y - zoc_radius.get(),
+                    'bottom': y + zoc_radius.get()}
 
         def zoc_tick(self):
             self.cache_zones_of_control()
-            for player in list(itervalues(self.players)):
-                player.zoc_destruction_points += self.zoc_points_per_tick
-                if player.zoc_destruction_points > self.zoc_point_cap:
-                    player.zoc_destruction_points = self.zoc_point_cap
+            for player in list(self.players.values()):
+                player.zoc_destruction_points += zoc_points_per_tick.get()
+                if player.zoc_destruction_points > zoc_point_cap.get():
+                    player.zoc_destruction_points = zoc_point_cap.get()
 
         def cache_zones_of_control(self):
             zones = []

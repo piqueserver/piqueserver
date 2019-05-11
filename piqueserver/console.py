@@ -15,9 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
-
 import sys
+
+from typing import List
+import traceback
 
 from twisted.internet import reactor
 from twisted.protocols.basic import LineReceiver
@@ -34,7 +35,7 @@ if sys.platform == 'win32':
     class StandardIO(object):
         disconnecting = False
         interval = 0.01
-        input = u''
+        input = ''
 
         def __init__(self, protocol):
             self.protocol = protocol
@@ -44,16 +45,16 @@ if sys.platform == 'win32':
         def get_input(self):
             while msvcrt.kbhit():
                 c = msvcrt.getwch()
-                if c == u'\r':  # new line
-                    c = u'\n'
+                if c == '\r':  # new line
+                    c = '\n'
                     stdout.write(c)
                     self.input += c
                     self.protocol.dataReceived(self.input)
                     self.input = ''
-                elif c in (u'\xE0', u'\x00'):
+                elif c in ('\xE0', '\x00'):
                     # ignore special characters
                     msvcrt.getwch()
-                elif c == u'\x08':  # delete
+                elif c == '\x08':  # delete
                     self.input = self.input[:-1]
                     stdout.write('\x08 \x08')
                 else:
@@ -86,9 +87,23 @@ class ConsoleInput(LineReceiver):
         if not line:
             return
 
-        result = commands.handle_input(self, line.decode())
-        if result is not None:
-            print(result)
+        try:
+            result = commands.handle_input(self, line.decode())
+        # pylint: disable=broad-except
+        except Exception:
+            traceback.print_exc()
+        else:
+            if result is not None:
+                print(result)
+
+    # methods used to emulate the behaviour of regular Connection objects to
+    # prevent errors when command writers didn't test that their scripts would
+    # work when run on the console
+    def send_chat(self, value: str, _):
+        print(value)
+
+    def send_lines(self, lines: List[str]):
+        print("\n".join(lines))
 
 
 def create_console(protocol):

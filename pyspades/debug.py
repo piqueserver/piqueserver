@@ -19,15 +19,6 @@
 Oh-so-messy debugging stuff. Beware of the inferior code quality.
 """
 
-isClient = None
-mapBytes = 0
-packets = 0
-map_data = {}
-is_relay = False
-sequence = None
-
-chunks = {}
-
 current_id = 0
 
 

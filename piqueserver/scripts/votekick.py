@@ -1,28 +1,38 @@
-# maintained by triplefox
+"""
+Allows users to start votekicks
 
-# Copyright (c) James Hofmann 2012.
+Commands
+^^^^^^^^
 
-# This file is part of pyspades.
+* ``/votekick <player> <reason>`` start votekick against a player
+* ``/y`` votes yes
+* ``/togglevotekick or /tvk`` toggles votekicks on/off globally
+* ``/togglevotekick or /tvk <player>`` toggles votekicks on/off for specific players
+* ``/cancel`` cancels a votekick
 
-# pyspades is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+Options
+^^^^^^^
 
-# pyspades is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+.. code-block:: guess
 
-# You should have received a copy of the GNU General Public License
-# along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
+    [votekick]
+    # percentage of total number of players in the server required to vote to
+    # successfully votekick a player
+    percentage = 35
+
+    # duration that votekicked player will be banned for
+    ban_duration = "30min"
+
+    public_votes = true
+
+.. codeauthor:: James Hofmann a.k.a triplefox
+"""
 
 
-from __future__ import print_function
-from six import itervalues
 from twisted.internet.reactor import seconds
 from piqueserver.scheduler import Scheduler
 from piqueserver.commands import command, admin, get_player, join_arguments, CommandError
+from piqueserver.config import config, cast_duration
 
 REQUIRE_REASON = True
 
@@ -57,6 +67,11 @@ S_ANNOUNCE_SELF = 'You started a votekick against {victim}. Say /CANCEL to ' \
 S_UPDATE = '{instigator} is votekicking {victim}. /Y to vote ({needed} left)'
 S_REASON = 'Reason: {reason}'
 
+# register options
+VOTEKICK_CONFIG = config.section('votekick')
+REQUIRED_PERCENTAGE_OPTION = VOTEKICK_CONFIG.option('percentage', 35.0)
+BAN_DURATION_OPTION = VOTEKICK_CONFIG.option('ban_duration', default="30min", cast=cast_duration)
+PUBLIC_VOTES_OPTION = VOTEKICK_CONFIG.option('public_votes', True)
 
 class VotekickFailure(Exception):
     pass
@@ -64,6 +79,10 @@ class VotekickFailure(Exception):
 
 @command('votekick')
 def start_votekick(connection, *args):
+    """
+    Starts an votekick against a player
+    /votekick <player name or id> <reason>
+    """
     protocol = connection.protocol
     if connection not in protocol.players:
         raise KeyError()
@@ -95,6 +114,10 @@ def start_votekick(connection, *args):
 
 @command('cancel')
 def cancel_votekick(connection):
+    """
+    Cancels an ongoing vote
+    /cancel
+    """
     protocol = connection.protocol
     votekick = protocol.votekick
     if not votekick:
@@ -110,6 +133,10 @@ def cancel_votekick(connection):
 
 @command('y')
 def vote_yes(connection):
+    """
+    Vote yes on an ongoing vote
+    /y
+    """
     protocol = connection.protocol
     if connection not in protocol.players:
         raise KeyError()
@@ -124,6 +151,10 @@ def vote_yes(connection):
 
 @command('tvk', admin_only=True)
 def togglevotekick(connection, *args):
+    """
+    Toggles votekicking for a player or the whole server
+    /tvk <player> or /tvk
+    """
     protocol = connection.protocol
     if len(args) == 0:
         protocol.votekick_enabled = not protocol.votekick_enabled
@@ -139,15 +170,15 @@ def togglevotekick(connection, *args):
 
 
 class Votekick(object):
-    duration = 120.0  # 2 minutes
-    interval = 2 * 60.0  # 3 minutes
-    ban_duration = 15.0
-    public_votes = True
+    timeout = 120.0  # 2 minutes
+    interval = 120.0  # 2 minutes
+    ban_duration = BAN_DURATION_OPTION.get()
+    public_votes = PUBLIC_VOTES_OPTION.get()
     schedule = None
 
-    def _get_votes_remaining(self):
+    @property
+    def votes_remaining(self) -> int:
         return self.protocol.get_required_votes() - len(self.votes) + 1
-    votes_remaining = property(_get_votes_remaining)
 
     @classmethod
     def start(cls, instigator, victim, reason=None):
@@ -198,7 +229,7 @@ class Votekick(object):
         instigator.send_chat(S_ANNOUNCE_SELF.format(victim=victim.name))
 
         schedule = Scheduler(protocol)
-        schedule.call_later(self.duration, self.end, S_RESULT_TIMED_OUT)
+        schedule.call_later(self.timeout, self.end, S_RESULT_TIMED_OUT)
         schedule.loop_call(30.0, self.send_chat_update)
         self.schedule = schedule
 
@@ -250,9 +281,6 @@ class Votekick(object):
 
 
 def apply_script(protocol, connection, config):
-    Votekick.ban_duration = config.get('votekick_ban_duration', 15.0)
-    Votekick.public_votes = config.get('votekick_public_votes', True)
-    required_percentage = config.get('votekick_percentage', 25.0)
 
     class VotekickProtocol(protocol):
         votekick = None
@@ -261,8 +289,8 @@ def apply_script(protocol, connection, config):
         def get_required_votes(self):
             # votekicks are invalid if this returns <= 0
             player_count = sum(not player.disconnected and not player.local
-                               for player in itervalues(self.players)) - 1
-            return int(player_count / 100.0 * required_percentage)
+                               for player in self.players.values()) - 1
+            return int(player_count / 100.0 * REQUIRED_PERCENTAGE_OPTION.get())
 
         def on_map_leave(self):
             if self.votekick:

@@ -1,8 +1,8 @@
 pylint
-mock
 coverage
 coveralls
 pytest
 pytest-cov
 Sphinx
 tox
+sphinx_rtd_theme

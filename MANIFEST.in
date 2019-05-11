@@ -1,9 +1,6 @@
-recursive-include enet/ *
-recursive-include examples/ * 
-recursive-include piqueserver/ *
-# recursive-include piqueserver/config/ *
-recursive-include py2exe/ * 
-recursive-include pyspades/ * 
+recursive-include piqueserver *
+recursive-include piqueserver/config *
+recursive-include pyspades *
 # recursive-include piqueserver.egg-info/ * 
 
 global-exclude *.pyc
@@ -28,12 +25,8 @@ global-exclude *.a
 
 # config/userdata
 exclude piqueserver/config/maps/*.txtc
-recursive-exclude piqueserver/config/logs/ *
-recursive-exclude piqueserver/config/data/ *
-
-# py2exe
-recursive-exclude py2exe/dist/
-exclude py2exe/*.zip
+recursive-exclude piqueserver/config/logs *
+recursive-exclude piqueserver/config/data *
 
 exclude pyspades/bytes.cpp
 exclude pyspades/common.cpp
@@ -43,13 +36,3 @@ exclude pyspades/mapmaker.cpp
 exclude pyspades/packet.cpp
 exclude pyspades/vxl.cpp
 exclude pyspades/world.cpp
-
-
-# enet
-exclude enet/pyenet/enet.c
-# exclude enet/pyenet/__init__.py
-exclude enet/pyenet/enet-pyspades.pyx
-recursive-exclude enet/pyenet/enet/ *
-recursive-exclude enet/pyenet/build/ *
-exclude enet/enet-*.tar.gz
-

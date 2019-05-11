@@ -82,7 +82,7 @@ cdef class ByteReader:
         """read a number of bytes
 
         Arguments:
-            bytecount (int, optional): The number of bytes to read. If ommited, all bytes available are read
+            bytecount (int, optional): The number of bytes to read. If omitted, all bytes available are read
 
         Returns:
             bytes: ``bytecount`` bytes of data
@@ -186,7 +186,7 @@ cdef class ByteReader:
         """get the current position in the buffer
 
         Returns:
-            int: The current postion in bytes"""
+            int: The current position in bytes"""
         return self.pos - self.data
 
     cpdef int dataLeft(self):
@@ -233,10 +233,6 @@ cdef class ByteReader:
 
     def __len__(self):
         return self.size
-
-    def __str__(self):
-        # NOTE: __str__ is only supported for python2 support
-        return self.data[:self.size]
 
     def __bytes__(self):
         return self.data[:self.size]
@@ -292,10 +288,6 @@ cdef class ByteWriter:
 
     cpdef size_t tell(self):
         return get_stream_pos(self.stream)
-
-    def __str__(self):
-        # NOTE: __str__ is only supported for python2 support
-        return get_stream(self.stream)
 
     def __bytes__(self):
         return get_stream(self.stream)

@@ -1,16 +1,27 @@
 """
 Protects spawned players for a specified amount of seconds.
 
-Maintainer: ?
-Fixed error by kmsi(kmsiapps@gmail.com) : replaced player to hit_player
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [spawn_protect]
+   protection_time = "3sec"
+
+.. codeauthor:: ? & kmsi <kmsiapps@gmail.com>
 """
 
 from pyspades.common import prettify_timespan
+from piqueserver.config import config, cast_duration
 from twisted.internet import reactor
+
+spawn_protect_config = config.section("spawn_protect")
+protection_time = spawn_protect_config.option("protection_time", default="3sec", cast=cast_duration)
 
 
 def apply_script(protocol, connection, config):
-    spawn_protect_time = config.get('spawn_protect_time', 3.0)
+    spawn_protect_time = protection_time.get()
 
     class SpawnProtectConnection(connection):
         spawn_timestamp = None

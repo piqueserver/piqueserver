@@ -15,122 +15,150 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
-import json
-from six import BytesIO
+import asyncio
+from twisted.internet.defer import Deferred
+import aiohttp
+from aiohttp import web
+from multidict import MultiDict
 
-from PIL import Image
 from jinja2 import Environment, PackageLoader
-from twisted.internet import reactor
-from twisted.web import server
-from twisted.web.resource import Resource
+import json
+import time
+import png
+from io import BytesIO
+from aiohttp.abc import AbstractAccessLogger
+from twisted.logger import Logger
+from piqueserver.utils import as_deferred
 
-OVERVIEW_UPDATE_INTERVAL = 1 * 60  # 1 minute
+from piqueserver.config import config, cast_duration
+
+status_server_config = config.section("status_server")
+host_option = status_server_config.option("host", "0.0.0.0")
+port_option = status_server_config.option("port", 32886)
+logging_option = status_server_config.option("logging", False)
+interval_option = status_server_config.option(
+    "update_interval", default="1min", cast=cast_duration)
+scripts_option = config.option("scripts", [])
 
 
-class CommonResource(Resource):
-    protocol = None
-    isLeaf = True
+class AccessLogger(AbstractAccessLogger):
 
-    def __init__(self, parent):
-        self.protocol = parent.protocol
-        self.env = parent.env
-        self.parent = parent
-        Resource.__init__(self)
+    def log(self, request, response, time):
+        self.logger.info(
+            "{remote} {method} {url}: {status} {time:0.2f}ms -- {ua}",
+            remote=request.remote,
+            ua=request.headers["User-Agent"],
+            method=request.method,
+            url=request.url,
+            time=time * 1000,
+            status=response.status)
 
 
-class JSONPage(CommonResource):
+async def set_default_headers(request, response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
 
-    def render_GET(self, request):
-        protocol = self.protocol
 
-        request.setHeader("Content-Type", "application/json")
+def current_state(protocol):
+    """Gathers data on current server/game state from protocol class"""
+    players = []
 
-        players = []
-
-        for player in protocol.players.values():
-            player_data = {}
-            player_data['name'] = player.name
-            player_data['latency'] = player.latency
-            player_data['client'] = player.client_string
-            player_data['kills'] = player.kills
-            player_data['team'] = player.team.name
-
-            players.append(player_data)
-
-        dictionary = {
-            "serverIdentifier": protocol.identifier,
-            "serverName": protocol.name,
-            "serverVersion": protocol.version,
-            "serverUptime": reactor.seconds() - protocol.start_time,
-            "gameMode": protocol.game_mode_name,
-            "map": {
-                "name": protocol.map_info.name,
-                "version": protocol.map_info.version,
-                "author": protocol.map_info.author
-            },
-            "scripts": protocol.config.get("scripts", []),
-            "players": players,
-            "maxPlayers": protocol.max_players,
-            "scores": {
-                "currentBlueScore": protocol.blue_team.score,
-                "currentGreenScore": protocol.green_team.score,
-                "maxScore": protocol.max_score}
+    for player in protocol.players.values():
+        player_data = {
+            'name': player.name,
+            'latency': player.latency,
+            'client': player.client_string,
+            'kills': player.kills,
+            'team': player.team.name
         }
 
-        return json.dumps(dictionary).encode()
+        players.append(player_data)
+
+    dictionary = {
+        "serverIdentifier": protocol.identifier,
+        "serverName": protocol.name,
+        "serverVersion": protocol.version,
+        "serverUptime": time.time() - protocol.start_time,
+        "gameMode": protocol.game_mode_name,
+        "map": {
+            "name": protocol.map_info.name,
+            "version": protocol.map_info.version,
+            "author": protocol.map_info.author
+        },
+        "scripts": scripts_option.get(),
+        "players": players,
+        "maxPlayers": protocol.max_players,
+        "scores": {
+            "currentBlueScore": protocol.blue_team.score,
+            "currentGreenScore": protocol.green_team.score,
+            "maxScore": protocol.max_score}
+    }
+
+    return dictionary
 
 
-class StatusPage(CommonResource):
-
-    def render_GET(self, _request):
-        status = self.env.get_template('status.html')
-        return status.render(server=self.protocol, reactor=reactor).encode(
-            'utf-8', 'replace')
-
-
-class MapOverview(CommonResource):
-
-    def render_GET(self, request):
-        overview = self.parent.get_overview()
-        request.setHeader("content-type", 'png/image')
-        request.setHeader("content-length", str(len(overview)))
-        if request.method == "HEAD":
-            return ''
-        return overview
-    render_HEAD = render_GET
-
-
-class StatusServerFactory(object):
-    last_overview = None
-    last_map_name = None
-    overview = None
-
-    def __init__(self, protocol, config):
-        self.env = Environment(loader=PackageLoader('piqueserver.web'))
+class StatusServer(object):
+    def __init__(self, protocol):
         self.protocol = protocol
-        root = Resource()
-        root.putChild(b'json', JSONPage(self))
-        root.putChild(b'', StatusPage(self))
-        root.putChild(b'overview', MapOverview(self))
-        site = server.Site(root)
+        self.last_update = None
+        self.last_map_name = None
+        self.cached_overview = None
+        env = Environment(loader=PackageLoader('piqueserver.web'))
+        self.status_template = env.get_template('status.html')
 
-        logging = config.get('logging', False)
-        site.noisy = logging
-        if not logging:
-            site.log = lambda _: None
+    async def json(self, request):
+        state = current_state(self.protocol)
+        return web.json_response(state)
 
-        protocol.listenTCP(config.get('port', 32886), site)
+    @property
+    def current_map(self):
+        return self.protocol.map_info.name
 
-    def get_overview(self):
-        current_time = reactor.seconds()
-        if (self.last_overview is None or
-                self.last_map_name != self.protocol.map_info.name or
-                current_time - self.last_overview > OVERVIEW_UPDATE_INTERVAL):
-            overview = self.protocol.map.get_overview(rgba=True)
-            image = Image.frombytes('RGBA', (512, 512), overview)
-            data = BytesIO()
-            image.save(data, 'png')
-            self.overview = data.getvalue()
-            self.last_overview = current_time
-            self.last_map_name = self.protocol.map_info.name
-        return self.overview
+    def update_cached_overview(self):
+        """Updates cached overview"""
+        overview = self.protocol.map.get_overview(rgba=True)
+        w = png.Writer(512, 512, alpha=True)
+        data = BytesIO()
+        w.write_array(data, overview)
+        self.cached_overview = data.getvalue()
+        self.last_update = time.time()
+        self.last_map_name = self.protocol.map_info.name
+
+    async def overview(self, request):
+        # update cache on a set interval or map change or initialization
+        if (self.cached_overview is None or
+                self.last_map_name != self.current_map or
+                time.time() - self.last_update > interval_option.get()):
+            self.update_cached_overview()
+
+        return web.Response(body=self.cached_overview,
+                            content_type='image/png')
+
+    async def index(self, request):
+        rendered = self.status_template.render(server=self.protocol)
+        return web.Response(body=rendered, content_type='text/html')
+
+    def create_app(self):
+        app = web.Application()
+        app.on_response_prepare.append(set_default_headers)
+        app.add_routes([
+            web.get('/json', self.json),
+            web.get('/overview', self.overview),
+            web.get('/', self.index)
+        ])
+        return app
+
+    async def listen(self):
+        """Starts the status server on configured host/port"""
+        app = self.create_app()
+        logger = Logger() if logging_option.get() else None
+        log_class = AccessLogger if logging_option.get() else None
+        runner = web.AppRunner(app,
+                               access_log=logger,
+                               access_log_class=log_class)
+        await as_deferred(runner.setup())
+        site = web.TCPSite(runner, host_option.get(), port_option.get())
+        await as_deferred(site.start())
+
+        # TODO: explain why we do this
+        await Deferred()

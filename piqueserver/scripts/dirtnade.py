@@ -1,7 +1,7 @@
 """
 Makes grenades create blocks.
 
-Maintainer: hompy
+.. codeauthor:: hompy
 """
 
 from pyspades.contained import BlockAction
@@ -41,7 +41,7 @@ def apply_script(protocol, connection, config):
                 block_action.x = x
                 block_action.y = y
                 block_action.z = z
-                self.protocol.send_contained(block_action, save=True)
+                self.protocol.broadcast_contained(block_action, save=True)
                 map.set_point(x, y, z, self.color)
                 blocks -= 1
                 if blocks == 0:

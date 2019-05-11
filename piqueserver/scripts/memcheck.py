@@ -2,10 +2,9 @@
 Runs the garbage collector at a given interval and displays any uncollected
 garbage found.
 
-Maintainer: mat^2
+.. codeauthor:: mat^2
 """
 
-from __future__ import print_function
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 import gc

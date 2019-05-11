@@ -37,11 +37,11 @@ class PublishResource(Resource):
 
 class PublishServer(object):
 
-    def __init__(self, protocol, config):
+    def __init__(self, protocol, port):
         self.protocol = protocol
         publish_resource = PublishResource(self)
         site = server.Site(publish_resource)
-        protocol.listenTCP(config.get('port', 32885), site)
+        protocol.listenTCP(port, site)
         self.update()
 
     def update(self):

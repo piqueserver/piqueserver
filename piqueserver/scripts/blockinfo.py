@@ -1,18 +1,35 @@
 """
 A tool for identifying griefers.
 
-Maintainer: hompy
+.. note::
+  "blockinfo" must be AFTER "votekick" in the config script list
+
+Commands
+^^^^^^^^
+
+* ``/griefcheck or /gc <player> <minutes>`` gives you when, how many and whos blocks a player destroyed *admin only*
+
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [blockinfo]
+   griefcheck_on_votekick = true
+   irc_only = false
+
+.. codeauthor:: hompy
 """
 
 from twisted.internet.reactor import seconds
 from pyspades.collision import distance_3d_vector
 from pyspades.common import prettify_timespan
 from piqueserver.commands import command, admin, get_player
+from piqueserver.config import config
 
-# "blockinfo" must be AFTER "votekick" in the config.txt script list
-# TODO: port these to new config system once merged
-GRIEFCHECK_ON_VOTEKICK = True
-IRC_ONLY = False
+blockinfo_config = config.section("blockinfo")
+GRIEFCHECK_ON_VOTEKICK = blockinfo_config.option("griefcheck_on_votekick", True)
+IRC_ONLY = blockinfo_config.option("irc_only", False)
 
 
 @command('griefcheck', 'gc')
@@ -141,9 +158,9 @@ def apply_script(protocol, connection, config):
         def on_votekick_start(self, instigator, victim, reason):
             result = protocol.on_votekick_start(
                 self, instigator, victim, reason)
-            if result is None and GRIEFCHECK_ON_VOTEKICK:
+            if result is None and GRIEFCHECK_ON_VOTEKICK.get():
                 message = grief_check(instigator, victim.name)
-                if IRC_ONLY:
+                if IRC_ONLY.get():
                     self.irc_say('* ' + message)
                 else:
                     self.send_chat(message, irc=True)

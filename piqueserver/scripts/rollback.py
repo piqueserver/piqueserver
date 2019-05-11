@@ -1,12 +1,33 @@
 """
-Progressively roll backs map to their original state (or to another map).
+Rollback rolls back the map to it's original state by placing and removing
+changed blocks. This takes ages. Use with care.
 
-Maintainer: hompy
+Commands
+^^^^^^^^
+
+* ``/rollmap <map name>`` changes the map to the given map in a rolling fashion *admin only*
+* ``/rollmap <map name> <sector>`` changes the sector of the current map to the given map's sector in a rolling fashion *admin only*
+* ``/rollback`` starts a rollback on the current map *admin only*
+* ``/rollbackcancel`` cancel an on-going rollback *admin only*
+
+.. warning::
+   ``/rollmap`` will take a long time if number of differing blocks is too high.
+
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+    [rollback]
+    rollback_on_game_end = false
+
+.. codeauthor:: hompy
 """
 
 import os
+import time
+import operator
 
-from six.moves import range
 from twisted.internet.task import LoopingCall
 from pyspades.vxl import VXLData
 from pyspades.contained import BlockAction, SetColor
@@ -14,9 +35,7 @@ from pyspades.constants import *
 from pyspades.common import coordinates, make_color
 from piqueserver.map import Map, MapNotFound, check_rotation
 from piqueserver.commands import command, admin
-from piqueserver import cfg
-import time
-import operator
+from piqueserver.config import config
 
 S_INVALID_MAP_NAME = 'Invalid map name'
 S_ROLLBACK_IN_PROGRESS = 'Rollback in progress'
@@ -32,6 +51,9 @@ S_ROLLBACK_TIME_TAKEN = 'Time taken: {seconds:.3}s'
 
 NON_SURFACE_COLOR = (0, 0, 0)
 
+rollback_config = config.section('rollback')
+ROLLBACK_ON_GAME_END_OPTION = rollback_config.option('rollback_on_game_end', False)
+config_dir = config.config_dir
 
 @command(admin_only=True)
 def rollmap(connection, mapname=None, value=None):
@@ -54,7 +76,7 @@ def rollbackcancel(connection):
 
 
 def apply_script(protocol, connection, config):
-    rollback_on_game_end = config.get('rollback_on_game_end', False)
+    rollback_on_game_end = ROLLBACK_ON_GAME_END_OPTION.get()
 
     class RollbackConnection(connection):
 
@@ -89,7 +111,7 @@ def apply_script(protocol, connection, config):
                     maps = check_rotation([mapname])
                     if not maps:
                         return S_INVALID_MAP_NAME
-                    map = Map(maps[0], os.path.join(cfg.config_dir, "maps")).data
+                    map = Map(maps[0], os.path.join(config_dir, "maps")).data
                 except MapNotFound as error:
                     return error.message
             name = (connection.name if connection is not None
@@ -99,7 +121,7 @@ def apply_script(protocol, connection, config):
             self.packet_generator = self.create_rollback_generator(
                 self.map, map, start_x, start_y, end_x, end_y, ignore_indestructable)
             self.rollback_in_progress = True
-            self.rollback_start_time = time.time()
+            self.rollback_start_time = time.monotonic()
             self.rollback_last_chat = self.rollback_start_time
             self.rollback_rows = 0
             self.rollback_total_rows = end_x - start_x
@@ -138,9 +160,9 @@ def apply_script(protocol, connection, config):
                     sent_total += sent * len(self.connections)
                     rows += (sent == 0)
                 self.rollback_rows += rows
-                if (time.time() - self.rollback_last_chat >
+                if (time.monotonic() - self.rollback_last_chat >
                         self.rollback_time_between_progress_updates):
-                    self.rollback_last_chat = time.time()
+                    self.rollback_last_chat = time.monotonic()
                     progress = float(self.rollback_rows) / \
                         self.rollback_total_rows
                     if progress < 1.0:
@@ -149,7 +171,7 @@ def apply_script(protocol, connection, config):
                     else:
                         self.send_chat(S_ROLLBACK_COLOR_PASS)
             except (StopIteration):
-                elapsed = time.time() - self.rollback_start_time
+                elapsed = time.monotonic() - self.rollback_start_time
                 message = S_ROLLBACK_TIME_TAKEN.format(seconds=elapsed)
                 self.end_rollback(message)
 

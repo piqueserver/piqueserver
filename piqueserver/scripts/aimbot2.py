@@ -1,11 +1,22 @@
 """
-Plugin to detect and react to possible aimbot users
+Detects and reacts to possible aimbot users.
 
-maintained by: ?
+Commands
+^^^^^^^^
+
+* ``/accuracy <player>`` shows player's accuracy per weapon
+* ``/hackinfo <player>`` shows player's accuracy, K/D ratio and how often their cross-hair snaps onto another players head *admin only*
+
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [aimbot]
+   collect_data = true # saves hits and shots of each weapon to a csv file
+
+.. codeauthor:: ?
 """
-# So we can do `x / y` instead of `float(x) / y`
-from __future__ import division
-from six.moves import range
 import os
 import csv
 import re
@@ -18,8 +29,9 @@ from pyspades.constants import (
     WEAPON_TOOL, WEAPON_KILL, HEADSHOT_KILL,
     RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON,
 )
-from piqueserver import cfg
 from piqueserver.commands import command, admin, get_player
+from piqueserver.config import config
+from piqueserver.utils import parse
 
 DISABLED, KICK, BAN, WARN_ADMIN = range(4)
 
@@ -30,20 +42,18 @@ HIT_PERCENT = WARN_ADMIN
 KILLS_IN_TIME = WARN_ADMIN
 MULTIPLE_BULLETS = WARN_ADMIN
 
-DETECT_DAMAGE_HACK = True
-
 # Minimum amount of time that must pass between admin warnings that are
 # triggered by the same detection method. Time is in seconds.
 WARN_INTERVAL_MINIMUM = 300
 
 # These controls are only used if banning is enabled
 # Time is given in minutes. Set to 0 for a permaban
-HEADSHOT_SNAP_BAN_DURATION = 1400
-HIT_PERCENT_BAN_DURATION = 1440
-KILLS_IN_TIME_BAN_DURATION = 2880
-MULTIPLE_BULLETS_BAN_DURATION = 10080
+HEADSHOT_SNAP_BAN_DURATION = parse("23hours")
+HIT_PERCENT_BAN_DURATION = parse("1day")
+KILLS_IN_TIME_BAN_DURATION = parse("2day")
+MULTIPLE_BULLETS_BAN_DURATION = parse("1week")
 
-# If more than or equal to this number of weapon hit packets are recieved
+# If more than or equal to this number of weapon hit packets are received
 # from the client in half the weapon delay time, then an aimbot is detected.
 # This method of detection should have 100% detection and no false positives
 # with the current aimbot.
@@ -86,11 +96,6 @@ HEADSHOT_SNAP_ANGLE = 90.0
 # of an enemy
 NEAR_MISS_ANGLE = 10.0
 
-# Valid damage values for each gun
-RIFLE_DAMAGE = (33, 49, 100)
-SMG_DAMAGE = (18, 29, 75)
-SHOTGUN_DAMAGE = (16, 27, 37)
-
 # Approximate size of player's heads in blocks
 HEAD_RADIUS = 0.7
 
@@ -104,8 +109,9 @@ NEAR_MISS_COS = cos(NEAR_MISS_ANGLE * (pi / 180.0))
 HEADSHOT_SNAP_ANGLE_COS = cos(HEADSHOT_SNAP_ANGLE * (pi / 180.0))
 
 aimbot_pattern = re.compile(".*(aim|bot|ha(ck|x)|cheat).*", re.IGNORECASE)
-
-
+aimbot_config = config.section("aimbot")
+collect_data = aimbot_config.option("collect_data", False)
+config_dir = config.config_dir
 def point_distance2(c1, c2):
     if c1.world_object is not None and c2.world_object is not None:
         p1 = c1.world_object.position
@@ -184,7 +190,6 @@ def hackinfo_player(player):
 
 
 def apply_script(protocol, connection, config):
-    collect_data = config.get("aimbot_collect_data", False)
     class Aimbot2Protocol(protocol):
 
         def start_votekick(self, payload):
@@ -376,26 +381,17 @@ def apply_script(protocol, connection, config):
             if hit_type == HEADSHOT_KILL:
                 self.multiple_bullets_count += 1
             if self.weapon == RIFLE_WEAPON:
-                if not (hit_amount in RIFLE_DAMAGE) and DETECT_DAMAGE_HACK:
+                self.rifle_hits += 1
+                if self.multiple_bullets_count >= RIFLE_MULTIPLE_BULLETS_MAX:
+                    self.multiple_bullets_eject()
                     return False
-                else:
-                    self.rifle_hits += 1
-                    if self.multiple_bullets_count >= RIFLE_MULTIPLE_BULLETS_MAX:
-                        self.multiple_bullets_eject()
-                        return False
             elif self.weapon == SMG_WEAPON:
-                if not (hit_amount in SMG_DAMAGE) and DETECT_DAMAGE_HACK:
+                self.smg_hits += 1
+                if self.multiple_bullets_count >= SMG_MULTIPLE_BULLETS_MAX:
+                    self.multiple_bullets_eject()
                     return False
-                else:
-                    self.smg_hits += 1
-                    if self.multiple_bullets_count >= SMG_MULTIPLE_BULLETS_MAX:
-                        self.multiple_bullets_eject()
-                        return False
             elif self.weapon == SHOTGUN_WEAPON:
-                if not (hit_amount in SHOTGUN_DAMAGE) and DETECT_DAMAGE_HACK:
-                    return False
-                elif shotgun_use:
-                    self.shotgun_hits += 1
+                self.shotgun_hits += 1
 
             return connection.on_hit(
                 self, hit_amount, hit_player, hit_type, grenade)
@@ -473,9 +469,9 @@ def apply_script(protocol, connection, config):
         # Data collection stuff
         def on_disconnect(self):
             self.bullet_loop_stop()
-            if collect_data:
+            if collect_data.get():
                 if self.name is not None:
-                    with open(os.path.join(cfg.config_dir,'aimbot2log.csv'), 'a+') as csvfile:
+                    with open(os.path.join(config_dir,'aimbot2log.csv'), 'a+') as csvfile:
                         csvfile.seek(0)
                         fieldnames = ['name', 'rifle_hits', 'rifle_count', 'smg_hits', 'smg_count', 'shotgun_hits', 'shotgun_count']
                         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)

@@ -1,14 +1,22 @@
 """
 Kicks a player if inactive for too long.
 
-Maintainer: hompy
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [afk]
+   time_limit = "15min"
+
+.. codeauthor:: hompy
 """
 
 from operator import attrgetter
-from six import itervalues
 from twisted.internet import reactor
 from pyspades.common import prettify_timespan
 from piqueserver.commands import command, get_player, admin
+from piqueserver.config import config, cast_duration
 
 S_AFK_CHECK = '{player} has been inactive for {time}'
 S_NO_PLAYERS_INACTIVE = 'No players or connections inactive for {time}'
@@ -16,6 +24,8 @@ S_AFK_KICKED = ('{num_players} players kicked, {num_connections} connections '
                 'terminated for {time} inactivity')
 S_AFK_KICK_REASON = 'Inactive for {time}'
 
+afk_config = config.section('afk')
+time_limit_option = afk_config.option('time_limit', default="1hour", cast=cast_duration)
 
 def afk(connection, player):
     player = get_player(connection.protocol, player)
@@ -33,7 +43,7 @@ def kick_afk(connection, minutes, amount=None):
     seconds = minutes * 60.0
     minutes_s = prettify_timespan(seconds)
     lower_bound = reactor.seconds() - seconds
-    for conn in list(itervalues(protocol.connections)):
+    for conn in list(protocol.connections.values()):
         if not conn.admin and conn.last_activity < lower_bound:
             to_kick.append(conn)
     if not to_kick:
@@ -58,8 +68,7 @@ def kick_afk(connection, minutes, amount=None):
 
 
 def apply_script(protocol, connection, config):
-    time_limit = config.get('afk_time_limit', None)
-    time_limit = time_limit and time_limit * 60.0
+    time_limit = time_limit_option.get()
 
     class AFKConnection(connection):
         afk_kick_call = None
@@ -77,7 +86,14 @@ def apply_script(protocol, connection, config):
         def reset_afk_kick_call(self):
             self.last_activity = reactor.seconds()
             if self.afk_kick_call and self.afk_kick_call.active():
-                self.afk_kick_call.reset(time_limit)
+                # In Twisted==18.9.0, reset() is broken when using
+                # AsyncIOReactor
+                # Hence, the following code does not work:
+                # self.afk_kick_call.reset(time_limit)
+                # It has been temporarily replaced with the equivalent:
+                self.afk_kick_call.cancel()
+                self.afk_kick_call = reactor.callLater(
+                    time_limit, self.afk_kick)
 
         def on_disconnect(self):
             if self.afk_kick_call and self.afk_kick_call.active():
@@ -93,7 +109,7 @@ def apply_script(protocol, connection, config):
             return connection.on_user_login(self, user_type, verbose)
 
         def on_connect(self):
-            if time_limit and not self.local:
+            if not self.local:
                 self.afk_kick_call = reactor.callLater(
                     time_limit, self.afk_kick)
             self.last_activity = reactor.seconds()

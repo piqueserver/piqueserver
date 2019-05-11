@@ -20,7 +20,7 @@ A few useful types used around the place.
 
 IDPool is used to distribute the IDs given out by the Server
 
-AttributeSet is used for tesint if various settings are active
+AttributeSet is used for testing if various settings are active
 
 MultikeyDict is used to make player names accessible by both id and name
 """
@@ -107,7 +107,7 @@ class MultikeyDict(dict):
 
     To delete: "del foo[1]" or "del foo['bar']" or "del foo['hello']"
 
-    This is an alternative to maintaining 2 seperate dicts for e.g. player
+    This is an alternative to maintaining 2 separate dicts for e.g. player
     IDs and their names, so you can do both dict[player_id] and
     dict[player_name].
 

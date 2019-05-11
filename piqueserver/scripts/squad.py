@@ -1,13 +1,29 @@
 """
 BF-like squad system.
 
-Maintainer: Triplefox
+Commands
+^^^^^^^^
+
+* ``/squad <key>`` to join a squad
+* ``/follow <player>`` to spawn near a specific player
+
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+    [squad]
+    respawn_time = "10sec"
+    auto_squad = true
+
+.. codeauthor:: Triplefox
 """
 
 import random
-from six import itervalues, iterkeys
 from piqueserver.commands import command, get_player
 from piqueserver import commands
+from piqueserver.config import config, cast_duration
+from piqueserver.server import respawn_time_option
 
 SQUAD_NAMES = set([
     'Alpha', 'Bravo', 'Charlie', 'Delta', 'Epsilon', 'Foxtrot', 'Gamma',
@@ -15,9 +31,19 @@ SQUAD_NAMES = set([
     'November', 'Oscar', 'Papa', 'Quebec', 'Romero', 'Sierra', 'Tango',
     'Uniform', 'Victor', 'Whiskey', 'X-ray', 'Yankee', 'Zulu'])
 
+squad_config = config.section('squad')
+RESPAWN_TIME_OPTION = squad_config.option('respawn_time',
+        default=respawn_time_option.get(), cast=cast_duration)
+SIZE_OPTION = squad_config.option('size', 0)
+AUTO_SQUAD_OPTION = squad_config.option('auto_squad', True)
+
 
 @command()
 def follow(self, playerkey=None):
+    """
+    Lets you spawn near a specific player in your squad
+    /follow <player>
+    """
     if playerkey is None:
         squad_pref = None
         squad = self.squad
@@ -37,6 +63,10 @@ def follow(self, playerkey=None):
 
 @command()
 def squad(self, squadkey=None):
+    """
+    Lets you join a squad. If you die you respawn near your squad mates.
+    /squad <key>
+    """
     if self.protocol.squad_size <= 1:
         return 'Squads are disabled on this server.'
 
@@ -45,7 +75,7 @@ def squad(self, squadkey=None):
     if squadkey is None:
         allsquads = self.get_squads(self.team)
         result = []
-        for squadkey in list(iterkeys(allsquads)):
+        for squadkey in list(allsquads.keys()):
             result.append(self.print_squad(
                 squadkey, allsquads[squadkey]))
         result.append(('To join squads: /squad <squad name>. ' +
@@ -64,10 +94,9 @@ def squad(self, squadkey=None):
 
 
 def apply_script(protocol, connection, config):
-    protocol.squad_respawn_time = config.get('squad_respawn_time',
-                                             protocol.respawn_time)
-    protocol.squad_size = config.get('squad_size', 0)
-    protocol.auto_squad = config.get('auto_squad', True)
+    protocol.squad_respawn_time = RESPAWN_TIME_OPTION.get()
+    protocol.squad_size = SIZE_OPTION.get()
+    protocol.auto_squad = AUTO_SQUAD_OPTION.get()
 
     class SquadConnection(connection):
         squad = None
@@ -81,13 +110,13 @@ def apply_script(protocol, connection, config):
         def get_squad(self, team, squadkey):
             result = {'name': squadkey, 'players': []}
             if squadkey is None:
-                for player in list(itervalues(self.protocol.players)):
+                for player in list(self.protocol.players.values()):
                     if (player.team is team and
                             player.squad is None):
                         result['players'].append(player)
                         result['name'] = player.squad
             else:
-                for player in list(itervalues(self.protocol.players)):
+                for player in list(self.protocol.players.values()):
                     if (player.team is team and player.squad and
                             player.squad.lower() == squadkey.lower()):
                         result['players'].append(player)
@@ -96,7 +125,7 @@ def apply_script(protocol, connection, config):
 
         def get_squads(self, team):
             squad_dict = {}
-            for player in list(itervalues(self.protocol.players)):
+            for player in list(self.protocol.players.values()):
                 if player.team is team:
                     if player.squad in squad_dict:
                         squad_list = squad_dict[player.squad]
@@ -199,7 +228,7 @@ def apply_script(protocol, connection, config):
                                      self.name)
             self.squad = None
             self.squad_pref = None
-            for player in list(itervalues(self.protocol.players)):
+            for player in list(self.protocol.players.values()):
                 if player.squad_pref is self:
                     player.squad_pref = None
             self.respawn_time = self.protocol.respawn_time

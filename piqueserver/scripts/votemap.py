@@ -1,29 +1,44 @@
-# Copyright (c) James Hofmann 2012.
+"""
+Allows players to vote for maps.
 
-# This file is part of pyspades.
+Commands
+^^^^^^^^
 
-# pyspades is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+* ``/votemap`` initiates map voting
+* ``/vote <map name>`` vote for a map
 
-# pyspades is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+.. code-block:: guess
 
-# You should have received a copy of the GNU General Public License
-# along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
+    [votemap]
+    public_votes = true
+    extension_time = "15min"
+    player_driven = false
+    autoschedule = false
+    percentage = 80
+
+.. codeauthor:: James Hofmann a.k.a triplefox (GPL LICENSE)
+"""
+
 
 import random
-from six import iterkeys, itervalues
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 from pyspades.common import prettify_timespan
 from piqueserver.map import check_rotation
 from piqueserver.scheduler import Scheduler
 from piqueserver.commands import command
+from piqueserver.config import config, cast_duration
 
+votemap_config = config.section('votemap')
+
+VOTEMAP_AUTOSCHEDULE_OPTION = votemap_config.option('autoschedule', 180)
+VOTEMAP_PUBLIC_VOTES_OPTION = votemap_config.option('public_votes', True)
+# godwhoa: This option gets loaded into votemap_time but that doesn't get used anywhere.
+VOTEMAP_TIME_OPTION = votemap_config.option('time', default="2min", cast=cast_duration)
+VOTEMAP_EXTENSION_TIME_OPTION = votemap_config.option('extension_time', default="15min",
+    cast=lambda x: cast_duration(x)/60)
+VOTEMAP_PLAYER_DRIVEN_OPTION = votemap_config.option('player_driven', False)
+VOTEMAP_PERCENTAGE_OPTION = votemap_config.option('percentage', 80)
 
 def cancel_verify(connection, instigator):
     return (connection.admin or
@@ -61,7 +76,7 @@ class VoteMap(object):
         thresh = int((len(self.protocol.players)) *
                      self.vote_percentage / 100.0)
         counts = {}
-        for v in list(itervalues(self.votes)):
+        for v in list(self.votes.values()):
             if v in counts:
                 counts[v]['count'] += 1
             else:
@@ -70,7 +85,7 @@ class VoteMap(object):
         if len(cvlist) <= 0:
             return {'name': self.picks[0], 'count': 0}
         mv = cvlist[0]
-        for n in list(iterkeys(counts)):
+        for n in list(counts.keys()):
             if counts[n]['count'] > mv['count']:
                 mv = n
         mv['count'] = thresh - mv['count']
@@ -195,15 +210,12 @@ def apply_script(protocol, connection, config):
 
         def __init__(self, interface, config):
             protocol.__init__(self, interface, config)
-            self.votemap_autoschedule = config.get('votemap_autoschedule', 180)
-            self.votemap_public_votes = config.get(
-                'votemap_public_votes', True)
-            self.votemap_time = config.get('votemap_time', 120)
-            self.votemap_extension_time = config.get('votemap_extension_time',
-                                                     15)
-            self.votemap_player_driven = config.get('votemap_player_driven',
-                                                    False)
-            self.votemap_percentage = config.get('votemap_percentage', 80)
+            self.votemap_autoschedule = VOTEMAP_AUTOSCHEDULE_OPTION.get()
+            self.votemap_public_votes = VOTEMAP_PUBLIC_VOTES_OPTION.get()
+            self.votemap_time = VOTEMAP_TIME_OPTION.get()
+            self.votemap_extension_time = VOTEMAP_EXTENSION_TIME_OPTION.get()
+            self.votemap_player_driven = VOTEMAP_PLAYER_DRIVEN_OPTION.get()
+            self.votemap_percentage = VOTEMAP_PERCENTAGE_OPTION.get()
             self.autoschedule_votemap()
 
         def autoschedule_votemap(self):
@@ -228,8 +240,8 @@ def apply_script(protocol, connection, config):
             else:
                 return verify
 
-        def set_map_name(self, *arg, **kw):
-            protocol.set_map_name(self, *arg, **kw)
+        def on_advance(self, *arg, **kw):
+            protocol.on_advance(self, *arg, **kw)
             self.end_votes()
 
         def end_votes(self):

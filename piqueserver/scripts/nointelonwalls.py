@@ -1,8 +1,9 @@
 """
-nointelonwalls.py - prevents taking intel through walls
-by kmsi(kmsiapps@gmail.com)
-inspired by nospadingwalls.py & omgnograbbingthroughwallsanymore.py
+Prevents taking intel through walls
+
 Version 2(2017.12.25)
+
+.. codeauthor:: kmsi<kmsiapps@gmail.com>
 """
 
 

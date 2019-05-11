@@ -1,7 +1,8 @@
 import tempfile
+from pprint import pprint
 
 import unittest
-from piqueserver.config import config, JSON_FORMAT, TOML_FORMAT
+from piqueserver.config import ConfigStore, JSON_FORMAT, TOML_FORMAT, cast_duration
 from io import StringIO
 
 SIMPLE_TOML_CONFIG = u"""
@@ -29,6 +30,7 @@ thing1 = "something"
 class TestExampleConfig(unittest.TestCase):
 
     def test_simple(self):
+        config = ConfigStore()
         f = StringIO(SIMPLE_TOML_CONFIG)
         config.load_from_file(f)
 
@@ -48,6 +50,7 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(s.get(), '42')
 
     def test_validation(self):
+        config = ConfigStore()
         f = StringIO(SIMPLE_TOML_CONFIG)
         config.load_from_file(f)
 
@@ -63,8 +66,9 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(bounded.get(), 6)
 
     def test_get(self):
-        f = StringIO(SIMPLE_TOML_CONFIG)
+        config = ConfigStore()
         test = config.option('testthing')
+        f = StringIO(SIMPLE_TOML_CONFIG)
         config.load_from_file(f)
 
         self.assertEqual(test.get(), None)
@@ -74,6 +78,7 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(test.get(), 'something')
 
     def test_nested(self):
+        config = ConfigStore()
         f = StringIO(SIMPLE_TOML_CONFIG)
         config.load_from_file(f)
 
@@ -104,6 +109,7 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(test.get(), 'hi')
 
     def test_reload(self):
+        config = ConfigStore()
         f = StringIO(SIMPLE_TOML_CONFIG)
         config.load_from_file(f)
 
@@ -121,6 +127,7 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(port.get(), 5555)
 
     def test_raw_loading(self):
+        config = ConfigStore()
         config.load_from_dict({})
         name = config.option('name')
         port = config.section('server').option('port')
@@ -140,6 +147,7 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(name.get(), 'thing')
 
     def test_fail_load(self):
+        config = ConfigStore()
         f = StringIO(SIMPLE_TOML_CONFIG)
 
         with self.assertRaises(ValueError):
@@ -148,15 +156,17 @@ class TestExampleConfig(unittest.TestCase):
         with self.assertRaises(ValueError):
             config.load_from_file(f, format_=JSON_FORMAT)
 
-    def test_json_default(self):
-        with open('piqueserver/config/config.json') as f:
-            config.load_from_file(f, format_=JSON_FORMAT)
-
-        # "name" : "piqueserver instance",
-        name = config.option('name')
-        self.assertEqual(name.get(), 'piqueserver instance')
+    def test_json(self):
+        config = ConfigStore()
+        f = StringIO(u'''
+        {
+            "name": "piqueserver instance"
+        }
+        ''')
+        config.load_from_file(f, format_=JSON_FORMAT)
 
     def test_more_nested(self):
+        config = ConfigStore()
         f = StringIO(SIMPLE_TOML_CONFIG)
         config.load_from_file(f)
 
@@ -173,6 +183,7 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(thing_config.get_dict(), {'thing1': 'something', 'thing2': 'something else'})
 
     def test_nested_update(self):
+        config = ConfigStore()
         f = StringIO(SIMPLE_TOML_CONFIG)
         config.load_from_file(f)
 
@@ -193,6 +204,7 @@ class TestExampleConfig(unittest.TestCase):
         self.assertEqual(raw['server']['name'], 'piqueserver instance')
 
     def test_dump_to_file(self):
+        config = ConfigStore()
         f = StringIO(SIMPLE_TOML_CONFIG)
         config.load_from_file(f)
 
@@ -213,3 +225,63 @@ class TestExampleConfig(unittest.TestCase):
             out = f.read().strip()
             # at least make sure it wrote something that could be toml
             self.assertIn('[server]', out)
+
+    def test_check_unused(self):
+        config = ConfigStore()
+        d = {
+                'server': {
+                    'name': 'wat',
+                    'unreg1': 'nothing',
+                    },
+                'unreg2': {
+                    'unreg3': 'should not be warned about'
+                    }
+                }
+        config.load_from_dict(d)
+
+        server_config = config.section('server')
+        name = server_config.option('name')
+
+        one = config.check_unused()
+        two = {
+                'server': {
+                    'unreg1': 'nothing',
+                    },
+                'unreg2': {
+                    'unreg3': 'should not be warned about'
+                    }
+                }
+        self.assertEqual(one, two)
+
+
+class TestCasts(unittest.TestCase):
+    def test_duration_cast(self):
+        test_cases = [
+            {
+                "name": "Direct seconds",
+                "input": 10,
+                "expect": 10
+            },
+            {
+                "name": "Duration",
+                "input": "10sec",
+                "expect": 10
+            },
+            {
+                "name": "Invalid type",
+                "input": [],
+                "ex": ValueError
+            },
+            {
+                "name": "Invalid Duration",
+                "input": "1dia",
+                "ex": ValueError
+            }
+        ]
+        for case in test_cases:
+            if "ex" in case:
+                with self.assertRaises(case["ex"]):
+                    cast_duration(case["input"])
+                continue
+            got = cast_duration(case["input"])
+            self.assertEqual(got, case["expect"])

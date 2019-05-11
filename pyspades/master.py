@@ -19,8 +19,6 @@
 Implementation of the 0,75 master server protocol
 """
 
-from __future__ import unicode_literals
-
 from pyspades.loaders import Loader
 from pyspades.protocol import BaseConnection
 from pyspades.constants import MASTER_VERSION
@@ -52,15 +50,15 @@ class AddServer(Loader):
             self.game_mode = reader.readString()
             self.map = reader.readString()
 
-    def write(self, reader):
+    def write(self, writer):
         if self.count is None:
-            reader.writeByte(self.max_players)
-            reader.writeShort(self.port, True, False)
-            reader.writeString(self.name)
-            reader.writeString(self.game_mode)
-            reader.writeString(self.map)
+            writer.writeByte(self.max_players)
+            writer.writeShort(self.port, True, False)
+            writer.writeString(self.name)
+            writer.writeString(self.game_mode)
+            writer.writeString(self.map)
         else:
-            reader.writeByte(self.count, True)
+            writer.writeByte(self.count, True)
 
 
 add_server = AddServer()

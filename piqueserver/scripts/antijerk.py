@@ -1,10 +1,19 @@
 """
 Kicks jerks for 'PRESS ALT-F4 FOR AIRSTRIKES' and so on.
 
-Maintainer: ?
+Options
+^^^^^^^
+
+.. code-block:: guess
+
+   [antijerk]
+   ban_duration = "15min"
+
+.. codeauthor:: ?
 """
 
 import re
+from piqueserver.config import config, cast_duration
 
 chat_pattern = re.compile(".*(airstrike).*(esc|escape|alt-f4|alt f4)",
                           re.IGNORECASE)
@@ -12,6 +21,8 @@ chat_pattern_2 = re.compile(".*(esc|escape|alt-f4|alt f4).*(airstrike)",
                             re.IGNORECASE)
 admin_pattern = re.compile(".*(admin)",
                            re.IGNORECASE)
+antijerk_config = config.section("antijerk")
+ban_duration = antijerk_config.option("ban_duration", default="15min", cast=cast_duration)
 
 
 def antijerk_match(player, msg):
@@ -21,9 +32,8 @@ def antijerk_match(player, msg):
 
 
 def apply_script(protocol, connection, config):
-    jerk_ban_duration = config.get('jerk_ban_duration', 15.0)
     def jerk_kick(connection):
-        connection.ban('Autoban: anti-jerk', jerk_ban_duration)
+        connection.ban('Autoban: anti-jerk', ban_duration.get())
 
     class AntiJerkConnection(connection):
 

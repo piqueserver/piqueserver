@@ -18,14 +18,15 @@
 # FIXME: This should be probably moved into it's own URL thing and put into
 # some module with a name describing it's insignificance
 
-def make_server_identifier(ip, port=32887):
+from ipaddress import IPv4Address
+def make_server_identifier(ip: IPv4Address, port: int = 32887) -> str:
     # ip should be an IPv4Address object
     a, b, c, d = ip.exploded.split('.')
     a = int(a)
     b = int(b)
     c = int(c)
     d = int(d)
-    return 'aos://%s:%s' % (a | (b << 8) | (c << 16) | (d << 24), port)
+    return 'aos://{}:{}'.format(a | (b << 8) | (c << 16) | (d << 24), port)
 
 
 def get_server_details(value):
@@ -43,4 +44,4 @@ def get_server_details(value):
     b = (host & 0xFF00) >> 8
     c = (host & 0xFF0000) >> 16
     d = (host & 0xFF000000) >> 24
-    return ('%s.%s.%s.%s' % (a, b, c, d), port)
+    return ('{}.{}.{}.{}'.format(a, b, c, d), port)

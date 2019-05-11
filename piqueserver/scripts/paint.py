@@ -1,11 +1,14 @@
 """
 Lets you change the color of the block you are looking at.
-/paint [player] enables painting mode for the player.
-
 With block tool selected, pick a color, then hold down sneak key
 (<V> by default) to paint.
 
-Maintainer: hompy
+Commands
+^^^^^^^^
+
+* ``/paint <player>`` enables painting mode for that player.
+
+.. codeauthor:: hompy
 """
 
 from pyspades.contained import BlockAction
@@ -47,9 +50,9 @@ def paint_block(protocol, player, x, y, z, color):
     block_action.z = z
     block_action.player_id = player.player_id
     block_action.value = DESTROY_BLOCK
-    protocol.send_contained(block_action, save=True)
+    protocol.broadcast_contained(block_action, save=True)
     block_action.value = BUILD_BLOCK
-    protocol.send_contained(block_action, save=True)
+    protocol.broadcast_contained(block_action, save=True)
     return True
 
 
