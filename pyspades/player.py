@@ -34,29 +34,7 @@ from pyspades.weapon import WEAPONS
 log = Logger()
 
 
-set_tool = loaders.SetTool()
-block_action = loaders.BlockAction()
-position_data = loaders.PositionData()
-restock = loaders.Restock()
-create_player = loaders.CreatePlayer()
-intel_pickup = loaders.IntelPickup()
-intel_capture = loaders.IntelCapture()
-intel_drop = loaders.IntelDrop()
-player_left = loaders.PlayerLeft()
-set_hp = loaders.SetHP()
-existing_player = loaders.ExistingPlayer()
-kill_action = loaders.KillAction()
-chat_message = loaders.ChatMessage()
-map_data = loaders.MapChunk()
-map_start = loaders.MapStart()
-state_data = loaders.StateData()
-ctf_data = loaders.CTFState()
 tc_data = loaders.TCState()
-change_weapon = loaders.ChangeWeapon()
-weapon_reload = loaders.WeaponReload()
-handshake_init = loaders.HandShakeInit()
-version_request = loaders.VersionRequest()
-
 
 def check_nan(*values) -> bool:
     for value in values:
@@ -223,6 +201,7 @@ class ServerConnection(BaseConnection):
         for player in self.protocol.players.values():
             if (player.player_id != self.player_id and player.world_object
                     and player.world_object.dead):
+                kill_action = loaders.KillAction()
                 kill_action.killer_id = player.player_id
                 kill_action.player_id = player.player_id
                 kill_action.kill_type = FALL_KILL
@@ -480,6 +459,7 @@ class ServerConnection(BaseConnection):
         self.on_tool_changed(self.tool)
         if self.filter_visibility_data or self.filter_animation_data:
             return
+        set_tool = loaders.SetTool()
         set_tool.player_id = self.player_id
         set_tool.value = contained.value
         self.protocol.send_contained(set_tool, sender=self)
@@ -566,6 +546,7 @@ class ServerConnection(BaseConnection):
                         self.total_blocks_removed += count
                         self.on_block_removed(*xyz)
             self.last_block_destroy = reactor.seconds()
+        block_action = loaders.BlockAction()
         block_action.x = x
         block_action.y = y
         block_action.z = z
@@ -682,6 +663,7 @@ class ServerConnection(BaseConnection):
 
     @register_packet_handler(loaders.HandShakeReturn)
     def on_handshake_recieved(self, contained: loaders.HandShakeReturn) -> None:
+        version_request = loaders.VersionRequest()
         self.protocol.send_contained(version_request)
 
     @register_packet_handler(loaders.VersionResponse)
@@ -787,6 +769,7 @@ class ServerConnection(BaseConnection):
             x += 0.5
             y += 0.5
             z -= 0.5
+        position_data = loaders.PositionData()
         position_data.x = x
         position_data.y = y
         position_data.z = z
@@ -798,6 +781,7 @@ class ServerConnection(BaseConnection):
         self.blocks = 50
         self.weapon_object.restock()
         if not local:
+            restock = loaders.Restock()
             self.send_contained(restock)
 
     def respawn(self) -> None:
@@ -829,6 +813,7 @@ class ServerConnection(BaseConnection):
         if self.team is None:
             return
         spectator = self.team.spectator
+        create_player = loaders.CreatePlayer()
         if not spectator:
             if pos is None:
                 x, y, z = self.get_spawn_location()
@@ -864,6 +849,7 @@ class ServerConnection(BaseConnection):
             self.on_spawn((x, y, z))
 
         if not self.client_info:
+            handshake_init = loaders.HandShakeInit()
             self.send_contained(handshake_init)
 
     def take_flag(self):
@@ -875,6 +861,7 @@ class ServerConnection(BaseConnection):
         if self.on_flag_take() == False:
             return
         flag.player = self
+        intel_pickup = loaders.IntelPickup()
         intel_pickup.player_id = self.player_id
         self.protocol.send_contained(intel_pickup, save=True)
 
@@ -891,6 +878,7 @@ class ServerConnection(BaseConnection):
             self.protocol.reset_game(self)
             self.protocol.on_game_end()
         else:
+            intel_capture = loaders.IntelCapture()
             intel_capture.player_id = self.player_id
             intel_capture.winning = False
             self.protocol.send_contained(intel_capture, save=True)
@@ -917,6 +905,7 @@ class ServerConnection(BaseConnection):
                 flag.set(x, y, z)
 
                 flag.player = None
+                intel_drop = loaders.IntelDrop()
                 intel_drop.player_id = self.player_id
                 intel_drop.x = flag.x
                 intel_drop.y = flag.y
@@ -932,6 +921,7 @@ class ServerConnection(BaseConnection):
     def on_disconnect(self) -> None:
         if self.name is not None:
             self.drop_flag()
+            player_left = loaders.PlayerLeft()
             player_left.player_id = self.player_id
             self.protocol.send_contained(player_left, sender=self,
                                          save=True)
@@ -980,6 +970,7 @@ class ServerConnection(BaseConnection):
         if self.hp <= 0:
             self.kill(hit_by, kill_type, grenade)
             return
+        set_hp = loaders.SetHP()
         set_hp.hp = self.hp
         set_hp.not_fall = int(kill_type != FALL_KILL)
         if hit_indicator is None:
@@ -999,6 +990,7 @@ class ServerConnection(BaseConnection):
             self.weapon_object.reset()
         self.weapon_object = WEAPONS[weapon](self._on_reload)
         if not local:
+            change_weapon = loaders.ChangeWeapon()
             self.protocol.send_contained(change_weapon, save=True)
             if not no_kill:
                 self.kill(kill_type=CLASS_CHANGE_KILL)
@@ -1023,6 +1015,7 @@ class ServerConnection(BaseConnection):
         self.drop_flag()
         self.hp = None
         self.weapon_object.reset()
+        kill_action = loaders.KillAction()
         kill_action.kill_type = kill_type
         if by is None:
             kill_action.killer_id = kill_action.player_id = self.player_id
@@ -1043,6 +1036,7 @@ class ServerConnection(BaseConnection):
         self._send_connection_data()
         self.send_map(ProgressiveMapGenerator(self.protocol.map))
         if not self.client_info:
+            handshake_init = loaders.HandShakeInit()
             self.send_contained(handshake_init)
 
     def _send_connection_data(self) -> None:
@@ -1051,6 +1045,7 @@ class ServerConnection(BaseConnection):
             for player in self.protocol.players.values():
                 if player.name is None:
                     continue
+                existing_player = loaders.ExistingPlayer()
                 existing_player.name = player.name
                 existing_player.player_id = player.player_id
                 existing_player.tool = player.tool or 0
@@ -1067,6 +1062,7 @@ class ServerConnection(BaseConnection):
         blue = self.protocol.blue_team
         green = self.protocol.green_team
 
+        state_data = loaders.StateData()
         state_data.player_id = self.player_id
         state_data.fog_color = self.protocol.fog_color
         state_data.team1_color = blue.color
@@ -1081,6 +1077,7 @@ class ServerConnection(BaseConnection):
             blue_flag = blue.flag
             green_base = green.base
             green_flag = green.flag
+            ctf_data = loaders.CTFState()
             ctf_data.cap_limit = self.protocol.max_score
             ctf_data.team1_score = blue.score
             ctf_data.team2_score = green.score
@@ -1157,6 +1154,7 @@ class ServerConnection(BaseConnection):
             if count:
                 self.total_blocks_removed += count
                 self.on_block_removed(n_x, n_y, n_z)
+        block_action = loaders.BlockAction()
         block_action.x = x
         block_action.y = y
         block_action.z = z
@@ -1176,6 +1174,7 @@ class ServerConnection(BaseConnection):
         self.set_hp(self.hp - damage, kill_type=FALL_KILL)
 
     def _on_reload(self):
+        weapon_reload = loaders.WeaponReload()
         weapon_reload.player_id = self.player_id
         weapon_reload.clip_ammo = self.weapon_object.current_ammo
         weapon_reload.reserve_ammo = self.weapon_object.current_stock
@@ -1184,6 +1183,7 @@ class ServerConnection(BaseConnection):
     def send_map(self, data: Optional[ProgressiveMapGenerator] = None) -> None:
         if data is not None:
             self.map_data = data
+            map_start = loaders.MapStart()
             map_start.size = data.get_size()
             self.send_contained(map_start)
         elif self.map_data is None:
@@ -1201,6 +1201,7 @@ class ServerConnection(BaseConnection):
         for _ in range(10):
             if not self.map_data.data_left():
                 break
+            map_data = loaders.MapChunk()
             map_data.data = self.map_data.read(8192)
             self.send_contained(map_data)
 
@@ -1213,6 +1214,7 @@ class ServerConnection(BaseConnection):
     def send_chat(self, value: str, global_message: bool = False) -> None:
         if self.deaf:
             return
+        chat_message = loaders.ChatMessage()
         if not global_message:
             chat_message.chat_type = CHAT_SYSTEM
             prefix = ''

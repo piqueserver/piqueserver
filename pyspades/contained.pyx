@@ -33,6 +33,8 @@ from pyspades.loaders cimport Loader
 from pyspades.bytes cimport ByteReader, ByteWriter
 from pyspades.packet import register_packet
 
+cimport cython
+
 cdef inline float limit(float a):
     if a > 512.0:
         return 512.0
@@ -266,6 +268,7 @@ cdef class GrenadePacket(Loader):
 
 register_packet(GrenadePacket)
 
+@cython.freelist(8)
 cdef class SetTool(Loader):
     id = 7
 
@@ -372,6 +375,7 @@ cdef class MoveObject(Loader):
 
 register_packet(MoveObject)
 
+@cython.freelist(8)
 cdef class CreatePlayer(Loader):
     id = 12
 
@@ -701,6 +705,7 @@ cdef class MapChunk(Loader):
 
 register_packet(MapChunk)
 
+@cython.freelist(8)
 cdef class PlayerLeft(Loader):
     id = 20
 
@@ -758,6 +763,7 @@ cdef class ProgressBar(Loader):
 
 register_packet(ProgressBar)
 
+@cython.freelist(8)
 cdef class IntelCapture(Loader):
     id = 23
 
@@ -824,6 +830,7 @@ cdef class Restock(Loader):
 
 register_packet(Restock)
 
+@cython.freelist(8)
 cdef class FogColor(Loader):
     id = 27
 
@@ -839,6 +846,7 @@ cdef class FogColor(Loader):
 
 register_packet(FogColor)
 
+@cython.freelist(8)
 cdef class WeaponReload(Loader):
     id = 28
 

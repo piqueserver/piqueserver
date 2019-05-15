@@ -1,7 +1,6 @@
 from random import choice
 from twisted.internet import reactor
-from pyspades.contained import KillAction, InputData, SetColor, WeaponInput
-from pyspades.player import create_player, set_tool
+from pyspades.contained import CreatePlayer, SetTool, KillAction, InputData, SetColor, WeaponInput
 from pyspades.constants import (GRENADE_KILL, FALL_KILL, NETWORK_FPS)
 from pyspades.common import (
     prettify_timespan,
@@ -10,10 +9,7 @@ from piqueserver.commands import command, CommandError, get_player, join_argumen
 from piqueserver.utils import timeparse
 
 # aparently, we need to send packets in this file. For now, I give in.
-kill_action = KillAction()
-input_data = InputData()
-set_color = SetColor()
-weapon_input = WeaponInput()
+
 
 
 def has_digits(s: str) -> bool:
@@ -271,6 +267,7 @@ def invisible(connection, player=None):
         player.send_chat("You return to visibility")
         protocol.irc_say('* %s became visible' % player.name)
         x, y, z = player.world_object.position.get()
+        create_player = CreatePlayer()
         create_player.player_id = player.player_id
         create_player.name = player.name
         create_player.x = x
@@ -279,6 +276,7 @@ def invisible(connection, player=None):
         create_player.weapon = player.weapon
         create_player.team = player.team.id
         world_object = player.world_object
+        input_data = InputData()
         input_data.player_id = player.player_id
         input_data.up = world_object.up
         input_data.down = world_object.down
@@ -288,10 +286,13 @@ def invisible(connection, player=None):
         input_data.crouch = world_object.crouch
         input_data.sneak = world_object.sneak
         input_data.sprint = world_object.sprint
+        set_tool = SetTool()
         set_tool.player_id = player.player_id
         set_tool.value = player.tool
+        set_color = SetColor()
         set_color.player_id = player.player_id
         set_color.value = make_color(*player.color)
+        weapon_input = WeaponInput()
         weapon_input.primary = world_object.primary_fire
         weapon_input.secondary = world_object.secondary_fire
         protocol.broadcast_contained(create_player, sender=player, save=True)

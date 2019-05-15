@@ -36,10 +36,6 @@ from pyspades import contained as loaders
 from pyspades.common import make_color
 from pyspades.mapgenerator import ProgressiveMapGenerator
 
-fog_color = loaders.FogColor()
-world_update = loaders.WorldUpdate()
-intel_capture = loaders.IntelCapture()
-territory_capture = loaders.TerritoryCapture()
 
 
 class ServerProtocol(BaseProtocol):
@@ -245,6 +241,7 @@ class ServerProtocol(BaseProtocol):
                 position = (0.0, 0.0, 0.0)
                 orientation = (0.0, 0.0, 0.0)
             items.append((position, orientation))
+        world_update = loaders.WorldUpdate()
         # we only want to send as many items of the player list as needed, so
         # we slice it off at the highest player id
         world_update.items = items[:highest_player_id+1]
@@ -283,12 +280,14 @@ class ServerProtocol(BaseProtocol):
         if self.game_mode == CTF_MODE:
             if player is None:
                 player = list(self.players.values())[0]
+            intel_capture = loaders.IntelCapture()
             intel_capture.player_id = player.player_id
             intel_capture.winning = True
             self.send_contained(intel_capture, save=True)
         elif self.game_mode == TC_MODE:
             if territory is None:
                 territory = self.entities[0]
+            territory_capture = loaders.TerritoryCapture()
             territory_capture.object_index = territory.id
             territory_capture.winning = True
             territory_capture.state = territory.team.id
@@ -426,6 +425,7 @@ class ServerProtocol(BaseProtocol):
 
     def set_fog_color(self, color):
         self.fog_color = color
+        fog_color = loaders.FogColor()
         fog_color.color = make_color(*color)
         self.send_contained(fog_color, save=True)
 

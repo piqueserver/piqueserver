@@ -26,8 +26,9 @@ Originally created by: TheGrandmaster / hompy
 
 from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
+from pyspades import contained as loaders
+from pyspades.constants import *
 from pyspades.player import create_player, player_left, intel_capture
-from pyspades.constants import CTF_MODE, RIFLE_WEAPON
 
 from piqueserver.config import config, cast_duration
 
@@ -74,6 +75,7 @@ class DummyPlayer():
             return self.player_id is not None
         self.player_id = self.protocol.player_ids.pop()
         self.protocol.player_ids.put_back(self.player_id)  # just borrowing it!
+        create_player = loaders.CreatePlayer()
         create_player.x = 0
         create_player.y = 0
         create_player.z = 63
@@ -94,6 +96,7 @@ class DummyPlayer():
         winning = (self.protocol.max_score not in (0, None) and
                    self.team.score + 1 >= self.protocol.max_score)
         self.team.score += 1
+        intel_capture = loaders.IntelCapture()
         intel_capture.player_id = self.player_id
         intel_capture.winning = winning
         self.protocol.broadcast_contained(intel_capture, save=True)
@@ -114,6 +117,7 @@ class DummyPlayer():
     def __del__(self):
         if self.player_id is None or self.player_id in self.protocol.players:
             return
+        player_left = loaders.PlayerLeft()
         player_left.player_id = self.player_id
         self.protocol.broadcast_contained(player_left, save=True)
 

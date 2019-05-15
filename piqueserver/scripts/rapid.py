@@ -15,7 +15,7 @@ Set ALWAYS_RAPID to TRUE to automatically get rapid when you login.
 
 from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
-from pyspades.player import set_tool
+from pyspades import contained as loaders
 from piqueserver.commands import command, get_player
 
 ALWAYS_RAPID = False
@@ -50,6 +50,7 @@ def toggle_rapid(connection, player=None):
 
 
 def resend_tool(player):
+    set_tool = loaders.SetTool()
     set_tool.player_id = player.player_id
     set_tool.value = player.tool
     if player.weapon_object.shoot:
