@@ -148,9 +148,8 @@ class IRCBot(irc.IRCClient):
             max_len = MAX_IRC_CHAT_SIZE - \
                 len(self.protocol.server_prefix) - 1
             msg = msg[len(self.factory.chatprefix):].strip()
-            message = ("<{}> {}".format(prefix + alias, msg))[:max_len]
-            # TODO: should this be logged here?
-            # log.info(escape_control_codes(message))
+            message = ("[irc] <{}> {}".format(prefix + alias, msg))[:max_len]
+            log.info(escape_control_codes(message))
             self.factory.server.broadcast_chat(message)
         elif msg.startswith(self.factory.commandprefix) and user in self.ops:
             self.unaliased_name = user
@@ -158,7 +157,6 @@ class IRCBot(irc.IRCClient):
             user_input = msg[len(self.factory.commandprefix):]
             result = commands.handle_input(self, user_input)
             if result is not None:
-                # TODO: should this be split on newline as in player.py on_command?
                 self.send("{}: {}".format(user, result))
 
     @channel
