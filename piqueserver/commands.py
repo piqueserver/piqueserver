@@ -25,12 +25,16 @@ from collections import namedtuple
 import textwrap
 from typing import Dict, List, Callable
 
+from twisted.logger import Logger
+
+from pyspades.common import escape_control_codes
 from pyspades.player import parse_command
 
 _commands = {}
 _alias_map = {}
 _rights = {}  # type: Dict[str, List[str]]
 
+log = Logger()
 
 class CommandError(Exception):
     pass
@@ -347,6 +351,25 @@ def get_truthy(value):
 
 
 def handle_command(connection, command, parameters):
+    """
+    Public facing function to run a command, given the connection, a command
+    name, and a list of parameters.
+
+    Will log the command.
+    """
+    result = _handle_command(connection, command, parameters)
+
+    if result == False:
+        parameters = ['***'] * len(parameters)
+    log_message = '<{}> /{} {}'.format(connection.name, command,
+                                       ' '.join(parameters))
+    if result:
+        log_message += ' -> %s' % result
+    log.info(escape_control_codes(log_message))
+
+    return result
+
+def _handle_command(connection, command, parameters):
     command = command.lower()
     try:
         command_name = _alias_map.get(command, command)
