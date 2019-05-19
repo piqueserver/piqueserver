@@ -67,11 +67,6 @@ def prettify_timespan(total, get_seconds = False):
     text = ', '.join([s for s in (days_s, hours_s, minutes_s, seconds_s) if s])
     return text
 
-def open_debugger(name, locals):
-    print('{}, opening debugger'.format(name))
-    import code
-    code.interact(local = locals)
-
 import zlib
 def crc32(data):
     return zlib.crc32(data) & 0xffffffff
