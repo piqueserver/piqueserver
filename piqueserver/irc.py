@@ -22,9 +22,10 @@ from operator import attrgetter
 
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
+from twisted.logger import Logger
 
 from pyspades.constants import MAX_CHAT_SIZE
-from pyspades.common import encode
+from pyspades.common import encode, escape_control_codes
 from pyspades.types import AttributeSet
 from piqueserver import commands
 from piqueserver.commands import command, restrict
@@ -37,6 +38,7 @@ SPLIT_THRESHOLD = 20  # players
 
 irc_color_codes = re.compile(r"\x03(?:\d{1,2}(?:,\d{1,2})?)?", re.UNICODE)
 
+log = Logger()
 
 def channel(func):
     """This decorator rewrites the username of incoming messages to strip the
@@ -91,7 +93,7 @@ class IRCBot(irc.IRCClient):
         if irc_channel.lower() == self.factory.channel:
             self.ops = set()
             self.voices = set()
-        print("Joined channel %s" % irc_channel)
+        log.info("Joined channel %s" % irc_channel)
 
     def irc_NICK(self, prefix, params):
         user = prefix.split('!', 1)[0]
@@ -108,6 +110,10 @@ class IRCBot(irc.IRCClient):
             return
         for name in arg[1][3].split():
             mode = name[0]
+            # reset ops or voices in case not previously set (they should be in
+            # the joined method, but joined() not observed to always get called)
+            if not self.ops: self.ops = set()
+            if not self.voices: self.voices = set()
             l = {'@': self.ops, '+': self.voices}
             if mode in l:
                 l[mode].add(name[1:])
@@ -142,8 +148,8 @@ class IRCBot(irc.IRCClient):
             max_len = MAX_IRC_CHAT_SIZE - \
                 len(self.protocol.server_prefix) - 1
             msg = msg[len(self.factory.chatprefix):].strip()
-            message = ("<{}> {}".format(prefix + alias, msg))[:max_len]
-            print(message)
+            message = ("[irc] <{}> {}".format(prefix + alias, msg))[:max_len]
+            log.info(escape_control_codes(message))
             self.factory.server.broadcast_chat(message)
         elif msg.startswith(self.factory.commandprefix) and user in self.ops:
             self.unaliased_name = user
@@ -204,15 +210,15 @@ class IRCClientFactory(protocol.ClientFactory):
         self.password = config.get('password', '') or None
 
     def startedConnecting(self, connector):
-        print("Connecting to IRC server...")
+        log.info("Connecting to IRC server...")
 
     def clientConnectionLost(self, connector, reason):
-        print("Lost connection to IRC server ({}), reconnecting in {} seconds".format(
+        log.info("Lost connection to IRC server ({}), reconnecting in {} seconds".format(
             reason, self.lost_reconnect_delay))
         reactor.callLater(self.lost_reconnect_delay, connector.connect)
 
     def clientConnectionFailed(self, connector, reason):
-        print("Could not connect to IRC server ({}), retrying in {} seconds".format(
+        log.info("Could not connect to IRC server ({}), retrying in {} seconds".format(
             reason, self.failed_reconnect_delay))
         reactor.callLater(self.failed_reconnect_delay, connector.connect)
 

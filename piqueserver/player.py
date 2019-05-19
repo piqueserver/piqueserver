@@ -113,16 +113,10 @@ class FeatureConnection(ServerConnection):
 
     def on_command(self, command: str, parameters: List[str]) -> None:
         result = commands.handle_command(self, command, parameters)
-        # TODO: Move this logging into command module?
-        if result == False:
-            parameters = ['***'] * len(parameters)
-        log_message = '<{}> /{} {}'.format(self.name, command,
-                                           ' '.join(parameters))
+
         if result:
-            log_message += ' -> %s' % result
             for i in reversed(result.split("\n")):
                 self.send_chat(i)
-        log.info(escape_control_codes(log_message))
 
     def _can_build(self) -> bool:
         if not self.building:
