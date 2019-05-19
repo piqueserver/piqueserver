@@ -1,5 +1,6 @@
 from pyspades.common import (coordinates, to_coordinates)
-from piqueserver.commands import command, CommandError, get_player
+from piqueserver.commands import (command, CommandError, get_player,
+                                  PermissionDenied)
 
 
 @command(admin_only=True)
@@ -25,6 +26,8 @@ def move_silent(connection, *args):
     If the z coordinate makes the player appear underground, put them at ground level instead.
     If the x/y/z coordinate makes the player appear outside of the world bounds,
     take the bound instead
+
+    You can only move other players if you are admin or have the move_others right
     """
     do_move(connection, args, True)
 
@@ -38,6 +41,8 @@ def move(connection, *args):
     If the z coordinate makes the player appear underground, put them at ground level instead.
     If the x/y/z coordinate makes the player appear outside of the world bounds,
     take the bound instead
+
+    You can only move other players if you are admin or have the move_others right
     """
     if connection not in connection.protocol.players:
         raise ValueError()
@@ -74,6 +79,9 @@ def do_move(connection, args, silent=False):
         player = connection.name
     # player specified
     elif arg_count == 2 or arg_count == 4:
+        if not connection.rights.admin or connection.rights.move_others:
+            raise PermissionDenied(
+                "moving other players requires the move_others right")
         player = args[0]
 
     player = get_player(connection.protocol, player)
