@@ -46,7 +46,6 @@ from twisted.python.logfile import DailyLogFile
 
 # won't be used; just need to be executed
 import piqueserver.core_commands  # pylint: disable=unused-import
-import pyspades.debug
 from piqueserver import commands, extensions
 from piqueserver.config import cast_duration, config
 from piqueserver.console import create_console
