@@ -19,6 +19,7 @@ import re
 import random
 from itertools import groupby, chain
 from operator import attrgetter
+from typing import List
 
 from twisted.words.protocols import irc
 from twisted.internet import reactor, protocol
@@ -180,6 +181,14 @@ class IRCBot(irc.IRCClient):
             msg = irc_color_codes.sub('', msg)
         self.describe(self.factory.channel, msg)
 
+    # methods used to emulate the behaviour of regular Connection objects to
+    # prevent errors when command writers didn't test that their commands would
+    # work when run from IRC
+    def send_chat(self, value: str, _):
+        self.send(value)
+
+    def send_lines(self, lines: List[str]):
+        self.send(lines)
 
 class IRCClientFactory(protocol.ClientFactory):
     protocol = IRCBot
