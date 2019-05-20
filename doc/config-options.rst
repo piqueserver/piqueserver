@@ -293,8 +293,6 @@ Piqueserver can log events that happen to a text file::
     # Write a new log file each day
     rotate_daily = true
 
-    # enable the debug logging
-    debug_log = false
     # enable profiling
     profile = false
 

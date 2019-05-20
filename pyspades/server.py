@@ -25,7 +25,6 @@ from pyspades.constants import (
     UPDATE_FREQUENCY, UPDATE_FPS, NETWORK_FPS)
 from pyspades.types import MultikeyDict, IDPool
 from pyspades.master import get_master_connection
-#from pyspades.debug import *
 from pyspades.team import Team
 from pyspades.entities import Territory
 # importing tc_data is a quick hack since this file writes into it
