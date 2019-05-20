@@ -191,11 +191,12 @@ class ServerConnection(BaseConnection):
         else:
             self.on_team_changed(old_team)
         self.set_weapon(contained.weapon, True)
-        if self.protocol.speedhack_detect:
+        if self.protocol.speedhack_detect and not self.local:
             self.speedhack_detect = True
         if self.protocol.rubberband_distance is not None:
             self.rubberband_distance = self.protocol.rubberband_distance
-        self.rapid_hack_detect = True
+        if not self.local:
+            self.rapid_hack_detect = True
         if team.spectator:
             if self.world_object is not None:
                 self.world_object.delete()
