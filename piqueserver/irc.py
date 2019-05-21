@@ -188,7 +188,7 @@ class IRCBot(irc.IRCClient):
         self.send(value)
 
     def send_lines(self, lines: List[str]):
-        self.send(lines)
+        self.send("\n".join(lines))
 
 class IRCClientFactory(protocol.ClientFactory):
     protocol = IRCBot
