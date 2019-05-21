@@ -1,4 +1,5 @@
 from ipaddress import ip_network, ip_address
+from collections import OrderedDict
 
 def get_cidr(network):
     if network.prefixlen == 32:
@@ -10,7 +11,7 @@ def get_cidr(network):
 
 class NetworkDict(object):
     def __init__(self):
-        self.networks = []
+        self.networks = OrderedDict()
 
     def read_list(self, values):
         for item in values:
@@ -25,46 +26,55 @@ class NetworkDict(object):
     def remove(self, key):
         """remove a key from the networkdict and return the removed items"""
         ip = ip_network(str(key), strict=False)
-        networks = []
         results = []
-        for item in self.networks:
-            network, _value = item
-            if ip in network or ip == network:
-                # this value should be removed
-                results.append(item)
+        # There are 32 possible networks for each IP address in CIDR. This is
+        # small enough that we can just loop through all of them to get an
+        # unelegant constant time lookup for IP addresses.
+        #
+        # This loop could be sped up by a lot by using a (ip, mask) int tuple
+        # instead of constantly creating new IPNetwork objects with .supernet()
+        #
+        # When in doubt, use brute force - Ken Thompson
+        for _ in range(0, 32):
+            try:
+                elem = self.networks.pop(ip)
+            except KeyError:
+                pass
             else:
-                # keep this value in the networkdict
-                networks.append(item)
-        self.networks = networks
+                results.append([ip, elem])
+            ip = ip.supernet()
         return results
 
     def __setitem__(self, key, value):
-        self.networks.append((ip_network(str(key), strict=False), value))
+        self.networks[ip_network(str(key), strict=False)] = value
 
     def __getitem__(self, key):
         return self.get_entry(key)[1]
 
     def get_entry(self, key):
-        ip = ip_address(str(key))
-        for entry in self.networks:
-            network, _value = entry
-            if ip in network:
-                return entry
-        raise KeyError()
+        ip = ip_network(str(key))
+        # See comment for remove()
+        for _ in range(0, 32):
+            try:
+                return self.networks[ip]
+            except KeyError:
+                pass
+            ip = ip.supernet()
+        raise KeyError(key)
 
     def __len__(self):
         return len(self.networks)
 
     def __delitem__(self, key):
         ip = ip_network(str(key), strict=False)
-        self.networks = [item for item in self.networks if ip not in item]
+        self.networks.popitem(ip)
 
     def pop(self, *arg, **kw):
-        network, value = self.networks.pop(*arg, **kw)
+        network, value = self.networks.popitem(*arg, **kw)
         return get_cidr(network), value
 
     def iteritems(self):
-        for network, value in self.networks:
+        for network, value in self.networks.items():
             yield get_cidr(network), value
 
     def __contains__(self, key):
