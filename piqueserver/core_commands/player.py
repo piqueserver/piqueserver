@@ -57,7 +57,7 @@ def kill(connection, value=None):
         player = connection
     else:
         if not connection.rights.kill and not connection.admin:
-            raise PermissionDenied()
+            raise PermissionDenied("you can't kill other players")
         player = get_player(connection.protocol, value, False)
     player.kill()
     if connection is not player:
