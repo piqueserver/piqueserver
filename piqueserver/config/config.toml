@@ -219,7 +219,13 @@ default_duration = "1day"
 
 
 [rights]
-# Rights allow you to specify the roles available and what permissions they have
+# Rights allow you to specify the roles available and what permissions they have.
+# Role names are arbitrary. For a user to gain one of the below roles, they
+# must /login with a password given in the corresponding passwords list.
+#
+# Special built-in roles include `team_1`, `team_2`, `spectator`, and `all`
+# (self explanatory). The server automatically manages these roles for users,
+# and rights for these roles can be given below too.
 moderator = [
  "advancemap", "cancel", "dban", "fog",
  "from", "hackinfo", "hban",

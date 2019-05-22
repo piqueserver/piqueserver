@@ -72,6 +72,9 @@ class FeatureConnection(ServerConnection):
                 self.disconnect(ERROR_BANNED)
                 return
 
+        self.user_types = pyspades.types.AttributeSet()
+        self.rights = pyspades.types.AttributeSet()
+
         ServerConnection.on_connect(self)
 
     def on_join(self) -> None:
@@ -88,8 +91,6 @@ class FeatureConnection(ServerConnection):
         self.protocol.irc_say('* %s (IP %s, ID %s) entered the game!' %
                               (self.name, self.address[0], self.player_id))
         if self.user_types is None:
-            self.user_types = pyspades.types.AttributeSet()
-            self.rights = pyspades.types.AttributeSet()
             if self.protocol.everyone_is_admin:
                 self.on_user_login('admin', False)
 
@@ -265,7 +266,37 @@ class FeatureConnection(ServerConnection):
                     return False
                 self.send_chat('Team is full, moved to %s' % other_team.name)
                 return other_team
+
+        # Add the user to their relevant groups
+        self.user_types.add("all")
+
+        team_usertype = None
+
+        if team is self.protocol.team_1:
+            team_usertype = "team_1"
+        elif team is self.protocol.team_2:
+            team_usertype = "team_2"
+        elif team.spectator:
+            team_usertype = "spectator"
+
+        if team_usertype:
+            # remove existing special groups
+            self.user_types -= {"team_1", "team_2", "spectator"}
+            self.user_types.add(team_usertype)
+
+        self.regenerate_rights()
+
         self.last_switch = reactor.seconds()
+
+    def regenerate_rights(self):
+        """regenerate ``self.rights`` based on the user_types of the user"""
+        new_rights = pyspades.types.AttributeSet()
+
+        for user_type in self.user_types:
+            rights = set(commands.get_rights(user_type))
+            new_rights.update(rights)
+
+        self.rights = new_rights
 
     def on_chat(self, value: str, global_message: bool) -> Union[str, bool]:
         """
@@ -373,8 +404,9 @@ class FeatureConnection(ServerConnection):
             self.send_chat("!" * 30)
 
         self.user_types.add(user_type)
-        rights = set(commands.get_rights(user_type))
-        self.rights.update(rights)
+
+        self.regenerate_rights()
+
         if verbose:
             message = ' logged in as %s' % (user_type)
             self.send_chat('You' + message)
