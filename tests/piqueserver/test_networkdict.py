@@ -16,7 +16,6 @@ class TestNetworkDict(unittest.TestCase):
             ["(unknown)", "178.63.171.105", ": Hack", 1511716248.032651],
             ["Ken Kaneki", "177.222.250.65", ": kaneki afk", 1511718856.598152],
             ["panic-recover", "172.17.0.1", ": 10", 1512040137.320614],
-            ["panic-recover", "172.17.0.1", ": who", 1512043319.372366]
         ]
         networkdict = NetworkDict()
         networkdict.read_list(ban_list)
