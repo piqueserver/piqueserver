@@ -1,6 +1,6 @@
 # core
 Cython>=0.27,<1
-Twisted[tls]
+Twisted[tls,conch]
 Jinja2>=2,<3
 pyenet
 toml
