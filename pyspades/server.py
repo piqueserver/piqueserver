@@ -23,7 +23,7 @@ from pyspades.protocol import BaseProtocol
 from pyspades.constants import (
     CTF_MODE, TC_MODE, GAME_VERSION, MIN_TERRITORY_COUNT, MAX_TERRITORY_COUNT,
     UPDATE_FREQUENCY, UPDATE_FPS, NETWORK_FPS)
-from pyspades.types import MultikeyDict, IDPool
+from pyspades.types import IDPool
 from pyspades.master import get_master_connection
 from pyspades.team import Team
 from pyspades.entities import Territory
@@ -78,7 +78,7 @@ class ServerProtocol(BaseProtocol):
         self.max_connections = self.max_players + 2
         BaseProtocol.__init__(self, *arg, **kw)
         self.entities = []
-        self.players = MultikeyDict()
+        self.players = {}
         self.player_ids = IDPool()
 
         self._create_teams()
@@ -254,7 +254,7 @@ class ServerProtocol(BaseProtocol):
         self.team_2.initialize()
         if self.game_mode == TC_MODE:
             self.reset_tc()
-        self.players = MultikeyDict()
+        self.players = {}
         if self.connections:
             data = ProgressiveMapGenerator(self.map, parent=True)
             for connection in list(self.connections.values()):
