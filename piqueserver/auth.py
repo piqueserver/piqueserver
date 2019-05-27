@@ -1,4 +1,5 @@
 import abc
+from typing import Tuple
 
 
 class BaseAuthBackend(abc.ABC):
