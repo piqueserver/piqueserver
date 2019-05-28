@@ -1,6 +1,5 @@
 # core
 Cython>=0.27,<1
-Twisted[tls,conch]
 Jinja2>=2,<3
 pyenet
 toml
@@ -10,6 +9,9 @@ packaging>=19.0
 
 # from command
 geoip2>=2.9,<3.0
+
+# [tls] for core, [conch] for ssh
+Twisted[tls,conch]
 
 # windows specific
 pypiwin32; platform_system=="Windows"

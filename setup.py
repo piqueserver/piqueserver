@@ -136,7 +136,7 @@ setup(
     install_requires=[
         'pypiwin32;platform_system=="Windows"',
         'Cython>=0.27,<1',
-        'Twisted[tls,conch]',
+        'Twisted[tls]',
         'Jinja2>=2,<3',
         'pypng==0.0.19',
         'aiohttp>=3.3.0,<3.6.0',
@@ -146,6 +146,7 @@ setup(
     ],
     extras_require={
         'from': ['geoip2>=2.9,<3.0'],
+        'ssh': ['Twisted[tls,conch]'],
     },
     entry_points={
         'console_scripts': [
