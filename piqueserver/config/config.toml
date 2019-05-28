@@ -169,6 +169,10 @@ time_announcements = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30, 60, 120, 180, 240, 300
 cap_limit = 10
 
 
+# Set this to true to automatically log all players in as admin on join.
+# Possibly useful for testing purposes.
+everyone_is_admin = true
+
 [team1]
 # information about the team1
 # name of the team to be displayed in-game
@@ -195,10 +199,6 @@ color = [ 0, 255, 0]
 #moderator = ["modpass"]
 #guard = ["guardpass"]
 #trusted = ["trustedpass"]
-
-# Include an empty password for the admin role to automatically log in everyone
-# as admin. Could be useful for testing.
-#admin = [""]
 
 
 [bans]

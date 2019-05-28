@@ -106,6 +106,8 @@ cap_limit = config.option('cap_limit', default=10,
                           validate=lambda x: isinstance(x, (int, float)))
 advance_on_win = config.option('advance_on_win', default=False,
                                validate=lambda x: isinstance(x, bool))
+everyone_is_admin = config.option('everyone_is_admin', default=False,
+                               validate=lambda x: isinstance(x, bool))
 team1_name = team1_config.option(
     'name', default='Blue', validate=validate_team_name)
 team2_name = team2_config.option(
@@ -406,9 +408,8 @@ class FeatureProtocol(ServerProtocol):
             for func_name in func_names:
                 commands.add_rights(user_type, func_name)
 
-        for password in self.passwords.get('admin', []):
-            if not password:
-                self.everyone_is_admin = True
+        if everyone_is_admin.get():
+            self.everyone_is_admin = True
 
         self.port = port_option.get()
         ServerProtocol.__init__(self, self.port, interface)
