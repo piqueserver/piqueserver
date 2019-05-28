@@ -201,7 +201,8 @@ color = [ 0, 255, 0]
 # default duration a banned player will be banned for
 default_duration = "1day"
 
-# location the bans are saved and loaded from
+# location the bans are saved and loaded from (relative to the config
+# directory)
 #file = "bans.txt"
 
 # Ban publish allows you to synchronize bans between servers. When enabled,

@@ -320,9 +320,9 @@ class FeatureProtocol(ServerProtocol):
             log.debug("skip loading bans: file unavailable",
                       count=len(self.bans))
         except IOError as e:
-            log.error('Could not read bans.txt: {}'.format(e))
+            log.error('Could not read bans file ({}): {}'.format(bans_file.get(), e))
         except ValueError as e:
-            log.error('Could not parse bans.txt: {}'.format(e))
+            log.error('Could not parse bans file ({}): {}'.format(bans_file.get(), e))
 
         self.hard_bans = set()  # possible DDoS'ers are added here
         self.player_memory = deque(maxlen=100)
@@ -765,7 +765,7 @@ class FeatureProtocol(ServerProtocol):
         return result
 
     def save_bans(self):
-        ban_file = os.path.join(config.config_dir, 'bans.txt')
+        ban_file = os.path.join(config.config_dir, bans_file.get())
         ensure_dir_exists(ban_file)
 
         start_time = reactor.seconds()
