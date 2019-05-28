@@ -62,6 +62,17 @@ pip (stable version)
 
     pip3 install piqueserver
 
+Optional features:
+
+- `ssh`: enable ssh manhole server support
+- `from`: enable the `from` command to geolocate players by ip
+
+To install with optional features with pip:
+
+.. code:: bash
+
+    pip3 install piqueserver[ssh,from]
+
 git (bleeding edge)
 ~~~~~~~~~~~~~~~~~~~
 
@@ -71,8 +82,12 @@ git (bleeding edge)
     cd piqueserver
     python3 -m venv venv
     source venv/bin/activate
+
+    # note: requirements.txt includes all optional deps too
     pip install -r requirements.txt
+
     python setup.py install
+
     # now `piqueserver` will be available on the $PATH when venv active
 
 Archlinux
