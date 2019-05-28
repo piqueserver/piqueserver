@@ -196,6 +196,10 @@ color = [ 0, 255, 0]
 #guard = ["guardpass"]
 #trusted = ["trustedpass"]
 
+# Include an empty password for the admin role to automatically log in everyone
+# as admin. Could be useful for testing.
+#admin = [""]
+
 
 [bans]
 # default duration a banned player will be banned for

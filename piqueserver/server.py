@@ -406,6 +406,10 @@ class FeatureProtocol(ServerProtocol):
             for func_name in func_names:
                 commands.add_rights(user_type, func_name)
 
+        for password in self.passwords.get('admin', []):
+            if not password:
+                self.everyone_is_admin = True
+
         self.port = port_option.get()
         ServerProtocol.__init__(self, self.port, interface)
         self.host.intercept = self.receive_callback
