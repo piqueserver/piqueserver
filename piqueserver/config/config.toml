@@ -171,7 +171,7 @@ cap_limit = 10
 
 # Set this to true to automatically log all players in as admin on join.
 # Possibly useful for testing purposes.
-everyone_is_admin = true
+#everyone_is_admin = false
 
 [team1]
 # information about the team1
