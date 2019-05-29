@@ -212,11 +212,12 @@ default_duration = "1day"
 #publish_port = 32885
 
 # Bansubscribe allows you to inherit bans from another server with banpublish enabled.
-# First element of list is the URL, the second is a list of names which should
+# `url` is the URL returning the json list, `whitelist` is a list of names which should
 # be exempt from the filter
-#urls = [
-#  ["http://www.blacklist.spadille.net/subscribe.json", []]
+#bansubscribe = [
+#    { url = "http://www.blacklist.spadille.net/subscribe.json", whitelist = []},
 #]
+
 
 
 [rights]
