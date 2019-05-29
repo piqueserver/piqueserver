@@ -409,3 +409,9 @@ release_notifications
 +++++++++++++++++++++
 
 Check github for new releases and notify admins if new releases are found. Default True.
+
+everyone_is_admin
++++++++++++++++++
+
+Set `everyone_is_admin` to true to automatically log all players in as admin on
+join.  Possibly useful for testing purposes.
