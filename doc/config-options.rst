@@ -137,7 +137,11 @@ This section defines the behaviour when admins ban players::
     publish_port = 32885
 
     # Bansubscribe allows you to inherit bans from another server with banpublish enabled.
-    urls = [ [ "http://www.blacklist.spadille.net/subscribe.json", []]]
+    # `url` is the URL returning the json list, `whitelist` is a list of names which should
+    # be exempt from the filter
+    bansubscribe = [
+        { url = "http://www.blacklist.spadille.net/subscribe.json", whitelist = []},
+    ]
 
 .. _respawn_waves:
 

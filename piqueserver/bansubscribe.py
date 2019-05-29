@@ -18,16 +18,30 @@
 import json
 from twisted.internet.task import LoopingCall
 from twisted.internet.defer import DeferredList
+from twisted.web.client import getPage
+from twisted.logger import Logger
 
 from piqueserver.networkdict import NetworkDict
 from piqueserver.config import config
+
+log = Logger()
 
 UPDATE_INTERVAL = 5 * 60  # every 5 minute
 
 # format is [{"ip" : "1.1.1.1", "reason : "blah"}, ...]
 
+def validate_bansub_config(c):
+    if not isinstance(c, list):
+        return False
+
+    for item in c:
+        if not item.get('url') or not isinstance(item.get('whitelist'), list):
+            return False
+
+    return True
+
 bans_config = config.section('bans')
-urls = bans_config.option('urls', [])
+bans_config_urls = bans_config.option('bansubscribe', default=[], validate=validate_bansub_config)
 
 class BanManager(object):
     bans = None
@@ -35,8 +49,8 @@ class BanManager(object):
 
     def __init__(self, protocol):
         self.protocol = protocol
-        self.urls = [(str(item), name_filter) for (item, name_filter) in
-                     urls.get()]
+        self.urls = [(entry.get('url'), entry.get('whitelist')) for entry in
+                     bans_config_urls.get()]
         self.loop = LoopingCall(self.update_bans)
         self.loop.start(UPDATE_INTERVAL, now=True)
 
@@ -44,7 +58,7 @@ class BanManager(object):
         self.new_bans = NetworkDict()
         defers = []
         for url, url_filter in self.urls:
-            defers.append(self.protocol.getPage(url).addCallback(self.got_bans,
+            defers.append(getPage(url.encode('utf8')).addCallback(self.got_bans,
                                                                  url_filter))
         DeferredList(defers).addCallback(self.bans_finished)
 
@@ -59,6 +73,7 @@ class BanManager(object):
     def bans_finished(self, _result):
         self.bans = self.new_bans
         self.new_bans = None
+        log.info("successfully updated bans from bansubscribe urls")
 
     def get_ban(self, ip):
         if self.bans is None:

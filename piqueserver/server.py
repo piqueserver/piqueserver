@@ -55,6 +55,7 @@ from piqueserver.player import FeatureConnection
 from piqueserver.release import check_for_releases, format_release
 from piqueserver.scheduler import Scheduler
 from piqueserver.utils import as_deferred
+from piqueserver.bansubscribe import bans_config_urls
 from pyspades.bytes import NoDataLeft
 from pyspades.constants import CTF_MODE, ERROR_SHUTDOWN, TC_MODE
 from pyspades.master import MAX_SERVER_NAME_SIZE
@@ -396,7 +397,7 @@ class FeatureProtocol(ServerProtocol):
         if ban_publish.get():
             from piqueserver.banpublish import PublishServer
             self.ban_publish = PublishServer(self, ban_publish_port.get())
-        if bans_urls.get():
+        if bans_config_urls.get():
             from piqueserver import bansubscribe
             self.ban_manager = bansubscribe.BanManager(self)
         self.start_time = time.time()
