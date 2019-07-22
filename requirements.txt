@@ -3,7 +3,7 @@ Cython>=0.27,<1
 Jinja2>=2,<3
 pyenet
 toml
-pypng==0.0.19
+pypng==0.0.20
 aiohttp>=3.3.0,<3.6.0
 packaging>=19.0
 
