@@ -929,7 +929,7 @@ class ServerConnection(BaseConnection):
             player_left.player_id = self.player_id
             self.protocol.send_contained(player_left, sender=self,
                                          save=True)
-            del self.protocol.players[self]
+            del self.protocol.players[self.player_id]
         if self.player_id is not None:
             self.protocol.player_ids.put_back(self.player_id)
             self.protocol.update_master()
