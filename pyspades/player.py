@@ -466,7 +466,7 @@ class ServerConnection(BaseConnection):
         set_tool = loaders.SetTool()
         set_tool.player_id = self.player_id
         set_tool.value = contained.value
-        self.protocol.send_contained(set_tool, sender=self)
+        self.protocol.send_contained(set_tool, sender=self, save=True)
 
     @register_packet_handler(loaders.SetColor)
     def on_color_change_recieved(self, contained: loaders.SetColor) -> None:
