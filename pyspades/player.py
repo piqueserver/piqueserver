@@ -347,7 +347,8 @@ class ServerConnection(BaseConnection):
         check(pos.x+0.5, pos.y-0.5, pos.z + oz) or 
         check(pos.x-0.5, pos.y+0.5, pos.z + oz) or 
         check(pos.x-0.5, pos.y-0.5, pos.z + oz)):
-            contained.jump = False
+            print("WARNING: Attempt to take off. " + str(self.name))
+            #contained.jump = False
         # XXX unsupported for now
         # returned = self.on_animation_update(contained.primary_fire,
             # contained.secondary_fire, contained.jump,
