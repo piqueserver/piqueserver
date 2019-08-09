@@ -222,6 +222,8 @@ class ServerConnection(BaseConnection):
             self.on_hack_attempt(
                 'Invalid orientation data received')
             return
+        # WARNING: Non-standard client can send a non-normalized vector
+        # Vector normalization occurs later in the world_object.set_orientation
         returned = self.on_orientation_update(x, y, z)
         if returned == False:
             return
