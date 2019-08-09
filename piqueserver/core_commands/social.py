@@ -8,7 +8,7 @@ def login(connection, password):
     /login <password>
     You will be kicked if a wrong password is given 3 times in a row
     """
-    if connection not in connection.protocol.players:
+    if connection not in connection.protocol.players.values():
         raise KeyError()
     for user_type, passwords in connection.protocol.passwords.items():
         if password in passwords:
