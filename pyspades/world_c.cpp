@@ -506,6 +506,11 @@ inline void set_orientation_vectors(Vector *o, Vector *s, Vector *h)
 
 void reorient_player(PlayerType *p, Vector *orientation)
 {
+    Vector *o = orientation;
+    float d = sqrtf(o->x * o->x + o->y * o->y + o->z * o->z);
+    o->x = o->x / d;
+    o->y = o->y / d;
+    o->z = o->z / d;
     p->f = *orientation;
     set_orientation_vectors(orientation, &p->s, &p->h);
 }
