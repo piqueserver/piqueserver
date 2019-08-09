@@ -155,9 +155,9 @@ class ServerConnection(BaseConnection):
     @register_packet_handler(loaders.ProtocolExtensionInfo)
     def on_ext_info_received(self, contained: loaders.ProtocolExtensionInfo) -> None:
         self.proto_extensions = dict(contained.extensions)
-        log.debug("received extinfo {extinfo} from {playername}",
+        log.debug("received extinfo {extinfo} from {player}",
                   extinfo=self.proto_extensions,
-                  playername=self.name)
+                  player=self)
 
     @register_packet_handler(loaders.ExistingPlayer)
     @register_packet_handler(loaders.ShortPlayerData)
@@ -173,7 +173,7 @@ class ServerConnection(BaseConnection):
 
         old_team = self.team
         team = self.protocol.teams[contained.team]
-        log.debug("{user} wants to join {team} (id {teamid})",
+        log.debug("{user} wants to join {team}",
                   user=self, team=team, teamid=contained.team)
 
         ret = self.on_team_join(team)
