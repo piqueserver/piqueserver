@@ -338,6 +338,16 @@ class ServerConnection(BaseConnection):
         z_vel = world_object.velocity.z
         if contained.jump and not (z_vel >= 0 and z_vel < 0.017):
             contained.jump = False
+        # Do not let jump if the player is in the air
+        check = self.protocol.map.get_solid
+        pos = world_object.position
+        oz = 2 + int(not contained.crouch) # TODO CHECCK THIS        
+        if contained.jump and not (
+        check(pos.x+0.5, pos.y+0.5, pos.z + oz) or
+        check(pos.x+0.5, pos.y-0.5, pos.z + oz) or 
+        check(pos.x-0.5, pos.y+0.5, pos.z + oz) or 
+        check(pos.x-0.5, pos.y-0.5, pos.z + oz)):
+            contained.jump = False
         # XXX unsupported for now
         # returned = self.on_animation_update(contained.primary_fire,
             # contained.secondary_fire, contained.jump,
