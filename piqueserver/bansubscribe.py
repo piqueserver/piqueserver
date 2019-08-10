@@ -22,13 +22,12 @@ from twisted.web.client import getPage
 from twisted.logger import Logger
 
 from piqueserver.networkdict import NetworkDict
-from piqueserver.config import config
+from piqueserver.config import config, cast_duration
 
 log = Logger()
 
-UPDATE_INTERVAL = 5 * 60  # every 5 minute
-
 # format is [{"ip" : "1.1.1.1", "reason : "blah"}, ...]
+
 
 def validate_bansub_config(c):
     if not isinstance(c, list):
@@ -42,6 +41,9 @@ def validate_bansub_config(c):
 
 bans_config = config.section('bans')
 bans_config_urls = bans_config.option('bansubscribe', default=[], validate=validate_bansub_config)
+bans_config_interval = bans_config.option('bansubscribe_interval', default="5min",
+                                          cast=cast_duration)
+
 
 class BanManager(object):
     bans = None
@@ -52,14 +54,14 @@ class BanManager(object):
         self.urls = [(entry.get('url'), entry.get('whitelist')) for entry in
                      bans_config_urls.get()]
         self.loop = LoopingCall(self.update_bans)
-        self.loop.start(UPDATE_INTERVAL, now=True)
+        self.loop.start(bans_config_interval.get(), now=True)
 
     def update_bans(self):
         self.new_bans = NetworkDict()
         defers = []
         for url, url_filter in self.urls:
             defers.append(getPage(url.encode('utf8')).addCallback(self.got_bans,
-                                                                 url_filter))
+                                                                  url_filter))
         DeferredList(defers).addCallback(self.bans_finished)
 
     def got_bans(self, data, name_filter):
