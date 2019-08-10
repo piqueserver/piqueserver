@@ -33,10 +33,10 @@ def ratio(connection, user=None):
     if user is not None:
         connection = get_player(connection.protocol, user)
         msg = "%s has"
-        if connection not in connection.protocol.players:
+        if connection not in connection.protocol.players.values():
             raise KeyError()
         msg %= connection.name
-    if connection not in connection.protocol.players:
+    if connection not in connection.protocol.players.values():
         raise KeyError()
 
     kills = connection.ratio_kills

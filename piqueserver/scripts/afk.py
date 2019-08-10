@@ -63,7 +63,7 @@ def kick_afk(connection, minutes, amount=None):
         num_connections=amount - kicks,
         time=minutes_s)
     protocol.irc_say('* ' + message)
-    if connection in protocol.players:
+    if connection in protocol.players.values():
         return message
 
 

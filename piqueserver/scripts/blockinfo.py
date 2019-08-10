@@ -36,7 +36,7 @@ IRC_ONLY = blockinfo_config.option("irc_only", False)
 def grief_check(connection, player, minutes=2):
     player = get_player(connection.protocol, player)
     protocol = connection.protocol
-    color = connection not in protocol.players and connection.colors
+    color = connection not in protocol.players.values() and connection.colors
     minutes = float(minutes)
     if minutes <= 0.0:
         raise ValueError('minutes must be number greater than 0')

@@ -26,7 +26,7 @@ from twisted.internet.task import LoopingCall
 from pyspades.common import prettify_timespan
 from piqueserver.map import check_rotation
 from piqueserver.scheduler import Scheduler
-from piqueserver.commands import command
+from piqueserver.commands import command, player_only
 from piqueserver.config import config, cast_duration
 
 votemap_config = config.section('votemap')
@@ -177,9 +177,8 @@ class VoteMap(object):
 
 
 @command()
+@player_only
 def votemap(connection, *arg):
-    if connection not in connection.protocol.players:
-        raise KeyError()
     if not connection.protocol.votemap_player_driven and not connection.admin:
         return "Player-initiated mapvotes are disabled on this server."
     return connection.protocol.start_votemap(
@@ -187,9 +186,8 @@ def votemap(connection, *arg):
 
 
 @command('vote')
+@player_only
 def votemap_vote(connection, value):
-    if connection not in connection.protocol.players:
-        raise KeyError()
     if connection.protocol.votemap is not None:
         return connection.protocol.votemap.vote(connection, value)
     else:

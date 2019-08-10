@@ -1,6 +1,6 @@
 from pyspades.common import (coordinates, to_coordinates)
 from piqueserver.commands import (command, CommandError, get_player,
-                                  PermissionDenied)
+                                  PermissionDenied, player_only)
 
 
 @command(admin_only=True)
@@ -33,6 +33,7 @@ def move_silent(connection, *args):
 
 
 @command(admin_only=True)
+@player_only
 def move(connection, *args):
     """
     Move yourself or a given player to the specified x/y/z coordinates or sector
@@ -44,8 +45,6 @@ def move(connection, *args):
 
     You can only move other players if you are admin or have the move_others right
     """
-    if connection not in connection.protocol.players:
-        raise ValueError()
     do_move(connection, args)
 
 
@@ -74,7 +73,8 @@ def do_move(connection, args, silent=False):
 
     # no player specified
     if arg_count == 1 or arg_count == 3:
-        if connection not in connection.protocol.players:
+        # must be run by a player in this case because moving self
+        if connection not in connection.protocol.players.values():
             raise ValueError()
         player = connection.name
     # player specified
@@ -111,7 +111,7 @@ def where(connection, player=None):
     """
     if player is not None:
         connection = get_player(connection.protocol, player)
-    elif connection not in connection.protocol.players:
+    elif connection not in connection.protocol.players.values():
         raise ValueError()
     x, y, z = connection.get_location()
     return '%s is in %s (%s, %s, %s)' % (
@@ -137,7 +137,7 @@ def teleport(connection, player1, player2=None, silent=False):
         else:
             return 'No administrator rights!'
     else:
-        if connection not in connection.protocol.players:
+        if connection not in connection.protocol.players.values():
             raise ValueError()
         player, target = connection, player1
         silent = silent or player.invisible
@@ -171,7 +171,7 @@ def fly(connection, player=None):
     protocol = connection.protocol
     if player is not None:
         player = get_player(protocol, player)
-    elif connection in protocol.players:
+    elif connection in protocol.players.values():
         player = connection
     else:
         raise ValueError()
@@ -179,6 +179,6 @@ def fly(connection, player=None):
 
     message = 'now flying' if player.fly else 'no longer flying'
     player.send_chat("You're %s" % message)
-    if connection is not player and connection in protocol.players:
+    if connection is not player and connection in protocol.players.values():
         connection.send_chat('%s is %s' % (player.name, message))
     protocol.irc_say('* %s is %s' % (player.name, message))

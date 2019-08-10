@@ -28,7 +28,7 @@ def reset_game(connection):
     """
     resetting_player = connection
     # irc compatibility
-    if resetting_player not in connection.protocol.players:
+    if resetting_player not in connection.protocol.players.values():
         for player in connection.protocol.players.values():
             resetting_player = player
             if player.admin:
@@ -78,7 +78,7 @@ def switch(connection, player=None, team=None):
     protocol = connection.protocol
     if player is not None:
         player = get_player(protocol, player)
-    elif connection in protocol.players:
+    elif connection in protocol.players.values():
         player = connection
     else:
         raise ValueError()
@@ -96,7 +96,7 @@ def switch(connection, player=None, team=None):
         player.on_team_changed(old_team)
         player.spawn(player.world_object.position.get())
         player.send_chat('Switched to %s team' % player.team.name)
-        if connection is not player and connection in protocol.players:
+        if connection is not player and connection in protocol.players.values():
             connection.send_chat('Switched %s to %s team' % (player.name,
                                                              player.team.name))
         protocol.irc_say('* %s silently switched teams' % player.name)
