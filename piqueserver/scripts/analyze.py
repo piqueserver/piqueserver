@@ -83,7 +83,7 @@ def apply_script(protocol, connection, config):
                         for name in list(self.protocol.analyzers.keys()):
                             if self.protocol.analyzers[name] == self.name:
                                 analyzer = get_player(self.protocol, name)
-                                if analyzer not in self.protocol.players:
+                                if analyzer not in self.protocol.players.values():
                                     raise ValueError()
                                 else:
                                     if body_part == "HEADSHOT":

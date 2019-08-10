@@ -207,7 +207,7 @@ def ip(connection, value=None):
     /ip [player]
     """
     if value is None:
-        if connection not in connection.protocol.players:
+        if connection not in connection.protocol.players.values():
             raise ValueError()
         player = connection
     else:
@@ -245,7 +245,7 @@ def invisible(connection, player=None):
     protocol = connection.protocol
     if player is not None:
         player = get_player(protocol, player)
-    elif connection in protocol.players:
+    elif connection in protocol.players.values():
         player = connection
     else:
         raise ValueError()
@@ -300,7 +300,7 @@ def invisible(connection, player=None):
         protocol.broadcast_contained(set_color, sender=player, save=True)
         protocol.broadcast_contained(input_data, sender=player)
         protocol.broadcast_contained(weapon_input, sender=player)
-    if connection is not player and connection in protocol.players:
+    if connection is not player and connection in protocol.players.values():
         if player.invisible:
             return '%s is now invisible' % player.name
         else:
@@ -315,7 +315,7 @@ def godsilent(connection, player=None):
     """
     if player is not None:
         connection = get_player(connection.protocol, player)
-    elif connection not in connection.protocol.players:
+    elif connection not in connection.protocol.players.values():
         return 'Unknown player: ' + player
 
     connection.god = not connection.god  # toggle godmode
@@ -351,7 +351,7 @@ def god(connection, player=None):
     """
     if player:
         connection = get_player(connection.protocol, player)
-    elif connection not in connection.protocol.players:
+    elif connection not in connection.protocol.players.values():
         return 'Unknown player'
 
     connection.god = not connection.god  # toggle godmode
@@ -372,7 +372,7 @@ def god_build(connection, player=None):
     protocol = connection.protocol
     if player is not None:
         player = get_player(protocol, player)
-    elif connection in protocol.players:
+    elif connection in protocol.players.values():
         player = connection
     else:
         raise ValueError()
@@ -382,6 +382,6 @@ def god_build(connection, player=None):
     message = ('now placing god blocks' if player.god_build else
                'no longer placing god blocks')
     player.send_chat("You're %s" % message)
-    if connection is not player and connection in protocol.players:
+    if connection is not player and connection in protocol.players.values():
         connection.send_chat('%s is %s' % (player.name, message))
     protocol.irc_say('* %s is %s' % (player.name, message))

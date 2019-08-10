@@ -68,7 +68,7 @@ def unlink(connection, player=None):
 
     if player is not None:
         player = get_player(protocol, player)
-    elif connection in protocol.players:
+    elif connection in protocol.players.values():
         player = connection
     else:
         raise ValueError()

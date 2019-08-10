@@ -24,7 +24,7 @@ def paint(connection, player=None):
     protocol = connection.protocol
     if player is not None:
         player = get_player(protocol, player)
-    elif connection in protocol.players:
+    elif connection in protocol.players.values():
         player = connection
     else:
         raise ValueError()
@@ -33,7 +33,7 @@ def paint(connection, player=None):
 
     message = 'now painting' if player.painting else 'no longer painting'
     player.send_chat("You're %s" % message)
-    if connection is not player and connection in protocol.players:
+    if connection is not player and connection in protocol.players.values():
         connection.send_chat('%s is %s' % (player.name, message))
     protocol.irc_say('* %s is %s' % (player.name, message))
 

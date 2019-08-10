@@ -1,14 +1,13 @@
-from piqueserver.commands import command, _commands, has_permission, get_player, get_command_help
+from piqueserver.commands import command, _commands, has_permission, get_player, get_command_help, player_only
 
 
 @command()
+@player_only
 def streak(connection):
     """
     Tell your current kill streak
     /streak
     """
-    if connection not in connection.protocol.players:
-        raise KeyError()
     return ('Your current kill streak is %s. Best is %s kills' %
             (connection.streak, connection.best_streak))
 
@@ -20,7 +19,7 @@ def ping(connection, value=None):
     /ping
     """
     if value is None:
-        if connection not in connection.protocol.players:
+        if connection not in connection.protocol.players.values():
             raise ValueError()
         player = connection
     else:
@@ -32,13 +31,12 @@ def ping(connection, value=None):
 
 
 @command()
+@player_only
 def rules(connection):
     """
     Show you the server rules
     /rules
     """
-    if connection not in connection.protocol.players:
-        raise KeyError()
     lines = connection.protocol.rules
     if lines is None:
         return

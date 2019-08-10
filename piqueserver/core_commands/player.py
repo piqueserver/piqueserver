@@ -1,4 +1,4 @@
-from piqueserver.commands import command, get_player, PermissionDenied
+from piqueserver.commands import command, get_player, PermissionDenied, player_only
 
 @command("client", "cli")
 def client(connection, target=None):
@@ -31,13 +31,12 @@ def weapon(connection, value):
 
 
 @command()
+@player_only
 def intel(connection):
     """
     Inform you of who has the enemy intel
     /intel
     """
-    if connection not in connection.protocol.players:
-        raise KeyError()
     flag = connection.team.other.flag
     if flag.player is not None:
         if flag.player is connection:
@@ -75,7 +74,7 @@ def heal(connection, player=None):
         player = get_player(connection.protocol, player, False)
         message = '%s was healed by %s' % (player.name, connection.name)
     else:
-        if connection not in connection.protocol.players:
+        if connection not in connection.protocol.players.values():
             raise ValueError()
         player = connection
         message = '%s was healed' % (connection.name)

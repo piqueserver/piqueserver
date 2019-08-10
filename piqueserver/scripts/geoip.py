@@ -36,7 +36,7 @@ finally:
     def where_from(connection, value=None):
         # Get player IP address
         if value is None:
-            if connection not in connection.protocol.players:
+            if connection not in connection.protocol.players.values():
                 raise ValueError()
             player = connection
         else:
