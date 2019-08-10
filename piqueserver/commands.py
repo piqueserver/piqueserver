@@ -23,6 +23,7 @@ import inspect
 import warnings
 from collections import namedtuple
 import textwrap
+import functools
 from typing import Dict, List, Callable
 
 from twisted.logger import Logger
@@ -249,6 +250,24 @@ def admin(func: Callable) -> Callable:
     ...     pass
     """
     return restrict('admin')(func)
+
+
+def player_only(func: Callable):
+    """This recorator restricts a command to only be runnable by players
+    connected to the server, not via other places such as, say, the console.
+
+    >>> @command()
+    ... @player_only
+    ... def some_command(x):
+    ...     pass
+    """
+    @functools.wraps(func)
+    def _decorated(connection, *args, **kwargs):
+        if connection not in connection.protocol.players.values():
+            raise CommandError("only players can't use this command")
+        func(connection, *args, **kwargs)
+    return _decorated
+
 
 # TODO: all of these utility functions should be seperated from the actual
 # implementation of the commands

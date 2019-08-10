@@ -63,7 +63,7 @@ from twisted.internet.task import LoopingCall
 from pyspades.contained import BlockAction, SetColor
 from pyspades.common import make_color
 from pyspades.constants import BUILD_BLOCK
-from piqueserver.commands import command
+from piqueserver.commands import command, player_only
 from piqueserver.config import config
 
 grownade_section = config.section("grownade")
@@ -113,10 +113,9 @@ def load_models(expression):
 
 
 @command('model', admin_only=True)
+@player_only
 def model_grenades(connection, expression=None):
     protocol = connection.protocol
-    if connection not in protocol.players:
-        raise ValueError()
     player = connection
 
     result = None

@@ -1,15 +1,15 @@
-from piqueserver.commands import command, get_player, join_arguments
+from piqueserver.commands import (command, get_player, join_arguments,
+                                  player_only)
 
 
 @command()
+@player_only
 def login(connection, password):
     """
     Log in if you're staff or a trusted member of this server
     /login <password>
     You will be kicked if a wrong password is given 3 times in a row
     """
-    if connection not in connection.protocol.players.values():
-        raise KeyError()
     for user_type, passwords in connection.protocol.passwords.items():
         if password in passwords:
             if user_type in connection.user_types:
