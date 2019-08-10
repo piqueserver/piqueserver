@@ -876,8 +876,9 @@ class ServerConnection(BaseConnection):
         if player is not self:
             return
         self.add_score(10)  # 10 points for intel
+        self.team.score += 1
         if (self.protocol.max_score not in (0, None) and
-                self.team.score + 1 >= self.protocol.max_score):
+                self.team.score >= self.protocol.max_score):
             self.on_flag_capture()
             self.protocol.reset_game(self)
             self.protocol.on_game_end()
@@ -886,7 +887,6 @@ class ServerConnection(BaseConnection):
             intel_capture.player_id = self.player_id
             intel_capture.winning = False
             self.protocol.send_contained(intel_capture, save=True)
-            self.team.score += 1
             flag = other_team.set_flag()
             flag.update()
             self.on_flag_capture()
