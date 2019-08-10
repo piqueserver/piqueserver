@@ -600,6 +600,8 @@ class ServerConnection(BaseConnection):
 
         for point in points:
             x, y, z = point
+            if map_.get_solid(x, y, z):
+                continue
             if not map_.build_point(x, y, z, self.color):
                 break
 
