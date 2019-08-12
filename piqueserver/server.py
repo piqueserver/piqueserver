@@ -20,8 +20,6 @@
 pyspades - default/featured server
 """
 import asyncio
-import imp
-import importlib
 import itertools
 import json
 import os
