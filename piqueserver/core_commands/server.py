@@ -15,6 +15,8 @@ def server_name(connection, *arg):
     /servername <new-name>
     Also affects the master list
     """
+    if not arg:
+        raise ValueError("no argument given")
     name = join_arguments(arg)
     protocol = connection.protocol
     protocol.set_server_name(name)
