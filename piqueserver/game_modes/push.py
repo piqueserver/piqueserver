@@ -54,7 +54,7 @@ ALLOW_RESPAWN_COMMAND = True
 # How long to wait to allow the command /r again
 RESPAWN_CMD_DELAY = 15  # seconds
 
-# A player has to wait this amount after he spawned before he can pick
+# Players have to wait this amount after spawning before they can pick
 # the intel up. This is to reduce the instant/careless intel pickups.
 INTEL_PICKUP_DELAY = 3  # seconds
 
@@ -109,12 +109,12 @@ def byte_middle_range(byte):
     return int(round(min)), int(round(max))
 
 
-def create_area(x, y, range):
-    return (x - range, y - range, x + range, y + range)
+def create_area(x, y, block_range):
+    return (x - block_range, y - block_range, x + block_range, y + block_range)
 
 
 def is_in_area(x, y, top_x, top_y, bottom_x, bottom_y):
-    return x >= top_x and y >= top_y and x < bottom_x and y < bottom_y
+    return top_x <= x < bottom_x and top_y <= y < bottom_y
 
 
 def has_flag(connection):
@@ -190,8 +190,7 @@ def apply_script(protocol, connection, config):
         last_blocks = None
 
         def is_in_invalid_area(self, x, y, check_area, error_message):
-            if is_in_area(x, y, check_area[0], check_area[1],
-                          check_area[2], check_area[3]):
+            if is_in_area(x, y, *check_area):
                 self.send_chat(error_message)
                 return True
             else:
