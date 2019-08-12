@@ -29,47 +29,66 @@ corner on the map. Example:
 
     'push_blue_build_area' : (64, 100, 243, 500),
     'push_green_build_area' : (268, 100, 447, 500),
+
+Options
+^^^^^^^
+
+.. code-block:: guess
+    [push]
+    # Disallow removal of map blocks. This allows a larger variety of maps that
+    # rely on more fragile structures. It also prevents griefing (like removing
+    # the map blocks before and after your teams bridge). Using server setting
+    # 'user_blocks_only' instead doesn't work reliable.
+    protect_map_blocks = true
+
+    # Allow the usage of /r to quickly respawn. As players can't refill blocks at
+    # their base, they would have to suicide otherwise. This is illogical, messes
+    # up their kill-death ratio and gives them an undeserved punishing respawn time.
+    allow_respawn_command = true
+
+    # How long to wait to allow the command /r again
+    respawn_cmd_delay = "15sec"
+
+    # Players have to wait this amount after spawning before they can pick
+    # the intel up. This is to reduce the instant/careless intel pickups.
+    intel_pickup_delay = "3sec"
+
+    # How long can you remove your own last blocks
+    block_removal_delay = "15sec"
+
+    # Reset intel after it was dropped somewhere
+    reset_intel_after_drop = "3min"
+
+    # No building near cp within this block range (can be overwritten using
+    # map extension parameter "push_cp_protect_range")
+    default_cp_protect_range = 8
+
+    # Disable grenade damage within enemy spawn.
+    disable_grenades_at_spawn = false
 """
 
 from pyspades.constants import *
 from pyspades.common import make_color
 from pyspades.contained import SetColor
 from piqueserver.commands import command, admin, get_team
+from piqueserver.config import config, cast_duration
 from twisted.internet.task import LoopingCall
 from random import randint
 import colorsys
 import time
 
-# Disallow removal of map blocks. This allows a larger variety of maps that
-# rely on more fragile structures. It also prevents griefing (like removing
-# the map blocks before and after your teams bridge). Using server setting
-# 'user_blocks_only' instead doesn't work reliable.
-PROTECT_MAP_BLOCKS = True
-
-# Allow the usage of /r to quickly respawn. As players can't refill blocks at
-# their base, they would have to suicide otherwise. This is illogical, messes
-# up their kill-death ratio and gives them an undeserved punishing respawn time.
-ALLOW_RESPAWN_COMMAND = True
-
-# How long to wait to allow the command /r again
-RESPAWN_CMD_DELAY = 15  # seconds
-
-# Players have to wait this amount after spawning before they can pick
-# the intel up. This is to reduce the instant/careless intel pickups.
-INTEL_PICKUP_DELAY = 3  # seconds
-
-# How long can you remove your own last blocks
-BLOCK_REMOVAL_DELAY = 15  # seconds
-
-# Reset intel after it was dropped somewhere
-RESET_INTEL_AFTER_DROP = 3  # minutes
-
-# No building near cp within this range (can be overwritten using
-# map extension parameter "push_cp_protect_range")
-DEFAULT_CP_PROTECT_RANGE = 8  # blocks
-
-# Disable grenade damage within enemy spawn.
-DISABLE_GRENADES_AT_SPAWN = False
+PUSH_CONFIG = config.section("push")
+PROTECT_MAP_BLOCKS = PUSH_CONFIG.option("protect_map_blocks", default=True, cast=bool)
+ALLOW_RESPAWN_COMMAND = PUSH_CONFIG.option("allow_respawn_command", default=True, cast=bool)
+RESPAWN_CMD_DELAY = PUSH_CONFIG.option("respawn_cmd_delay", default="15sec", cast=cast_duration)
+INTEL_PICKUP_DELAY = PUSH_CONFIG.option("intel_pickup_delay", default="3sec", cast=cast_duration)
+BLOCK_REMOVAL_DELAY = PUSH_CONFIG.option("block_removal_delay", default="15sec",
+                                         cast=cast_duration)
+RESET_INTEL_AFTER_DROP = PUSH_CONFIG.option("reset_intel_after_drop", default="3min",
+                                            cast=cast_duration)
+DEFAULT_CP_PROTECT_RANGE = PUSH_CONFIG.option("default_cp_protect_range", default=8, cast=int)
+DISABLE_GRENADES_AT_SPAWN = PUSH_CONFIG.option("disable_grenades_at_spawn", default=False,
+                                               cast=bool)
 
 CANT_DESTROY = "You can't destroy your team's blocks!"
 NO_BLOCKS = "Out of blocks! Refill at base or type /r"
@@ -143,18 +162,18 @@ def resetintel(connection, value):
 
 @command('r')
 def respawn(connection):
-    if not ALLOW_RESPAWN_COMMAND:
+    if not ALLOW_RESPAWN_COMMAND.get():
         return
     if connection.world_object is not None and not connection.world_object.dead:
         if (connection.last_spawn_time is None or connection.last_spawn_time +
-                RESPAWN_CMD_DELAY <= get_now_in_secs()):
+                RESPAWN_CMD_DELAY.get() <= get_now_in_secs()):
             if has_flag(connection):
                 connection.drop_flag()
             connection.spawn()
         else:
             connection.send_chat(
                 "Please wait %s seconds before using this command again."
-                % (connection.last_spawn_time + RESPAWN_CMD_DELAY - get_now_in_secs()))
+                % (connection.last_spawn_time + RESPAWN_CMD_DELAY.get() - get_now_in_secs()))
 
 
 def get_entity_location(connection, entity_id):
@@ -224,7 +243,7 @@ def apply_script(protocol, connection, config):
             if can_build is False:
                 return False
 
-            if ALLOW_RESPAWN_COMMAND and self.blocks == len(points):
+            if ALLOW_RESPAWN_COMMAND.get() and self.blocks == len(points):
                 self.send_chat(NO_BLOCKS)
 
             for point in points:
@@ -233,7 +252,7 @@ def apply_script(protocol, connection, config):
 
             if self.last_blocks is None:
                 self.last_blocks = []
-            if BLOCK_REMOVAL_DELAY > 0:
+            if BLOCK_REMOVAL_DELAY.get() > 0:
                 for point in points:
                     x, y, z = point[0], point[1], point[2]
                     if not self.protocol.map.get_solid(x, y, z):
@@ -247,7 +266,7 @@ def apply_script(protocol, connection, config):
             if can_build is False:
                 return False
 
-            if ALLOW_RESPAWN_COMMAND and self.blocks == 0:
+            if ALLOW_RESPAWN_COMMAND.get() and self.blocks == 0:
                 self.send_chat(NO_BLOCKS)
 
             if self.invalid_build_position(x, y, z):
@@ -255,7 +274,7 @@ def apply_script(protocol, connection, config):
 
             if self.last_blocks is None:
                 self.last_blocks = []
-            if BLOCK_REMOVAL_DELAY > 0:
+            if BLOCK_REMOVAL_DELAY.get() > 0:
                 self.last_blocks.append(((x, y, z), get_now_in_secs()))
 
             self.random_color()
@@ -280,7 +299,7 @@ def apply_script(protocol, connection, config):
                 if self.last_blocks is not None and not is_trusted:
                     for last in self.last_blocks:
                         if block == last[0]:
-                            if last[1] + BLOCK_REMOVAL_DELAY < get_now_in_secs():
+                            if last[1] + BLOCK_REMOVAL_DELAY.get() < get_now_in_secs():
                                 self.last_blocks.remove(last)
                                 return False
                             self.last_blocks.remove(last)
@@ -299,12 +318,12 @@ def apply_script(protocol, connection, config):
                     if is_team_block and not is_trusted:
                         self.send_chat(CANT_DESTROY)
                         return False
-                    if PROTECT_MAP_BLOCKS and not is_blue_block and not is_green_block:
+                    if PROTECT_MAP_BLOCKS.get() and not is_blue_block and not is_green_block:
                         return False
             return connection.on_block_destroy(self, x, y, z, value)
 
         def on_flag_take(self):
-            if self.last_spawn_time + INTEL_PICKUP_DELAY > get_now_in_secs():
+            if self.last_spawn_time + INTEL_PICKUP_DELAY.get() > get_now_in_secs():
                 return False
             return connection.on_flag_take(self)
 
@@ -314,7 +333,7 @@ def apply_script(protocol, connection, config):
             return connection.on_spawn(self, pos)
 
         def grenade_exploded(self, grenade):
-            if DISABLE_GRENADES_AT_SPAWN:
+            if DISABLE_GRENADES_AT_SPAWN.get():
                 if not (self is None or self.name is None or
                         self.team is None or self.team.other is None):
                     grenade_x = int(grenade.position.x)
@@ -353,7 +372,7 @@ def apply_script(protocol, connection, config):
                     return 0
                 elif team.flag.player is None:
                     timer_val += 1
-                    if timer_val >= RESET_INTEL_AFTER_DROP * (60 / self.check_loop.interval):
+                    if timer_val >= RESET_INTEL_AFTER_DROP.get() / self.check_loop.interval:
                         reset_intel_position(self, team)
                         return 0
                     return timer_val
@@ -379,7 +398,7 @@ def apply_script(protocol, connection, config):
             self.spawn_range = extensions.get('push_spawn_range', 5)
             # distance from cp where building is not allowed
             self.cp_protect_range = extensions.get('push_cp_protect_range',
-                                                   DEFAULT_CP_PROTECT_RANGE)
+                                                   DEFAULT_CP_PROTECT_RANGE.get())
 
             self.blue_team.spawn = extensions.get('push_blue_spawn')
             self.blue_team.cp = extensions.get('push_blue_cp')
