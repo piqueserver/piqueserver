@@ -877,9 +877,9 @@ class ServerConnection(BaseConnection):
             return
         self.add_score(10)  # 10 points for intel
         self.team.score += 1
+        self.on_flag_capture()
         if (self.protocol.max_score not in (0, None) and
                 self.team.score >= self.protocol.max_score):
-            self.on_flag_capture()
             self.protocol.reset_game(self)
             self.protocol.on_game_end()
         else:
@@ -889,7 +889,6 @@ class ServerConnection(BaseConnection):
             self.protocol.send_contained(intel_capture, save=True)
             flag = other_team.set_flag()
             flag.update()
-            self.on_flag_capture()
 
     def drop_flag(self) -> None:
         protocol = self.protocol
