@@ -268,10 +268,33 @@ def player_only(func: Callable):
         func(connection, *args, **kwargs)
     return _decorated
 
+def target_player(func: Callable):
+    """This decorator converts first argument of a command to a `piqueserver.FeatureConnection`.
+       It's intended for commands which accept single argument for target player eg. /fly [player].
+       It implicitly uses invoker as target if no arguments are provided.
+       It uses first argument are player name or id for targetting.
+       It forces non-player invokers to provide player argument.
 
-# TODO: all of these utility functions should be seperated from the actual
-# implementation of the commands
-
+    >>> @command()
+    ... @target_player
+    ... def fly(connection, target):
+    ...     target.fly = True
+    ...     pass
+    """
+    @functools.wraps(func)
+    def _decorated(connection, *args, **kwargs):
+        is_player = connection in connection.protocol.players.values()
+        # implicitly set target to invoker if no args
+        if len(args) == 0 and is_player:
+            args = [connection]
+        # try and use first arg as player name or id to target
+        elif len(args) > 0:
+            args = [get_player(connection.protocol, args[0]), *args[1:]]
+        # console or irc invokers are required to provide a target
+        else:
+            raise ValueError("Target player is required")
+        func(connection, *args, **kwargs)
+    return _decorated
 
 def get_player(protocol, value: str, spectators=True):
     """
