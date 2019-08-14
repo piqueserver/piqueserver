@@ -427,8 +427,8 @@ def _handle_command(connection, command, parameters):
         msg = str(e)
     except PermissionDenied as e:
         msg = 'You can\'t do that: {}'.format(str(e))
-    except ValueError:
-        msg = 'Invalid parameters'
+    except ValueError as e:
+        msg = str(e) if e.args else "Invalid parameters"
 
     return format_command_error(command_func, msg)
 
