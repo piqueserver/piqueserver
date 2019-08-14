@@ -246,22 +246,24 @@ def fog(connection, *args):
         hex_code = args[0][1:]
 
         if (len(hex_code) != 3) and (len(hex_code) != 6):
-            raise ValueError()
+            raise ValueError("Invalid hex code length")
 
         if len(hex_code) == 3: # it's a short hex code, turn it into a full one
             hex_code = (hex_code[0]*2) + (hex_code[1]*2) + (hex_code[2]*2)
 
         valid_characters = re.compile('[a-fA-F0-9]')
         for char in hex_code:
-            if valid_characters.match(char) == None:
-                raise ValueError()
+            if valid_characters.match(char) is None:
+                raise ValueError("Invalid hex code characters")
 
         r = int(hex_code[0:2], base=16)
         g = int(hex_code[2:4], base=16)
         b = int(hex_code[4:6], base=16)
     else:
-        raise ValueError()
+        raise ValueError("Neither RGB or hex code provided")
 
+    old_fog_color = connection.protocol.fog_color
     connection.protocol.set_fog_color((r, g, b))
-    # TODO: Warn when the fog was set to the same color as before
+    if old_fog_color == (r, g, b):
+        return 'Fog color changed successfully\nWarning: fog color set to same color as before'
     return 'Fog color changed successfully'
