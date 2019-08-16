@@ -1,16 +1,15 @@
-from piqueserver.commands import command, get_player, PermissionDenied, player_only
+from piqueserver.commands import command, get_player, PermissionDenied, player_only, target_player
 
 @command("client", "cli")
-def client(connection, target=None):
+@target_player
+def client(connection, player):
     """
     Tell you information about your client or the client of a given player
     /client [player]
     """
-    if not target:
-        player = connection
+    if connection == player:
         who_is = "You are"
     else:
-        player = get_player(connection.protocol, target)
         who_is = player.name + " is"
 
     return "{} connected with {}".format(who_is, player.client_string)
@@ -65,19 +64,16 @@ def kill(connection, value=None):
 
 
 @command(admin_only=True)
-def heal(connection, player=None):
+@target_player
+def heal(connection, player):
     """
     Heal and refill yourself or a given player and inform everyone on the server of this action
     /heal [player]
     """
-    if player is not None:
-        player = get_player(connection.protocol, player, False)
-        message = '%s was healed by %s' % (player.name, connection.name)
-    else:
-        if connection not in connection.protocol.players.values():
-            raise ValueError()
-        player = connection
+    if player == connection:
         message = '%s was healed' % (connection.name)
+    else:
+        message = '%s was healed by %s' % (player.name, connection.name)
     player.refill()
     connection.protocol.send_chat(message, irc=True)
 

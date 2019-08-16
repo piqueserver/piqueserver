@@ -3,7 +3,8 @@ import re
 from twisted.internet import reactor
 from piqueserver.config import cast_duration
 from pyspades.common import prettify_timespan
-from piqueserver.commands import command, CommandError, get_player, get_team, get_truthy
+from piqueserver.commands import (
+    command, CommandError, get_player, get_team, get_truthy, target_player)
 
 
 @command('time')
@@ -70,26 +71,18 @@ def unlock(connection, value):
 
 
 @command(admin_only=True)
-def switch(connection, player=None, team=None):
+@target_player
+def switch(connection, player):
     """
     Switch teams either for yourself or for a given player
     /switch [player]
     """
     protocol = connection.protocol
-    if player is not None:
-        player = get_player(protocol, player)
-    elif connection in protocol.players.values():
-        player = connection
-    else:
-        raise ValueError()
     if player.team.spectator:
         player.send_chat(
             "The switch command can't be used on a spectating player.")
         return
-    if team is None:
-        new_team = player.team.other
-    else:
-        new_team = get_team(connection, team)
+    new_team = player.team.other
     if player.invisible:
         old_team = player.team
         player.team = new_team
@@ -248,7 +241,7 @@ def fog(connection, *args):
         if (len(hex_code) != 3) and (len(hex_code) != 6):
             raise ValueError("Invalid hex code length")
 
-        if len(hex_code) == 3: # it's a short hex code, turn it into a full one
+        if len(hex_code) == 3:  # it's a short hex code, turn it into a full one
             hex_code = (hex_code[0]*2) + (hex_code[1]*2) + (hex_code[2]*2)
 
         valid_characters = re.compile('[a-fA-F0-9]')
