@@ -98,7 +98,7 @@ def start_votekick(connection, *args):
             # player requested votekick info
             protocol.votekick.send_chat_update(player)
             return
-        raise ValueError()
+        raise ValueError("Target player is required")
 
     value = args[0]
     victim = get_player(protocol, value)

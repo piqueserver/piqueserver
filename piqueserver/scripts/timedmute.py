@@ -28,7 +28,7 @@ def timed_mute(connection, *args):
     player = get_player(protocol, nick)
 
     if time < 0:
-        raise ValueError()
+        raise ValueError("Time cannot be < 0")
 
     if not player.mute:
         TimedMute(player, time, reason)

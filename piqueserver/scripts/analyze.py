@@ -33,7 +33,7 @@ def analyze_shot(connection, player=None):
 
     player = get_player(protocol, player)
     if player not in protocol.players:
-        raise ValueError()  # FIXME: proper error
+        raise ValueError("Target player is required")
 
     if connection.name in protocol.analyzers:
         if player.name == protocol.analyzers[connection.name]:

@@ -47,10 +47,10 @@ def day_time(connection, value=None):
     if value is not None:
         if not connection.admin:
             return S_NO_RIGHTS
-        value = float(value)
-        if value < 0.0:
-            raise ValueError()
-        connection.protocol.current_time = value
+        time = float(value)
+        if time < 0.0:
+            raise ValueError("Time cannot be < 0")
+        connection.protocol.current_time = time
         connection.protocol.update_day_color()
     f, i = modf(connection.protocol.current_time)
     return S_TIME_OF_DAY.format(hours=int(i), minutes=int(f * 60))

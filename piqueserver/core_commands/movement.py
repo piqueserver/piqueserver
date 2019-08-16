@@ -73,7 +73,7 @@ def do_move(connection, args, silent=False):
     if arg_count == 1 or arg_count == 3:
         # must be run by a player in this case because moving self
         if connection not in connection.protocol.players.values():
-            raise ValueError()
+            raise ValueError("Both player and target player are required")
         player = connection.name
     # player specified
     elif arg_count == 2 or arg_count == 4:
@@ -133,7 +133,7 @@ def teleport(connection, player1, player2=None, silent=False):
             return 'No administrator rights!'
     else:
         if connection not in connection.protocol.players.values():
-            raise ValueError()
+            raise ValueError("Both player and target player are required")
         player, target = connection, player1
         silent = silent or player.invisible
         message = '%s ' + \
