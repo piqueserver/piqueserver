@@ -18,7 +18,7 @@ from pyspades.contained import GrenadePacket
 from pyspades.collision import distance_3d_vector
 from pyspades.constants import *
 from pyspades.common import Vertex3
-from piqueserver.commands import command, admin, get_player
+from piqueserver.commands import (command, admin, get_player, target_player)
 
 ENABLED_AT_START = False
 
@@ -61,17 +61,11 @@ def relink(connection):
 
 
 @command(admin_only=True)
+@target_player
 def unlink(connection, player=None):
     protocol = connection.protocol
     if not protocol.running_man:
         return S_NOT_ENABLED
-
-    if player is not None:
-        player = get_player(protocol, player)
-    elif connection in protocol.players.values():
-        player = connection
-    else:
-        raise ValueError()
 
     player.drop_link()
     player.linkable = not player.linkable
@@ -154,7 +148,7 @@ def apply_script(protocol, connection, config):
 
         def get_new_link(self):
             available = list(filter(self.can_be_linked_to,
-                                     self.team.get_players()))
+                                    self.team.get_players()))
             if not available:
                 return
             self.drop_link(force_message=True)
