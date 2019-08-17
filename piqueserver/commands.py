@@ -293,7 +293,6 @@ def target_player(func: Callable):
         # console or irc invokers are required to provide a target
         else:
             raise ValueError("Target player is required")
-        print(*args)
         return func(connection, *args, **kwargs)
     return _decorated
 
