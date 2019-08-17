@@ -62,7 +62,7 @@ def relink(connection):
 
 @command(admin_only=True)
 @target_player
-def unlink(connection, player=None):
+def unlink(connection, player):
     protocol = connection.protocol
     if not protocol.running_man:
         return S_NOT_ENABLED

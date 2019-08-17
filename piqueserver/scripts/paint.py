@@ -21,7 +21,7 @@ PAINT_RAY_LENGTH = 32.0
 
 @command(admin_only=True)
 @target_player
-def paint(connection, player=None):
+def paint(connection, player):
     protocol = connection.protocol
 
     player.painting = not player.painting
