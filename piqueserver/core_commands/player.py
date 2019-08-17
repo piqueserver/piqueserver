@@ -70,7 +70,7 @@ def heal(connection, player):
     Heal and refill yourself or a given player and inform everyone on the server of this action
     /heal [player]
     """
-    if player == connection:
+    if connection is player:
         message = '%s was healed' % (connection.name)
     else:
         message = '%s was healed by %s' % (player.name, connection.name)
