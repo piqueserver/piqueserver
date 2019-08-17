@@ -7,7 +7,7 @@ def client(connection, player):
     Tell you information about your client or the client of a given player
     /client [player]
     """
-    if connection == player:
+    if connection is player:
         who_is = "You are"
     else:
         who_is = player.name + " is"

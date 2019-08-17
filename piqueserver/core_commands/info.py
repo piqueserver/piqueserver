@@ -21,7 +21,7 @@ def ping(connection, player):
     /ping
     """
     ping = player.latency
-    if connection == player:
+    if connection is player:
         return 'Your ping is {} ms. Lower ping is better!'.format(player.latency)
     return "{}'s ping is {} ms".format(player.name, player.latency)
 
