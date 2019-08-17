@@ -286,10 +286,10 @@ def target_player(func: Callable):
         is_player = connection in connection.protocol.players.values()
         # implicitly set target to invoker if no args
         if len(args) == 0 and is_player:
-            args = [connection]
+            args = (connection)
         # try and use first arg as player name or id to target
         elif len(args) > 0:
-            args = [get_player(connection.protocol, args[0]), *args[1:]]
+            args = (get_player(connection.protocol, args[0]), *args[1:])
         # console or irc invokers are required to provide a target
         else:
             raise ValueError("Target player is required")
