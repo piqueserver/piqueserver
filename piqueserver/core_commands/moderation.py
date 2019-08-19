@@ -1,15 +1,14 @@
 from random import choice
 from twisted.internet import reactor
+# aparently, we need to send packets in this file. For now, I give in.
 from pyspades.contained import CreatePlayer, SetTool, KillAction, InputData, SetColor, WeaponInput
 from pyspades.constants import (GRENADE_KILL, FALL_KILL, NETWORK_FPS)
 from pyspades.common import (
     prettify_timespan,
     make_color)
-from piqueserver.commands import command, CommandError, get_player, join_arguments
+from piqueserver.commands import (
+    command, CommandError, get_player, join_arguments, target_player)
 from piqueserver.utils import timeparse
-
-# aparently, we need to send packets in this file. For now, I give in.
-
 
 
 def has_digits(s: str) -> bool:
@@ -201,17 +200,12 @@ def unmute(connection, value):
 
 
 @command(admin_only=True)
-def ip(connection, value=None):
+@target_player
+def ip(connection, player):
     """
     Get the IP of a user
     /ip [player]
     """
-    if value is None:
-        if connection not in connection.protocol.players.values():
-            raise ValueError()
-        player = connection
-    else:
-        player = get_player(connection.protocol, value)
     return 'The IP of %s is %s' % (player.name, player.address[0])
 
 
@@ -237,18 +231,13 @@ def who_was(connection, value):
 
 
 @command('invisible', 'invis', 'inv', admin_only=True)
-def invisible(connection, player=None):
+@target_player
+def invisible(connection, player):
     """
     Turn invisible
     /invisible [player]
     """
     protocol = connection.protocol
-    if player is not None:
-        player = get_player(protocol, player)
-    elif connection in protocol.players.values():
-        player = connection
-    else:
-        raise ValueError()
     # TODO: move this logic to a more suitable place
     player.invisible = not player.invisible
     player.filter_visibility_data = player.invisible
@@ -364,18 +353,13 @@ def god(connection, player=None):
 
 
 @command('godbuild', admin_only=True)
-def god_build(connection, player=None):
+@target_player
+def god_build(connection, player):
     """
     Place blocks that can be destroyed only by players with godmode activated
     /godbuild [player]
     """
     protocol = connection.protocol
-    if player is not None:
-        player = get_player(protocol, player)
-    elif connection in protocol.players.values():
-        player = connection
-    else:
-        raise ValueError()
 
     player.god_build = not player.god_build
 

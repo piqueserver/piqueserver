@@ -1,4 +1,5 @@
-from piqueserver.commands import command, _commands, has_permission, get_player, get_command_help, player_only
+from piqueserver.commands import (
+    command, _commands, has_permission, get_player, get_command_help, player_only, target_player)
 
 
 @command()
@@ -13,21 +14,16 @@ def streak(connection):
 
 
 @command()
-def ping(connection, value=None):
+@target_player
+def ping(connection, player):
     """
     Tell your current ping (time for your actions to be received by the server)
     /ping
     """
-    if value is None:
-        if connection not in connection.protocol.players.values():
-            raise ValueError()
-        player = connection
-    else:
-        player = get_player(connection.protocol, value)
     ping = player.latency
-    if value is None:
-        return 'Your ping is %s ms. Lower ping is better!' % ping
-    return "%s's ping is %s ms" % (player.name, ping)
+    if connection is player:
+        return 'Your ping is {} ms. Lower ping is better!'.format(player.latency)
+    return "{}'s ping is {} ms".format(player.name, player.latency)
 
 
 @command()

@@ -33,13 +33,13 @@ EPSILON = 0.0000001
 
 def coordinates(data):
     if data is None:
-        raise ValueError()
+        raise ValueError("data is None")
     if len(data) != 2:
-        raise ValueError()
+        raise ValueError("invalid data length")
     x = (ord(data[0].lower()) - ord('a')) * 64
     y = (int(data[1]) - 1) * 64
     if x < 0 or x >= 512 or y < 0 or y >= 512:
-        raise ValueError()
+        raise ValueError("coordinates are out-of-bounds")
     return x, y
 
 def to_coordinates(x, y):

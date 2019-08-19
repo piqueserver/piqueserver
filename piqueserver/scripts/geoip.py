@@ -14,7 +14,7 @@ Commands
 '''
 
 import os
-from piqueserver.commands import command, restrict, get_player
+from piqueserver.commands import (command, restrict, get_player, target_player)
 from piqueserver.config import config
 
 # optional commands
@@ -31,17 +31,9 @@ except (IOError, OSError):
     )
 finally:
 
-    @restrict('admin')
-    @command('from')
-    def where_from(connection, value=None):
-        # Get player IP address
-        if value is None:
-            if connection not in connection.protocol.players.values():
-                raise ValueError()
-            player = connection
-        else:
-            player = get_player(connection.protocol, value)
-
+    @command('from', admin_only=True)
+    @target_player
+    def where_from(connection, player):
         # Query database
         try:
             record = database.city(player.address[0])
@@ -49,7 +41,8 @@ finally:
             return 'Player location could not be determined.'
 
         # Extract info
-        raw_items = (record.city, *reversed(record.subdivisions), record.country)
+        raw_items = (record.city, *reversed(record.subdivisions),
+                     record.country)
 
         items = (raw_item.name for raw_item in raw_items if raw_item.name is not None)
 

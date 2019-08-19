@@ -14,20 +14,15 @@ Commands
 from pyspades.contained import BlockAction
 from pyspades.common import Vertex3
 from pyspades.constants import *
-from piqueserver.commands import command, admin, get_player
+from piqueserver.commands import command, admin, get_player, target_player
 
 PAINT_RAY_LENGTH = 32.0
 
 
 @command(admin_only=True)
-def paint(connection, player=None):
+@target_player
+def paint(connection, player):
     protocol = connection.protocol
-    if player is not None:
-        player = get_player(protocol, player)
-    elif connection in protocol.players.values():
-        player = connection
-    else:
-        raise ValueError()
 
     player.painting = not player.painting
 
