@@ -9,12 +9,15 @@ def get_cidr(network):
 # Note: Network objects cannot have any host bits set without strict=False.
 # More info: https://docs.python.org/3/howto/ipaddress.html#defining-networks
 
+
 class NetworkDict(object):
     def __init__(self):
         self.networks = OrderedDict()
 
     def read_list(self, values):
-        for item in values:
+        for index, item in enumerate(values):
+            if len(item) < 4:
+                raise ValueError("Invalid ban entry. index: {} item: {}\nEntry format needs to be [name, ip, reason, time]".format(index, item))
             self[item[1]] = [item[0]] + item[2:]
 
     def make_list(self):
