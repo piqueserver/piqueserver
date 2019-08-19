@@ -16,7 +16,7 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import imp
+import importlib
 import math
 import random
 import time
@@ -82,13 +82,22 @@ class Map(object):
                  duration=time.monotonic() - start_time)
 
     def load_information(self, rot_info: 'RotationInfo', load_dir: str) -> None:
-        self.load_dir = load_dir
+        path = rot_info.get_meta_filename(load_dir)
+        namespace = 'piqueserver_internal_map_' + rot_info.name
         try:
-            info = imp.load_source(
-                'piqueserver_internal_map_' + rot_info.name, rot_info.get_meta_filename(load_dir))
-        except IOError:
+            loader = importlib.machinery.SourceFileLoader(namespace, path)
+            spec = importlib.util.spec_from_loader(loader.name, loader)
+            info = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(info)
+        except FileNotFoundError:
+            log.error("Map info file not found {}".format(path))
             info = None
+        except Exception as e:
+            log.error("Error while loading map info: {!r}".format(e))
+            info = None
+
         self.info = info
+        self.load_dir = load_dir
         self.rot_info = rot_info
         self.gen_script = getattr(info, 'gen_script', None)
         if self.gen_script:
