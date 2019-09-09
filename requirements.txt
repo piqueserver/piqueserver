@@ -4,7 +4,7 @@ Jinja2>=2,<3
 pyenet
 toml
 pypng==0.0.20
-aiohttp>=3.3.0,<3.6.0
+aiohttp>=3.3.0,<3.7.0
 packaging>=19.0
 
 # from command

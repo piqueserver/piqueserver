@@ -139,7 +139,7 @@ setup(
         'Twisted[tls]',
         'Jinja2>=2,<3',
         'pypng==0.0.20',
-        'aiohttp>=3.3.0,<3.6.0',
+        'aiohttp>=3.3.0,<3.7.0',
         'pyenet',
         'toml',
         'packaging>=19.0'
