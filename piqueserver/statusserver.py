@@ -24,7 +24,7 @@ from multidict import MultiDict
 from jinja2 import Environment, PackageLoader
 import json
 import time
-import png
+from PIL import Image
 from io import BytesIO
 from aiohttp.abc import AbstractAccessLogger
 from twisted.logger import Logger
@@ -117,9 +117,9 @@ class StatusServer(object):
     def update_cached_overview(self):
         """Updates cached overview"""
         overview = self.protocol.map.get_overview(rgba=True)
-        w = png.Writer(512, 512, alpha=True)
+        image = Image.frombytes('RGBA', (512, 512), overview)
         data = BytesIO()
-        w.write_array(data, overview)
+        image.save(data, 'png')
         self.cached_overview = data.getvalue()
         self.last_update = time.time()
         self.last_map_name = self.protocol.map_info.name

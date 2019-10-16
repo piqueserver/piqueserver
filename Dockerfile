@@ -11,7 +11,8 @@ COPY requirements.txt /usr/src/app/
 # Note: manylinux wheel support isn't enabled by default for alpinelinux
 # we temporarly enable it for pyenet since it is compatible
 RUN apk add --no-cache --virtual .build-deps-cython gcc musl-dev \
-    && apk add --no-cache --virtual .build-deps-crypto libffi-dev openssl-dev \
+    && apk add --no-cache --virtual .build-deps-pillow zlib-dev jpeg-dev libffi-dev openssl-dev \
+    && apk add --no-cache zlib jpeg \
     \
     && echo "manylinux1_compatible = True" > /usr/local/lib/python3.6/_manylinux.py \
     && pip install pyenet \
@@ -19,7 +20,7 @@ RUN apk add --no-cache --virtual .build-deps-cython gcc musl-dev \
     && pip install --no-cache-dir -r requirements.txt \
     \
     && apk del .build-deps-cython \
-    && apk del .build-deps-crypto
+    && apk del .build-deps-pillow
 
 # The fact that we removed gcc beforehand makes us download it again
 # This is remedied by building the server core first and leaving all .py scripts 

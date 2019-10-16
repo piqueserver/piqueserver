@@ -138,7 +138,7 @@ setup(
         'Cython>=0.27,<1',
         'Twisted[tls]',
         'Jinja2>=2,<3',
-        'pypng==0.0.20',
+        'Pillow>=5.1.0,<6',
         'aiohttp>=3.3.0,<3.7.0',
         'pyenet',
         'toml',
