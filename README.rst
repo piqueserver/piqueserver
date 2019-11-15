@@ -99,7 +99,7 @@ you'll be able to install manually or with your favourite AUR helper:
 
 .. code:: bash
 
-    pacaur -y piqueserver-git
+    pacaur -S piqueserver-git
 
 \:rocket: Running
 -----------------
