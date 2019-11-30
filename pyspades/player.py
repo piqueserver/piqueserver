@@ -29,7 +29,7 @@ from pyspades.mapgenerator import ProgressiveMapGenerator
 from pyspades.packet import call_packet_handler, register_packet_handler
 from pyspades.protocol import BaseConnection
 from pyspades.team import Team
-from pyspades.weapon import WEAPONS
+from pyspades.weapon import get_weapon_class_by_id
 
 log = Logger()
 
@@ -993,7 +993,8 @@ class ServerConnection(BaseConnection):
         self.weapon = weapon
         if self.weapon_object is not None:
             self.weapon_object.reset()
-        self.weapon_object = WEAPONS[weapon](self._on_reload)
+        weapon_class = get_weapon_class_by_id(weapon)
+        self.weapon_object = weapon_class(self._on_reload)
         if not local:
             change_weapon = loaders.ChangeWeapon()
             self.protocol.send_contained(change_weapon, save=True)

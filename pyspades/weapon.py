@@ -264,5 +264,7 @@ WEAPONS_076 = {
     SHOTGUN_WEAPON: Shotgun076,
 }
 
+
 # Currently used weapon set
-WEAPONS = WEAPONS_075
+def get_weapon_class_by_id(weapon_id: int) -> BaseWeapon:
+    return WEAPONS_075[weapon_id]
