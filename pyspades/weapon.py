@@ -1,3 +1,7 @@
+"""
+Definitions for weapons used in AoS.
+"""
+
 from abc import ABCMeta, abstractmethod
 import math
 from typing import Any, Callable, Dict, Optional, Type
@@ -7,7 +11,7 @@ from pyspades.constants import (RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON,
                                 HEAD, TORSO, ARMS, LEGS, CLIP_TOLERANCE)
 
 
-class BaseWeapon(object, metaclass=ABCMeta):
+class BaseWeapon(metaclass=ABCMeta):
     """
     Base class for all weapons for all game versions.
     """
@@ -30,24 +34,37 @@ class BaseWeapon(object, metaclass=ABCMeta):
     # Time between reloading and being able to shoot again
     reload_time = 0.0
     # Dict of damages
-    damage = None  # type: Dict[int, int]
+    damage = {} # type: Dict[int, int]
 
     def __init__(self, reload_callback: Callable[[], None]) -> None:
         self.reload_callback = reload_callback
+        self.current_stock = self.stock
+        self.current_ammo = self.ammo
+        self.reload_call = None # type: Optional[Any]
         self.reset()
 
     def restock(self) -> None:
+        """
+        Refills the ammo for this weapon.
+        """
         self.current_stock = self.stock
 
     def reset(self) -> None:
+        """
+        Resets this weapon to its initial state.
+        """
         self.shoot = False
         if self.reloading:
-            self.reload_call.cancel()
+            if self.reload_call is not None:
+                self.reload_call.cancel()
             self.reloading = False
         self.current_ammo = self.ammo
         self.current_stock = self.stock
 
     def set_shoot(self, value: bool) -> None:
+        """
+        Sets the current firing state of the weapon.
+        """
         if value == self.shoot:
             return
         current_time = reactor.seconds()
@@ -60,16 +77,20 @@ class BaseWeapon(object, metaclass=ABCMeta):
             self.shoot_time = max(current_time, self.next_shot)
             if self.reloading:
                 self.reloading = False
-                self.reload_call.cancel()
+                if self.reload_call is not None:
+                    self.reload_call.cancel()
         else:
             ammo = self.current_ammo
-            self.current_ammo = self.get_ammo(True)
+            self.current_ammo = self.get_ammo(no_max=True)
             if self.shoot_time is not None:
                 self.next_shot = self.shoot_time + self.delay * (
                     ammo - self.current_ammo)
         self.shoot = value
 
     def reload(self) -> None:
+        """
+        Requests to reload the weapon if possible.
+        """
         if self.reloading:
             return
         ammo = self.get_ammo()
@@ -80,9 +101,12 @@ class BaseWeapon(object, metaclass=ABCMeta):
         self.reloading = True
         self.set_shoot(False)
         self.current_ammo = ammo
-        self.reload_call = reactor.callLater(self.reload_time, self.on_reload) # type: Any
+        self.reload_call = reactor.callLater(self.reload_time, self.on_reload)
 
     def on_reload(self) -> None:
+        """
+        Callback: Called whenever the weapon has finished reloading.
+        """
         self.reloading = False
         if self.slow_reload:
             self.current_ammo += 1
@@ -97,6 +121,11 @@ class BaseWeapon(object, metaclass=ABCMeta):
             self.reload_callback()
 
     def get_ammo(self, no_max: bool = False) -> int:
+        """
+        Returns the amount of ammo we have at this given point.
+
+        If no_max is not set to True, clamp the result to a minimum of 0 shots.
+        """
         if self.shoot:
             dt = reactor.seconds() - self.shoot_time
             ammo = self.current_ammo - max(0, int(
@@ -107,11 +136,23 @@ class BaseWeapon(object, metaclass=ABCMeta):
             return ammo
         return max(0, ammo)
 
-    def is_empty(self, tolerance=CLIP_TOLERANCE) -> bool:
-        return self.get_ammo(True) < -tolerance or not self.shoot
+    def is_empty(self, tolerance: float = CLIP_TOLERANCE) -> bool:
+        """
+        Is this weapon empty?
+        """
+        # FIXME: This appears to be more of a "can this gun fire?" check.
+        # We may need to rename it. --GM
+        return self.get_ammo(no_max=True) < -tolerance or not self.shoot
 
     @abstractmethod
-    def get_damage(self, value, position1, position2) -> int:
+    def get_damage(self, value: int, position1: Any, position2: Any) -> int:
+        """
+        Returns the amount of damage dealt by this weapon.
+
+        value: An index of the body part we're hitting.
+        position1: The starting position of the shot.
+        position2: The position of the target we're hitting.
+        """
         raise NotImplementedError()
 
 
@@ -119,7 +160,7 @@ class BaseWeapon075(BaseWeapon):
     """
     Base class for all weapons for AoS 0.75.
     """
-    def get_damage(self, value, position1, position2) -> int:
+    def get_damage(self, value: int, position1: Any, position2: Any) -> int:
         return self.damage[value]
 
 
@@ -127,9 +168,9 @@ class BaseWeapon076(BaseWeapon):
     """
     Base class for all weapons for AoS 0.76.
     """
-    def get_damage(self, value, position1, position2) -> int:
+    def get_damage(self, value: int, position1: Any, position2: Any) -> int:
         falloff = 1 - ((pyspades.collision.distance_3d_vector(position1, position2)**1.5)*0.0004)
-        return math.ceil(self.damage[value] * falloff)
+        return int(math.ceil(self.damage[value] * falloff))
 
 
 class Rifle075(BaseWeapon075):
