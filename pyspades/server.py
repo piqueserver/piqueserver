@@ -415,12 +415,11 @@ class ServerProtocol(BaseProtocol):
 
     def broadcast_chat_status(self, message, team=None):
         """
-        Send a warning message. This gets displayed
-        as a red popup with sound for OpenSpades
-        clients
+        Send a warning message. This gets displayed as a message in the status
+        area at the top of the screen, where events such as intel pickups are
+        also displayed.
         """
         self.send_chat(self, "C% " + str(message), team=team)
-
 
     def set_fog_color(self, color):
         self.fog_color = color
