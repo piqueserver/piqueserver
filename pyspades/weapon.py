@@ -1,7 +1,8 @@
 from abc import ABCMeta, abstractmethod
 import math
-from typing import Callable, Dict
-from twisted.internet import reactor
+from typing import Any, Callable, Dict, Optional, Type
+from twisted.internet import reactor # type: ignore
+import pyspades.collision
 from pyspades.constants import (RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON,
                                 HEAD, TORSO, ARMS, LEGS, CLIP_TOLERANCE)
 
@@ -13,8 +14,8 @@ class BaseWeapon(object, metaclass=ABCMeta):
     shoot = False
     reloading = False
     id = None  # type: int
-    shoot_time = None
-    next_shot = 0
+    shoot_time = None  # type: Optional[float]
+    next_shot = 0.0
     start = None
 
     # Weapon parameters
@@ -31,7 +32,7 @@ class BaseWeapon(object, metaclass=ABCMeta):
     # Dict of damages
     damage = None  # type: Dict[int, int]
 
-    def __init__(self, reload_callback: Callable) -> None:
+    def __init__(self, reload_callback: Callable[[], None]) -> None:
         self.reload_callback = reload_callback
         self.reset()
 
@@ -63,8 +64,9 @@ class BaseWeapon(object, metaclass=ABCMeta):
         else:
             ammo = self.current_ammo
             self.current_ammo = self.get_ammo(True)
-            self.next_shot = self.shoot_time + self.delay * (
-                ammo - self.current_ammo)
+            if self.shoot_time is not None:
+                self.next_shot = self.shoot_time + self.delay * (
+                    ammo - self.current_ammo)
         self.shoot = value
 
     def reload(self) -> None:
@@ -78,7 +80,7 @@ class BaseWeapon(object, metaclass=ABCMeta):
         self.reloading = True
         self.set_shoot(False)
         self.current_ammo = ammo
-        self.reload_call = reactor.callLater(self.reload_time, self.on_reload)
+        self.reload_call = reactor.callLater(self.reload_time, self.on_reload) # type: Any
 
     def on_reload(self) -> None:
         self.reloading = False
@@ -266,5 +268,5 @@ WEAPONS_076 = {
 
 
 # Currently used weapon set
-def get_weapon_class_by_id(weapon_id: int) -> BaseWeapon:
+def get_weapon_class_by_id(weapon_id: int) -> Type[BaseWeapon]:
     return WEAPONS_075[weapon_id]
