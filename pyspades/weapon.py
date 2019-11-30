@@ -1,3 +1,4 @@
+from abc import ABCMeta, abstractmethod
 import math
 from typing import Callable, Dict
 from twisted.internet import reactor
@@ -5,7 +6,10 @@ from pyspades.constants import (RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON,
                                 HEAD, TORSO, ARMS, LEGS, CLIP_TOLERANCE)
 
 
-class BaseWeapon(object):
+class BaseWeapon(object, metaclass=ABCMeta):
+    """
+    Base class for all weapons for all game versions.
+    """
     shoot = False
     reloading = False
     id = None  # type: int
@@ -104,11 +108,32 @@ class BaseWeapon(object):
     def is_empty(self, tolerance=CLIP_TOLERANCE) -> bool:
         return self.get_ammo(True) < -tolerance or not self.shoot
 
+    @abstractmethod
+    def get_damage(self, value, position1, position2) -> int:
+        raise NotImplementedError()
+
+
+class BaseWeapon075(BaseWeapon):
+    """
+    Base class for all weapons for AoS 0.75.
+    """
     def get_damage(self, value, position1, position2) -> int:
         return self.damage[value]
 
 
-class Rifle(BaseWeapon):
+class BaseWeapon076(BaseWeapon):
+    """
+    Base class for all weapons for AoS 0.76.
+    """
+    def get_damage(self, value, position1, position2) -> int:
+        falloff = 1 - ((pyspades.collision.distance_3d_vector(position1, position2)**1.5)*0.0004)
+        return math.ceil(self.damage[value] * falloff)
+
+
+class Rifle075(BaseWeapon075):
+    """
+    Weapon definition: AoS 0.75 rifle.
+    """
     id = RIFLE_WEAPON
     name = 'Rifle'
     delay = 0.5
@@ -125,7 +150,10 @@ class Rifle(BaseWeapon):
     }
 
 
-class SMG(BaseWeapon):
+class SMG075(BaseWeapon075):
+    """
+    Weapon definition: AoS 0.75 SMG.
+    """
     id = SMG_WEAPON
     name = 'SMG'
     delay = 0.11  # actually 0.1, but due to AoS scheduling, it's usually 0.11
@@ -142,7 +170,10 @@ class SMG(BaseWeapon):
     }
 
 
-class Shotgun(BaseWeapon):
+class Shotgun075(BaseWeapon075):
+    """
+    Weapon definition: AoS 0.75 shotgun.
+    """
     id = SHOTGUN_WEAPON
     name = 'Shotgun'
     delay = 1.0
@@ -159,8 +190,79 @@ class Shotgun(BaseWeapon):
     }
 
 
-WEAPONS = {
-    RIFLE_WEAPON: Rifle,
-    SMG_WEAPON: SMG,
-    SHOTGUN_WEAPON: Shotgun,
+class Rifle076(BaseWeapon076):
+    """
+    Weapon definition: AoS 0.76 rifle.
+    """
+    id = RIFLE_WEAPON
+    name = 'Rifle'
+    delay = 0.6
+    ammo = 8
+    stock = 48
+    reload_time = 2.5
+    slow_reload = False
+
+    damage = {
+        TORSO: 60,
+        HEAD: 250,
+        ARMS: 50,
+        LEGS: 50
+    }
+
+
+class SMG076(BaseWeapon076):
+    """
+    Weapon definition: AoS 0.76 SMG.
+    """
+    id = SMG_WEAPON
+    name = 'SMG'
+    delay = 0.11  # actually 0.1, but due to AoS scheduling, it's usually 0.11
+    ammo = 30
+    stock = 150
+    reload_time = 2.5
+    slow_reload = False
+
+    damage = {
+        TORSO: 40,
+        HEAD: 60,
+        ARMS: 20,
+        LEGS: 20
+    }
+
+
+class Shotgun076(BaseWeapon076):
+    """
+    Weapon definition: AoS 0.76 shotgun.
+    """
+    id = SHOTGUN_WEAPON
+    name = 'Shotgun'
+    delay = 0.8
+    ammo = 8
+    stock = 48
+    reload_time = 0.4
+    slow_reload = True
+
+    damage = {
+        TORSO: 40,
+        HEAD: 60,
+        ARMS: 20,
+        LEGS: 20
+    }
+
+
+# 0.75 weapon set
+WEAPONS_075 = {
+    RIFLE_WEAPON: Rifle075,
+    SMG_WEAPON: SMG075,
+    SHOTGUN_WEAPON: Shotgun075,
 }
+
+# 0.76 weapon set
+WEAPONS_076 = {
+    RIFLE_WEAPON: Rifle076,
+    SMG_WEAPON: SMG076,
+    SHOTGUN_WEAPON: Shotgun076,
+}
+
+# Currently used weapon set
+WEAPONS = WEAPONS_075
