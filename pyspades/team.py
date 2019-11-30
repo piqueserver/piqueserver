@@ -8,7 +8,7 @@ from pyspades.entities import Flag, Base
 from pyspades.protocol import BaseProtocol
 
 
-class Team(object):
+class Team:
     score = None
     flag = None
     base = None

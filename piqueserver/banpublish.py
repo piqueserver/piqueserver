@@ -35,7 +35,7 @@ class PublishResource(Resource):
         return self.factory.json_bans
 
 
-class PublishServer(object):
+class PublishServer:
 
     def __init__(self, protocol, port):
         self.protocol = protocol

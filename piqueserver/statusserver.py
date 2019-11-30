@@ -97,7 +97,7 @@ def current_state(protocol):
     return dictionary
 
 
-class StatusServer(object):
+class StatusServer:
     def __init__(self, protocol):
         self.protocol = protocol
         self.last_update = None

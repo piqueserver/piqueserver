@@ -60,7 +60,7 @@ def check_rotation(maps: List[Union[str, 'RotationInfo']], load_dir:
     return infos
 
 
-class Map(object):
+class Map:
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, rot_info: 'RotationInfo', load_dir: str) -> None:
@@ -134,7 +134,7 @@ class Map(object):
         fp.close()
 
 
-class RotationInfo(object):
+class RotationInfo:
     seed = None
 
     def __init__(self, name: str = "pyspades") -> None:

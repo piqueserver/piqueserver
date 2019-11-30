@@ -197,7 +197,7 @@ class FeatureTeam(Team):
         return Team.get_entity_location(self, entity_id)
 
 
-class EndCall(object):
+class EndCall:
     _active = True
 
     def __init__(self, protocol, delay: int, func: Callable, *arg, **kw) -> None:

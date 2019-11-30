@@ -239,7 +239,7 @@ class IRCClientFactory(protocol.ClientFactory):
         return p
 
 
-class IRCRelay(object):
+class IRCRelay:
     factory = None
 
     def __init__(self, protocol, config):

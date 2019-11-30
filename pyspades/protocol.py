@@ -22,7 +22,7 @@ from pyspades.bytes import ByteWriter
 import enet
 
 
-class BaseConnection(object):
+class BaseConnection:
     disconnected = False
     timeout_call = None
 
@@ -71,7 +71,7 @@ class BaseConnection(object):
         return self.peer.roundTripTime
 
 
-class BaseProtocol(object):
+class BaseProtocol:
     connection_class = BaseConnection
     max_connections = 33
     is_client = False

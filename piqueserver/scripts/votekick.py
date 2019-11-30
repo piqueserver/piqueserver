@@ -167,7 +167,7 @@ def togglevotekick(connection, *args):
         'enabled' if player.votekick_enabled else 'disabled'))
 
 
-class Votekick(object):
+class Votekick:
     timeout = 120.0  # 2 minutes
     interval = 120.0  # 2 minutes
     ban_duration = BAN_DURATION_OPTION.get()
