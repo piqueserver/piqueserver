@@ -109,7 +109,9 @@ GAME_PROTOCOL_VERSIONS = {
     GAME_VERSION_AOS_076RC10: 4,
 }
 
-# Current game version.
-# TODO: Drop the use of this constant and get this from the config.
-GAME_VERSION = GAME_VERSION_AOS_075
-#GAME_VERSION = GAME_VERSION_AOS_076RC10
+GAME_VERSION_FROM_STRING = {
+    "0.75": GAME_VERSION_AOS_075,
+    "0.76": GAME_VERSION_AOS_076RC10,
+}
+
+GAME_VERSION_TO_STRING = {v: k for k, v in GAME_VERSION_FROM_STRING.items()}

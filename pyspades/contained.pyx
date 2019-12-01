@@ -161,14 +161,6 @@ cdef class WorldUpdate076(Loader):
     cpdef read(self, ByteReader reader):
         cdef list items = []
         self.items = items
-        for _ in range(32):
-            p_x = 0.0
-            p_y = 0.0
-            p_z = 0.0
-            o_x = 0.0
-            o_y = 0.0
-            o_z = 0.0
-            items.append(((p_x, p_y, p_z), (o_x, o_y, o_z)))
 
         while reader.dataLeft() >= (1 + (6*4)):
             idx = reader.readByte(True)
@@ -178,6 +170,9 @@ cdef class WorldUpdate076(Loader):
             o_x = reader.readFloat(False)
             o_y = reader.readFloat(False)
             o_z = reader.readFloat(False)
+            while len(items) < idx:
+                items.append(((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)))
+
             items[idx] = ((p_x, p_y, p_z), (o_x, o_y, o_z))
 
     cpdef write(self, ByteWriter writer):

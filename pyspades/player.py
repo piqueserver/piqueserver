@@ -106,12 +106,12 @@ class ServerConnection(BaseConnection):
     map_data = None
     last_position_update = None
     local = False
+    game_version = None # type: Optional[int]
 
     def __init__(self, *arg, **kw) -> None:
         BaseConnection.__init__(self, *arg, **kw)
         protocol = self.protocol
         address = self.peer.address
-        self.game_version = self.protocol.version
         self.total_blocks_removed = 0
         self.address = (address.host, address.port)
         self.respawn_time = protocol.respawn_time
@@ -123,12 +123,18 @@ class ServerConnection(BaseConnection):
     def on_connect(self) -> None:
         if self.local:
             return
-        protocol_version = GAME_PROTOCOL_VERSIONS[self.game_version]
-        if self.peer.eventData != protocol_version:
+
+        for game_version in self.protocol.game_versions:
+            protocol_version = GAME_PROTOCOL_VERSIONS[game_version]
+            if self.peer.eventData == protocol_version:
+                self.game_version = game_version
+                break
+        else:
             log.debug("{player} kicked: wrong protocol version {version}",
                       player=self, version=self.peer.eventData)
             self.disconnect(ERROR_WRONG_VERSION)
             return
+
         max_players = min(32, self.protocol.max_players)
         if len(self.protocol.connections) > max_players:
             self.disconnect(ERROR_FULL)
@@ -995,6 +1001,7 @@ class ServerConnection(BaseConnection):
         self.weapon = weapon
         if self.weapon_object is not None:
             self.weapon_object.reset()
+        assert self.game_version is not None
         weapon_class = get_weapon_class_by_id(weapon, version=self.game_version)
         self.weapon_object = weapon_class(self._on_reload)
         if not local:
