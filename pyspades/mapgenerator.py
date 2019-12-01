@@ -7,7 +7,7 @@ import zlib
 COMPRESSION_LEVEL = 9
 
 
-class ProgressiveMapGenerator(object):
+class ProgressiveMapGenerator:
     """
     Progressively generates the stream of bytes sent to the client for map
     downloads.
@@ -75,7 +75,7 @@ class ProgressiveMapGenerator(object):
         return bool(self.data) or self.generator is not None
 
 
-class MapGeneratorChild(object):
+class MapGeneratorChild:
     pos = 0
 
     def __init__(self, generator):

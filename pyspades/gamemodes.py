@@ -65,7 +65,7 @@ class IntelBasedGamemode:
         return connection.team.other_flag
 
 
-class TerritoryBasedGamemode(object):
+class TerritoryBasedGamemode:
     name = "tc"
 
     def __init__(self, protocol):

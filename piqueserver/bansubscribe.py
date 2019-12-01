@@ -45,7 +45,7 @@ bans_config_interval = bans_config.option('bansubscribe_interval', default="5min
                                           cast=cast_duration)
 
 
-class BanManager(object):
+class BanManager:
     bans = None
     new_bans = None
 

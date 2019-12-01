@@ -46,7 +46,7 @@ def cancel_verify(connection, instigator):
             connection.rights.cancel)
 
 
-class VoteMap(object):
+class VoteMap:
     extension_time = 0.0
     public_votes = True
     instigator = None

@@ -37,7 +37,7 @@ MAXMIND_DOWNLOAD_MD5 = MAXMIND_DOWNLOAD + '.md5'
 
 # (major, minor) versions of python we are supporting
 # used on startup to emit a warning if not running on a supported version
-SUPPORTED_PYTHONS = ((3, 5), (3, 6), (3, 7))
+SUPPORTED_PYTHONS = ((3, 5), (3, 6), (3, 7), (3, 8))
 
 
 class ConfigStore():

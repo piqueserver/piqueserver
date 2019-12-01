@@ -176,7 +176,7 @@ class ArenaException(Exception):
     pass
 
 
-class Gate(object):
+class Gate:
 
     def __init__(self, x, y, z, protocol_obj):
         self.support_blocks = []

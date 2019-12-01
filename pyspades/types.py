@@ -29,7 +29,7 @@ import itertools
 from collections import namedtuple
 
 
-class IDPool(object):
+class IDPool:
     """
     Manage pool of IDs
 

@@ -70,7 +70,7 @@ def bellrand(a, b):
     return (uniform(a, b) + uniform(a, b) + uniform(a, b)) / 3.0
 
 
-class Nag(object):
+class Nag:
     call = None
 
     def __init__(self, secs, f, *args, **kw):

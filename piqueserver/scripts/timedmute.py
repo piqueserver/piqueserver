@@ -36,7 +36,7 @@ def timed_mute(connection, *args):
         return '%s is already muted!' % nick
 
 
-class TimedMute(object):
+class TimedMute:
     player = None
     time = None
 

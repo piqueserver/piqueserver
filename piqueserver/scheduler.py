@@ -20,7 +20,7 @@ from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
 
 
-class Scheduler(object):
+class Scheduler:
 
     def __init__(self, protocol):
         self.protocol = protocol

@@ -10,7 +10,7 @@ def get_cidr(network):
 # More info: https://docs.python.org/3/howto/ipaddress.html#defining-networks
 
 
-class NetworkDict(object):
+class NetworkDict:
     def __init__(self):
         self.networks = OrderedDict()
 

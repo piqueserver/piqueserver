@@ -56,7 +56,7 @@ def parse_command(value: str) -> Tuple[str, Sequence[str]]:
     return command, splitted
 
 
-class SlidingWindow(object):
+class SlidingWindow:
     def __init__(self, entries: Any) -> None:
         self.entries = entries
         self.window = collections.deque()  # type: Deque
