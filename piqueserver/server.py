@@ -633,8 +633,8 @@ class FeatureProtocol(ServerProtocol):
         self.help = self.format_lines(help_option.get())
         self.tips = self.format_lines(tips_option.get())
         self.rules = self.format_lines(rules_option.get())
-        if self.master_connection is not None:
-            self.master_connection.send_server()
+        for connection in self.master_connections:
+            connection.send_server()
 
     def format(self, value: str, extra: Optional[Dict[str, str]] = None) -> str:
         map_info = self.map_info
@@ -680,17 +680,20 @@ class FeatureProtocol(ServerProtocol):
         if value == self.master:
             return
         self.master = value
-        has_connection = self.master_connection is not None
         has_reconnect = self.master_reconnect_call is not None
         if value:
-            if not has_connection and not has_reconnect:
+            if not has_reconnect:
                 self.set_master()
         else:
             if has_reconnect:
                 self.master_reconnect_call.cancel()
                 self.master_reconnect_call = None
-            if has_connection:
-                self.master_connection.disconnect()
+            for (key, connection,) in list(self.master_connections.items()):
+                connection.disconnect()
+                try:
+                    del self.master_connections[key]
+                except LookupError:
+                    pass
 
     async def shutdown(self):
         """
