@@ -23,6 +23,7 @@ from pyspades.protocol import BaseProtocol
 from pyspades.constants import (
     CTF_MODE, TC_MODE, GAME_VERSION, MIN_TERRITORY_COUNT, MAX_TERRITORY_COUNT,
     UPDATE_FREQUENCY, UPDATE_FPS, NETWORK_FPS)
+from pyspades.constants import GAME_PROTOCOL_VERSIONS
 from pyspades.types import IDPool
 from pyspades.master import get_master_connection
 from pyspades.team import Team
@@ -240,7 +241,12 @@ class ServerProtocol(BaseProtocol):
                 position = (0.0, 0.0, 0.0)
                 orientation = (0.0, 0.0, 0.0)
             items.append((position, orientation))
-        world_update = loaders.WorldUpdate()
+
+        if self.version >= loaders.WorldUpdate076.since_version:
+            world_update = loaders.WorldUpdate076()
+        else:
+            world_update = loaders.WorldUpdate()
+
         # we only want to send as many items of the player list as needed, so
         # we slice it off at the highest player id
         world_update.items = items[:highest_player_id+1]

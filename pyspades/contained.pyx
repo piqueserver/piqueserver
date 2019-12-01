@@ -29,6 +29,8 @@ This module contains the definitions and registrations for the various packets u
 
 from pyspades.common import encode, decode
 from pyspades.constants import NEUTRAL_TEAM, CTF_MODE, TC_MODE
+from pyspades.constants import GAME_VERSION_AOS_075
+from pyspades.constants import GAME_VERSION_AOS_076RC10
 from pyspades.loaders cimport Loader
 from pyspades.bytes cimport ByteReader, ByteWriter
 from pyspades.packet import register_packet
@@ -118,6 +120,7 @@ register_packet(OrientationData)
 
 cdef class WorldUpdate(Loader):
     id = 2
+    until_version = GAME_VERSION_AOS_076RC10
 
     cdef public:
         list items
@@ -147,6 +150,56 @@ cdef class WorldUpdate(Loader):
             writer.writeFloat(o_z, False)
 
 register_packet(WorldUpdate)
+
+cdef class WorldUpdate076(Loader):
+    id = 2
+    since_version = GAME_VERSION_AOS_076RC10
+
+    cdef public:
+        list items
+
+    cpdef read(self, ByteReader reader):
+        cdef list items = []
+        self.items = items
+        for _ in range(32):
+            p_x = 0.0
+            p_y = 0.0
+            p_z = 0.0
+            o_x = 0.0
+            o_y = 0.0
+            o_z = 0.0
+            items.append(((p_x, p_y, p_z), (o_x, o_y, o_z)))
+
+        while reader.dataLeft() >= (1 + (6*4)):
+            idx = reader.readByte(True)
+            p_x = reader.readFloat(False)
+            p_y = reader.readFloat(False)
+            p_z = reader.readFloat(False)
+            o_x = reader.readFloat(False)
+            o_y = reader.readFloat(False)
+            o_z = reader.readFloat(False)
+            items[idx] = ((p_x, p_y, p_z), (o_x, o_y, o_z))
+
+    cpdef write(self, ByteWriter writer):
+        writer.writeByte(self.id, True)
+        cdef tuple item
+        for idx in range(len(self.items)):
+            item = self.items[idx]
+            (p_x, p_y, p_z), (o_x, o_y, o_z) = item
+
+            if p_x == 0.0 and p_y == 0.0 and p_z == 0.0 \
+                    and o_x == 0.0 and o_y == 0.0 and o_z == 0.0:
+                continue
+
+            writer.writeByte(idx)
+            writer.writeFloat(p_x, False)
+            writer.writeFloat(p_y, False)
+            writer.writeFloat(p_z, False)
+            writer.writeFloat(o_x, False)
+            writer.writeFloat(o_y, False)
+            writer.writeFloat(o_z, False)
+
+register_packet(WorldUpdate076)
 
 cdef class InputData(Loader):
     id = 3

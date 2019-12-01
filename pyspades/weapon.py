@@ -9,6 +9,8 @@ from twisted.internet import reactor # type: ignore
 import pyspades.collision
 from pyspades.constants import (RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON,
                                 HEAD, TORSO, ARMS, LEGS, CLIP_TOLERANCE)
+from pyspades.constants import GAME_VERSION_AOS_075
+from pyspades.constants import GAME_VERSION_AOS_076RC10
 
 
 class BaseWeapon(metaclass=ABCMeta):
@@ -293,21 +295,23 @@ class Shotgun076(BaseWeapon076):
     }
 
 
-# 0.75 weapon set
-WEAPONS_075 = {
-    RIFLE_WEAPON: Rifle075,
-    SMG_WEAPON: SMG075,
-    SHOTGUN_WEAPON: Shotgun075,
-}
+WEAPONS_BY_VERSION = {
+    # 0.75 weapon set
+    GAME_VERSION_AOS_075: {
+        RIFLE_WEAPON: Rifle075,
+        SMG_WEAPON: SMG075,
+        SHOTGUN_WEAPON: Shotgun075,
+    },
 
-# 0.76 weapon set
-WEAPONS_076 = {
-    RIFLE_WEAPON: Rifle076,
-    SMG_WEAPON: SMG076,
-    SHOTGUN_WEAPON: Shotgun076,
+    # 0.76 weapon set
+    GAME_VERSION_AOS_076RC10: {
+        RIFLE_WEAPON: Rifle076,
+        SMG_WEAPON: SMG076,
+        SHOTGUN_WEAPON: Shotgun076,
+    },
 }
 
 
 # Currently used weapon set
-def get_weapon_class_by_id(weapon_id: int) -> Type[BaseWeapon]:
-    return WEAPONS_075[weapon_id]
+def get_weapon_class_by_id(weapon_id: int, version: int) -> Type[BaseWeapon]:
+    return WEAPONS_BY_VERSION[version][weapon_id]

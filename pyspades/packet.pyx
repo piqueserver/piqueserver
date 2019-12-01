@@ -17,11 +17,14 @@
 
 from pyspades.loaders cimport Loader
 from pyspades.bytes cimport ByteReader, ByteWriter
+from pyspades.constants import GAME_VERSION_COUNT
 
 _client_loaders = {}
 _server_loaders = {}
 
-def register_packet(loader=None, server=True, client=True, extension=None):
+def register_packet(loader=None,
+                    server=True, client=True,
+                    extension=None):
     """register a packet
 
     >>> @register_packet()
@@ -66,8 +69,8 @@ def register_packet(loader=None, server=True, client=True, extension=None):
     # lifetime, but only time will tell
 
     def register(cls):
-        # Having to handle the two loader dicts separate isn't very nice, but I
-        # you can't avoid it whithout making things more complicated somewhere
+        # Having to handle the two loader dicts separate isn't very nice, but
+        # you can't avoid it without making things more complicated somewhere
         # else.
         # This is needed because certain packets (e.g. HitPacket and SetHP) in
         # likely a legendary case of premature optimisation (or because the
@@ -76,19 +79,24 @@ def register_packet(loader=None, server=True, client=True, extension=None):
         # Since this library tries to work as both a Server and Client
         # implementation, both are always evaluated
 
-        if client:
-            if cls.id in _client_loaders:
-                msg = ("Tried to register client packet '{!r}', but a packet "
-                       "with that id ({}) already exists.".format(cls, cls.id))
-                raise KeyError(msg)
-            _client_loaders[cls.id] = cls
+        for version in range(cls.since_version, cls.until_version, 1):
+            if client:
+                if version not in _client_loaders:
+                    _client_loaders[version] = {}
+                if cls.id in _client_loaders[version]:
+                    msg = ("Tried to register client packet '{!r}', but a packet "
+                           "with that id ({}) already exists.".format(cls, cls.id))
+                    raise KeyError(msg)
+                _client_loaders[version][cls.id] = cls
 
-        if server:
-            if cls.id in _server_loaders:
-                msg = ("Tried to register server packet '{!r}', but a packet "
-                       "with that id ({}) already exists.".format(cls, cls.id))
-                raise KeyError(msg)
-            _server_loaders[cls.id] = cls
+            if server:
+                if version not in _server_loaders:
+                    _server_loaders[version] = {}
+                if cls.id in _server_loaders[version]:
+                    msg = ("Tried to register server packet '{!r}', but a packet "
+                           "with that id ({}) already exists.".format(cls, cls.id))
+                    raise KeyError(msg)
+                _server_loaders[version][cls.id] = cls
 
         return cls
 
@@ -100,11 +108,11 @@ def register_packet(loader=None, server=True, client=True, extension=None):
     return register
 
 
-def load_server_packet(data):
-    return load_contained_packet(data, _server_loaders)
+def load_server_packet(data, version):
+    return load_contained_packet(data, _server_loaders[version])
 
-def load_client_packet(data):
-    return load_contained_packet(data, _client_loaders)
+def load_client_packet(data, version):
+    return load_contained_packet(data, _client_loaders[version])
 
 cdef inline Loader load_contained_packet(ByteReader data, dict table):
     type_ = data.readByte(True)
@@ -113,19 +121,26 @@ cdef inline Loader load_contained_packet(ByteReader data, dict table):
 _packet_handlers = {}
 
 def register_packet_handler(loader):
+
     def register_handler(function):
-        _packet_handlers[loader.id] = function
+        for version in range(loader.since_version, loader.until_version, 1):
+            if version not in _packet_handlers:
+                _packet_handlers[version] = {}
+            _packet_handlers[version][loader.id] = function
+
         return function
+
     return register_handler
 
 def call_packet_handler(self, loader):
-    contained = load_client_packet(ByteReader(loader.data))
+    contained = load_client_packet(ByteReader(loader.data), self.game_version)
+    handler_table = _packet_handlers[self.game_version]
     try:
-        handler = _packet_handlers[contained.id]
-    except KeyError:
+        handler = handler_table[contained.id]
+    except LookupError:
         # an invalid ID was sent
         pass
-    finally:
-        # we call the handler in the finally clause so we don't
+    else:
+        # we call the handler in the else clause so we don't
         # accidentally ignore KeyErrors the handler raises
         handler(self, contained)
