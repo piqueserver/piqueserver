@@ -111,6 +111,7 @@ setup(
     maintainer_email='noway@2ch.hk',
     license='GNU General Public License v3',
     long_description=long_description,
+    long_description_content_type="text/x-rst",
     url="https://github.com/piqueserver/piqueserver",
     keywords=['ace of spades', 'aos', 'server',
               'pyspades', 'pysnip', 'piqueserver'],

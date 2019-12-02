@@ -1035,6 +1035,7 @@ cdef class ProtocolExtensionInfo(Loader):
         writer.writeByte(len(self.extensions), True)
 
         for ext in self.extensions:
-            writer.writeByte(ext[0], ext[1])
+            writer.writeByte(ext[0])
+            writer.writeByte(ext[1])
 
 register_packet(ProtocolExtensionInfo)

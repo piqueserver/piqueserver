@@ -10,7 +10,7 @@ set -e -x
 # code from https://github.com/pypa/python-manylinux-demo/blob/master/travis/build-wheels.sh
 # Compile wheels
 cd /io/
-for PYBIN in /opt/python/{cp35-cp35m,cp36-cp36m,cp37-cp37m}/bin; do
+for PYBIN in /opt/python/{cp35-cp35m,cp36-cp36m,cp37-cp37m,cp38-cp38}/bin; do
     # clean previous cached stuff
     rm -rf /io/build/
     git clean -fX -- pyspades
