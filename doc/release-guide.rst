@@ -94,7 +94,12 @@ Prerequisites: same as for sdist, plus ``docker``
 Build Windows binary wheels
 ---------------------------
 
-TODO: ???
+Use the download-wheels tool to fetch the wheels from appveyor. This requires
+the commit bumping the version to complete on appveyor. Copy the build ID from the URL.
+
+::
+
+    python download_wheels.py --buildid -d winbuilds/
 
 Update git
 ----------
