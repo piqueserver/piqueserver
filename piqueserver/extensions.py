@@ -1,7 +1,6 @@
 
 import os
 import importlib
-import imp
 
 from twisted.logger import Logger
 
@@ -63,25 +62,29 @@ def load_scripts(script_names, script_dir, script_type):
     '''
     script_objects = []
 
-    for script in script_names[:]:
+    finder = importlib.machinery.PathFinder()
+    for script in script_names:
+        spec_scripts = finder.find_spec(script, [script_dir])
+        spec_global = importlib.util.find_spec(script)
+        spec = spec_scripts or spec_global
+        if not spec:
+            log.error(
+                "{} '{}' not found in either {} directory or global scope".format(
+                    script_type, script, script_dir))
+            continue
+        # namespace module name to avoid shadowing global modules
+        # TODO: figure out if there are any right or better ways.
+        spec.name = 'piqueserver_{}_namespace_{}'.format(script_type, script)
+        spec.loader.name = spec.name
+        # load module
         try:
-            # this finds and loads scripts directly from the script dir
-            # no need for messing with sys.path
-            f, filename, desc = imp.find_module(script, [script_dir])
-            module = imp.load_module('piqueserver_{}_namespace_'.format(
-                script_type) + script, f, filename, desc)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
             script_objects.append(module)
-        except ImportError as e:
-            # warning: this also catches import errors from inside the script
-            # module it tried to load
-            try:
-                module = importlib.import_module(script)
-                script_objects.append(module)
-            except ImportError as e:
-                log.error(
-                    "('{} {}' not found: {!r})".format(
-                        script_type, script, e))
-                script_names.remove(script)
+            continue
+        except Exception as e: # needs to be broad since we exec the module
+            log.error("Error while loading {} {}: {!r}".format(
+                script_type, script, e))
 
     return script_objects
 

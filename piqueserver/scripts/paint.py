@@ -14,26 +14,21 @@ Commands
 from pyspades.contained import BlockAction
 from pyspades.common import Vertex3
 from pyspades.constants import *
-from piqueserver.commands import command, admin, get_player
+from piqueserver.commands import command, admin, get_player, target_player
 
 PAINT_RAY_LENGTH = 32.0
 
 
 @command(admin_only=True)
-def paint(connection, player=None):
+@target_player
+def paint(connection, player):
     protocol = connection.protocol
-    if player is not None:
-        player = get_player(protocol, player)
-    elif connection in protocol.players:
-        player = connection
-    else:
-        raise ValueError()
 
     player.painting = not player.painting
 
     message = 'now painting' if player.painting else 'no longer painting'
     player.send_chat("You're %s" % message)
-    if connection is not player and connection in protocol.players:
+    if connection is not player and connection in protocol.players.values():
         connection.send_chat('%s is %s' % (player.name, message))
     protocol.irc_say('* %s is %s' % (player.name, message))
 

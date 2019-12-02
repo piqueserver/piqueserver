@@ -1,4 +1,4 @@
-from pyspades.types import IDPool, AttributeSet, MultikeyDict
+from pyspades.types import IDPool, AttributeSet
 import unittest
 
 
@@ -30,43 +30,3 @@ class TestAttributeSet(unittest.TestCase):
         self.assertTrue(atset.new)
         atset.new = 0
         self.assertFalse(atset.new)
-
-
-class TestMultikeyDict(unittest.TestCase):
-    def test_create(self):
-        dic = MultikeyDict()
-        dic[1, 'bar'] = 2
-        self.assertEqual(dic[1], 2)
-        self.assertIs(dic[1], dic['bar'])
-
-    def test_identity(self):
-        dic = MultikeyDict()
-        lst = ("hi", )
-        dic["key", ("tup", "le")] = lst
-        self.assertIs(dic["key"], lst)
-        self.assertIs(dic["tup", "le"], lst)
-
-    def test_assign_multiple(self):
-        dic = MultikeyDict()
-        dic[1, 'bar'] = 2
-        with self.assertRaises(KeyError):
-            dic[3, 'bar'] = 5
-
-    def test_misc_funcs(self):
-        dic = MultikeyDict()
-        dic[1, 'bar'] = 2
-        dic[3, 'baz'] = 5
-
-        self.assertEqual(len(dic), 2)
-        del dic[1]
-        self.assertEqual(len(dic), 1)
-
-        dic.clear()
-        self.assertEqual(len(dic), 0)
-
-    def test_get(self):
-        dic = MultikeyDict()
-        dic[7, 'egg'] = 42
-        self.assertEqual(dic.get(7), 42)
-        self.assertEqual(dic.get("egg"), 42)
-        self.assertEqual(dic.get("spam", "def"), "def")

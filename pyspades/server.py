@@ -23,9 +23,8 @@ from pyspades.protocol import BaseProtocol
 from pyspades.constants import (
     CTF_MODE, TC_MODE, GAME_VERSION, MIN_TERRITORY_COUNT, MAX_TERRITORY_COUNT,
     UPDATE_FREQUENCY, UPDATE_FPS, NETWORK_FPS)
-from pyspades.types import MultikeyDict, IDPool
+from pyspades.types import IDPool
 from pyspades.master import get_master_connection
-#from pyspades.debug import *
 from pyspades.team import Team
 from pyspades.entities import Territory
 # importing tc_data is a quick hack since this file writes into it
@@ -36,10 +35,6 @@ from pyspades import contained as loaders
 from pyspades.common import make_color
 from pyspades.mapgenerator import ProgressiveMapGenerator
 
-fog_color = loaders.FogColor()
-world_update = loaders.WorldUpdate()
-intel_capture = loaders.IntelCapture()
-territory_capture = loaders.TerritoryCapture()
 
 
 class ServerProtocol(BaseProtocol):
@@ -83,7 +78,7 @@ class ServerProtocol(BaseProtocol):
         self.max_connections = self.max_players + 2
         BaseProtocol.__init__(self, *arg, **kw)
         self.entities = []
-        self.players = MultikeyDict()
+        self.players = {}
         self.player_ids = IDPool()
 
         self._create_teams()
@@ -245,6 +240,7 @@ class ServerProtocol(BaseProtocol):
                 position = (0.0, 0.0, 0.0)
                 orientation = (0.0, 0.0, 0.0)
             items.append((position, orientation))
+        world_update = loaders.WorldUpdate()
         # we only want to send as many items of the player list as needed, so
         # we slice it off at the highest player id
         world_update.items = items[:highest_player_id+1]
@@ -258,7 +254,7 @@ class ServerProtocol(BaseProtocol):
         self.team_2.initialize()
         if self.game_mode == TC_MODE:
             self.reset_tc()
-        self.players = MultikeyDict()
+        self.players = {}
         if self.connections:
             data = ProgressiveMapGenerator(self.map, parent=True)
             for connection in list(self.connections.values()):
@@ -283,12 +279,14 @@ class ServerProtocol(BaseProtocol):
         if self.game_mode == CTF_MODE:
             if player is None:
                 player = list(self.players.values())[0]
+            intel_capture = loaders.IntelCapture()
             intel_capture.player_id = player.player_id
             intel_capture.winning = True
             self.send_contained(intel_capture, save=True)
         elif self.game_mode == TC_MODE:
             if territory is None:
                 territory = self.entities[0]
+            territory_capture = loaders.TerritoryCapture()
             territory_capture.object_index = territory.id
             territory_capture.winning = True
             territory_capture.state = territory.team.id
@@ -417,15 +415,15 @@ class ServerProtocol(BaseProtocol):
 
     def broadcast_chat_status(self, message, team=None):
         """
-        Send a warning message. This gets displayed
-        as a red popup with sound for OpenSpades
-        clients
+        Send a warning message. This gets displayed as a message in the status
+        area at the top of the screen, where events such as intel pickups are
+        also displayed.
         """
         self.send_chat(self, "C% " + str(message), team=team)
 
-
     def set_fog_color(self, color):
         self.fog_color = color
+        fog_color = loaders.FogColor()
         fog_color.color = make_color(*color)
         self.send_contained(fog_color, save=True)
 

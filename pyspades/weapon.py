@@ -5,7 +5,7 @@ from pyspades.constants import (RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON,
                                 HEAD, TORSO, ARMS, LEGS, CLIP_TOLERANCE)
 
 
-class BaseWeapon(object):
+class BaseWeapon:
     shoot = False
     reloading = False
     id = None  # type: int

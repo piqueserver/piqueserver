@@ -41,22 +41,32 @@ linetrace = os.environ.get('CYTHON_TRACE') == '1'
 
 # Compile the server with support for
 # AddressSanitizer/UndefinedBehaviourSanitizer
-# TODO: clean up compile options code and actually make this compile with asan
 USE_ASAN = os.environ.get('USE_ASAN') == '1'
 USE_UBSAN = os.environ.get('USE_UBSAN') == '1'
 
 ext_modules = []
 
 for name in ext_names:
+    extra = {
+        "define_macros": [],
+        "extra_link_args": [],
+        "extra_compile_args": [],
+    }  # type: dict
+
     if static:
-        extra = {'extra_link_args': ['-static-libstdc++', '-static-libgcc']}
-    else:
-        extra = {}
+        extra['extra_link_args'].extend(
+            ['-static-libstdc++', '-static-libgcc'])
+
+    if USE_ASAN:
+        extra["extra_link_args"].append("-lasan")
+        extra["extra_compile_args"].append("-fsanitize=address")
+
+    if USE_UBSAN:
+        extra["extra_link_args"].append("-lubsan")
+        extra["extra_compile_args"].append("-fsanitize=undefined")
 
     if name in ['pyspades.vxl', 'pyspades.world', 'pyspades.mapmaker']:
-        extra["extra_compile_args"] = ['-std=c++11']
-
-    extra['define_macros'] = []
+        extra["extra_compile_args"].append('-std=c++11')
 
     if linetrace:
         extra['define_macros'].append(('CYTHON_TRACE', '1'))
@@ -126,21 +136,17 @@ setup(
     install_requires=[
         'pypiwin32;platform_system=="Windows"',
         'Cython>=0.27,<1',
-        'Twisted[tls]>=17,<19',
-        'Jinja2>=2,<3',  # status server is part of our 'vanilla' package
-        'pypng==0.0.19',
-        'aiohttp>=3.3.0,<3.6.0',
+        'Twisted[tls]',
+        'Jinja2>=2,<3',
+        'Pillow>=5.1.0,<7',
+        'aiohttp>=3.3.0,<3.7.0',
         'pyenet',
         'toml',
         'packaging>=19.0'
     ],
     extras_require={
         'from': ['geoip2>=2.9,<3.0'],
-        # 'statusserver': ['Jinja2>=2.8,<2.9', 'pypng==0.0.19'],
-        'ssh': [
-            'cryptography>=2.1.4,<2.2',
-            'pyasn1>=0.4.2,<0.5'
-        ]
+        'ssh': ['Twisted[tls,conch]'],
     },
     entry_points={
         'console_scripts': [

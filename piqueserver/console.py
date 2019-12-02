@@ -32,7 +32,7 @@ if sys.platform == 'win32':
     # StandardIO on Windows does not work, so we create a silly replacement
     import msvcrt  # pylint: disable=import-error
 
-    class StandardIO(object):
+    class StandardIO:
         disconnecting = False
         interval = 0.01
         input = ''

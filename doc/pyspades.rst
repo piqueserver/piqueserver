@@ -60,14 +60,6 @@ pyspades\.contained module
     :undoc-members:
     :show-inheritance:
 
-pyspades\.debug module
-----------------------
-
-.. automodule:: pyspades.debug
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 pyspades\.entities module
 -------------------------
 

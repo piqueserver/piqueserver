@@ -31,7 +31,8 @@ Options
 
 from twisted.internet.reactor import seconds
 from piqueserver.scheduler import Scheduler
-from piqueserver.commands import command, admin, get_player, join_arguments, CommandError
+from piqueserver.commands import (command, admin, get_player, join_arguments,
+                                  CommandError, player_only)
 from piqueserver.config import config, cast_duration
 
 REQUIRE_REASON = True
@@ -78,14 +79,13 @@ class VotekickFailure(Exception):
 
 
 @command('votekick')
+@player_only
 def start_votekick(connection, *args):
     """
     Starts an votekick against a player
     /votekick <player name or id> <reason>
     """
     protocol = connection.protocol
-    if connection not in protocol.players:
-        raise KeyError()
     player = connection
 
     if not protocol.votekick_enabled:
@@ -98,7 +98,7 @@ def start_votekick(connection, *args):
             # player requested votekick info
             protocol.votekick.send_chat_update(player)
             return
-        raise ValueError()
+        raise ValueError("Target player is required")
 
     value = args[0]
     victim = get_player(protocol, value)
@@ -122,7 +122,7 @@ def cancel_votekick(connection):
     votekick = protocol.votekick
     if not votekick:
         return S_NO_VOTEKICK
-    if connection in protocol.players:
+    if connection in protocol.players.values():
         player = connection
         if (player is not votekick.instigator and not player.admin and
                 not player.rights.cancel):
@@ -132,17 +132,15 @@ def cancel_votekick(connection):
 
 
 @command('y')
+@player_only
 def vote_yes(connection):
     """
     Vote yes on an ongoing vote
     /y
     """
-    protocol = connection.protocol
-    if connection not in protocol.players:
-        raise KeyError()
     player = connection
 
-    votekick = protocol.votekick
+    votekick = connection.protocol.votekick
     if not votekick:
         return S_NO_VOTEKICK
 
@@ -169,7 +167,7 @@ def togglevotekick(connection, *args):
         'enabled' if player.votekick_enabled else 'disabled'))
 
 
-class Votekick(object):
+class Votekick:
     timeout = 120.0  # 2 minutes
     interval = 120.0  # 2 minutes
     ban_duration = BAN_DURATION_OPTION.get()

@@ -37,7 +37,7 @@ MAXMIND_DOWNLOAD_MD5 = MAXMIND_DOWNLOAD + '.md5'
 
 # (major, minor) versions of python we are supporting
 # used on startup to emit a warning if not running on a supported version
-SUPPORTED_PYTHONS = ((3, 5), (3, 6), (3, 7))
+SUPPORTED_PYTHONS = ((3, 5), (3, 6), (3, 7), (3, 8))
 
 
 class ConfigStore():
@@ -177,6 +177,7 @@ class ConfigStore():
         '''
         Register and return a new option object.
         '''
+        # TODO: how to handle same option defined twice?
         option = _Option(self, name, default, cast, validate)
         self._options[name] = option
         return option
@@ -185,6 +186,9 @@ class ConfigStore():
         '''
         Register and return a new section object.
         '''
+        if name in self._sections:
+            return self._sections[name]
+
         section = _Section(self, name)
         self._sections[name] = section
         return section

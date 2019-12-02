@@ -17,6 +17,7 @@
 
 import sys
 from os import path
+
 try:
     from twisted.cred import portal, checkers
     from twisted.conch import manhole, manhole_ssh
@@ -63,7 +64,7 @@ def create_remote_factory(namespace, users):
 
 
 ssh_config = config.section("ssh")
-class RemoteConsole(object):
+class RemoteConsole:
 
     def __init__(self, server):
         users = ssh_config.option("users", {})

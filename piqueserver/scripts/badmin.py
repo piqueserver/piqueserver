@@ -1,5 +1,5 @@
 """
-Badmin is an bot admin. 
+Badmin is an bot admin.
 
 It automates common admin tasks such as:
 
@@ -98,10 +98,10 @@ def investigate(connection, player):
 
 def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green (1)
     print("start score grief")
-    color = connection not in connection.protocol.players and connection.colors
+    color = connection not in connection.protocol.players.values() and connection.colors
     minutes = float(time or 2)
     if minutes < 0.0:
-        raise ValueError()
+        raise ValueError("Minutes cannot be < 0")
     time = reactor.seconds() - minutes * 60.0
     blocks_removed = player.blocks_removed or []
     blocks = [b[1] for b in blocks_removed if b[0] >= time]

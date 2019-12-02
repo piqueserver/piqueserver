@@ -3,7 +3,8 @@ import re
 from twisted.internet import reactor
 from piqueserver.config import cast_duration
 from pyspades.common import prettify_timespan
-from piqueserver.commands import command, CommandError, get_player, get_team, get_truthy
+from piqueserver.commands import (
+    command, CommandError, get_player, get_team, get_truthy, target_player)
 
 
 @command('time')
@@ -28,7 +29,7 @@ def reset_game(connection):
     """
     resetting_player = connection
     # irc compatibility
-    if resetting_player not in connection.protocol.players:
+    if resetting_player not in connection.protocol.players.values():
         for player in connection.protocol.players.values():
             resetting_player = player
             if player.admin:
@@ -70,33 +71,25 @@ def unlock(connection, value):
 
 
 @command(admin_only=True)
-def switch(connection, player=None, team=None):
+@target_player
+def switch(connection, player):
     """
     Switch teams either for yourself or for a given player
     /switch [player]
     """
     protocol = connection.protocol
-    if player is not None:
-        player = get_player(protocol, player)
-    elif connection in protocol.players:
-        player = connection
-    else:
-        raise ValueError()
     if player.team.spectator:
         player.send_chat(
             "The switch command can't be used on a spectating player.")
         return
-    if team is None:
-        new_team = player.team.other
-    else:
-        new_team = get_team(connection, team)
+    new_team = player.team.other
     if player.invisible:
         old_team = player.team
         player.team = new_team
         player.on_team_changed(old_team)
         player.spawn(player.world_object.position.get())
         player.send_chat('Switched to %s team' % player.team.name)
-        if connection is not player and connection in protocol.players:
+        if connection is not player and connection in protocol.players.values():
             connection.send_chat('Switched %s to %s team' % (player.name,
                                                              player.team.name))
         protocol.irc_say('* %s silently switched teams' % player.name)
@@ -246,22 +239,24 @@ def fog(connection, *args):
         hex_code = args[0][1:]
 
         if (len(hex_code) != 3) and (len(hex_code) != 6):
-            raise ValueError()
+            raise ValueError("Invalid hex code length")
 
-        if len(hex_code) == 3: # it's a short hex code, turn it into a full one
+        if len(hex_code) == 3:  # it's a short hex code, turn it into a full one
             hex_code = (hex_code[0]*2) + (hex_code[1]*2) + (hex_code[2]*2)
 
         valid_characters = re.compile('[a-fA-F0-9]')
         for char in hex_code:
-            if valid_characters.match(char) == None:
-                raise ValueError()
+            if valid_characters.match(char) is None:
+                raise ValueError("Invalid hex code characters")
 
         r = int(hex_code[0:2], base=16)
         g = int(hex_code[2:4], base=16)
         b = int(hex_code[4:6], base=16)
     else:
-        raise ValueError()
+        raise ValueError("Neither RGB or hex code provided")
 
+    old_fog_color = connection.protocol.fog_color
     connection.protocol.set_fog_color((r, g, b))
-    # TODO: Warn when the fog was set to the same color as before
+    if old_fog_color == (r, g, b):
+        return 'Fog color changed successfully\nWarning: fog color set to same color as before'
     return 'Fog color changed successfully'

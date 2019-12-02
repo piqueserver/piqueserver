@@ -19,54 +19,47 @@
 """
 pyspades - default/featured server
 """
-import sys
-import os
-import imp
-import importlib
-import json
+import asyncio
 import itertools
+import json
+import os
 import random
+import sys
 import time
 from collections import deque
+from ipaddress import AddressValueError, IPv4Address, ip_address, ip_network
 from pprint import pprint
-from ipaddress import ip_network, ip_address, IPv4Address, AddressValueError
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
-from twisted.internet import reactor, threads
-from twisted.internet.defer import inlineCallbacks, Deferred, ensureDeferred
-from twisted.internet.task import coiterate, LoopingCall, deferLater
-from twisted.python.logfile import DailyLogFile
-from twisted.logger import Logger, textFileLogObserver
-from twisted.logger import FilteringLogObserver, LogLevelFilterPredicate, LogLevel
-from twisted.logger import globalLogBeginner
-from twisted.internet.tcp import Port
-import asyncio
 import aiohttp
-from piqueserver.utils import as_deferred
-from piqueserver.release import check_for_releases, format_release
 from enet import Address, Packet, Peer
-
-
-import pyspades.debug
-from pyspades.server import (ServerProtocol, Team)
-from pyspades.constants import (CTF_MODE, TC_MODE, ERROR_SHUTDOWN)
-from pyspades.master import MAX_SERVER_NAME_SIZE
-from pyspades.tools import make_server_identifier
-from pyspades.bytes import NoDataLeft
-from pyspades.vxl import VXLData
-
-from piqueserver.scheduler import Scheduler
-from piqueserver import commands
-from piqueserver.map import Map, MapNotFound, check_rotation, RotationInfo
-from piqueserver.console import create_console
-from piqueserver.networkdict import NetworkDict
-from piqueserver.player import FeatureConnection
-from piqueserver.config import config, cast_duration
-from piqueserver import extensions
+from twisted.internet import reactor, threads
+from twisted.internet.defer import Deferred, ensureDeferred, inlineCallbacks
+from twisted.internet.task import LoopingCall, coiterate, deferLater
+from twisted.internet.tcp import Port
+from twisted.logger import (FilteringLogObserver, Logger, LogLevel,
+                            LogLevelFilterPredicate, globalLogBeginner,
+                            textFileLogObserver)
+from twisted.python.logfile import DailyLogFile
 
 # won't be used; just need to be executed
 import piqueserver.core_commands  # pylint: disable=unused-import
-
+from piqueserver import commands, extensions
+from piqueserver.config import cast_duration, config
+from piqueserver.console import create_console
+from piqueserver.map import Map, MapNotFound, RotationInfo, check_rotation
+from piqueserver.networkdict import NetworkDict
+from piqueserver.player import FeatureConnection
+from piqueserver.release import check_for_releases, format_release
+from piqueserver.scheduler import Scheduler
+from piqueserver.utils import as_deferred
+from piqueserver.bansubscribe import bans_config_urls
+from pyspades.bytes import NoDataLeft
+from pyspades.constants import CTF_MODE, ERROR_SHUTDOWN, TC_MODE
+from pyspades.master import MAX_SERVER_NAME_SIZE
+from pyspades.server import ServerProtocol, Team
+from pyspades.tools import make_server_identifier
+from pyspades.vxl import VXLData
 
 log = Logger()
 
@@ -112,6 +105,8 @@ cap_limit = config.option('cap_limit', default=10,
                           validate=lambda x: isinstance(x, (int, float)))
 advance_on_win = config.option('advance_on_win', default=False,
                                validate=lambda x: isinstance(x, bool))
+everyone_is_admin = config.option('everyone_is_admin', default=False,
+                               validate=lambda x: isinstance(x, bool))
 team1_name = team1_config.option(
     'name', default='Blue', validate=validate_team_name)
 team2_name = team2_config.option(
@@ -144,6 +139,7 @@ login_retries = config.option('login_retries', 1)
 default_ban_duration = bans_config.option(
     'default_duration', default="1day", cast=cast_duration)
 speedhack_detect = config.option('speedhack_detect', True)
+rubberband_distance = config.option('rubberband_distance', default=10)
 user_blocks_only = config.option('user_blocks_only', False)
 debug_log_enabled = logging_config.option('debug_log', False)
 logging_profile_option = logging_config.option('profile', False)
@@ -201,7 +197,7 @@ class FeatureTeam(Team):
         return Team.get_entity_location(self, entity_id)
 
 
-class EndCall(object):
+class EndCall:
     _active = True
 
     def __init__(self, protocol, delay: int, func: Callable, *arg, **kw) -> None:
@@ -325,9 +321,9 @@ class FeatureProtocol(ServerProtocol):
             log.debug("skip loading bans: file unavailable",
                       count=len(self.bans))
         except IOError as e:
-            log.error('Could not read bans.txt: {}'.format(e))
+            log.error('Could not read bans file ({}): {}'.format(bans_file.get(), e))
         except ValueError as e:
-            log.error('Could not parse bans.txt: {}'.format(e))
+            log.error('Could not parse bans file ({}): {}'.format(bans_file.get(), e))
 
         self.hard_bans = set()  # possible DDoS'ers are added here
         self.player_memory = deque(maxlen=100)
@@ -376,6 +372,7 @@ class FeatureProtocol(ServerProtocol):
         self.default_ban_time = default_ban_duration.get()
 
         self.speedhack_detect = speedhack_detect.get()
+        self.rubberband_distance = rubberband_distance.get()
         if user_blocks_only.get():
             self.user_blocks = set()
         self.set_god_build = set_god_build.get()
@@ -398,7 +395,7 @@ class FeatureProtocol(ServerProtocol):
         if ban_publish.get():
             from piqueserver.banpublish import PublishServer
             self.ban_publish = PublishServer(self, ban_publish_port.get())
-        if bans_urls.get():
+        if bans_config_urls.get():
             from piqueserver import bansubscribe
             self.ban_manager = bansubscribe.BanManager(self)
         self.start_time = time.time()
@@ -409,6 +406,9 @@ class FeatureProtocol(ServerProtocol):
         for user_type, func_names in rights.get().items():
             for func_name in func_names:
                 commands.add_rights(user_type, func_name)
+
+        if everyone_is_admin.get():
+            self.everyone_is_admin = True
 
         self.port = port_option.get()
         ServerProtocol.__init__(self, self.port, interface)
@@ -639,10 +639,7 @@ class FeatureProtocol(ServerProtocol):
     def format_lines(self, value: List[str]) -> List[str]:
         if value is None:
             return
-        lines = []
-        for line in value:
-            lines.append(self.format(line))
-        return lines
+        return [self.format(line) for line in value]
 
     def got_master_connection(self, client):
         log.info('Master connection established.')
@@ -772,7 +769,7 @@ class FeatureProtocol(ServerProtocol):
         return result
 
     def save_bans(self):
-        ban_file = os.path.join(config.config_dir, 'bans.txt')
+        ban_file = os.path.join(config.config_dir, bans_file.get())
         ensure_dir_exists(ban_file)
 
         start_time = reactor.seconds()

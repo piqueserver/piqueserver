@@ -17,7 +17,8 @@ from pyspades.contained import GrenadePacket
 from pyspades.common import to_coordinates, Vertex3
 from pyspades.world import Grenade
 from pyspades.constants import UPDATE_FREQUENCY, WEAPON_TOOL
-from piqueserver.commands import command, admin, get_player
+from piqueserver.commands import (
+    command, admin, get_player, player_only, target_player)
 
 STREAK_REQUIREMENT = 8
 
@@ -44,9 +45,8 @@ ARRIVAL_DELAY = 2  # seconds from airstrike notice to arrival
 
 
 @command('airstrike', 'a')
+@player_only
 def airstrike(connection, *args):
-    if connection not in connection.protocol.players:
-        raise ValueError()
     player = connection
 
     if player.airstrike:
@@ -60,14 +60,8 @@ def airstrike(connection, *args):
 
 
 @command('givestrike', admin_only=True)
-def give_strike(connection, player=None):
-    protocol = connection.protocol
-    if player is not None:
-        player = get_player(protocol, player)
-    elif connection in protocol.players:
-        player = connection
-    else:
-        raise ValueError()
+@target_player
+def give_strike(connection, player):
     player.airstrike = True
     player.send_chat(S_READY)
 
@@ -76,7 +70,7 @@ def bellrand(a, b):
     return (uniform(a, b) + uniform(a, b) + uniform(a, b)) / 3.0
 
 
-class Nag(object):
+class Nag:
     call = None
 
     def __init__(self, secs, f, *args, **kw):

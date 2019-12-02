@@ -1,44 +1,38 @@
-from piqueserver.commands import command, _commands, has_permission, get_player, get_command_help
+from piqueserver.commands import (
+    command, _commands, has_permission, get_player, get_command_help, player_only, target_player)
 
 
 @command()
+@player_only
 def streak(connection):
     """
     Tell your current kill streak
     /streak
     """
-    if connection not in connection.protocol.players:
-        raise KeyError()
     return ('Your current kill streak is %s. Best is %s kills' %
             (connection.streak, connection.best_streak))
 
 
 @command()
-def ping(connection, value=None):
+@target_player
+def ping(connection, player):
     """
     Tell your current ping (time for your actions to be received by the server)
     /ping
     """
-    if value is None:
-        if connection not in connection.protocol.players:
-            raise ValueError()
-        player = connection
-    else:
-        player = get_player(connection.protocol, value)
     ping = player.latency
-    if value is None:
-        return 'Your ping is %s ms. Lower ping is better!' % ping
-    return "%s's ping is %s ms" % (player.name, ping)
+    if connection is player:
+        return 'Your ping is {} ms. Lower ping is better!'.format(player.latency)
+    return "{}'s ping is {} ms".format(player.name, player.latency)
 
 
 @command()
+@player_only
 def rules(connection):
     """
     Show you the server rules
     /rules
     """
-    if connection not in connection.protocol.players:
-        raise KeyError()
     lines = connection.protocol.rules
     if lines is None:
         return

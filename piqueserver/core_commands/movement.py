@@ -1,17 +1,15 @@
 from pyspades.common import (coordinates, to_coordinates)
-from piqueserver.commands import command, CommandError, get_player
+from piqueserver.commands import (command, CommandError, get_player,
+                                  PermissionDenied, player_only, target_player)
 
 
 @command(admin_only=True)
-def unstick(connection, player=None):
+@target_player
+def unstick(connection, player):
     """
     Unstick yourself or another player and inform everyone on the server of it
     /unstick [player]
     """
-    if player is not None:
-        player = get_player(connection.protocol, player)
-    else:
-        player = connection
     connection.protocol.send_chat("%s unstuck %s" %
                                   (connection.name, player.name), irc=True)
     player.set_location_safe(player.get_location())
@@ -25,11 +23,14 @@ def move_silent(connection, *args):
     If the z coordinate makes the player appear underground, put them at ground level instead.
     If the x/y/z coordinate makes the player appear outside of the world bounds,
     take the bound instead
+
+    You can only move other players if you are admin or have the move_others right
     """
     do_move(connection, args, True)
 
 
 @command(admin_only=True)
+@player_only
 def move(connection, *args):
     """
     Move yourself or a given player to the specified x/y/z coordinates or sector
@@ -38,9 +39,9 @@ def move(connection, *args):
     If the z coordinate makes the player appear underground, put them at ground level instead.
     If the x/y/z coordinate makes the player appear outside of the world bounds,
     take the bound instead
+
+    You can only move other players if you are admin or have the move_others right
     """
-    if connection not in connection.protocol.players:
-        raise ValueError()
     do_move(connection, args)
 
 
@@ -62,18 +63,23 @@ def do_move(connection, args, silent=False):
     elif arg_count == 3 or arg_count == 4:
         x = min(max(0, int(args[initial_index])), 511)
         y = min(max(0, int(args[initial_index + 1])), 511)
-        z = min(max(0, int(args[initial_index + 2])), connection.protocol.map.get_height(x, y) - 2)
+        z = min(max(0, int(args[initial_index + 2])),
+                connection.protocol.map.get_height(x, y) - 2)
         position = '%d %d %d' % (x, y, z)
     else:
         raise ValueError('Wrong number of parameters!')
 
     # no player specified
     if arg_count == 1 or arg_count == 3:
-        if connection not in connection.protocol.players:
-            raise ValueError()
+        # must be run by a player in this case because moving self
+        if connection not in connection.protocol.players.values():
+            raise ValueError("Both player and target player are required")
         player = connection.name
     # player specified
     elif arg_count == 2 or arg_count == 4:
+        if not (connection.rights.admin or connection.rights.move_others):
+            raise PermissionDenied(
+                "moving other players requires the move_others right")
         player = args[0]
 
     player = get_player(connection.protocol, player)
@@ -96,18 +102,15 @@ def do_move(connection, args, silent=False):
 
 
 @command(admin_only=True)
-def where(connection, player=None):
+@target_player
+def where(connection, player):
     """
     Tell you the coordinates of yourself or of a given player
     /where [player]
     """
-    if player is not None:
-        connection = get_player(connection.protocol, player)
-    elif connection not in connection.protocol.players:
-        raise ValueError()
-    x, y, z = connection.get_location()
+    x, y, z = player.get_location()
     return '%s is in %s (%s, %s, %s)' % (
-        connection.name, to_coordinates(x, y), int(x), int(y), int(z))
+        player.name, to_coordinates(x, y), int(x), int(y), int(z))
 
 
 @command('teleport', 'tp', admin_only=True)
@@ -129,8 +132,8 @@ def teleport(connection, player1, player2=None, silent=False):
         else:
             return 'No administrator rights!'
     else:
-        if connection not in connection.protocol.players:
-            raise ValueError()
+        if connection not in connection.protocol.players.values():
+            raise ValueError("Both player and target player are required")
         player, target = connection, player1
         silent = silent or player.invisible
         message = '%s ' + \
@@ -154,23 +157,18 @@ def tpsilent(connection, player1, player2=None):
 
 
 @command(admin_only=True)
-def fly(connection, player=None):
+@target_player
+def fly(connection, player):
     """
     Enable flight
     /fly [player]
     Hold control and press space ;)
     """
     protocol = connection.protocol
-    if player is not None:
-        player = get_player(protocol, player)
-    elif connection in protocol.players:
-        player = connection
-    else:
-        raise ValueError()
     player.fly = not player.fly
 
     message = 'now flying' if player.fly else 'no longer flying'
     player.send_chat("You're %s" % message)
-    if connection is not player and connection in protocol.players:
+    if connection is not player and connection in protocol.players.values():
         connection.send_chat('%s is %s' % (player.name, message))
     protocol.irc_say('* %s is %s' % (player.name, message))

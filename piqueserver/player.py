@@ -12,6 +12,7 @@ from pyspades.constants import (ERROR_BANNED, DESTROY_BLOCK, SPADE_DESTROY,
 from pyspades.server import ServerConnection
 from pyspades.common import encode, escape_control_codes, prettify_timespan, Vertex3
 from pyspades.world import Character
+from pyspades.types import AttributeSet
 
 # TODO: move these where they belong
 from pyspades.team import Team
@@ -88,8 +89,8 @@ class FeatureConnection(ServerConnection):
         self.protocol.irc_say('* %s (IP %s, ID %s) entered the game!' %
                               (self.name, self.address[0], self.player_id))
         if self.user_types is None:
-            self.user_types = pyspades.types.AttributeSet()
-            self.rights = pyspades.types.AttributeSet()
+            self.user_types = AttributeSet()
+            self.rights = AttributeSet()
             if self.protocol.everyone_is_admin:
                 self.on_user_login('admin', False)
 
@@ -113,16 +114,10 @@ class FeatureConnection(ServerConnection):
 
     def on_command(self, command: str, parameters: List[str]) -> None:
         result = commands.handle_command(self, command, parameters)
-        # TODO: Move this logging into command module?
-        if result == False:
-            parameters = ['***'] * len(parameters)
-        log_message = '<{}> /{} {}'.format(self.name, command,
-                                           ' '.join(parameters))
+
         if result:
-            log_message += ' -> %s' % result
             for i in reversed(result.split("\n")):
                 self.send_chat(i)
-        log.info(escape_control_codes(log_message))
 
     def _can_build(self) -> bool:
         if not self.building:

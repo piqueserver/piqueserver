@@ -15,8 +15,8 @@ Set ALWAYS_RAPID to TRUE to automatically get rapid when you login.
 
 from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
-from pyspades.player import set_tool
-from piqueserver.commands import command, get_player
+from pyspades import contained as loaders
+from piqueserver.commands import command, get_player, target_player
 
 ALWAYS_RAPID = False
 RAPID_INTERVAL = 0.08
@@ -24,14 +24,9 @@ RAPID_BLOCK_DELAY = 0.26
 
 
 @command('rapid', admin_only=True)
-def toggle_rapid(connection, player=None):
+@target_player
+def toggle_rapid(connection, player):
     protocol = connection.protocol
-    if player is not None:
-        player = get_player(protocol, player)
-    elif connection in protocol.players:
-        player = connection
-    else:
-        raise ValueError()
 
     player.rapid = rapid = not player.rapid
     player.rapid_hack_detect = not rapid
@@ -44,12 +39,13 @@ def toggle_rapid(connection, player=None):
 
     message = 'now rapid' if rapid else 'no longer rapid'
     player.send_chat("You're %s" % message)
-    if connection is not player and connection in protocol.players:
+    if connection is not player and connection in protocol.players.values():
         connection.send_chat('%s is %s' % (player.name, message))
     protocol.irc_say('* %s is %s' % (player.name, message))
 
 
 def resend_tool(player):
+    set_tool = loaders.SetTool()
     set_tool.player_id = player.player_id
     set_tool.value = player.tool
     if player.weapon_object.shoot:

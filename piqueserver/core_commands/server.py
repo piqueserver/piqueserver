@@ -15,13 +15,15 @@ def server_name(connection, *arg):
     /servername <new-name>
     Also affects the master list
     """
+    if not arg:
+        raise ValueError("no argument given")
     name = join_arguments(arg)
     protocol = connection.protocol
     protocol.set_server_name(name)
     message = "%s changed servername to '%s'" % (connection.name, name)
     log.info(message)
     connection.protocol.irc_say("* " + message)
-    if connection in connection.protocol.players:
+    if connection in connection.protocol.players.values():
         return message
     return None
 
@@ -73,5 +75,5 @@ def toggle_master(connection):
     message = ("toggled master broadcast %s" % ['OFF', 'ON'][
         int(protocol.master)])
     protocol.irc_say("* %s " % connection.name + message)
-    if connection in connection.protocol.players:
+    if connection in connection.protocol.players.values():
         return "You " + message

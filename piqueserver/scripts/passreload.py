@@ -28,16 +28,13 @@ def reloadconfig(connection):
     except Exception as e:
         print('Error reloading config:', e)
         return 'Error reloading config. Check log for details.'
-    connection.protocol.reload_passes()
+    connection.protocol.reapply_config()
     return 'Config reloaded!'
 
 
 def apply_script(protocol, connection, config):
     class PassreloadProtocol(protocol):
-        def reload_passes(self):
-            for password in self.passwords.get('admin', []):
-                if not password:
-                    self.everyone_is_admin = True
+        def reapply_config(self):
             commands.update_rights(config.get('rights', {}))
 
     return PassreloadProtocol, connection

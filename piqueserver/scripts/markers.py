@@ -43,7 +43,7 @@ from pyspades.world import cube_line
 from pyspades.contained import BlockAction, BlockLine, SetColor, ChatMessage
 from pyspades.common import make_color, to_coordinates
 from pyspades.constants import *
-from piqueserver.commands import command, admin, get_player
+from piqueserver.commands import command, admin, get_player, player_only
 
 SHADOW_INTEL = True  # if True, shows where the intel used to be before taken
 REVEAL_ENEMIES = True  # if True, mimics old intel reveal behavior when captured
@@ -73,9 +73,8 @@ ENEMY_EXPIRE_DISTANCE_SQUARED = 18.0 ** 2
 
 
 @command(admin_only=True)
+@player_only
 def clear(connection):
-    if connection not in connection.protocol.players:
-        raise ValueError()
     connection.destroy_markers()
     return S_CLEARED
 
@@ -96,9 +95,8 @@ def toggle_markers(connection, player=None):
 
 
 @command()
+@player_only
 def markers(connection):
-    if connection not in connection.protocol.players:
-        raise ValueError()
     connection.send_lines(S_HELP)
 
 

@@ -23,14 +23,19 @@ import inspect
 import warnings
 from collections import namedtuple
 import textwrap
+import functools
 from typing import Dict, List, Callable
 
+from twisted.logger import Logger
+
+from pyspades.common import escape_control_codes
 from pyspades.player import parse_command
 
 _commands = {}
 _alias_map = {}
 _rights = {}  # type: Dict[str, List[str]]
 
+log = Logger()
 
 class CommandError(Exception):
     pass
@@ -246,9 +251,50 @@ def admin(func: Callable) -> Callable:
     """
     return restrict('admin')(func)
 
-# TODO: all of these utility functions should be seperated from the actual
-# implementation of the commands
 
+def player_only(func: Callable):
+    """This recorator restricts a command to only be runnable by players
+    connected to the server, not via other places such as, say, the console.
+
+    >>> @command()
+    ... @player_only
+    ... def some_command(x):
+    ...     pass
+    """
+    @functools.wraps(func)
+    def _decorated(connection, *args, **kwargs):
+        if connection not in connection.protocol.players.values():
+            raise CommandError("only players can't use this command")
+        func(connection, *args, **kwargs)
+    return _decorated
+
+def target_player(func: Callable):
+    """This decorator converts first argument of a command to a `piqueserver.FeatureConnection`.
+       It's intended for commands which accept single argument for target player eg. /fly [player].
+       It implicitly uses invoker as target if no arguments are provided.
+       It uses first argument are player name or id for targetting.
+       It forces non-player invokers to provide player argument.
+
+    >>> @command()
+    ... @target_player
+    ... def fly(connection, target):
+    ...     target.fly = True
+    ...     pass
+    """
+    @functools.wraps(func)
+    def _decorated(connection, *args, **kwargs):
+        is_player = connection in connection.protocol.players.values()
+        # implicitly set target to invoker if no args
+        if len(args) == 0 and is_player:
+            args = (connection,)
+        # try and use first arg as player name or id to target
+        elif len(args) > 0:
+            args = (get_player(connection.protocol, args[0]), *args[1:])
+        # console or irc invokers are required to provide a target
+        else:
+            raise ValueError("Target player is required")
+        return func(connection, *args, **kwargs)
+    return _decorated
 
 def get_player(protocol, value: str, spectators=True):
     """
@@ -347,6 +393,25 @@ def get_truthy(value):
 
 
 def handle_command(connection, command, parameters):
+    """
+    Public facing function to run a command, given the connection, a command
+    name, and a list of parameters.
+
+    Will log the command.
+    """
+    result = _handle_command(connection, command, parameters)
+
+    if result == False:
+        parameters = ['***'] * len(parameters)
+    log_message = '<{}> /{} {}'.format(connection.name, command,
+                                       ' '.join(parameters))
+    if result:
+        log_message += ' -> %s' % result
+    log.info(escape_control_codes(log_message))
+
+    return result
+
+def _handle_command(connection, command, parameters):
     command = command.lower()
     try:
         command_name = _alias_map.get(command, command)
@@ -376,16 +441,17 @@ def handle_command(connection, command, parameters):
     # make an attempt at displaying them nicely in format_command_error
     except KeyError:
         msg = None  # 'Invalid command'
+        traceback.print_exc()
     except TypeError:
         print('Command', command, 'failed with args:', parameters)
         traceback.print_exc()
         msg = 'Command failed'
     except CommandError as e:
         msg = str(e)
-    except PermissionDenied:
-        msg = 'You can\'t use this command'
-    except ValueError:
-        msg = 'Invalid parameters'
+    except PermissionDenied as e:
+        msg = 'You can\'t do that: {}'.format(str(e))
+    except ValueError as e:
+        msg = str(e) if e.args else "Invalid parameters"
 
     return format_command_error(command_func, msg)
 

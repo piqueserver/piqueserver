@@ -12,7 +12,7 @@ An Ace of Spades 0.75 server based on
    link <https://riot.im/app/#/room/#piqueserver:matrix.org>`__)
 -  Discord: Join with `this invite link <https://discord.gg/w6Te7xC>`__
 -  Slack: Join with `this invite link <https://join.slack.com/t/piqueserver/shared_invite/enQtMjg5MDI3MTkwNTgxLTNhMDkyNDRkNzhiNmQyYjRkOTdjNGNkYzNhNTQ4NzZkY2JhZjQxYzIyMTQ0Y2JlYTI2ZGFjMTFmNjAwZTM2OGU>`__
--  (disabled due to spam) IRC`: ``#piqueserver`` on freenode.net
+-  IRC: (disabled due to spam) ``#piqueserver`` on freenode.net
    (`web <http://webchat.freenode.net/?channels=%23piqueserver>`__)
 
 All of these are `bridged <https://matrix.org/docs/guides/faq.html#what-is-matrix>`__ together!
@@ -62,11 +62,16 @@ pip (stable version)
 
     pip3 install piqueserver
 
-to install with the optional ssh server
+Optional features:
+
+- `ssh`: enable ssh manhole server support
+- `from`: enable the `from` command to geolocate players by ip
+
+To install with optional features with pip:
 
 .. code:: bash
 
-    pip3 install piqueserver[ssh]
+    pip3 install piqueserver[ssh,from]
 
 git (bleeding edge)
 ~~~~~~~~~~~~~~~~~~~
@@ -77,20 +82,24 @@ git (bleeding edge)
     cd piqueserver
     python3 -m venv venv
     source venv/bin/activate
+
+    # note: requirements.txt includes all optional deps too
     pip install -r requirements.txt
+
     python setup.py install
+
     # now `piqueserver` will be available on the $PATH when venv active
 
-Archlinux
+Arch Linux
 ~~~~~~~~~
 
-An `AUR package <https://aur.archlinux.org/packages/piqueserver-git/>`__
-(git master) is available. Install manually or with your favourite AUR
-helper:
+The `AUR package <https://aur.archlinux.org/packages/piqueserver-git/>`__
+(git master) is currently broken. When it gets repaired (you can help!),
+you'll be able to install manually or with your favourite AUR helper:
 
 .. code:: bash
 
-    pacaur -y piqueserver-git
+    pacaur -S piqueserver-git
 
 \:rocket: Running
 -----------------
@@ -152,8 +161,8 @@ Is that everything?
 ~~~~~~~~~~~~~~~~~~~
 
 Please see also the
-`Wiki <https://github.com/piqueserver/piqueserver/wiki>`__ for more
-information.
+`Online Documentation <https://piqueserver.readthedocs.io/en/latest/>`__ for more
+information (readthedocs.io has replaced our wiki).
 
 \:blush: Contribute
 -------------------

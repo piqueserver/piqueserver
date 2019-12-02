@@ -1,62 +1,40 @@
-import math
 import collections
+import math
 import random
-import shlex
-from itertools import product
-import textwrap
 import re
+import shlex
+import textwrap
+from itertools import product
+from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
+import enet
 from twisted.internet import reactor
 from twisted.logger import Logger
-import enet
-from typing import Any, Optional, Sequence, Tuple, Union
 
-from pyspades.protocol import BaseConnection
-from pyspades.constants import (
-    RAPID_WINDOW_ENTRIES, ERROR_FULL, ERROR_WRONG_VERSION,
-    ERROR_TOO_MANY_CONNECTIONS, FALL_KILL, CTF_MODE, TC_MODE,
-    MAX_POSITION_RATE, TC_CAPTURE_DISTANCE, WEAPON_TOOL, SPADE_TOOL,
-    BLOCK_TOOL, MELEE, HIT_TOLERANCE, MELEE_DISTANCE, MELEE_KILL, HEAD,
-    HEADSHOT_KILL, WEAPON_KILL, MAX_BLOCK_DISTANCE)
-from pyspades.team import Team
-from pyspades.constants import *
-from pyspades.packet import call_packet_handler, register_packet_handler
 from pyspades import contained as loaders
-from pyspades.collision import vector_collision, collision_3d
 from pyspades import world
+from pyspades.collision import collision_3d, vector_collision
 from pyspades.common import Vertex3, get_color, make_color
-from pyspades.weapon import WEAPONS
+from pyspades.constants import *
+from pyspades.constants import (BLOCK_TOOL, CTF_MODE, ERROR_FULL,
+                                ERROR_TOO_MANY_CONNECTIONS,
+                                ERROR_WRONG_VERSION, FALL_KILL, HEAD,
+                                HEADSHOT_KILL, HIT_TOLERANCE,
+                                MAX_BLOCK_DISTANCE, MAX_POSITION_RATE, MELEE,
+                                MELEE_DISTANCE, MELEE_KILL,
+                                RAPID_WINDOW_ENTRIES, SPADE_TOOL,
+                                TC_CAPTURE_DISTANCE, TC_MODE, WEAPON_KILL,
+                                WEAPON_TOOL)
 from pyspades.mapgenerator import ProgressiveMapGenerator
-from piqueserver.config import config
+from pyspades.packet import call_packet_handler, register_packet_handler
+from pyspades.protocol import BaseConnection
+from pyspades.team import Team
+from pyspades.weapon import WEAPONS
 
 log = Logger()
-# distance the server tolerates between the place it thinks the client is to where the client actually is.
-rubberband_distance = config.option('rubberband_distance', default=10)
 
 
-set_tool = loaders.SetTool()
-block_action = loaders.BlockAction()
-position_data = loaders.PositionData()
-restock = loaders.Restock()
-create_player = loaders.CreatePlayer()
-intel_pickup = loaders.IntelPickup()
-intel_capture = loaders.IntelCapture()
-intel_drop = loaders.IntelDrop()
-player_left = loaders.PlayerLeft()
-set_hp = loaders.SetHP()
-existing_player = loaders.ExistingPlayer()
-kill_action = loaders.KillAction()
-chat_message = loaders.ChatMessage()
-map_data = loaders.MapChunk()
-map_start = loaders.MapStart()
-state_data = loaders.StateData()
-ctf_data = loaders.CTFState()
 tc_data = loaders.TCState()
-change_weapon = loaders.ChangeWeapon()
-weapon_reload = loaders.WeaponReload()
-handshake_init = loaders.HandShakeInit()
-version_request = loaders.VersionRequest()
-
 
 def check_nan(*values) -> bool:
     for value in values:
@@ -78,7 +56,7 @@ def parse_command(value: str) -> Tuple[str, Sequence[str]]:
     return command, splitted
 
 
-class SlidingWindow(object):
+class SlidingWindow:
     def __init__(self, entries: Any) -> None:
         self.entries = entries
         self.window = collections.deque()  # type: Deque
@@ -120,6 +98,7 @@ class ServerConnection(BaseConnection):
     freeze_animation = False
     filter_weapon_input = False
     speedhack_detect = False
+    rubberband_distance = 10
     rapid_hack_detect = False
     timers = None
     world_object = None  # type: world.Character
@@ -137,6 +116,7 @@ class ServerConnection(BaseConnection):
         self.respawn_time = protocol.respawn_time
         self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
         self.client_info = {}
+        self.proto_extensions = {}  # type: Dict[int, int]
         self.line_build_start_pos = None
 
     def on_connect(self) -> None:
@@ -172,6 +152,13 @@ class ServerConnection(BaseConnection):
             return
         call_packet_handler(self, loader)
 
+    @register_packet_handler(loaders.ProtocolExtensionInfo)
+    def on_ext_info_received(self, contained: loaders.ProtocolExtensionInfo) -> None:
+        self.proto_extensions = dict(contained.extensions)
+        log.debug("received extinfo {extinfo} from {player}",
+                  extinfo=self.proto_extensions,
+                  player=self)
+
     @register_packet_handler(loaders.ExistingPlayer)
     @register_packet_handler(loaders.ShortPlayerData)
     def on_new_player_recieved(self, contained: loaders.ExistingPlayer) -> None:
@@ -181,12 +168,12 @@ class ServerConnection(BaseConnection):
             # modes. Without this check, they could respawn themselves
             # instantly on any team they wanted.
             log.debug("{} tried sending an ExistingPlayer packet while not in"
-                      "limbo or spectator mode".format(self))
+                      " limbo or spectator mode".format(self))
             return
 
         old_team = self.team
         team = self.protocol.teams[contained.team]
-        log.debug("{user} wants to join {team} (id {teamid})",
+        log.debug("{user} wants to join {team}",
                   user=self, team=team, teamid=contained.team)
 
         ret = self.on_team_join(team)
@@ -199,14 +186,17 @@ class ServerConnection(BaseConnection):
         if self.name is None:
             name = contained.name
             self.name = self.protocol.get_name(name)
-            self.protocol.players[self.name, self.player_id] = self
+            self.protocol.players[self.player_id] = self
             self.on_login(self.name)
         else:
             self.on_team_changed(old_team)
         self.set_weapon(contained.weapon, True)
-        if self.protocol.speedhack_detect:
+        if self.protocol.speedhack_detect and not self.local:
             self.speedhack_detect = True
-        self.rapid_hack_detect = True
+        if self.protocol.rubberband_distance is not None:
+            self.rubberband_distance = self.protocol.rubberband_distance
+        if not self.local:
+            self.rapid_hack_detect = True
         if team.spectator:
             if self.world_object is not None:
                 self.world_object.delete()
@@ -215,6 +205,7 @@ class ServerConnection(BaseConnection):
         for player in self.protocol.players.values():
             if (player.player_id != self.player_id and player.world_object
                     and player.world_object.dead):
+                kill_action = loaders.KillAction()
                 kill_action.killer_id = player.player_id
                 kill_action.player_id = player.player_id
                 kill_action.kill_type = FALL_KILL
@@ -472,9 +463,10 @@ class ServerConnection(BaseConnection):
         self.on_tool_changed(self.tool)
         if self.filter_visibility_data or self.filter_animation_data:
             return
+        set_tool = loaders.SetTool()
         set_tool.player_id = self.player_id
         set_tool.value = contained.value
-        self.protocol.send_contained(set_tool, sender=self)
+        self.protocol.send_contained(set_tool, sender=self, save=True)
 
     @register_packet_handler(loaders.SetColor)
     def on_color_change_recieved(self, contained: loaders.SetColor) -> None:
@@ -558,6 +550,7 @@ class ServerConnection(BaseConnection):
                         self.total_blocks_removed += count
                         self.on_block_removed(*xyz)
             self.last_block_destroy = reactor.seconds()
+        block_action = loaders.BlockAction()
         block_action.x = x
         block_action.y = y
         block_action.z = z
@@ -607,6 +600,8 @@ class ServerConnection(BaseConnection):
 
         for point in points:
             x, y, z = point
+            if map_.get_solid(x, y, z):
+                continue
             if not map_.build_point(x, y, z, self.color):
                 break
 
@@ -674,6 +669,7 @@ class ServerConnection(BaseConnection):
 
     @register_packet_handler(loaders.HandShakeReturn)
     def on_handshake_recieved(self, contained: loaders.HandShakeReturn) -> None:
+        version_request = loaders.VersionRequest()
         self.protocol.send_contained(version_request)
 
     @register_packet_handler(loaders.VersionResponse)
@@ -695,12 +691,22 @@ class ServerConnection(BaseConnection):
         else:
             self.client_info["client"] = "Unknown({})".format(contained.client)
 
+        # send extension info to clients that support this packet.
+        # skip openspades <= 0.1.3 https://github.com/piqueserver/piqueserver/issues/504
+        if contained.client == 'o' and contained.version <= (0, 1, 3):
+            log.debug("not sending version request to OpenSpades <= 0.1.3")
+        else:
+            ext_info = loaders.ProtocolExtensionInfo()
+            ext_info.extensions = []
+            self.send_contained(ext_info)
+
     @property
     def client_string(self):
         client = self.client_info.get("client", "Unknown")
         os = self.client_info.get("os_info", "Unknown")
         version = self.client_info.get("version", None)
-        version_string = "Unknown" if version is None else ".".join(map(str, version))
+        version_string = "Unknown" if version is None else ".".join(
+            map(str, version))
         if client == os == version_string == "Unknown":
             client = "Probably Voxlap"
             os = "Windows"
@@ -711,7 +717,7 @@ class ServerConnection(BaseConnection):
         if not self.speedhack_detect:
             return True
         if distance is None:
-            distance = rubberband_distance.get()
+            distance = self.rubberband_distance
         position = self.world_object.position
         return (math.fabs(x - position.x) < distance and
                 math.fabs(y - position.y) < distance and
@@ -769,6 +775,7 @@ class ServerConnection(BaseConnection):
             x += 0.5
             y += 0.5
             z -= 0.5
+        position_data = loaders.PositionData()
         position_data.x = x
         position_data.y = y
         position_data.z = z
@@ -780,6 +787,7 @@ class ServerConnection(BaseConnection):
         self.blocks = 50
         self.weapon_object.restock()
         if not local:
+            restock = loaders.Restock()
             self.send_contained(restock)
 
     def respawn(self) -> None:
@@ -811,6 +819,7 @@ class ServerConnection(BaseConnection):
         if self.team is None:
             return
         spectator = self.team.spectator
+        create_player = loaders.CreatePlayer()
         if not spectator:
             if pos is None:
                 x, y, z = self.get_spawn_location()
@@ -846,6 +855,7 @@ class ServerConnection(BaseConnection):
             self.on_spawn((x, y, z))
 
         if not self.client_info:
+            handshake_init = loaders.HandShakeInit()
             self.send_contained(handshake_init)
 
     def take_flag(self):
@@ -857,6 +867,7 @@ class ServerConnection(BaseConnection):
         if self.on_flag_take() == False:
             return
         flag.player = self
+        intel_pickup = loaders.IntelPickup()
         intel_pickup.player_id = self.player_id
         self.protocol.send_contained(intel_pickup, save=True)
 
@@ -867,19 +878,19 @@ class ServerConnection(BaseConnection):
         if player is not self:
             return
         self.add_score(10)  # 10 points for intel
+        self.team.score += 1
+        self.on_flag_capture()
         if (self.protocol.max_score not in (0, None) and
-                self.team.score + 1 >= self.protocol.max_score):
-            self.on_flag_capture()
+                self.team.score >= self.protocol.max_score):
             self.protocol.reset_game(self)
             self.protocol.on_game_end()
         else:
+            intel_capture = loaders.IntelCapture()
             intel_capture.player_id = self.player_id
             intel_capture.winning = False
             self.protocol.send_contained(intel_capture, save=True)
-            self.team.score += 1
             flag = other_team.set_flag()
             flag.update()
-            self.on_flag_capture()
 
     def drop_flag(self) -> None:
         protocol = self.protocol
@@ -899,6 +910,7 @@ class ServerConnection(BaseConnection):
                 flag.set(x, y, z)
 
                 flag.player = None
+                intel_drop = loaders.IntelDrop()
                 intel_drop.player_id = self.player_id
                 intel_drop.x = flag.x
                 intel_drop.y = flag.y
@@ -914,10 +926,11 @@ class ServerConnection(BaseConnection):
     def on_disconnect(self) -> None:
         if self.name is not None:
             self.drop_flag()
+            player_left = loaders.PlayerLeft()
             player_left.player_id = self.player_id
             self.protocol.send_contained(player_left, sender=self,
                                          save=True)
-            del self.protocol.players[self]
+            del self.protocol.players[self.player_id]
         if self.player_id is not None:
             self.protocol.player_ids.put_back(self.player_id)
             self.protocol.update_master()
@@ -962,6 +975,7 @@ class ServerConnection(BaseConnection):
         if self.hp <= 0:
             self.kill(hit_by, kill_type, grenade)
             return
+        set_hp = loaders.SetHP()
         set_hp.hp = self.hp
         set_hp.not_fall = int(kill_type != FALL_KILL)
         if hit_indicator is None:
@@ -981,6 +995,7 @@ class ServerConnection(BaseConnection):
             self.weapon_object.reset()
         self.weapon_object = WEAPONS[weapon](self._on_reload)
         if not local:
+            change_weapon = loaders.ChangeWeapon()
             self.protocol.send_contained(change_weapon, save=True)
             if not no_kill:
                 self.kill(kill_type=CLASS_CHANGE_KILL)
@@ -1005,6 +1020,7 @@ class ServerConnection(BaseConnection):
         self.drop_flag()
         self.hp = None
         self.weapon_object.reset()
+        kill_action = loaders.KillAction()
         kill_action.kill_type = kill_type
         if by is None:
             kill_action.killer_id = kill_action.player_id = self.player_id
@@ -1025,6 +1041,7 @@ class ServerConnection(BaseConnection):
         self._send_connection_data()
         self.send_map(ProgressiveMapGenerator(self.protocol.map))
         if not self.client_info:
+            handshake_init = loaders.HandShakeInit()
             self.send_contained(handshake_init)
 
     def _send_connection_data(self) -> None:
@@ -1033,6 +1050,7 @@ class ServerConnection(BaseConnection):
             for player in self.protocol.players.values():
                 if player.name is None:
                     continue
+                existing_player = loaders.ExistingPlayer()
                 existing_player.name = player.name
                 existing_player.player_id = player.player_id
                 existing_player.tool = player.tool or 0
@@ -1049,6 +1067,7 @@ class ServerConnection(BaseConnection):
         blue = self.protocol.blue_team
         green = self.protocol.green_team
 
+        state_data = loaders.StateData()
         state_data.player_id = self.player_id
         state_data.fog_color = self.protocol.fog_color
         state_data.team1_color = blue.color
@@ -1063,6 +1082,7 @@ class ServerConnection(BaseConnection):
             blue_flag = blue.flag
             green_base = green.base
             green_flag = green.flag
+            ctf_data = loaders.CTFState()
             ctf_data.cap_limit = self.protocol.max_score
             ctf_data.team1_score = blue.score
             ctf_data.team2_score = green.score
@@ -1139,6 +1159,7 @@ class ServerConnection(BaseConnection):
             if count:
                 self.total_blocks_removed += count
                 self.on_block_removed(n_x, n_y, n_z)
+        block_action = loaders.BlockAction()
         block_action.x = x
         block_action.y = y
         block_action.z = z
@@ -1158,6 +1179,7 @@ class ServerConnection(BaseConnection):
         self.set_hp(self.hp - damage, kill_type=FALL_KILL)
 
     def _on_reload(self):
+        weapon_reload = loaders.WeaponReload()
         weapon_reload.player_id = self.player_id
         weapon_reload.clip_ammo = self.weapon_object.current_ammo
         weapon_reload.reserve_ammo = self.weapon_object.current_stock
@@ -1166,6 +1188,7 @@ class ServerConnection(BaseConnection):
     def send_map(self, data: Optional[ProgressiveMapGenerator] = None) -> None:
         if data is not None:
             self.map_data = data
+            map_start = loaders.MapStart()
             map_start.size = data.get_size()
             self.send_contained(map_start)
         elif self.map_data is None:
@@ -1183,6 +1206,7 @@ class ServerConnection(BaseConnection):
         for _ in range(10):
             if not self.map_data.data_left():
                 break
+            map_data = loaders.MapChunk()
             map_data.data = self.map_data.read(8192)
             self.send_contained(map_data)
 
@@ -1195,6 +1219,7 @@ class ServerConnection(BaseConnection):
     def send_chat(self, value: str, global_message: bool = False) -> None:
         if self.deaf:
             return
+        chat_message = loaders.ChatMessage()
         if not global_message:
             chat_message.chat_type = CHAT_SYSTEM
             prefix = ''

@@ -38,7 +38,7 @@ def kick_afk(connection, minutes, amount=None):
     protocol = connection.protocol
     minutes = int(minutes)
     if minutes < 1:
-        raise ValueError()
+        raise ValueError("Minutes cannot be < 1")
     to_kick = []
     seconds = minutes * 60.0
     minutes_s = prettify_timespan(seconds)
@@ -63,7 +63,7 @@ def kick_afk(connection, minutes, amount=None):
         num_connections=amount - kicks,
         time=minutes_s)
     protocol.irc_say('* ' + message)
-    if connection in protocol.players:
+    if connection in protocol.players.values():
         return message
 
 

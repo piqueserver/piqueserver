@@ -1,5 +1,3 @@
-# TODO: store config here about location of maps/scripts/game_modes/etc as well
-
 # server name - displayed on master server
 name = "piqueserver instance"
 
@@ -113,13 +111,11 @@ default_time_limit = "2hours"
 # advances the map rotation when the game ends, if set to true
 advance_on_win = true
 
-# time before player respawns
-# TODO: document how spawn time is calculated (it's not always the time given)
+# time between player respawn waves
 # (default: 8 seconds)
 respawn_time = "16sec"
 
-# if respawns should line up with each other (multiple players will respawn at
-# the same time instead of exactly the time from when they died
+# if respawns should happen in waves, or respawn_time seconds after the players death
 respawn_waves = true
 
 # whether friendly fire is allowed by default
@@ -173,12 +169,15 @@ time_announcements = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30, 60, 120, 180, 240, 300
 cap_limit = 10
 
 
+# Set this to true to automatically log all players in as admin on join.
+# Possibly useful for testing purposes.
+#everyone_is_admin = false
+
 [team1]
 # information about the team1
 # name of the team to be displayed in-game
 name = "Blue"
 # color of the players
-# TODO: make this support hex and named colors instead of rbg
 color = [ 0, 0, 255]
 
 [team2]
@@ -196,7 +195,7 @@ color = [ 0, 255, 0]
 # logging in as admin or trusted also disables being votekicked (if that script is enabled)
 # For security reasons, logins are disabled by default.
 #
-# admin = ["adminpass1", "adminpass2"]
+#admin = ["adminpass1", "adminpass2"]
 #moderator = ["modpass"]
 #guard = ["guardpass"]
 #trusted = ["trustedpass"]
@@ -206,17 +205,23 @@ color = [ 0, 255, 0]
 # default duration a banned player will be banned for
 default_duration = "1day"
 
-# location the bans are saved and loaded from
+# location the bans are saved and loaded from (relative to the config
+# directory)
 #file = "bans.txt"
 
 # Ban publish allows you to synchronize bans between servers. When enabled,
 # the server listens on the given port and respnds to any requests with a list
 # of bans
-publish = false
-publish_port = 32885
+#publish = false
+#publish_port = 32885
 
 # Bansubscribe allows you to inherit bans from another server with banpublish enabled.
-# urls = [ [ "http://www.blacklist.spadille.net/subscribe.json", []]]
+# `url` is the URL returning the json list, `whitelist` is a list of names which should
+# be exempt from the filter
+#bansubscribe = [
+#    { url = "http://www.blacklist.spadille.net/subscribe.json", whitelist = []},
+#]
+
 
 
 [rights]
@@ -244,8 +249,6 @@ guard = [
 # set log level
 # various log levels in decending order: debug, info, warn, error, critical
 loglevel = "info"
-# enable the debug logging
-debug_log = false
 
 # the logfile to log to if logging enabled
 # relative paths are resolved relative to the config directory; parent
@@ -347,7 +350,6 @@ ban_duration = "30min"
 public_votes = true
 
 
-# TODO: document
 # piqueserver.scripts.votemap
 [votemap]
 

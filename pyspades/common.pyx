@@ -33,13 +33,13 @@ EPSILON = 0.0000001
 
 def coordinates(data):
     if data is None:
-        raise ValueError()
+        raise ValueError("data is None")
     if len(data) != 2:
-        raise ValueError()
+        raise ValueError("invalid data length")
     x = (ord(data[0].lower()) - ord('a')) * 64
     y = (int(data[1]) - 1) * 64
     if x < 0 or x >= 512 or y < 0 or y >= 512:
-        raise ValueError()
+        raise ValueError("coordinates are out-of-bounds")
     return x, y
 
 def to_coordinates(x, y):
@@ -66,11 +66,6 @@ def prettify_timespan(total, get_seconds = False):
     if seconds > 1: seconds_s += 's'
     text = ', '.join([s for s in (days_s, hours_s, minutes_s, seconds_s) if s])
     return text
-
-def open_debugger(name, locals):
-    print('{}, opening debugger'.format(name))
-    import code
-    code.interact(local = locals)
 
 import zlib
 def crc32(data):

@@ -124,20 +124,27 @@ bans
 This section defines the behaviour when admins ban players::
 
     [bans]
-    # default duration in minutes a banned player will be banned for
-    default_duration = 1440
+    # default duration a banned player will be banned for
+    default_duration = "1day"
 
     # location the bans are saved and loaded from
     file = "bans.txt"
 
     # Ban publish allows you to synchronize bans between servers. When enabled,
-    # the server listens on the given port and respnds to any requests with a list
+    # the server listens on the given port and responds to any requests with a list
     # of bans
     publish = false
     publish_port = 32885
 
     # Bansubscribe allows you to inherit bans from another server with banpublish enabled.
-    urls = [ [ "http://www.blacklist.spadille.net/subscribe.json", []]]
+    # `url` is the URL returning the json list, `whitelist` is a list of names which should
+    # be exempt from the filter
+    bansubscribe = [
+        { url = "http://www.blacklist.spadille.net/subscribe.json", whitelist = []},
+    ]
+
+    # how often the subscribed servers are frequented to update bans
+    bansubscribe_interval = "5min"
 
 .. _respawn_waves:
 
@@ -293,8 +300,6 @@ Piqueserver can log events that happen to a text file::
     # Write a new log file each day
     rotate_daily = true
 
-    # enable the debug logging
-    debug_log = false
     # enable profiling
     profile = false
 
@@ -406,10 +411,10 @@ Note: this url must return solely the ip address in the response body.
 release_notifications
 +++++++++++++++++++++
 
-Check github for new releases and notify admins if so. Default True.
+Check github for new releases and notify admins if new releases are found. Default True.
 
-Optionally override the service used to fetch the server's public ip address.
-Eg. `"https://api.ipify.org"`. If this is set to an empty string,
-IP getting is disabled.
+everyone_is_admin
++++++++++++++++++
 
-Note: this url must return solely the ip address in the response body.
+Set `everyone_is_admin` to true to automatically log all players in as admin on
+join.  Possibly useful for testing purposes.
