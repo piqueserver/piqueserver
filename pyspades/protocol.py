@@ -82,7 +82,12 @@ class BaseProtocol:
             address = enet.Address(interface, port)
         else:
             address = None
-        self.host = enet.Host(address, self.max_connections, 1)
+        try:
+            self.host = enet.Host(address, self.max_connections, 1)
+        except MemoryError:
+            # pyenet raises memoryerror when the enet host could not be created
+            raise IOError("Failed  to Create Enet Host. Is the Port in use?")
+
         self.host.compress_with_range_coder()
         self.update_loop = LoopingCall(self.update)
         self.update_loop.start(update_interval, False)
