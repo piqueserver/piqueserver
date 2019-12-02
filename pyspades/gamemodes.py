@@ -5,7 +5,7 @@ from pyspades.collision import vector_collision, collision_3d
 from pyspades.constants import TC_CAPTURE_DISTANCE
 
 
-class BaseGamemode(metclass=abc.ABCMeta):
+class BaseGamemode(metaclass=abc.ABCMeta):
     """Base Game Mode. You should probably not inherit directly from this,
     unless you enjoy doing low-level protocol fumbling."""
 
