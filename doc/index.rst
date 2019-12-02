@@ -6,22 +6,15 @@
 Welcome to piqueserver's documentation!
 =======================================
 
+Piqueserver is an Ace of Spades 0.75 Server based on Pysnip.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   installation
-   configuration
-   included-scripts
-   command-line
-   docker
-   porting
+   admins
    contributing
-   architecture
-   piqueserver
-   pyspades
-   contributing-developer
-   release-guide
+   developers
    other
 
 Indices and tables
