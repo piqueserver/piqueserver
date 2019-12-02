@@ -13,3 +13,4 @@ Piqueserver.
    included-scripts
    command-line
    docker
+   systemd-install-setup
