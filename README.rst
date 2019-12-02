@@ -91,7 +91,7 @@ git (bleeding edge)
     # now `piqueserver` will be available on the $PATH when venv active
 
 Arch Linux
-~~~~~~~~~
+~~~~~~~~~~
 
 The `AUR package <https://aur.archlinux.org/packages/piqueserver-git/>`__
 (git master) is currently broken. When it gets repaired (you can help!),
