@@ -239,11 +239,17 @@ def main():
     # update config with cli overrides
     if args.json_parameters:
         config.update_from_dict(json.loads(args.json_parameters))
-    # We need to install the asyncio reactor before 
-    # we add any imports like `twisted.internet.*` which install the default reactor.
-    # We keep it here and not at package level to avoid installing the reactor more than once.
+    # We need to install the asyncio reactor before we add any imports like
+    # `twisted.internet.*` which install the default reactor.  We keep it here
+    # and not at package level to avoid installing the reactor more than once.
     # Twisted throws an exception if you install the reactor more than once.
     import asyncio
+
+    if sys.platform == 'win32' and sys.version >= (3, 7, 0):
+        # we (or twisted) do not support the ProactorEventLoop as it does not
+        # support adding file readers
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
     from twisted.internet import asyncioreactor
     asyncioreactor.install(asyncio.get_event_loop())
 
