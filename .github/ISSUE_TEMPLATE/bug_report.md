@@ -26,7 +26,8 @@ A description of what you expected to happen.
 
 **Server (please complete the following information):**
  - OS/Version: [e.g. Ubuntu 18.04]
- - Piqueserver Version: run `pip show piqueserver` to see the version. If installed via git, run `git describe` instead
+ - Piqueserver Version: run `piqueserver --version` to see the version.
+ - Installation Method: pip, git, etc.
 
 **Client (if relevant)**
  - Name: [e.g. OpenSpades, BetterSpades]
