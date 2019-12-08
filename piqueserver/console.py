@@ -44,22 +44,19 @@ if sys.platform == 'win32':
 
         def get_input(self):
             while msvcrt.kbhit():
-                c = msvcrt.getwch()
+                c = msvcrt.getwche()
                 if c == '\r':  # new line
                     c = '\n'
-                    stdout.write(c)
                     self.input += c
-                    self.protocol.dataReceived(self.input)
+                    self.protocol.dataReceived(self.input.encode())
                     self.input = ''
                 elif c in ('\xE0', '\x00'):
                     # ignore special characters
                     msvcrt.getwch()
                 elif c == '\x08':  # delete
                     self.input = self.input[:-1]
-                    stdout.write('\x08 \x08')
                 else:
                     self.input += c
-                    stdout.write(c)
             reactor.callLater(self.interval, self.get_input)
 
         def write(self, data):
