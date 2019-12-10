@@ -1,86 +1,47 @@
-piqueserver\.game\_modes package
-================================
+Included Game Modes
+===================
 
-Submodules
-----------
+This is an Overview over the game modes that currently ship with piqueserver
+
+Scripts
+-------
 
 piqueserver\.game\_modes\.arena module
 --------------------------------------
 
 .. automodule:: piqueserver.game_modes.arena
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 piqueserver\.game\_modes\.babel module
 --------------------------------------
 
 .. automodule:: piqueserver.game_modes.babel
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-piqueserver\.game\_modes\.babel\_script module
-----------------------------------------------
-
-.. automodule:: piqueserver.game_modes.babel_script
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 piqueserver\.game\_modes\.freeforall module
 -------------------------------------------
 
 .. automodule:: piqueserver.game_modes.freeforall
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 piqueserver\.game\_modes\.infiltration module
 ---------------------------------------------
 
 .. automodule:: piqueserver.game_modes.infiltration
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 piqueserver\.game\_modes\.onectf module
 ---------------------------------------
 
 .. automodule:: piqueserver.game_modes.onectf
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 piqueserver\.game\_modes\.push module
 -------------------------------------
 
 .. automodule:: piqueserver.game_modes.push
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 piqueserver\.game\_modes\.tdm module
 ------------------------------------
 
 .. automodule:: piqueserver.game_modes.tdm
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 piqueserver\.game\_modes\.tow module
 ------------------------------------
 
 .. automodule:: piqueserver.game_modes.tow
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: piqueserver.game_modes
-    :members:
-    :undoc-members:
-    :show-inheritance:
