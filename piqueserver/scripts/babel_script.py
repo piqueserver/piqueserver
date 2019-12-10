@@ -1,5 +1,4 @@
 """
-babel_script.py last modified 2014-04-04 13:55:07
 Original script by Yourself
 Anti grief by izzy
 Return intel dropped from platform bug fix by a_girl
@@ -9,13 +8,9 @@ http://www.buildandshoot.com/viewtopic.php?t=2586
 
 How to install and configure:
 
-1) Save babel_script.py to 'scripts' folder:
-http://aloha.pk/files/aos/pyspades/feature_server/scripts/babel_script.py
-2) Save babel.py to 'scripts' folder:
-http://aloha.pk/files/aos/pyspades/feature_server/scripts/babel.py
-3) Set game_mode to "babel" in config.txt
-4) Add "babel_script" to scripts list in config.txt
-5) Set cap_limit to "10" in config.txt
+3) Set game_mode to "piqueserver.game_mode.babel" in config.txt
+4) Add "piqueserver.scripts.babel_script" to scripts list in config.txt
+5) Set cap_limit to "10" in config
 """
 
 from random import randint

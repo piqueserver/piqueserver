@@ -7,7 +7,8 @@ attackers recieve points for capturing the intel.
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: toml
+
     [infiltration]
     # Attackers get attacker_score_multiplier points for taking and capturing
     # the intel.
@@ -28,7 +29,6 @@ from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
 from pyspades import contained as loaders
 from pyspades.constants import *
-from pyspades.player import create_player, player_left, intel_capture
 
 from piqueserver.config import config, cast_duration
 

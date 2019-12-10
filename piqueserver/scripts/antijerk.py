@@ -4,7 +4,7 @@ Kicks jerks for 'PRESS ALT-F4 FOR AIRSTRIKES' and so on.
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: toml
 
    [antijerk]
    ban_duration = "15min"

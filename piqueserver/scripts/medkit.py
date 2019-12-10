@@ -9,7 +9,7 @@ Commands
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: toml
 
    [medkit]
    medkits = 1 # no. of medkits

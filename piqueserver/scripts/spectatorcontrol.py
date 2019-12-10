@@ -24,7 +24,7 @@ Tocksman
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: toml
 
    [spectator_control]
    no_chat = false # determines whether spectators can chat or not in your server

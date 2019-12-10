@@ -16,7 +16,7 @@ Commands
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: toml
 
     [rollback]
     rollback_on_game_end = false

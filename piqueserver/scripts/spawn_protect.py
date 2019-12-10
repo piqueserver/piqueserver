@@ -4,7 +4,7 @@ Protects spawned players for a specified amount of seconds.
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: toml
 
    [spawn_protect]
    protection_time = "3sec"

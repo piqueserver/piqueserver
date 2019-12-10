@@ -1,39 +1,44 @@
-# READ THE INSTRUCTIONS BELOW BEFORE YOU ASK QUESTIONS
+"""
+Arena, A game of team survival. The last team
+standing scores a point.
 
-# Arena game mode written by Yourself A game of team survival. The last team
-# standing scores a point.
+A map that uses arena needs to be modified to have a starting area for each
+team. A starting area is enclosed and has a gate on it. Each block of a gate
+must have the EXACT same color to work properly. Between each rounds, the
+gate is rebuilt. The gates are destroyed simultaneously at the start of each
+round, releasing the players onto the map. Players are free to switch weapons
+between rounds.
 
-# A map that uses arena needs to be modified to have a starting area for each
-# team. A starting area is enclosed and has a gate on it. Each block of a gate
-# must have the EXACT same color to work properly. Between each rounds, the
-# gate is rebuilt. The gates are destroyed simultaneously at the start of each
-# round, releasing the players onto the map. Players are free to switch weapons
-# between rounds.
+Spawn locations and gate locations MUST be present in the map metadata (map
+txt file) for arena to work properly.
 
-# Spawn locations and gate locations MUST be present in the map metadata (map
-# txt file) for arena to work properly.
+The spawn location/s for the green team are set by using the data from the
+``arena_green_spawns`` tuple in the extensions dictionary. Likewise, the blue
+spawn/s is set with the ``arena_blue_spawns`` key. ``arena_green_spawns`` and
+``arena_blue_spawns`` are tuples which contain tuples of spawn coordinates.
+Spawn locations are chosen randomly.
 
-# The spawn location/s for the green team are set by using the data from the
-# 'arena_green_spawns' tuple in the extensions dictionary. Likewise, the blue
-# spawn/s is set with the 'arena_blue_spawns' key. 'arena_green_spawns' and
-# 'arena_blue_spawns' are tuples which contain tuples of spawn coordinates.
-# Spawn locations are chosen randomly.
+.. note::
 
-# NOTE THAT THE SCRIPT RETAINS BACKWARDS COMPATIBILITY with the old
-# 'arena_green_spawn' and 'arena_blue_spawn'
+    the script retains backwards compatibility With the old
+    ``arena_green_spawn`` and ``arena_blue_spawn``
 
-# The 'arena_max_spawn_distance' can be used to set MAX_SPAWN_DISTANCE on a map
-# by map basis. See the comment by MAX_SPAWN_DISTANCE for more information
+The ``arena_max_spawn_distance`` can be used to set ``MAX_SPAWN_DISTANCE`` on a
+map by map basis. See the comment by ``MAX_SPAWN_DISTANCE`` for more information
 
-# The locations of gates is also determined in the map metadata. 'arena_gates'
-# is a tuple of coordinates in the extension dictionary. Each gate needs only
-# one block to be specified (since each gate is made of a uniform color)
+The locations of gates is also determined in the map metadata. ``arena_gates``
+is a tuple of coordinates in the extension dictionary. Each gate needs only one
+block to be specified (since each gate is made of a uniform color)
 
-# Sample extensions dictionary of an arena map with two gates: In this example
-# there is one spawn location for blue and two spawn locations for green.
-# extensions = { 'arena': True, 'arena_blue_spawns' : ((128, 256, 60),),
-# 'arena_green_spawns' : ((384, 256, 60), (123, 423, 51)), 'arena_gates':
-# ((192, 236, 59), (320, 245, 60)) }
+Sample extensions dictionary of an arena map with two gates: In this example
+there is one spawn location for blue and two spawn locations for green::
+
+    extensions = { 'arena': True, 'arena_blue_spawns' : ((128, 256, 60),),
+    'arena_green_spawns' : ((384, 256, 60), (123, 423, 51)), 'arena_gates':
+    ((192, 236, 59), (320, 245, 60)) }
+
+.. codeauthor:: Yourself
+"""
 
 import random
 import math

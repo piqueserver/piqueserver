@@ -4,7 +4,7 @@ Changes the damage values depending on distance.
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: toml
 
    [rangedamange.rifle]
    pct_per_block = 0 # percentage per block?

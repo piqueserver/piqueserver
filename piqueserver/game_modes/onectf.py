@@ -1,3 +1,7 @@
+"""
+One CTF: CTF with a single intel, placed in the center.
+"""
+
 from pyspades.constants import *
 from pyspades.collision import vector_collision
 

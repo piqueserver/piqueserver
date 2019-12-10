@@ -1,3 +1,6 @@
+"""
+Free for All: shoot anyone
+"""
 # Free for all script written by Yourself
 
 from random import randint

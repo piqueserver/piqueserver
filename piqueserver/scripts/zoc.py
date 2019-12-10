@@ -5,7 +5,7 @@ over nearby area, restricting player ability to destroy.
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: toml
 
    [zoc]
    radius = 32

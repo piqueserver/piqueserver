@@ -12,7 +12,7 @@ Commands
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: toml
 
    [blockinfo]
    griefcheck_on_votekick = true

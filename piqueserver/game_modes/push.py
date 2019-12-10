@@ -1,16 +1,20 @@
 """
-push.py last modified 2019-03-06
-Contributors: danhezee, StackOverflow, izzy, Danke, noway421, IAmYourFriend
+.. codeauthor:: danhezee, StackOverflow, izzy, Danke, noway421, IAmYourFriend
 
-The concept:
-    Each team spawns at a set location with the enemy intel. They must "push"
-    the intel towards their control point, which is also at a set location.
-    The only way to arrive there is by building bridges over the deadly water.
-    Further introduction to the game mode: https://youtu.be/DdisPY6vDD0
+The concept
+^^^^^^^^^^^
 
-How to setup new maps:
-    Spawn and CP locations must be configured via extensions in the map's
-    map_name.txt metadata. Example:
+Each team spawns at a set location with the enemy intel. They must "push"
+the intel towards their control point, which is also at a set location.
+The only way to arrive there is by building bridges over the deadly water.
+Further introduction to the game mode: https://youtu.be/DdisPY6vDD0
+
+
+Setting Up New Maps
+^^^^^^^^^^^^^^^^^^^
+
+Spawn and CP locations must be configured via extensions in the map's
+map_name.txt metadata:
 
 >>> extensions = {
 ...     'push': True,
@@ -25,7 +29,7 @@ How to setup new maps:
 Additional (but optional) extensions, to mark each teams build area and prevent
 the enemy from building there (and thereby helping the enemy). The build area
 is defined by x and y of upper left corner, followed by x and y of bottom right
-corner on the map. Example:
+corner on the map::
 
     'push_blue_build_area' : (64, 100, 243, 500),
     'push_green_build_area' : (268, 100, 447, 500),
@@ -33,7 +37,8 @@ corner on the map. Example:
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: python
+
     [push]
     # Disallow removal of map blocks. This allows a larger variety of maps that
     # rely on more fragile structures. It also prevents griefing (like removing

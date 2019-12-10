@@ -7,7 +7,7 @@ Commands
 * ``/votemap`` initiates map voting
 * ``/vote <map name>`` vote for a map
 
-.. code-block:: guess
+.. code-block:: toml
 
     [votemap]
     public_votes = true

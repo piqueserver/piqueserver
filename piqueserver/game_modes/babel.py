@@ -1,7 +1,7 @@
 """
-babel.py last modified 2014-04-04 22:12:44
-Originally onectf.py by Yourself
-Modified to complement babel_script.py: http://aloha.pk/files/aos/pyspades/feature_server/scripts/babel_script.py
+Babel: reach the heavens by building a tower
+
+Derived from onectf.py by Yourself
 
 Release thread:
 http://www.buildandshoot.com/viewtopic.php?t=2586

@@ -13,7 +13,7 @@ Commands
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: toml
 
     [votekick]
     # percentage of total number of players in the server required to vote to

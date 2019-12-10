@@ -4,7 +4,7 @@ Saves current map on shutdown (and optionally loads it again on startup)
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: toml
 
     [savemap]
     load_saved_map = false

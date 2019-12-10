@@ -4,7 +4,7 @@ Kicks a player if inactive for too long.
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: toml
 
    [afk]
    time_limit = "15min"

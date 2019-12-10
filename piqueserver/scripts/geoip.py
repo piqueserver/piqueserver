@@ -3,11 +3,13 @@ Gets a player's location info using a geoip database.
 Location is formatted as a list of regions ordered by hierarchy (i.e. City, Region, Country)
 
 .. note::
-  This script depends on `geoip2` package and `piqueserver --update-geoip` needs to be executed after installing the package.
+
+  This script depends on ``geoip2`` package and ``piqueserver --update-geoip``
+  needs to be executed after installing the package.
 
 Commands
 ^^^^^^^^
-* ``/from ``         get active player's location
+* ``/from``         get active player's location
 * ``/from <player>`` get player's location info
 
 .. codeauthor:: ?

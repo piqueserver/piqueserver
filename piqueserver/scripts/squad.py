@@ -10,7 +10,7 @@ Commands
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: toml
 
     [squad]
     respawn_time = "10sec"

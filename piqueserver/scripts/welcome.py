@@ -4,7 +4,7 @@ Greets specified people entering with messages
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: toml
 
    [welcome]
    welcomes = { nota = "Hi notafile", feik = "Hi feik" }

@@ -42,7 +42,7 @@ sprinkle tree-growing grenades without worrying about unseemly oddities.
 Options
 ^^^^^^^
 
-.. code-block:: guess
+.. code-block:: toml
 
     [grownade]
 
