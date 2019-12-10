@@ -1,19 +1,11 @@
-Contributing to piqueserver
-===========================
-
-This is the common user guide for contributing to piqueserver.
+Contributing, Reporting Bugs and Requesting Features
+====================================================
 
 In which ways I can contribute?
 -------------------------------
 If you come across any issues, or have feature suggestions you would like to see in piqueserver, please inform us in our `Issue Tracker <https://github.com/piqueserver/piqueserver/issues>`_.
 
 .. tip:: Before reporting your problem or submitting a suggestion, search the `Issue Tracker <https://github.com/piqueserver/piqueserver/issues>`_ for similar issues.
-
-Also:
-
-- If you want to submit a bug report, read the second section of this document.
-- If you can code, read the third section of this document.
-
 
 Reporting bugs
 ---------------

@@ -15,7 +15,6 @@ Subpackages
 .. toctree::
 
     piqueserver.core_commands
-    piqueserver.game_modes
     piqueserver.web
 
 Submodules

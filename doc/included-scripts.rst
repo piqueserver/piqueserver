@@ -31,6 +31,11 @@ piqueserver\.scripts\.autohelp script
 
 .. automodule:: piqueserver.scripts.autohelp
 
+piqueserver\.game\_modes\.babel\_script module
+++++++++++++++++++++++++++++++++++++++++++++++
+
+.. automodule:: piqueserver.scripts.babel_script
+
 piqueserver\.scripts\.badmin script
 +++++++++++++++++++++++++++++++++++
 

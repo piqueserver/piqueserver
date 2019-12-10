@@ -50,7 +50,7 @@ We want to copy the default config directory over.
 Edit a new file, ``/etc/systemd/system/piqueserver@.service`` and insert
 the following contents.
 
-.. code:: toml
+.. code:: ini
 
    [Unit]
    Description=Piqueserver
