@@ -28,7 +28,6 @@ from twisted.internet.reactor import callLater
 from twisted.internet.task import LoopingCall
 from pyspades import contained as loaders
 from pyspades.constants import *
-from pyspades.player import create_player, player_left, intel_capture
 
 from piqueserver.config import config, cast_duration
 

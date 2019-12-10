@@ -20,10 +20,10 @@ piqueserver\.game\_modes\.babel module
     :undoc-members:
     :show-inheritance:
 
-piqueserver\.game\_modes\.babel\_script module
+piqueserver\.game\_modes\.babel module
 ----------------------------------------------
 
-.. automodule:: piqueserver.game_modes.babel_script
+.. automodule:: piqueserver.game_modes.babel
     :members:
     :undoc-members:
     :show-inheritance:
