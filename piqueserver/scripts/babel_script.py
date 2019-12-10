@@ -8,9 +8,9 @@ http://www.buildandshoot.com/viewtopic.php?t=2586
 
 How to install and configure:
 
-3) Set game_mode to "piqueserver.game_mode.babel" in config.txt
-4) Add "piqueserver.scripts.babel_script" to scripts list in config.txt
-5) Set cap_limit to "10" in config
+1) Set game_mode to "piqueserver.game_mode.babel" in config.txt
+2) Add "piqueserver.scripts.babel_script" to scripts list in config.txt
+3) Set cap_limit to "10" in config
 """
 
 from random import randint
