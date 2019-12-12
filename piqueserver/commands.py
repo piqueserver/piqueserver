@@ -92,7 +92,7 @@ def add(func: Callable) -> None:
     """
     warnings.warn(
         '@add is deprecated, use @command()',
-        DeprecationWarning)
+        DeprecationWarning, stacklevel=2)
     command()(func)
 
 
@@ -102,7 +102,7 @@ def name(name: str) -> Callable:
     """
     warnings.warn(
         '@name is deprecated, use @command("name")',
-        DeprecationWarning)
+        DeprecationWarning, stacklevel=2)
 
     def dec(func: Callable) -> Callable:
         func.__name__ = name
@@ -116,7 +116,7 @@ def alias(name: str) -> Callable:
     """
     warnings.warn(
         '@alias is deprecated, use @command("name", "alias1", "alias2")',
-        DeprecationWarning)
+        DeprecationWarning, stacklevel=2)
 
     def dec(func: Callable) -> Callable:
         try:
