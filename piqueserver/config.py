@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with piqueserver.  If not, see <http://www.gnu.org/licenses/>.
 
-import collections
+from collections.abc import Mapping
 import json
 import os
 import sys
@@ -84,7 +84,7 @@ class ConfigStore():
     # https://stackoverflow.com/a/3233356/
     def _nested_update(self, config_dict, updates):
         for k, v in updates.items():
-            if isinstance(v, collections.Mapping):
+            if isinstance(v, Mapping):
                 config_dict[k] = self._nested_update(config_dict.get(k, {}), v)
             else:
                 config_dict[k] = v
@@ -159,7 +159,7 @@ class ConfigStore():
 
         unused = {}
         for k, v in self.get_dict().items():
-            if isinstance(v, collections.Mapping):
+            if isinstance(v, Mapping):
                 if k in self._sections:
                     section_unused = self._sections[k].check_unused()
                     if section_unused:
