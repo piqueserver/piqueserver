@@ -26,6 +26,7 @@ import os
 import random
 import sys
 import time
+import warnings
 from collections import deque
 from ipaddress import AddressValueError, IPv4Address, ip_address, ip_network
 from pprint import pprint
@@ -508,11 +509,11 @@ class FeatureProtocol(ServerProtocol):
         remaining = self.advance_call.getTime() - reactor.seconds()
         if remaining < 60.001:
             if remaining < 10.001:
-                self.send_chat('%s...' % int(round(remaining)))
+                self.broadcast_chat('%s...' % int(round(remaining)))
             else:
-                self.send_chat('%s seconds remaining.' % int(round(remaining)))
+                self.broadcast_chat('%s seconds remaining.' % int(round(remaining)))
         else:
-            self.send_chat('%s minutes remaining.' %
+            self.broadcast_chat('%s minutes remaining.' %
                            int(round(remaining / 60)))
 
     def _time_up(self):
@@ -538,7 +539,7 @@ class FeatureProtocol(ServerProtocol):
             if message is not None:
                 log.info("advancing to map '{name}' ({reason}) in 10 seconds",
                          name=planned_map.full_name, reason=message)
-                self.send_chat(
+                self.broadcast_chat(
                     '{} Next map: {}.'.format(message, planned_map.full_name),
                     irc=True)
                 await sleep(10)
@@ -848,7 +849,7 @@ class FeatureProtocol(ServerProtocol):
 
     def send_tip(self):
         line = self.tips[random.randrange(len(self.tips))]
-        self.send_chat(line)
+        self.broadcast_chat(line)
         reactor.callLater(self.tip_frequency * 60, self.send_tip)
 
     # pylint: disable=arguments-differ
@@ -859,10 +860,14 @@ class FeatureProtocol(ServerProtocol):
         """
         if irc:
             self.irc_say('* %s' % value)
-        ServerProtocol.send_chat(self, value, global_message, sender, team)
+        ServerProtocol.broadcast_chat(self, value, global_message, sender, team)
 
     # backwards compatability
-    send_chat = broadcast_chat
+    def send_chat(self, *args, **kwargs):
+        """Deprecated: see broadcast_chat"""
+        warnings.warn("use of deprecated send_chat, use broadcast_chat instead",
+                      DeprecationWarning, stacklevel=2)
+        self.broadcast_chat(*args, **kwargs)
 
     # log high CPU usage
 

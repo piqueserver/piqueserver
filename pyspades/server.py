@@ -16,6 +16,7 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import random
+import warnings
 from itertools import product
 import enet
 
@@ -170,7 +171,11 @@ class ServerProtocol(BaseProtocol):
                 player.peer.send(0, packet)
 
     # backwards compatability
-    send_contained = broadcast_contained
+    def send_contained(self, *args, **kwargs):
+        """Deprecated: see broadcast_contained"""
+        warnings.warn("use of deprecated send_contained, use broadcast_contained instead",
+                      DeprecationWarning, stacklevel=2)
+        self.broadcast_contained(*args, **kwargs)
 
     def reset_tc(self):
         self.entities = self.get_cp_entities()
@@ -211,6 +216,7 @@ class ServerProtocol(BaseProtocol):
 
     def update(self):
         self.loop_count += 1
+
         BaseProtocol.update(self)
         for player in self.connections.values():
             if (player.map_data is not None and
@@ -244,7 +250,7 @@ class ServerProtocol(BaseProtocol):
         # we only want to send as many items of the player list as needed, so
         # we slice it off at the highest player id
         world_update.items = items[:highest_player_id+1]
-        self.send_contained(world_update, unsequenced=True)
+        self.broadcast_contained(world_update, unsequenced=True)
 
     def set_map(self, map_obj):
         self.map = map_obj
@@ -387,7 +393,11 @@ class ServerProtocol(BaseProtocol):
             player.send_chat(message, global_message)
 
     # backwards compatability
-    send_chat = broadcast_chat
+    def send_chat(self, *args, **kwargs):
+        """Deprecated: see broadcast_chat"""
+        warnings.warn("use of deprecated send_chat, use broadcast_chat instead",
+                      DeprecationWarning, stacklevel=2)
+        self.broadcast_chat(*args, **kwargs)
 
     def broadcast_chat_warning(self, message, team=None):
         """
@@ -395,7 +405,7 @@ class ServerProtocol(BaseProtocol):
         as a yellow popup with sound for OpenSpades
         clients
         """
-        self.send_chat(self, "%% " + str(message), team=team)
+        self.broadcast_chat(self, "%% " + str(message), team=team)
 
     def broadcast_chat_notice(self, message, team=None):
         """
@@ -403,7 +413,7 @@ class ServerProtocol(BaseProtocol):
         as a popup for OpenSpades
         clients
         """
-        self.send_chat(self, "N% " + str(message), team=team)
+        self.broadcast_chat(self, "N% " + str(message), team=team)
 
     def broadcast_chat_error(self, message, team=None):
         """
@@ -411,7 +421,7 @@ class ServerProtocol(BaseProtocol):
         as a red popup with sound for OpenSpades
         clients
         """
-        self.send_chat(self, "!% " + str(message), team=team)
+        self.broadcast_chat(self, "!% " + str(message), team=team)
 
     def broadcast_chat_status(self, message, team=None):
         """
@@ -419,13 +429,13 @@ class ServerProtocol(BaseProtocol):
         area at the top of the screen, where events such as intel pickups are
         also displayed.
         """
-        self.send_chat(self, "C% " + str(message), team=team)
+        self.broadcast_chat(self, "C% " + str(message), team=team)
 
     def set_fog_color(self, color):
         self.fog_color = color
         fog_color = loaders.FogColor()
         fog_color.color = make_color(*color)
-        self.send_contained(fog_color, save=True)
+        self.broadcast_contained(fog_color, save=True)
 
     def get_fog_color(self):
         return self.fog_color
