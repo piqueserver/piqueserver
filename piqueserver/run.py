@@ -134,6 +134,11 @@ def main():
     arg_parser = argparse.ArgumentParser(
         prog=PKG_NAME, description=description)
 
+
+    if not sys.warnoptions:
+        import warnings
+        warnings.filterwarnings("default", module="piqueserver[.*]")
+
     arg_parser.add_argument(
         '-c',
         '--config-file',

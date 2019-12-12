@@ -74,7 +74,7 @@ def load_scripts(script_names, script_dir, script_type):
             continue
         # namespace module name to avoid shadowing global modules
         # TODO: figure out if there are any right or better ways.
-        spec.name = 'piqueserver_{}_namespace_{}'.format(script_type, script)
+        spec.name = 'piqueserver._{}_namespace.{}'.format(script_type, script)
         spec.loader.name = spec.name
         # load module
         try:
