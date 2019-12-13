@@ -278,8 +278,5 @@ cdef class VXLData:
         return Generator(self)
 
     def __dealloc__(self):
-        cdef MapData * map
         if self.map != NULL:
-            map = self.map
-            self.map = NULL
-            delete_vxl(map)
+            delete_vxl(self.map)
