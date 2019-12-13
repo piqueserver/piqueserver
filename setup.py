@@ -43,6 +43,7 @@ linetrace = os.environ.get('CYTHON_TRACE') == '1'
 # AddressSanitizer/UndefinedBehaviourSanitizer
 USE_ASAN = os.environ.get('USE_ASAN') == '1'
 USE_UBSAN = os.environ.get('USE_UBSAN') == '1'
+USE_DEBUG = os.environ.get('USE_DEBUG') == '1'
 
 ext_modules = []
 
@@ -91,7 +92,9 @@ class build_ext(_build_ext):
         if linetrace:
             compiler_directives['linetrace'] = True
 
-        self.extensions = cythonize(self.extensions, compiler_directives=compiler_directives)
+        self.extensions = cythonize(self.extensions,
+                                    compiler_directives=compiler_directives,
+                                    gdb_debug=USE_DEBUG)
 
         _build_ext.run(self)
 
