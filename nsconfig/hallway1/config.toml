@@ -95,7 +95,7 @@ scripts = [
   #"piqueserver.scripts.platform",
   "piqueserver.scripts.votekick",
   "piqueserver.scripts.squad",
-  #"piqueserver.scripts.teamchat",
+  ## #"piqueserver.scripts.teamchat", # already has an implementation
   "piqueserver.scripts.ratio",
   "piqueserver.scripts.trusted",
   "piqueserver.scripts.blockinfo",
