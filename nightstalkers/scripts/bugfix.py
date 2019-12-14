@@ -26,7 +26,7 @@ def apply_script(protocol: Type[ServerProtocol], connection: Type[ServerConnecti
     class BugFixConnection(BugFixConnectionInterface, connection):
         def on_line_build_attempt(self, points: Sequence[Tuple[int, int, int]]) -> Optional[bool]:
             # prevent "unlimited tower" crash, fix by Danko
-            value = connection.on_line_build_attempt(self, points) # type: Optional[bool]
+            value = super().on_line_build_attempt(points) # type: Optional[bool]
             if value is False:
                 return value
             for point in points:
