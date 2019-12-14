@@ -1,0 +1,463 @@
+# server name - displayed on master server
+name = "(test, plz ignore) [N-S] Hallway!! [GONE WILD]"
+
+# messages sent when user joins server
+motd = [
+  "Server sponsored by @Mikkel",
+  "Type /squad to join squads!",
+  "Type /powerpref to get info about powers",
+  "Join our discord: discord.gg/ztjPTsJ"
+]
+
+# info displaying when user types the /help command
+# String interpolation is allowed. Possible values are:
+# 'server_name', 'map_name', 'map_author', 'map_description', 'game_mode'
+help = [
+  "Server name: %(server_name)s",
+  "Map: %(map_name)s by %(map_author)s",
+  "Discord: discord.gg/ztjPTsJ",
+  "Type /fly to start flying! Jump and keep pressing ctrl! Type /paint to paint pressing V with a block"
+]
+
+# list of messages to send when the user sends the /rules command
+rules = [
+  "Cheating is not welcome. Griefing is frowned upon. Have fun!"
+]
+
+# random lines from this list are shown at a specified frequency in-game
+tips = [
+  "Discord: discord.gg/ztjPTsJ",
+  "Type /fly to start flying! Jump + CTRL",
+  "Type /paint to paint pressing V with a block"
+]
+
+# how often the tips should display
+tips_frequency = "5min"
+
+# SERVER
+# set this if the server should register on the master server list
+master = false
+
+# limit max number of players who can join.
+# must be 0 < max_players <= 32
+max_players = 32
+
+# messages from the server in-game will be prefixed with this string
+server_prefix = ""
+
+# limit number of players who can connect from the same ip address
+# 0 disables the limit (default: 0)
+#max_connections_per_ip = 0
+#max_connections_per_ip = 3
+max_connections_per_ip = 5
+
+# port the server will listen on (default: 32887)
+port = 32887
+
+# interface the server will listen on (default: all interfaces)
+# TODO: document enet specific strangeness
+network_interface = ""
+
+# url that is used to request the server's public ip address
+# it should be a url that returns only the requester's public ip in the response body
+# Set to an empty string if you wish to disable ip requesting
+# WARNING: do not change unless you are sure you know what you are doing
+# other tools if the default is down:
+# https://icanhazip.com/
+# https://api.ipify.org
+#ip_getter = "https://services.buildandshoot.com/getip"
+
+# note: scripts are loaded in order entered here. Some scripts may depend on
+# other scripts being loaded before them.
+scripts = [
+  #"piqueserver.scripts.rollback",
+  #"piqueserver.scripts.protect",
+  #"piqueserver.scripts.map_extensions",
+  #"piqueserver.scripts.disco",
+  #"piqueserver.scripts.votekick",
+  #"piqueserver.scripts.trusted",
+  #"piqueserver.scripts.ratio",
+  #"piqueserver.scripts.passreload",
+  #"piqueserver.scripts.blockinfo",
+  #"piqueserver.scripts.squad",
+  #"piqueserver.scripts.afk"
+
+  ## #"piqueserver.scripts.infiblocks", # replaced with infinite_everything
+  ## #"piqueserver.scripts.infiniclip", # replaced with infinite_everything
+  "nightstalkers.scripts.infinite_everything",
+
+  "piqueserver.scripts.spectatorcontrol",
+  "piqueserver.scripts.welcome",
+  "piqueserver.scripts.passreload",
+  "piqueserver.scripts.protect",
+  "piqueserver.scripts.map_extensions",
+  "piqueserver.scripts.rollback",
+  #"piqueserver.scripts.platform",
+  "piqueserver.scripts.votekick",
+  "piqueserver.scripts.squad",
+  #"piqueserver.scripts.teamchat",
+  "piqueserver.scripts.ratio",
+  "piqueserver.scripts.trusted",
+  "piqueserver.scripts.blockinfo",
+  #"piqueserver.scripts.irctools",
+  #"piqueserver.scripts.db",
+  #"piqueserver.scripts.ircpublish",
+  "piqueserver.scripts.paint",
+  #"piqueserver.scripts.thunder",
+  "piqueserver.scripts.memcheck",
+  "piqueserver.scripts.afk",
+  "piqueserver.scripts.aimbot2",
+  #"piqueserver.scripts.banhammer",
+  ## #"piqueserver.scripts.detectclient", # already has an implementation
+  #"piqueserver.scripts.sculpt",
+  #"piqueserver.scripts.analyzer",
+  "piqueserver.scripts.rapid",
+  #"piqueserver.scripts.intelrpg2",
+  "piqueserver.scripts.airstrike2",
+  #"piqueserver.scripts.bugfix",
+  #"piqueserver.scripts.dw",
+  #"piqueserver.scripts.floor",
+  #"piqueserver.scripts.improvedweapons",
+  #"piqueserver.scripts.bots2"
+]
+
+# number of /login attempts allowed before players are auto-kicked (default: 1)
+login_retries = 3
+
+# MAP
+# maps listed in the rotation
+# these names are the name of the map vxl/txt files without the file extensions
+# eg. if you have hallway.txt and hallway.vxl, you can add "hallway" to the rotation
+# Note: you can still load a map in-game that isn't on this rotation list with commands
+# rotation = [ "classicgen", "random" ]
+rotation = [
+  "Hallway",
+  #"nhallway",
+  #"NewHallway",
+  #"hallpoint_muffin"
+]
+
+# whether next map for a new game will be chosen at random
+# if this is false, maps will cycle in order listed in the rotation list
+random_rotation = false
+
+# GAME
+# set the game mode. "ctf" and "tc" are built in game modes; others are custom
+# game modes specified by python module or python script in the config game_modes
+# directory (without the '.py' extension).
+# Examples: "piqueserver.game_modes.push", "mygame" (where you have config/game_modes/mygame.py)
+game_mode = "ctf"
+
+# default time limit to set per map. When the time limit runs out, the map rotation is advanced
+#default_time_limit = "2hours"
+default_time_limit = false
+# advances the map rotation when the game ends, if set to true
+advance_on_win = true
+
+# time between player respawn waves
+# (default: 8 seconds)
+#respawn_time = "16sec"
+respawn_time = "6sec"
+
+# if respawns should happen in waves, or respawn_time seconds after the players death
+#respawn_waves = true
+respawn_waves = false
+
+# whether friendly fire is allowed by default
+friendly_fire = false
+
+# allow friendly fire if player destroys blocks (helpful if you want to kill
+# griefers
+friendly_fire_on_grief = true
+
+# duration a player is vulnerable to friendly fire if
+# friendly_fire_on_grief enabled
+grief_friendly_fire_time = "5sec"
+
+# If friendly fire should be enabled for the spade too. This is disabled by default,
+# because it frequently causes accidental teamkills
+spade_teamkills_on_grief = false
+
+# If 0, any permutation of teams is allowed. If 1 or greater, team balance is enforced with the algorithm:
+# `abs(team1_players - team2_players) <= balanced_teams`
+# The value is thus the maximum player number difference allowed between teams
+balanced_teams = 2
+# original NS config says 1, I'd need to confirm this --GM
+
+# time players must wait before switching teams again
+# 0sec disables cooldown time
+teamswitch_interval = "0sec"
+# whether players are allowed to switch teams at all
+teamswitch_allowed = true
+
+# attempt to detect speedhacking. This might cause false positives.
+#speedhack_detect = true
+speedhack_detect = false
+
+# distance the server tolerates between the place it thinks the client is to where the client actually is.
+rubberband_distance = 10
+
+# The amount of damage dealt by a melee hit
+#melee_damage = 80
+melee_damage = 100
+
+# controls whether players receive damage by falling from height
+#fall_damage = true
+fall_damage = false
+
+# disable users ability to affect the map's initial blocks
+user_blocks_only = false
+
+# puts the player into god build mode automatically when entering god mode, if set to true
+set_god_build = false
+
+# time in seconds remaining when the time remaining should be announced
+time_announcements = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30, 60, 120, 180, 240, 300, 600, 900, 1200, 1800, 2400, 3000]
+
+# number of intel captures to win the game (default: 10)
+#cap_limit = 10
+cap_limit = 25
+
+
+# Set this to true to automatically log all players in as admin on join.
+# Possibly useful for testing purposes.
+#everyone_is_admin = false
+
+[team1]
+# information about the team1
+# name of the team to be displayed in-game
+name = "Aqua"
+# color of the players
+color = [ 0, 255, 255]
+
+[team2]
+# information about team2 - same settings as for team1
+name = "Gold"
+color = [ 255, 215, 0]
+
+[passwords]
+# server management passwords
+# players can login using these to execute privileged commands (kicking,
+# changing maps, etc.)
+# authenticate with: /login <password>
+# supports a list of passwords so you can give different passwords to different
+# people for easy password management.
+# logging in as admin or trusted also disables being votekicked (if that script is enabled)
+# For security reasons, logins are disabled by default.
+#
+#admin = ["adminpass1", "adminpass2"]
+#moderator = ["modpass"]
+#guard = ["guardpass"]
+#trusted = ["trustedpass"]
+
+# FIXME: Get logins working via some other mechanism so we don't have to dump them into Git --GM
+admin = ["admin5"]
+sponsor = ["sponsor5"]
+globalmoderator = ["globalmoderator5"]
+trusted = ["trusted5"]
+moderator = ["moderator5"]
+
+
+
+[bans]
+# default duration a banned player will be banned for
+default_duration = "1day"
+
+# location the bans are saved and loaded from (relative to the config
+# directory)
+#file = "bans.txt"
+
+# Ban publish allows you to synchronize bans between servers. When enabled,
+# the server listens on the given port and respnds to any requests with a list
+# of bans
+#publish = false
+#publish_port = 32885
+
+# Bansubscribe allows you to inherit bans from another server with banpublish enabled.
+# `url` is the URL returning the json list, `whitelist` is a list of names which should
+# be exempt from the filter
+#bansubscribe = [
+#    { url = "http://www.blacklist.spadille.net/subscribe.json", whitelist = []},
+#]
+
+
+
+[rights]
+# Rights allow you to specify the roles available and what permissions they have
+#moderator = [
+#  "advancemap", "cancel", "dban", "fog",
+#  "from", "hackinfo", "hban",
+#  "invisible", "ip", "kick", "kickafk",
+#  "kill", "map", "master", "move", "moves",
+#  "mute", "resetgame", "switch", "teleport",
+#  "teleport_other", "tpsilent", "togglebuild", "togglekill",
+#  "togglevotekick", "trust", "undoban", "unmute",
+#  "unstick", "where", "whowas"
+#]
+#guard = [
+#  "cancel", "fog", "from",
+#  "hackinfo", "hban", "ip", "kick",
+#  "kickafk", "kill", "move", "moves", "mute",
+#  "switch", "teleport", "teleport_other", "togglebuild",
+#  "togglekill", "togglevotekick", "trust", "unmute",
+#  "unstick", "where", "whowas"
+#]
+
+sponsor = [
+  "specpower", "advance", "cancel", "dban", "fog", "from", "goto",
+  "hackinfo", "hban", "invisible", "ip", "kick", "kickafk", "kill",
+  "map", "master", "move", "mute", "resetgame", "switch", "teleport",
+  "teleport_other", "tpsilent", "togglebuild", "togglekill",
+  "togglevotekick", "trust", "undoban", "unmute", "unstick", "where",
+  "whowas", "wban", "ban", "lightning", "fly", "wall", "floor", "box",
+  "sculpt", "paint", "db"
+]
+globalmoderator = [
+  "specpower", "cancel", "fog", "from", "goto", "hackinfo", "hban",
+  "ip", "kick", "kickafk", "kill", "move", "mute", "switch", "teleport",
+  "teleport_other", "togglebuild", "togglekill", "togglevotekick",
+  "trust", "unmute", "unstick", "where", "whowas", "god", "invisible",
+  "dban", "move", "trust", "tpsilent", "build", "trust", "wall", "move",
+  "dw", "box", "sculpt", "floor", "paint", "df", "team", "lightning",
+  "gradient", "hban", "platform", "button", "quickbuild", "prison",
+  "hackinfo", "godbuild", "disco"
+]
+trusted = [
+  "cancel",  "trust", "togglebuild", "togglekill"
+]
+moderator = [
+  "specpower", "cancel", "from", "goto", "hackinfo", "hban", "ip",
+  "kick", "kickafk", "kill", "move", "mute", "switch", "teleport",
+  "teleport_other", "togglebuild", "togglekill", "togglevotekick",
+  "trust", "unmute", "unstick", "where", "whowas", "invisible", "dban",
+  "move", "trust", "tpsilent", "build", "trust", "wall", "move", "dw",
+  "box", "sculpt", "floor", "paint", "df", "team", "gradient",
+  "platform", "button", "quickbuild", "prison", "hackinfo", "godbuild",
+  "floor", "db", "action", "trigger", "rapid", "deaf", "god", "qbcopy",
+  "qbpaste", "qbload"
+]
+
+[logging]
+# set log level
+# various log levels in decending order: debug, info, warn, error, critical
+loglevel = "info"
+
+# the logfile to log to if logging enabled
+# relative paths are resolved relative to the config directory; parent
+# directories are created as necessary
+logfile = "./logs/log.txt"
+
+# writes a new log file each day
+rotate_daily = true
+
+profile = false
+
+
+# the web server which provides a json api and webpage to view a summary of the
+# game (including map, players, and server information)
+[status_server]
+enabled = true
+port = 32886
+logging = true
+
+
+# settings for the irc chatbot that can report server events and respond to commands
+# disabled by default
+[irc]
+enabled = false
+nickname = "NS-NHW-PiqueTestGM"
+username = "piqueserver"
+realname = "piqueserver"
+server = "irc.lindhost.eu"
+port = 6667
+channel = "#hakd"
+password = ""
+
+# prefixes irc users must use for bot to process as command or to send to game chat
+commandprefix = ":"
+chatprefix = ";"
+
+
+
+[ssh]
+# enable the ssh manhole server
+# gives ssh access to a python repl connected to the running server
+# Do not enable unless you are sure you want to use this!
+#enabled = false
+#port = 32887
+
+[ssh.users]
+# user = password
+# pairs for credentials allowed to login to the ssh server
+# WARNING: keep these credentials secure since this gives console access to the server
+# on which piqueserver is running!
+#user1 = "ssh_pass_change_this"
+
+
+###############################################################################
+# Script specific config
+#
+# Each section corresponds to the script that uses said section.  These
+# settings are only used by enabled scripts, and will be ignored by the core
+# server.
+###############################################################################
+
+
+# piqueserver.scripts.squad
+[squad]
+#respawn_time = "32sec"
+respawn_time = "7sec"
+#size = 4
+size = 8
+auto_squad = false
+
+
+# piqueserver.scripts.savemap
+# allows automatically saving a snapshot of the map on server close
+[savemap]
+
+# automatically load the saved map on map load
+load_saved_map = false
+
+
+# piqueserver.scripts.rollback
+[rollback]
+rollback_on_game_end = false
+
+
+# piqueserver.scripts.afk
+[afk]
+# duration player must be inactive for to be auto-kicked for afk
+#time_limit = "30min"
+time_limit = "50min"
+
+
+# piqueserver.scripts.votekick
+[votekick]
+
+# percentage of total number of players in the server required to vote to
+# successfully votekick a player
+#percentage = 35
+percentage = 25
+
+
+# duration that votekicked player will be banned for
+#ban_duration = "30min"
+ban_duration = "240min"
+
+public_votes = true
+
+
+# piqueserver.scripts.votemap
+[votemap]
+
+# publically display which map players voted for
+public_votes = true
+
+# extend current map (meaning?)
+extension_time = "15min"
+
+# players can initiate voting for a new map with /votemap
+player_driven = false
+autoschedule = false
+percentage = 80
