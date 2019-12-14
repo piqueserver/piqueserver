@@ -114,7 +114,7 @@ scripts = [
   "piqueserver.scripts.rapid",
   #"piqueserver.scripts.intelrpg2",
   "piqueserver.scripts.airstrike2",
-  #"piqueserver.scripts.bugfix",
+  "nightstalkers.scripts.bugfix",
   #"piqueserver.scripts.dw",
   #"piqueserver.scripts.floor",
   #"piqueserver.scripts.improvedweapons",
