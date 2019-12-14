@@ -131,7 +131,7 @@ login_retries = 3
 # Note: you can still load a map in-game that isn't on this rotation list with commands
 # rotation = [ "classicgen", "random" ]
 rotation = [
-  "Hallway",
+  "hallway",
   #"nhallway",
   #"NewHallway",
   #"hallpoint_muffin"
