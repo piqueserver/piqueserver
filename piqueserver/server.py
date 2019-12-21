@@ -56,6 +56,8 @@ from piqueserver.utils import as_deferred
 from piqueserver.bansubscribe import bans_config_urls
 from pyspades.bytes import NoDataLeft
 from pyspades.constants import CTF_MODE, ERROR_SHUTDOWN, TC_MODE
+from pyspades.constants import GAME_VERSION_FROM_STRING
+from pyspades.constants import GAME_VERSION_TO_STRING
 from pyspades.master import MAX_SERVER_NAME_SIZE
 from pyspades.server import ServerProtocol, Team
 from pyspades.tools import make_server_identifier
@@ -154,6 +156,16 @@ logging_rotate_daily = logging_config.option('rotate_daily', False)
 tip_frequency = config.option(
     'tips_frequency', default="5sec", cast=lambda x: cast_duration(x)/60)
 register_master_option = config.option('master', False)
+
+game_version = config.option('game_version', '0.75')
+game_versions = config.option('game_versions',
+    default=[game_version.get(),],
+    validate=lambda x: (
+        len(x) >= 1
+        and all(map(lambda y: (
+            y in GAME_VERSION_FROM_STRING.keys()
+        ), list(x)))
+    ))
 
 default_ip_getter = 'https://services.buildandshoot.com/getip'
 ip_getter_option = config.option('ip_getter', default_ip_getter)
@@ -411,6 +423,10 @@ class FeatureProtocol(ServerProtocol):
             self.everyone_is_admin = True
 
         self.port = port_option.get()
+        self.game_versions = set(map(
+            GAME_VERSION_FROM_STRING.__getitem__,
+            game_versions.get()
+        ))
         ServerProtocol.__init__(self, self.port, interface)
         self.host.intercept = self.receive_callback
 
@@ -617,8 +633,8 @@ class FeatureProtocol(ServerProtocol):
         self.help = self.format_lines(help_option.get())
         self.tips = self.format_lines(tips_option.get())
         self.rules = self.format_lines(rules_option.get())
-        if self.master_connection is not None:
-            self.master_connection.send_server()
+        for connection in self.master_connections:
+            connection.send_server()
 
     def format(self, value: str, extra: Optional[Dict[str, str]] = None) -> str:
         map_info = self.map_info
@@ -664,17 +680,20 @@ class FeatureProtocol(ServerProtocol):
         if value == self.master:
             return
         self.master = value
-        has_connection = self.master_connection is not None
         has_reconnect = self.master_reconnect_call is not None
         if value:
-            if not has_connection and not has_reconnect:
+            if not has_reconnect:
                 self.set_master()
         else:
             if has_reconnect:
                 self.master_reconnect_call.cancel()
                 self.master_reconnect_call = None
-            if has_connection:
-                self.master_connection.disconnect()
+            for (key, connection,) in list(self.master_connections.items()):
+                connection.disconnect()
+                try:
+                    del self.master_connections[key]
+                except LookupError:
+                    pass
 
     async def shutdown(self):
         """
@@ -801,13 +820,17 @@ class FeatureProtocol(ServerProtocol):
                     map_name = self.map_info.short_name
                 else:
                     map_name = "loading..."
+
+                # TODO: Consider a better way of advertising hydra servers
+                selected_game_version = sorted(self.game_versions)[-1]
+
                 entry = {
                     "name": self.name,
                     "players_current": self.get_player_count(),
                     "players_max": self.max_players,
                     "map": map_name,
                     "game_mode": self.get_mode_name(),
-                    "game_version": "0.75"
+                    "game_version": GAME_VERSION_TO_STRING[selected_game_version],
                 }
                 payload = json.dumps(entry).encode()
                 self.host.socket.send(address, payload)

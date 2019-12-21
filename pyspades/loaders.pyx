@@ -15,7 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+from pyspades.constants import GAME_VERSION_AOS_075
+from pyspades.constants import GAME_VERSION_COUNT
+
+
 cdef class Loader:
+    since_version = GAME_VERSION_AOS_075
+    until_version = GAME_VERSION_COUNT
+
     def __init__(self, ByteReader reader = None):
         if reader is not None:
             self.read(reader)

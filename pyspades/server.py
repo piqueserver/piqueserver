@@ -16,13 +16,17 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import random
+from typing import Dict, Set
 from itertools import product
 import enet
 
+from twisted.logger import Logger
 from pyspades.protocol import BaseProtocol
 from pyspades.constants import (
-    CTF_MODE, TC_MODE, GAME_VERSION, MIN_TERRITORY_COUNT, MAX_TERRITORY_COUNT,
+    CTF_MODE, TC_MODE, MIN_TERRITORY_COUNT, MAX_TERRITORY_COUNT,
     UPDATE_FREQUENCY, UPDATE_FPS, NETWORK_FPS)
+from pyspades.constants import GAME_PROTOCOL_VERSIONS
+from pyspades.constants import GAME_VERSION_TO_STRING
 from pyspades.types import IDPool
 from pyspades.master import get_master_connection
 from pyspades.team import Team
@@ -35,6 +39,7 @@ from pyspades import contained as loaders
 from pyspades.common import make_color
 from pyspades.mapgenerator import ProgressiveMapGenerator
 
+log = Logger()
 
 
 class ServerProtocol(BaseProtocol):
@@ -54,7 +59,7 @@ class ServerProtocol(BaseProtocol):
     server_prefix = '[*] '
     respawn_time = 5
     refill_interval = 20
-    master_connection = None
+    master_connections = {} # type: Dict[int, Any]
     speedhack_detect = True
     fog_color = (128, 232, 255)
     winning_player = None
@@ -67,7 +72,7 @@ class ServerProtocol(BaseProtocol):
     spectator_name = 'Spectator'
     loop_count = 0
     melee_damage = 100
-    version = GAME_VERSION
+    game_versions = set() # type: Set[int]
     respawn_waves = False
 
     def __init__(self, *arg, **kw):
@@ -157,6 +162,11 @@ class ServerProtocol(BaseProtocol):
         data = bytes(writer)
         packet = enet.Packet(data, flags)
         for player in self.connections.values():
+            if player.game_version <  contained.since_version:
+                continue
+            if player.game_version >= contained.until_version:
+                continue
+
             if player is sender or player.player_id is None:
                 continue
             if team is not None and player.team is not team:
@@ -240,11 +250,18 @@ class ServerProtocol(BaseProtocol):
                 position = (0.0, 0.0, 0.0)
                 orientation = (0.0, 0.0, 0.0)
             items.append((position, orientation))
+
+        # 0.75 and older world update
         world_update = loaders.WorldUpdate()
         # we only want to send as many items of the player list as needed, so
         # we slice it off at the highest player id
         world_update.items = items[:highest_player_id+1]
         self.send_contained(world_update, unsequenced=True)
+
+        # 0.76RC10+ compact world update
+        world_update_076 = loaders.WorldUpdate076()
+        world_update_076.items = items[:highest_player_id+1]
+        self.send_contained(world_update_076, unsequenced=True)
 
     def set_map(self, map_obj):
         self.map = map_obj
@@ -332,17 +349,35 @@ class ServerProtocol(BaseProtocol):
 
     def set_master(self):
         if self.master:
-            get_master_connection(self).addCallbacks(
-                self.got_master_connection,
-                self.master_disconnected)
+            for game_version in sorted(self.game_versions):
+                if game_version not in self.master_connections:
+                    log.info('Adding master connection for version {!r}'.format(
+                        GAME_VERSION_TO_STRING[game_version],
+                    ))
+                    connection = get_master_connection(self, game_version)
+                    connection.addCallbacks(
+                        self.got_master_connection,
+                        self.master_disconnected)
 
     def got_master_connection(self, connection):
-        self.master_connection = connection
+        log.info('Got master connection for version {!r}'.format(
+            GAME_VERSION_TO_STRING[connection.game_version],
+        ))
+        self.master_connections[connection.game_version] = connection
         connection.disconnect_callback = self.master_disconnected
-        self.update_master()
+        self.update_master(connection)
 
     def master_disconnected(self, client=None):
-        self.master_connection = None
+        if client is not None:
+            log.error('Lost master connection for version {!r}'.format(
+                GAME_VERSION_TO_STRING[client.game_version],
+            ))
+            try:
+                del self.master_connections[client.game_version]
+            except LookupError:
+                pass
+        else:
+            log.error('Lost untracked master connection')
 
     def get_player_count(self):
         count = 0
@@ -351,10 +386,12 @@ class ServerProtocol(BaseProtocol):
                 count += 1
         return count
 
-    def update_master(self):
-        if self.master_connection is None:
-            return
-        self.master_connection.set_count(self.get_player_count())
+    def update_master(self, connection=None):
+        if connection is None:
+            for connection in self.master_connections.values():
+                connection.set_count(self.get_player_count())
+        else:
+            connection.set_count(self.get_player_count())
 
     def update_entities(self):
         map_obj = self.map

@@ -29,7 +29,7 @@ from pyspades.mapgenerator import ProgressiveMapGenerator
 from pyspades.packet import call_packet_handler, register_packet_handler
 from pyspades.protocol import BaseConnection
 from pyspades.team import Team
-from pyspades.weapon import WEAPONS
+from pyspades.weapon import get_weapon_class_by_id
 
 log = Logger()
 
@@ -106,6 +106,7 @@ class ServerConnection(BaseConnection):
     map_data = None
     last_position_update = None
     local = False
+    game_version = None # type: Optional[int]
 
     def __init__(self, *arg, **kw) -> None:
         BaseConnection.__init__(self, *arg, **kw)
@@ -122,11 +123,18 @@ class ServerConnection(BaseConnection):
     def on_connect(self) -> None:
         if self.local:
             return
-        if self.peer.eventData != self.protocol.version:
+
+        for game_version in self.protocol.game_versions:
+            protocol_version = GAME_PROTOCOL_VERSIONS[game_version]
+            if self.peer.eventData == protocol_version:
+                self.game_version = game_version
+                break
+        else:
             log.debug("{player} kicked: wrong protocol version {version}",
                       player=self, version=self.peer.eventData)
             self.disconnect(ERROR_WRONG_VERSION)
             return
+
         max_players = min(32, self.protocol.max_players)
         if len(self.protocol.connections) > max_players:
             self.disconnect(ERROR_FULL)
@@ -993,7 +1001,9 @@ class ServerConnection(BaseConnection):
         self.weapon = weapon
         if self.weapon_object is not None:
             self.weapon_object.reset()
-        self.weapon_object = WEAPONS[weapon](self._on_reload)
+        assert self.game_version is not None
+        weapon_class = get_weapon_class_by_id(weapon, version=self.game_version)
+        self.weapon_object = weapon_class(self._on_reload)
         if not local:
             change_weapon = loaders.ChangeWeapon()
             self.protocol.send_contained(change_weapon, save=True)

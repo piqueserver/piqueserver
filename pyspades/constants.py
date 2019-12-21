@@ -16,7 +16,6 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 MASTER_VERSION = 31
-GAME_VERSION = 3
 RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON = range(3)
 TORSO, HEAD, ARMS, LEGS, MELEE = range(5)
 SPADE_TOOL, BLOCK_TOOL, WEAPON_TOOL, GRENADE_TOOL = range(4)
@@ -79,3 +78,40 @@ WEAPON_INTERVAL = {
     SMG_WEAPON: 0.05,
     SHOTGUN_WEAPON: 0.3
 }
+
+# Game version IDs.
+#
+(
+    GAME_VERSION_AOS_075,
+    GAME_VERSION_AOS_076RC10,
+
+    GAME_VERSION_COUNT,
+) = range(2+1)
+
+# Mapping of game versions to protocol versions.
+#
+# AoS since version 0.75 has used an increasing single-integer
+# protocol version number.
+#
+# AoS 0.70 and older use a CRC-32 of the client.exe binary.
+#
+# Some prerelease versions of 0.75:
+# - 0o075001: Not known. Possibly a test candidate version.
+#             Yes, that's an octal number.
+# - 1: 0.75RC12 and some older versions.
+# - 2: Some later release candidate.
+#
+# 0.76 seems to have stuck with version 4 as it was never
+# officially released as the mainline version.
+#
+GAME_PROTOCOL_VERSIONS = {
+    GAME_VERSION_AOS_075: 3,
+    GAME_VERSION_AOS_076RC10: 4,
+}
+
+GAME_VERSION_FROM_STRING = {
+    "0.75": GAME_VERSION_AOS_075,
+    "0.76": GAME_VERSION_AOS_076RC10,
+}
+
+GAME_VERSION_TO_STRING = {v: k for k, v in GAME_VERSION_FROM_STRING.items()}

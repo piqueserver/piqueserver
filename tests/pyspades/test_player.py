@@ -4,6 +4,7 @@ test pyspades/protocol.py
 
 from twisted.trial import unittest
 from pyspades import player, server, contained
+from pyspades.constants import GAME_VERSION_AOS_075
 from pyspades.team import Team
 from unittest.mock import Mock
 
@@ -21,6 +22,7 @@ class BaseConnectionTest(unittest.TestCase):
 
         for team in (prot.team_1, prot.team_2, prot.team_spectator):
             ply = player.ServerConnection(prot, Mock())
+            ply.game_version = GAME_VERSION_AOS_075
             ply.spawn = Mock()
             ex_ply = contained.ExistingPlayer()
             ex_ply.team = team.id
