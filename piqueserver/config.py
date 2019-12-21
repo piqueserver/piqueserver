@@ -72,8 +72,8 @@ class ConfigStore():
         self._sections = {}
 
         # these are for config that isn't ever stored in the config file (yet)
-        self.config_dir = DEFAULT_CONFIG_DIR
-        self.config_file = os.path.join(DEFAULT_CONFIG_DIR, "config.toml")
+        self.config_dir = os.environ.get('PIQUE_CONFIG_DIR') or DEFAULT_CONFIG_DIR
+        self.config_file = os.path.join(self.config_dir, "config.toml")
 
     def _validate_all(self):
         for option in self._options.values():
@@ -255,7 +255,10 @@ class _Option():
         self._default = default
         self._cast = cast
         self._validate_func = validate
-
+        env_var_name = "PIQUE_" + name.upper().replace(' ', '_')
+        env_var = os.environ.get(self._env_var)
+        if env_var:
+            self.set(env_var)
         # get and validate on declaration to make sure all is good
         self._validate(self.get())
 
