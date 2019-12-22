@@ -26,13 +26,19 @@ map_name.txt metadata:
 ...     'water_damage' : 100
 ... }
 
-Additional (but optional) extensions, to mark each teams build area and prevent
+Additional (but optional) extensions, to mark each team's build area and prevent
 the enemy from building there (and thereby helping the enemy). The build area
 is defined by x and y of upper left corner, followed by x and y of bottom right
 corner on the map::
 
     'push_blue_build_area' : (64, 100, 243, 500),
     'push_green_build_area' : (268, 100, 447, 500),
+
+Commands
+^^^^^^^^
+
+* ``/r`` Quickly respawn to refill blocks and ammo (if enabled)
+* ``/resetintel <team>`` Manually reset the blue or green team's intel
 
 Options
 ^^^^^^^
@@ -42,8 +48,7 @@ Options
     [push]
     # Disallow removal of map blocks. This allows a larger variety of maps that
     # rely on more fragile structures. It also prevents griefing (like removing
-    # the map blocks before and after your teams bridge). Using server setting
-    # 'user_blocks_only' instead doesn't work reliable.
+    # the map blocks before and after your team's bridge).
     protect_map_blocks = true
 
     # Allow the usage of /r to quickly respawn. As players can't refill blocks at
@@ -161,14 +166,22 @@ def reset_intel_position(protocol, team):
 
 @command(admin_only=True)
 def resetintel(connection, value):
+    """
+    Manually reset the blue or green team's intel
+    /resetintel <team>
+    """
     team = get_team(connection, value)
     reset_intel_position(connection.protocol, team)
 
 
 @command('r')
 def respawn(connection):
+    """
+    Quickly respawn to refill blocks and ammo
+    /r
+    """
     if not ALLOW_RESPAWN_COMMAND.get():
-        return
+        return "Command is disabled"
     if connection.world_object is not None and not connection.world_object.dead:
         if (connection.last_spawn_time is None or connection.last_spawn_time +
                 RESPAWN_CMD_DELAY.get() <= get_now_in_secs()):
