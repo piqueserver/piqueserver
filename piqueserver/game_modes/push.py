@@ -181,7 +181,7 @@ def respawn(connection):
     /r
     """
     if not ALLOW_RESPAWN_COMMAND.get():
-        return
+        return "Command is disabled"
     if connection.world_object is not None and not connection.world_object.dead:
         if (connection.last_spawn_time is None or connection.last_spawn_time +
                 RESPAWN_CMD_DELAY.get() <= get_now_in_secs()):
