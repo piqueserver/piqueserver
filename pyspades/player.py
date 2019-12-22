@@ -312,7 +312,7 @@ class ServerConnection(BaseConnection):
         if self.filter_weapon_input:
             return
         contained.player_id = self.player_id
-        self.protocol.send_contained(contained, sender=self)
+        self.protocol.broadcast_contained(contained, sender=self)
 
     @register_packet_handler(loaders.InputData)
     def on_input_data_recieved(self, contained: loaders.InputData) -> None:
@@ -365,7 +365,7 @@ class ServerConnection(BaseConnection):
                 contained.sprint)
         if self.filter_visibility_data or self.filter_animation_data:
             return
-        self.protocol.send_contained(contained, sender=self)
+        self.protocol.broadcast_contained(contained, sender=self)
 
     @register_packet_handler(loaders.WeaponReload)
     def on_reload_recieved(self, contained) -> None:
@@ -375,7 +375,7 @@ class ServerConnection(BaseConnection):
         if self.filter_animation_data:
             return
         contained.player_id = self.player_id
-        self.protocol.send_contained(contained, sender=self)
+        self.protocol.broadcast_contained(contained, sender=self)
 
     @register_packet_handler(loaders.HitPacket)
     def on_hit_recieved(self, contained):
@@ -442,8 +442,7 @@ class ServerConnection(BaseConnection):
         if self.filter_visibility_data:
             return
         contained.player_id = self.player_id
-        self.protocol.send_contained(contained,
-                                     sender=self)
+        self.protocol.broadcast_contained(contained, sender=self)
 
     @register_packet_handler(loaders.SetTool)
     def on_tool_change_recieved(self, contained: loaders.SetTool) -> None:
@@ -466,7 +465,7 @@ class ServerConnection(BaseConnection):
         set_tool = loaders.SetTool()
         set_tool.player_id = self.player_id
         set_tool.value = contained.value
-        self.protocol.send_contained(set_tool, sender=self, save=True)
+        self.protocol.broadcast_contained(set_tool, sender=self, save=True)
 
     @register_packet_handler(loaders.SetColor)
     def on_color_change_recieved(self, contained: loaders.SetColor) -> None:
@@ -480,8 +479,7 @@ class ServerConnection(BaseConnection):
         if self.filter_animation_data:
             return
         contained.player_id = self.player_id
-        self.protocol.send_contained(contained, sender=self,
-                                     save=True)
+        self.protocol.broadcast_contained(contained, sender=self, save=True)
 
     @register_packet_handler(loaders.BlockAction)
     def on_block_action_recieved(self, contained: loaders.BlockAction) -> None:
@@ -556,7 +554,7 @@ class ServerConnection(BaseConnection):
         block_action.z = z
         block_action.value = contained.value
         block_action.player_id = self.player_id
-        self.protocol.send_contained(block_action, save=True)
+        self.protocol.broadcast_contained(block_action, save=True)
         self.protocol.update_entities()
 
     @register_packet_handler(loaders.BlockLine)
@@ -608,7 +606,7 @@ class ServerConnection(BaseConnection):
         self.blocks -= len(points)
         self.on_line_build(points)
         contained.player_id = self.player_id
-        self.protocol.send_contained(contained, save=True)
+        self.protocol.broadcast_contained(contained, save=True)
         self.protocol.update_entities()
 
     @register_packet_handler(loaders.ChatMessage)
@@ -670,7 +668,7 @@ class ServerConnection(BaseConnection):
     @register_packet_handler(loaders.HandShakeReturn)
     def on_handshake_recieved(self, contained: loaders.HandShakeReturn) -> None:
         version_request = loaders.VersionRequest()
-        self.protocol.send_contained(version_request)
+        self.protocol.broadcast_contained(version_request)
 
     @register_packet_handler(loaders.VersionResponse)
     def on_version_info_recieved(self, contained: loaders.VersionResponse) -> None:
@@ -850,7 +848,7 @@ class ServerConnection(BaseConnection):
         if self.filter_visibility_data and not spectator:
             self.send_contained(create_player)
         else:
-            self.protocol.send_contained(create_player, save=True)
+            self.protocol.broadcast_contained(create_player, save=True)
         if not spectator:
             self.on_spawn((x, y, z))
 
@@ -869,7 +867,7 @@ class ServerConnection(BaseConnection):
         flag.player = self
         intel_pickup = loaders.IntelPickup()
         intel_pickup.player_id = self.player_id
-        self.protocol.send_contained(intel_pickup, save=True)
+        self.protocol.broadcast_contained(intel_pickup, save=True)
 
     def capture_flag(self):
         other_team = self.team.other
@@ -888,7 +886,7 @@ class ServerConnection(BaseConnection):
             intel_capture = loaders.IntelCapture()
             intel_capture.player_id = self.player_id
             intel_capture.winning = False
-            self.protocol.send_contained(intel_capture, save=True)
+            self.protocol.broadcast_contained(intel_capture, save=True)
             flag = other_team.set_flag()
             flag.update()
 
@@ -915,7 +913,7 @@ class ServerConnection(BaseConnection):
                 intel_drop.x = flag.x
                 intel_drop.y = flag.y
                 intel_drop.z = flag.z
-                self.protocol.send_contained(intel_drop, save=True)
+                self.protocol.broadcast_contained(intel_drop, save=True)
                 self.on_flag_drop()
                 break
         elif game_mode == TC_MODE:
@@ -928,7 +926,7 @@ class ServerConnection(BaseConnection):
             self.drop_flag()
             player_left = loaders.PlayerLeft()
             player_left.player_id = self.player_id
-            self.protocol.send_contained(player_left, sender=self,
+            self.protocol.broadcast_contained(player_left, sender=self,
                                          save=True)
             del self.protocol.players[self.player_id]
         if self.player_id is not None:
@@ -996,7 +994,7 @@ class ServerConnection(BaseConnection):
         self.weapon_object = WEAPONS[weapon](self._on_reload)
         if not local:
             change_weapon = loaders.ChangeWeapon()
-            self.protocol.send_contained(change_weapon, save=True)
+            self.protocol.broadcast_contained(change_weapon, save=True)
             if not no_kill:
                 self.kill(kill_type=CLASS_CHANGE_KILL)
 
@@ -1030,7 +1028,7 @@ class ServerConnection(BaseConnection):
         if by is not None and by is not self:
             by.add_score(1)
         kill_action.respawn_time = self.get_respawn_time() + 1
-        self.protocol.send_contained(kill_action, save=True)
+        self.protocol.broadcast_contained(kill_action, save=True)
         self.world_object.dead = True
         self.respawn()
 
@@ -1165,7 +1163,7 @@ class ServerConnection(BaseConnection):
         block_action.z = z
         block_action.value = GRENADE_DESTROY
         block_action.player_id = self.player_id
-        self.protocol.send_contained(block_action, save=True)
+        self.protocol.broadcast_contained(block_action, save=True)
         self.protocol.update_entities()
 
     def _on_fall(self, damage: int) -> None:
