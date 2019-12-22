@@ -250,7 +250,7 @@ def main():
     # Twisted throws an exception if you install the reactor more than once.
     import asyncio
 
-    if sys.platform == 'win32' and sys.version >= (3, 7, 0):
+    if sys.platform == 'win32' and sys.version_info >= (3, 7, 0):
         # we (or twisted) do not support the ProactorEventLoop as it does not
         # support adding file readers
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
