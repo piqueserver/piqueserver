@@ -84,6 +84,7 @@ class ServerProtocol(BaseProtocol):
         self._create_teams()
 
         self.world = world.World()
+        self.master_connection = []
         self.set_master()
 
         # safe position LUT
@@ -332,17 +333,18 @@ class ServerProtocol(BaseProtocol):
 
     def set_master(self):
         if self.master:
-            get_master_connection(self).addCallbacks(
-                self.got_master_connection,
-                self.master_disconnected)
+            for master in get_master_connection(self):
+                master.addCallbacks(
+                    self.got_master_connection,
+                    self.master_disconnected)
 
     def got_master_connection(self, connection):
-        self.master_connection = connection
+        self.master_connection.append(connection)
         connection.disconnect_callback = self.master_disconnected
         self.update_master()
 
-    def master_disconnected(self, client=None):
-        self.master_connection = None
+    def master_disconnected(self, master):
+        self.master_connection.remove(master)
 
     def get_player_count(self):
         count = 0
@@ -354,7 +356,8 @@ class ServerProtocol(BaseProtocol):
     def update_master(self):
         if self.master_connection is None:
             return
-        self.master_connection.set_count(self.get_player_count())
+        for master in self.master_connection:
+            master.set_count(self.get_player_count())
 
     def update_entities(self):
         map_obj = self.map
