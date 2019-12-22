@@ -101,7 +101,7 @@ def revert_rotation(connection):
     protocol.irc_say("* %s reverted map rotation to %s" % (name, maps))
 
 
-@command('advancemap', admin_only=True)
+@command('advancemap', 'advance', admin_only=True)
 def advance(connection):
     """
     Force the next map to be immediately loaded instead of waiting for the time limit to end
