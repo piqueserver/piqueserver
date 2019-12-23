@@ -1,6 +1,6 @@
 pylint
 # https://github.com/coveralls-clients/coveralls-python/issues/203
-coverage<5.0
+coverage<6.0
 coveralls
 pytest
 pytest-cov
