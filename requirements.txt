@@ -8,7 +8,7 @@ aiohttp>=3.3.0,<3.7.0
 packaging>=19.0
 
 # from command
-geoip2>=2.9,<3.0
+geoip2>=2.9,<4.0
 
 # [tls] for core, [conch] for ssh
 Twisted[tls,conch]
