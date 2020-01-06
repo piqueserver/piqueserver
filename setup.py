@@ -139,7 +139,7 @@ setup(
         'Cython>=0.27,<1',
         'Twisted[tls]',
         'Jinja2>=2,<3',
-        'Pillow>=5.1.0,<7',
+        'Pillow>=5.1.0,<8',
         'aiohttp>=3.3.0,<3.7.0',
         'pyenet',
         'toml',
