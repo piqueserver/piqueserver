@@ -264,7 +264,7 @@ def player_only(func: Callable):
     @functools.wraps(func)
     def _decorated(connection, *args, **kwargs):
         if connection not in connection.protocol.players.values():
-            raise CommandError("only players can't use this command")
+            raise CommandError("only players can use this command")
         func(connection, *args, **kwargs)
     return _decorated
 
