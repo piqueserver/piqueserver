@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+import asyncio
 from twisted.internet import reactor
-from twisted.internet.task import LoopingCall
 from pyspades.bytes import ByteWriter
 
 import enet
@@ -89,8 +89,7 @@ class BaseProtocol:
             raise IOError("Failed  to Create Enet Host. Is the Port in use?")
 
         self.host.compress_with_range_coder()
-        self.update_loop = LoopingCall(self.update)
-        self.update_loop.start(update_interval, False)
+        self.update_loop = asyncio.get_event_loop().call_later(update_interval, self.update)
         self.connections = {}
         self.clients = {}
 

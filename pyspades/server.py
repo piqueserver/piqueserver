@@ -19,6 +19,8 @@ import random
 import warnings
 from itertools import product
 import enet
+import time
+import asyncio
 
 from pyspades.protocol import BaseProtocol
 from pyspades.constants import (
@@ -66,10 +68,12 @@ class ServerProtocol(BaseProtocol):
     team1_name = 'Blue'
     team2_name = 'Green'
     spectator_name = 'Spectator'
-    loop_count = 0
     melee_damage = 100
     version = GAME_VERSION
     respawn_waves = False
+    last_network_update = 0
+    world_time = 0.0
+    wu_lag = 0
 
     def __init__(self, *arg, **kw):
         # +2 to allow server->master and master->server connection since enet
@@ -98,6 +102,10 @@ class ServerProtocol(BaseProtocol):
         self.pos_table.sort(key=lambda vec: abs(vec[0] * 1.03) +
                             abs(vec[1] * 1.02) +
                             abs(vec[2] * 1.01))
+
+        self.world_time = time.time()
+        self.loop_lag = time.time()
+
 
     def _create_teams(self):
         """create the teams
@@ -215,26 +223,44 @@ class ServerProtocol(BaseProtocol):
         return entities
 
     def update(self):
-        self.loop_count += 1
+        lag = time.time() - self.loop_lag
+        #if lag > (UPDATE_FREQUENCY*1.05):
+        #    print("MAIN LOOP UPDATE LAG: " + str(round(lag*1000)) + " ms")
+        self.wu_lag = time.time()
 
         BaseProtocol.update(self)
         for player in self.connections.values():
             if (player.map_data is not None and
                     not player.peer.reliableDataInTransit):
                 player.continue_map_transfer()
-        self.world.update(UPDATE_FREQUENCY)
-        self.on_world_update()
-        if self.loop_count % int(UPDATE_FPS / NETWORK_FPS) == 0:
-            self.update_network()
+        if (time.time() - self.world_time) > UPDATE_FREQUENCY:
+            self.update_network(True)
+        while (time.time() - self.world_time) > UPDATE_FREQUENCY:
+            self.world.update(UPDATE_FREQUENCY)
+            self.on_world_update()
+            self.world_time += UPDATE_FREQUENCY
+        if (time.time() - self.last_network_update) >= (1 / NETWORK_FPS):
+            self.update_network(False)
+            self.last_network_update = time.time()        
 
-    def update_network(self):
+        self.loop_lag = time.time()
+        lag = time.time() - self.wu_lag
+        #if lag > (UPDATE_FREQUENCY / 2):
+        #    print("WORLD UPDATE LAG: " + str(round(lag*1000)) + " ms")
+
+        tmp = min(self.world_time+UPDATE_FREQUENCY-time.time(), self.last_network_update+(1 / NETWORK_FPS)-time.time())
+        tmp = max(0, tmp*0.6)
+        asyncio.get_event_loop().call_later(tmp, self.update)
+        
+
+    def update_network(self, for_spectators=False):
+        if not len(self.players):
+            return
         items = []
-        highest_player_id = 0
-        for i in range(32):
+        for i in range(max(self.players)+1):
             position = orientation = None
             try:
                 player = self.players[i]
-                highest_player_id = i
                 if (not player.filter_visibility_data and
                         not player.team.spectator):
                     world_object = player.world_object
@@ -249,9 +275,15 @@ class ServerProtocol(BaseProtocol):
         world_update = loaders.WorldUpdate()
         # we only want to send as many items of the player list as needed, so
         # we slice it off at the highest player id
-        world_update.items = items[:highest_player_id+1]
-        self.broadcast_contained(world_update, unsequenced=True)
-
+        world_update.items = items[:max(self.players)+1]
+        if for_spectators:
+            for player in self.connections.values():
+                if (player.team is not None and player.team.spectator) or \
+                (player.world_object is None) or player.world_object.dead: # Dead players
+                    player.send_contained(world_update, True)
+        else:
+            self.send_contained(world_update, unsequenced=True)
+            
     def set_map(self, map_obj):
         self.map = map_obj
         self.world.map = map_obj
