@@ -103,8 +103,8 @@ class ServerProtocol(BaseProtocol):
                             abs(vec[1] * 1.02) +
                             abs(vec[2] * 1.01))
 
-        self.world_time = time.time()
-        self.loop_lag = time.time()
+        self.world_time = time.monotonic()
+        self.loop_lag = time.monotonic()
 
 
     def _create_teams(self):
@@ -223,32 +223,32 @@ class ServerProtocol(BaseProtocol):
         return entities
 
     def update(self):
-        lag = time.time() - self.loop_lag
+        lag = time.monotonic() - self.loop_lag
         #if lag > (UPDATE_FREQUENCY*1.05):
         #    print("MAIN LOOP UPDATE LAG: " + str(round(lag*1000)) + " ms")
-        self.wu_lag = time.time()
+        self.wu_lag = time.monotonic()
 
         BaseProtocol.update(self)
         for player in self.connections.values():
             if (player.map_data is not None and
                     not player.peer.reliableDataInTransit):
                 player.continue_map_transfer()
-        if (time.time() - self.world_time) > UPDATE_FREQUENCY:
+        if (time.monotonic() - self.world_time) > UPDATE_FREQUENCY:
             self.update_network(True)
-        while (time.time() - self.world_time) > UPDATE_FREQUENCY:
+        while (time.monotonic() - self.world_time) > UPDATE_FREQUENCY:
             self.world.update(UPDATE_FREQUENCY)
             self.on_world_update()
             self.world_time += UPDATE_FREQUENCY
-        if (time.time() - self.last_network_update) >= (1 / NETWORK_FPS):
+        if (time.monotonic() - self.last_network_update) >= (1 / NETWORK_FPS):
             self.update_network(False)
-            self.last_network_update = time.time()        
+            self.last_network_update = time.monotonic()
 
-        self.loop_lag = time.time()
-        lag = time.time() - self.wu_lag
+        self.loop_lag = time.monotonic()
+        lag = time.monotonic() - self.wu_lag
         #if lag > (UPDATE_FREQUENCY / 2):
         #    print("WORLD UPDATE LAG: " + str(round(lag*1000)) + " ms")
 
-        tmp = min(self.world_time+UPDATE_FREQUENCY-time.time(), self.last_network_update+(1 / NETWORK_FPS)-time.time())
+        tmp = min(self.world_time+UPDATE_FREQUENCY-time.monotonic(), self.last_network_update+(1 / NETWORK_FPS)-time.monotonic())
         tmp = max(0, tmp*0.6)
         asyncio.get_event_loop().call_later(tmp, self.update)
         
