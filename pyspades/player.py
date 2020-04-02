@@ -768,11 +768,11 @@ class ServerConnection(BaseConnection):
             x, y, z = position.x, position.y, position.z
         else:
             x, y, z = location
-            if self.world_object is not None:
-                self.world_object.set_position(x, y, z)
             x += 0.5
             y += 0.5
             z -= 0.5
+            if self.world_object is not None:
+                self.world_object.set_position(x, y, z)
         position_data = loaders.PositionData()
         position_data.x = x
         position_data.y = y
