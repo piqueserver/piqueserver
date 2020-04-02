@@ -169,6 +169,7 @@ cdef class Character(Object):
     def set_orientation(self, x, y, z):
         """set the current orientation of the Player"""
         cdef Vertex3 v = Vertex3(x, y, z)
+        v.normalize()
         reorient_player(self.player, v.value)
 
     cpdef int can_see(self, float x, float y, float z):
