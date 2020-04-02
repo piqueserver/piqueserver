@@ -44,7 +44,7 @@ the version info.
 Build the sdist
 ---------------
 
-Prerequisites: Linux computer, ``python3.5`` (or greater), ``pip`` (same
+Prerequisites: Linux computer, ``python3.6`` (or greater), ``pip`` (same
 version as the python you’re using), ``twine``
 
 The source distribution is OS agnostic, so this is the easiest to start
