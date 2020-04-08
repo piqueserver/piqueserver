@@ -30,11 +30,10 @@ async def check_for_releases() -> Optional[Dict[str, Any]]:
     log.debug("checking latest version")
     try:
         release = await fetch_latest_release()
-    except IOError as e:
+        latest_version = release["tag_name"]
+    except Exception as e:
         log.warn("could not fetch latest version: {err}", err=e)
         return None
-
-    latest_version = release["tag_name"]
     if version.parse(latest_version) > version.parse(__version__):
         return release
     return None
