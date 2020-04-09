@@ -89,7 +89,7 @@ class BaseProtocol:
             raise IOError("Failed  to Create Enet Host. Is the Port in use?")
 
         self.host.compress_with_range_coder()
-        self.update_loop = asyncio.get_event_loop().call_later(update_interval, self.update)
+        self.update_loop = asyncio.ensure_future(self.update())
         self.connections = {}
         self.clients = {}
 
