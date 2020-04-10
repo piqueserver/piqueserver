@@ -21,6 +21,7 @@ from itertools import product
 import enet
 import time
 import asyncio
+import traceback
 
 from pyspades.protocol import BaseProtocol
 from pyspades.constants import (
@@ -235,7 +236,10 @@ class ServerProtocol(BaseProtocol):
             # Update world
             while (time.monotonic() - self.world_time) > UPDATE_FREQUENCY:
                 self.world.update(UPDATE_FREQUENCY)
-                self.on_world_update()
+                try:
+                    self.on_world_update()
+                except Exception:
+                    traceback.print_exc()
                 self.world_time += UPDATE_FREQUENCY
             # Update network
             if time.monotonic() - self.last_network_update >= 1 / NETWORK_FPS:
