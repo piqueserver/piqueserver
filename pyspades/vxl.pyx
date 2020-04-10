@@ -283,3 +283,6 @@ cdef class VXLData:
             map = self.map
             self.map = NULL
             delete_vxl(map)
+
+    cpdef list a_star(self, int x1, int y1, int z1, int x2, int y2, int z2, bint can_dig = 0, bint can_build = 0):
+        return a_star(x1, y1, z1, x2, y2, z2, can_dig, can_build, self.map)[::-1]

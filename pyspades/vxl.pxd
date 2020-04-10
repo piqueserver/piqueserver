@@ -28,6 +28,9 @@ cdef extern from "vxl_c.cpp":
     bint is_valid_position(int x, int y, int z)
     void update_shadows(MapData * map)
 
+cdef extern from "pathfinder.cpp":
+    object a_star(int x1, int y1, int z1, int x2, int y2, int z2, int can_dig, int can_build, MapData * map)
+
 cdef class VXLData:
     cdef MapData * map
 
@@ -45,3 +48,4 @@ cdef class VXLData:
     cpdef bint set_column_fast(self, int x, int y, int start_z,
         int end_z, int end_color_z, int color)
     cpdef update_shadows(self)
+    cpdef list a_star(self, int x1, int y1, int z1, int x2, int y2, int z2, bint can_dig = ?, bint can_build = ?)
