@@ -446,7 +446,7 @@ class FeatureProtocol(ServerProtocol):
         """called after the map has been loaded"""
         self.update_format()
         self.tip_frequency = tip_frequency.get()
-        if self.tips is not None and self.tip_frequency > 0:
+        if self.tips and self.tip_frequency > 0:
             reactor.callLater(self.tip_frequency * 60, self.send_tip)
 
         self.master = register_master_option.get()
