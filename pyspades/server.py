@@ -236,13 +236,16 @@ class ServerProtocol(BaseProtocol):
                         not player.peer.reliableDataInTransit):
                     player.continue_map_transfer()
             # Update world
-            while (time.monotonic() - self.world_time) > UPDATE_FREQUENCY:
+            while (time.monotonic() - self.world_time) >= UPDATE_FREQUENCY:
                 self.loop_count += 1
                 self.world.update(UPDATE_FREQUENCY)
-                try:
-                    self.on_world_update()
-                except Exception:
-                    traceback.print_exc()
+                if (time.monotonic() - start_time) < 2:
+                    try:
+                        self.on_world_update()
+                    except Exception:
+                        traceback.print_exc()
+                else:
+                    log.warn("world update heavy LAG. on_world_update skipped")
                 self.world_time += UPDATE_FREQUENCY
             # Update network
             if time.monotonic() - self.last_network_update >= 1 / NETWORK_FPS:
