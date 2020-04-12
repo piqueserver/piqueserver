@@ -226,7 +226,7 @@ class ServerProtocol(BaseProtocol):
             start_time = time.monotonic()
             lag = start_time - self.world_time - UPDATE_FREQUENCY
             if lag > 0.004:
-                log.debug("LAG before world update: " + str(round(lag*1000)) + " ms")
+                log.debug("LAG before world update: {lag:.0f} ms", lag=lag * 1000)
 
             BaseProtocol.update(self)
             # Map transfer
@@ -250,7 +250,7 @@ class ServerProtocol(BaseProtocol):
 
             lag = time.monotonic() - start_time
             if lag > (UPDATE_FREQUENCY * 0.7):
-                log.debug("world update LAG: " + str(round(lag*1000)) + " ms")
+                log.debug("world update LAG: {lag:.0f} ms", lag=lag * 1000)
 
             delay = self.world_time + UPDATE_FREQUENCY - time.monotonic()
             await asyncio.sleep(delay)
