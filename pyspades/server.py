@@ -103,6 +103,7 @@ class ServerProtocol(BaseProtocol):
                             abs(vec[2] * 1.01))
 
         self.last_network_update = self.world_time = time.monotonic()
+        self.loop_count = 0
 
 
     def _create_teams(self):
@@ -235,6 +236,7 @@ class ServerProtocol(BaseProtocol):
                     player.continue_map_transfer()
             # Update world
             while (time.monotonic() - self.world_time) > UPDATE_FREQUENCY:
+                self.loop_count += 1
                 self.world.update(UPDATE_FREQUENCY)
                 try:
                     self.on_world_update()
