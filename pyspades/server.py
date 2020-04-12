@@ -247,7 +247,7 @@ class ServerProtocol(BaseProtocol):
                 self.update_network()
 
             lag = time.monotonic() - start_time
-            if lag > (UPDATE_FREQUENCY / 10):
+            if lag > (UPDATE_FREQUENCY * 0.7):
                 log.debug("world update LAG: " + str(round(lag*1000)) + " ms")
 
             delay = self.world_time + UPDATE_FREQUENCY - time.monotonic()
