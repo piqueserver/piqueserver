@@ -224,6 +224,7 @@ class ServerProtocol(BaseProtocol):
     async def update(self):
         while True:
             start_time = time.monotonic()
+            # Notify if update starts more than 4ms later than requested
             lag = start_time - self.world_time - UPDATE_FREQUENCY
             if lag > 0.004:
                 log.debug("LAG before world update: {lag:.0f} ms", lag=lag * 1000)
@@ -248,6 +249,7 @@ class ServerProtocol(BaseProtocol):
                 self.last_network_update = self.world_time
                 self.update_network()
 
+            # Notify if update uses more than 70% of time budget
             lag = time.monotonic() - start_time
             if lag > (UPDATE_FREQUENCY * 0.7):
                 log.debug("world update LAG: {lag:.0f} ms", lag=lag * 1000)
