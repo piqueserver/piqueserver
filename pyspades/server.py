@@ -305,6 +305,8 @@ class ServerProtocol(BaseProtocol):
                 connection._send_connection_data()
                 connection.send_map(data.get_child())
         self.update_entities()
+        if self.initialized:
+            self.on_game_start()
 
     def reset_game(self, player=None, territory=None):
         """reset the score of the game
@@ -478,6 +480,9 @@ class ServerProtocol(BaseProtocol):
         pass
 
     def on_game_end(self):
+        pass
+
+    def on_game_start(self):
         pass
 
     def on_world_update(self):
