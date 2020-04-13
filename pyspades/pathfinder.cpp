@@ -25,7 +25,7 @@ float inline get_cost(int x1, int y1, int z1, int x2, int y2, int z2, int can_di
     if (solid(x2, y2, z2) || solid(x2, y2, z2 + 1) || solid(x2, y2, z2 + 2)) return -1;
     // Движемся по диагонали
     if ((x1 != x2) && (y1 != y2)) {
-        int z = std::max(z1, z2);
+        int z = std::min(z1, z2);
         // При движении по диагонали оба боковых столба должны быть свбодны
         if (solid(x1, y2, z) or solid(x1, y2, z + 1) or solid(x1, y2, z + 2) or
             solid(x2, y1, z) or solid(x2, y1, z + 1) or solid(x2, y1, z + 2)) return -1;
@@ -127,9 +127,9 @@ PyObject* a_star(int x1, int y1, int z1, int x2, int y2, int z2, int can_dig, in
     }
     loop_end: 
 
-    std::cout << "END " << j << std::endl;
-    std::cout << "COST " << best.full_cost  << std::endl;
-    std::cout << "DIST " << distance(best.x, best.y, best.z, x2, y2, z2) << std::endl;
+    //std::cout << "END " << j << std::endl;
+    //std::cout << "COST " << best.full_cost  << std::endl;
+    //std::cout << "DIST " << distance(best.x, best.y, best.z, x2, y2, z2) << std::endl;
 
     nodes.clear();
 
