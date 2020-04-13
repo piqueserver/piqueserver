@@ -570,6 +570,8 @@ class FeatureProtocol(ServerProtocol):
         self.set_map(self.map_info.data)
         self.set_time_limit(self.map_info.time_limit)
         self.update_format()
+        if self.initialized:
+            self.on_game_start()
 
     def set_server_name(self, name: str) -> None:
         name_option.set(name)
