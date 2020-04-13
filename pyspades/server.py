@@ -19,6 +19,9 @@ import random
 import warnings
 from itertools import product
 import enet
+import time
+import asyncio
+import traceback
 
 from pyspades.protocol import BaseProtocol
 from pyspades.constants import (
@@ -35,8 +38,9 @@ from pyspades.bytes import ByteWriter
 from pyspades import contained as loaders
 from pyspades.common import make_color
 from pyspades.mapgenerator import ProgressiveMapGenerator
+from twisted.logger import Logger
 
-
+log = Logger()
 
 class ServerProtocol(BaseProtocol):
     connection_class = ServerConnection
@@ -66,7 +70,6 @@ class ServerProtocol(BaseProtocol):
     team1_name = 'Blue'
     team2_name = 'Green'
     spectator_name = 'Spectator'
-    loop_count = 0
     melee_damage = 100
     version = GAME_VERSION
     respawn_waves = False
@@ -98,6 +101,10 @@ class ServerProtocol(BaseProtocol):
         self.pos_table.sort(key=lambda vec: abs(vec[0] * 1.03) +
                             abs(vec[1] * 1.02) +
                             abs(vec[2] * 1.01))
+
+        self.last_network_update = self.world_time = time.monotonic()
+        self.loop_count = 0
+
 
     def _create_teams(self):
         """create the teams
@@ -214,27 +221,52 @@ class ServerProtocol(BaseProtocol):
             entities.append(flag)
         return entities
 
-    def update(self):
-        self.loop_count += 1
+    async def update(self):
+        while True:
+            start_time = time.monotonic()
+            # Notify if update starts more than 4ms later than requested
+            lag = start_time - self.world_time - UPDATE_FREQUENCY
+            if lag > 0.004:
+                log.debug("LAG before world update: {lag:.0f} ms", lag=lag * 1000)
 
-        BaseProtocol.update(self)
-        for player in self.connections.values():
-            if (player.map_data is not None and
-                    not player.peer.reliableDataInTransit):
-                player.continue_map_transfer()
-        self.world.update(UPDATE_FREQUENCY)
-        self.on_world_update()
-        if self.loop_count % int(UPDATE_FPS / NETWORK_FPS) == 0:
-            self.update_network()
+            BaseProtocol.update(self)
+            # Map transfer
+            for player in self.connections.values():
+                if (player.map_data is not None and
+                        not player.peer.reliableDataInTransit):
+                    player.continue_map_transfer()
+            # Update world
+            while (time.monotonic() - self.world_time) > UPDATE_FREQUENCY:
+                self.loop_count += 1
+                self.world.update(UPDATE_FREQUENCY)
+                try:
+                    self.on_world_update()
+                except Exception:
+                    traceback.print_exc()
+                self.world_time += UPDATE_FREQUENCY
+            # Update network
+            if time.monotonic() - self.last_network_update >= 1 / NETWORK_FPS:
+                self.last_network_update = self.world_time
+                self.update_network()
+
+            # Notify if update uses more than 70% of time budget
+            lag = time.monotonic() - start_time
+            if lag > (UPDATE_FREQUENCY * 0.7):
+                log.debug("world update LAG: {lag:.0f} ms", lag=lag * 1000)
+
+            delay = self.world_time + UPDATE_FREQUENCY - time.monotonic()
+            await asyncio.sleep(delay)
+
 
     def update_network(self):
+        if not len(self.players):
+            return
         items = []
-        highest_player_id = 0
-        for i in range(32):
+        highest_player_id = max(self.players)
+        for i in range(highest_player_id + 1):
             position = orientation = None
             try:
                 player = self.players[i]
-                highest_player_id = i
                 if (not player.filter_visibility_data and
                         not player.team.spectator):
                     world_object = player.world_object
