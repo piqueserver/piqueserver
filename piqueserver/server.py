@@ -913,6 +913,8 @@ class FeatureProtocol(ServerProtocol):
             self.irc_say('Round ended!', me=True)
         elif next(self.win_count) % self.advance_on_win == 0:
             self.advance_rotation('Game finished!')
+            return
+        self.on_game_start()
 
     def on_advance(self, map_name: str) -> None:
         pass
