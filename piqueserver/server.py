@@ -710,7 +710,7 @@ class FeatureProtocol(ServerProtocol):
                 name = connection.name
                 connection.kick(silent=True)
         if duration:
-            duration = reactor.seconds() + duration
+            duration = time.time() + duration
         else:
             duration = None
         self.bans[ip] = (name or '(unknown)', reason, duration)
