@@ -83,7 +83,7 @@ def load_scripts(script_names, script_dir, script_type):
             script_objects.append(module)
             continue
         except Exception as e: # needs to be broad since we exec the module
-            log.error("Error while loading {} {}: {!r}".format(
+            log.failure("Error while loading {} {}: {!r}".format(
                 script_type, script, e))
 
     return script_objects
