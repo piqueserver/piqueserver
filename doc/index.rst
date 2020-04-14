@@ -29,6 +29,7 @@ Piqueserver is an Ace of Spades 0.75 Server based on Pysnip.
 
    contributing-developer
    architecture
+   startup-and-initialization
 
    release-guide
 
