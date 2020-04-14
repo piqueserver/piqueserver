@@ -23,12 +23,9 @@ class TestNetworkDict(unittest.TestCase):
 
     def test_get_set(self):
         networkdict = NetworkDict()
-        networkdict["177.47.27.223/24"] = [
-            'GOD', ': esp hacker', 1511717871.435394]
-        try:
-            networkdict["177.47.27.223"]
-        except KeyError:
-            self.fail("Should not get a KeyError on an existing key")
+        values = ('GOD', ': esp hacker', 1511717871.435394)
+        networkdict["177.47.27.223/24"] = values
+        assert values == networkdict["177.47.27.223"]
 
     def test_get_nonexisting(self):
         networkdict = NetworkDict()

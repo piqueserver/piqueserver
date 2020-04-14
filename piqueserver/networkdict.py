@@ -52,7 +52,7 @@ class NetworkDict:
         self.networks[ip_network(str(key), strict=False)] = value
 
     def __getitem__(self, key):
-        return self.get_entry(key)[1]
+        return self.get_entry(key)
 
     def get_entry(self, key):
         ip = ip_network(str(key))
