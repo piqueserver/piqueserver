@@ -561,6 +561,8 @@ class ServerConnection(BaseConnection):
     def on_block_line_recieved(self, contained):
         if not self.hp:
             return  # dead players can't build
+        if self.line_build_start_pos is None:
+            return
 
         map_ = self.protocol.map
 
