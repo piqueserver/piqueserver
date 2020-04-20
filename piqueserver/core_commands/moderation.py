@@ -167,7 +167,7 @@ def say(connection, *arg):
     /say <text>
     """
     value = ' '.join(arg)
-    connection.protocol.send_chat(value)
+    connection.protocol.broadcast_chat(value)
     connection.protocol.irc_say(value)
 
 
