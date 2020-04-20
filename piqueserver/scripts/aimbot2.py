@@ -36,7 +36,7 @@ from piqueserver.utils import timeparse
 DISABLED, KICK, BAN, WARN_ADMIN = range(4)
 
 # This controls which detection methods are enabled. If a player is detected
-# using one of these methods, the player is kicked.
+# using one of these methods, the given action is performed
 HEADSHOT_SNAP = WARN_ADMIN
 HIT_PERCENT = WARN_ADMIN
 KILLS_IN_TIME = WARN_ADMIN
