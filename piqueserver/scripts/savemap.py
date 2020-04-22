@@ -75,7 +75,7 @@ def apply_script(protocol, connection, config):
                 path = get_path(self.map_info.rot_info.name)
             with open(path, 'wb') as f:
                 f.write(self.map.generate())
-            log.info("Map saved to '%s'" % path)
+            log.info("Map saved to '{path}'", path=path)
             return path
 
     return SaveMapProtocol, connection
