@@ -1,5 +1,11 @@
 """
-Saves current map on shutdown (and optionally loads it again on startup)
+Adds a /savemap command to save the current state of the map.
+You can specify any name with an argument, without it the map will
+be saved with the '.saved' suffix.
+With /rmsaved you can delete a '.saved' version of this map.
+
+Also adds two options: for automatically saving map at shutdown and 
+loading saved map instead of the original.
 
 Options
 ^^^^^^^
@@ -8,67 +14,68 @@ Options
 
     [savemap]
     load_saved_map = false
-
-.. codeauthor:: mat^2
+    save_at_shutdown = false
 """
 
 import os
-from twisted.internet import reactor, threads
-from twisted.internet.defer import ensureDeferred
+from twisted.internet import reactor
 from twisted.logger  import Logger
-from pyspades.vxl import VXLData
 from piqueserver.config import config
+from piqueserver.commands import command
+from piqueserver.map import RotationInfo
 
-log = Logger()
 
 savemap_config = config.section('savemap')
-LOAD_SAVED_MAP_OPTION = savemap_config.option('load_saved_map', False)
+config_dir = config.config_dir
+log = Logger()
 
 
-def get_name(map_info):
-    return '%s/%s.saved.vxl' % (os.path.join(config.config_dir, 'maps'),
-                                map_info.rot_info.name)
+@command('savemap', admin_only=True)
+def savemap(connection, custom_name=None):
+    name = connection.protocol.save_map(custom_name)
+    return "Map saved to '%s'" % name
 
+@command('rmsaved', admin_only=True)
+def rmsaved(connection):
+    name = connection.protocol.map_info.rot_info.name
+    path = get_path(name)
+    if os.path.isfile(path):
+        os.remove(path)
+        # remove .saved suffix
+        connection.protocol.map_info.rot_info.name = name[:-6]
+        return "Map '%s' removed" % name
+    else:
+        return "There is no saved version of '%s' map" % name
 
-def load_map_from_path(path):
-    with open(path, 'rb') as f:
-        return VXLData(f)
-
+def get_path(map_name):
+    if map_name.endswith('.saved'):
+        map_name = map_name[:-6]
+    return '%s.saved.vxl' % os.path.join(config_dir, 'maps', map_name)
 
 def apply_script(protocol, connection, config):
-    class MapSaveProtocol(protocol):
-
+    class SaveMapProtocol(protocol):
         def __init__(self, *arg, **kw):
             protocol.__init__(self, *arg, **kw)
-            reactor.addSystemEventTrigger('before', 'shutdown', self.save_map)
+            def call():
+                if savemap_config.option('save_at_shutdown', False).get():
+                    self.save_map()
+            reactor.addSystemEventTrigger('before', 'shutdown', call)
 
-        def make_map(self, name):
-            if not LOAD_SAVED_MAP_OPTION.get():
-                # just do the normal operation
-                return protocol.make_map(self, name)
+        async def set_map_name(self, rot_info: RotationInfo) -> None:
+            if savemap_config.option('load_saved_map', False).get():
+                if os.path.isfile(get_path(rot_info.name)):
+                    log.info("Saved version of '%s' found" % rot_info.name)
+                    rot_info.name += '.saved'
+            await protocol.set_map_name(self, rot_info)
 
-            async def do_load():
-                map_info = await protocol.make_map(self, name)
-                cached_path = get_name(map_info)
-
-                if not os.path.isfile(cached_path):
-                    # no cache file. Just load the regular map
-                    return map_info
-
-                log.info("Loading saved map for {name} from {cached_path}",
-                    name=name, cached_path=cached_path)
-                map_info.data = await threads.deferToThread(
-                    load_map_from_path, cached_path)
-                log.info("Saved map loaded")
-                return map_info
-
-            # replace the map_info deferred with our own one that also
-            # loads and replaces the map data
-            return ensureDeferred(do_load)
-
-        def save_map(self):
-            with open(get_name(self.map_info), 'wb') as f:
+        def save_map(self, custom_name=None):
+            if custom_name:
+                path = os.path.join(config_dir, 'maps', custom_name) + '.vxl'
+            else:
+                path = get_path(self.map_info.rot_info.name)
+            with open(path, 'wb') as f:
                 f.write(self.map.generate())
-            log.info("Map saved to {}".format(get_name(self.map_info)))
+            log.info("Map saved to '{path}'", path=path)
+            return path
 
-    return MapSaveProtocol, connection
+    return SaveMapProtocol, connection
