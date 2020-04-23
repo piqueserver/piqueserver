@@ -108,3 +108,17 @@ def advance(connection):
     /advancemap
     """
     connection.protocol.advance_rotation('Map advance forced.')
+
+@command('loadmap', admin_only=True)
+def load_map(connection, map):
+    """
+    Instantly switches map to the specified
+    /loadmap <mapname>
+    """
+    protocol = connection.protocol
+
+    try:
+        protocol.planned_map = check_rotation([map])[0]
+        protocol.advance_rotation()
+    except MapNotFound:
+        return 'Map %s not found' % (map)
