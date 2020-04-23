@@ -321,10 +321,12 @@ auto_squad = false
 # piqueserver.scripts.savemap
 # allows automatically saving a snapshot of the map on server close
 [savemap]
-
 # automatically load the saved map on map load
-load_saved_map = false
-
+load_saved_map = true
+# automatically save map at shutdown
+save_at_shutdown = false
+# automatically save map at map rotation or server shutdown
+always_save_map = false
 
 # piqueserver.scripts.rollback
 [rollback]
