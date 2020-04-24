@@ -118,15 +118,15 @@ def apply_script(protocol, connection, config):
                     return False
 
             if self.team is self.protocol.blue_team:
-                can_shoot_blocks = position.x <= 288
+                can_shoot_blocks = x <= 288
             else:
-                can_shoot_blocks = position.x >= 224
+                can_shoot_blocks = x >= 224
 
             if can_shoot_blocks:
                 if self.tool is WEAPON_TOOL:
-                    self.send_chat('You must be closer to the enemy\'s base to shoot blocks!')
+                    self.send_chat('You must shoot blocks closer to the enemy\'s base!')
                 else:
-                    self.send_chat('You must be closer to the enemy\'s base to grenade blocks!')
+                    self.send_chat('You must grenade blocks closer to the enemy\'s base!')
                 return False
             return connection.on_block_destroy(self, x, y, z, mode)
 
