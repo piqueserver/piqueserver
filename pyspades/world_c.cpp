@@ -237,8 +237,8 @@ long can_see(MapData *map, float x0, float y0, float z0, float x1, float y1,
     ftol(f.y * g.x - f.x * g.y, &p.z);
     ftol(g.z, &i.z);
 
-    if (cnt > 32)
-        cnt = 32;
+    if (cnt > 128)
+        cnt = 128;
     while (cnt)
     {
         if (((p.x | p.y) >= 0) && (a.z != c.z))
