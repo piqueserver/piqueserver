@@ -146,7 +146,7 @@ setup(
         'packaging>=19.0'
     ],
     extras_require={
-        'from': ['geoip2>=2.9,<3.0'],
+        'from': ['geoip2>=2.9,<5.0'],
         'ssh': ['Twisted[tls,conch]'],
     },
     entry_points={
