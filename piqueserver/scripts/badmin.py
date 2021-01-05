@@ -192,16 +192,12 @@ def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green 
 
 
 def check_percent(self):
-    # TODO: uncomment this when you find out what/where semi_hits and
-    #       semi_count should be defined. Possibly in aimbot2.py, but currently these
-    #       attributes don't exist anywhere
-    # if self.weapon == RIFLE_WEAPON:
-    #     if self.semi_hits == 0 or self.semi_count == 0:
-    #         return 0
-    #     else:
-    #         return (float(self.semi_hits) / float(self.semi_count)) * 100
-    # elif self.weapon == SMG_WEAPON:
-    if self.weapon == SMG_WEAPON:
+    if self.weapon == RIFLE_WEAPON:
+        if self.rifle_hits == 0 or self.rifle_count == 0:
+            return 0
+        else:
+            return (float(self.rifle_hits) / float(self.rifle_count)) * 100
+    elif self.weapon == SMG_WEAPON:
         if self.smg_hits == 0 or self.smg_count == 0:
             return 0
         else:
