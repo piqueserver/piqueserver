@@ -14,7 +14,7 @@ from math import ceil, sin, cos
 from random import uniform, vonmisesvariate
 from twisted.internet import reactor
 from pyspades.contained import GrenadePacket
-from pyspades.common import to_coordinates, Vertex3
+from pyspades.common import coordinates, to_coordinates, Vertex3
 from pyspades.world import Grenade
 from pyspades.constants import UPDATE_FREQUENCY, WEAPON_TOOL
 from piqueserver.commands import (
@@ -27,7 +27,7 @@ REFILL_ON_GRANT = True  # heals when unlocking the airstrike
 REFILL_ON_AIRSTRIKE = False  # heals when calling in the airstrike
 
 
-S_READY = "Airstrike support ready! SCOPE and HOLD <V> (sneak) to launch"
+S_READY = "Airstrike support ready! SCOPE and HOLD <V> (sneak) or /airstrike <COORD> to launch"
 S_FAILED = 'You need to aim your airstrike somewhere, not at the sky!'
 S_NO_STREAK = 'Every {streak} kills in a row you unlock an ' \
     'airstrike. {remaining} kills to go!'
@@ -46,11 +46,18 @@ ARRIVAL_DELAY = 2  # seconds from airstrike notice to arrival
 
 @command('airstrike', 'a')
 @player_only
-def airstrike(connection, *args):
-    player = connection
-
+def airstrike(player, *args):
     if player.airstrike:
-        return S_READY
+        if not args:
+            return S_READY
+        x,y = coordinates(args[0])
+        # center the coordinate
+        x+=32
+        y+= 32
+        z = player.protocol.map.get_z(x,y)
+
+        player.start_zoomv((x,y,z))
+        return
 
     kills_left = STREAK_REQUIREMENT - player.airstrike_streak
     return S_NO_STREAK.format(streak=STREAK_REQUIREMENT,
@@ -112,14 +119,16 @@ def apply_script(protocol, connection, config):
         zoomv = None
         zoomv_nag = None
         last_zoomv_message = None
+        airstrike_location = {"coord": None} # need to be an object to be changed inside of zoomv
 
-        def start_airstrike(self, x, y, z):
+        def start_airstrike(self, allCoord):
+            x,y,z = allCoord["coord"]
             coords = to_coordinates(x, y)
             message = S_ALLIED.format(player=self.name, coords=coords)
-            self.protocol.send_chat(message, global_message=False,
+            self.protocol.broadcast_chat(message, global_message=False,
                                     team=self.team)
             message = S_ENEMY.format(coords=coords)
-            self.protocol.send_chat(message, global_message=False,
+            self.protocol.broadcast_chat(message, global_message=False,
                                     team=self.team.other)
             self.team.last_airstrike = reactor.seconds()
 
@@ -197,7 +206,7 @@ def apply_script(protocol, connection, config):
                         grenade_call.cancel()
             self.airstrike_grenade_calls = None
 
-        def start_zoomv(self):
+        def start_zoomv(self, coord=None):
             now = reactor.seconds()
             last_strike = getattr(self.team, 'last_airstrike', None)
             if last_strike is not None and now - last_strike < TEAM_COOLDOWN:
@@ -205,20 +214,19 @@ def apply_script(protocol, connection, config):
                 message = S_COOLDOWN.format(seconds=int(remaining))
                 self.send_zoomv_chat(message)
                 return
-            location = self.world_object.cast_ray(ZOOMV_RAY_LENGTH)
-            if not location:
+            self.airstrike_location["coord"] = coord if coord else self.world_object.cast_ray(ZOOMV_RAY_LENGTH)
+            if not self.airstrike_location["coord"]:
                 self.send_zoomv_chat(S_FAILED)
                 return
             self.zoomv.start_or_reset()
 
-        def end_zoomv(self):
-            location = self.world_object.cast_ray(ZOOMV_RAY_LENGTH)
+        def end_zoomv(self, location=None):
             if not location:
                 self.send_chat(S_FAILED)
                 return
             self.airstrike = False
             self.airstrike_streak = 0
-            self.start_airstrike(*location)
+            self.start_airstrike(location)
             if REFILL_ON_AIRSTRIKE:
                 self.refill()
 
@@ -234,7 +242,7 @@ def apply_script(protocol, connection, config):
 
         def on_login(self, player_name):
             self.airstrike_nag = Nag(4.0, self.send_chat, S_READY)
-            self.zoomv = Nag(1.0, self.end_zoomv)
+            self.zoomv = Nag(1.0, self.end_zoomv, self.airstrike_location)
             self.zoomv_nag = Nag(2.0, self.send_zoomv_chat, S_STAND)
             connection.on_login(self, player_name)
 
