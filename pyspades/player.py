@@ -56,22 +56,33 @@ def parse_command(value: str) -> Tuple[str, Sequence[str]]:
     return command, splitted
 
 
-class SlidingWindow:
-    def __init__(self, entries: Any) -> None:
-        self.entries = entries
-        self.window = collections.deque()  # type: Deque
+class RateLimiter:
+    """sliding window rate limiter
 
-    def add(self, value) -> None:
-        self.window.append(value)
-        if len(self.window) <= self.entries:
-            return
-        self.window.popleft()
+    Triggers if more than a certain number of events happen in a certain amount
+    of time"""
+    def __init__(self, event_count: int, seconds: float) -> None:
+        """limit is event_count events in seconds"""
+        self._seconds = seconds
+        self._window = collections.deque(maxlen=event_count)  # type: collections.deque
 
-    def check(self) -> bool:
-        return len(self.window) == self.entries
+    def record_event(self, timestamp: float) -> None:
+        """record an event at the given timestamp"""
+        self._window.append(timestamp)
 
-    def get(self) -> Any:
-        return self.window[0], self.window[-1]
+    def above_limit(self) -> bool:
+        if len(self._window) != self._window.maxlen:
+            # not enough events yet
+            return False
+
+        start, end = self._window[0], self._window[-1]
+
+        if end - start < self._seconds:
+            return True
+        return False
+
+    def get_events(self) -> list:
+        return list(self._window)
 
 
 class ServerConnection(BaseConnection):
@@ -114,7 +125,7 @@ class ServerConnection(BaseConnection):
         self.total_blocks_removed = 0
         self.address = (address.host, address.port)
         self.respawn_time = protocol.respawn_time
-        self.rapids = SlidingWindow(RAPID_WINDOW_ENTRIES)
+        self.rapids = RateLimiter(RAPID_WINDOW_ENTRIES, MAX_RAPID_SPEED)
         self.client_info = {}
         self.proto_extensions = {}  # type: Dict[int, int]
         self.line_build_start_pos = None
@@ -500,12 +511,10 @@ class ServerConnection(BaseConnection):
         self.last_block = current_time
         if (self.rapid_hack_detect and last_time is not None and
                 current_time - last_time < interval):
-            self.rapids.add(current_time)
-            if self.rapids.check():
-                start, end = self.rapids.get()
-                if end - start < MAX_RAPID_SPEED:
-                    log.info('RAPID HACK: {window}', window=self.rapids.window)
-                    self.on_hack_attempt('Rapid hack detected')
+            self.rapids.record_event(current_time)
+            if self.rapids.above_limit():
+                log.info('RAPID HACK: {events}', events=self.rapids.get_events())
+                self.on_hack_attempt('Rapid hack detected')
             return
         map = self.protocol.map
         x = contained.x

@@ -32,7 +32,7 @@ def analyze_shot(connection, player=None):
         return 'Please enter a target player to analyze.'
 
     player = get_player(protocol, player)
-    if player not in protocol.players:
+    if player.player_id not in protocol.players:
         raise ValueError("Target player is required")
 
     if connection.name in protocol.analyzers:

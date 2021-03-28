@@ -53,14 +53,14 @@ def apply_script(protocol, connection, config):
             self.one_ctf = self.reverse_one_ctf = False
             self.one_ctf_spawn_pos = FLAG_SPAWN_POS
             extensions = self.map_info.extensions
-            if ONE_CTF_MODE == ONE_CTF:
+            if "one_ctf" in extensions:
+                self.one_ctf = extensions['one_ctf']
+            elif not self.one_ctf and 'reverse_one_ctf' in extensions:
+                self.reverse_one_ctf = extensions['reverse_one_ctf']
+            elif ONE_CTF_MODE == ONE_CTF:
                 self.one_ctf = True
             elif ONE_CTF_MODE == REVERSE_ONE_CTF:
                 self.reverse_one_ctf = True
-            elif "one_ctf" in extensions:
-                self.one_ctf = extensions['one_ctf']
-            if not self.one_ctf and 'reverse_one_ctf' in extensions:
-                self.reverse_one_ctf = extensions['reverse_one_ctf']
             if 'one_ctf_spawn_pos' in extensions:
                 self.one_ctf_spawn_pos = extensions['one_ctf_spawn_pos']
             return protocol.on_map_change(self, map)
