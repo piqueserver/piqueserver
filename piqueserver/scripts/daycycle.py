@@ -102,12 +102,12 @@ def apply_script(protocol, connection, config):
         def update_day_color(self):
             if self.current_time >= 24.00:
                 self.current_time = wrap(0.00, 24.00, self.current_time)
-            while (self.current_time < self.start_time or
+            while (self.current_time < self.daycycle_start_time or
                    self.current_time >= self.target_time):
                 self.next_color()
                 self.target_time = self.target_time or 24.00
-            t = ((self.current_time - self.start_time) /
-                 (self.target_time - self.start_time))
+            t = ((self.current_time - self.daycycle_start_time) /
+                 (self.target_time - self.daycycle_start_time))
             if self.hsv_transition:
                 new_color = interpolate_hsb(self.start_color,
                                             self.target_color, t)
@@ -122,7 +122,7 @@ def apply_script(protocol, connection, config):
             self.current_time += self.time_step * self.time_multiplier
 
         def next_color(self):
-            self.start_time, self.start_color, _ = (
+            self.daycycle_start_time, self.start_color, _ = (
                 self.day_colors[self.target_color_index])
             self.target_color_index = ((self.target_color_index + 1) %
                                        len(self.day_colors))
