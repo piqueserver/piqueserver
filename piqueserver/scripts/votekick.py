@@ -182,7 +182,10 @@ class Votekick:
     def start(cls, instigator, victim, reason=None):
         protocol = instigator.protocol
         last_votekick = instigator.last_votekick
-        reason = reason.strip() if reason else None
+        reason = reason.strip() if reason else None        
+        for IPs in list(instigator.protocol.instigatorsIPs.keys()):
+            if seconds() - instigator.protocol.instigatorsIPs[IPs] > cls.interval:
+                instigator.protocol.instigatorsIPs.pop(IPs)
         if protocol.votekick:
             raise VotekickFailure(S_IN_PROGRESS)
         elif instigator is victim:
@@ -191,9 +194,12 @@ class Votekick:
             raise VotekickFailure(S_NOT_ENOUGH_PLAYERS)
         elif victim.admin or victim.rights.cancel or victim.local:
             raise VotekickFailure(S_VOTEKICK_IMMUNE)
-        elif not instigator.admin and (last_votekick is not None and
-                                       seconds() - last_votekick < cls.interval):
-            raise VotekickFailure(S_NOT_YET)
+        elif not instigator.admin:
+            if last_votekick is not None and seconds() - last_votekick < cls.interval:
+                raise VotekickFailure(S_NOT_YET)
+            elif instigator.protocol.instigatorsIPs.get(instigator.address[0]) is not None:
+                if seconds() - instigator.protocol.instigatorsIPs.get(instigator.address[0]) < cls.interval:
+                    raise VotekickFailure(S_NOT_YET)
         elif REQUIRE_REASON and not reason:
             raise VotekickFailure(S_NEED_REASON)
 
@@ -210,6 +216,7 @@ class Votekick:
         self.victim = victim
         self.reason = reason
         self.votes = {instigator: True}
+        self.votersIPs = {instigator.address[0]: instigator.name}
         self.ended = False
 
         protocol.irc_say(
@@ -236,9 +243,19 @@ class Votekick:
             return
         elif player in self.votes:
             return
+        elif player.address[0] in self.votersIPs.keys():
+            for adminz in list(player.protocol.players.values()):
+                if adminz.admin:
+                    adminz.send_chat("[Votekick]: "+player.name + " tried to vote multiple times. Previous name: "+self.votersIPs[player.address[0]])
+            try:
+                player.protocol.irc_say("[Votekick]: "+player.name + " tried to vote multiple times. Previous name: "+self.votersIPs[player.address[0]])
+            except:
+                pass
+            return
         if self.public_votes:
             self.protocol.send_chat(S_YES.format(player=player.name))
         self.votes[player] = True
+        self.votersIPs.update({player.address[0]: player.name})
         if self.votes_remaining <= 0:
             # vote passed, ban or kick accordingly
             victim = self.victim
@@ -253,6 +270,7 @@ class Votekick:
         self.instigator = None
         self.victim = None
         self.votes = None
+        self.votersIPs = {}
         if self.schedule:
             self.schedule.reset()
         self.schedule = None
@@ -264,6 +282,7 @@ class Votekick:
         self.protocol.send_chat(message, irc=True)
         if not self.instigator.admin:
             self.instigator.last_votekick = seconds()
+            self.instigator.protocol.instigatorsIPs.update({self.instigator.address[0]: seconds()})
         self.protocol.on_votekick_end()
         self.release()
 
@@ -283,6 +302,7 @@ def apply_script(protocol, connection, config):
     class VotekickProtocol(protocol):
         votekick = None
         votekick_enabled = True
+        instigatorsIPs = {}
 
         def get_required_votes(self):
             # votekicks are invalid if this returns <= 0
@@ -334,7 +354,8 @@ def apply_script(protocol, connection, config):
             votekick = self.protocol.votekick
             if votekick:
                 if votekick.victim is self:
-                    votekick.end(S_RESULT_KICKED)
+                    votekick.end(S_RESULT_BANNED)
+                    self.ban(None, Votekick.ban_duration)
                 elif votekick.instigator is self:
                     votekick.end(S_RESULT_INSTIGATOR_KICKED)
             connection.kick(self, reason, silent)
