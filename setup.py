@@ -138,7 +138,7 @@ setup(
         'pypiwin32;platform_system=="Windows"',
         'Cython>=0.27,<1',
         'Twisted[tls]',
-        'Jinja2>=2,<3',
+        'Jinja2>=2,<4',
         'Pillow>=5.1.0,<9',
         'aiohttp>=3.3.0,<3.8.0',
         'pyenet',
