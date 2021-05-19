@@ -4,17 +4,18 @@ You can specify any name with an argument, without it the map will
 be saved with the '.saved' suffix.
 With /rmsaved you can delete a '.saved' version of this map.
 
-Also adds two options: for automatically saving map at shutdown and 
-loading saved map instead of the original.
-
 Options
 ^^^^^^^
 
 .. code-block:: toml
 
     [savemap]
-    load_saved_map = false
+    # automatically load the saved map on map load
+    load_saved_map = true
+    # automatically save map at shutdown
     save_at_shutdown = false
+    # automatically save map at map rotation or server shutdown
+    always_save_map = false
 """
 
 import os
@@ -57,11 +58,16 @@ def apply_script(protocol, connection, config):
         def __init__(self, *arg, **kw):
             protocol.__init__(self, *arg, **kw)
             def call():
-                if savemap_config.option('save_at_shutdown', False).get():
+                at_shutdown = savemap_config.option('save_at_shutdown', False).get()
+                always = savemap_config.option('always_save_map', False).get()
+                if at_shutdown or always:
                     self.save_map()
             reactor.addSystemEventTrigger('before', 'shutdown', call)
 
         async def set_map_name(self, rot_info: RotationInfo) -> None:
+            if savemap_config.option('always_save_map', False).get():
+                if self.map is not None:
+                    self.save_map()
             if savemap_config.option('load_saved_map', False).get():
                 if os.path.isfile(get_path(rot_info.name)):
                     log.info("Saved version of '%s' found" % rot_info.name)
