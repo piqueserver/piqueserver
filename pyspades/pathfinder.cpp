@@ -1,10 +1,15 @@
 #include <Python.h>
+#include "structmember.h"
 #include <bitset>
 #include <math.h>
 #include <vector>
 #include <iostream>
 #include <queue> 
 #include "vxl_c.h"
+#include <thread>
+#include <future>
+
+using namespace std;
 
 struct Tnode {
     float cost, full_cost;
@@ -12,34 +17,12 @@ struct Tnode {
     uint32_t prev;
 };
 
-// Никогда не проверяет начальную точку
-float inline get_cost(int x1, int y1, int z1, int x2, int y2, int z2, int can_dig, int can_build, MapData *map) {
-    #define solid(x, y, z) (map->geometry[get_pos(x, y, z)])
-    // Если ставим под собой блок
-    if (can_build && (x1 == x2) && (y1 == y2) && (z1 > z2)) return 3.2;
-    // Проверка основования под целевой точкой
-    if (!solid(x2, y2, z2 + 3)) return -1;
-    // Если копаем под себя
-    if (can_dig && (x1 == x2) && (y1 == y2) && (z1 < z2)) return 4;
-    // Проверка целевой точки на 3 свбодных блока
-    if (solid(x2, y2, z2) || solid(x2, y2, z2 + 1) || solid(x2, y2, z2 + 2)) return -1;
-    // Движемся по диагонали
-    if ((x1 != x2) && (y1 != y2)) {
-        int z = std::min(z1, z2);
-        // При движении по диагонали оба боковых столба должны быть свбодны
-        if (solid(x1, y2, z) or solid(x1, y2, z + 1) or solid(x1, y2, z + 2) or
-            solid(x2, y1, z) or solid(x2, y1, z + 1) or solid(x2, y1, z + 2)) return -1;
-        return (z1 != z2) ? 1.7320508 : 1.414;
-    };
-    // Движемся не по диагонали
-    return (z1 != z2) ? 1.4142136 : 1;
-}
-
 float inline distance(int x1, int y1, int z1, int x2, int y2, int z2) {
     int dx = x1 - x2;
     int dy = y1 - y2;
     int dz = z1 - z2;
-    return sqrt(dx*dx + dy*dy + dz*dz);
+    //return sqrt(dx*dx + dy*dy + dz*dz);
+    return abs(dx) + abs(dy) + abs(dz) + abs(dx-dy) + abs(dx-dz) + abs(dy-dz);
 }
 
 int inline is_valid(int x, int y, int z)
@@ -47,15 +30,44 @@ int inline is_valid(int x, int y, int z)
     return (uint32_t)x < 512 && (uint32_t)y < 512 && (uint32_t)z < 64;
 }
 
-PyObject* a_star(int x1, int y1, int z1, int x2, int y2, int z2, int can_dig, int can_build, MapData *map) {
+const float dist_diag_z = distance(0, 0, 0, 1, 1, 1);
+const float dist_diag = distance(0, 0, 0, 1, 1, 0);
+const float straight_z = distance(0, 0, 0, 1, 0, 1);
+const float straight = distance(0, 0, 0, 1, 0, 0);
+const float build_one = dist_diag_z * 1.5;
+const float dig_one = dist_diag_z * 2.7;
+// Никогда не проверяет начальную точку
+float inline get_cost(int x1, int y1, int z1, int x2, int y2, int z2, int can_dig, int can_build, MapData *map) {
+    #define solid(x, y, z) (map->geometry[get_pos(x, y, z)])
+    // Если ставим под собой блок
+    if (can_build && (x1 == x2) && (y1 == y2) && (z1 > z2)) return build_one;
+    // Проверка основания под целевой точкой
+    if (!solid(x2, y2, z2 + 3)) return -1;
+    // Если копаем под себя
+    if (can_dig && (x1 == x2) && (y1 == y2) && (z1 < z2)) return dig_one;
+    // Проверка целевой точки на 3 свободных блока
+    if (solid(x2, y2, z2) || solid(x2, y2, z2 + 1) || solid(x2, y2, z2 + 2)) return -1;
+    // Движемся по диагонали
+    if ((x1 != x2) && (y1 != y2)) {
+        int z = std::min(z1, z2);
+        // При движении по диагонали оба боковых столба должны быть свбодными
+        if (solid(x1, y2, z) or solid(x1, y2, z + 1) or solid(x1, y2, z + 2) or
+            solid(x2, y1, z) or solid(x2, y1, z + 1) or solid(x2, y1, z + 2)) return -1;
+        return (z1 != z2) ? dist_diag_z : dist_diag;
+    };
+    // Движемся не по диагонали
+    return (z1 != z2) ? straight_z : straight;
+}
+
+PyObject* a_star_real(int x1, int y1, int z1, int x2, int y2, int z2, int can_dig, int can_build, MapData *map) {
     priority_queue <pair<float, uint32_t>> open;
     std::bitset<MAP_X * MAP_Y * MAP_Z> visited;
     std::vector<Tnode> nodes;
-
+    /*
     PyObject* integer;
     PyObject* tuple;
     PyObject* list = PyList_New(0);
-
+    */
     // First node
     Tnode node;
     node.prev = 4294967295;
@@ -131,11 +143,12 @@ PyObject* a_star(int x1, int y1, int z1, int x2, int y2, int z2, int can_dig, in
     //std::cout << "COST " << best.full_cost  << std::endl;
     //std::cout << "DIST " << distance(best.x, best.y, best.z, x2, y2, z2) << std::endl;
 
-    nodes.clear();
-
-    //PyObject* integer;
-    //PyObject* tuple;
-    //PyObject* list = PyList_New(0);
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
+    PyObject* integer;
+    PyObject* tuple;
+    PyObject* list = PyList_New(0);
+    
     while (best.prev != 4294967295) {
         tuple = PyTuple_New(3);
         integer = PyLong_FromLong(best.x);
@@ -147,5 +160,65 @@ PyObject* a_star(int x1, int y1, int z1, int x2, int y2, int z2, int can_dig, in
         PyList_Append(list, tuple);
         best = nodes[best.prev];
     }
+    PyGILState_Release(gstate);
+
+    nodes.clear();
     return list;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+typedef struct {
+    PyObject_HEAD
+    std::future<PyObject*> future;
+} AStarFutureData;
+
+PyObject* a_star_ready(AStarFutureData *self, PyObject *Py_UNUSED(ignored)) {
+    if (self->future.wait_for(chrono::seconds(0)) == future_status::ready) {
+        Py_RETURN_TRUE;
+    } else {
+        Py_RETURN_FALSE;
+    }
+};
+
+PyObject* a_star_get(AStarFutureData *self, PyObject *Py_UNUSED(ignored)) {
+    //Py_BEGIN_ALLOW_THREADS
+    PyThreadState *_save;
+    _save = PyEval_SaveThread();
+
+    auto list = self->future.get();
+
+    //Py_END_ALLOW_THREADS
+    PyEval_RestoreThread(_save);
+
+    PyObject* reverse = PyObject_GetAttrString(list, (char*)"reverse");
+    PyObject_CallObject(reverse, nullptr);
+    return list;
+};
+
+static PyMethodDef AStarFuture_methods[] = {
+    {"ready", (PyCFunction) a_star_ready, METH_NOARGS, "Checks if the result available"},
+    {"get", (PyCFunction) a_star_get, METH_NOARGS, "Returns the result"},
+    {NULL}  /* Sentinel */
+};
+
+static PyTypeObject AStarFutureType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "AStarFuture",
+    .tp_basicsize = sizeof(AStarFutureData),
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_methods = AStarFuture_methods,
+    .tp_new = PyType_GenericNew,
+};
+
+bool registred = false;
+PyObject* a_star_start(int x1, int y1, int z1, int x2, int y2, int z2, int can_dig, int can_build, MapData *map) {
+    if (!registred) {
+        PyType_Ready(&AStarFutureType);
+        registred = true;
+    };
+    PyObject *object =  PyObject_CallObject((PyObject *) &AStarFutureType, nullptr);
+    ((AStarFutureData*)object)->future =  std::async(a_star_real, x1, y1, z1, x2, y2, z2, can_dig, can_build, map);
+    return object;
 }
