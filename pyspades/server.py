@@ -26,7 +26,7 @@ import traceback
 from pyspades.protocol import BaseProtocol
 from pyspades.constants import (
     CTF_MODE, TC_MODE, GAME_VERSION, MIN_TERRITORY_COUNT, MAX_TERRITORY_COUNT,
-    UPDATE_FREQUENCY, UPDATE_FPS, NETWORK_FPS)
+    UPDATE_FREQUENCY, NETWORK_FPS, UPDATE_DEFICIT_MAX)
 from pyspades.types import IDPool
 from pyspades.master import get_master_connection
 from pyspades.team import Team
@@ -239,13 +239,14 @@ class ServerProtocol(BaseProtocol):
             while (time.monotonic() - self.world_time) >= UPDATE_FREQUENCY:
                 self.loop_count += 1
                 self.world.update(UPDATE_FREQUENCY)
-                if (time.monotonic() - start_time) < 2:
+                if (time.monotonic() - start_time) < UPDATE_DEFICIT_MAX:
                     try:
                         self.on_world_update()
                     except Exception:
                         traceback.print_exc()
                 else:
-                    log.warn("world update heavy LAG. on_world_update skipped")
+                    log.warn("world update behind by %.2f seconds, skipping on_world_update" 
+                        % (time.monotonic() - start_time))
                 self.world_time += UPDATE_FREQUENCY
             # Update network
             if time.monotonic() - self.last_network_update >= 1 / NETWORK_FPS:
