@@ -294,31 +294,28 @@ class ServerProtocol(BaseProtocol):
             # ????
             if player.player_id is None:
                 continue
-            spec = False
+            player.spectator = False
             # 60 ups only for spectators
             if player.team is not None and player.team.spectator:
-                spec = True
+                player.spectator = True
             # New players without a team are spectators too 
             if player.team is None and player.saved_loaders is None:
-                spec = True
+                player.spectator = True
             # Dead players are spectators too 
             if player.world_object is not None and player.world_object.dead:
-                spec = True
+                player.spectator = True
             try:
-                if spec:
+                if player.spectator:
                     player.send_contained(player.on_network_update(pkg), True)
             except Exception:
                 traceback.print_exc()
         # Send to all players if it's time 
         if time.monotonic() - self.last_network_update >= 1 / NETWORK_FPS:
             self.last_network_update = self.world_time
-            for player in self.connections.values():
-                if player.player_id is None or player.team is None:
-                    continue
-                if player.team.spectator:
-                    continue
+            for player in self.players.values():
                 try: 
-                    player.send_contained(player.on_network_update(pkg), True)
+                    if not player.spectator:
+                        player.send_contained(player.on_network_update(pkg), True)
                 except Exception:
                     traceback.print_exc()
 

@@ -117,6 +117,7 @@ class ServerConnection(BaseConnection):
     map_data = None
     last_position_update = None
     local = False
+    spectator = False
 
     def __init__(self, *arg, **kw) -> None:
         BaseConnection.__init__(self, *arg, **kw)
