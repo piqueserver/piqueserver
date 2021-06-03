@@ -1046,6 +1046,9 @@ class ServerConnection(BaseConnection):
     def add_score(self, score):
         self.kills += score
 
+    def on_network_update(self, pkg):
+        return pkg
+
     def _connection_ack(self) -> None:
         self._send_connection_data()
         self.send_map(ProgressiveMapGenerator(self.protocol.map))

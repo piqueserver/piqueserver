@@ -245,10 +245,12 @@ class ServerProtocol(BaseProtocol):
                     traceback.print_exc()
                 self.world_time += UPDATE_FREQUENCY
             # Update network
-            if time.monotonic() - self.last_network_update >= 1 / NETWORK_FPS:
-                self.last_network_update = self.world_time
+            # TODO Delete
+            try:
                 self.update_network()
-
+            except Exception:
+                traceback.print_exc()
+       
             # Notify if update uses more than 70% of time budget
             lag = time.monotonic() - start_time
             if lag > (UPDATE_FREQUENCY * 0.7):
@@ -258,7 +260,8 @@ class ServerProtocol(BaseProtocol):
             await asyncio.sleep(delay)
 
 
-    def update_network(self):
+    # Make common WorldUpdate package
+    def make_WorldUpdate_pkg(self):
         if not len(self.players):
             return
         items = []
@@ -282,7 +285,42 @@ class ServerProtocol(BaseProtocol):
         # we only want to send as many items of the player list as needed, so
         # we slice it off at the highest player id
         world_update.items = items[:highest_player_id+1]
-        self.broadcast_contained(world_update, unsequenced=True)
+        return world_update
+
+    def update_network(self):
+        pkg = self.make_WorldUpdate_pkg()
+        # Send to all spectators
+        for player in self.connections.values():
+            # ????
+            if player.player_id is None:
+                continue
+            spec = False
+            # 60 ups only for spectators
+            if player.team is not None and player.team.spectator:
+                spec = True
+            # New players without a team are spectators too 
+            if player.team is None and player.saved_loaders is None:
+                spec = True
+            # Dead players are spectators too 
+            if player.world_object is not None and player.world_object.dead:
+                spec = True
+            try:
+                if spec:
+                    player.send_contained(player.on_network_update(pkg), True)
+            except Exception:
+                traceback.print_exc()
+        # Send to all players if it's time 
+        if time.monotonic() - self.last_network_update >= 1 / NETWORK_FPS:
+            self.last_network_update = self.world_time
+            for player in self.connections.values():
+                if player.player_id is None or player.team is None:
+                    continue
+                if player.team.spectator:
+                    continue
+                try: 
+                    player.send_contained(player.on_network_update(pkg), True)
+                except Exception:
+                    traceback.print_exc()
 
     def set_map(self, map_obj):
         self.map = map_obj
