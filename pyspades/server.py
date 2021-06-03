@@ -289,6 +289,8 @@ class ServerProtocol(BaseProtocol):
 
     def update_network(self):
         pkg = self.make_WorldUpdate_pkg()
+        if pkg is None:
+            return
         # Send to all spectators
         for player in self.connections.values():
             # ????
