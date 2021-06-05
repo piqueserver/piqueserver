@@ -53,7 +53,7 @@ from piqueserver.networkdict import NetworkDict
 from piqueserver.player import FeatureConnection
 from piqueserver.release import check_for_releases, format_release
 from piqueserver.scheduler import Scheduler
-from piqueserver.utils import as_deferred
+from piqueserver.utils import as_deferred, EndCall
 from piqueserver.bansubscribe import bans_config_urls
 from pyspades.bytes import NoDataLeft
 from pyspades.constants import CTF_MODE, ERROR_SHUTDOWN, TC_MODE
@@ -196,50 +196,6 @@ class FeatureTeam(Team):
             if result is not None:
                 return result
         return Team.get_entity_location(self, entity_id)
-
-
-class EndCall:
-    _active = True
-
-    def __init__(self, protocol, delay: int, func: Callable, *arg, **kw) -> None:
-        self.protocol = protocol
-        protocol.end_calls.append(self)
-        self.delay = delay
-        self.func = func
-        self.arg = arg
-        self.kw = kw
-        self.call = None  # type: Deferred
-
-    def set(self, value: Optional[float]) -> None:
-        if value is None:
-            if self.call is not None:
-                self.call.cancel()
-                self.call = None
-        elif value is not None:
-            value = value - self.delay
-            if value <= 0.0:
-                self.cancel()
-            elif self.call:
-                # In Twisted==18.9.0, reset() is broken when using
-                # AsyncIOReactor
-                # self.call.reset(value)
-                self.call.cancel()
-                self.call = reactor.callLater(value, self.fire)
-            else:
-                self.call = reactor.callLater(value, self.fire)
-
-    def fire(self):
-        self.call = None
-        self.cancel()
-        self.func(*self.arg, **self.kw)
-
-    def cancel(self) -> None:
-        self.set(None)
-        self.protocol.end_calls.remove(self)
-        self._active = False
-
-    def active(self) -> bool:
-        return self._active and (self.call and self.call.active())
 
 
 class FeatureProtocol(ServerProtocol):
