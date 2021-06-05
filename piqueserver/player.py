@@ -38,9 +38,8 @@ class FeatureConnection(ServerConnection):
         self.killing = True
         self.streak = 0
         self.best_streak = 0
-        self.last_chat = None
-        self.chat_time = 0
-        self.chat_count = 0
+        self.chat_limiter = RateLimiter(
+            CHAT_WINDOW_SIZE, CHAT_WINDOW_SIZE / CHAT_PER_SECOND)
         self.user_types = None
         self.rights = None
         self.can_complete_line_build = True
@@ -292,27 +291,13 @@ class FeatureConnection(ServerConnection):
 
         # antispam:
         current_time = reactor.seconds()
-        if self.last_chat is None:
-            self.last_chat = current_time
-
-        else:
-            self.chat_time += current_time - self.last_chat
-
-            if self.chat_count > CHAT_WINDOW_SIZE:
-                if self.chat_count / self.chat_time > CHAT_PER_SECOND:
-                    self.mute = True
-                    self.protocol.send_chat(
-                        '%s has been muted for excessive spam' % (
-                            self.name),
-                        irc=True)
-
-                # reset if CHAT_WINDOW_SIZE messages were sent and not
-                # determined to be spam
-                self.chat_time = 0
-                self.chat_count = 0
-            else:
-                self.chat_count += 1
-            self.last_chat = current_time
+        self.chat_limiter.record_event(current_time)
+        if self.chat_limiter.above_limit():
+            self.mute = True
+            self.protocol.send_chat(
+                '%s has been muted for excessive spam' % (
+                    self.name),
+                irc=True)
 
         log.info("<{name}> {message}", name=escape_control_codes(
             self.name), message=escape_control_codes(value))
