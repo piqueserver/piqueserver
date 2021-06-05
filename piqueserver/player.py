@@ -23,26 +23,30 @@ log = Logger()
 
 
 class FeatureConnection(ServerConnection):
-    printable_name = None
-    admin = False
-    last_switch = None
-    mute = False
-    deaf = False
-    login_retries = None
-    god = False
-    god_build = False
-    fly = False
-    invisible = False
-    building = True
-    killing = True
-    streak = 0
-    best_streak = 0
-    last_chat = None
-    chat_time = 0
-    chat_count = 0
-    user_types = None
-    rights = None
-    can_complete_line_build = True
+    def __init__(self, *args, **kwargs):
+        self.printable_name = None
+        self.admin = False
+        self.last_switch = None
+        self.mute = False
+        self.deaf = False
+        self.login_retries = None
+        self.god = False
+        self.god_build = False
+        self.fly = False
+        self.invisible = False
+        self.building = True
+        self.killing = True
+        self.streak = 0
+        self.best_streak = 0
+        self.last_chat = None
+        self.chat_time = 0
+        self.chat_count = 0
+        self.user_types = None
+        self.rights = None
+        self.can_complete_line_build = True
+
+        super().__init__(*args, **kwargs)
+
 
     def on_connect(self) -> None:
         protocol = self.protocol
