@@ -151,11 +151,10 @@ class StatusServer:
     async def listen(self):
         """Starts the status server on configured host/port"""
         app = self.create_app()
-        logger = Logger() if logging_option.get() else None
-        log_class = AccessLogger if logging_option.get() else None
-        runner = web.AppRunner(app,
-                               access_log=logger,
-                               access_log_class=log_class)
+        if logging_option.get():
+            runner = web.AppRunner(app, access_log=Logger(), access_log_class=AccessLogger)
+        else:
+            runner = web.AppRunner(app)
         await as_deferred(runner.setup())
         site = web.TCPSite(runner, host_option.get(), port_option.get())
         await as_deferred(site.start())
