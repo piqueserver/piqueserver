@@ -84,4 +84,9 @@ def apply_script(protocol, connection, config):
             log.info("Map saved to '{path}'", path=path)
             return path
 
+        def update_format(self) -> None:
+            if self.map_info.short_name.endswith('.saved'):
+                self.map_info.short_name = self.map_info.short_name[:-6]
+            protocol.update_format(self)
+
     return SaveMapProtocol, connection
