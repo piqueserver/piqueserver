@@ -1,4 +1,3 @@
-import math
 from typing import List, Tuple, Optional, Union
 
 from twisted.internet import reactor
@@ -6,13 +5,11 @@ from twisted.logger import Logger
 
 from piqueserver import commands
 from piqueserver.release import format_release
-import pyspades
 from pyspades.constants import (ERROR_BANNED, DESTROY_BLOCK, SPADE_DESTROY,
-                                GRENADE_DESTROY, ERROR_KICKED, BLOCK_TOOL)
+                                GRENADE_DESTROY, ERROR_KICKED)
 from pyspades.server import ServerConnection
-from pyspades.common import encode, escape_control_codes, prettify_timespan, Vertex3
-from pyspades.world import Character
-from pyspades.types import AttributeSet
+from pyspades.common import escape_control_codes, prettify_timespan
+from pyspades.types import AttributeSet, RateLimiter
 
 # TODO: move these where they belong
 from pyspades.team import Team

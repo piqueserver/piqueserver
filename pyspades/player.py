@@ -5,7 +5,7 @@ import re
 import shlex
 import textwrap
 from itertools import product
-from typing import Any, Dict, Optional, Sequence, Tuple, Union
+from typing import Dict, Optional, Sequence, Tuple, Union
 
 import enet
 from twisted.internet import reactor
@@ -30,6 +30,7 @@ from pyspades.packet import call_packet_handler, register_packet_handler
 from pyspades.protocol import BaseConnection
 from pyspades.team import Team
 from pyspades.weapon import WEAPONS
+from pyspades.types import RateLimiter
 
 log = Logger()
 
@@ -54,35 +55,6 @@ def parse_command(value: str) -> Tuple[str, Sequence[str]]:
     else:
         command = ''
     return command, splitted
-
-
-class RateLimiter:
-    """sliding window rate limiter
-
-    Triggers if more than a certain number of events happen in a certain amount
-    of time"""
-    def __init__(self, event_count: int, seconds: float) -> None:
-        """limit is event_count events in seconds"""
-        self._seconds = seconds
-        self._window = collections.deque(maxlen=event_count)  # type: collections.deque
-
-    def record_event(self, timestamp: float) -> None:
-        """record an event at the given timestamp"""
-        self._window.append(timestamp)
-
-    def above_limit(self) -> bool:
-        if len(self._window) != self._window.maxlen:
-            # not enough events yet
-            return False
-
-        start, end = self._window[0], self._window[-1]
-
-        if end - start < self._seconds:
-            return True
-        return False
-
-    def get_events(self) -> list:
-        return list(self._window)
 
 
 class ServerConnection(BaseConnection):

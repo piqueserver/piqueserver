@@ -35,7 +35,7 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 import aiohttp
 from enet import Address, Packet, Peer
 from twisted.internet import reactor, threads
-from twisted.internet.defer import Deferred, ensureDeferred, inlineCallbacks
+from twisted.internet.defer import Deferred, ensureDeferred
 from twisted.internet.task import LoopingCall, coiterate, deferLater
 from twisted.internet.tcp import Port
 from twisted.logger import (FilteringLogObserver, Logger, LogLevel,
