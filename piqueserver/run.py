@@ -7,9 +7,6 @@ import argparse
 import tarfile
 import json
 
-from piqueserver.config import (config, TOML_FORMAT, JSON_FORMAT,
-                                MAXMIND_DOWNLOAD, MAXMIND_DOWNLOAD_MD5,
-                                SUPPORTED_PYTHONS)
 import urllib.request
 import hashlib
 
@@ -61,6 +58,7 @@ def copytree(src, dst):
 
 
 def copy_config():
+    from piqueserver.config import config
     config_source = os.path.dirname(os.path.abspath(__file__)) + '/config'
     print('Attempting to copy example config to %s (origin: %s).' %
           (config.config_dir, config_source))
@@ -76,6 +74,7 @@ def copy_config():
 
 
 def update_geoip(target_dir):
+    from piqueserver.config import MAXMIND_DOWNLOAD, MAXMIND_DOWNLOAD_MD5
     db_filename = 'GeoLite2-City.mmdb'
     working_directory = os.path.join(target_dir, 'data/')
     zipped_path = os.path.join(working_directory,
@@ -124,6 +123,23 @@ def update_geoip(target_dir):
 
 
 def main():
+    # We need to install the asyncio reactor before we add any imports like
+    # `twisted.internet.*` which install the default reactor.  We keep it here
+    # and not at package level to avoid installing the reactor more than once.
+    # Twisted throws an exception if you install the reactor more than once.
+    import asyncio
+
+    if sys.platform == 'win32' and sys.version_info >= (3, 7, 0):
+        # we (or twisted) do not support the ProactorEventLoop as it does not
+        # support adding file readers
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+    from twisted.internet import asyncioreactor
+    asyncioreactor.install(asyncio.get_event_loop())
+
+    from piqueserver.config import (config, TOML_FORMAT, JSON_FORMAT,
+                                    SUPPORTED_PYTHONS)
+
     if (sys.version_info.major, sys.version_info.minor) not in SUPPORTED_PYTHONS:
         print('Warning: you are running on an unsupported Python version.\n'
               'The server may not run correctly.\n'
@@ -133,7 +149,6 @@ def main():
                   'for the voxel-based game "Ace of Spades".' % PKG_NAME
     arg_parser = argparse.ArgumentParser(
         prog=PKG_NAME, description=description)
-
 
     if not sys.warnoptions:
         import warnings
@@ -244,19 +259,6 @@ def main():
     # update config with cli overrides
     if args.json_parameters:
         config.update_from_dict(json.loads(args.json_parameters))
-    # We need to install the asyncio reactor before we add any imports like
-    # `twisted.internet.*` which install the default reactor.  We keep it here
-    # and not at package level to avoid installing the reactor more than once.
-    # Twisted throws an exception if you install the reactor more than once.
-    import asyncio
-
-    if sys.platform == 'win32' and sys.version_info >= (3, 7, 0):
-        # we (or twisted) do not support the ProactorEventLoop as it does not
-        # support adding file readers
-        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
-    from twisted.internet import asyncioreactor
-    asyncioreactor.install(asyncio.get_event_loop())
 
     from piqueserver import server
     server.run()
