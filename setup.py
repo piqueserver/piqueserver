@@ -140,7 +140,7 @@ setup(
         'Twisted[tls]',
         'Jinja2>=2,<4',
         'Pillow>=5.1.0,<9',
-        'aiohttp>=3.3.0,<3.8.0',
+        'aiohttp>=3.3.0,<3.9.0',
         'pyenet',
         'toml',
         'packaging>=19.0'
