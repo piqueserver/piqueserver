@@ -414,8 +414,7 @@ class ServerConnection(BaseConnection):
             contained.position = self.world_object.position.get()
         velocity = Vertex3(*contained.velocity) - self.world_object.velocity
         if velocity.length() > 2.0: # cap at tested maximum
-            velocity.normalize()
-            velocity *= 2.0
+            velocity = velocity.normal() * 2.0
         velocity += self.world_object.velocity
         if self.on_grenade(contained.value) == False:
             return
