@@ -385,12 +385,6 @@ class ServerConnection(BaseConnection):
                 return
             hit_amount = self.protocol.melee_damage
         else:
-            # only calculate distance on XY plane -- fog is a cylinder
-            # add rubberband distance to give laggy players leeway
-            dx = position1.x - position2.x
-            dy = position1.y - position2.y
-            if math.sqrt(dx * dx + dy * dy) > FOG_DISTANCE + self.rubberband_distance:
-                return
             hit_amount = self.weapon_object.get_damage(
                 value, position1, position2)
         if is_melee:
@@ -404,6 +398,13 @@ class ServerConnection(BaseConnection):
             return
         elif returned is not None:
             hit_amount = returned
+        if not is_melee:
+            # only calculate distance on XY plane -- fog is a cylinder
+            # add rubberband distance to give laggy players leeway
+            dx = position1.x - position2.x
+            dy = position1.y - position2.y
+            if math.sqrt(dx * dx + dy * dy) > FOG_DISTANCE + self.rubberband_distance:
+                return
         player.hit(hit_amount, self, kill_type)
 
     @register_packet_handler(loaders.GrenadePacket)
