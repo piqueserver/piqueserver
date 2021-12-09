@@ -240,7 +240,7 @@ class FeatureConnection(ServerConnection):
         if self.god:
             self.refill()
 
-    def on_team_join(self, team: 'FeatureTeam') -> HookValue:
+    def on_team_join(self, team: Team) -> HookValue:
         if self.team is not None:
             if self.protocol.teamswitch_interval:
                 teamswitch_interval = self.protocol.teamswitch_interval
