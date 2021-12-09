@@ -412,12 +412,16 @@ class ServerConnection(BaseConnection):
         self.grenades -= 1
         if not self.check_speedhack(*contained.position):
             contained.position = self.world_object.position.get()
+        velocity = Vertex3(*contained.velocity) - self.world_object.velocity
+        if velocity.length() > 2.0: # cap at tested maximum
+            velocity = velocity.normal() * 2.0
+        velocity += self.world_object.velocity
         if self.on_grenade(contained.value) == False:
             return
         grenade = self.protocol.world.create_object(
             world.Grenade, contained.value,
             Vertex3(*contained.position), None,
-            Vertex3(*contained.velocity), self.grenade_exploded)
+            velocity, self.grenade_exploded)
         grenade.team = self.team
         log.debug("{player!r} ({world_object!r}) created {grenade!r}",
                   grenade=grenade, world_object=self.world_object, player=self)
