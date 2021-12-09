@@ -342,7 +342,11 @@ class ServerProtocol(BaseProtocol):
 
         Returns the fixed name.
         '''
+        name = name.replace('\n', '')
+        name = name.replace('#', '')
         name = name.replace('%', '')
+        if not name:
+            name = 'Deuce'
         new_name = name
         names = [p.name.lower() for p in self.players.values()]
         i = 0

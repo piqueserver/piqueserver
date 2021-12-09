@@ -606,6 +606,7 @@ class ServerConnection(BaseConnection):
                 return
             elif result is not None:
                 value = result
+            value = value.replace('\n', '')
             contained.chat_type = CHAT_ALL if global_message else CHAT_TEAM
             contained.value = value
             contained.player_id = self.player_id
