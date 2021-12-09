@@ -20,8 +20,8 @@ from pyspades.constants import (BLOCK_TOOL, CTF_MODE, ERROR_FULL,
                                 ERROR_TOO_MANY_CONNECTIONS,
                                 ERROR_WRONG_VERSION, FALL_KILL, HEAD,
                                 HEADSHOT_KILL, HIT_TOLERANCE,
-                                MAX_BLOCK_DISTANCE, MAX_POSITION_RATE, MELEE,
-                                MELEE_DISTANCE, MELEE_KILL,
+                                FOG_DISTANCE, MAX_BLOCK_DISTANCE, MAX_POSITION_RATE,
+                                MELEE, MELEE_DISTANCE, MELEE_KILL,
                                 RAPID_WINDOW_ENTRIES, SPADE_TOOL,
                                 TC_CAPTURE_DISTANCE, TC_MODE, WEAPON_KILL,
                                 WEAPON_TOOL)
@@ -385,6 +385,12 @@ class ServerConnection(BaseConnection):
                 return
             hit_amount = self.protocol.melee_damage
         else:
+            # only calculate distance on XY plane -- fog is a cylinder
+            # add rubberband distance to give laggy players leeway
+            dx = position1.x - position2.x
+            dy = position1.y - position2.y
+            if math.sqrt(dx * dx + dy * dy) > FOG_DISTANCE + self.rubberband_distance:
+                return
             hit_amount = self.weapon_object.get_damage(
                 value, position1, position2)
         if is_melee:
