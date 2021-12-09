@@ -142,7 +142,6 @@ default_ban_duration = bans_config.option(
 speedhack_detect = config.option('speedhack_detect', True)
 rubberband_distance = config.option('rubberband_distance', default=10)
 user_blocks_only = config.option('user_blocks_only', False)
-debug_log_enabled = logging_config.option('debug_log', False)
 logging_profile_option = logging_config.option('profile', False)
 set_god_build = config.option('set_god_build', False)
 ssh_enabled = config.section('ssh').option('enabled', False)
@@ -212,7 +211,6 @@ class FeatureProtocol(ServerProtocol):
     killing = True
     global_chat = True
     remote_console = None
-    debug_log = None
     advance_call = None
     master_reconnect_call = None
     master = False
@@ -333,11 +331,6 @@ class FeatureProtocol(ServerProtocol):
         if user_blocks_only.get():
             self.user_blocks = set()
         self.set_god_build = set_god_build.get()
-        self.debug_log = debug_log_enabled.get()
-        if self.debug_log:
-            # TODO: make this configurable
-            pyspades.debug.open_debug_log(
-                os.path.join(config.config_dir, 'debug.log'))
         if ssh_enabled.get():
             from piqueserver.ssh import RemoteConsole
             self.remote_console = RemoteConsole(self)
