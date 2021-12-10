@@ -20,8 +20,8 @@ from pyspades.constants import (BLOCK_TOOL, CTF_MODE, ERROR_FULL,
                                 ERROR_TOO_MANY_CONNECTIONS,
                                 ERROR_WRONG_VERSION, FALL_KILL, HEAD,
                                 HEADSHOT_KILL, HIT_TOLERANCE,
-                                MAX_BLOCK_DISTANCE, MAX_POSITION_RATE, MELEE,
-                                MELEE_DISTANCE, MELEE_KILL,
+                                FOG_DISTANCE, MAX_BLOCK_DISTANCE, MAX_POSITION_RATE,
+                                MELEE, MELEE_DISTANCE, MELEE_KILL,
                                 RAPID_WINDOW_ENTRIES, SPADE_TOOL,
                                 TC_CAPTURE_DISTANCE, TC_MODE, WEAPON_KILL,
                                 WEAPON_TOOL)
@@ -362,37 +362,39 @@ class ServerConnection(BaseConnection):
 
     @register_packet_handler(loaders.HitPacket)
     def on_hit_recieved(self, contained):
-        if not self.hp:
-            return
         world_object = self.world_object
         value = contained.value
         is_melee = value == MELEE
-        if not is_melee and self.weapon_object.is_empty():
-            return
-        try:
-            player = self.protocol.players[contained.player_id]
-        except KeyError:
-            return
-        valid_hit = world_object.validate_hit(player.world_object,
-                                              value, HIT_TOLERANCE)
-        if not valid_hit:
-            return
-        position1 = world_object.position
-        position2 = player.world_object.position
-        if is_melee:
-            if not vector_collision(position1, position2,
-                                    MELEE_DISTANCE):
-                return
-            hit_amount = self.protocol.melee_damage
-        else:
-            hit_amount = self.weapon_object.get_damage(
-                value, position1, position2)
         if is_melee:
             kill_type = MELEE_KILL
         elif contained.value == HEAD:
             kill_type = HEADSHOT_KILL
         else:
             kill_type = WEAPON_KILL
+        try:
+            player = self.protocol.players[contained.player_id]
+        except KeyError:
+            return
+        position1 = world_object.position
+        position2 = player.world_object.position
+        if is_melee:
+            hit_amount = self.protocol.melee_damage
+        else:
+            hit_amount = self.weapon_object.get_damage(
+                value, position1, position2)
+        self.on_unvalidated_hit(hit_amount, player, kill_type, None)
+        if not self.hp:
+            return
+        if not is_melee and self.weapon_object.is_empty():
+            return
+        valid_hit = world_object.validate_hit(player.world_object,
+                                              value, HIT_TOLERANCE,
+                                              self.rubberband_distance)
+        if not valid_hit:
+            return
+        if is_melee and not vector_collision(position1, position2,
+                                             MELEE_DISTANCE):
+            return
         returned = self.on_hit(hit_amount, player, kill_type, None)
         if returned == False:
             return
@@ -1128,6 +1130,7 @@ class ServerConnection(BaseConnection):
                 damage = grenade.get_damage(player.world_object.position)
                 if damage == 0:
                     continue
+                self.on_unvalidated_hit(damage, player, GRENADE_KILL, grenade)
                 returned = self.on_hit(damage, player, GRENADE_KILL, grenade)
                 if returned == False:
                     continue
@@ -1272,6 +1275,9 @@ class ServerConnection(BaseConnection):
         pass
 
     def on_hit(self, hit_amount, hit_player, kill_type, grenade):
+        pass
+
+    def on_unvalidated_hit(self, hit_amount, hit_player, kill_type, grenade):
         pass
 
     def on_kill(self, killer, kill_type, grenade):

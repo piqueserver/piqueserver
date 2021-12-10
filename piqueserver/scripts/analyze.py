@@ -61,7 +61,7 @@ def apply_script(protocol, connection, config):
         prev_time = None
         body_part = ""
 
-        def on_hit(self, hit_amount, hit_player, type, grenade):
+        def on_unvalidated_hit(self, hit_amount, hit_player, type, grenade):
             if self.name in list(self.protocol.analyzers.values()):
                 if type == HEADSHOT_KILL or hit_amount in body_damage_values or hit_amount in limb_damage_values:
                     if not grenade:
@@ -101,7 +101,7 @@ def apply_script(protocol, connection, config):
                                     else:
                                         analyzer.send_chat('%s shot %s dist: %d blocks dT: NA %s %s(%d)' % (
                                             self.name, hit_player.name, dist, weap, body_part, counter))
-            return connection.on_hit(self, hit_amount, hit_player, type, grenade)
+            return connection.on_unvalidated_hit(self, hit_amount, hit_player, type, grenade)
 
         def on_weapon_set(self, value):
             if self.name in list(self.protocol.analyzers.values()):

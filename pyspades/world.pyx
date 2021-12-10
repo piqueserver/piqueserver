@@ -34,7 +34,7 @@ cdef extern from "world_c.cpp":
     int c_validate_hit "validate_hit" (
         float shooter_x, float shooter_y, float shooter_z,
         float orientation_x, float orientation_y, float orientation_z,
-        float victim_x, float victim_y, float victim_z, float tolerance)
+        float victim_x, float victim_y, float victim_z, float aim_tolerance, float dist_tolerance)
     int c_can_see "can_see" (MapData * map, float x0, float y0, float z0,
         float x1, float y1, float z1)
     int c_cast_ray "cast_ray" (MapData * map, float x0, float y0, float z0,
@@ -190,7 +190,7 @@ cdef class Character(Object):
             return x, y, z
         return None
 
-    def validate_hit(self, Character other, part, float tolerance):
+    def validate_hit(self, Character other, part, float aim_tolerance, float dist_tolerance):
         """check if a given hit is within a given tolerance of hitting another
         player. This is primarily used to prevent players from shooting at
         things they aren't facing at"""
@@ -213,7 +213,7 @@ cdef class Character(Object):
             return False
         if not c_validate_hit(position1.x, position1.y, position1.z,
                               orientation.x, orientation.y, orientation.z,
-                              x, y, z, tolerance):
+                              x, y, z, aim_tolerance, dist_tolerance):
             return False
         return True
 

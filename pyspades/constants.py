@@ -44,6 +44,8 @@ SPAWN_RADIUS = 32
 MINE_RANGE = 3
 BUILD_TOLERANCE = 5
 
+FOG_DISTANCE = 128.0
+
 MELEE_DISTANCE = 3
 
 MAX_CHAT_SIZE = 90  # more like 95, but just to make sure
