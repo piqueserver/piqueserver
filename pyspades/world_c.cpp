@@ -33,6 +33,8 @@
 #include "common_c.h"
 #include <cmath>
 
+#define FOG_DISTANCE 128
+
 enum damage_index
 {
     BODY_TORSO,
@@ -92,20 +94,23 @@ float distance3d(float x1, float y1, float z1, float x2, float y2, float z2)
 int validate_hit(float shooter_x, float shooter_y, float shooter_z,
                  float orientation_x, float orientation_y, float orientation_z,
                  float ox, float oy, float oz,
-                 float tolerance)
+                 float aim_tolerance, float dist_tolerance)
 {
-    Orientation o;
-    get_orientation(&o, orientation_x, orientation_y, orientation_z);
     ox -= shooter_x;
     oy -= shooter_y;
+    if (sqrtf(ox * ox + oy * oy) > FOG_DISTANCE + dist_tolerance)
+        return 0;
     oz -= shooter_z;
+    
+    Orientation o;
+    get_orientation(&o, orientation_x, orientation_y, orientation_z);
     float cz = ox * o.f.x + oy * o.f.y + oz * o.f.z;
     float r = 1.f / cz;
     float cx = ox * o.s.x + oy * o.s.y + oz * o.s.z;
     float x = cx * r;
     float cy = ox * o.h.x + oy * o.h.y + oz * o.h.z;
     float y = cy * r;
-    r *= tolerance;
+    r *= aim_tolerance;
     int ret = (x - r < 0 && x + r > 0 && y - r < 0 && y + r > 0);
 #if 0
     if (!ret) {
@@ -237,8 +242,8 @@ long can_see(MapData *map, float x0, float y0, float z0, float x1, float y1,
     ftol(f.y * g.x - f.x * g.y, &p.z);
     ftol(g.z, &i.z);
 
-    if (cnt > 128)
-        cnt = 128;
+    if (cnt > FOG_DISTANCE)
+        cnt = FOG_DISTANCE;
     while (cnt)
     {
         if (((p.x | p.y) >= 0) && (a.z != c.z))

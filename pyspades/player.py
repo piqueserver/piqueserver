@@ -374,7 +374,8 @@ class ServerConnection(BaseConnection):
         except KeyError:
             return
         valid_hit = world_object.validate_hit(player.world_object,
-                                              value, HIT_TOLERANCE)
+                                              value, HIT_TOLERANCE,
+                                              self.rubberband_distance)
         if not valid_hit:
             return
         position1 = world_object.position
@@ -398,13 +399,6 @@ class ServerConnection(BaseConnection):
             return
         elif returned is not None:
             hit_amount = returned
-        if not is_melee:
-            # only calculate distance on XY plane -- fog is a cylinder
-            # add rubberband distance to give laggy players leeway
-            dx = position1.x - position2.x
-            dy = position1.y - position2.y
-            if math.sqrt(dx * dx + dy * dy) > FOG_DISTANCE + self.rubberband_distance:
-                return
         player.hit(hit_amount, self, kill_type)
 
     @register_packet_handler(loaders.GrenadePacket)
