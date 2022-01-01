@@ -48,7 +48,7 @@ ARRIVAL_DELAY = 2  # seconds from airstrike notice to arrival
 @player_only
 def airstrike(connection, *args):
     """
-    Triggers an aistrike. Be careful there's a large radius.
+    Triggers an airstrike. Be careful there's a large radius.
     Aim your weapon and then hold v
     """
     player = connection
