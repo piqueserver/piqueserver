@@ -47,14 +47,18 @@ ARRIVAL_DELAY = 2  # seconds from airstrike notice to arrival
 @command('airstrike', 'a')
 @player_only
 def airstrike(connection, *args):
+    """
+    Triggers an aistrike. Be careful there's a large radius.
+    Aim your weapon and then hold v
+    """
     player = connection
+    kills_left = STREAK_REQUIREMENT - player.airstrike_streak
+    message = S_NO_STREAK.format(streak= STREAK_REQUIREMENT, remaining = kills_left)
+    
+    player.send_chat(message)
 
     if player.airstrike:
-        return S_READY
-
-    kills_left = STREAK_REQUIREMENT - player.airstrike_streak
-    return S_NO_STREAK.format(streak=STREAK_REQUIREMENT,
-                              remaining=kills_left)
+       return S_READY
 
 # debug
 
