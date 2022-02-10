@@ -221,7 +221,7 @@ default_duration = "1day"
 #bansubscribe = [
 #    { url = "http://www.blacklist.spadille.net/subscribe.json", whitelist = []},
 #]
-
+#bansubscribe_interval = "5min"
 
 
 [rights]
