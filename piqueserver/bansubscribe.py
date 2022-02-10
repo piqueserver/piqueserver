@@ -15,14 +15,16 @@
 # You should have received a copy of the GNU General Public License
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
+import asyncio
 import json
-from twisted.internet.task import LoopingCall
-from twisted.internet.defer import DeferredList
-from twisted.web.client import getPage
+from itertools import chain
+from typing import List
+
+import aiohttp
 from twisted.logger import Logger
 
+from piqueserver.config import cast_duration, config
 from piqueserver.networkdict import NetworkDict
-from piqueserver.config import config, cast_duration
 
 log = Logger()
 
@@ -47,34 +49,39 @@ bans_config_interval = bans_config.option('bansubscribe_interval', default="5min
 
 class BanManager:
     bans = None
-    new_bans = None
 
     def __init__(self, protocol):
         self.protocol = protocol
         self.urls = [(entry.get('url'), entry.get('whitelist')) for entry in
                      bans_config_urls.get()]
-        self.loop = LoopingCall(self.update_bans)
-        self.loop.start(bans_config_interval.get(), now=True)
 
-    def update_bans(self):
-        self.new_bans = NetworkDict()
-        defers = []
-        for url, url_filter in self.urls:
-            defers.append(getPage(url.encode('utf8')).addCallback(self.got_bans,
-                                                                  url_filter))
-        DeferredList(defers).addCallback(self.bans_finished)
+    async def start(self):
+        while True:
+            await self.update_bans()
+            await asyncio.sleep(bans_config_interval.get())
 
-    def got_bans(self, data, name_filter):
-        bans = json.loads(data)
-        for entry in bans:
-            name = entry.get('name', None)
-            if name is not None and name in name_filter:
-                continue
-            self.new_bans[str(entry['ip'])] = str(entry['reason'])
+    async def fetch_filtered_bans(self, url: str, whitelist: List[str]):
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as resp:
+                    # blacklist.spadille.net doesn't set json content type ¯\_(ツ)_/¯
+                    banslist = json.loads(await resp.text())
+                    return [ban for ban in banslist if ban.get('name', None) not in whitelist]
+        except Exception as e:
+            log.error("Failed to fetch bans from {url}: {err}", url=url, err=e)
+            return []
 
-    def bans_finished(self, _result):
-        self.bans = self.new_bans
-        self.new_bans = None
+    async def update_bans(self):
+        coros = []
+        for url, whitelist in self.urls:
+            coros.append(self.fetch_filtered_bans(url, whitelist))
+        log.info("fetching bans from bansubscribe urls")
+        banlists = await asyncio.gather(*coros)
+        bans = list(chain(*banlists))
+        new_bans = NetworkDict()
+        for ban in bans:
+            new_bans[ban['ip']] = ban['reason']
+        self.bans = new_bans
         log.info("successfully updated bans from bansubscribe urls")
 
     def get_ban(self, ip):
