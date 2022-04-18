@@ -55,15 +55,15 @@ cdef class Generator:
 cdef class VXLData:
     def __init__(self, fp = None):
         cdef unsigned char * c_data
+        cdef size_t c_len
         if fp is not None:
             data = fp.read()
             c_data = data
+            c_len = len(data)
         else:
             c_data = NULL
-        self.map = load_vxl(c_data)
-
-    def load_vxl(self, c_data = None):
-        self.map = load_vxl(c_data)
+            c_len = 0
+        self.map = load_vxl(c_data, c_len)
 
     def copy(self):
         cdef VXLData map = VXLData()
@@ -278,8 +278,5 @@ cdef class VXLData:
         return Generator(self)
 
     def __dealloc__(self):
-        cdef MapData * map
         if self.map != NULL:
-            map = self.map
-            self.map = NULL
-            delete_vxl(map)
+            delete_vxl(self.map)

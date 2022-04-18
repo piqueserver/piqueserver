@@ -14,7 +14,7 @@ install:
 
 script:
   - export CYTHON_TRACE=1
-  - python setup.py develop
+  - USE_DEBUG=1 python setup.py develop
   - pytest --cov=piqueserver --cov=pyspades
   - travis_retry coveralls
   - ./scripts/smoke_test.py -t 7
