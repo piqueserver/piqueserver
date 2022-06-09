@@ -334,6 +334,7 @@ class FeatureConnection(ServerConnection):
                                       self.name)
 
     def send_lines(self, lines: List[str]) -> None:
+        # TODO: address here
         current_time = 0
         for line in lines:
             reactor.callLater(current_time, self.send_chat, line)
