@@ -97,7 +97,7 @@ def toggle_markers(connection, player=None):
 @command()
 @player_only
 def markers(connection):
-    connection.send_lines(S_HELP)
+    connection.send_lines(S_HELP, 'markers_help')
 
 
 class BaseMarker():

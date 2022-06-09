@@ -80,7 +80,7 @@ def squad(self, squadkey=None):
                 squadkey, allsquads[squadkey]))
         result.append(('To join squads: /squad <squad name>. ' +
                        '/squad none to spawn normally.'))
-        self.send_lines(result)
+        self.send_lines(result, 'squad_list')
         return
 
     if squadkey.lower() == 'none':
