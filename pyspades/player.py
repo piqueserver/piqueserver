@@ -657,7 +657,7 @@ class ServerConnection(BaseConnection):
     @register_packet_handler(loaders.HandShakeReturn)
     def on_handshake_recieved(self, contained: loaders.HandShakeReturn) -> None:
         version_request = loaders.VersionRequest()
-        self.protocol.broadcast_contained(version_request)
+        self.send_contained(version_request)
 
     @register_packet_handler(loaders.VersionResponse)
     def on_version_info_recieved(self, contained: loaders.VersionResponse) -> None:
