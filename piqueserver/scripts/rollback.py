@@ -49,7 +49,7 @@ S_ROLLBACK_PROGRESS = 'Rollback progress {percent:.0%}'
 S_ROLLBACK_COLOR_PASS = 'Rollback doing color pass...'
 S_ROLLBACK_TIME_TAKEN = 'Time taken: {seconds:.3}s'
 
-NON_SURFACE_COLOR = (0, 0, 0)
+NON_SURFACE_COLOR = (69, 43, 30)
 
 rollback_config = config.section('rollback')
 ROLLBACK_ON_GAME_END_OPTION = rollback_config.option('rollback_on_game_end', False)
