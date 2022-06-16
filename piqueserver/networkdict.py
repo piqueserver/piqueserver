@@ -70,10 +70,10 @@ class NetworkDict:
 
     def __delitem__(self, key):
         ip = ip_network(str(key), strict=False)
-        self.networks.popitem(ip)
+        self.networks.pop(ip)
 
     def pop(self, *arg, **kw):
-        network, value = self.networks.popitem(*arg, **kw)
+        network, value = self.networks.pop(*arg, **kw)
         return get_cidr(network), value
 
     def iteritems(self):
