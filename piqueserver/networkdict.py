@@ -73,7 +73,10 @@ class NetworkDict:
         self.networks.pop(ip)
 
     def pop(self, *arg, **kw):
-        network, value = self.networks.pop(*arg, **kw)
+        if not arg or not kw:
+            network, value = self.networks.popitem()
+        else:
+            network, value = self.networks.pop(*arg, **kw)
         return get_cidr(network), value
 
     def iteritems(self):
