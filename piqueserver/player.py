@@ -336,15 +336,29 @@ class FeatureConnection(ServerConnection):
                                       self.name)
 
     def send_lines(self, lines: List[str], key: str = 'unknown') -> None:
-        # We don't want to send_lines to the player if they're already being
-        # sent the message of this type This disables an exploit where
-        # spamming a command utilizing send_lines causes the server to crash.
-        if key in self.current_send_lines_types:
-            log.info("Skipped sending lines to '{}': already being sent key "
-                     "'{}'".format(self.printable_name, key))
-            return
+        """
+        Send a list of lines to the player.
 
-        self.current_send_lines_types.append(key)
+        'key' is a unique identifier for the lines being sent - for example,
+        a message saying '3 medkits are ready!' could use the key 'medkits.ready'.
+        The key is used to avoid sending two messages of the same variety at once,
+        to protect the server against a vulnerability which exploits this function.
+
+        The key should always be specified when calling this function. The default
+        value of 'unknown' exists simply for backwards compatibility.
+        """
+
+        # Detect if the send_lines key is already being sent to the player.
+        # If the caller of this function forgot to specify a key (thus,
+        # 'unknown' is used as per the default), we'll skip this detection.
+        if key != 'unknown':
+            if key in self.current_send_lines_types:
+                log.info(
+                    "Skipped sending lines to '{}': already being sent key "
+                    "'{}'".format(self.printable_name, key))
+                return
+
+            self.current_send_lines_types.append(key)
 
         current_time = 0
         for line in lines:
