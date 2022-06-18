@@ -44,7 +44,7 @@ class FeatureConnection(ServerConnection):
         self.user_types = None
         self.rights = None
         self.can_complete_line_build = True
-        self.current_send_lines_types = {}
+        self.current_send_lines_types = []
 
         super().__init__(*args, **kwargs)
 
@@ -335,21 +335,23 @@ class FeatureConnection(ServerConnection):
                 self.protocol.add_ban(self.address[0], reason, duration,
                                       self.name)
 
-    def send_lines(self, lines: List[str], type: str = 'unknown') -> None:
-        # We don't want to send_lines to the player if they're already being sent the message of this type
-        # This disables an exploit where spamming a command utilizing send_lines causes the server to crash.
-        if type in self.current_send_lines_types:
-            log.info("Skipped sending lines to '{}': already being sent type '{}'".format(self.printable_name, type))
+    def send_lines(self, lines: List[str], key: str = 'unknown') -> None:
+        # We don't want to send_lines to the player if they're already being
+        # sent the message of this type This disables an exploit where
+        # spamming a command utilizing send_lines causes the server to crash.
+        if key in self.current_send_lines_types:
+            log.info("Skipped sending lines to '{}': already being sent key "
+                     "'{}'".format(self.printable_name, key))
             return
 
-        self.current_send_lines_types.add(type)
+        self.current_send_lines_types.append(key)
 
         current_time = 0
         for line in lines:
             reactor.callLater(current_time, self.send_chat, line)
             current_time += 2
 
-        reactor.callLater(current_time, self._completed_send_lines, type)
+        reactor.callLater(current_time, self._completed_send_lines, key)
 
     def _completed_send_lines(self, type: str) -> None:
         self.current_send_lines_types.remove(type)
