@@ -481,7 +481,7 @@ def apply_script(protocol, connection, config):
                 self.old_respawn_time = None
                 self.old_building = None
                 self.old_killing = None
-            return protocol.on_map_change(self, map)
+            return protocol.on_map_change(self, map_)
 
         def build_gates(self):
             for gate in self.gates:
