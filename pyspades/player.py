@@ -602,7 +602,12 @@ class ServerConnection(BaseConnection):
     def on_chat_message_recieved(self, contained: loaders.ChatMessage) -> None:
         if not self.name:
             return
+
         value = contained.value
+        if len(value)>108:
+            log.info("TOO LONG MESSAGE (%i chars) FROM %s (#%i)"%(len(value), self.name, self.player_id))
+
+        value = value[:108]
         if value.startswith('/'):
             self.on_command(*parse_command(value[1:]))
         else:
