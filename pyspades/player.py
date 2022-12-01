@@ -37,6 +37,7 @@ log = Logger()
 
 tc_data = loaders.TCState()
 
+
 def check_nan(*values) -> bool:
     for value in values:
         if math.isnan(value):
@@ -415,7 +416,7 @@ class ServerConnection(BaseConnection):
         if not self.check_speedhack(*contained.position):
             contained.position = self.world_object.position.get()
         velocity = Vertex3(*contained.velocity) - self.world_object.velocity
-        if velocity.length() > 2.0: # cap at tested maximum
+        if velocity.length() > 2.0:  # cap at tested maximum
             velocity = velocity.normal() * 2.0
         velocity += self.world_object.velocity
         if self.on_grenade(contained.value) == False:
@@ -491,7 +492,8 @@ class ServerConnection(BaseConnection):
                 current_time - last_time < interval):
             self.rapids.record_event(current_time)
             if self.rapids.above_limit():
-                log.info('RAPID HACK: {events}', events=self.rapids.get_events())
+                log.info('RAPID HACK: {events}',
+                         events=self.rapids.get_events())
                 self.on_hack_attempt('Rapid hack detected')
             return
         map = self.protocol.map
@@ -604,8 +606,9 @@ class ServerConnection(BaseConnection):
             return
 
         value = contained.value
-        if len(value)>108:
-            log.info("TOO LONG MESSAGE (%i chars) FROM %s (#%i)"%(len(value), self.name, self.player_id))
+        if len(value) > 108:
+            log.info("TOO LONG MESSAGE (%i chars) FROM %s (#%i)" %
+                     (len(value), self.name, self.player_id))
 
         value = value[:108]
         if value.startswith('/'):
@@ -921,7 +924,7 @@ class ServerConnection(BaseConnection):
             player_left = loaders.PlayerLeft()
             player_left.player_id = self.player_id
             self.protocol.broadcast_contained(player_left, sender=self,
-                                         save=True)
+                                              save=True)
             del self.protocol.players[self.player_id]
         if self.player_id is not None:
             self.protocol.player_ids.put_back(self.player_id)
