@@ -477,6 +477,8 @@ class ServerConnection(BaseConnection):
         if not self.hp:
             return
         value = contained.value
+        if value == GRENADE_DESTROY:
+            return
         if value == BUILD_BLOCK:
             interval = TOOL_INTERVAL[BLOCK_TOOL]
         elif self.tool == WEAPON_TOOL:
