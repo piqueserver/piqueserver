@@ -421,7 +421,7 @@ def apply_script(protocol, connection, config):
                     team.arena_message += 's'
                 team.arena_message += ' on ' + team.name
             self.broadcast_chat('%s and %s remain.' %
-                           (green_team.arena_message, blue_team.arena_message))
+                                (green_team.arena_message, blue_team.arena_message))
 
         def on_map_change(self, map_):
             extensions = self.map_info.extensions
@@ -523,7 +523,7 @@ def apply_script(protocol, connection, config):
             self.build_gates()
             self.arena_spawn()
             self.broadcast_chat('The round will begin in %i seconds.' %
-                           SPAWN_ZONE_TIME)
+                                SPAWN_ZONE_TIME)
             self.arena_countdown_timers = [
                 reactor.callLater(SPAWN_ZONE_TIME, self.begin_arena)]
             for time in range(1, 6):
