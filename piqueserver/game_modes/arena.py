@@ -380,7 +380,7 @@ def apply_script(protocol, connection, config):
             elif green_count < blue_count:
                 self.arena_win(blue_team)
             else:
-                self.send_chat('Round ends in a tie.')
+                self.broadcast_chat('Round ends in a tie.')
             self.begin_arena_countdown()
 
         def arena_win(self, team, killer=None):
@@ -399,7 +399,7 @@ def apply_script(protocol, connection, config):
                 self.arena_take_flag = True
                 killer.take_flag()
                 killer.capture_flag()
-            self.send_chat(team.name + ' team wins the round!')
+            self.broadcast_chat(team.name + ' team wins the round!')
             self.begin_arena_countdown()
 
         def arena_reset_fog_color(self):
@@ -420,8 +420,8 @@ def apply_script(protocol, connection, config):
                 if num != 1:
                     team.arena_message += 's'
                 team.arena_message += ' on ' + team.name
-            self.send_chat('%s and %s remain.' %
-                           (green_team.arena_message, blue_team.arena_message))
+            self.broadcast_chat('%s and %s remain.' %
+                                (green_team.arena_message, blue_team.arena_message))
 
         def on_map_change(self, map_):
             extensions = self.map_info.extensions
@@ -481,7 +481,7 @@ def apply_script(protocol, connection, config):
                 self.old_respawn_time = None
                 self.old_building = None
                 self.old_killing = None
-            return protocol.on_map_change(self, map)
+            return protocol.on_map_change(self, map_)
 
         def build_gates(self):
             for gate in self.gates:
@@ -522,13 +522,13 @@ def apply_script(protocol, connection, config):
             self.building = False
             self.build_gates()
             self.arena_spawn()
-            self.send_chat('The round will begin in %i seconds.' %
-                           SPAWN_ZONE_TIME)
+            self.broadcast_chat('The round will begin in %i seconds.' %
+                                SPAWN_ZONE_TIME)
             self.arena_countdown_timers = [
                 reactor.callLater(SPAWN_ZONE_TIME, self.begin_arena)]
             for time in range(1, 6):
                 self.arena_countdown_timers.append(reactor.callLater(
-                    SPAWN_ZONE_TIME - time, self.send_chat, str(time)))
+                    SPAWN_ZONE_TIME - time, self.broadcast_chat, str(time)))
 
         def delay_arena_countdown(self, amount):
             if self.arena_counting_down:
@@ -540,7 +540,7 @@ def apply_script(protocol, connection, config):
             self.arena_counting_down = False
             for team in (self.green_team, self.blue_team):
                 if team.count() == 0:
-                    self.send_chat(
+                    self.broadcast_chat(
                         'Not enough players on the %s team to begin.' %
                         team.name)
                     self.begin_arena_countdown()
@@ -550,9 +550,9 @@ def apply_script(protocol, connection, config):
             self.building = BUILDING_ENABLED
             self.refill_all()
             self.destroy_gates()
-            self.send_chat('Go!')
+            self.broadcast_chat('Go!')
             if MAX_ROUND_TIME > 0:
-                self.send_chat(
+                self.broadcast_chat(
                     'There is a time limit of %s for this round.' %
                     MAX_ROUND_TIME_TEXT)
                 self.arena_limit_timer = reactor.callLater(

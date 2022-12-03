@@ -85,6 +85,8 @@ def encode(value):
 
 def decode(value):
     if value is not None:
+        if value == b"":
+            return ""
         if value[0] == 0xFF:
             try:
                 return value[1:].decode('utf-8', 'strict')
