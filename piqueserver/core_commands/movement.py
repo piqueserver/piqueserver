@@ -77,7 +77,7 @@ def do_move(connection, args, silent=False):
         player = connection.name
     # player specified
     elif arg_count == 2 or arg_count == 4:
-        if not (connection.rights.admin or connection.rights.move_others):
+        if not (connection.admin or connection.rights.move_others):
             raise PermissionDenied(
                 "moving other players requires the move_others right")
         player = args[0]
