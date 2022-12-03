@@ -25,7 +25,7 @@ async def test_ban_manger_update_bans():
         {"ip":"177.142.42.13","name":"Danko","reason":"Cheating"},
     ]
     site = await mock_server(data, 9191)
-    asyncio.get_event_loop().create_task(site.start())
+    await site.start()
 
     banm = bansubscribe.BanManager(Mock())
     banm.urls = [("http://localhost:9191/", ["Danko"])]
