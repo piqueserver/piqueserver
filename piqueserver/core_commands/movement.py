@@ -10,7 +10,7 @@ def unstick(connection, player):
     Unstick yourself or another player and inform everyone on the server of it
     /unstick [player]
     """
-    connection.protocol.send_chat("%s unstuck %s" %
+    connection.protocol.broadcast_chat("%s unstuck %s" %
                                   (connection.name, player.name), irc=True)
     player.set_location_safe(player.get_location())
 
@@ -77,7 +77,7 @@ def do_move(connection, args, silent=False):
         player = connection.name
     # player specified
     elif arg_count == 2 or arg_count == 4:
-        if not (connection.rights.admin or connection.rights.move_others):
+        if not (connection.admin or connection.rights.move_others):
             raise PermissionDenied(
                 "moving other players requires the move_others right")
         player = args[0]
@@ -98,7 +98,7 @@ def do_move(connection, args, silent=False):
     if silent:
         connection.protocol.irc_say('* ' + message)
     else:
-        connection.protocol.send_chat(message, irc=True)
+        connection.protocol.broadcast_chat(message, irc=True)
 
 
 @command(admin_only=True)
@@ -144,7 +144,7 @@ def teleport(connection, player1, player2=None, silent=False):
     if silent:
         connection.protocol.irc_say('* ' + message)
     else:
-        connection.protocol.send_chat(message, irc=True)
+        connection.protocol.broadcast_chat(message, irc=True)
 
 
 @command('tpsilent', 'tps', admin_only=True)
