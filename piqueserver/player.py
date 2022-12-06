@@ -1,3 +1,4 @@
+import re
 from typing import List, Tuple, Optional, Union
 
 from twisted.internet import reactor
@@ -43,6 +44,7 @@ class FeatureConnection(ServerConnection):
         self.user_types = None
         self.rights = None
         self.can_complete_line_build = True
+        self.current_send_lines_types = []
 
         super().__init__(*args, **kwargs)
 
@@ -77,7 +79,7 @@ class FeatureConnection(ServerConnection):
 
     def on_join(self) -> None:
         if self.protocol.motd is not None:
-            self.send_lines(self.protocol.motd)
+            self.send_lines(self.protocol.motd, 'motd')
 
     def on_login(self, name: str) -> None:
         self.printable_name = escape_control_codes(name)
@@ -333,11 +335,40 @@ class FeatureConnection(ServerConnection):
                 self.protocol.add_ban(self.address[0], reason, duration,
                                       self.name)
 
-    def send_lines(self, lines: List[str]) -> None:
+    def send_lines(self, lines: List[str], key: str = 'unknown') -> None:
+        """
+        Send a list of lines to the player.
+
+        'key' is a unique identifier for the lines being sent - for example,
+        a message saying '3 medkits are ready!' could use the key 'medkits.ready'.
+        The key is used to avoid sending two messages of the same variety at once,
+        to protect the server against a vulnerability which exploits this function.
+
+        The key should always be specified when calling this function. The default
+        value of 'unknown' exists simply for backwards compatibility.
+        """
+
+        # Detect if the send_lines key is already being sent to the player.
+        # If the caller of this function forgot to specify a key (thus,
+        # 'unknown' is used as per the default), we'll skip this detection.
+        if key != 'unknown':
+            if key in self.current_send_lines_types:
+                log.info(
+                    "Skipped sending lines to '{}': already being sent key "
+                    "'{}'".format(self.printable_name, key))
+                return
+
+            self.current_send_lines_types.append(key)
+
         current_time = 0
         for line in lines:
             reactor.callLater(current_time, self.send_chat, line)
             current_time += 2
+
+        reactor.callLater(current_time, self._completed_send_lines, key)
+
+    def _completed_send_lines(self, type: str) -> None:
+        self.current_send_lines_types.remove(type)
 
     def on_hack_attempt(self, reason):
         log.warn('Hack attempt detected from {}: {}'.format(self.printable_name,
