@@ -72,17 +72,17 @@ def unlock(connection, value):
 
 @command(admin_only=True)
 @target_player
-def switch(connection, player):
+def switch(connection, player, team=None):
     """
     Switch teams either for yourself or for a given player
-    /switch [player]
+    /switch [player] [team]
     """
     protocol = connection.protocol
-    if player.team.spectator:
-        player.send_chat(
-            "The switch command can't be used on a spectating player.")
-        return
-    new_team = player.team.other
+    new_team = protocol.blue_team if player.team.spectator else player.team.other
+
+    if team:
+        new_team = get_team(connection, team)
+
     if player.invisible:
         old_team = player.team
         player.team = new_team
@@ -231,11 +231,11 @@ def fog(connection, *args):
     /fog #aabbcc        (hex representation of rgb)
     /fog #abc           (short hex representation of rgb)
     """
-    if(len(args) == 3):
+    if (len(args) == 3):
         r = int(args[0])
         g = int(args[1])
         b = int(args[2])
-    elif(len(args) == 1 and args[0][0] == '#'):
+    elif (len(args) == 1 and args[0][0] == '#'):
         hex_code = args[0][1:]
 
         if (len(hex_code) != 3) and (len(hex_code) != 6):
