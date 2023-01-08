@@ -90,6 +90,7 @@ class ServerConnection(BaseConnection):
     map_data = None
     last_position_update = None
     local = False
+    spectator = False
 
     def __init__(self, *arg, **kw) -> None:
         BaseConnection.__init__(self, *arg, **kw)
@@ -1033,6 +1034,9 @@ class ServerConnection(BaseConnection):
 
     def add_score(self, score):
         self.kills += score
+
+    def on_network_update(self, pkg):
+        return pkg
 
     def _connection_ack(self) -> None:
         self._send_connection_data()
