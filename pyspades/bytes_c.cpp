@@ -94,7 +94,11 @@ inline uint32_t read_uint(char *data, int big_endian)
 
 inline double read_float(char *data, int big_endian)
 {
-    return _PyFloat_Unpack4((const unsigned char *)data, !big_endian);
+    #if (PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 11)
+        return PyFloat_Unpack4((const char *)data, !big_endian);
+    #else
+        return _PyFloat_Unpack4((const unsigned char *)data, !big_endian);
+    #endif
 }
 
 /*
@@ -166,7 +170,11 @@ inline void write_uint(stringstream *ss, uint32_t value,
 inline void write_float(stringstream *ss, double value, int big_endian)
 {
     char out[4];
-    _PyFloat_Pack4(value, (unsigned char *)&out, !big_endian);
+    #if (PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 11)
+        PyFloat_Pack4(value, (char *)&out, !big_endian);
+    #else
+        _PyFloat_Pack4(value, (unsigned char *)&out, !big_endian);
+    #endif
     ss->write(out, 4);
 }
 
