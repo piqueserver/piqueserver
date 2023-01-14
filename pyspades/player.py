@@ -672,7 +672,7 @@ class ServerConnection(BaseConnection):
     @register_packet_handler(loaders.VersionResponse)
     def on_version_info_recieved(self, contained: loaders.VersionResponse) -> None:
         self.client_info["version"] = contained.version
-        self.client_info["os_info"] = contained.os_info
+        self.client_info["os_info"] = contained.os_info[:108]
         # TODO: Make this a dict lookup instead
         if contained.client == 'o':
             self.client_info["client"] = "OpenSpades"
@@ -680,7 +680,8 @@ class ServerConnection(BaseConnection):
             self.client_info["client"] = "BetterSpades"
             # BetterSpades currently sends the client name in the OS info to
             # deal with old scripts that don't recognize the 'B' indentifier
-            match = re.match(r"\ABetterSpades \((.*)\)\Z", contained.os_info)
+            match = re.match(r"\ABetterSpades \((.*)\)\Z",
+                             contained.os_info[:108])
             if match:
                 self.client_info["os_info"] = match.groups()[0]
         elif contained.client == 'a':
