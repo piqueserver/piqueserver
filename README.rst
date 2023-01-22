@@ -189,8 +189,8 @@ team <https://github.com/orgs/piqueserver/people>`__.
 
 .. |Build Status| image:: https://github.com/piqueserver/piqueserver/actions/workflows/main.yml/badge.svg?branch=master
    :target: https://github.com/piqueserver/piqueserver/actions/workflows/main.yml
-.. |Wheel Status| image:: https://github.com/DryByte/piqueserver/actions/workflows/wheels.yml/badge.svg?branch=master
-   :target: https://github.com/DryByte/piqueserver/actions/workflows/wheels.yml
+.. |Wheel Status| image:: https://github.com/piqueserver/piqueserver/actions/workflows/wheels.yml/badge.svg?branch=master
+   :target: https://github.com/piqueserver/piqueserver/actions/workflows/wheels.yml
 .. |Coverage Status| image:: https://coveralls.io/repos/github/piqueserver/piqueserver/badge.svg?branch=master
    :target: https://coveralls.io/github/piqueserver/piqueserver?branch=master
 .. |Join the chat at https://gitter.im/piqueserver/piqueserver| image:: https://badges.gitter.im/piqueserver/piqueserver.svg
