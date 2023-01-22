@@ -203,7 +203,6 @@ grownade
 flagreturn
 wildcards
 buildingred
-travis
 Tox
 votekicked
 rubberbanded

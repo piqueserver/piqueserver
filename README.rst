@@ -1,4 +1,4 @@
-piqueserver |Build Status| |Build status| |Coverage Status|
+piqueserver |Build Status| |Wheel Status| |Coverage Status|
 ===========================================================
 
 An Ace of Spades 0.75 server based on
@@ -189,8 +189,8 @@ team <https://github.com/orgs/piqueserver/people>`__.
 
 .. |Build Status| image:: https://github.com/piqueserver/piqueserver/actions/workflows/main.yml/badge.svg?branch=master
    :target: https://github.com/piqueserver/piqueserver/actions/workflows/main.yml
-.. |Build status| image:: https://ci.appveyor.com/api/projects/status/3mayprg9le4lejmm/branch/master?svg=true
-   :target: https://ci.appveyor.com/project/piqueserver/piqueserver/branch/master
+.. |Wheel Status| image:: https://github.com/DryByte/piqueserver/actions/workflows/wheels.yml/badge.svg?branch=master
+   :target: https://github.com/DryByte/piqueserver/actions/workflows/wheels.yml
 .. |Coverage Status| image:: https://coveralls.io/repos/github/piqueserver/piqueserver/badge.svg?branch=master
    :target: https://coveralls.io/github/piqueserver/piqueserver?branch=master
 .. |Join the chat at https://gitter.im/piqueserver/piqueserver| image:: https://badges.gitter.im/piqueserver/piqueserver.svg
