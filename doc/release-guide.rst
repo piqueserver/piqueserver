@@ -5,7 +5,7 @@ Ensure we’re ready for release
 ------------------------------
 
 -  branch should be up to date
--  travis builds should be passing
+-  github action builds should be passing
 -  test with a clean install on local machine if possible
 -  all the following should run without error (assuming Linux machine):
 
@@ -44,7 +44,7 @@ the version info.
 Build the sdist
 ---------------
 
-Prerequisites: Linux computer, ``python3.6`` (or greater), ``pip`` (same
+Prerequisites: Linux computer, ``python3.7`` (or greater), ``pip`` (same
 version as the python you’re using), ``twine``
 
 The source distribution is OS agnostic, so this is the easiest to start
@@ -94,12 +94,11 @@ Prerequisites: same as for sdist, plus ``docker``
 Build Windows binary wheels
 ---------------------------
 
-Use the download-wheels tool to fetch the wheels from appveyor. This requires
-the commit bumping the version to complete on appveyor. Copy the build ID from the URL.
+Use the download-wheels tool to fetch the wheels from github actions.
 
 ::
 
-    python download_wheels.py --buildid -d winbuilds/
+    python download_wheels.py --ghtoken <your github token> -d winbuilds/
 
 Update git
 ----------
