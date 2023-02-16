@@ -1217,11 +1217,21 @@ class ServerConnection(BaseConnection):
     def send_data(self, data):
         self.protocol.transport.write(data, self.address)
 
-    def send_chat(self, value: str, global_message: bool = False) -> None:
+    def send_chat(self, value: str, global_message: bool = False, custom_type: int = CHAT_ALL) -> None:
         if self.deaf:
             return
         chat_message = loaders.ChatMessage()
-        if not global_message:
+        if custom_type > 2 and "client" in self.client_info:
+            if self.client_info["client"] == "BetterSpades":
+                chat_message.chat_type = custom_type
+
+            elif self.client_info["client"] == "OpenSpades":
+                value = OPENSPADES_CHATTYPES[custom_type]+value
+
+            chat_message.player_id = 35
+            prefix = ''
+
+        elif not global_message:
             chat_message.chat_type = CHAT_SYSTEM
             prefix = ''
         else:
@@ -1239,30 +1249,30 @@ class ServerConnection(BaseConnection):
     def send_chat_warning(self, message):
         """
         Send a warning message. This gets displayed as a yellow popup
-        with sound for OpenSpades clients
+        with sound for OpenSpades/BetterSpades clients
         """
-        self.send_chat("%% " + str(message))
+        self.send_chat(message, custom_type=CHAT_WARNING)
 
     def send_chat_notice(self, message):
         """
-        Send a notice. This gets displayed as a popup for OpenSpades
+        Send a notice. This gets displayed as a popup for OpenSpades/Betterspades
         clients
         """
-        self.send_chat("N% " + str(message))
+        self.send_chat(message, custom_type=CHAT_INFO)
 
     def send_chat_error(self, message):
         """
         Send a error message. This gets displayed as a red popup with
-        sound for OpenSpades clients
+        sound for OpenSpades/Betterspades clients
         """
-        self.send_chat("!% " + str(message))
+        self.send_chat(message, custom_type=CHAT_ERROR)
 
     def send_chat_status(self, message):
         """
         Send a status message. This gets displayed in the center of the
-        screen for OpenSpades clients
+        screen for OpenSpades/Betterspades clients
         """
-        self.send_chat("C% " + str(message))
+        self.send_chat(message, custom_type=CHAT_BIG)
 
     # events/hooks
 
