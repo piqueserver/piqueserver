@@ -170,9 +170,6 @@ def togglevotekick(connection, *args):
 class Votekick:
     timeout = 120.0  # 2 minutes
     interval = 120.0  # 2 minutes
-    ban_duration = BAN_DURATION_OPTION.get()
-    public_votes = PUBLIC_VOTES_OPTION.get()
-    schedule = None
 
     @property
     def votes_remaining(self) -> int:
@@ -211,6 +208,9 @@ class Votekick:
         self.reason = reason
         self.votes = {instigator: True}
         self.ended = False
+
+        self.ban_duration = BAN_DURATION_OPTION.get()
+        self.public_votes = PUBLIC_VOTES_OPTION.get()
 
         protocol.irc_say(
             S_ANNOUNCE_IRC.format(
