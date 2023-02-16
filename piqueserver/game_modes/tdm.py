@@ -14,17 +14,24 @@ Options
     # Hide intel from the map and disable the captures
     remove_intel = false
 
+    # Use intel scores as a percentage to win the game
+    # This can cause trouble if remove_intel is false
+    score_percentage = false
+
 ..Maintainer: Triplefox
 """
 
 from pyspades.constants import *
+from pyspades.contained import IntelCapture
 from piqueserver.config import config
 from piqueserver.commands import command
+import math
 
 TDM_CONFIG = config.section("tdm")
 KILL_LIMIT = TDM_CONFIG.option("kill_limit", default=100)
 INTEL_POINTS = TDM_CONFIG.option("intel_points", default=10)
 REMOVE_INTEL = TDM_CONFIG.option("remove_intel", default=False)
+SCORE_PERCENTAGE = TDM_CONFIG.option("score_percentage", default=False)
 
 HIDE_COORD = (0, 0, 0)
 
@@ -95,7 +102,30 @@ def apply_script(protocol, connection, config):
                          KILL_LIMIT.get() - green_kills,
                          KILL_LIMIT.get()))
 
+        # since its a team based game, we gonna split the caps
+        # for all players in the team
+        def do_captures(self, team, caps):
+            while (team.score < caps):
+                for player in team.get_players():
+                    if team.score >= caps:
+                        break
+
+                    team.score += 1
+                    intel_capture = IntelCapture()
+                    intel_capture.player_id = player.player_id
+                    intel_capture.winning = False
+
+                    self.broadcast_contained(intel_capture)
+
         def check_end_game(self, player):
+            if SCORE_PERCENTAGE.get() and player:
+                team = player.team
+                caps_percent = math.floor(
+                    self.max_score*team.kills/KILL_LIMIT.get())
+
+                if caps_percent > team.score:
+                    self.do_captures(team, caps_percent)
+
             if self.green_team.kills >= KILL_LIMIT.get():
                 self.send_chat("Green Team Wins, %s - %s" %
                                (self.green_team.kills, self.blue_team.kills))
