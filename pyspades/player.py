@@ -1226,7 +1226,7 @@ class ServerConnection(BaseConnection):
                 chat_message.chat_type = custom_type
 
             elif self.client_info["client"] == "OpenSpades":
-                value = OPENSPADES_CHATTYPES[custom_type]+value
+                value = OPENSPADES_CHATTYPES[custom_type] + value
 
             chat_message.player_id = 35
             prefix = ''
