@@ -1222,10 +1222,10 @@ class ServerConnection(BaseConnection):
             return
         chat_message = loaders.ChatMessage()
         if custom_type > 2 and "client" in self.client_info:
-            if self.client_info["client"] == "OpenSpades":
-                value = OPENSPADES_CHATTYPES[custom_type] + value
-            elif EXTENSION_CHATTYPE in self.proto_extensions:
+            if EXTENSION_CHATTYPE in self.proto_extensions:
                 chat_message.chat_type = custom_type
+            else:
+                value = OPENSPADES_CHATTYPES[custom_type] + value
 
             chat_message.player_id = 35
             prefix = ''
