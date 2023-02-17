@@ -84,14 +84,16 @@ def apply_script(protocol, connection, config):
             blue_kills = self.blue_team.kills
             diff = green_kills - blue_kills
             if green_kills > blue_kills:
-                return ("Green leads %s-%s (+%s, %s left). Playing to %s kills." %
-                        (green_kills, blue_kills,
+                return ("%s leads %s-%s (+%s, %s left). Playing to %s kills." %
+                        (self.green_team.name,
+                         green_kills, blue_kills,
                          diff,
                          KILL_LIMIT.get() - green_kills,
                          KILL_LIMIT.get()))
             elif green_kills < blue_kills:
-                return ("Blue leads %s-%s (+%s, %s left). Playing to %s kills." %
-                        (blue_kills, green_kills,
+                return ("%s leads %s-%s (+%s, %s left). Playing to %s kills." %
+                        (self.blue_team.name,
+                         blue_kills, green_kills,
                          -diff,
                          KILL_LIMIT.get() - blue_kills,
                          KILL_LIMIT.get()))
@@ -127,13 +129,17 @@ def apply_script(protocol, connection, config):
                     self.do_captures(team, caps_percent)
 
             if self.green_team.kills >= KILL_LIMIT.get():
-                self.broadcast_chat("Green Team Wins, %s - %s" %
-                                    (self.green_team.kills, self.blue_team.kills))
+                self.broadcast_chat("%s Team Wins, %s - %s" %
+                                    (self.green_team.name,
+                                     self.green_team.kills,
+                                     self.blue_team.kills))
                 self.reset_game(player)
                 protocol.on_game_end(self)
             elif self.blue_team.kills >= KILL_LIMIT.get():
-                self.broadcast_chat("Blue Team Wins, %s - %s" %
-                                    (self.blue_team.kills, self.green_team.kills))
+                self.broadcast_chat("%s Team Wins, %s - %s" %
+                                    (self.blue_team.name,
+                                     self.blue_team.kills,
+                                     self.green_team.kills))
                 self.reset_game(player)
                 protocol.on_game_end(self)
 
