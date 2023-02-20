@@ -176,6 +176,6 @@ def apply_script(protocol, connection, config):
             self.fog_color = color
             fog_color = loaders.FogColor()
             fog_color.color = make_color(*color)
-            self.send_contained(fog_color, save=True, rule=send_fog_rule)
+            self.broadcast_contained(fog_color, save=True, rule=send_fog_rule)
 
     return RampageProtocol, RampageConnection

@@ -320,7 +320,7 @@ class ServerProtocol(BaseProtocol):
             intel_capture = loaders.IntelCapture()
             intel_capture.player_id = player.player_id
             intel_capture.winning = True
-            self.send_contained(intel_capture, save=True)
+            self.broadcast_contained(intel_capture, save=True)
         elif self.game_mode == TC_MODE:
             if territory is None:
                 territory = self.entities[0]
@@ -328,7 +328,7 @@ class ServerProtocol(BaseProtocol):
             territory_capture.object_index = territory.id
             territory_capture.winning = True
             territory_capture.state = territory.team.id
-            self.send_contained(territory_capture)
+            self.broadcast_contained(territory_capture)
             self.reset_tc()
         for entity in self.entities:
             entity.update()

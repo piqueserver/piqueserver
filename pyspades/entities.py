@@ -26,7 +26,7 @@ class Entity(Vertex3):
         move_object.x = self.x
         move_object.y = self.y
         move_object.z = self.z
-        self.protocol.send_contained(move_object, save=True)
+        self.protocol.broadcast_contained(move_object, save=True)
 
 
 class Flag(Entity):
@@ -106,7 +106,7 @@ class Territory(Flag):
             progress = 1 - progress
         progress_bar.progress = progress
         progress_bar.rate = rate
-        self.protocol.send_contained(progress_bar)
+        self.protocol.broadcast_contained(progress_bar)
 
     def finish(self):
         self.finish_call = None
@@ -127,7 +127,7 @@ class Territory(Flag):
             territory_capture.object_index = self.id
             territory_capture.state = self.team.id
             territory_capture.winning = False
-            protocol.send_contained(territory_capture)
+            protocol.broadcast_contained(territory_capture)
 
     def get_progress(self, set=False):
         """
