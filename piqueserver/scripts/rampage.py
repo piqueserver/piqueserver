@@ -106,7 +106,7 @@ def apply_script(protocol, connection, config):
             send_fog(self, RAMPAGE_FOG_COLOR)
             if ANNOUNCE_RAMPAGE:
                 message = S_RAMPAGE_START.format(player=self.name)
-                self.protocol.send_chat(message, global_message=None)
+                self.protocol.broadcast_chat(message, global_message=None)
 
         def end_rampage(self):
             self.rampage = False
@@ -145,7 +145,7 @@ def apply_script(protocol, connection, config):
                 if was_rampaging and ANNOUNCE_RAMPAGE:
                     message = S_RAMPAGE_KILLED.format(victim=self.name,
                                                       killer=killer.name)
-                    self.protocol.send_chat(message, global_message=None)
+                    self.protocol.broadcast_chat(message, global_message=None)
                 if (not killer.rampage and killer.hp and
                     killer.team is not self.team and
                         (GRENADE_KILLS_COUNT or type != GRENADE_KILL)):

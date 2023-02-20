@@ -161,7 +161,7 @@ def reset_intel_position(protocol, team):
            protocol.map.get_z(team.other.spawn[0], team.other.spawn[1], 1))
     team.flag.set(*pos)  # If spawn not set, it would throw error.
     team.flag.update()
-    protocol.send_chat("The %s intel has been reset." % team.name)
+    protocol.broadcast_chat("The %s intel has been reset." % team.name)
 
 
 @command(admin_only=True)

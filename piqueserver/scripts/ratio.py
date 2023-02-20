@@ -85,7 +85,7 @@ def apply_script(protocol, connection, config):
                 if IRC_ONLY:
                     self.irc_say('* ' + message)
                 else:
-                    self.send_chat(message, irc=True)
+                    self.broadcast_chat(message, irc=True)
             return result
 
     return RatioProtocol, RatioConnection

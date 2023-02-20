@@ -120,10 +120,10 @@ def apply_script(protocol, connection, config):
         def start_airstrike(self, x, y, z):
             coords = to_coordinates(x, y)
             message = S_ALLIED.format(player=self.name, coords=coords)
-            self.protocol.send_chat(message, global_message=False,
+            self.protocol.broadcast_chat(message, global_message=False,
                                     team=self.team)
             message = S_ENEMY.format(coords=coords)
-            self.protocol.send_chat(message, global_message=False,
+            self.protocol.broadcast_chat(message, global_message=False,
                                     team=self.team.other)
             self.team.last_airstrike = reactor.seconds()
 

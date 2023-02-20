@@ -219,14 +219,14 @@ class Votekick:
                 victim=victim.name,
                 victim_id=victim.player_id,
                 reason=self.reason))
-        protocol.send_chat(
+        protocol.broadcast_chat(
             S_ANNOUNCE.format(
                 instigator=instigator.name,
                 instigator_id=instigator.player_id,
                 victim=victim.name,
                 victim_id=victim.player_id),
             sender=instigator)
-        protocol.send_chat(S_REASON.format(reason=self.reason),
+        protocol.broadcast_chat(S_REASON.format(reason=self.reason),
                            sender=instigator)
         instigator.send_chat(S_ANNOUNCE_SELF.format(victim=victim.name, victim_id=victim.player_id))
 
@@ -241,7 +241,7 @@ class Votekick:
         elif player in self.votes:
             return
         if self.public_votes:
-            self.protocol.send_chat(S_YES.format(player=player.name, player_id=player.player_id))
+            self.protocol.broadcast_chat(S_YES.format(player=player.name, player_id=player.player_id))
         self.votes[player] = True
         if self.votes_remaining <= 0:
             # vote passed, ban or kick accordingly
@@ -265,7 +265,7 @@ class Votekick:
     def end(self, result):
         self.ended = True
         message = S_ENDED.format(victim=self.victim.name, victim_id=self.victim.player_id, result=result)
-        self.protocol.send_chat(message, irc=True)
+        self.protocol.broadcast_chat(message, irc=True)
         if not self.instigator.admin:
             self.instigator.last_votekick = seconds()
         self.protocol.on_votekick_end()

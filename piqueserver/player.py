@@ -203,9 +203,9 @@ class FeatureConnection(ServerConnection):
                                "*god mode*" % player.name)
             return False
         if self.god:
-            self.protocol.send_chat('%s, killing in god mode is forbidden!' %
+            self.protocol.broadcast_chat('%s, killing in god mode is forbidden!' %
                                     self.name, irc=True)
-            self.protocol.send_chat('%s returned to being a mere human.' %
+            self.protocol.broadcast_chat('%s returned to being a mere human.' %
                                     self.name, irc=True)
             self.god = False
             self.god_build = False
@@ -296,7 +296,7 @@ class FeatureConnection(ServerConnection):
         self.chat_limiter.record_event(current_time)
         if self.chat_limiter.above_limit():
             self.mute = True
-            self.protocol.send_chat(
+            self.protocol.broadcast_chat(
                 '%s has been muted for excessive spam' % (
                     self.name),
                 irc=True)
@@ -312,7 +312,7 @@ class FeatureConnection(ServerConnection):
                 message = '{} was kicked: {}'.format(self.name, reason)
             else:
                 message = '%s was kicked' % self.name
-            self.protocol.send_chat(message, irc=True)
+            self.protocol.broadcast_chat(message, irc=True)
             log.info(message)
         # FIXME: Client should handle disconnect events the same way in both
         # main and initial loading network loops
@@ -327,10 +327,10 @@ class FeatureConnection(ServerConnection):
             message = '{} banned for {}{}'.format(self.name,
                                                   prettify_timespan(duration), reason)
         if self.protocol.on_ban_attempt(self, reason, duration):
-            self.protocol.send_chat(message, irc=True)
+            self.protocol.broadcast_chat(message, irc=True)
             self.protocol.on_ban(self, reason, duration)
             if self.address[0] == "127.0.0.1":
-                self.protocol.send_chat("Ban ignored: localhost")
+                self.protocol.broadcast_chat("Ban ignored: localhost")
             else:
                 self.protocol.add_ban(self.address[0], reason, duration,
                                       self.name)

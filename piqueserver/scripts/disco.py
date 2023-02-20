@@ -67,11 +67,11 @@ def apply_script(protocol, connection, config):
                 self.old_fog_color = self.fog_color
                 self.disco_loop.start(0.3)
                 if message:
-                    self.send_chat('DISCO PARTY MODE ENABLED!')
+                    self.broadcast_chat('DISCO PARTY MODE ENABLED!')
             else:
                 self.disco_loop.stop()
                 if self.old_fog_color is not None:
                     self.set_fog_color(self.old_fog_color)
                 if message:
-                    self.send_chat('The party has been stopped.')
+                    self.broadcast_chat('The party has been stopped.')
     return DiscoProtocol, connection

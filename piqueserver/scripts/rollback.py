@@ -117,7 +117,7 @@ def apply_script(protocol, connection, config):
             name = (connection.name if connection is not None
                     else S_AUTOMATIC_ROLLBACK_PLAYER_NAME)
             message = S_ROLLBACK_COMMENCED.format(player=name)
-            self.send_chat(message, irc=True)
+            self.broadcast_chat(message, irc=True)
             self.packet_generator = self.create_rollback_generator(
                 self.map, map, start_x, start_y, end_x, end_y, ignore_indestructable)
             self.rollback_in_progress = True
@@ -141,7 +141,7 @@ def apply_script(protocol, connection, config):
             self.packet_generator = None
             self.update_entities()
             message = S_ROLLBACK_ENDED.format(result=result)
-            self.send_chat(message, irc=True)
+            self.broadcast_chat(message, irc=True)
 
         def rollback_cycle(self):
             if not self.rollback_in_progress:
@@ -167,9 +167,9 @@ def apply_script(protocol, connection, config):
                         self.rollback_total_rows
                     if progress < 1.0:
                         message = S_ROLLBACK_PROGRESS.format(percent=progress)
-                        self.send_chat(message)
+                        self.broadcast_chat(message)
                     else:
-                        self.send_chat(S_ROLLBACK_COLOR_PASS)
+                        self.broadcast_chat(S_ROLLBACK_COLOR_PASS)
             except (StopIteration):
                 elapsed = time.monotonic() - self.rollback_start_time
                 message = S_ROLLBACK_TIME_TAKEN.format(seconds=elapsed)

@@ -20,7 +20,7 @@ def toggledemo(connection):
     message = 'Demolition is now disabled'
     if connection.protocol.demolitionEnabled:
         message = 'Demolition is now enabled'
-    connection.protocol.send_chat(message, irc=True)
+    connection.protocol.broadcast_chat(message, irc=True)
     return 'ok :)'
 
 

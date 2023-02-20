@@ -182,7 +182,7 @@ def minedebug(connection):
     proto = connection.protocol
     proto.minefield_debug = not proto.minefield_debug
     message = 'Minefield is now in debug' if proto.minefield_debug else 'Minefield is no longer in debug'
-    proto.send_chat(message, global_message=True)
+    proto.broadcast_chat(message, global_message=True)
     return 'You toggled minefield debug'
 
 
@@ -219,7 +219,7 @@ def apply_script(protocol, connection, config):
                 self.protocol.mine_kills += 1
                 message = choice(KILL_MESSAGES).format(
                     player=self.name, mine_kills=self.protocol.mine_kills)
-                self.protocol.send_chat(message, global_message=True)
+                self.protocol.broadcast_chat(message, global_message=True)
             connection.on_kill(self, killer, type, grenade)
 
     class MineProtocol(protocol):

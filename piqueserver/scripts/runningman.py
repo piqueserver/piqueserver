@@ -49,7 +49,7 @@ def running_man(connection):
     if not protocol.running_man:
         protocol.drop_all_links()
     message = S_ENABLED if protocol.running_man else S_DISABLED
-    protocol.send_chat(message, irc=True)
+    protocol.broadcast_chat(message, irc=True)
 
 
 @command(admin_only=True)
@@ -57,7 +57,7 @@ def relink(connection):
     if not connection.protocol.running_man:
         return S_NOT_ENABLED
     connection.protocol.drop_all_links()
-    connection.protocol.send_chat(S_UNLINK_ALL, irc=True)
+    connection.protocol.broadcast_chat(S_UNLINK_ALL, irc=True)
 
 
 @command(admin_only=True)
@@ -131,7 +131,7 @@ def apply_script(protocol, connection, config):
                 for player in self.team.get_players():
                     player.drop_link(no_message=True)
                 message = S_FLAG_CAPTURED.format(team=self.team.name)
-                self.protocol.send_chat(message, global_message=None)
+                self.protocol.broadcast_chat(message, global_message=None)
             connection.on_flag_capture(self)
 
         def on_reset(self):

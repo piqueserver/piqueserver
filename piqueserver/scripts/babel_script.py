@@ -136,7 +136,7 @@ def apply_script(protocol, connection, config):
         def auto_kill_intel_hog(self):
             self.auto_kill_intel_hog_call = None
             self.kill()
-            self.protocol.send_chat(
+            self.protocol.broadcast_chat(
                 'God punished %s for holding the intel too long' %
                 (self.name))
 
@@ -179,7 +179,7 @@ def apply_script(protocol, connection, config):
 
         def reset_flag(self):
             self.protocol.onectf_reset_flags()
-            self.protocol.send_chat('The intel has returned to the heavens')
+            self.protocol.broadcast_chat('The intel has returned to the heavens')
 
         def on_flag_capture(self):
             if self.auto_kill_intel_hog_call is not None:

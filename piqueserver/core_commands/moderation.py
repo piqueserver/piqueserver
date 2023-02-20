@@ -182,7 +182,7 @@ def mute(connection, value):
         return '%s is already muted' % player.name
     player.mute = True
     message = '%s has been muted by %s' % (player.name, connection.name)
-    connection.protocol.send_chat(message, irc=True)
+    connection.protocol.broadcast_chat(message, irc=True)
 
 
 @command(admin_only=True)
@@ -196,7 +196,7 @@ def unmute(connection, value):
         return '%s is not muted' % player.name
     player.mute = False
     message = '%s has been unmuted by %s' % (player.name, connection.name)
-    connection.protocol.send_chat(message, irc=True)
+    connection.protocol.broadcast_chat(message, irc=True)
 
 
 @command(admin_only=True)
@@ -349,7 +349,7 @@ def god(connection, player=None):
         message = '%s entered GOD MODE!' % connection.name
     else:
         message = '%s returned to being a mere human' % connection.name
-    connection.protocol.send_chat(message, irc=True)
+    connection.protocol.broadcast_chat(message, irc=True)
 
 
 @command('godbuild', admin_only=True)

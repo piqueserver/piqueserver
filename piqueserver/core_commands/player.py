@@ -60,7 +60,7 @@ def kill(connection, value=None):
     player.kill()
     if connection is not player:
         message = '%s killed %s' % (connection.name, player.name)
-        connection.protocol.send_chat(message, irc=True)
+        connection.protocol.broadcast_chat(message, irc=True)
 
 
 @command(admin_only=True)
@@ -75,7 +75,7 @@ def heal(connection, player):
     else:
         message = '%s was healed by %s' % (player.name, connection.name)
     player.refill()
-    connection.protocol.send_chat(message, irc=True)
+    connection.protocol.broadcast_chat(message, irc=True)
 
 
 @command()

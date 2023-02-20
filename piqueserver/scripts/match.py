@@ -103,14 +103,14 @@ def apply_script(protocol, connection, config):
             if self.timer_end is not None:
                 return 'Timer is running already.'
             self.timer_end = reactor.seconds() + end
-            self.send_chat('Timer started, ending in %s minutes' % (end / 60),
+            self.broadcast_chat('Timer started, ending in %s minutes' % (end / 60),
                            irc=True)
             self.display_timer(True)
 
         def stop_timer(self):
             if self.timer_call is not None:
                 self.timer_call.cancel()
-                self.send_chat('Timer stopped.')
+                self.broadcast_chat('Timer stopped.')
                 self.timer_call = None
             else:
                 return 'No timer in progress.'
@@ -121,15 +121,15 @@ def apply_script(protocol, connection, config):
             next_call = 60
             if not silent:
                 if time_left <= 0:
-                    self.send_chat('Timer ended!', irc=True)
+                    self.broadcast_chat('Timer ended!', irc=True)
                     self.timer_end = None
                     return
                 elif minutes_left <= 1:
-                    self.send_chat('%s seconds left' % int(time_left),
+                    self.broadcast_chat('%s seconds left' % int(time_left),
                                    irc=True)
                     next_call = max(1, int(time_left / 2.0))
                 else:
-                    self.send_chat('%s minutes left' % int(minutes_left),
+                    self.broadcast_chat('%s minutes left' % int(minutes_left),
                                    irc=True)
             self.timer_call = reactor.callLater(next_call, self.display_timer)
 

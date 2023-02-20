@@ -105,9 +105,9 @@ class VoteMap:
         instigator = self.instigator
         protocol = self.protocol
         if instigator is None:
-            protocol.send_chat('Time to vote!', irc=True)
+            protocol.broadcast_chat('Time to vote!', irc=True)
         else:
-            protocol.send_chat(
+            protocol.broadcast_chat(
                 '* %s initiated a map vote.' % instigator.name, irc=True)
         self.schedule = schedule = Scheduler(protocol)
         schedule.call_later(self.vote_time, self.timeout)
@@ -122,7 +122,7 @@ class VoteMap:
             return
         self.votes[connection] = mapname
         if self.public_votes:
-            self.protocol.send_chat('%s voted for %s.' % (connection.name,
+            self.protocol.broadcast_chat('%s voted for %s.' % (connection.name,
                                                           mapname))
         if self.votes_left()['count'] <= 0:
             self.on_majority()
@@ -134,16 +134,16 @@ class VoteMap:
             return 'You did not start the vote.'
         else:
             message = 'Cancelled by %s' % connection.name
-        self.protocol.send_chat(message)
+        self.protocol.broadcast_chat(message)
         self.set_cooldown()
         self.finish()
 
     def update(self):
-        self.protocol.send_chat(
+        self.protocol.broadcast_chat(
             'Choose next map. Say /vote <name> to cast vote.')
         names = ' '.join(self.picks)
-        self.protocol.send_chat('Maps: %s' % names)
-        self.protocol.send_chat('To extend current map: /vote extend')
+        self.protocol.broadcast_chat('Maps: %s' % names)
+        self.protocol.broadcast_chat('To extend current map: /vote extend')
 
     def timeout(self):
         self.show_result()
@@ -158,11 +158,11 @@ class VoteMap:
         if result == "extend":
             tl = self.protocol.set_time_limit(self.extension_time, True)
             span = prettify_timespan(tl * 60.0)
-            self.protocol.send_chat('Mapvote ended. Current map will '
+            self.protocol.broadcast_chat('Mapvote ended. Current map will '
                                     'continue for %s.' % span, irc=True)
             self.protocol.autoschedule_votemap()
         else:
-            self.protocol.send_chat('Mapvote ended. Next map will be: %s.' %
+            self.protocol.broadcast_chat('Mapvote ended. Next map will be: %s.' %
                                     result, irc=True)
             self.protocol.planned_map = check_rotation([result])[0]
         self.set_cooldown()
