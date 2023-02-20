@@ -956,7 +956,7 @@ class ServerConnection(BaseConnection):
         if by is not None and self.team is by.team:
             friendly_fire = self.protocol.friendly_fire
             friendly_fire_on_grief = self.protocol.friendly_fire_on_grief
-            if friendly_fire_on_grief:
+            if friendly_fire_on_grief and not friendly_fire:
                 if (kill_type == MELEE_KILL and
                         not self.protocol.spade_teamkills_on_grief):
                     return
@@ -964,7 +964,7 @@ class ServerConnection(BaseConnection):
                 if (self.last_block_destroy is None
                         or reactor.seconds() - self.last_block_destroy >= hit_time):
                     return
-            elif not friendly_fire:
+            if not friendly_fire:
                 return
         self.set_hp(self.hp - value, by, kill_type=kill_type)
 
