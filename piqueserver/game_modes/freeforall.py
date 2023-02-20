@@ -1,19 +1,30 @@
 """
 Free for All: shoot anyone
+
+Options
+^^^^^^^
+.. code-block:: toml
+    [freeforall]
+    # If ALWAYS_ENABLED is False, free for all can still be enabled in the map
+    # metadata by setting the key 'free_for_all' to True in the extensions
+    # dictionary
+    always_enabled = true
+
+    # If WATER_SPAWNS is True, then players can spawn in water
+    water_spawns = false
+..
 """
 # Free for all script written by Yourself
 
 from random import randint
 
+from pyspades.contained import CreatePlayer, ExistingPlayer
+from piqueserver.config import config
 from pyspades.constants import CTF_MODE
 
-# If ALWAYS_ENABLED is False, free for all can still be enabled in the map
-# metadata by setting the key 'free_for_all' to True in the extensions
-# dictionary
-ALWAYS_ENABLED = True
-
-# If WATER_SPANS is True, then players can spawn in water
-WATER_SPAWNS = False
+FFA_CONFIG = config.section("freeforall")
+ALWAYS_ENABLED = FFA_CONFIG.option("always_enabled", default=True)
+WATER_SPAWNS = FFA_CONFIG.option("water_spawns", default=False)
 
 HIDE_POS = (0, 0, 63)
 
@@ -26,7 +37,7 @@ def apply_script(protocol, connection, config):
 
         def on_map_change(self, map):
             extensions = self.map_info.extensions
-            if ALWAYS_ENABLED:
+            if ALWAYS_ENABLED.get():
                 self.free_for_all = True
             else:
                 if 'free_for_all' in extensions:
@@ -52,8 +63,27 @@ def apply_script(protocol, connection, config):
                 return HIDE_POS
             return protocol.on_flag_spawn(self, x, y, z, flag, entity_id)
 
+        def broadcast_contained(self, contained, unsequenced=False, sender=None,
+                                team=None, save=False, rule=None):
+            if contained.id == CreatePlayer.id:
+                if contained.team != -1:
+                    player = self.players[contained.player_id]
+                    contained.team = self.blue_team.id
+
+                    player.send_contained(contained)
+                    contained.team = self.green_team.id
+                    sender = player
+
+            return protocol.broadcast_contained(self, contained, unsequenced, sender, team, save, rule)
+
     class FreeForAllConnection(connection):
         score_hack = False
+        
+        def on_team_join(self, team):
+            if team.spectator:
+                return team
+
+            return self.protocol.green_team
 
         def on_spawn_location(self, pos):
             if not self.score_hack and self.protocol.free_for_all:
@@ -61,7 +91,7 @@ def apply_script(protocol, connection, config):
                     x = randint(0, 511)
                     y = randint(0, 511)
                     z = self.protocol.map.get_z(x, y)
-                    if z != 63 or WATER_SPAWNS:
+                    if z != 63 or WATER_SPAWNS.get():
                         break
                 # Magic numbers taken from server.py spawn function
                 z -= 2.4
@@ -79,15 +109,16 @@ def apply_script(protocol, connection, config):
             if self.protocol.free_for_all:
                 return False
             return connection.on_flag_take(self)
-
+        """
         def on_kill(self, by, type, grenade):
             # Switch teams to add score hack
             if by is not None and by.team is self.team and self is not by:
-                self.score_hack = True
+                #self.score_hack = True
                 pos = self.world_object.position
-                self.set_team(self.team.other)
+                #self.set_team(self.team.other)
                 self.spawn((pos.x, pos.y, pos.z))
-                self.score_hack = False
+                #self.score_hack = False
             return connection.on_kill(self, by, type, grenade)
+        """
 
     return FreeForAllProtocol, FreeForAllConnection
