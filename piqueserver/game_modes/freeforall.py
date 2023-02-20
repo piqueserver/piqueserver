@@ -12,6 +12,15 @@ Options
 
     # If WATER_SPAWNS is True, then players can spawn in water
     water_spawns = false
+
+    # If ISOLATE_PLAYER is True, then player will be alone in
+    # the blue team, vs all greens auto disabling use_score_hack
+    isolate_player = true
+
+    # If USE_SCORE_HACK is True, then when you kill someone
+    # he will get changed to the other team, so you can
+    # get score when playing on voxlap
+    use_score_hack = false
 ..
 """
 # Free for all script written by Yourself
@@ -25,6 +34,8 @@ from pyspades.constants import CTF_MODE
 FFA_CONFIG = config.section("freeforall")
 ALWAYS_ENABLED = FFA_CONFIG.option("always_enabled", default=True)
 WATER_SPAWNS = FFA_CONFIG.option("water_spawns", default=False)
+ISOLATE_PLAYER = FFA_CONFIG.option("isolate_player", default=True)
+USE_SCORE_HACK = FFA_CONFIG.option("use_score_hack", default=False)
 
 HIDE_POS = (0, 0, 63)
 
@@ -63,24 +74,26 @@ def apply_script(protocol, connection, config):
                 return HIDE_POS
             return protocol.on_flag_spawn(self, x, y, z, flag, entity_id)
 
-        def broadcast_contained(self, contained, unsequenced=False, sender=None,
-                                team=None, save=False, rule=None):
-            if contained.id == CreatePlayer.id:
-                if contained.team != -1:
-                    player = self.players[contained.player_id]
-                    contained.team = self.blue_team.id
+        def broadcast_contained(self, contained, unsequenced=False,
+                                sender=None, team=None, save=False, rule=None):
+            if ISOLATE_PLAYER.get():
+                if contained.id == CreatePlayer.id:
+                    if contained.team != -1:
+                        player = self.players[contained.player_id]
+                        contained.team = self.blue_team.id
 
-                    player.send_contained(contained)
-                    contained.team = self.green_team.id
-                    sender = player
+                        player.send_contained(contained)
+                        contained.team = self.green_team.id
+                        sender = player
 
-            return protocol.broadcast_contained(self, contained, unsequenced, sender, team, save, rule)
+            return protocol.broadcast_contained(self, contained, unsequenced,
+                                                sender, team, save, rule)
 
     class FreeForAllConnection(connection):
         score_hack = False
-        
+
         def on_team_join(self, team):
-            if team.spectator:
+            if team.spectator or not ISOLATE_PLAYER.get():
                 return team
 
             return self.protocol.green_team
@@ -109,16 +122,17 @@ def apply_script(protocol, connection, config):
             if self.protocol.free_for_all:
                 return False
             return connection.on_flag_take(self)
-        """
-        def on_kill(self, by, type, grenade):
+
+        def on_kill(self, by, _type, grenade):
             # Switch teams to add score hack
-            if by is not None and by.team is self.team and self is not by:
-                #self.score_hack = True
-                pos = self.world_object.position
-                #self.set_team(self.team.other)
-                self.spawn((pos.x, pos.y, pos.z))
-                #self.score_hack = False
-            return connection.on_kill(self, by, type, grenade)
-        """
+            if USE_SCORE_HACK.get():
+                if by is not None and by.team is self.team and self is not by:
+                    self.score_hack = True
+                    pos = self.world_object.position
+                    self.set_team(self.team.other)
+                    self.spawn((pos.x, pos.y, pos.z))
+                    self.score_hack = False
+
+            return connection.on_kill(self, by, _type, grenade)
 
     return FreeForAllProtocol, FreeForAllConnection
