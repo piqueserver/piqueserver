@@ -14,7 +14,7 @@ Options
     water_spawns = false
 
     # If ISOLATE_PLAYER is True, then player will be alone in
-    # the blue team, vs all greens auto disabling use_score_hack
+    # the blue team, vs all greens. This auto disable use_score_hack
     isolate_player = true
 
     # If USE_SCORE_HACK is True, then when you kill someone
@@ -80,10 +80,10 @@ def apply_script(protocol, connection, config):
                 if contained.id == CreatePlayer.id:
                     if contained.team != -1:
                         player = self.players[contained.player_id]
-                        contained.team = self.blue_team.id
+                        contained.team = self.team_1.id
 
                         player.send_contained(contained)
-                        contained.team = self.green_team.id
+                        contained.team = self.team_2.id
                         sender = player
 
             return protocol.broadcast_contained(self, contained, unsequenced,
@@ -96,7 +96,7 @@ def apply_script(protocol, connection, config):
             if team.spectator or not ISOLATE_PLAYER.get():
                 return team
 
-            return self.protocol.green_team
+            return self.protocol.team_2
 
         def on_spawn_location(self, pos):
             if not self.score_hack and self.protocol.free_for_all:
@@ -125,7 +125,7 @@ def apply_script(protocol, connection, config):
 
         def on_kill(self, by, _type, grenade):
             # Switch teams to add score hack
-            if USE_SCORE_HACK.get():
+            if USE_SCORE_HACK.get() and not ISOLATE_PLAYER.get():
                 if by is not None and by.team is self.team and self is not by:
                     self.score_hack = True
                     pos = self.world_object.position
