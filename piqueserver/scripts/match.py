@@ -103,8 +103,8 @@ def apply_script(protocol, connection, config):
             if self.timer_end is not None:
                 return 'Timer is running already.'
             self.timer_end = reactor.seconds() + end
-            self.broadcast_chat('Timer started, ending in %s minutes' % (end / 60),
-                           irc=True)
+            self.broadcast_chat('Timer started, ending in %s minutes'
+                                % (end / 60), irc=True)
             self.display_timer(True)
 
         def stop_timer(self):
@@ -126,11 +126,11 @@ def apply_script(protocol, connection, config):
                     return
                 elif minutes_left <= 1:
                     self.broadcast_chat('%s seconds left' % int(time_left),
-                                   irc=True)
+                                        irc=True)
                     next_call = max(1, int(time_left / 2.0))
                 else:
                     self.broadcast_chat('%s minutes left' % int(minutes_left),
-                                   irc=True)
+                                        irc=True)
             self.timer_call = reactor.callLater(next_call, self.display_timer)
 
         def display_messages(self):

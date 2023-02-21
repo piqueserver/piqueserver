@@ -52,8 +52,10 @@ S_ROLLBACK_TIME_TAKEN = 'Time taken: {seconds:.3}s'
 NON_SURFACE_COLOR = (69, 43, 30)
 
 rollback_config = config.section('rollback')
-ROLLBACK_ON_GAME_END_OPTION = rollback_config.option('rollback_on_game_end', False)
+ROLLBACK_ON_GAME_END_OPTION = rollback_config.option(
+    'rollback_on_game_end', False)
 config_dir = config.config_dir
+
 
 @command(admin_only=True)
 def rollmap(connection, mapname=None, value=None):
@@ -90,7 +92,8 @@ def apply_script(protocol, connection, config):
         rollback_max_rows = 10  # per 'cycle', intended to cap cpu usage
         # per 'cycle' cap for (unique packets * players)
         rollback_max_packets = 180
-        rollback_max_unique_packets = 12  # per 'cycle', each block op is at least 1
+        # per 'cycle', each block op is at least 1
+        rollback_max_unique_packets = 12
         rollback_time_between_cycles = 0.06
         rollback_time_between_progress_updates = 10.0
         rollback_start_time = None
@@ -119,7 +122,8 @@ def apply_script(protocol, connection, config):
             message = S_ROLLBACK_COMMENCED.format(player=name)
             self.broadcast_chat(message, irc=True)
             self.packet_generator = self.create_rollback_generator(
-                self.map, map, start_x, start_y, end_x, end_y, ignore_indestructable)
+                self.map, map, start_x, start_y,
+                end_x, end_y, ignore_indestructable)
             self.rollback_in_progress = True
             self.rollback_start_time = time.monotonic()
             self.rollback_last_chat = self.rollback_start_time

@@ -78,7 +78,10 @@ def switch(connection, player, team=None):
     /switch [player] [team]
     """
     protocol = connection.protocol
-    new_team = protocol.blue_team if player.team.spectator else player.team.other
+    new_team = protocol.blue_team
+
+    if not player.team.spectator:
+        new_team = player.team.other
 
     if team:
         new_team = get_team(connection, team)
@@ -89,7 +92,8 @@ def switch(connection, player, team=None):
         player.on_team_changed(old_team)
         player.spawn(player.world_object.position.get())
         player.send_chat('Switched to %s team' % player.team.name)
-        if connection is not player and connection in protocol.players.values():
+        if (connection is not player
+                and connection in protocol.players.values()):
             connection.send_chat('Switched %s to %s team' % (player.name,
                                                              player.team.name))
         protocol.irc_say('* %s silently switched teams' % player.name)
@@ -142,7 +146,8 @@ def toggle_build(connection, player=None):
         value = not connection.protocol.building
         connection.protocol.building = value
         on_off = ['OFF', 'ON'][int(value)]
-        connection.protocol.broadcast_chat('Building has been toggled %s!' % on_off)
+        connection.protocol.broadcast_chat(
+            'Building has been toggled %s!' % on_off)
         connection.protocol.irc_say(
             '* %s toggled building %s' % (connection.name,
                                           on_off))
@@ -162,12 +167,14 @@ def toggle_kill(connection, player=None):
         connection.protocol.broadcast_chat(msg % player.name)
         connection.protocol.irc_say('* %s %s killing for %s' %
                                     (connection.name,
-                                     ['disabled', 'enabled'][int(value)], player.name))
+                                     ['disabled', 'enabled'][int(value)],
+                                     player.name))
     else:
         value = not connection.protocol.killing
         connection.protocol.killing = value
         on_off = ['OFF', 'ON'][int(value)]
-        connection.protocol.broadcast_chat('Killing has been toggled %s!' % on_off)
+        connection.protocol.broadcast_chat(
+            'Killing has been toggled %s!' % on_off)
         connection.protocol.irc_say(
             '* %s toggled killing %s' % (connection.name,
                                          on_off))
@@ -241,7 +248,8 @@ def fog(connection, *args):
         if (len(hex_code) != 3) and (len(hex_code) != 6):
             raise ValueError("Invalid hex code length")
 
-        if len(hex_code) == 3:  # it's a short hex code, turn it into a full one
+        # it's a short hex code, turn it into a full one
+        if len(hex_code) == 3:
             hex_code = (hex_code[0]*2) + (hex_code[1]*2) + (hex_code[2]*2)
 
         valid_characters = re.compile('[a-fA-F0-9]')
@@ -258,5 +266,6 @@ def fog(connection, *args):
     old_fog_color = connection.protocol.fog_color
     connection.protocol.set_fog_color((r, g, b))
     if old_fog_color == (r, g, b):
-        return 'Fog color changed successfully\nWarning: fog color set to same color as before'
+        return ('Fog color changed successfully\n'
+                'Warning: fog color set to same color as before')
     return 'Fog color changed successfully'

@@ -39,16 +39,16 @@ example extension from mapname.txt:
 """
 # todo: reset intel in minefield
 
+from random import choice
+from piqueserver.commands import command, admin
+from twisted.internet.reactor import callLater
+from pyspades.constants import DESTROY_BLOCK, SPADE_DESTROY, BUILD_BLOCK
+from pyspades.collision import collision_3d
+from pyspades.common import Vertex3, make_color
+from pyspades.contained import GrenadePacket, BlockAction, SetColor
+from pyspades.world import Grenade
 MINEFIELD_VERSION = 1.6
 
-from pyspades.world import Grenade
-from pyspades.contained import GrenadePacket, BlockAction, SetColor
-from pyspades.common import Vertex3, make_color
-from pyspades.collision import collision_3d
-from pyspades.constants import DESTROY_BLOCK, SPADE_DESTROY, BUILD_BLOCK
-from twisted.internet.reactor import callLater
-from piqueserver.commands import command, admin
-from random import choice
 
 KILL_MESSAGES = [
     '{player} wandered into a minefield',
@@ -209,7 +209,7 @@ def apply_script(protocol, connection, config):
                 return False
             if mode == DESTROY_BLOCK or mode == SPADE_DESTROY:
                 pos = self.world_object.position
-                #xx, yy, zz = x + 0.5, y + 0.5, z + 0.5
+                # xx, yy, zz = x + 0.5, y + 0.5, z + 0.5
                 if collision_3d(x, y, z, pos.x, pos.y, pos.z, 10):
                     self.protocol.check_mine(self, x, y, z)
             return connection.on_block_destroy(self, x, y, z, mode)

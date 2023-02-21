@@ -16,7 +16,8 @@ from twisted.internet.reactor import callLater, seconds
 from twisted.internet.task import LoopingCall
 from pyspades import contained as loaders
 from pyspades.common import make_color
-from pyspades.constants import GRENADE_KILL, RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON
+from pyspades.constants import (
+    GRENADE_KILL, RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON)
 
 KILL_REQUIREMENT = 3
 TIME_REQUIREMENT = 8.0
@@ -32,7 +33,8 @@ RAPID_INTERVALS = {
 RAMPAGE_FOG_COLOR = (255, 0, 0)
 
 
-def RAMPAGE_FOG_FUNC(): return RAMPAGE_FOG_COLOR
+def RAMPAGE_FOG_FUNC():
+    return RAMPAGE_FOG_COLOR
 
 
 ANNOUNCE_RAMPAGE = True
@@ -114,7 +116,8 @@ def apply_script(protocol, connection, config):
             if self.rampage_call and self.rampage_call.active():
                 self.rampage_call.cancel()
             self.rampage_call = None
-            if self.rampage_warning_call and self.rampage_warning_call.active():
+            if (self.rampage_warning_call and
+                    self.rampage_warning_call.active()):
                 self.rampage_warning_call.cancel()
             self.rampage_warning_call = None
             if self.rampage_rapid_loop and self.rampage_rapid_loop.running:
@@ -163,12 +166,14 @@ def apply_script(protocol, connection, config):
 
         def on_shoot_set(self, fire):
             if (self.rampage and fire and
-                    self.rampage_rapid_loop and not self.rampage_rapid_loop.running):
+                self.rampage_rapid_loop and
+                    not self.rampage_rapid_loop.running):
                 interval = RAPID_INTERVALS[self.weapon]
                 self.rampage_rapid_loop.start(interval, now=False)
             connection.on_shoot_set(self, fire)
 
-    def send_fog_rule(player): return not player.rampage
+    def send_fog_rule(player):
+        return not player.rampage
 
     class RampageProtocol(protocol):
 

@@ -116,7 +116,8 @@ def apply_script(protocol, connection, config):
                 if (self.link is None or
                         self.link_deaths >= MAX_LINK_DEATHS):
                     self.get_new_link()
-                if self.link is not None and self.link.hp is not None and self.link.hp > 0:
+                if (self.link is not None and
+                        self.link.hp is not None and self.link.hp > 0):
                     self.set_location_safe(
                         self.link.world_object.position.get())
             connection.on_spawn(self, pos)
@@ -142,7 +143,8 @@ def apply_script(protocol, connection, config):
         def can_be_linked_to(self, player):
             if self is player or self.link is player:
                 return False
-            if player.link is not None and player.link_deaths < MAX_LINK_DEATHS:
+            if (player.link is not None and
+                    player.link_deaths < MAX_LINK_DEATHS):
                 return False
             return True
 
@@ -166,7 +168,9 @@ def apply_script(protocol, connection, config):
         def drop_link(self, force_message=False, no_message=False):
             if self.link is None:
                 return
-            if (self.link.hp is not None and (self.link.hp > 0 or force_message)) and not no_message:
+            if (self.link.hp is not None and
+                (self.link.hp > 0 or force_message)
+                    and not no_message):
                 self.link.send_chat(S_FREE)
             self.link.link = None
             self.link = None

@@ -48,7 +48,6 @@ class FeatureConnection(ServerConnection):
 
         super().__init__(*args, **kwargs)
 
-
     def on_connect(self) -> None:
         protocol = self.protocol
         client_ip = self.address[0]
@@ -60,8 +59,8 @@ class FeatureConnection(ServerConnection):
                 protocol.remove_ban(client_ip)
                 protocol.save_bans()
             else:
-                log.info('banned user {} ({}) attempted to join'.format(name,
-                                                                        client_ip))
+                log.info('banned user {} ({}) attempted to join'
+                         .format(name, client_ip))
                 self.disconnect(ERROR_BANNED)
                 return
 
@@ -159,7 +158,7 @@ class FeatureConnection(ServerConnection):
         map_on_block_destroy = self.protocol.map_info.on_block_destroy
         if map_on_block_destroy is not None:
             result = map_on_block_destroy(self, x, y, z, mode)
-            if result == False:
+            if not result:
                 return result
         if not self.building:
             return False
@@ -203,10 +202,10 @@ class FeatureConnection(ServerConnection):
                                "*god mode*" % player.name)
             return False
         if self.god:
-            self.protocol.broadcast_chat('%s, killing in god mode is forbidden!' %
-                                    self.name, irc=True)
-            self.protocol.broadcast_chat('%s returned to being a mere human.' %
-                                    self.name, irc=True)
+            self.protocol.broadcast_chat(
+                '%s, killing in god mode is forbidden!' % self.name, irc=True)
+            self.protocol.broadcast_chat(
+                '%s returned to being a mere human.' % self.name, irc=True)
             self.god = False
             self.god_build = False
 
@@ -371,8 +370,8 @@ class FeatureConnection(ServerConnection):
         self.current_send_lines_types.remove(type)
 
     def on_hack_attempt(self, reason):
-        log.warn('Hack attempt detected from {}: {}'.format(self.printable_name,
-                                                            reason))
+        log.warn('Hack attempt detected from {}: {}'
+                 .format(self.printable_name, reason))
         self.kick(reason)
 
     def on_user_login(self, user_type, verbose=True):

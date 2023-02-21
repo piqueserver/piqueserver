@@ -8,6 +8,7 @@ move_object = loaders.MoveObject()
 progress_bar = loaders.ProgressBar()
 territory_capture = loaders.TerritoryCapture()
 
+
 class Entity(Vertex3):
     team = None
 

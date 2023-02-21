@@ -42,6 +42,7 @@ from twisted.logger import Logger
 
 log = Logger()
 
+
 class ServerProtocol(BaseProtocol):
     connection_class = ServerConnection
 
@@ -104,7 +105,6 @@ class ServerProtocol(BaseProtocol):
 
         self.last_network_update = self.world_time = time.monotonic()
         self.loop_count = 0
-
 
     def _create_teams(self):
         """create the teams
@@ -180,7 +180,8 @@ class ServerProtocol(BaseProtocol):
     # backwards compatability
     def send_contained(self, *args, **kwargs):
         """Deprecated: see broadcast_contained"""
-        warnings.warn("use of deprecated send_contained, use broadcast_contained instead",
+        warnings.warn("use of deprecated send_contained,"
+                      " use broadcast_contained instead",
                       DeprecationWarning, stacklevel=2)
         self.broadcast_contained(*args, **kwargs)
 
@@ -227,7 +228,8 @@ class ServerProtocol(BaseProtocol):
             # Notify if update starts more than 4ms later than requested
             lag = start_time - self.world_time - UPDATE_FREQUENCY
             if lag > 0.004:
-                log.debug("LAG before world update: {lag:.0f} ms", lag=lag * 1000)
+                log.debug(
+                    "LAG before world update: {lag:.0f} ms", lag=lag * 1000)
 
             BaseProtocol.update(self)
             # Map transfer
@@ -256,7 +258,6 @@ class ServerProtocol(BaseProtocol):
 
             delay = self.world_time + UPDATE_FREQUENCY - time.monotonic()
             await asyncio.sleep(delay)
-
 
     def update_network(self):
         if not len(self.players):
@@ -338,7 +339,8 @@ class ServerProtocol(BaseProtocol):
 
     def get_name(self, name):
         '''
-        Sanitizes `name` and modifies it so that it doesn't collide with other names connected to the server.
+        Sanitizes `name` and modifies it so that it doesn't
+        collide with other names connected to the server.
 
         Returns the fixed name.
         '''
@@ -427,7 +429,8 @@ class ServerProtocol(BaseProtocol):
     # backwards compatability
     def send_chat(self, *args, **kwargs):
         """Deprecated: see broadcast_chat"""
-        warnings.warn("use of deprecated send_chat, use broadcast_chat instead",
+        warnings.warn("use of deprecated send_chat,"
+                      " use broadcast_chat instead",
                       DeprecationWarning, stacklevel=2)
         self.broadcast_chat(*args, **kwargs)
 

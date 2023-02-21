@@ -85,7 +85,10 @@ def toggle_markers(connection, player=None):
     if player is not None:
         player = get_player(protocol, player)
         player.allow_markers = not player.allow_markers
-        message = S_PLAYER_ENABLED if player.allow_markers else S_PLAYER_DISABLED
+        message = S_PLAYER_ENABLED
+        if not player.allow_markers:
+            message = S_PLAYER_DISABLED
+
         message = message.format(player=player.name)
         protocol.broadcast_chat(message, irc=True)
     else:
@@ -252,7 +255,7 @@ def parse_string_map(xs_and_dots):
 
     for y, row in enumerate(rows):
         # if anyone understands this code, tell us
-        columns = [''.join(l[y:]).split('.', 1)[0] for l in zip(*rows)]
+        columns = [''.join(a[y:]).split('.', 1)[0] for a in zip(*rows)]
         it = enumerate(columns)
         for x, column in it:
             h = len(row[x:].split('.', 1)[0])
@@ -640,13 +643,15 @@ def apply_script(protocol, connection, config):
         sneak_presses = None
 
         def send_markers(self):
-            def is_self(player): return player is self
+            def is_self(player):
+                return player is self
             send_me = partial(self.protocol.broadcast_contained, rule=is_self)
             for marker in self.protocol.markers:
                 marker.build(send_me)
 
         def destroy_markers(self):
-            def is_self(player): return player is self
+            def is_self(player):
+                return player is self
             send_me = partial(self.protocol.broadcast_contained, rule=is_self)
             for marker in self.protocol.markers:
                 marker.destroy(send_me)
@@ -665,7 +670,8 @@ def apply_script(protocol, connection, config):
                                self.protocol.allow_markers)
             if markers_allowed and sneak and self.world_object.sneak != sneak:
                 now = seconds()
-                if self.last_marker is None or now - self.last_marker > COOLDOWN:
+                if (self.last_marker is None or
+                        now - self.last_marker > COOLDOWN):
                     presses = self.sneak_presses
                     presses.append(now)
                     if len(presses) == 2 and presses[0] >= now - VV_TIMEFRAME:

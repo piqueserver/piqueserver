@@ -1,4 +1,6 @@
-from piqueserver.commands import command, get_player, PermissionDenied, player_only, target_player
+from piqueserver.commands import (
+    command, get_player, PermissionDenied, player_only, target_player)
+
 
 @command("client", "cli")
 @target_player

@@ -88,15 +88,20 @@ import colorsys
 import time
 
 PUSH_CONFIG = config.section("push")
-PROTECT_MAP_BLOCKS = PUSH_CONFIG.option("protect_map_blocks", default=True, cast=bool)
-ALLOW_RESPAWN_COMMAND = PUSH_CONFIG.option("allow_respawn_command", default=True, cast=bool)
-RESPAWN_CMD_DELAY = PUSH_CONFIG.option("respawn_cmd_delay", default="15sec", cast=cast_duration)
-INTEL_PICKUP_DELAY = PUSH_CONFIG.option("intel_pickup_delay", default="3sec", cast=cast_duration)
+PROTECT_MAP_BLOCKS = PUSH_CONFIG.option(
+    "protect_map_blocks", default=True, cast=bool)
+ALLOW_RESPAWN_COMMAND = PUSH_CONFIG.option(
+    "allow_respawn_command", default=True, cast=bool)
+RESPAWN_CMD_DELAY = PUSH_CONFIG.option(
+    "respawn_cmd_delay", default="15sec", cast=cast_duration)
+INTEL_PICKUP_DELAY = PUSH_CONFIG.option(
+    "intel_pickup_delay", default="3sec", cast=cast_duration)
 BLOCK_REMOVAL_DELAY = PUSH_CONFIG.option("block_removal_delay", default="15sec",
                                          cast=cast_duration)
 RESET_INTEL_AFTER_DROP = PUSH_CONFIG.option("reset_intel_after_drop", default="3min",
                                             cast=cast_duration)
-DEFAULT_CP_PROTECT_RANGE = PUSH_CONFIG.option("default_cp_protect_range", default=8, cast=int)
+DEFAULT_CP_PROTECT_RANGE = PUSH_CONFIG.option(
+    "default_cp_protect_range", default=8, cast=int)
 DISABLE_GRENADES_AT_SPAWN = PUSH_CONFIG.option("disable_grenades_at_spawn", default=False,
                                                cast=bool)
 
@@ -240,7 +245,7 @@ def apply_script(protocol, connection, config):
                 return True
             # prevent teams from building in enemy build area
             if self.team.build_area is not None and self.is_in_invalid_area(
-                        x, y, self.team.other.build_area, BUILDING_AT_ENEMY_AREA):
+                    x, y, self.team.other.build_area, BUILDING_AT_ENEMY_AREA):
                 return True
             return False
 
@@ -329,8 +334,10 @@ def apply_script(protocol, connection, config):
                 block_info = self.protocol.map.get_point(*block)
                 if block_info[0] is True:
                     block_hls = byte_rgb_to_hls(block_info[1])
-                    is_blue_block = compare_hs(block_hls, self.protocol.blue_team.hls)
-                    is_green_block = compare_hs(block_hls, self.protocol.green_team.hls)
+                    is_blue_block = compare_hs(
+                        block_hls, self.protocol.blue_team.hls)
+                    is_green_block = compare_hs(
+                        block_hls, self.protocol.green_team.hls)
                     is_team_block = ((self.team is self.protocol.blue_team and is_blue_block) or
                                      (self.team is self.protocol.green_team and is_green_block))
                     if is_team_block and not is_trusted:
@@ -400,16 +407,17 @@ def apply_script(protocol, connection, config):
 
         def check_intel_locations(self):
             self.reset_intel_blue_timer = self.check_intel_location(
-                                              self.blue_team, self.reset_intel_blue_timer)
+                self.blue_team, self.reset_intel_blue_timer)
             self.reset_intel_green_timer = self.check_intel_location(
-                                              self.green_team, self.reset_intel_green_timer)
+                self.green_team, self.reset_intel_green_timer)
 
         def on_map_change(self, map):
             extensions = self.map_info.extensions
             for must_have in ('push_blue_spawn', 'push_green_spawn',
                               'push_blue_cp', 'push_green_cp'):
                 if must_have not in extensions:
-                    raise Exception("Missing push map metadata: %s" % must_have)
+                    raise Exception(
+                        "Missing push map metadata: %s" % must_have)
 
             extensions['water_damage'] = 100
             # distance from spawn center to randomly spawn in
@@ -424,7 +432,8 @@ def apply_script(protocol, connection, config):
 
             self.green_team.spawn = extensions.get('push_green_spawn')
             self.green_team.cp = extensions.get('push_green_cp')
-            self.green_team.build_area = extensions.get('push_green_build_area')
+            self.green_team.build_area = extensions.get(
+                'push_green_build_area')
 
             self.map_info.get_entity_location = get_entity_location
             self.map_info.get_spawn_location = get_spawn_location
