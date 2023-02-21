@@ -53,12 +53,13 @@ def airstrike(connection, *args):
     """
     player = connection
     kills_left = STREAK_REQUIREMENT - player.airstrike_streak
-    message = S_NO_STREAK.format(streak= STREAK_REQUIREMENT, remaining = kills_left)
-    
+    message = S_NO_STREAK.format(
+        streak=STREAK_REQUIREMENT, remaining=kills_left)
+
     player.send_chat(message)
 
     if player.airstrike:
-       return S_READY
+        return S_READY
 
 # debug
 
@@ -120,11 +121,11 @@ def apply_script(protocol, connection, config):
         def start_airstrike(self, x, y, z):
             coords = to_coordinates(x, y)
             message = S_ALLIED.format(player=self.name, coords=coords)
-            self.protocol.send_chat(message, global_message=False,
-                                    team=self.team)
+            self.protocol.broadcast_chat(message, global_message=False,
+                                         team=self.team)
             message = S_ENEMY.format(coords=coords)
-            self.protocol.send_chat(message, global_message=False,
-                                    team=self.team.other)
+            self.protocol.broadcast_chat(message, global_message=False,
+                                         team=self.team.other)
             self.team.last_airstrike = reactor.seconds()
 
             reactor.callLater(ARRIVAL_DELAY, self.do_airstrike, x, y, z)

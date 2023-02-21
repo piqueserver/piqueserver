@@ -27,13 +27,13 @@ def airstrike_howto_match(player, msg):
 
 def apply_script(protocol, connection, config):
     def send_help_nick(connection):
-        connection.protocol.send_chat(
+        connection.protocol.broadcast_chat(
             "TO CHANGE YOUR NAME: Start Menu-> "
             "All Programs-> Ace of Spades-> Configuration")
         connection.protocol.irc_say("* Sent nick help to %s" % connection.name)
 
     def send_help_airstrike(connection):
-        connection.protocol.send_chat(
+        connection.protocol.broadcast_chat(
             "TO USE AN AIRSTRIKE: Once you have 15 points, "
             "get a 6 killstreak ->                  "
             "Then type /airstrike G4 if you want the strike to hit G4")

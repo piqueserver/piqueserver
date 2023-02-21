@@ -38,7 +38,7 @@ def reset_game(connection):
             return
     connection.protocol.reset_game(resetting_player)
     connection.protocol.on_game_end()
-    connection.protocol.send_chat(
+    connection.protocol.broadcast_chat(
         'Game has been reset by %s' % connection.name,
         irc=True)
 
@@ -52,7 +52,7 @@ def lock(connection, value):
     """
     team = get_team(connection, value)
     team.locked = True
-    connection.protocol.send_chat('%s team is now locked' % team.name)
+    connection.protocol.broadcast_chat('%s team is now locked' % team.name)
     connection.protocol.irc_say('* %s locked %s team' % (connection.name,
                                                          team.name))
 
@@ -65,7 +65,7 @@ def unlock(connection, value):
     """
     team = get_team(connection, value)
     team.locked = False
-    connection.protocol.send_chat('%s team is now unlocked' % team.name)
+    connection.protocol.broadcast_chat('%s team is now unlocked' % team.name)
     connection.protocol.irc_say('* %s unlocked %s team' % (connection.name,
                                                            team.name))
 
@@ -78,7 +78,10 @@ def switch(connection, player, team=None):
     /switch [player] [team]
     """
     protocol = connection.protocol
-    new_team = protocol.blue_team if player.team.spectator else player.team.other
+    new_team = protocol.blue_team
+
+    if not player.team.spectator:
+        new_team = player.team.other
 
     if team:
         new_team = get_team(connection, team)
@@ -89,14 +92,15 @@ def switch(connection, player, team=None):
         player.on_team_changed(old_team)
         player.spawn(player.world_object.position.get())
         player.send_chat('Switched to %s team' % player.team.name)
-        if connection is not player and connection in protocol.players.values():
+        if (connection is not player
+                and connection in protocol.players.values()):
             connection.send_chat('Switched %s to %s team' % (player.name,
                                                              player.team.name))
         protocol.irc_say('* %s silently switched teams' % player.name)
     else:
         player.respawn_time = protocol.respawn_time
         player.set_team(new_team)
-        protocol.send_chat('%s switched teams' % player.name, irc=True)
+        protocol.broadcast_chat('%s switched teams' % player.name, irc=True)
 
 
 @command('setbalance', admin_only=True)
@@ -113,11 +117,11 @@ def set_balance(connection, value):
     protocol.balanced_teams = should_balance
 
     if should_balance:
-        protocol.send_chat('now balancing teams')
+        protocol.broadcast_chat('now balancing teams')
         connection.protocol.irc_say(
             '* %s turned on balanced teams' % connection.name)
     else:
-        protocol.send_chat('now no longer balancing teams')
+        protocol.broadcast_chat('now no longer balancing teams')
         connection.protocol.irc_say(
             '* %s turned off balanced teams' % connection.name)
 
@@ -133,7 +137,7 @@ def toggle_build(connection, player=None):
         value = not player.building
         player.building = value
         msg = '%s can build again' if value else '%s is disabled from building'
-        connection.protocol.send_chat(msg % player.name)
+        connection.protocol.broadcast_chat(msg % player.name)
         connection.protocol.irc_say('* %s %s building for %s' %
                                     (connection.name,
                                      ['disabled', 'enabled'][int(value)],
@@ -142,7 +146,8 @@ def toggle_build(connection, player=None):
         value = not connection.protocol.building
         connection.protocol.building = value
         on_off = ['OFF', 'ON'][int(value)]
-        connection.protocol.send_chat('Building has been toggled %s!' % on_off)
+        connection.protocol.broadcast_chat(
+            'Building has been toggled %s!' % on_off)
         connection.protocol.irc_say(
             '* %s toggled building %s' % (connection.name,
                                           on_off))
@@ -159,15 +164,17 @@ def toggle_kill(connection, player=None):
         value = not player.killing
         player.killing = value
         msg = '%s can kill again' if value else '%s is disabled from killing'
-        connection.protocol.send_chat(msg % player.name)
+        connection.protocol.broadcast_chat(msg % player.name)
         connection.protocol.irc_say('* %s %s killing for %s' %
                                     (connection.name,
-                                     ['disabled', 'enabled'][int(value)], player.name))
+                                     ['disabled', 'enabled'][int(value)],
+                                     player.name))
     else:
         value = not connection.protocol.killing
         connection.protocol.killing = value
         on_off = ['OFF', 'ON'][int(value)]
-        connection.protocol.send_chat('Killing has been toggled %s!' % on_off)
+        connection.protocol.broadcast_chat(
+            'Killing has been toggled %s!' % on_off)
         connection.protocol.irc_say(
             '* %s toggled killing %s' % (connection.name,
                                          on_off))
@@ -182,7 +189,7 @@ def toggle_teamkill(connection):
     value = not connection.protocol.friendly_fire
     connection.protocol.friendly_fire = value
     on_off = ['OFF', 'ON'][int(value)]
-    connection.protocol.send_chat(
+    connection.protocol.broadcast_chat(
         'Friendly fire has been toggled %s!' % on_off)
     connection.protocol.irc_say('* %s toggled friendly fire %s' % (
         connection.name, on_off))
@@ -203,7 +210,7 @@ def global_chat(connection, value=None):
     else:
         connection.protocol.global_chat = not connection.protocol.global_chat
 
-    connection.protocol.send_chat(
+    connection.protocol.broadcast_chat(
         'Global chat %s' % (
             'enabled' if connection.protocol.global_chat else 'disabled'),
         irc=True)
@@ -220,7 +227,7 @@ def set_time_limit(connection, duration):
     protocol = connection.protocol
     # takes time in minutes
     protocol.set_time_limit(limit/60)
-    protocol.send_chat('Time limit set to {}'.format(span), irc=True)
+    protocol.broadcast_chat('Time limit set to {}'.format(span), irc=True)
 
 
 @command(admin_only=True)
@@ -241,7 +248,8 @@ def fog(connection, *args):
         if (len(hex_code) != 3) and (len(hex_code) != 6):
             raise ValueError("Invalid hex code length")
 
-        if len(hex_code) == 3:  # it's a short hex code, turn it into a full one
+        # it's a short hex code, turn it into a full one
+        if len(hex_code) == 3:
             hex_code = (hex_code[0]*2) + (hex_code[1]*2) + (hex_code[2]*2)
 
         valid_characters = re.compile('[a-fA-F0-9]')
@@ -258,5 +266,6 @@ def fog(connection, *args):
     old_fog_color = connection.protocol.fog_color
     connection.protocol.set_fog_color((r, g, b))
     if old_fog_color == (r, g, b):
-        return 'Fog color changed successfully\nWarning: fog color set to same color as before'
+        return ('Fog color changed successfully\n'
+                'Warning: fog color set to same color as before')
     return 'Fog color changed successfully'

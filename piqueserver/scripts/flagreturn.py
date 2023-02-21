@@ -29,7 +29,7 @@ def apply_script(protocol, connection, config):
                         flag.out = False
                         flag.set(*flag.start)
                         flag.update()
-                        self.protocol.send_chat('%s intel was returned by %s!' % (
+                        self.protocol.broadcast_chat('%s intel was returned by %s!' % (
                             self.team.name, self.name), global_message=None)
             return connection.on_position_update(self)
 

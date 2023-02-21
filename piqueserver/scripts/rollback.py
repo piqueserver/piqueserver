@@ -52,8 +52,10 @@ S_ROLLBACK_TIME_TAKEN = 'Time taken: {seconds:.3}s'
 NON_SURFACE_COLOR = (69, 43, 30)
 
 rollback_config = config.section('rollback')
-ROLLBACK_ON_GAME_END_OPTION = rollback_config.option('rollback_on_game_end', False)
+ROLLBACK_ON_GAME_END_OPTION = rollback_config.option(
+    'rollback_on_game_end', False)
 config_dir = config.config_dir
+
 
 @command(admin_only=True)
 def rollmap(connection, mapname=None, value=None):
@@ -90,7 +92,8 @@ def apply_script(protocol, connection, config):
         rollback_max_rows = 10  # per 'cycle', intended to cap cpu usage
         # per 'cycle' cap for (unique packets * players)
         rollback_max_packets = 180
-        rollback_max_unique_packets = 12  # per 'cycle', each block op is at least 1
+        # per 'cycle', each block op is at least 1
+        rollback_max_unique_packets = 12
         rollback_time_between_cycles = 0.06
         rollback_time_between_progress_updates = 10.0
         rollback_start_time = None
@@ -117,9 +120,10 @@ def apply_script(protocol, connection, config):
             name = (connection.name if connection is not None
                     else S_AUTOMATIC_ROLLBACK_PLAYER_NAME)
             message = S_ROLLBACK_COMMENCED.format(player=name)
-            self.send_chat(message, irc=True)
+            self.broadcast_chat(message, irc=True)
             self.packet_generator = self.create_rollback_generator(
-                self.map, map, start_x, start_y, end_x, end_y, ignore_indestructable)
+                self.map, map, start_x, start_y,
+                end_x, end_y, ignore_indestructable)
             self.rollback_in_progress = True
             self.rollback_start_time = time.monotonic()
             self.rollback_last_chat = self.rollback_start_time
@@ -141,7 +145,7 @@ def apply_script(protocol, connection, config):
             self.packet_generator = None
             self.update_entities()
             message = S_ROLLBACK_ENDED.format(result=result)
-            self.send_chat(message, irc=True)
+            self.broadcast_chat(message, irc=True)
 
         def rollback_cycle(self):
             if not self.rollback_in_progress:
@@ -167,9 +171,9 @@ def apply_script(protocol, connection, config):
                         self.rollback_total_rows
                     if progress < 1.0:
                         message = S_ROLLBACK_PROGRESS.format(percent=progress)
-                        self.send_chat(message)
+                        self.broadcast_chat(message)
                     else:
-                        self.send_chat(S_ROLLBACK_COLOR_PASS)
+                        self.broadcast_chat(S_ROLLBACK_COLOR_PASS)
             except (StopIteration):
                 elapsed = time.monotonic() - self.rollback_start_time
                 message = S_ROLLBACK_TIME_TAKEN.format(seconds=elapsed)
@@ -183,7 +187,7 @@ def apply_script(protocol, connection, config):
             set_color = SetColor()
             set_color.value = make_color(*NON_SURFACE_COLOR)
             set_color.player_id = 31
-            self.send_contained(set_color, save=True)
+            self.broadcast_contained(set_color, save=True)
             old = cur.copy()
             check_protected = hasattr(protocol, 'protected')
             for x in range(start_x, end_x):
@@ -223,7 +227,7 @@ def apply_script(protocol, connection, config):
                         if action is not None:
                             block_action.z = z
                             block_action.value = action
-                            self.send_contained(block_action, save=True)
+                            self.broadcast_contained(block_action, save=True)
                             yield 1
                 yield 0
             last_color = None
@@ -234,14 +238,14 @@ def apply_script(protocol, connection, config):
                 packets_sent = 0
                 if color != last_color:
                     set_color.value = make_color(*color)
-                    self.send_contained(set_color, save=True)
+                    self.broadcast_contained(set_color, save=True)
                     packets_sent += 1
                     last_color = color
                 cur.set_point(x, y, z, color)
                 block_action.x = x
                 block_action.y = y
                 block_action.z = z
-                self.send_contained(block_action, save=True)
+                self.broadcast_contained(block_action, save=True)
                 packets_sent += 1
                 yield packets_sent
 

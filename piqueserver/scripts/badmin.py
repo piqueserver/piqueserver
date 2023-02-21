@@ -226,7 +226,7 @@ def apply_script(protocol, connection, config):
         elif punishment == "kick":
             connection.kick('@Badmin: ' + reason)
         elif punishment == "warn":
-            connection.protocol.send_chat(
+            connection.protocol.broadcast_chat(
                 " @Badmin: Hey %s, %s" % (connection.name, reason))
 
     class BadminConnection(connection):
