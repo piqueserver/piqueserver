@@ -18,7 +18,7 @@ Options
     isolate_player = true
 
     # If USE_SCORE_HACK is True, then when you kill someone
-    # he will get changed to the other team, so you can
+    # that player will appear to be on the other team, so you can
     # get score when playing on voxlap
     use_score_hack = false
 ..
