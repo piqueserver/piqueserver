@@ -20,6 +20,7 @@ Options
 import os
 import csv
 import re
+import time
 from math import sqrt, cos, pi
 
 from twisted.internet.task import LoopingCall
@@ -240,7 +241,7 @@ def apply_script(protocol, connection, config):
         def get_headshot_snap_count(self):
             pop_count = 0
             headshot_snap_count = 0
-            current_time = reactor.seconds()
+            current_time = time.monotonic()
             for old_time in self.headshot_snap_times:
                 if current_time - old_time <= HEADSHOT_SNAP_TIME:
                     headshot_snap_count += 1
@@ -277,7 +278,7 @@ def apply_script(protocol, connection, config):
                     # Didn't snap near a head
                     continue
 
-                current_time = reactor.seconds()
+                current_time = time.monotonic()
                 self.headshot_snap_times.append(current_time)
 
                 if self.get_headshot_snap_count() < HEADSHOT_SNAP_THRESHOLD:
@@ -315,7 +316,7 @@ def apply_script(protocol, connection, config):
             return connection.on_shoot_set(self, shoot)
 
         def get_kill_count(self):
-            current_time = reactor.seconds()
+            current_time = time.monotonic()
             kill_count = 0
             pop_count = 0
             for old_time in self.kill_times:
@@ -334,7 +335,7 @@ def apply_script(protocol, connection, config):
             if kill_type != WEAPON_KILL and kill_type != HEADSHOT_KILL:
                 return connection.on_kill(self, by, kill_type, grenade)
 
-            by.kill_times.append(reactor.seconds())
+            by.kill_times.append(time.monotonic())
             if by.get_kill_count() >= KILL_THRESHOLD:
                 if KILLS_IN_TIME == BAN:
                     by.ban('Aimbot detected - kills in time window',
@@ -344,7 +345,7 @@ def apply_script(protocol, connection, config):
                     by.kick('Aimbot detected - kills in time window')
                     return
                 elif KILLS_IN_TIME == WARN_ADMIN:
-                    current_time = reactor.seconds()
+                    current_time = time.monotonic()
                     if ((current_time - by.kills_in_time_warn_time)
                             > WARN_INTERVAL_MINIMUM):
                         by.kills_in_time_warn_time = current_time
@@ -359,7 +360,7 @@ def apply_script(protocol, connection, config):
             elif MULTIPLE_BULLETS == KICK:
                 self.kick('Aimbot detected - multiple bullets')
             elif MULTIPLE_BULLETS == WARN_ADMIN:
-                current_time = reactor.seconds()
+                current_time = time.monotonic()
                 if ((current_time - self.multiple_bullets_warn_time)
                         > WARN_INTERVAL_MINIMUM):
                     self.multiple_bullets_warn_time = current_time
@@ -371,7 +372,7 @@ def apply_script(protocol, connection, config):
                 return connection.on_hit(
                     self, hit_amount, hit_player, hit_type, grenade)
 
-            current_time = reactor.seconds()
+            current_time = time.monotonic()
             shotgun_use = False
             if current_time - \
                     self.shot_time > (0.5 * hit_player.weapon_object.delay):
@@ -404,7 +405,7 @@ def apply_script(protocol, connection, config):
             elif HIT_PERCENT == KICK:
                 self.kick(message)
             elif HIT_PERCENT == WARN_ADMIN:
-                current_time = reactor.seconds()
+                current_time = time.monotonic()
                 if (current_time -
                         self.hit_percent_warn_time) > WARN_INTERVAL_MINIMUM:
                     self.hit_percent_warn_time = current_time
