@@ -2,6 +2,7 @@ from pyspades.constants import NEUTRAL_TEAM, TC_CAPTURE_RATE, SPAWN_RADIUS
 from pyspades.common import Vertex3
 from pyspades import contained as loaders
 
+import time
 from twisted.internet import reactor
 
 move_object = loaders.MoveObject()
@@ -79,7 +80,7 @@ class Territory(Flag):
             self.finish_call.cancel()
             self.finish_call = None
         if rate != 0:
-            self.start = reactor.seconds()
+            self.start = time.monotonic()
             rate_value = self.rate_value
             if rate_value < 0:
                 self.capturing_team = self.protocol.blue_team
@@ -142,7 +143,7 @@ class Territory(Flag):
         rate = self.rate_value
         if rate == 0.0 or self.start is None:
             return self.progress
-        dt = reactor.seconds() - self.start
+        dt = time.monotonic() - self.start
         progress = max(0, min(1, self.progress + rate * dt))
         if set:
             self.progress = progress
