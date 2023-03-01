@@ -20,7 +20,7 @@ import json
 from twisted.internet import reactor
 from twisted.web import server
 from twisted.web.resource import Resource
-
+import time
 
 class PublishResource(Resource):
 
@@ -47,6 +47,6 @@ class PublishServer:
     def update(self):
         bans = []
         for network, (_name, reason, timestamp) in self.protocol.bans.iteritems():
-            if timestamp is None or reactor.seconds() < timestamp:
+            if timestamp is None or time.time() < timestamp:
                 bans.append({"ip": network, "reason": reason})
         self.json_bans = json.dumps(bans)
