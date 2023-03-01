@@ -428,7 +428,7 @@ class FeatureProtocol(ServerProtocol):
         advance_call = self.advance_call
         add_time = 0.0
         if advance_call is not None:
-            add_time = ((advance_call.getTime() - reactor.seconds()) / 60.0)
+            add_time = ((advance_call.getTime() - time.time()) / 60.0)
             advance_call.cancel()
             self.advance_call = None
         time_limit = time_limit or self.default_time_limit
@@ -456,7 +456,7 @@ class FeatureProtocol(ServerProtocol):
         return time_limit
 
     def _next_time_announce(self):
-        remaining = self.advance_call.getTime() - reactor.seconds()
+        remaining = self.advance_call.getTime() - time.time()
         if remaining < 60.001:
             if remaining < 10.001:
                 self.broadcast_chat('%s...' % int(round(remaining)))
@@ -692,7 +692,7 @@ class FeatureProtocol(ServerProtocol):
             bans_count = len(self.bans)
             log.info("starting ban vacuum with {count} bans",
                      count=bans_count)
-            start_time = time.time()
+            start_time = time.monotonic()
 
             # create a copy of the items, so we don't have issues modifying
             # while iteraing
@@ -707,7 +707,7 @@ class FeatureProtocol(ServerProtocol):
                 yield
             log.debug("ban vacuum took {time:.2f} seconds, removed {count} bans",
                       count=bans_count - len(self.bans),
-                      time=time.time() - start_time)
+                      time=time.monotonic() - start_time)
             self.save_bans()
 
         # TODO: use cooperate() here instead, once you figure out why it's
@@ -723,12 +723,12 @@ class FeatureProtocol(ServerProtocol):
         ban_file = os.path.join(config.config_dir, bans_file.get())
         ensure_dir_exists(ban_file)
 
-        start_time = reactor.seconds()
+        start_time = time.monotonic()
         with open(ban_file, 'w') as f:
             json.dump(self.bans.make_list(), f, indent=2)
         log.debug("saving {count} bans took {time:.2f} seconds",
                   count=len(self.bans),
-                  time=reactor.seconds() - start_time)
+                  time=time.monotonic() - start_time)
 
         if self.ban_publish is not None:
             self.ban_publish.update()
@@ -775,7 +775,7 @@ class FeatureProtocol(ServerProtocol):
 
     def data_received(self, peer: Peer, packet: Packet) -> None:
         ip = peer.address.host
-        current_time = reactor.seconds()
+        current_time = time.monotonic()
         try:
             ServerProtocol.data_received(self, peer, packet)
         except (NoDataLeft, ValueError):
@@ -785,7 +785,7 @@ class FeatureProtocol(ServerProtocol):
                 'IP %s was hardbanned for invalid data or possibly DDoS.' % ip)
             self.hard_bans.add(ip)
             return
-        dt = reactor.seconds() - current_time
+        dt = time.monotonic() - current_time
         if dt > 1.0:
             log.warn('processing {!r} from {} took {}'.format(
                 packet.data, ip, dt))
@@ -823,14 +823,14 @@ class FeatureProtocol(ServerProtocol):
 
     def update_world(self):
         last_time = self.last_time
-        current_time = reactor.seconds()
+        current_time = time.monotonic()
         if last_time is not None:
             dt = current_time - last_time
             if dt > 1.0:
                 log.warn('high CPU usage detected - %s' % dt)
         self.last_time = current_time
         ServerProtocol.update_world(self)
-        time_taken = reactor.seconds() - current_time
+        time_taken = time.monotonic() - current_time
         if time_taken > 1.0:
             log.warn(
                 'World update iteration took %s, objects: %s' %
