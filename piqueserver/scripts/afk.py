@@ -42,7 +42,7 @@ def kick_afk(connection, minutes, amount=None): #Can't find out where this funct
     to_kick = []
     seconds = minutes * 60.0
     minutes_s = prettify_timespan(seconds)
-    lower_bound = self.world_time - seconds # What are seconds here?
+    lower_bound = time.monotonic() - seconds # What are seconds here?
     for conn in list(protocol.connections.values()):
         if not conn.admin and conn.last_activity < lower_bound:
             to_kick.append(conn)
