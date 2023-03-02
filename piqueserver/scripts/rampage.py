@@ -18,6 +18,7 @@ from pyspades import contained as loaders
 from pyspades.common import make_color
 from pyspades.constants import (
     GRENADE_KILL, RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON)
+import time
 
 KILL_REQUIREMENT = 3
 TIME_REQUIREMENT = 8.0
@@ -152,7 +153,7 @@ def apply_script(protocol, connection, config):
                 if (not killer.rampage and killer.hp and
                     killer.team is not self.team and
                         (GRENADE_KILLS_COUNT or type != GRENADE_KILL)):
-                    now = seconds()
+                    now = time.monotonic() #seconds() #reactor.seconds()? 
                     killer.rampage_kills.append(now)
                     if (len(killer.rampage_kills) == KILL_REQUIREMENT and
                             killer.rampage_kills[0] >= now - TIME_REQUIREMENT):
