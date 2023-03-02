@@ -193,7 +193,7 @@ class Votekick:
         elif victim.admin or victim.rights.cancel or victim.local:
             raise VotekickFailure(S_VOTEKICK_IMMUNE)
         elif not instigator.admin and (last_votekick is not None and
-                                       seconds() - last_votekick < cls.interval):
+                                       time.time() - last_votekick < cls.interval): #Absolute time?
             raise VotekickFailure(S_NOT_YET)
         elif REQUIRE_REASON and not reason:
             raise VotekickFailure(S_NEED_REASON)
@@ -276,7 +276,7 @@ class Votekick:
             result=result)
         self.protocol.broadcast_chat(message, irc=True)
         if not self.instigator.admin:
-            self.instigator.last_votekick = seconds()
+            self.instigator.last_votekick = time.time() #asking for time of votekick so that it can be compared in absolute later?
         self.protocol.on_votekick_end()
         self.release()
 
