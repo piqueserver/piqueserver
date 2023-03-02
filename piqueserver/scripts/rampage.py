@@ -18,6 +18,7 @@ from pyspades import contained as loaders
 from pyspades.common import make_color
 from pyspades.constants import (
     GRENADE_KILL, RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON)
+import time
 
 KILL_REQUIREMENT = 3
 TIME_REQUIREMENT = 8.0
