@@ -99,7 +99,7 @@ class VoteMap:
             return True
         last = instigator.last_votemap
         if (last is not None and
-                reactor.seconds() - last < self.vote_interval):
+                time.time()- last < self.vote_interval): #combination of lastvotemap and voteinterval
             return "You can't start a vote now."
         return True
 
@@ -171,7 +171,7 @@ class VoteMap:
 
     def set_cooldown(self):
         if self.instigator is not None and not self.instigator.admin:
-            self.instigator.last_votemap = reactor.seconds()
+            self.instigator.last_votemap = time.time()
 
     def finish(self):
         self.schedule.reset()
@@ -202,7 +202,7 @@ def apply_script(protocol, connection, config):
         votemap_time = 120
         votemap_interval = 3 * 60
         votemap_percentage = 80.0
-        votemap = None
+        votemap = None #used
         planned_map = None
         autoschedule_call = None
 
