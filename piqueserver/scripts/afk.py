@@ -17,6 +17,7 @@ from twisted.internet import reactor
 from pyspades.common import prettify_timespan
 from piqueserver.commands import command, get_player, admin
 from piqueserver.config import config, cast_duration
+import time
 
 S_AFK_CHECK = '{player} has been inactive for {time}'
 S_NO_PLAYERS_INACTIVE = 'No players or connections inactive for {time}'
