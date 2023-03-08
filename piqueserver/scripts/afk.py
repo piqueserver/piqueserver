@@ -30,7 +30,8 @@ time_limit_option = afk_config.option('time_limit', default="1hour", cast=cast_d
 
 def afk(connection, player):
     player = get_player(connection.protocol, player)
-    elapsed = prettify_timespan(player.world_time - player.last_activity, True)
+    elapsed = prettify_timespan((time.monotonic() - player.last_activity), True)
+
     return S_AFK_CHECK.format(player=player.name, time=elapsed)
 
 
@@ -43,7 +44,8 @@ def kick_afk(connection, minutes, amount=None): #Can't find out where this funct
     to_kick = []
     seconds = minutes * 60.0
     minutes_s = prettify_timespan(seconds)
-    lower_bound = time.monotonic() - seconds # What are seconds here?
+    lower_bound = time.monotonic() - seconds
+
     for conn in list(protocol.connections.values()):
         if not conn.admin and conn.last_activity < lower_bound:
             to_kick.append(conn)
@@ -77,7 +79,8 @@ def apply_script(protocol, connection, config):
 
         def afk_kick(self):
             if self.name:
-                time_inactive = self.world_time - self.last_activity
+
+                time_inactive = time.monotonic() - self.last_activity
                 time_inactive = max(1.0, round(time_inactive / 60.0)) * 60.0
                 elapsed = prettify_timespan(time_inactive)
                 self.kick(S_AFK_KICK_REASON.format(time=elapsed))
@@ -85,7 +88,7 @@ def apply_script(protocol, connection, config):
                 self.disconnect()
 
         def reset_afk_kick_call(self):
-            self.last_activity = self.world_time
+            self.last_activity = time.monotonic()
             if self.afk_kick_call and self.afk_kick_call.active():
                 # In Twisted==18.9.0, reset() is broken when using
                 # AsyncIOReactor
@@ -110,10 +113,13 @@ def apply_script(protocol, connection, config):
             return connection.on_user_login(self, user_type, verbose)
 
         def on_connect(self):
+
             if not self.local:
                 self.afk_kick_call = reactor.callLater(
                     time_limit, self.afk_kick)
-            self.last_activity = self.world_time
+
+            self.last_activity = time.monotonic()
+
             return connection.on_connect(self)
 
         def on_chat(self, value, global_message):
