@@ -18,13 +18,9 @@ class TestAfkTime(unittest.TestCase):
         connection.protocol = MagicMock()
         player_obj = MagicMock()
         player_obj.name = "TestPlayer"
-        player_obj.world_time = monotonic()
-        player_obj.last_activity =  player_obj.world_time - 600
+        player_obj.last_activity =  monotonic() - 600
         connection.protocol.players = {1 : player_obj}
 
         result = afk.afk(connection, connection.protocol.players[1])
         
         self.assertEqual(result, "TestPlayer has been inactive for 10 minutes")
-
-    
-
