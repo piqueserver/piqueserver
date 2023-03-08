@@ -4,6 +4,7 @@ import random
 import re
 import shlex
 import textwrap
+import time
 from itertools import product
 from typing import Dict, Optional, Sequence, Tuple, Union
 
@@ -217,7 +218,7 @@ class ServerConnection(BaseConnection):
     def on_position_update_recieved(self, contained: loaders.PositionData) -> None:
         if not self.hp:
             return
-        current_time = reactor.seconds()
+        current_time = time.monotonic()
         last_update = self.last_position_update
         self.last_position_update = current_time
         if last_update is not None:
@@ -489,7 +490,7 @@ class ServerConnection(BaseConnection):
             interval = WEAPON_INTERVAL[self.weapon]
         else:
             interval = TOOL_INTERVAL[self.tool]
-        current_time = reactor.seconds()
+        current_time = time.monotonic()
         last_time = self.last_block
         self.last_block = current_time
         if (self.rapid_hack_detect and last_time is not None and
@@ -540,7 +541,7 @@ class ServerConnection(BaseConnection):
                     if count:
                         self.total_blocks_removed += count
                         self.on_block_removed(*xyz)
-            self.last_block_destroy = reactor.seconds()
+            self.last_block_destroy = time.monotonic()
         block_action = loaders.BlockAction()
         block_action.x = x
         block_action.y = y
@@ -729,8 +730,8 @@ class ServerConnection(BaseConnection):
     def check_refill(self):
         last_refill = self.last_refill
         if (last_refill is None or
-                reactor.seconds() - last_refill > self.protocol.refill_interval):
-            self.last_refill = reactor.seconds()
+               time.monotonic() - last_refill > self.protocol.refill_interval):
+            self.last_refill = time.monotonic()
             if self.on_refill() != False:
                 self.refill()
 
@@ -809,7 +810,7 @@ class ServerConnection(BaseConnection):
         if not self.respawn_time:
             return 0
         if self.protocol.respawn_waves:
-            offset = reactor.seconds() % self.respawn_time
+            offset = time.monotonic() % self.respawn_time
         else:
             offset = 0
         return self.respawn_time - offset
@@ -962,7 +963,7 @@ class ServerConnection(BaseConnection):
                     return
                 hit_time = self.protocol.friendly_fire_time
                 if (self.last_block_destroy is None
-                        or reactor.seconds() - self.last_block_destroy >= hit_time):
+                        or time.monotonic() - self.last_block_destroy >= hit_time):
                     return
             if not friendly_fire:
                 return
