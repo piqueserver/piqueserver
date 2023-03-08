@@ -1,4 +1,5 @@
 import re
+import time
 from typing import List, Tuple, Optional, Union
 
 from twisted.internet import reactor
@@ -55,7 +56,7 @@ class FeatureConnection(ServerConnection):
         if client_ip in self.protocol.bans:
             name, reason, timestamp = self.protocol.bans[client_ip]
 
-            if timestamp is not None and reactor.seconds() >= timestamp:
+            if timestamp is not None and time.time() >= timestamp:
                 protocol.remove_ban(client_ip)
                 protocol.save_bans()
             else:
@@ -250,7 +251,7 @@ class FeatureConnection(ServerConnection):
                     self.send_chat('Switching teams is not allowed')
                     return False
                 if (self.last_switch is not None and
-                        reactor.seconds() - self.last_switch < teamswitch_interval):
+                        time.monotonic() - self.last_switch < teamswitch_interval):
                     self.send_chat(
                         'You must wait before switching teams again')
                     return False
@@ -267,7 +268,7 @@ class FeatureConnection(ServerConnection):
                     return False
                 self.send_chat('Team is full, moved to %s' % other_team.name)
                 return other_team
-        self.last_switch = reactor.seconds()
+        self.last_switch = time.monotonic()
 
     def on_chat(self, value: str, global_message: bool) -> Union[str, bool]:
         """
@@ -291,7 +292,7 @@ class FeatureConnection(ServerConnection):
                 return False
 
         # antispam:
-        current_time = reactor.seconds()
+        current_time = time.monotonic()
         self.chat_limiter.record_event(current_time)
         if self.chat_limiter.above_limit():
             self.mute = True

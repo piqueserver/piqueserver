@@ -21,6 +21,7 @@ Options
 .. codeauthor:: hompy
 """
 
+from time import monotonic
 from twisted.internet.reactor import seconds
 from pyspades.collision import distance_3d_vector
 from pyspades.common import prettify_timespan
@@ -41,7 +42,7 @@ def grief_check(connection, player, minutes=2):
     minutes = float(minutes)
     if minutes <= 0.0:
         raise ValueError('minutes must be number greater than 0')
-    time = seconds() - minutes * 60.0
+    time = monotonic() - minutes * 60.0
     blocks_removed = player.blocks_removed or []
     blocks = [b[1] for b in blocks_removed if b[0] >= time]
     player_name = player.name
@@ -70,7 +71,7 @@ def grief_check(connection, player, minutes=2):
         else:
             message += ' All of them were map blocks.'
         last = blocks_removed[-1]
-        time_s = prettify_timespan(seconds() - last[0], get_seconds=True)
+        time_s = prettify_timespan(monotonic() - last[0], get_seconds=True)
         message += ' Last one was destroyed %s ago' % time_s
         whom = last[1]
         if whom is None and len(names) > 0:
@@ -82,8 +83,8 @@ def grief_check(connection, player, minutes=2):
             message += ', and belonged to %s' % name
         message += '.'
     switch_sentence = False
-    if player.last_switch is not None and player.last_switch >= time:
-        time_s = prettify_timespan(seconds() - player.last_switch,
+    if player.last_switch is not None and player.last_switch >= time: 
+        time_s = prettify_timespan(monotonic() - player.last_switch,
                                    get_seconds=True)
         message += ' %s joined %s team %s ago' % (player_name,
                                                   player.team.name, time_s)
@@ -138,7 +139,7 @@ def apply_script(protocol, connection, config):
             if self.blocks_removed is None:
                 self.blocks_removed = []
             pos = (x, y, z)
-            info = (seconds(), self.protocol.block_info.pop(pos, None))
+            info = (monotonic(), self.protocol.block_info.pop(pos, None))
             self.blocks_removed.append(info)
             connection.on_block_removed(self, x, y, z)
 
@@ -146,7 +147,7 @@ def apply_script(protocol, connection, config):
             if killer and killer.team is self.team:
                 if killer.teamkill_times is None:
                     killer.teamkill_times = []
-                killer.teamkill_times.append(seconds())
+                killer.teamkill_times.append(monotonic())
             return connection.on_kill(self, killer, type, grenade)
 
     class BlockInfoProtocol(protocol):

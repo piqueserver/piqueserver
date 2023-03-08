@@ -21,6 +21,7 @@ Commands
 .. codeauthor:: ?
 """
 
+from time import monotonic
 from twisted.internet import reactor
 from pyspades.common import prettify_timespan
 from pyspades.constants import *
@@ -102,7 +103,7 @@ def score_grief(connection, player, time=None):  # 302 = blue (0), #303 = green 
     minutes = float(time or 2)
     if minutes < 0.0:
         raise ValueError("Minutes cannot be < 0")
-    time = reactor.seconds() - minutes * 60.0
+    time = monotonic() - minutes * 60.0
     blocks_removed = player.blocks_removed or []
     blocks = [b[1] for b in blocks_removed if b[0] >= time]
     player_name = player.name

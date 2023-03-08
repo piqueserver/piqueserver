@@ -10,6 +10,7 @@ Commands
 .. codeauthor:: hompy
 """
 
+import time
 from math import ceil, sin, cos
 from random import uniform, vonmisesvariate
 from twisted.internet import reactor
@@ -126,7 +127,7 @@ def apply_script(protocol, connection, config):
             message = S_ENEMY.format(coords=coords)
             self.protocol.broadcast_chat(message, global_message=False,
                                          team=self.team.other)
-            self.team.last_airstrike = reactor.seconds()
+            self.team.last_airstrike = time.monotonic()
 
             reactor.callLater(ARRIVAL_DELAY, self.do_airstrike, x, y, z)
 
@@ -203,7 +204,7 @@ def apply_script(protocol, connection, config):
             self.airstrike_grenade_calls = None
 
         def start_zoomv(self):
-            now = reactor.seconds()
+            now = time.monotonic()
             last_strike = getattr(self.team, 'last_airstrike', None)
             if last_strike is not None and now - last_strike < TEAM_COOLDOWN:
                 remaining = ceil(TEAM_COOLDOWN - (now - last_strike))
@@ -229,9 +230,9 @@ def apply_script(protocol, connection, config):
 
         def send_zoomv_chat(self, message):
             last_message = self.last_zoomv_message
-            if last_message is None or reactor.seconds() - last_message >= 1.0:
+            if last_message is None or time.monotonic() - last_message >= 1.0:
                 self.send_chat(message)
-                self.last_zoomv_message = reactor.seconds()
+                self.last_zoomv_message = time.monotonic()
 
         def on_team_changed(self, old_team):
             self.end_airstrike()
