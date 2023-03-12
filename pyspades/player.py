@@ -500,7 +500,7 @@ class ServerConnection(BaseConnection):
                          events=self.rapids.get_events())
                 self.on_hack_attempt('Rapid hack detected')
             return
-        map = self.protocol.map
+        map_ = self.protocol.map
         x = contained.x
         y = contained.y
         z = contained.z
@@ -516,11 +516,11 @@ class ServerConnection(BaseConnection):
                 return
             elif self.on_block_build_attempt(x, y, z) == False:
                 return
-            elif not map.build_point(x, y, z, self.color):
+            elif not map_.build_point(x, y, z, self.color):
                 return
             self.on_block_build(x, y, z)
         else:
-            if not map.get_solid(x, y, z):
+            if not map_.get_solid(x, y, z):
                 return
             pos = world_object.position
             if self.tool == SPADE_TOOL and not collision_3d(
@@ -529,14 +529,14 @@ class ServerConnection(BaseConnection):
             if self.on_block_destroy(x, y, z, value) == False:
                 return
             elif value == DESTROY_BLOCK:
-                count = map.destroy_point(x, y, z)
+                count = map_.destroy_point(x, y, z)
                 if count:
                     self.total_blocks_removed += count
                     self.blocks = min(50, self.blocks + 1)
                     self.on_block_removed(x, y, z)
             elif value == SPADE_DESTROY:
                 for xyz in ((x, y, z), (x, y, z + 1), (x, y, z - 1)):
-                    count = map.destroy_point(*xyz)
+                    count = map_.destroy_point(*xyz)
                     if count:
                         self.total_blocks_removed += count
                         self.on_block_removed(*xyz)
@@ -555,6 +555,18 @@ class ServerConnection(BaseConnection):
         if not self.hp:
             return  # dead players can't build
         if self.line_build_start_pos is None:
+            return
+
+        current_time = reactor.seconds()
+        last_time = self.last_block
+        self.last_block = current_time
+        if (self.rapid_hack_detect and last_time is not None and
+                current_time - last_time < TOOL_INTERVAL[BLOCK_TOOL]):
+            self.rapids.record_event(current_time)
+            if self.rapids.above_limit():
+                log.info('RAPID HACK: {events}',
+                         events=self.rapids.get_events())
+                self.on_hack_attempt('Rapid hack detected')
             return
 
         map_ = self.protocol.map
@@ -578,6 +590,13 @@ class ServerConnection(BaseConnection):
         # that the line build started at
         if not collision_3d(start_pos.x, start_pos.y, start_pos.z, x1, y1, z1,
                             MAX_BLOCK_DISTANCE):
+            return
+
+        # check if block can be placed in that location
+        if not map_.has_neighbors(x1, y1, z1):
+            return
+
+        if not map_.has_neighbors(x2, y2, z2):
             return
 
         points = world.cube_line(x1, y1, z1, x2, y2, z2)
