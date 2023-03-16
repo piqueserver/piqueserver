@@ -502,6 +502,8 @@ void reposition_player(PlayerType *p, Vector *position)
 inline void set_orientation_vectors(Vector *o, Vector *s, Vector *h)
 {
     float f = sqrtf(o->x * o->x + o->y * o->y);
+    if (f == 0)
+        f = 1.0;
     s->x = -o->y / f;
     s->y = o->x / f;
     h->x = -o->z * s->y;
