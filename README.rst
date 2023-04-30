@@ -164,6 +164,13 @@ Please see also the
 `Online Documentation <https://piqueserver.readthedocs.io/en/latest/>`__ for more
 information (readthedocs.io has replaced our wiki).
 
+Where can i find more scripts?
+~~~~~~~~~~~~~~~~~~~
+
+You can checkout the `Piqueserver Extras Repository <https://github.com/piqueserver/piqueserver-extras>`__, that contains scripts made by the community and ports from PySnip/PySpades script.
+Or in community forums, such as:
+`aloha.pk <https://aloha.pk/c/aos-modding/scripts/83>`__ and `BuildAndShoot <https://www.buildandshoot.com/forums/viewforum.php?f=19>`__
+
 \:blush: Contribute
 -------------------
 
