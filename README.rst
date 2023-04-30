@@ -164,7 +164,7 @@ Please see also the
 `Online Documentation <https://piqueserver.readthedocs.io/en/latest/>`__ for more
 information (readthedocs.io has replaced our wiki).
 
-Where can i find other scripts?
+Where can i find more scripts?
 ~~~~~~~~~~~~~~~~~~~
 
 You can checkout the `Piqueserver Extras Repository <https://github.com/piqueserver/piqueserver-extras>`__, that contains scripts made by the community and ports from PySnip/PySpades script.
