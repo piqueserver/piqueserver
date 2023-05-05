@@ -36,7 +36,7 @@ def rules(connection):
     lines = connection.protocol.rules
     if lines is None:
         return
-    connection.send_lines(lines)
+    connection.send_lines(lines, 'rules')
 
 
 @command()
@@ -57,7 +57,7 @@ def commands(connection):
             continue
         desc, _, _ = get_command_help(cmd)
         lines.append("/{} {}".format(cmd.command_name, desc))
-    connection.send_lines(lines)
+    connection.send_lines(lines, 'commands')
 
 
 @command("help")
@@ -75,4 +75,4 @@ def help_command(connection, command_name=None):
         return 'Description: {}\n Usage: {}'.format(desc, usage)
     # Output help if present in config
     if connection.protocol.help:
-        return connection.send_lines(connection.protocol.help)
+        return connection.send_lines(connection.protocol.help, 'help')

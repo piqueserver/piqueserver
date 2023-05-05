@@ -99,7 +99,7 @@ class ConsoleInput(LineReceiver):
     def send_chat(self, value: str, _):
         print(value)
 
-    def send_lines(self, lines: List[str]):
+    def send_lines(self, lines: List[str], type: str = None):
         print("\n".join(lines))
 
 

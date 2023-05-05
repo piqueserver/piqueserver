@@ -43,7 +43,7 @@ class TimedMute:
     def __init__(self, player, time=300, reason='None'):
         if time == 0:
             player.mute = True
-            player.protocol.send_chat(
+            player.protocol.broadcast_chat(
                 '%s was muted indefinitely (Reason: %s)' %
                 (player.name, reason), irc=True)
             return
@@ -52,7 +52,7 @@ class TimedMute:
         schedule.call_later(time, self.end)
         player.mute_schedule = schedule
 
-        player.protocol.send_chat(
+        player.protocol.broadcast_chat(
             '%s was muted for %s seconds (Reason: %s)' %
             (player.name, time, reason), irc=True)
         player.mute = True
@@ -64,7 +64,7 @@ class TimedMute:
         self.player.mute = False
         message = '%s was unmuted after %s seconds' % (
             self.player.name, self.time)
-        self.player.protocol.send_chat(message, irc=True)
+        self.player.protocol.broadcast_chat(message, irc=True)
 
 
 def apply_script(protocol, connection, config):

@@ -1,7 +1,8 @@
 from random import choice
 from twisted.internet import reactor
 # aparently, we need to send packets in this file. For now, I give in.
-from pyspades.contained import CreatePlayer, SetTool, KillAction, InputData, SetColor, WeaponInput
+from pyspades.contained import (
+    CreatePlayer, SetTool, KillAction, InputData, SetColor, WeaponInput)
 from pyspades.constants import (GRENADE_KILL, FALL_KILL, NETWORK_FPS)
 from pyspades.common import (
     prettify_timespan,
@@ -18,8 +19,9 @@ def has_digits(s: str) -> bool:
 def get_ban_arguments(connection, args):
     """
     Parses duration and reason from arguments.
-    It handles duration in two ways: interger mintues and human-friendly duration.
-    It also handles cases where duration or reason are none.
+    It handles duration in two ways: interger mintues and
+    human-friendly duration. It also handles cases
+    where duration or reason are none.
     Note: It returns duration in seconds.
     """
     default_duration = connection.protocol.default_ban_time
@@ -182,7 +184,7 @@ def mute(connection, value):
         return '%s is already muted' % player.name
     player.mute = True
     message = '%s has been muted by %s' % (player.name, connection.name)
-    connection.protocol.send_chat(message, irc=True)
+    connection.protocol.broadcast_chat(message, irc=True)
 
 
 @command(admin_only=True)
@@ -196,7 +198,7 @@ def unmute(connection, value):
         return '%s is not muted' % player.name
     player.mute = False
     message = '%s has been unmuted by %s' % (player.name, connection.name)
-    connection.protocol.send_chat(message, irc=True)
+    connection.protocol.broadcast_chat(message, irc=True)
 
 
 @command(admin_only=True)
@@ -318,7 +320,8 @@ def godsilent(connection, player=None):
         if player is None:
             return 'You have silently entered god mode'
         else:
-            # TODO: Do not send this if the specified player is the one who called the command
+            # TODO: Do not send this if the specified
+            #       player is the one who called the command
             connection.send_chat(
                 'Someone has made you silently enter godmode!')
             return 'You made ' + connection.name + ' silently enter god mode'
@@ -326,10 +329,12 @@ def godsilent(connection, player=None):
         if player is None:
             return 'You have silently returned to being a mere human'
         else:
-            # TODO: Do not send this if the specified player is the one who called the command
+            # TODO: Do not send this if the specified
+            #       player is the one who called the command
             connection.send_chat(
                 'Someone has made you silently return to being a mere human')
-            return 'You made ' + connection.name + ' silently return to being a mere human'
+            return ('You made ' + connection.name +
+                    ' silently return to being a mere human')
 
 
 @command(admin_only=True)
@@ -349,7 +354,7 @@ def god(connection, player=None):
         message = '%s entered GOD MODE!' % connection.name
     else:
         message = '%s returned to being a mere human' % connection.name
-    connection.protocol.send_chat(message, irc=True)
+    connection.protocol.broadcast_chat(message, irc=True)
 
 
 @command('godbuild', admin_only=True)

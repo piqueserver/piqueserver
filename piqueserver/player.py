@@ -1,3 +1,4 @@
+import re
 from typing import List, Tuple, Optional, Union
 
 from twisted.internet import reactor
@@ -44,9 +45,9 @@ class FeatureConnection(ServerConnection):
         self.user_types = None
         self.rights = None
         self.can_complete_line_build = True
+        self.current_send_lines_types = []
 
         super().__init__(*args, **kwargs)
-
 
     def on_connect(self) -> None:
         protocol = self.protocol
@@ -59,8 +60,8 @@ class FeatureConnection(ServerConnection):
                 protocol.remove_ban(client_ip)
                 protocol.save_bans()
             else:
-                log.info('banned user {} ({}) attempted to join'.format(name,
-                                                                        client_ip))
+                log.info('banned user {} ({}) attempted to join'
+                         .format(name, client_ip))
                 self.disconnect(ERROR_BANNED)
                 return
 
@@ -78,7 +79,7 @@ class FeatureConnection(ServerConnection):
 
     def on_join(self) -> None:
         if self.protocol.motd is not None:
-            self.send_lines(self.protocol.motd)
+            self.send_lines(self.protocol.motd, 'motd')
 
     def on_login(self, name: str) -> None:
         self.printable_name = escape_control_codes(name)
@@ -169,7 +170,7 @@ class FeatureConnection(ServerConnection):
         map_on_block_destroy = self.protocol.map_info.on_block_destroy
         if map_on_block_destroy is not None:
             result = map_on_block_destroy(self, x, y, z, mode)
-            if result == False:
+            if not result:
                 return result
         if not self.building:
             return False
@@ -213,10 +214,10 @@ class FeatureConnection(ServerConnection):
                                "*god mode*" % player.name)
             return False
         if self.god:
-            self.protocol.send_chat('%s, killing in god mode is forbidden!' %
-                                    self.name, irc=True)
-            self.protocol.send_chat('%s returned to being a mere human.' %
-                                    self.name, irc=True)
+            self.protocol.broadcast_chat(
+                '%s, killing in god mode is forbidden!' % self.name, irc=True)
+            self.protocol.broadcast_chat(
+                '%s returned to being a mere human.' % self.name, irc=True)
             self.god = False
             self.god_build = False
 
@@ -306,7 +307,7 @@ class FeatureConnection(ServerConnection):
         self.chat_limiter.record_event(current_time)
         if self.chat_limiter.above_limit():
             self.mute = True
-            self.protocol.send_chat(
+            self.protocol.broadcast_chat(
                 '%s has been muted for excessive spam' % (
                     self.name),
                 irc=True)
@@ -322,7 +323,7 @@ class FeatureConnection(ServerConnection):
                 message = '{} was kicked: {}'.format(self.name, reason)
             else:
                 message = '%s was kicked' % self.name
-            self.protocol.send_chat(message, irc=True)
+            self.protocol.broadcast_chat(message, irc=True)
             log.info(message)
         # FIXME: Client should handle disconnect events the same way in both
         # main and initial loading network loops
@@ -337,23 +338,52 @@ class FeatureConnection(ServerConnection):
             message = '{} banned for {}{}'.format(self.name,
                                                   prettify_timespan(duration), reason)
         if self.protocol.on_ban_attempt(self, reason, duration):
-            self.protocol.send_chat(message, irc=True)
+            self.protocol.broadcast_chat(message, irc=True)
             self.protocol.on_ban(self, reason, duration)
             if self.address[0] == "127.0.0.1":
-                self.protocol.send_chat("Ban ignored: localhost")
+                self.protocol.broadcast_chat("Ban ignored: localhost")
             else:
                 self.protocol.add_ban(self.address[0], reason, duration,
                                       self.name)
 
-    def send_lines(self, lines: List[str]) -> None:
+    def send_lines(self, lines: List[str], key: str = 'unknown') -> None:
+        """
+        Send a list of lines to the player.
+
+        'key' is a unique identifier for the lines being sent - for example,
+        a message saying '3 medkits are ready!' could use the key 'medkits.ready'.
+        The key is used to avoid sending two messages of the same variety at once,
+        to protect the server against a vulnerability which exploits this function.
+
+        The key should always be specified when calling this function. The default
+        value of 'unknown' exists simply for backwards compatibility.
+        """
+
+        # Detect if the send_lines key is already being sent to the player.
+        # If the caller of this function forgot to specify a key (thus,
+        # 'unknown' is used as per the default), we'll skip this detection.
+        if key != 'unknown':
+            if key in self.current_send_lines_types:
+                log.info(
+                    "Skipped sending lines to '{}': already being sent key "
+                    "'{}'".format(self.printable_name, key))
+                return
+
+            self.current_send_lines_types.append(key)
+
         current_time = 0
         for line in lines:
             reactor.callLater(current_time, self.send_chat, line)
             current_time += 2
 
+        reactor.callLater(current_time, self._completed_send_lines, key)
+
+    def _completed_send_lines(self, type: str) -> None:
+        self.current_send_lines_types.remove(type)
+
     def on_hack_attempt(self, reason):
-        log.warn('Hack attempt detected from {}: {}'.format(self.printable_name,
-                                                            reason))
+        log.warn('Hack attempt detected from {}: {}'
+                 .format(self.printable_name, reason))
         self.kick(reason)
 
     def on_user_login(self, user_type, verbose=True):

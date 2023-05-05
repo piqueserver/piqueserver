@@ -81,11 +81,11 @@ def apply_script(protocol, connection, config):
             result = protocol.on_votekick_start(
                 self, instigator, victim, reason)
             if result is None and RATIO_ON_VOTEKICK:
-                message = ratio(instigator, victim.name)
+                message = ratio(instigator, "#%i" % victim.player_id)
                 if IRC_ONLY:
                     self.irc_say('* ' + message)
                 else:
-                    self.send_chat(message, irc=True)
+                    self.broadcast_chat(message, irc=True)
             return result
 
     return RatioProtocol, RatioConnection

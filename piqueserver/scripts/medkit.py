@@ -28,13 +28,17 @@ medkit_heal_amount = medkit_config.option("medkit_heal_amount", 40)
 
 @command('medkit', 'm')
 def medkit(connection):
-    if connection.medkits and connection.hp < 100:
-        connection.set_hp(connection.hp + connection.protocol.heal_amount,
-                          kill_type=FALL_KILL)
-        connection.medkits -= 1
-        connection.send_chat('You have been healed')
-    else:
-        connection.send_chat("You don't have any medkits or have full health!")
+    if not connection.medkits:
+        connection.send_chat("You don't have any medkits")
+        return
+    if connection.hp >= 100:
+        connection.send_chat("You already have full health!")
+        return
+
+    connection.set_hp(connection.hp + connection.protocol.heal_amount,
+                      kill_type=FALL_KILL)
+    connection.medkits -= 1
+    connection.send_chat('You have been healed')
 
 
 def apply_script(protocol, connection, config):

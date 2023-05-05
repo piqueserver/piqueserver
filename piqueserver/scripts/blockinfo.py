@@ -28,7 +28,8 @@ from piqueserver.commands import command, admin, get_player
 from piqueserver.config import config
 
 blockinfo_config = config.section("blockinfo")
-GRIEFCHECK_ON_VOTEKICK = blockinfo_config.option("griefcheck_on_votekick", True)
+GRIEFCHECK_ON_VOTEKICK = blockinfo_config.option(
+    "griefcheck_on_votekick", True)
 IRC_ONLY = blockinfo_config.option("irc_only", False)
 
 
@@ -159,11 +160,11 @@ def apply_script(protocol, connection, config):
             result = protocol.on_votekick_start(
                 self, instigator, victim, reason)
             if result is None and GRIEFCHECK_ON_VOTEKICK.get():
-                message = grief_check(instigator, victim.name)
+                message = grief_check(instigator, "#%i" % victim.player_id)
                 if IRC_ONLY.get():
                     self.irc_say('* ' + message)
                 else:
-                    self.send_chat(message, irc=True)
+                    self.broadcast_chat(message, irc=True)
             return result
 
     return BlockInfoProtocol, BlockInfoConnection

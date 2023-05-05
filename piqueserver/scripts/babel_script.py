@@ -18,7 +18,8 @@ from pyspades.constants import (BLUE_BASE, GREEN_BASE, BLUE_FLAG, GREEN_FLAG,
                                 SPADE_TOOL, GRENADE_TOOL, WEAPON_TOOL)
 from twisted.internet import reactor
 
-# If ALWAYS_ENABLED is False, then babel can be enabled by setting 'babel': True
+# If ALWAYS_ENABLED is False, then babel
+# can be enabled by setting 'babel': True
 # in the map metadat extensions dictionary.
 ALWAYS_ENABLED = True
 
@@ -62,9 +63,10 @@ def coord_on_platform(x, y, z):
             return True
     if z == 1:
         if (256 - PLATFORM_WIDTH - 1 <= x <= 256 + PLATFORM_WIDTH + 1
-            and 256 - PLATFORM_HEIGHT - 1 <= y <= 256 + PLATFORM_HEIGHT + 1):
+                and 256 - PLATFORM_HEIGHT - 1 <= y <= 256 + PLATFORM_HEIGHT + 1):
             return True
     return False
+
 
 def apply_script(protocol, connection, config):
     allowed_intel_hold_time = config.get('allowed_intel_hold_time', 150)
@@ -104,7 +106,10 @@ def apply_script(protocol, connection, config):
             return connection.on_line_build_attempt(self, points)
 
         def is_trusted_for_block_destruction(self):
-            return self.admin or self.user_types.moderator or self.user_types.guard or self.user_types.trusted
+            return (self.admin or
+                    self.user_types.moderator or
+                    self.user_types.guard or
+                    self.user_types.trusted)
 
         # anti team destruction
         def on_block_destroy(self, x, y, z, mode):
@@ -112,9 +117,12 @@ def apply_script(protocol, connection, config):
 
             position = self.world_object.position
 
-            if not self.is_trusted_for_block_destruction() and self.tool is SPADE_TOOL:
+            if (not self.is_trusted_for_block_destruction() and
+                    self.tool is SPADE_TOOL):
                 if minx <= position.x <= maxx and miny <= position.y <= maxy:
-                    self.send_chat('You can\'t destroy your team\'s blocks in this area. Attack the enemy\'s tower!')
+                    self.send_chat(
+                        'You can\'t destroy your team\'s'
+                        'blocks in this area. Attack the enemy\'s tower!')
                     return False
 
             if self.team is self.protocol.blue_team:
@@ -124,9 +132,13 @@ def apply_script(protocol, connection, config):
 
             if can_shoot_blocks:
                 if self.tool is WEAPON_TOOL:
-                    self.send_chat('You must be closer to the enemy\'s base to shoot blocks!')
+                    self.send_chat(
+                        'You must be closer to the enemy\'s'
+                        'base to shoot blocks!')
                 else:
-                    self.send_chat('You must be closer to the enemy\'s base to grenade blocks!')
+                    self.send_chat(
+                        'You must be closer to the enemy\'s'
+                        'base to grenade blocks!')
                 return False
             return connection.on_block_destroy(self, x, y, z, mode)
 
@@ -136,7 +148,7 @@ def apply_script(protocol, connection, config):
         def auto_kill_intel_hog(self):
             self.auto_kill_intel_hog_call = None
             self.kill()
-            self.protocol.send_chat(
+            self.protocol.broadcast_chat(
                 'God punished %s for holding the intel too long' %
                 (self.name))
 
@@ -162,7 +174,9 @@ def apply_script(protocol, connection, config):
 
         # return intel to platform if dropped
         def on_flag_drop(self):
-            x, y, z = self.world_object.position.x, self.world_object.position.y, self.world_object.position.z
+            x = self.world_object.position.x
+            y = self.world_object.position.y
+            z = self.world_object.position.z
             if self.auto_kill_intel_hog_call is not None:
                 self.auto_kill_intel_hog_call.cancel()
                 self.auto_kill_intel_hog_call = None
@@ -179,7 +193,8 @@ def apply_script(protocol, connection, config):
 
         def reset_flag(self):
             self.protocol.onectf_reset_flags()
-            self.protocol.send_chat('The intel has returned to the heavens')
+            self.protocol.broadcast_chat(
+                'The intel has returned to the heavens')
 
         def on_flag_capture(self):
             if self.auto_kill_intel_hog_call is not None:

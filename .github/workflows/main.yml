@@ -5,10 +5,11 @@ on: [push, pull_request]
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        os: [ubuntu-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v2
@@ -21,9 +22,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -U -r requirements.txt
           pip install -U -r dev-requirements.txt
-      - name: Build
+      - name: Build on linux
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           export CYTHON_TRACE=1
+          python setup.py develop
+      - name: Build on windows
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          set CYTHON_TRACE=1
           python setup.py develop
       - name: Lint with flake8
         run: |

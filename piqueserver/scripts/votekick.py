@@ -60,19 +60,23 @@ S_RESULT_INSTIGATOR_KICKED = 'Instigator kicked by admin'
 S_RESULT_LEFT = '{victim} (#{victim_id}) left during votekick'
 S_RESULT_INSTIGATOR_LEFT = 'Instigator {instigator} (#{instigator_id}) left'
 S_RESULT_PASSED = 'Player kicked'
-S_ANNOUNCE_IRC = '* {instigator} (#{instigator_id}) started a votekick against player {victim} (#{victim_id}). ' \
-    'Reason: {reason}'
-S_ANNOUNCE = '{instigator} (#{instigator_id}) started a VOTEKICK against {victim} (#{victim_id}). Say /Y to agree'
-S_ANNOUNCE_SELF = 'You started a votekick against {victim} ({victim_id}). Say /CANCEL to ' \
-    'stop it'
-S_UPDATE = '{instigator} (#{instigator_id}) is votekicking {victim} (#{victim_id}). /Y to vote ({needed} left)'
+S_ANNOUNCE_IRC = '* {instigator} (#{instigator_id}) started a votekick' \
+    'against player {victim} (#{victim_id}). Reason: {reason}'
+S_ANNOUNCE = '{instigator} (#{instigator_id}) started a VOTEKICK against' \
+    '{victim} (#{victim_id}). Say /Y to agree'
+S_ANNOUNCE_SELF = 'You started a votekick against {victim} ({victim_id}).'\
+    ' Say /CANCEL to stop it'
+S_UPDATE = '{instigator} (#{instigator_id}) is votekicking' \
+    '{victim} (#{victim_id}). /Y to vote ({needed} left)'
 S_REASON = 'Reason: {reason}'
 
 # register options
 VOTEKICK_CONFIG = config.section('votekick')
 REQUIRED_PERCENTAGE_OPTION = VOTEKICK_CONFIG.option('percentage', 35.0)
-BAN_DURATION_OPTION = VOTEKICK_CONFIG.option('ban_duration', default="30min", cast=cast_duration)
+BAN_DURATION_OPTION = VOTEKICK_CONFIG.option(
+    'ban_duration', default="30min", cast=cast_duration)
 PUBLIC_VOTES_OPTION = VOTEKICK_CONFIG.option('public_votes', True)
+
 
 class VotekickFailure(Exception):
     pass
@@ -170,9 +174,6 @@ def togglevotekick(connection, *args):
 class Votekick:
     timeout = 120.0  # 2 minutes
     interval = 120.0  # 2 minutes
-    ban_duration = BAN_DURATION_OPTION.get()
-    public_votes = PUBLIC_VOTES_OPTION.get()
-    schedule = None
 
     @property
     def votes_remaining(self) -> int:
@@ -212,6 +213,9 @@ class Votekick:
         self.votes = {instigator: True}
         self.ended = False
 
+        self.ban_duration = BAN_DURATION_OPTION.get()
+        self.public_votes = PUBLIC_VOTES_OPTION.get()
+
         protocol.irc_say(
             S_ANNOUNCE_IRC.format(
                 instigator=instigator.name,
@@ -219,16 +223,17 @@ class Votekick:
                 victim=victim.name,
                 victim_id=victim.player_id,
                 reason=self.reason))
-        protocol.send_chat(
+        protocol.broadcast_chat(
             S_ANNOUNCE.format(
                 instigator=instigator.name,
                 instigator_id=instigator.player_id,
                 victim=victim.name,
                 victim_id=victim.player_id),
             sender=instigator)
-        protocol.send_chat(S_REASON.format(reason=self.reason),
-                           sender=instigator)
-        instigator.send_chat(S_ANNOUNCE_SELF.format(victim=victim.name, victim_id=victim.player_id))
+        protocol.broadcast_chat(S_REASON.format(reason=self.reason),
+                                sender=instigator)
+        instigator.send_chat(S_ANNOUNCE_SELF.format(
+            victim=victim.name, victim_id=victim.player_id))
 
         schedule = Scheduler(protocol)
         schedule.call_later(self.timeout, self.end, S_RESULT_TIMED_OUT)
@@ -241,7 +246,8 @@ class Votekick:
         elif player in self.votes:
             return
         if self.public_votes:
-            self.protocol.send_chat(S_YES.format(player=player.name, player_id=player.player_id))
+            self.protocol.broadcast_chat(S_YES.format(
+                player=player.name, player_id=player.player_id))
         self.votes[player] = True
         if self.votes_remaining <= 0:
             # vote passed, ban or kick accordingly
@@ -264,8 +270,11 @@ class Votekick:
 
     def end(self, result):
         self.ended = True
-        message = S_ENDED.format(victim=self.victim.name, victim_id=self.victim.player_id, result=result)
-        self.protocol.send_chat(message, irc=True)
+        message = S_ENDED.format(
+            victim=self.victim.name,
+            victim_id=self.victim.player_id,
+            result=result)
+        self.protocol.broadcast_chat(message, irc=True)
         if not self.instigator.admin:
             self.instigator.last_votekick = seconds()
         self.protocol.on_votekick_end()
@@ -323,11 +332,13 @@ def apply_script(protocol, connection, config):
                 if votekick.victim is self:
                     # victim leaves, gets votekick ban
                     reason = votekick.reason
-                    votekick.end(S_RESULT_LEFT.format(victim=self.name, victim_id=self.player_id))
+                    votekick.end(S_RESULT_LEFT.format(
+                        victim=self.name, victim_id=self.player_id))
                     self.ban(reason, Votekick.ban_duration)
                 elif votekick.instigator is self:
                     # instigator leaves, votekick is called off
-                    s = S_RESULT_INSTIGATOR_LEFT.format(instigator=self.name, instigator_id=self.player_id)
+                    s = S_RESULT_INSTIGATOR_LEFT.format(
+                        instigator=self.name, instigator_id=self.player_id)
                     votekick.end(s)
                 else:
                     # make sure we still have enough players

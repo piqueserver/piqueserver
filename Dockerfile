@@ -1,4 +1,4 @@
-FROM python:3.6-alpine
+FROM python:3.7-alpine
 VOLUME /config
 
 RUN mkdir -p /usr/src/app && mkdir -p /usr/src/app/enet && mkdir -p /usr/src/app/pyspades
@@ -14,9 +14,9 @@ RUN apk add --no-cache --virtual .build-deps-cython gcc musl-dev \
     && apk add --no-cache --virtual .build-deps-pillow zlib-dev jpeg-dev libffi-dev openssl-dev \
     && apk add --no-cache zlib jpeg \
     \
-    && echo "manylinux1_compatible = True" > /usr/local/lib/python3.6/_manylinux.py \
+    && echo "manylinux1_compatible = True" > /usr/local/lib/python3.7/_manylinux.py \
     && pip install pyenet \
-    && rm /usr/local/lib/python3.6/_manylinux.py \
+    && rm /usr/local/lib/python3.7/_manylinux.py \
     && pip install --no-cache-dir -r requirements.txt \
     \
     && apk del .build-deps-cython \
