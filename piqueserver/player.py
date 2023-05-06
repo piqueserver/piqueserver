@@ -44,7 +44,8 @@ class FeatureConnection(ServerConnection):
         self.best_streak = 0
         self.chat_limiter = RateLimiter(
             CHAT_WINDOW_SIZE, CHAT_WINDOW_SIZE / CHAT_PER_SECOND)
-        self.command_limiter = RateLimiter(COMMAND_WINDOW_SIZE, COMMAND_LIMIT_SECOND)
+        self.command_limiter = RateLimiter(
+            COMMAND_WINDOW_SIZE, COMMAND_LIMIT_SECOND)
         self.user_types = None
         self.rights = None
         self.can_complete_line_build = True
