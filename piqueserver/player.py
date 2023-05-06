@@ -1,4 +1,5 @@
 import re
+import time
 from typing import List, Tuple, Optional, Union
 
 from twisted.internet import reactor
@@ -17,6 +18,8 @@ from pyspades.team import Team
 from pyspades.world import Grenade
 CHAT_WINDOW_SIZE = 5
 CHAT_PER_SECOND = 0.5
+COMMAND_WINDOW_SIZE = 4
+COMMAND_LIMIT_SECOND = 5
 
 HookValue = Optional[bool]
 
@@ -41,7 +44,7 @@ class FeatureConnection(ServerConnection):
         self.best_streak = 0
         self.chat_limiter = RateLimiter(
             CHAT_WINDOW_SIZE, CHAT_WINDOW_SIZE / CHAT_PER_SECOND)
-        self.command_spam_lock = False
+        self.command_limiter = RateLimiter(COMMAND_WINDOW_SIZE, COMMAND_LIMIT_SECOND)
         self.user_types = None
         self.rights = None
         self.can_complete_line_build = True
@@ -115,7 +118,10 @@ class FeatureConnection(ServerConnection):
         ServerConnection.on_disconnect(self)
 
     def on_command(self, command: str, parameters: List[str]) -> None:
-        if self.command_spam_lock:
+        current_time = time.monotonic()
+        self.command_limiter.record_event(current_time)
+
+        if self.command_limiter.above_limit():
             self.send_chat("Please wait before executing your next command.")
             return
 
@@ -124,13 +130,6 @@ class FeatureConnection(ServerConnection):
         if result:
             for i in reversed(result.split("\n")):
                 self.send_chat(i)
-
-        self.command_spam_lock = True
-        reactor.callLater(2, self._remove_command_lock)
-        # TODO: Configurable delay.
-
-    def _remove_command_lock(self) -> None:
-        self.command_spam_lock = False
 
     def _can_build(self) -> bool:
         if not self.building:
