@@ -99,6 +99,8 @@ class ServerConnection(BaseConnection):
         self.address = (address.host, address.port)
         self.respawn_time = protocol.respawn_time
         self.rapids = RateLimiter(RAPID_WINDOW_ENTRIES, MAX_RAPID_SPEED)
+        self.command_limiter = RateLimiter(
+            self.protocol.command_limit_size, self.protocol.command_limit_time)
         self.client_info = {}
         self.proto_extensions = {}  # type: Dict[int, int]
         self.line_build_start_pos = None

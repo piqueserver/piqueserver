@@ -107,7 +107,7 @@ cap_limit = config.option('cap_limit', default=10,
 advance_on_win = config.option('advance_on_win', default=False,
                                validate=lambda x: isinstance(x, bool))
 everyone_is_admin = config.option('everyone_is_admin', default=False,
-                               validate=lambda x: isinstance(x, bool))
+                                  validate=lambda x: isinstance(x, bool))
 team1_name = team1_config.option(
     'name', default='Blue', validate=validate_team_name)
 team2_name = team2_config.option(
@@ -173,6 +173,10 @@ tips_option = config.option('tips')
 network_interface = config.option('network_interface', default='')
 scripts_option = config.option(
     'scripts', default=[], validate=extensions.check_scripts)
+cmd_antispam_enable = config.option("enable_command_antispam", True)
+cmd_command_limit_size = config.option("max_command_size", 4)
+cmd_command_limit_time = config.option(
+    "max_command_per_time", "5s", cast=cast_duration)
 
 
 def ensure_dir_exists(filename: str) -> None:
@@ -216,6 +220,7 @@ class FeatureProtocol(ServerProtocol):
     master = False
     ip = None
     identifier = None
+    command_antispam = False
 
     planned_map = None
 
@@ -276,9 +281,11 @@ class FeatureProtocol(ServerProtocol):
             log.debug("skip loading bans: file unavailable",
                       count=len(self.bans))
         except IOError as e:
-            log.error('Could not read bans file ({}): {}'.format(bans_file.get(), e))
+            log.error('Could not read bans file ({}): {}'.format(
+                bans_file.get(), e))
         except ValueError as e:
-            log.error('Could not parse bans file ({}): {}'.format(bans_file.get(), e))
+            log.error('Could not parse bans file ({}): {}'.format(
+                bans_file.get(), e))
 
         self.hard_bans = set()  # possible DDoS'ers are added here
         self.player_memory = deque(maxlen=100)
@@ -322,6 +329,9 @@ class FeatureProtocol(ServerProtocol):
         self.time_announcements = time_announcements.get()
         self.balanced_teams = balanced_teams.get()
         self.login_retries = login_retries.get()
+        self.command_antispam = cmd_antispam_enable.get()
+        self.command_limit_size = cmd_command_limit_size.get()
+        self.command_limit_time = cmd_command_limit_time.get()
 
         # voting configuration
         self.default_ban_time = default_ban_duration.get()
@@ -461,10 +471,11 @@ class FeatureProtocol(ServerProtocol):
             if remaining < 10.001:
                 self.broadcast_chat('%s...' % int(round(remaining)))
             else:
-                self.broadcast_chat('%s seconds remaining.' % int(round(remaining)))
+                self.broadcast_chat('%s seconds remaining.' %
+                                    int(round(remaining)))
         else:
             self.broadcast_chat('%s minutes remaining.' %
-                           int(round(remaining / 60)))
+                                int(round(remaining / 60)))
 
     def _time_up(self):
         self.advance_call = None
@@ -810,7 +821,8 @@ class FeatureProtocol(ServerProtocol):
         """
         if irc:
             self.irc_say('* %s' % value)
-        ServerProtocol.broadcast_chat(self, value, global_message, sender, team)
+        ServerProtocol.broadcast_chat(
+            self, value, global_message, sender, team)
 
     # backwards compatability
     def send_chat(self, *args, **kwargs):

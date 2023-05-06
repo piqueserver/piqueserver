@@ -168,6 +168,12 @@ time_announcements = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 30, 60, 120, 180, 240, 300
 # number of intel captures to win the game (default: 10)
 cap_limit = 10
 
+# Enable command antispam for preventing users to abuse from flooding commands
+enable_command_antispam = true
+
+# Maximum commands to be executed in the given time
+max_command_size = 4
+max_command_per_time = "5s"
 
 # Set this to true to automatically log all players in as admin on join.
 # Possibly useful for testing purposes.

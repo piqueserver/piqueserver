@@ -18,8 +18,6 @@ from pyspades.team import Team
 from pyspades.world import Grenade
 CHAT_WINDOW_SIZE = 5
 CHAT_PER_SECOND = 0.5
-COMMAND_WINDOW_SIZE = 4
-COMMAND_LIMIT_SECOND = 5
 
 HookValue = Optional[bool]
 
@@ -44,8 +42,6 @@ class FeatureConnection(ServerConnection):
         self.best_streak = 0
         self.chat_limiter = RateLimiter(
             CHAT_WINDOW_SIZE, CHAT_WINDOW_SIZE / CHAT_PER_SECOND)
-        self.command_limiter = RateLimiter(
-            COMMAND_WINDOW_SIZE, COMMAND_LIMIT_SECOND)
         self.user_types = None
         self.rights = None
         self.can_complete_line_build = True
@@ -119,12 +115,13 @@ class FeatureConnection(ServerConnection):
         ServerConnection.on_disconnect(self)
 
     def on_command(self, command: str, parameters: List[str]) -> None:
-        if not self.admin:
+        if not self.admin and self.protocol.command_antispam:
             current_time = time.monotonic()
             self.command_limiter.record_event(current_time)
 
             if self.command_limiter.above_limit():
-                self.send_chat("Please wait before executing your next command.")
+                self.send_chat(
+                    "Please wait before executing your next command.")
                 return
 
         result = commands.handle_command(self, command, parameters)
