@@ -173,10 +173,10 @@ tips_option = config.option('tips')
 network_interface = config.option('network_interface', default='')
 scripts_option = config.option(
     'scripts', default=[], validate=extensions.check_scripts)
-cmd_antispam_enable = config.option("enable_command_antispam", True)
-cmd_command_limit_size = config.option("max_command_size", 4)
+cmd_antispam_enable = config.option("enable_command_ratelimit", True)
+cmd_command_limit_size = config.option("command_ratelimit_amount", 4)
 cmd_command_limit_time = config.option(
-    "max_command_per_time", "5s", cast=cast_duration)
+    "command_ratelimit_period", "5s", cast=cast_duration)
 
 
 def ensure_dir_exists(filename: str) -> None:
