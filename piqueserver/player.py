@@ -49,6 +49,9 @@ class FeatureConnection(ServerConnection):
 
         super().__init__(*args, **kwargs)
 
+        self.command_limiter = RateLimiter(
+            self.protocol.command_limit_size, self.protocol.command_limit_time)
+
     def on_connect(self) -> None:
         protocol = self.protocol
         client_ip = self.address[0]
