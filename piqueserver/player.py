@@ -1,4 +1,5 @@
 import re
+import time
 from typing import List, Tuple, Optional, Union
 
 from twisted.internet import reactor
@@ -47,6 +48,9 @@ class FeatureConnection(ServerConnection):
         self.current_send_lines_types = []
 
         super().__init__(*args, **kwargs)
+
+        self.command_limiter = RateLimiter(
+            self.protocol.command_limit_size, self.protocol.command_limit_time)
 
     def on_connect(self) -> None:
         protocol = self.protocol
@@ -114,6 +118,15 @@ class FeatureConnection(ServerConnection):
         ServerConnection.on_disconnect(self)
 
     def on_command(self, command: str, parameters: List[str]) -> None:
+        if not self.admin and self.protocol.command_antispam:
+            current_time = time.monotonic()
+            self.command_limiter.record_event(current_time)
+
+            if self.command_limiter.above_limit():
+                self.send_chat(
+                    "Please wait before executing your next command.")
+                return
+
         result = commands.handle_command(self, command, parameters)
 
         if result:
