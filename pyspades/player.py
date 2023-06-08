@@ -40,7 +40,7 @@ tc_data = loaders.TCState()
 
 def check_nan(*values) -> bool:
     for value in values:
-        if math.isnan(value):
+        if math.isnan(value) or math.isinf(value):
             return True
     return False
 
