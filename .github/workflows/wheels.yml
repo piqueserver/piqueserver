@@ -1,6 +1,6 @@
 name: Wheel build
 
-on: [push]
+on: [create, release, workflow_dispatch]
 
 jobs:
   build:
