@@ -133,10 +133,10 @@ setup(
     ],
     platforms="Darwin, Unix, Win32",
 
-    setup_requires=['Cython>=0.27,<1'],
+    setup_requires=['Cython>=0.27,<4'],
     install_requires=[
         'pypiwin32;platform_system=="Windows"',
-        'Cython>=0.27,<1',
+        'Cython>=0.27,<4',
         'Twisted[tls]',
         'Jinja2>=2,<4',
         'Pillow>=5.1.0,<11',
