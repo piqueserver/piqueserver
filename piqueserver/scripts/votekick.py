@@ -61,13 +61,13 @@ S_RESULT_LEFT = '{victim} (#{victim_id}) left during votekick'
 S_RESULT_INSTIGATOR_LEFT = 'Instigator {instigator} (#{instigator_id}) left'
 S_RESULT_PASSED = 'Player kicked'
 S_ANNOUNCE_IRC = '* {instigator} (#{instigator_id}) started a votekick' \
-    'against player {victim} (#{victim_id}). Reason: {reason}'
+    ' against player {victim} (#{victim_id}). Reason: {reason}'
 S_ANNOUNCE = '{instigator} (#{instigator_id}) started a VOTEKICK against' \
-    '{victim} (#{victim_id}). Say /Y to agree'
+    ' {victim} (#{victim_id}). Say /Y to agree'
 S_ANNOUNCE_SELF = 'You started a votekick against {victim} ({victim_id}).'\
     ' Say /CANCEL to stop it'
 S_UPDATE = '{instigator} (#{instigator_id}) is votekicking' \
-    '{victim} (#{victim_id}). /Y to vote ({needed} left)'
+    ' {victim} (#{victim_id}). /Y to vote ({needed} left)'
 S_REASON = 'Reason: {reason}'
 
 # register options
