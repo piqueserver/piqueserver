@@ -1,4 +1,5 @@
 import math
+import time
 from typing import Callable, Dict
 from twisted.internet import reactor
 from pyspades.constants import (RIFLE_WEAPON, SMG_WEAPON, SHOTGUN_WEAPON,
@@ -45,7 +46,7 @@ class BaseWeapon:
     def set_shoot(self, value: bool) -> None:
         if value == self.shoot:
             return
-        current_time = reactor.seconds()
+        current_time = time.monotonic()
         if value:
             self.start = current_time
             if self.current_ammo <= 0:
@@ -92,7 +93,7 @@ class BaseWeapon:
 
     def get_ammo(self, no_max: bool = False) -> int:
         if self.shoot:
-            dt = reactor.seconds() - self.shoot_time
+            dt = time.monotonic() - self.shoot_time
             ammo = self.current_ammo - max(0, int(
                 math.ceil(dt / self.delay)))
         else:

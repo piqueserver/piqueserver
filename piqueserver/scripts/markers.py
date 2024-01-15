@@ -32,6 +32,7 @@ Commands
 .. codeauthor:: hompy
 """
 
+import time
 import csv
 from io import StringIO
 from collections import deque, defaultdict
@@ -663,13 +664,13 @@ def apply_script(protocol, connection, config):
                 self.send_chat(S_REACHED_LIMIT)
                 return
             new_marker = marker_class(self.protocol, self.team, *location)
-            self.last_marker = seconds()
+            self.last_marker = time.monotonic()
 
         def on_animation_update(self, jump, crouch, sneak, sprint):
             markers_allowed = (VV_ENABLED and self.allow_markers and
                                self.protocol.allow_markers)
             if markers_allowed and sneak and self.world_object.sneak != sneak:
-                now = seconds()
+                now = time.monotonic()
                 if (self.last_marker is None or
                         now - self.last_marker > COOLDOWN):
                     presses = self.sneak_presses
@@ -703,7 +704,7 @@ def apply_script(protocol, connection, config):
                     if global_message:
                         self.send_chat(S_TEAMCHAT)
                     elif (self.last_marker is not None and
-                          seconds() - self.last_marker <= COOLDOWN):
+                          time.monotonic() - self.last_marker <= COOLDOWN):
                         self.send_chat(S_WAIT)
                     else:
                         location = None
