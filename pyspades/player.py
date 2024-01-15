@@ -975,16 +975,17 @@ class ServerConnection(BaseConnection):
         if by is not None and self.team is by.team:
             friendly_fire = self.protocol.friendly_fire
             friendly_fire_on_grief = self.protocol.friendly_fire_on_grief
-            if friendly_fire_on_grief and not friendly_fire:
-                if (kill_type == MELEE_KILL and
-                        not self.protocol.spade_teamkills_on_grief):
-                    return
-                hit_time = self.protocol.friendly_fire_time
-                if (self.last_block_destroy is None
-                        or reactor.seconds() - self.last_block_destroy >= hit_time):
-                    return
             if not friendly_fire:
-                return
+                if friendly_fire_on_grief:
+                    if (kill_type == MELEE_KILL and
+                            not self.protocol.spade_teamkills_on_grief):
+                        return
+                    hit_time = self.protocol.friendly_fire_time
+                    if (self.last_block_destroy is None
+                            or reactor.seconds() - self.last_block_destroy >= hit_time):
+                        return
+                else:
+                    return
         self.set_hp(self.hp - value, by, kill_type=kill_type)
 
     def set_hp(self, value: Union[int, float], hit_by: Optional['ServerConnection'] = None, kill_type: int = WEAPON_KILL,
