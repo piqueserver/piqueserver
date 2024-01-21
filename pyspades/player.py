@@ -716,7 +716,7 @@ class ServerConnection(BaseConnection):
             log.debug("not sending version request to OpenSpades <= 0.1.3")
         else:
             ext_info = loaders.ProtocolExtensionInfo()
-            ext_info.extensions = []
+            ext_info.extensions = self.protocol.available_proto_extensions
             self.send_contained(ext_info)
 
     @property
