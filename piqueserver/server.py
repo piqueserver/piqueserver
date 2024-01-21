@@ -771,7 +771,8 @@ class FeatureProtocol(ServerProtocol):
                     "players_max": self.max_players,
                     "map": map_name,
                     "game_mode": self.get_mode_name(),
-                    "game_version": "0.75"
+                    "game_version": "0.75",
+                    "extensions": self.available_proto_extensions
                 }
                 payload = json.dumps(entry).encode()
                 self.host.socket.send(address, payload)
