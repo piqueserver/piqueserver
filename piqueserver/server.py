@@ -272,7 +272,7 @@ class FeatureProtocol(ServerProtocol):
         self.win_count = itertools.count(1)
         self.bans = NetworkDict()
 
-        self.proto_extensions = [(EXTENSION_CHATTYPE, 1)]
+        self.available_proto_extensions = [(EXTENSION_CHATTYPE, 1)]
 
         # attempt to load a saved bans list
         try:
