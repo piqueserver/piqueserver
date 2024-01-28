@@ -4,7 +4,7 @@ to the client on connect
 """
 import zlib
 
-COMPRESSION_LEVEL = 9
+COMPRESSION_LEVEL = 5
 
 
 class ProgressiveMapGenerator:
