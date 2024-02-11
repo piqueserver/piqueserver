@@ -424,6 +424,7 @@ class ServerConnection(BaseConnection):
         if length > 2.0:  # cap at tested maximum
             velocity = velocity.normal() * 2.0
         velocity += self.world_object.velocity
+        contained.velocity = (velocity.x, velocity.y, velocity.z)
         if self.on_grenade(contained.value) == False:
             return
         grenade = self.protocol.world.create_object(
