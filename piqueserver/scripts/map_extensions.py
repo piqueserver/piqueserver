@@ -1,7 +1,7 @@
 """
 Provides extensions to the map metadata (e.g. water damage).
 
-.. codeauthor:: ?
+.. codeauthor:: triplefox, mat^2
 """
 
 
