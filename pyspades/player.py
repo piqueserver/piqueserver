@@ -722,6 +722,7 @@ class ServerConnection(BaseConnection):
             ext_info = loaders.ProtocolExtensionInfo()
             ext_info.extensions = self.protocol.available_proto_extensions
             self.send_contained(ext_info)
+        self.on_client_info()
 
     @property
     def client_string(self):
@@ -1415,6 +1416,9 @@ class ServerConnection(BaseConnection):
         pass
 
     def on_animation_update(self, jump, crouch, sneak, sprint):
+        pass
+
+    def on_client_info(self):
         pass
 
     def __repr__(self):
