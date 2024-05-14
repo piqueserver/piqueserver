@@ -70,7 +70,8 @@ def apply_script(protocol, connection, config):
                     self.save_map()
             if savemap_config.option('load_saved_map', False).get():
                 if os.path.isfile(get_path(rot_info.name)):
-                    log.info("Saved version of '%s' found" % rot_info.name)
+                    log.info("Saved version of '{name}' found",
+                             name=rot_info.name)
                     rot_info.name += '.saved'
             await protocol.set_map_name(self, rot_info)
 

@@ -403,11 +403,16 @@ def handle_command(connection, command, parameters):
 
     if result == False:
         parameters = ['***'] * len(parameters)
-    log_message = '<{}> /{} {}'.format(connection.name, command,
-                                       ' '.join(parameters))
+
+    log_message = '<{name}> /{command} {parameters}'
     if result:
-        log_message += ' -> %s' % result
-    log.info(escape_control_codes(log_message))
+        log_message += ' -> {result}'
+
+    log.info(log_message,
+             name=escape_control_codes(connection.name),
+             command=escape_control_codes(command),
+             parameters=escape_control_codes(' '.join(parameters)),
+             result=escape_control_codes(result))
 
     return result
 

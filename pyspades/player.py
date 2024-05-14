@@ -151,8 +151,11 @@ class ServerConnection(BaseConnection):
             # Existingplayer may only be sent if in the limbo or spectator
             # modes. Without this check, they could respawn themselves
             # instantly on any team they wanted.
-            log.debug("{} tried sending an ExistingPlayer packet while not in"
-                      " limbo or spectator mode".format(self))
+            log.debug(
+                ("{player!r} tried sending an ExistingPlayer packet while not"
+                 " in limbo or spectator mode"),
+                player=self
+            )
             return
 
         old_team = self.team
@@ -634,8 +637,10 @@ class ServerConnection(BaseConnection):
 
         value = contained.value
         if len(value) > 108:
-            log.info("TOO LONG MESSAGE (%i chars) FROM %s (#%i)" %
-                     (len(value), self.name, self.player_id))
+            log.info("TOO LONG MESSAGE ({chars} chars) FROM {name} (#{id})",
+                     chars=len(value),
+                     name=self.name,
+                     id=self.player_id)
 
         value = value[:108]
         if value.startswith('/'):

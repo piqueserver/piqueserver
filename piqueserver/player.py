@@ -63,8 +63,9 @@ class FeatureConnection(ServerConnection):
                 protocol.remove_ban(client_ip)
                 protocol.save_bans()
             else:
-                log.info('banned user {} ({}) attempted to join'
-                         .format(name, client_ip))
+                log.info('banned user {name} ({client_ip}) attempted to join',
+                         name=name,
+                         client_ip=client_ip)
                 self.disconnect(ERROR_BANNED)
                 return
 
@@ -73,8 +74,12 @@ class FeatureConnection(ServerConnection):
         if manager is not None:
             reason = manager.get_ban(client_ip)
             if reason is not None:
-                log.info(('federated banned user (%s) attempted to join, '
-                          'banned for %r') % (client_ip, reason))
+                log.info(
+                    ('federated banned user ({client_ip}) attempted to join, '
+                     'banned for {reason}'),
+                    client_ip=client_ip,
+                    reason=reason
+                )
                 self.disconnect(ERROR_BANNED)
                 return
 
@@ -325,7 +330,7 @@ class FeatureConnection(ServerConnection):
             else:
                 message = '%s was kicked' % self.name
             self.protocol.broadcast_chat(message, irc=True)
-            log.info(message)
+            log.info('{message}', message=message)
         # FIXME: Client should handle disconnect events the same way in both
         # main and initial loading network loops
         self.disconnect(ERROR_KICKED)
@@ -366,8 +371,11 @@ class FeatureConnection(ServerConnection):
         if key != 'unknown':
             if key in self.current_send_lines_types:
                 log.info(
-                    "Skipped sending lines to '{}': already being sent key "
-                    "'{}'".format(self.printable_name, key))
+                    ("Skipped sending lines to '{name}': already being sent "
+                     "key '{key}'"),
+                    name=self.printable_name,
+                    key=key
+                )
                 return
 
             self.current_send_lines_types.append(key)
@@ -383,8 +391,9 @@ class FeatureConnection(ServerConnection):
         self.current_send_lines_types.remove(type)
 
     def on_hack_attempt(self, reason):
-        log.warn('Hack attempt detected from {}: {}'
-                 .format(self.printable_name, reason))
+        log.warn('Hack attempt detected from {name}: {reason}',
+                 name=self.printable_name,
+                 reason=reason)
         self.kick(reason)
 
     def on_user_login(self, user_type, verbose=True):
@@ -412,5 +421,5 @@ class FeatureConnection(ServerConnection):
 
     def timed_out(self):
         if self.name is not None:
-            log.info('%s timed out' % self.printable_name)
+            log.info('{name} timed out', name=self.printable_name)
         ServerConnection.timed_out(self)

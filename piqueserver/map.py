@@ -75,7 +75,7 @@ class Map:
             random.seed(seed)
             self.data = self.gen_script(rot_info.name, seed)
         else:
-            log.info("Loading map '%s'..." % self.name)
+            log.info("Loading map '{mapname}'...", mapname=self.name)
             self.load_vxl(rot_info)
 
         log.info('Map loaded successfully. (took {duration:.2f}s)',
@@ -90,10 +90,11 @@ class Map:
             info = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(info)
         except FileNotFoundError:
-            log.error("Map info file not found {}".format(path))
+            log.error("Map info file not found {path}", path=path)
             info = None
         except Exception as e:
-            log.error("Error while loading map info: {!r}".format(e))
+            log.error("Error while loading map info: {exception!r}",
+                      exception=e)
             info = None
 
         self.info = info
