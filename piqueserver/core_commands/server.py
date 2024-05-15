@@ -21,7 +21,7 @@ def server_name(connection, *arg):
     protocol = connection.protocol
     protocol.set_server_name(name)
     message = "%s changed servername to '%s'" % (connection.name, name)
-    log.info(message)
+    log.info("{message}", message=message)
     connection.protocol.irc_say("* " + message)
     if connection in connection.protocol.players.values():
         return message

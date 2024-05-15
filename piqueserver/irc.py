@@ -94,7 +94,7 @@ class IRCBot(irc.IRCClient):
         if irc_channel.lower() == self.factory.channel:
             self.ops = set()
             self.voices = set()
-        log.info("Joined channel %s" % irc_channel)
+        log.info("Joined channel {irc_channel}", irc_channel=irc_channel)
 
     def irc_NICK(self, prefix, params):
         user = prefix.split('!', 1)[0]
@@ -150,7 +150,7 @@ class IRCBot(irc.IRCClient):
                 len(self.protocol.server_prefix) - 1
             msg = msg[len(self.factory.chatprefix):].strip()
             message = ("[irc] <{}> {}".format(prefix + alias, msg))[:max_len]
-            log.info(escape_control_codes(message))
+            log.info('{message}', message=escape_control_codes(message))
             self.factory.server.broadcast_chat(message)
         elif msg.startswith(self.factory.commandprefix) and user in self.ops:
             self.unaliased_name = user
@@ -222,13 +222,21 @@ class IRCClientFactory(protocol.ClientFactory):
         log.info("Connecting to IRC server...")
 
     def clientConnectionLost(self, connector, reason):
-        log.info("Lost connection to IRC server ({}), reconnecting in {} seconds".format(
-            reason, self.lost_reconnect_delay))
+        log.info(
+            ("Lost connection to IRC server ({reason}), reconnecting in"
+             " {time} seconds"),
+            reason=reason,
+            lost_reconnect_delay=self.lost_reconnect_delay
+        )
         reactor.callLater(self.lost_reconnect_delay, connector.connect)
 
     def clientConnectionFailed(self, connector, reason):
-        log.info("Could not connect to IRC server ({}), retrying in {} seconds".format(
-            reason, self.failed_reconnect_delay))
+        log.info(
+            ("Could not connect to IRC server ({reason}), retrying in"
+             " {time} seconds"),
+            reason=reason,
+            time=self.failed_reconnect_delay
+        )
         reactor.callLater(self.failed_reconnect_delay, connector.connect)
 
     def buildProtocol(self, address):

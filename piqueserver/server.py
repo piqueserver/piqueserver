@@ -259,7 +259,7 @@ class FeatureProtocol(ServerProtocol):
                     textFileLogObserver(logging_file), [predicate])
             ]
             globalLogBeginner.beginLoggingTo(observers)
-            log.info('piqueserver started on %s' % time.strftime('%c'))
+            log.info('piqueserver started on {time}', time=time.strftime('%c'))
 
         self.config = config_dict
         if random_rotation.get():
@@ -283,17 +283,21 @@ class FeatureProtocol(ServerProtocol):
             log.debug("skip loading bans: file unavailable",
                       count=len(self.bans))
         except IOError as e:
-            log.error('Could not read bans file ({}): {}'.format(
-                bans_file.get(), e))
+            log.error('Could not read bans file ({path}): {exception!r}',
+                      path=bans_file.get(),
+                      exception=e)
         except ValueError as e:
-            log.error('Could not parse bans file ({}): {}'.format(
-                bans_file.get(), e))
+            log.error('Could not parse bans file ({path}): {exception!r}',
+                      path=bans_file.get(),
+                      exception=e)
 
         self.hard_bans = set()  # possible DDoS'ers are added here
         self.player_memory = deque(maxlen=100)
         if len(self.name) > MAX_SERVER_NAME_SIZE:
-            log.warn('(server name too long; it will be truncated to "%s")' % (
-                self.name[:MAX_SERVER_NAME_SIZE]))
+            log.warn(
+                '(server name too long; it will be truncated to "{name}")',
+                name=self.name[:MAX_SERVER_NAME_SIZE]
+            )
         self.respawn_time = respawn_time_option.get()
         self.respawn_waves = respawn_waves.get()
 
@@ -380,7 +384,8 @@ class FeatureProtocol(ServerProtocol):
         try:
             self.set_map_rotation(self.config['rotation'])
         except MapNotFound as e:
-            log.critical('Invalid map in map rotation (%s), exiting.' % e.map)
+            log.critical('Invalid map in map rotation ({name}), exiting.',
+                         name=e.map)
             raise SystemExit
 
         map_load_d = self.advance_rotation()
@@ -416,7 +421,11 @@ class FeatureProtocol(ServerProtocol):
 
     async def get_external_ip(self, ip_getter: str) -> Iterator[Deferred]:
         log.info(
-            'Retrieving external IP from {!r} to generate server identifier.'.format(ip_getter))
+            ('Retrieving external IP from {ip_getter} to generate server'
+             ' identifier.'),
+            ip_getter=ip_getter
+        )
+
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(ip_getter) as response:
@@ -432,8 +441,12 @@ class FeatureProtocol(ServerProtocol):
 
         self.ip = ip
         self.identifier = make_server_identifier(ip, self.port)
-        log.info('Server public ip address: {}:{}'.format(ip, self.port))
-        log.info('Public aos identifier: {}'.format(self.identifier))
+        log.info('Server public ip address: {ip}:{port}',
+                 ip=ip,
+                 port=self.port)
+
+        log.info('Public aos identifier: {identifier}',
+                 identifier=self.identifier)
 
     def set_time_limit(self, time_limit: Optional[int] = None, additive:
                        bool = False) -> Optional[int]:
@@ -616,7 +629,8 @@ class FeatureProtocol(ServerProtocol):
                 message = 'Master connection could not be established'
             else:
                 message = 'Master connection lost'
-            log.info('%s, reconnecting in 60 seconds...' % message)
+            log.info('{message}, reconnecting in 60 seconds...',
+                     message=message)
             self.master_reconnect_call = reactor.callLater(
                 60, self.reconnect_master)
 
@@ -691,7 +705,7 @@ class FeatureProtocol(ServerProtocol):
             self.new_release = await check_for_releases()
             if self.new_release:
                 log.info("#" * 60)
-                log.info(format_release(self.new_release))
+                log.info("{text}", text=format_release(self.new_release))
                 log.info("#" * 60)
             await asyncio.sleep(86400)  # 24 hrs
 
@@ -796,13 +810,17 @@ class FeatureProtocol(ServerProtocol):
             import traceback
             traceback.print_exc()
             log.info(
-                'IP %s was hardbanned for invalid data or possibly DDoS.' % ip)
+                'IP {ip} was hardbanned for invalid data or possibly DDoS.',
+                ip=ip
+            )
             self.hard_bans.add(ip)
             return
         dt = reactor.seconds() - current_time
         if dt > 1.0:
-            log.warn('processing {!r} from {} took {}'.format(
-                packet.data, ip, dt))
+            log.warn('processing {data!r} from {ip} took {time}',
+                     data=packet.data,
+                     ip=ip,
+                     time=dt)
 
     def irc_say(self, msg: str, me: bool = False) -> None:
         if self.irc_relay:
@@ -842,14 +860,16 @@ class FeatureProtocol(ServerProtocol):
         if last_time is not None:
             dt = current_time - last_time
             if dt > 1.0:
-                log.warn('high CPU usage detected - %s' % dt)
+                log.warn('high CPU usage detected - {dt}', dt=dt)
         self.last_time = current_time
         ServerProtocol.update_world(self)
         time_taken = reactor.seconds() - current_time
         if time_taken > 1.0:
             log.warn(
-                'World update iteration took %s, objects: %s' %
-                (time_taken, self.world.objects))
+                'World update iteration took {time}, objects: {objects!r}',
+                time=time_taken,
+                objects=self.world.objects
+            )
 
     # events
 

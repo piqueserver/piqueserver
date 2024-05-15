@@ -26,7 +26,7 @@ def check_scripts(script_names):
         else:
             seen.add(script)
     if dups:
-        log.warn("Scripts included multiple times: {}".format(dups))
+        log.warn("Scripts included multiple times: {dups}", dups=dups)
         return False
     return True
 
@@ -69,8 +69,12 @@ def load_scripts(script_names, script_dir, script_type):
         spec = spec_scripts or spec_global
         if not spec:
             log.error(
-                "{} '{}' not found in either {} directory or global scope".format(
-                    script_type, script, script_dir))
+                ("{script_type} '{script}' not found in either {script_dir} "
+                 "directory or global scope"),
+                script_type=script_type,
+                script=script,
+                script_dir=script_dir
+            )
             continue
         # namespace module name to avoid shadowing global modules
         # TODO: figure out if there are any right or better ways.
@@ -83,8 +87,12 @@ def load_scripts(script_names, script_dir, script_type):
             script_objects.append(module)
             continue
         except Exception as e: # needs to be broad since we exec the module
-            log.failure("Error while loading {} {}: {!r}".format(
-                script_type, script, e))
+            log.failure(
+                "Error while loading {script_type} {script}: {exception!r}",
+                script_type=script_type,
+                script=script,
+                exception=e
+            )
 
     return script_objects
 
