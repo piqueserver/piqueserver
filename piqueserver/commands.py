@@ -412,7 +412,7 @@ def handle_command(connection, command, parameters):
              name=escape_control_codes(connection.name),
              command=escape_control_codes(command),
              parameters=escape_control_codes(' '.join(parameters)),
-             result=escape_control_codes(result))
+             result=escape_control_codes(str(result)) if result is not None else None)
 
     return result
 
