@@ -35,10 +35,6 @@ DEFAULT_CONFIG_DIR = os.path.expanduser(_path)
 MAXMIND_DOWNLOAD = 'https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz'
 MAXMIND_DOWNLOAD_MD5 = MAXMIND_DOWNLOAD + '.md5'
 
-# (major, minor) versions of python we are supporting
-# used on startup to emit a warning if not running on a supported version
-SUPPORTED_PYTHONS = ((3, 7), (3, 8), (3, 9), (3, 10), (3, 11))
-
 
 class ConfigStore():
     '''

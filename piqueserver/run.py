@@ -129,7 +129,7 @@ def main():
     # Twisted throws an exception if you install the reactor more than once.
     import asyncio
 
-    if sys.platform == 'win32' and sys.version_info >= (3, 7, 0):
+    if sys.platform == 'win32':
         # we (or twisted) do not support the ProactorEventLoop as it does not
         # support adding file readers
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -137,13 +137,7 @@ def main():
     from twisted.internet import asyncioreactor
     asyncioreactor.install(asyncio.get_event_loop())
 
-    from piqueserver.config import (config, TOML_FORMAT, JSON_FORMAT,
-                                    SUPPORTED_PYTHONS)
-
-    if (sys.version_info.major, sys.version_info.minor) not in SUPPORTED_PYTHONS:
-        print('Warning: you are running on an unsupported Python version.\n'
-              'The server may not run correctly.\n'
-              'Please see https://piqueserver.readthedocs.io/en/v1.0.0/supported-python-environments.html for more information.')
+    from piqueserver.config import config, TOML_FORMAT, JSON_FORMAT
 
     description = '%s is an open-source Python server implementation ' \
                   'for the voxel-based game "Ace of Spades".' % PKG_NAME
