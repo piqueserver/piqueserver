@@ -20,18 +20,16 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -U -r requirements.txt
-          pip install -U -r dev-requirements.txt
       - name: Build on linux
         if: ${{ matrix.os == 'ubuntu-latest' }}
         run: |
           export CYTHON_TRACE=1
-          pip install -e .
+          pip install -e .[dev]
       - name: Build on windows
         if: ${{ matrix.os == 'windows-latest' }}
         run: |
           set CYTHON_TRACE=1
-          pip install -e .
+          pip install -e .[dev]
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names

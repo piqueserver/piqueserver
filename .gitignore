@@ -69,3 +69,6 @@ htmlcov
 *~
 *.swp
 *.swo
+
+# setuptools-scm
+piqueserver/_version.py

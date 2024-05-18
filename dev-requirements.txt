@@ -1,8 +1,0 @@
-flake8
-coveralls
-pytest
-pytest-cov
-pytest-asyncio
-Sphinx
-tox
-sphinx_rtd_theme

@@ -1,0 +1,104 @@
+[build-system]
+requires = [
+    "setuptools ~= 69.0",
+    "setuptools-scm ~= 8.0",
+    "Cython ~= 3.0",
+    "wheel ~= 0.43",
+]
+
+# configure with setup.py
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools_scm]
+version_file = "piqueserver/_version.py"
+
+[project]
+name = "piqueserver"
+description = "Open-Source server implementation for Ace of Spades"
+readme = "README.rst"
+dynamic = ["version"]
+
+authors = [
+    { name = "Mathias Kærlev (matpow2)", email = "matpow2@gmail.com" },
+    { name = "Nate Shoffner", email = "nate.shoffner@gmail.com" },
+    { name = "NotAFile", email = "notafile@gmail.com" },
+    { name = "pyspades, PySnip and piqueserver contributors" },
+]
+
+maintainers = [
+    { name = "NotAFile", email = "notafile@gmail.com" },
+]
+
+keywords = [
+    "ace of spades",
+    "aos",
+    "server",
+    "pyspades",
+    "pysnip",
+    "piqueserver",
+]
+
+classifiers = [
+    "Intended Audience :: System Administrators",
+    "Development Status :: 5 - Production/Stable",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Unix",
+    "Operating System :: Microsoft :: Windows",
+    "Environment :: Console",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python",
+    "Programming Language :: Cython",
+    "Programming Language :: Python :: 3",
+    "Framework :: Twisted",
+    "Topic :: Games/Entertainment",
+    "Topic :: Games/Entertainment :: First Person Shooters",
+]
+
+requires-python = ">= 3.8"
+dependencies = [
+    "Jinja2 >= 3.0.0, <4",
+    "pyenet",
+    "toml",
+    "Pillow >= 5.1.0, <11",
+    "aiohttp >= 3.3.0, <3.8.0",
+    "packaging >= 19.0",
+
+    "Twisted",
+
+    # windows specific
+    "pypiwin32; platform_system==\"Windows\"",
+]
+
+[project.scripts]
+piqueserver = "piqueserver.run:main"
+
+[project.optional-dependencies]
+# '/from' command
+from = [
+    "geoip2 >= 2.9, <5.0",
+]
+
+# ssh script
+ssh = [
+    "Twisted[tls,conch]",
+]
+
+# development dependencies
+dev = [
+    "flake8",
+    "coveralls",
+    "pytest",
+    "pytest-cov",
+    "pytest-asyncio",
+    "Sphinx",
+    "tox",
+    "sphinx_rtd_theme",
+    "Twisted[tls,conch]",
+]
+
+[project.urls]
+Homepage = "https://piqueserver.org"
+Documentation = "https://docs.piqueserver.org/en/latest/"
+Repository = "https://github.com/piqueserver/piqueserver"
+Issues = "https://github.com/piqueserver/issues"
+Changelog = "https://github.com/piqueserver/piqueserver/releases"
