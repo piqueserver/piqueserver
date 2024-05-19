@@ -96,9 +96,12 @@ def revert_rotation(connection):
     """
     protocol = connection.protocol
     name = connection.name
-    maps = protocol.config['maps']
+    maps = protocol.config['rotation']
     protocol.set_map_rotation(maps)
-    protocol.irc_say("* %s reverted map rotation to %s" % (name, maps))
+
+    map_text = ', '.join(maps)
+    protocol.irc_say(f'* {name} reverted map rotation to {map_text}')
+    return f'You reverted the map rotation to {map_text}'
 
 
 @command('advancemap', 'advance', admin_only=True)
