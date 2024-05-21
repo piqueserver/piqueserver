@@ -12,8 +12,6 @@ An Ace of Spades 0.75 server based on
    link <https://riot.im/app/#/room/#piqueserver:matrix.org>`__)
 -  Discord: Join with `this invite link <https://discord.gg/w6Te7xC>`__
 -  Slack: Join with `this invite link <https://join.slack.com/t/piqueserver/shared_invite/enQtMjg5MDI3MTkwNTgxLTNhMDkyNDRkNzhiNmQyYjRkOTdjNGNkYzNhNTQ4NzZkY2JhZjQxYzIyMTQ0Y2JlYTI2ZGFjMTFmNjAwZTM2OGU>`__
--  IRC: (disabled due to spam) ``#piqueserver`` on freenode.net
-   (`web <http://webchat.freenode.net/?channels=%23piqueserver>`__)
 
 All of these are `bridged <https://matrix.org/docs/guides/faq.html#what-is-matrix>`__ together!
 
