@@ -483,6 +483,9 @@ class ServerProtocol(BaseProtocol):
     def on_game_end(self):
         pass
 
+    def on_game_start(self):
+        pass
+
     def on_world_update(self):
         pass
 
