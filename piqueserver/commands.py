@@ -427,7 +427,7 @@ def _handle_command(connection, command, parameters):
     if not has_permission(command_func, connection):
         return "You can't use this command"
 
-    argspec = inspect.signature(command_func, follow_wrapped=False)
+    argspec = inspect.signature(command_func, follow_wrapped=True)
 
     # all args
     positional_args = [
@@ -448,7 +448,7 @@ def _handle_command(connection, command, parameters):
         if param.kind == param.VAR_POSITIONAL
     ), None)
 
-    max_params = len(positional_args) - min_params - 1
+    max_params = max(0, len(positional_args) - 1)
     len_params = len(parameters)
 
     if len_params < min_params or \
