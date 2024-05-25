@@ -1,9 +1,0 @@
-[run]
-branch = True
-source =
-  piqueserver
-  pyspades
-omit =
-  piqueserver/scripts/*
-  piqueserver/game_modes/*
-plugins = Cython.Coverage
