@@ -9,8 +9,49 @@ requires = [
 # configure with setup.py
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+packages = ["piqueserver", "pyspades"]
+package-data.piqueserver = [
+    "piqueserver/config/**/*.*",
+]
+
 [tool.setuptools_scm]
 version_file = "piqueserver/_version.py"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+requires =
+    tox>=4
+
+env_list = py{38,39,310,311}
+
+[testenv]
+package = editable
+extras = dev, from, ssh
+description = run unit tests
+deps =
+    pytest>=8
+    pytest-sugar
+commands =
+    pytest tests/
+"""
+
+[tool.coverage.run]
+branch = true
+source = [
+    "piqueserver",
+    "pyspades",
+]
+
+omit = [
+    "piqueserver/scripts/*",
+    "piqueserver/game_modes/*",
+]
+
+plugins = [
+    "Cython.Coverage",
+]
 
 [project]
 name = "piqueserver"
