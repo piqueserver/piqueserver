@@ -10,9 +10,24 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["piqueserver", "pyspades"]
-package-data.piqueserver = [
-    "piqueserver/config/**/*.*",
+packages = [
+    # piqueserver
+    "piqueserver",
+    "piqueserver.core_commands",
+    "piqueserver.game_modes",
+    "piqueserver.scripts",
+    "piqueserver.utils",
+
+    # pyspades
+    "pyspades",
+
+    # data
+    "piqueserver.config",
+    "piqueserver.config.game_modes",
+    "piqueserver.config.scripts",
+    "piqueserver.config.maps",
+    "piqueserver.web",
+    "piqueserver.web.templates",
 ]
 
 [tool.setuptools_scm]
