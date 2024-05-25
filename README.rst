@@ -45,7 +45,7 @@ All of these are `bridged <https://matrix.org/docs/guides/faq.html#what-is-matri
 Requirements
 ~~~~~~~~~~~~
 
-Piqueserver requires python 3.7 and above
+Piqueserver requires Python 3.8 and above
 
 We currently provide builds for:
  - Linux x86_64
