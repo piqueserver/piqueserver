@@ -81,12 +81,9 @@ git (bleeding edge)
     python3 -m venv venv
     source venv/bin/activate
 
-    # note: requirements.txt includes all optional deps too
-    pip install -r requirements.txt
+    pip install .
 
-    python setup.py install
-
-    # now `piqueserver` will be available on the $PATH when venv active
+    # now `piqueserver` will be available on the $PATH when venv is active
 
 Arch Linux
 ~~~~~~~~~~
@@ -182,9 +179,7 @@ Use ``python3`` and ``pip`` to setup the development environment:
 .. code:: bash
 
     $ python3 -m venv venv && source venv/bin/activate
-    (venv) $ pip install -r requirements.txt
-    (venv) $ pip install -r dev-requirements.txt # includes dev tools
-    (venv) $ python setup.py develop             # install in-place
+    (venv) $ pip install -e '.[dev]' # install in-place
     (venv) $ deactivate # Deactivate virtualenv
 
 --------------
