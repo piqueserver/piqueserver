@@ -31,7 +31,8 @@ MAX_SERVER_NAME_SIZE = 31
 MAX_MAP_NAME_SIZE = 20
 MAX_GAME_MODE_SIZE = 7
 
-HOST = 'master.buildandshoot.com'
+BNS_MASTER = 'master.buildandshoot.com'
+HOSTS = [ BNS_MASTER ]
 
 
 class AddServer(Loader):
@@ -96,13 +97,16 @@ class MasterConnection(BaseConnection):
             self.defer = None
         callback = self.disconnect_callback
         if callback is not None:
-            callback()
+            callback(self)
         self.disconnect_callback = None
 
 
 def get_master_connection(protocol):
-    defer = Deferred()
-    connection = protocol.connect(MasterConnection, HOST, PORT, MASTER_VERSION)
-    connection.server_protocol = protocol
-    connection.defer = defer
-    return defer
+    defers = []
+    for host in HOSTS:
+        defer = Deferred()
+        connection = protocol.connect(MasterConnection, host, PORT, MASTER_VERSION)
+        connection.server_protocol = protocol
+        connection.defer = defer
+        defers.append(defer)
+    return defers
