@@ -63,7 +63,7 @@ class VoteMap:
         self.vote_interval = self.protocol.votemap_interval
         self.public_votes = self.protocol.votemap_public_votes
         self.extension_time = self.protocol.votemap_extension_time
-        rotation = [n.name.lower() for n in rotation]
+        rotation = [n.name for n in rotation]
         final_rotation = random.sample(rotation, min(len(rotation), 5))
         if self.extension_time > 0:
             final_rotation.append("extend")
@@ -119,10 +119,13 @@ class VoteMap:
 
     def vote(self, connection, mapname):
         mapname = mapname.lower()
-        if mapname not in self.picks:
+        map_match = next((n for n in self.picks if n.lower() == mapname),
+                         None)
+
+        if map_match is None:
             connection.send_chat("Map %s is not available." % mapname)
             return
-        self.votes[connection] = mapname
+        self.votes[connection] = map_match
         if self.public_votes:
             self.protocol.broadcast_chat('%s voted for %s.' % (connection.name,
                                                                mapname))
