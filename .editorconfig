@@ -13,6 +13,9 @@ indent_size = 4
 [*.{json,yml,yaml,gitignore,md,py,html,js,css,cpp,pxd,pyx,h,txt,cfg}]
 end_of_line = lf
 
+[*.{yml,yaml}]
+indent_size = 2
+
 [*.{bat,ps1}]
 end_of_line = crlf
 
