@@ -235,7 +235,7 @@ class ServerConnection(BaseConnection):
             self.on_hack_attempt(
                 'Invalid position data received')
             return
-        if not self.check_speedhack(x, y, z):
+        if not self.check_speedhack(x, y, z) or self.world_object.is_stuck():
             # vanilla behaviour
             self.set_location()
             return
