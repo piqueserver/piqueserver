@@ -237,6 +237,19 @@ cdef class Character(Object):
             self.fall_callback(ret)
         return 0
 
+    cpdef bint is_stuck(self):
+        x, y, z = self.position.get()
+
+        if z > 62:
+            return True
+
+        if self.world.map.get_solid(x, y, z) and \
+           self.world.map.get_solid(x, y, z + 1) and \
+           self.world.map.get_solid(x, y, z + 2):
+           return True
+
+        return False
+
     # properties
     property up:
         def __get__(self):
