@@ -7,12 +7,13 @@ Release thread:
 http://www.buildandshoot.com/viewtopic.php?t=2586
 """
 
+import math
 from pyspades.constants import CTF_MODE
 from pyspades.collision import vector_collision
 
 FLAG_SPAWN_POS = (256, 256)
 
-HIDE_POS = (0, 0, 63)
+HIDE_POS = (math.inf, math.inf, 128)
 
 DISABLED, ONE_CTF, REVERSE_ONE_CTF = range(3)
 

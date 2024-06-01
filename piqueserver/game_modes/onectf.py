@@ -2,12 +2,13 @@
 One CTF: CTF with a single intel, placed in the center.
 """
 
+import math
 from pyspades.constants import *
 from pyspades.collision import vector_collision
 
 FLAG_SPAWN_POS = (256, 256)
 
-HIDE_POS = (0, 0, 63)
+HIDE_POS = (math.inf, math.inf, 128)
 
 # 1CTF and R1CTF can be enabled via the map metadata. Enable it by setting
 # 'one_ctf' to 'True' or 'reverse_one_ctf' to 'True' in the extensions dictionary. ex:
