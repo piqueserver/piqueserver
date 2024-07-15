@@ -98,7 +98,6 @@ class ServerConnection(BaseConnection):
         self.total_blocks_removed = 0
         self.address = (address.host, address.port)
         self.respawn_time = protocol.respawn_time
-        self.rapids = RateLimiter(RAPID_WINDOW_ENTRIES, MAX_RAPID_SPEED)
         self.client_info = {}
         self.proto_extensions = {}  # type: Dict[int, int]
         self.line_build_start_pos = None
@@ -501,11 +500,6 @@ class ServerConnection(BaseConnection):
         self.last_block = current_time
         if (self.rapid_hack_detect and last_time is not None and
                 current_time - last_time < interval):
-            self.rapids.record_event(current_time)
-            if self.rapids.above_limit():
-                log.info('RAPID HACK: {events}',
-                         events=self.rapids.get_events())
-                self.on_hack_attempt('Rapid hack detected')
             return
         map_ = self.protocol.map
         x = contained.x
@@ -569,11 +563,6 @@ class ServerConnection(BaseConnection):
         self.last_block = current_time
         if (self.rapid_hack_detect and last_time is not None and
                 current_time - last_time < TOOL_INTERVAL[BLOCK_TOOL]):
-            self.rapids.record_event(current_time)
-            if self.rapids.above_limit():
-                log.info('RAPID HACK: {events}',
-                         events=self.rapids.get_events())
-                self.on_hack_attempt('Rapid hack detected')
             return
 
         map_ = self.protocol.map
