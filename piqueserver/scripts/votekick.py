@@ -334,7 +334,7 @@ def apply_script(protocol, connection, config):
                     reason = votekick.reason
                     votekick.end(S_RESULT_LEFT.format(
                         victim=self.name, victim_id=self.player_id))
-                    self.ban(reason, Votekick.ban_duration)
+                    self.ban(reason, votekick.ban_duration)
                 elif votekick.instigator is self:
                     # instigator leaves, votekick is called off
                     s = S_RESULT_INSTIGATOR_LEFT.format(
