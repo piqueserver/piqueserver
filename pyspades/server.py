@@ -32,7 +32,7 @@ from pyspades.master import get_master_connection
 from pyspades.team import Team
 from pyspades.entities import Territory
 # importing tc_data is a quick hack since this file writes into it
-from pyspades.player import ServerConnection, tc_data
+from pyspades.player import ServerConnection, check_nan, tc_data
 from pyspades import world
 from pyspades.bytes import ByteWriter
 from pyspades import contained as loaders
@@ -399,6 +399,9 @@ class ServerProtocol(BaseProtocol):
     def update_entities(self):
         map_obj = self.map
         for entity in self.entities:
+            if check_nan(entity.x, entity.y, entity.z):
+                continue
+
             moved = False
             if map_obj.get_solid(entity.x, entity.y, entity.z - 1):
                 moved = True
