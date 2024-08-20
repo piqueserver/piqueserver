@@ -56,6 +56,7 @@ RUBBERBAND_DISTANCE = 3
 
 MAX_TIMER_SPEED = 2000
 TIMER_WINDOW_ENTRIES = 40
+# left in here just in case a script depended on them, otherwise useless
 MAX_RAPID_SPEED = 60  # 1 minute
 RAPID_WINDOW_ENTRIES = 10
 
@@ -72,9 +73,11 @@ MAX_DIG_DISTANCE = 6
 HIT_TOLERANCE = 5.0
 CLIP_TOLERANCE = 10
 
+SPADE_TOOL_3X = 4
 TOOL_INTERVAL = {
     SPADE_TOOL: 0.1,
-    BLOCK_TOOL: 0.1,
+    SPADE_TOOL_3X: 0.9,
+    BLOCK_TOOL: 0.4,
     GRENADE_TOOL: 1.0
 }
 

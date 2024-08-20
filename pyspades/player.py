@@ -24,7 +24,7 @@ from pyspades.constants import (BLOCK_TOOL, CTF_MODE, ERROR_FULL,
                                 MELEE, MELEE_DISTANCE, MELEE_KILL,
                                 RAPID_WINDOW_ENTRIES, SPADE_TOOL,
                                 TC_CAPTURE_DISTANCE, TC_MODE, WEAPON_KILL,
-                                WEAPON_TOOL)
+                                WEAPON_TOOL, SPADE_TOOL_3X)
 from pyspades.mapgenerator import ProgressiveMapGenerator
 from pyspades.packet import call_packet_handler, register_packet_handler
 from pyspades.protocol import BaseConnection
@@ -489,6 +489,8 @@ class ServerConnection(BaseConnection):
             return
         if value == BUILD_BLOCK:
             interval = TOOL_INTERVAL[BLOCK_TOOL]
+        elif value == SPADE_DESTROY:
+            interval = TOOL_INTERVAL[SPADE_TOOL_3X]
         elif self.tool == WEAPON_TOOL:
             if self.weapon_object.is_empty():
                 return
