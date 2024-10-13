@@ -427,7 +427,7 @@ def _handle_command(connection, command, parameters):
     if not has_permission(command_func, connection):
         return "You can't use this command"
 
-    argspec = inspect.signature(command_func, follow_wrapped=True)
+    argspec = inspect.signature(command_func, follow_wrapped=False)
 
     # all args
     positional_args = [
