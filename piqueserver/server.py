@@ -64,7 +64,6 @@ from pyspades.vxl import VXLData
 
 log = Logger()
 
-
 def validate_team_name(name):
     if len(name) > 9:
         log.warn(
@@ -177,7 +176,11 @@ cmd_antispam_enable = config.option("enable_command_ratelimit", True)
 cmd_command_limit_size = config.option("command_ratelimit_amount", 4)
 cmd_command_limit_time = config.option(
     "command_ratelimit_period", "5s", cast=cast_duration)
-
+master_hosts = config.option("master_hosts", [
+    {'host': 'master.buildandshoot.com', 'port': 32886},
+    {'host': 'master1.aos.coffee', 'port': 32886},
+    {'host': 'master2.aos.coffee', 'port': 32886},
+])
 
 def ensure_dir_exists(filename: str) -> None:
     d = os.path.dirname(filename)
@@ -216,8 +219,8 @@ class FeatureProtocol(ServerProtocol):
     global_chat = True
     remote_console = None
     advance_call = None
-    master_reconnect_call = None
-    master = False
+    master: bool = False
+    master_hosts = []
     ip = None
     identifier = None
     command_antispam = False
@@ -338,6 +341,7 @@ class FeatureProtocol(ServerProtocol):
         self.command_antispam = cmd_antispam_enable.get()
         self.command_limit_size = cmd_command_limit_size.get()
         self.command_limit_time = cmd_command_limit_time.get()
+        self.master_hosts = master_hosts.get()
 
         # voting configuration
         self.default_ban_time = default_ban_duration.get()
@@ -594,8 +598,7 @@ class FeatureProtocol(ServerProtocol):
         self.help = self.format_lines(help_option.get())
         self.tips = self.format_lines(tips_option.get())
         self.rules = self.format_lines(rules_option.get())
-        if self.master_connection is not None:
-            self.master_connection.send_server()
+        self.master_pool.update_server()
 
     def format(self, value: str, extra: Optional[Dict[str, str]] = None) -> str:
         map_info = self.map_info
@@ -618,41 +621,12 @@ class FeatureProtocol(ServerProtocol):
             return
         return [self.format(line) for line in value]
 
-    def got_master_connection(self, client):
-        log.info('Master connection established.')
-        ServerProtocol.got_master_connection(self, client)
-
-    def master_disconnected(self, client=None):
-        ServerProtocol.master_disconnected(self, client)
-        if self.master and self.master_reconnect_call is None:
-            if client:
-                message = 'Master connection could not be established'
-            else:
-                message = 'Master connection lost'
-            log.info('{message}, reconnecting in 60 seconds...',
-                     message=message)
-            self.master_reconnect_call = reactor.callLater(
-                60, self.reconnect_master)
-
-    def reconnect_master(self):
-        self.master_reconnect_call = None
-        self.set_master()
-
-    def set_master_state(self, value):
-        if value == self.master:
+    def set_master_state(self, value: bool):
+        if self.master == value:
             return
+
         self.master = value
-        has_connection = self.master_connection is not None
-        has_reconnect = self.master_reconnect_call is not None
-        if value:
-            if not has_connection and not has_reconnect:
-                self.set_master()
-        else:
-            if has_reconnect:
-                self.master_reconnect_call.cancel()
-                self.master_reconnect_call = None
-            if has_connection:
-                self.master_connection.disconnect()
+        self.set_master()
 
     async def shutdown(self):
         """
