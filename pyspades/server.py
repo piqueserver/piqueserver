@@ -16,6 +16,7 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import random
+from typing import List, TypedDict
 import warnings
 from itertools import product
 import enet
@@ -28,7 +29,7 @@ from pyspades.constants import (
     CTF_MODE, TC_MODE, GAME_VERSION, MIN_TERRITORY_COUNT, MAX_TERRITORY_COUNT,
     UPDATE_FREQUENCY, UPDATE_FPS, NETWORK_FPS)
 from pyspades.types import IDPool
-from pyspades.master import get_master_connection
+from pyspades.master import MasterPool
 from pyspades.team import Team
 from pyspades.entities import Territory
 # importing tc_data is a quick hack since this file writes into it
@@ -42,6 +43,9 @@ from twisted.logger import Logger
 
 log = Logger()
 
+class MasterHostDict(TypedDict):
+    host: str
+    port: int
 
 class ServerProtocol(BaseProtocol):
     connection_class = ServerConnection
@@ -60,7 +64,6 @@ class ServerProtocol(BaseProtocol):
     server_prefix = '[*] '
     respawn_time = 5
     refill_interval = 20
-    master_connection = None
     speedhack_detect = True
     fog_color = (128, 232, 255)
     winning_player = None
@@ -74,13 +77,14 @@ class ServerProtocol(BaseProtocol):
     melee_damage = 100
     version = GAME_VERSION
     respawn_waves = False
+    master_hosts: List[MasterHostDict]
 
     def __init__(self, *arg, **kw):
         # +2 to allow server->master and master->server connection since enet
         # allocates peers for both clients and hosts. this is done at
         # enet-level, not application-level, so even for masterless-servers,
         # this should not allow additional players.
-        self.max_connections = self.max_players + 2
+        self.max_connections = self.max_players + 2 * len(self.master_hosts)
         BaseProtocol.__init__(self, *arg, **kw)
         self.entities = []
         self.players = {}
@@ -89,6 +93,7 @@ class ServerProtocol(BaseProtocol):
         self._create_teams()
 
         self.world = world.World()
+        self.master_pool = MasterPool(protocol=self)
         self.set_master()
 
         # safe position LUT
@@ -371,18 +376,16 @@ class ServerProtocol(BaseProtocol):
         return x, y, z
 
     def set_master(self):
+        self.master_pool.reset()
+
         if self.master:
-            get_master_connection(self).addCallbacks(
-                self.got_master_connection,
-                self.master_disconnected)
+            for host in self.master_hosts:
+                self.master_pool.add_descriptor(
+                    host=host['host'],
+                    port=host['port'],
+                )
 
-    def got_master_connection(self, connection):
-        self.master_connection = connection
-        connection.disconnect_callback = self.master_disconnected
-        self.update_master()
-
-    def master_disconnected(self, client=None):
-        self.master_connection = None
+            self.master_pool.up()
 
     def get_player_count(self):
         count = 0
@@ -392,9 +395,7 @@ class ServerProtocol(BaseProtocol):
         return count
 
     def update_master(self):
-        if self.master_connection is None:
-            return
-        self.master_connection.set_count(self.get_player_count())
+        self.master_pool.update_player_count(self.get_player_count())
 
     def update_entities(self):
         map_obj = self.map
