@@ -168,6 +168,9 @@ class MasterPool:
         self.descriptors = []
 
     def on_master_connect(self, client: MasterConnection):
+        if (count := self.protocol.get_player_count()) > 0:
+            client.update_player_count(count)
+
         log.info(
             'Connection to [{host}:{port}] was successful',
             host=client.descriptor.host,
