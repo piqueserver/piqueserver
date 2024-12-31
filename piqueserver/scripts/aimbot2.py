@@ -107,6 +107,7 @@ FOG_DISTANCE = 135.0
 FOG_DISTANCE2 = FOG_DISTANCE**2
 NEAR_MISS_COS = cos(NEAR_MISS_ANGLE * (pi / 180.0))
 HEADSHOT_SNAP_ANGLE_COS = cos(HEADSHOT_SNAP_ANGLE * (pi / 180.0))
+SHOTGUN_HITS_PER_FIRE = 8
 
 aimbot_pattern = re.compile(".*(aim|bot|ha(ck|x)|cheat).*", re.IGNORECASE)
 aimbot_config = config.section("aimbot")
@@ -157,7 +158,7 @@ def accuracy_player(player, name_info=True):
         smg_percent = 'None'
     if player.shotgun_count != 0:
         shotgun_percent = "{0:.1f}%".format(
-            (player.shotgun_hits / player.shotgun_count) * 100)
+            ((player.shotgun_hits / SHOTGUN_HITS_PER_FIRE) / player.shotgun_count) * 100)
     else:
         shotgun_percent = 'None'
 
@@ -422,7 +423,7 @@ def apply_script(protocol, connection, config):
                     if smg_perc >= SMG_KICK_PERC:
                         self.hit_percent_eject(smg_perc)
             elif self.weapon == SHOTGUN_WEAPON:
-                shotgun_perc = float(self.shotgun_hits) / \
+                shotgun_perc = (float(self.shotgun_hits) / SHOTGUN_HITS_PER_FIRE) / \
                     float(self.shotgun_count)
                 if self.shotgun_count >= SHOTGUN_KICK_MINIMUM:
                     if shotgun_perc >= SHOTGUN_KICK_PERC:
