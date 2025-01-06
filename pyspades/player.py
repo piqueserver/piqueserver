@@ -37,6 +37,8 @@ log = Logger()
 
 tc_data = loaders.TCState()
 
+# special characters to replace in chat messages
+MSG_SPECIAL_CHARACTER_MAP = str.maketrans({'\r': ' ', '\n': ' '})
 
 def check_nan(*values) -> bool:
     for value in values:
@@ -635,7 +637,9 @@ class ServerConnection(BaseConnection):
         if not self.name:
             return
 
-        value = contained.value
+        value: str = contained.value
+        value = value.translate(MSG_SPECIAL_CHARACTER_MAP)
+
         if len(value) > 108:
             log.info("TOO LONG MESSAGE ({chars} chars) FROM {name} (#{id})",
                      chars=len(value),
