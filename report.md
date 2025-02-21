@@ -62,13 +62,15 @@ We analyzed several complex functions using both manual counts and the Lizard to
    - **`do_move`:**  
      Moves a character within a 3D game environment.
    - **`join_squad`:**  
-The purpose of the functions is to manage the process of a player joining or leaving a squad. It has a number of different checks. It verifies that a player can join a squad, It determines whether the player is actually trying to change their current squad or follow preference. It also checks that there is space in the squad and if a player joins a squad, removes the player from an existing squad, if applicable. It also notifies the other player of the squad chang
+The purpose of the functions is to manage the process of a player joining or leaving a squad. It has a number of different checks. It verifies that a player can join a squad, It determines whether the player is actually trying to change their current squad or follow preference. It also checks that there is space in the squad and if a player joins a squad, removes the player from an existing squad, if applicable. It also notifies the other player of the squad change. Since the function does a lot of things is 
    - **`on_spawn`:**  
 The on_spawn function is a method that runs when a player spawns in the game. It seems one of its primary functions is handling squad-based spawning, ensuring that the player is near their squad members, and updating squad-related information like setting safe spawn locations.
 
 5. **Exceptions and Documentation:**  
-   - Did it take into account exceptions?   
-   - Is the documentation clear regarding possible outcomes.
+   - Did it take into account exceptions? 
+   The tools did 
+
+   - Is the documentation clear regarding possible outcomes: The second function does not have any documentation apart from small comments in the code which do not provide a significant amount of information.
 
 
 ---
@@ -108,7 +110,7 @@ We first employed the `coverage.py` tool to measure branch coverage across our c
   
 
 - **Integration:**  
-  Instead of integrating it into our build environment, we ran it from the command line and generated an HTML report for local review.
+  Instead of integrating it into our build environment, we ran it from the command line and generated an HTML report for local review, as indicated above.
 
 
 **Coverage Results (from `coverage.py`):**
@@ -157,7 +159,7 @@ We also developed a custom coverage tool that works as follows:
 ### Evaluation
 
 1. **Detail Level:**  
-   The measurement is very detailed, as we have inserted branch counters in each decision point.
+   The measurement is quite detailed, as we have inserted branch counters in each decision point.
 2. **Limitations:**  
    Our tool is not dynamic and requires manual instrumentation for each function under test.
 3. **Consistency:**  
