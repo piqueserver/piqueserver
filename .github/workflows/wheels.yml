@@ -20,7 +20,7 @@ jobs:
           fetch-tags: true
 
       - name: Build
-        uses: pypa/cibuildwheel@v2.18.0
+        uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_BUILD_FRONTEND: "build"
           CIBW_SKIP: "pp*"
