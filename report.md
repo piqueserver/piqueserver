@@ -67,7 +67,7 @@ The purpose of the functions is to manage the process of a player joining or lea
 The on_spawn function is a method that runs when a player spawns in the game. It seems one of its primary functions is handling squad-based spawning, ensuring that the player is near their squad members, and updating squad-related information like setting safe spawn locations.
 
 5. **Exceptions and Documentation:**  
-   - Did it take into account exceptions?
+   - Did it take into account exceptions?   
    - Is the documentation clear regarding possible outcomes.
 
 
@@ -93,9 +93,23 @@ We plan to refactor the complex functions to reduce their cyclomatic complexity.
 We first employed the `coverage.py` tool to measure branch coverage across our codebase.
 
 - **Documentation:**  
-  The tool is well-documented, though initially it was challenging to interpret the output intially. The results from the tool were hard to interpret before we realized that the tool, even with the branch flag set, would output branch and line coverage together. We therefore had to parse the output to only get the branch coverage since we are only interested in that.
+  The tool is well-documented, though initially it was challenging to interpret the output. The results from the tool were hard to interpret before we realized that the tool, even with the branch flag set, would output branch and line coverage together. We therefore had to parse the output to only get the branch coverage since we are only interested in that.
+
+- **How to run the tool**:
+ We use Coverage.py, version 7.6.12 with C extension and Python 3.10.12
+  In the root of the repository run: 
+  - coverage run --branch -m pytest
+  Followed by: 
+  - coverage json -o coverage.json
+  This generates a JSON file in the root of the directory. Then run the script disp.py which genereates a html page. To display it, run the following command in the root of the piqueserver directory. 
+  - python -m http.server
+  The report should then be visible at: http://localhost:8000/branch_coverage.html
+
+  
+
 - **Integration:**  
   Instead of integrating it into our build environment, we ran it from the command line and generated an HTML report for local review.
+
 
 **Coverage Results (from `coverage.py`):**
 - **First Function:**
