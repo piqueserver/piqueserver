@@ -22,7 +22,6 @@ jobs:
       - name: Build
         uses: pypa/cibuildwheel@v2.18.0
         env:
-          CIBW_PROJECT_REQUIRES_PYTHON: ">=3.8"
           CIBW_BUILD_FRONTEND: "build"
           CIBW_SKIP: "pp*"
         with:

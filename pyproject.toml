@@ -110,7 +110,7 @@ classifiers = [
     "Topic :: Games/Entertainment :: First Person Shooters",
 ]
 
-requires-python = ">= 3.8"
+requires-python = ">= 3.10, < 3.13"
 dependencies = [
     "Jinja2 >= 3.0.0, <4",
     "pyenet",
