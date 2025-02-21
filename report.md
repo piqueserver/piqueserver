@@ -27,7 +27,7 @@ The onboarding experience was not completely painless. The documentation is spli
   - Once the proper dependencies were downloaded (automatically into a virtual Python environment), the code ran without errors.
 
 - **Dependency Documentation:**  
-  - The required dependencies exist in a configuration file but are not explicitly stated in the documentation, leading to some confusion.
+  - The required dependencies exist in a configuration file but are not explicitly stated in the documentation. 
 
 ---
 
@@ -54,20 +54,22 @@ We analyzed several complex functions using both manual counts and the Lizard to
      - Third function: **20**
 
 3. **Observations:**
-   - The tool-based and manual methods yielded different results, highlighting that cyclomatic complexity can vary based on the counting method used.
+   - The tools vs. manual count did not get the same result for the functions. We have understood that it can differ a lot with how you implement the method of counting the cyclomatic complexity and even the formula varies between theories.
+
    - In our case, the complex functions are also long. Although there is a correlation between complexity and length, the function’s purpose ultimately guides its design.
 
 4. **Function Purposes:**
    - **`do_move`:**  
      Moves a character within a 3D game environment.
    - **`join_squad`:**  
-     Manages the process of a player joining or leaving a squad by performing several checks (e.g., verifying squad capacity, handling transitions between squads, and notifying other players).
+The purpose of the functions is to manage the process of a player joining or leaving a squad. It has a number of different checks. It verifies that a player can join a squad, It determines whether the player is actually trying to change their current squad or follow preference. It also checks that there is space in the squad and if a player joins a squad, removes the player from an existing squad, if applicable. It also notifies the other player of the squad chang
    - **`on_spawn`:**  
-     Handles player spawning with a focus on squad-based spawning, ensuring players appear near their squad members and updating spawn-related data.
+The on_spawn function is a method that runs when a player spawns in the game. It seems one of its primary functions is handling squad-based spawning, ensuring that the player is near their squad members, and updating squad-related information like setting safe spawn locations.
 
 5. **Exceptions and Documentation:**  
-   - The measurement methods did not always account for exceptions.
-   - Overall, the documentation is clear regarding possible outcomes, though there is room to improve details on edge cases.
+   - Did it take into account exceptions?
+   - Is the documentation clear regarding possible outcomes.
+
 
 ---
 
@@ -88,38 +90,55 @@ We plan to refactor the complex functions to reduce their cyclomatic complexity.
 ### Tools
 
 **Using `coverage.py`:**  
-We employed the `coverage.py` tool to measure branch coverage across our codebase.
+We first employed the `coverage.py` tool to measure branch coverage across our codebase.
 
 - **Documentation:**  
-  The tool is well-documented, though initially it was challenging to interpret the output because it combined branch and line coverage.
+  The tool is well-documented, though initially it was challenging to interpret the output intially. The results from the tool were hard to interpret before we realized that the tool, even with the branch flag set, would output branch and line coverage together. We therefore had to parse the output to only get the branch coverage since we are only interested in that.
 - **Integration:**  
   Instead of integrating it into our build environment, we ran it from the command line and generated an HTML report for local review.
 
 **Coverage Results (from `coverage.py`):**
 - **First Function:**
   - Branches: **18**
+  - Coverage before addings tests: **0%** since there were not tests for the function
   - Coverage after adding tests: **77.8%**
 - **Second Function:**
   - Branches: **24**
+  - Coverage before addings tests: **0%** since there were not tests for the function
   - Coverage after adding tests: **79.2%**
 - **Third Function:**
   - Branches: **12**
+  - Coverage before addings tests: **0%** since there were not tests for the function
   - Coverage after adding tests: **94%**
+
+- **Fourth function**
+  - Branches:
+  - Coverage before addings tests: 
+  - Coverage after adding tests: 
+
 
 ### Our Own Coverage Tool
 
 We also developed a custom coverage tool that works as follows:
 
 - **Implementation:**  
-  A Python dictionary is used where branch IDs are keys set to `False` initially. When a branch is executed by the tests, its corresponding value is set to `True`. After test execution, the tool returns the dictionary, indicating which branches were covered.
+  A Python dictionary is used where branch IDs are keys set to `False` initially. When a branch is executed by the tests, its corresponding value is set to `True`. After test execution, the tool returns the dictionary, indicating which branches were covered. Our tool supports......
 
 - **Results from Our Tool:**
   - **First Function (`do_move`):**
     - Branches: **13**
-    - Coverage after tests: 10 out of 13 (~77%)
+    -  Coverage after adding tests:: 10 out of 13 (~77%)
   - **Second Function:**
     - Branches: **16**
-    - Coverage after tests: 13 out of 16 (~81%)
+    -  Coverage after adding tests:: 13 out of 16 (~81%)
+
+  - **Third function:**
+    - Branches: 
+    - Coverage after adding tests:: 
+  - **Second Function:**
+    - Branches: **16**
+    - Coverage after adding tests:: 13 out of 16 (~81%)
+
 
 ### Evaluation
 
@@ -128,7 +147,7 @@ We also developed a custom coverage tool that works as follows:
 2. **Limitations:**  
    Our tool is not dynamic and requires manual instrumentation for each function under test.
 3. **Consistency:**  
-   The results for the second function differ between our tool and `coverage.py`, which indicates the need for further refinement.
+   The results for the second function differ between our tool and `coverage.py`. They differ because 
 
 ---
 
