@@ -44,83 +44,97 @@ def move(connection, *args):
     """
     do_move(connection, args)
 
-
-def do_move(connection, args, silent=False):
-    # R1: Allow a player to move themselves.
-    # R2: Allow an admin or a player with "move_others" permission to move another player.
-    # R3: Correctly interpret movement arguments as either a sector or coordinates.
-    # R4: If the "silent" flag is set, or if the player is invisible, the movement must be silent.
-    # R5: If movement args are incorrect must raise a "ValueError".
-    # R6: If a player tries to move another player without permission then must raise a "PermissionDenied" error.
-    # R7: The function must correctly update the player’s location.
-    # R8: If a player is not found, the function must handle the error properly.
-    # R9: If movement is successful, a message must be sent.
-
-    position = None
-    player = None
+def validate_and_parse_args(args):
+    """
+    Validate the argument count and determine the initial index.
+    
+    :params:
+    args: the movement arguments.
+    
+    return: length of args, the inital index based on args
+    """
     arg_count = len(args)
+    if arg_count not in {1, 2, 3, 4}:
+        raise ValueError('Wrong number of parameters!')
+    initial_index = 1 if arg_count in {2, 4} else 0
+    return arg_count, initial_index
 
-    initial_index = 1 if arg_count == 2 or arg_count == 4 else 0
 
-    # R3: Determine movement target
-    # the target position is a <sector>
-    if arg_count == 1 or arg_count == 2:
+def determine_movement_target(connection, args, arg_count, initial_index):
+    """
+    Determine the movement target as either a sector or coordinates.
+    
+    :params:
+    connection: the connection to the server
+    args: movement arguments
+    arg_count: length of movement arguments
+    initial_index: the start index
+
+
+    return: the player position coordinates
+    """
+    if arg_count in {1, 2}:  # Target sector
         x, y = coordinates(args[initial_index])
         x += 32
         y += 32
         z = connection.protocol.map.get_height(x, y) - 2
         position = args[initial_index].upper()
-    # the target position is <x> <y> <z>
-    elif arg_count == 3 or arg_count == 4:
+    else:  # Target coordinates
         x = min(max(0, int(args[initial_index])), 511)
         y = min(max(0, int(args[initial_index + 1])), 511)
-        z = min(max(0, int(args[initial_index + 2])),
-                connection.protocol.map.get_height(x, y) - 2)
+        z = min(max(0, int(args[initial_index + 2])), connection.protocol.map.get_height(x, y) - 2)
         position = '%d %d %d' % (x, y, z)
-    else:
-        # R5: Invalid argument count should raise ValueError
-        raise ValueError('Wrong number of parameters!')
+    return x, y, z, position
 
-    # R1, R2: Determine if the move is for self or another player
-    # no player specified
-    if arg_count == 1 or arg_count == 3:
-        # must be run by a player in this case because moving self
+
+def determine_player(connection, args, arg_count):
+    """
+    Determine whether the move is for self or another player.
+
+    :params:
+    connection: the connection to the server
+    args: the movement arguments
+    arg_count: the length of the movements arguments
+
+    return: the first movement argument or player name.
+    """
+    if arg_count in {1, 3}:  # Move self
         if connection not in connection.protocol.players.values():
-            # R8: Handle missing player error
             raise ValueError("Both player and target player are required")
-        player = connection.name
-    # player specified
-    elif arg_count == 2 or arg_count == 4:
-        # R6: Check permission before moving another player
+        return connection.name
+    elif arg_count in {2, 4}:  # Move other
         if not (connection.admin or connection.rights.move_others):
             raise PermissionDenied("moving other players requires the move_others right")
-        player = args[0]
+        return args[0]
+    return None
 
-    # R8: Retrieve target player
-    player = get_player(connection.protocol, player)
 
-    # R4: Determine if movement should be silent
+def do_move(connection, args, silent=False):
+    """
+    Moves a player to a specified location.
+
+    :params:
+    connection: The player issuing the move command
+    args: The movement target, either a sector or specific coordinates
+    silent: Whether the move should be silent.
+    """
+    arg_count, initial_index = validate_and_parse_args(args)
+    x, y, z, position = determine_movement_target(connection, args, arg_count, initial_index)
+    player_name = determine_player(connection, args, arg_count)
+    
+    player = get_player(connection.protocol, player_name)
     silent = connection.invisible or silent
-
-    # R7: Move the player
     player.set_location((x, y, z))
-
-    # R9: Generate movement message
+    
     if connection is player:
-        message = ('%s ' + ('silently ' if silent else '') + 'teleported to '
-                   'location %s')
-        message = message % (player.name, position)
+        message = ('%s ' + ('silently ' if silent else '') + 'teleported to location %s') % (player.name, position)
     else:
-        message = ('%s ' + ('silently ' if silent else '') + 'teleported %s '
-                   'to location %s')
-        message = message % (connection.name, player.name, position)
-
-    # R9: Send movement message
+        message = ('%s ' + ('silently ' if silent else '') + 'teleported %s to location %s') % (connection.name, player.name, position)
+    
     if silent:
         connection.protocol.irc_say('* ' + message)
     else:
         connection.protocol.broadcast_chat(message, irc=True)
-
 
 @command(admin_only=True)
 @target_player
