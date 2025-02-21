@@ -160,7 +160,7 @@ class MasterPool:
                 )
 
     def down(self):
-        for client in self.clients:
+        for client in list(self.clients):
             self.remove_client(client)
 
     def reset(self):
