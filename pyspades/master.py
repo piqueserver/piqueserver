@@ -128,15 +128,19 @@ class MasterPool:
         self.descriptors += [descriptor]
 
     def add_client(self, desc: MasterHostDescriptor):
-        connection = self.protocol.connect(
-            MasterConnection, desc.host, desc.port, MASTER_VERSION)
+        try:
+            connection = self.protocol.connect(
+                MasterConnection, desc.host, desc.port, MASTER_VERSION)
+        except OSError as error:
+            self.on_master_disconnect(client=None, descriptor=desc, reason=repr(error))
+            return
 
         connection.server_protocol = self.protocol
         connection.descriptor = desc
         connection.on_master_connect = \
             lambda: self.on_master_connect(connection)
         connection.on_master_disconnect = \
-            lambda: self.on_master_disconnect(connection)
+            lambda: self.on_master_disconnect(connection, desc, reason='disconnected')
 
         self.clients += [connection]
 
@@ -149,15 +153,7 @@ class MasterPool:
 
     def up(self):
         for desc in self.descriptors:
-            try:
-                self.add_client(desc)
-            except OSError as error:
-                log.error(
-                    'Could not add master client [{host}:{port}]: {error}',
-                    host=desc.host,
-                    port=desc.port,
-                    error=error,
-                )
+            self.add_client(desc)
 
     def down(self):
         for client in list(self.clients):
@@ -177,21 +173,29 @@ class MasterPool:
             port=client.descriptor.port,
         )
 
-    def on_master_disconnect(self, client: MasterConnection):
-        if client.was_once_connected:
-            message = 'Disconnected from [{host}:{port}], reconnecting in 60s'
+    def on_master_disconnect(
+        self,
+        client: MasterConnection | None,
+        descriptor: MasterHostDescriptor,
+        reason: str,
+    ):
+        if client is not None and client.was_once_connected:
+            message = 'Disconnected from [{host}:{port}] ({reason}), reconnecting in 60s'
         else:
             # connection failure instead of disconnect
-            message = 'Connection to [{host}:{port}] failed, retrying in 60s'
+            message = 'Connection to [{host}:{port}] failed ({reason}), retrying in 60s'
 
         log.info(
             message,
-            host=client.descriptor.host,
-            port=client.descriptor.port,
+            host=descriptor.host,
+            port=descriptor.port,
+            reason=reason,
         )
 
-        self.remove_client(client)
-        reactor.callLater(60, lambda: self.add_client(client.descriptor))
+        if client is not None:
+            self.remove_client(client)
+
+        reactor.callLater(5, lambda: self.add_client(descriptor))
 
     def update_server(self):
         for client in self.clients:
