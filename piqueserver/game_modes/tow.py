@@ -3,6 +3,21 @@ Tug of War game mode, where you must progressively capture the enemy CPs in a
 straight line to win.
 
 Maintainer: mat^2
+
+Custom map extensions:
+
+    `tow_locations`: Specify the locations of capture points as a tuple of (x,y)
+coords. It can be as long as you want, but it must have at least 4 coordinates
+
+    `tow_move_spawn`: Set to false to keep the spawnpoint at the first and last
+CP instead of moving with each territory captured
+
+    `tow_use_custom_spawn_function`: Set this to true if you want to use a custom
+get_spawn_location function in your map.txt. You can get the current capture point
+by doing `connection.team.spawn_cp.x` and `connection.team.spawn_cp.y`. To check
+if it's tow, you can use `if connection.protocol.game_mode_name == "tow":`
+
+Example map: https://codeberg.org/ashy/SolarSystem/src/branch/main/dist/SolarSystem.txt
 """
 
 import random
@@ -10,8 +25,7 @@ import math
 from pyspades.constants import TC_MODE
 from pyspades.server import Territory
 
-# Whether to move spawn to the front lines as the game goes on or keep it at the first and last capture point
-MOVE_SPAWN = False
+MOVE_SPAWN = True # Whether to move spawn to the front lines as the game goes on or keep it at the first and last capture point
 
 # Procedural generation parameters for when capture points are not specified in map.txt files
 CP_COUNT = 6 # Number of capture points. Must be at least 2
@@ -65,6 +79,10 @@ def get_point(x, y, magnitude, angle):
 def apply_script(protocol, connection, config):
     class TugConnection(connection):
         def get_spawn_location(self):
+            extensions = self.protocol.map_info.extensions
+            if "tow_use_custom_spawn_function" in extensions and extensions["tow_use_custom_spawn_function"] == True:
+                return super().get_spawn_location()
+            
             if self.team.spawn_cp is None:
                 base = self.team.last_spawn
             else:
@@ -87,6 +105,11 @@ def apply_script(protocol, connection, config):
             return entities[index]
         
         def update_cps(self, entities):
+            extensions = self.map_info.extensions
+            move_spawn = MOVE_SPAWN
+            if "tow_move_spawn" in extensions:
+                move_spawn = extensions["tow_move_spawn"]
+            
             prev = None
             for i, curr in enumerate(entities):
                 if prev is not None:
@@ -94,7 +117,7 @@ def apply_script(protocol, connection, config):
                         # Blue -> Green
                         self.blue_team.cp  = curr
                         self.green_team.cp = prev
-                        if MOVE_SPAWN:
+                        if move_spawn:
                             self.blue_team.spawn_cp  = self.get_cp(entities, i - 2)
                             self.green_team.spawn_cp = self.get_cp(entities, i + 1)
                         else:
@@ -106,7 +129,7 @@ def apply_script(protocol, connection, config):
                         # Blue -> Neutral
                         self.blue_team.cp  = curr
                         self.green_team.cp = curr
-                        if MOVE_SPAWN:
+                        if move_spawn:
                             self.blue_team.spawn_cp  = self.get_cp(entities, i - 2)
                             self.green_team.spawn_cp = self.get_cp(entities, i + 1)
                         else:
@@ -199,7 +222,7 @@ def apply_script(protocol, connection, config):
                     continue # Must not add extra spawns to entities list
                 elif i < center: # Blue
                     entity.team = self.blue_team
-                elif i > center: #Green
+                elif i > center: # Green
                     entity.team = self.green_team
                 else: # Neutral
                     entity.team = None
