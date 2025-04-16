@@ -632,42 +632,46 @@ class ServerConnection(BaseConnection):
         self.protocol.broadcast_contained(contained, save=True)
         self.protocol.update_entities()
 
-    @register_packet_handler(loaders.ChatMessage)
-    def on_chat_message_recieved(self, contained: loaders.ChatMessage) -> None:
-        if not self.name:
+@register_packet_handler(loaders.ChatMessage)
+def on_chat_message_recieved(self, contained: loaders.ChatMessage) -> None:
+    if not self.name:
+        return
+
+    value: str = contained.value
+    value = value.translate(MSG_SPECIAL_CHARACTER_MAP)
+
+    if len(value) > 108:
+        log.info("TOO LONG MESSAGE ({chars} chars) FROM {name} (#{id})",
+                 chars=len(value),
+                 name=self.name,
+                 id=self.player_id)
+
+    value = value[:108]
+    if value.startswith('/'):
+        self.on_command(*parse_command(value[1:]))
+    else:
+        global_message = contained.chat_type == CHAT_ALL
+        result = self.on_chat(value, global_message)
+        if result is False:
             return
-
-        value: str = contained.value
-        value = value.translate(MSG_SPECIAL_CHARACTER_MAP)
-
-        if len(value) > 108:
-            log.info("TOO LONG MESSAGE ({chars} chars) FROM {name} (#{id})",
-                     chars=len(value),
-                     name=self.name,
-                     id=self.player_id)
-
-        value = value[:108]
-        if value.startswith('/'):
-            self.on_command(*parse_command(value[1:]))
+        elif result is not None:
+            value = result
+        
+        # Here we can add support for custom message types
+        contained.chat_type = contained.custom_type if hasattr(contained, 'custom_type') else CHAT_ALL
+        contained.value = value
+        contained.player_id = self.player_id
+        
+        if global_message:
+            team = None
         else:
-            global_message = contained.chat_type == CHAT_ALL
-            result = self.on_chat(value, global_message)
-            if result == False:
-                return
-            elif result is not None:
-                value = result
-            contained.chat_type = CHAT_ALL if global_message else CHAT_TEAM
-            contained.value = value
-            contained.player_id = self.player_id
-            if global_message:
-                team = None
-            else:
-                team = self.team
-            for player in self.protocol.players.values():
-                if not player.deaf:
-                    if team is None or team is player.team:
-                        player.send_contained(contained)
-            self.on_chat_sent(value, global_message)
+            team = self.team
+        
+        for player in self.protocol.players.values():
+            if not player.deaf:
+                if team is None or team is player.team:
+                    player.send_contained(contained)
+        self.on_chat_sent(value, global_message)
 
     @register_packet_handler(loaders.FogColor)
     def on_fog_color_recieved(self, contained):
