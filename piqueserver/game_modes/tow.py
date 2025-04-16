@@ -10,6 +10,9 @@ import math
 from pyspades.constants import TC_MODE
 from pyspades.server import Territory
 
+# Whether to move spawn to the front lines as the game goes on or keep it at the first and last capture point
+MOVE_SPAWN = False
+
 # Procedural generation parameters for when capture points are not specified in map.txt files
 CP_COUNT = 6 # Number of capture points. Must be at least 2
 ANGLE = 65
@@ -21,7 +24,6 @@ FIX_ANGLE = math.radians(4)
 HELP = [
     "In Tug of War, you capture your opponents' front CP to advance."
 ]
-
 
 class TugTerritory(Territory):
     disabled = True
@@ -62,7 +64,6 @@ def get_point(x, y, magnitude, angle):
 
 def apply_script(protocol, connection, config):
     class TugConnection(connection):
-
         def get_spawn_location(self):
             if self.team.spawn_cp is None:
                 base = self.team.last_spawn
@@ -93,16 +94,24 @@ def apply_script(protocol, connection, config):
                         # Blue -> Green
                         self.blue_team.cp  = curr
                         self.green_team.cp = prev
-                        self.blue_team.spawn_cp  = self.get_cp(entities, i - 2)
-                        self.green_team.spawn_cp = self.get_cp(entities, i + 1)
+                        if MOVE_SPAWN:
+                            self.blue_team.spawn_cp  = self.get_cp(entities, i - 2)
+                            self.green_team.spawn_cp = self.get_cp(entities, i + 1)
+                        else:
+                            self.blue_team.spawn_cp = self.blue_team.last_spawn
+                            self.green_team.spawn_cp = self.green_team.last_spawn
                         curr.disabled = False
                         prev.disabled = False
                     elif prev.team is not None and prev.team.id == self.blue_team.id and curr.team == None:
                         # Blue -> Neutral
                         self.blue_team.cp  = curr
                         self.green_team.cp = curr
-                        self.blue_team.spawn_cp  = self.get_cp(entities, i - 2)
-                        self.green_team.spawn_cp = self.get_cp(entities, i + 1)
+                        if MOVE_SPAWN:
+                            self.blue_team.spawn_cp  = self.get_cp(entities, i - 2)
+                            self.green_team.spawn_cp = self.get_cp(entities, i + 1)
+                        else:
+                            self.blue_team.spawn_cp = self.blue_team.last_spawn
+                            self.green_team.spawn_cp = self.green_team.last_spawn
                         curr.disabled = False
                     else: # Disable all other capture points.
                         curr.disabled = True
