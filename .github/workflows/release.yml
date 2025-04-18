@@ -1,0 +1,30 @@
+name: Pypi Release
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  call-workflow:
+    uses: ./.github/workflows/wheels.yml
+
+  upload_pypi:
+    needs: [build_wheels, build_sdist]
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+    if: github.event_name == 'release' && github.event.action == 'published'
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          # unpacks all CIBW artifacts into dist/
+          pattern: cibw-*
+          path: dist
+          merge-multiple: true
+
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # To test: repository-url: https://test.pypi.org/legacy/
+

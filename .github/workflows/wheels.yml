@@ -4,6 +4,7 @@ on:
   release:
     types: [created]
 
+  workflow_call:
   workflow_dispatch:
 
 jobs:
@@ -11,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, ubuntu24.04-arm, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +24,8 @@ jobs:
         uses: pypa/cibuildwheel@v2.22.0
         env:
           CIBW_BUILD_FRONTEND: "build"
-          CIBW_SKIP: "pp*"
+          CIBW_ARCHS: "auto64"
+          CIBW_ARCHS_MACOS: "universal2"
         with:
           output-dir: wheelhouse
 
@@ -38,11 +40,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Build sdist
         run: pipx run build --sdist
 
       - uses: actions/upload-artifact@v4
         with:
+          name: cibw-sdist
           path: dist/*.tar.gz
 
