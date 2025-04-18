@@ -54,7 +54,7 @@ Use the download-wheels tool to fetch the wheels from github actions.
 ::
 
     cd dist/
-    gh release dowload <git tag>
+    gh release download <git tag>
 
 Update Github release
 ---------------------

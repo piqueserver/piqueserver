@@ -31,7 +31,7 @@ Installing from source
     # we make git tags for every version so you can checkout out to specific version if you want
     # git checkout v0.1.3
     # create a new python3 venv
-    virtualenv -p python3 venv
+    python3 -m venv venv
     source venv/bin/activate
     # install piqueserver
     pip install .
