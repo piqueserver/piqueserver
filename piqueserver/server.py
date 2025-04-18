@@ -243,6 +243,7 @@ class FeatureProtocol(ServerProtocol):
     default_fog = (128, 232, 255)
 
     def __init__(self, interface: bytes, config_dict: Dict[str, Any]) -> None:
+        self.initialized = False
         # logfile path relative to config dir if not abs path
         log_filename = logfile.get()
         if log_filename.strip():  # catches empty filename
@@ -422,6 +423,9 @@ class FeatureProtocol(ServerProtocol):
 
         self.master = register_master_option.get()
         self.set_master()
+        if not self.initialized:
+            self.initialized = True
+            self.on_game_start()
 
     async def get_external_ip(self, ip_getter: str) -> Iterator[Deferred]:
         log.info(
@@ -546,6 +550,8 @@ class FeatureProtocol(ServerProtocol):
         self.set_map(self.map_info.data)
         self.set_time_limit(self.map_info.time_limit)
         self.update_format()
+        if self.initialized:
+            self.on_game_start()
 
     def set_server_name(self, name: str) -> None:
         name_option.set(name)
@@ -866,6 +872,8 @@ class FeatureProtocol(ServerProtocol):
             self.irc_say('Round ended!', me=True)
         elif next(self.win_count) % self.advance_on_win == 0:
             self.advance_rotation('Game finished!')
+            return
+        self.on_game_start()
 
     def on_advance(self, map_name: str) -> None:
         pass
