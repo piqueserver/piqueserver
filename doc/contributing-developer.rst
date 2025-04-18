@@ -48,11 +48,10 @@ If you already are in your virtual env and wish to test something quickly,
 
    # make sure the venv is setup and all deps are installed
    python -m venv venv && source venv/bin/activate
-   pip install -r requirements.txt -r dev-requirements.txt
 
    # build the cython extensions inplace
    # otherwise pytest has issues
-   python setup.py build_ext --inplace
+   pip install -e .
 
    # and test away!
    pytest

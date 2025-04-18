@@ -32,7 +32,7 @@ COPY piqueserver/ /usr/src/app/piqueserver/
 COPY setup.py COPYING.txt CREDITS.txt LICENSE README.rst /usr/src/app/
 
 RUN apk add --no-cache --virtual .build-deps-server gcc musl-dev g++ \
-    && STDCPP_STATIC=1 python ./setup.py install \
+    && STDCPP_STATIC=1 pip install . \
     && apk del .build-deps-server \
     && cd / && rm -rf /usr/src/app
 
