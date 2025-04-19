@@ -131,7 +131,7 @@ def apply_script(protocol, connection, config):
                         self.green_team.cp = curr
                         if move_spawn:
                             self.blue_team.spawn_cp  = self.get_cp(entities, i - 2)
-                            self.green_team.spawn_cp = self.get_cp(entities, i + 1)
+                            self.green_team.spawn_cp = self.get_cp(entities, i + 2)
                         else:
                             self.blue_team.spawn_cp = self.blue_team.last_spawn
                             self.green_team.spawn_cp = self.green_team.last_spawn
