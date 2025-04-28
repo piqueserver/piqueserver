@@ -1,7 +1,7 @@
 Installation
 ============
 
-.. note:: piqueserver only supports python 3.7 and above
+.. note:: piqueserver only supports python 3.10 and above
 
 
 All platforms
@@ -31,12 +31,10 @@ Installing from source
     # we make git tags for every version so you can checkout out to specific version if you want
     # git checkout v0.1.3
     # create a new python3 venv
-    virtualenv -p python3 venv
+    python3 -m venv venv
     source venv/bin/activate
-    # install deps.
-    pip install -r requirements.txt
     # install piqueserver
-    python setup.py install
+    pip install .
 
     # don't forget to deactivate the venv when finished!
     deactivate
@@ -52,7 +50,7 @@ Installation from source
     Most of the piqueserver team uses Linux and we aren't experienced with Cython on windows. 
     If you can help us improve windows support we'd greatly appreciate it.
 
-Tricky bit for windows is to get Cython working. 
+Tricky bit for windows is to get Cython working.
 
 * Install Visual C++ compiler please follow `this guide <https://wiki.python.org/moin/WindowsCompilers>`_.
 * Don't forget to upgrade `setuptools`
@@ -65,5 +63,5 @@ Tricky bit for windows is to get Cython working.
 
     cd piqueserver
     pip3 install -r requirements.txt
-    python setup.py install
+    pip install .
 
