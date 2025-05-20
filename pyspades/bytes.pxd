@@ -1,6 +1,7 @@
+from libc.math cimport NAN
+
 DEF INT_ERROR = -0xFFFFFFFF >> 1
 DEF LONG_LONG_ERROR = -0xFFFFFFFFFFFFFFFF >> 1
-DEF FLOAT_ERROR = float('nan')
 
 cdef extern from "<sstream>" namespace "std":
     cdef cppclass stringstream:
@@ -20,7 +21,7 @@ cdef class ByteReader:
                         except INT_ERROR
     cpdef long long readInt(self, bint unsigned = ?, bint big_endian = ?) \
                             except LONG_LONG_ERROR
-    cpdef float readFloat(self, bint big_endian = ?) except? FLOAT_ERROR
+    cpdef float readFloat(self, bint big_endian = ?) except? NAN
     cpdef bytes readString(self, int size = ?)
     cpdef ByteReader readReader(self, int size = ?)
     cpdef int dataLeft(self)
