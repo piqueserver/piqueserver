@@ -45,6 +45,9 @@ log = Logger()
 
 NICKNAME_SPECIAL_CHARS = str.maketrans({
     '%': '',
+    '#': '',
+    '\r': '',
+    '\n': '',
 })
 
 class MasterHostDict(TypedDict):
