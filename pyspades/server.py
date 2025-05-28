@@ -357,6 +357,8 @@ class ServerProtocol(BaseProtocol):
         Returns the fixed name.
         '''
         name = name.translate(NICKNAME_SPECIAL_CHARS)
+        if not name:
+            name = 'Deuce'
         new_name = name
         names = [p.name.lower() for p in self.players.values()]
         i = 0
