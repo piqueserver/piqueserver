@@ -37,8 +37,8 @@ log = Logger()
 
 tc_data = loaders.TCState()
 
-# special characters to replace in chat messages
-MSG_SPECIAL_CHARACTER_MAP = str.maketrans({'\r': ' ', '\n': ' '})
+# messages that contain these characters will be dropped
+BANNED_MESSAGE_CHARACTERS = ['\r', '\n']
 
 def check_nan(*values) -> bool:
     for value in values:
@@ -638,7 +638,11 @@ class ServerConnection(BaseConnection):
             return
 
         value: str = contained.value
-        value = value.translate(MSG_SPECIAL_CHARACTER_MAP)
+        if any(c in BANNED_MESSAGE_CHARACTERS for c in value):
+            log.info("Dropped message with special characters from {name} (#{id})",
+                     name=self.name,
+                     id=self.player_id)
+            return
 
         if len(value) > 108:
             log.info("TOO LONG MESSAGE ({chars} chars) FROM {name} (#{id})",
