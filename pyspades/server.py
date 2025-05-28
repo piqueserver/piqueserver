@@ -43,6 +43,10 @@ from twisted.logger import Logger
 
 log = Logger()
 
+NICKNAME_SPECIAL_CHARS = str.maketrans({
+    '%': '',
+})
+
 class MasterHostDict(TypedDict):
     host: str
     port: int
@@ -342,14 +346,14 @@ class ServerProtocol(BaseProtocol):
             if player.team is not None:
                 player.spawn()
 
-    def get_name(self, name):
+    def get_name(self, name: str):
         '''
         Sanitizes `name` and modifies it so that it doesn't
         collide with other names connected to the server.
 
         Returns the fixed name.
         '''
-        name = name.replace('%', '')
+        name = name.translate(NICKNAME_SPECIAL_CHARS)
         new_name = name
         names = [p.name.lower() for p in self.players.values()]
         i = 0
