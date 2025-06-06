@@ -397,8 +397,7 @@ class FeatureProtocol(ServerProtocol):
         map_load_d.addCallback(lambda x: self._post_init())
 
         ip_getter = ip_getter_option.get()
-        if ip_getter:
-            ensureDeferred(as_deferred(self.get_external_ip(ip_getter)))
+        ensureDeferred(as_deferred(self.print_identifiers(ip_getter)))
 
         self.new_release = None
         notify_new_releases = config.option(
@@ -423,7 +422,14 @@ class FeatureProtocol(ServerProtocol):
         self.master = register_master_option.get()
         self.set_master()
 
-    async def get_external_ip(self, ip_getter: str) -> Iterator[Deferred]:
+    async def print_identifiers(self, ip_getter: str):
+        if ip_getter:
+            await self.get_external_ip(ip_getter)
+
+        log.info('Local aos identifier: aos://16777343:{port}',
+                 port=self.port)
+
+    async def get_external_ip(self, ip_getter: str):
         log.info(
             ('Retrieving external IP from {ip_getter} to generate server'
              ' identifier.'),
