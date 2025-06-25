@@ -121,7 +121,7 @@ def apply_script(protocol, connection, config):
                     self.tool is SPADE_TOOL):
                 if minx <= position.x <= maxx and miny <= position.y <= maxy:
                     self.send_chat(
-                        'You can\'t destroy your team\'s'
+                        'You can\'t destroy your team\'s '
                         'blocks in this area. Attack the enemy\'s tower!')
                     return False
 
@@ -133,11 +133,11 @@ def apply_script(protocol, connection, config):
             if can_shoot_blocks:
                 if self.tool is WEAPON_TOOL:
                     self.send_chat(
-                        'You must be closer to the enemy\'s'
+                        'You must be closer to the enemy\'s '
                         'base to shoot blocks!')
                 else:
                     self.send_chat(
-                        'You must be closer to the enemy\'s'
+                        'You must be closer to the enemy\'s '
                         'base to grenade blocks!')
                 return False
             return connection.on_block_destroy(self, x, y, z, mode)
