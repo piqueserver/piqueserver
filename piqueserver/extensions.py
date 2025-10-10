@@ -1,6 +1,7 @@
 
 import os
-import importlib
+import importlib.util
+import importlib.machinery
 
 from twisted.logger import Logger
 
