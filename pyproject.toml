@@ -116,7 +116,7 @@ dependencies = [
     "pyenet",
     "toml",
     "Pillow >= 5.1.0, <11",
-    "aiohttp >= 3.3.0, < 3.12.0",
+    "aiohttp >= 3.3.0, < 3.14.0",
     "packaging >= 19.0",
 
     "Twisted",
