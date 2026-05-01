@@ -54,21 +54,19 @@ cdef class Generator:
 
 cdef class VXLData:
     def __init__(self, fp = None):
-        cdef unsigned char * c_data
-        if fp is not None:
+        if isinstance(fp, VXLData):
+            self.map = copy_map((<VXLData> fp).map)
+        elif fp is not None:
             data = fp.read()
-            c_data = data
+            self.map = load_vxl(<unsigned char *> data)
         else:
-            c_data = NULL
-        self.map = load_vxl(c_data)
+            self.map = load_vxl(NULL)
 
     def load_vxl(self, c_data = None):
         self.map = load_vxl(c_data)
 
     def copy(self):
-        cdef VXLData map = VXLData()
-        map.map = copy_map(self.map)
-        return map
+        return VXLData(self)
 
     def get_point(self, int x, int y, int z):
         color = self.get_color(x, y, z)
