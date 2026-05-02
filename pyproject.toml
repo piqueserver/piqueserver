@@ -131,7 +131,7 @@ piqueserver = "piqueserver.run:main"
 [project.optional-dependencies]
 # '/from' command
 from = [
-    "geoip2 >= 2.9, <5.0",
+    "geoip2 >= 2.9, < 6.0",
 ]
 
 # ssh script
