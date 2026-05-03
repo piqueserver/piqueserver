@@ -16,7 +16,7 @@
 # along with pyspades.  If not, see <http://www.gnu.org/licenses/>.
 
 import random
-from typing import List, TypedDict
+from typing import List, Tuple, TypedDict
 import warnings
 from itertools import product
 import enet
@@ -85,6 +85,12 @@ class ServerProtocol(BaseProtocol):
     version = GAME_VERSION
     respawn_waves = False
     master_hosts: List[MasterHostDict]
+    # (extension_id, version) lists derived from the per-extension state
+    # configuration. available is what the server advertises to clients;
+    # required is the subset clients must advertise back or be kicked.
+    # both default to empty so embedders/tests don't have to set them.
+    available_proto_extensions: List[Tuple[int, int]] = []
+    required_proto_extensions: List[Tuple[int, int]] = []
 
     def __init__(self, *arg, **kw):
         # +2 to allow server->master and master->server connection since enet
