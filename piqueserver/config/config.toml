@@ -85,6 +85,20 @@ scripts = [
 # number of /login attempts allowed before players are auto-kicked (default: 1)
 login_retries = 3
 
+# per-extension state for the protocol extensions piqueserver knows about.
+# any known extension you don't list here is treated as "disabled".
+# valid states:
+#   "enabled"  - server advertises it; clients may use it.
+#   "disabled" - server doesn't advertise it.
+#   "required" - server advertises it and kicks clients that don't
+#                support it back. clients with the "kick reason"
+#                extension see a descriptive message; others get the
+#                generic wrong-version dialog.
+proto_extensions = [
+  ["chat type", "enabled"],
+  ["kick reason", "enabled"],
+]
+
 # MAP
 # maps listed in the rotation
 # these names are the name of the map vxl/txt files without the file extensions
