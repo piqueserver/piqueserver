@@ -725,7 +725,13 @@ class ServerConnection(BaseConnection):
 
         # send extension info to clients that support this packet.
         # skip openspades <= 0.1.3 https://github.com/piqueserver/piqueserver/issues/504
-        if contained.client == 'o' and contained.version <= (0, 1, 3):
+        # unless the server requires extensions, in which case those clients
+        # also need a chance to advertise what they support before we decide
+        # whether to kick them.
+        skip_old_openspades = (contained.client == 'o'
+                               and contained.version <= (0, 1, 3)
+                               and not self.protocol.required_proto_extensions)
+        if skip_old_openspades:
             log.debug("not sending version request to OpenSpades <= 0.1.3")
         else:
             ext_info = loaders.ProtocolExtensionInfo()
