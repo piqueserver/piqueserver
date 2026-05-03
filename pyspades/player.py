@@ -144,6 +144,43 @@ class ServerConnection(BaseConnection):
         log.debug("received extinfo {extinfo} from {player}",
                   extinfo=self.proto_extensions,
                   player=self)
+        self._enforce_required_extensions()
+
+    def _missing_required_extensions(self):
+        return [
+            (ext_id, min_ver)
+            for ext_id, min_ver in self.protocol.required_proto_extensions
+            if self.proto_extensions.get(ext_id, -1) < min_ver
+        ]
+
+    def _enforce_required_extensions(self) -> bool:
+        """Kick the player if any required extension is missing.
+
+        Returns True if a kick was issued.
+        """
+        if self.local or self.disconnected:
+            return False
+        missing = self._missing_required_extensions()
+        if not missing:
+            return False
+        log.info("{player} kicked: missing required protocol extensions {missing}",
+                 player=self, missing=missing)
+        if EXTENSION_KICKREASON in self.proto_extensions:
+            self.disconnect(
+                ERROR_KICKED,
+                reason="Missing required client extension: " + ", ".join(
+                    "{} v{}".format(EXTENSION_NAMES.get(ext_id, "id %d" % ext_id),
+                                    min_ver)
+                    for ext_id, min_ver in missing
+                ),
+            )
+        else:
+            # vanilla and other clients without the kick-reason extension
+            # have no way to surface a custom string, so reuse the existing
+            # "wrong version" dialog — it already conveys "your client and
+            # this server don't agree on the protocol".
+            self.disconnect(ERROR_WRONG_VERSION)
+        return True
 
     @register_packet_handler(loaders.ExistingPlayer)
     @register_packet_handler(loaders.ShortPlayerData)
@@ -158,6 +195,11 @@ class ServerConnection(BaseConnection):
                  " in limbo or spectator mode"),
                 player=self
             )
+            return
+
+        # catches clients that never sent ProtocolExtensionInfo at all
+        # (e.g. vanilla 0.75) — by now we've waited long enough for one.
+        if self._enforce_required_extensions():
             return
 
         old_team = self.team
