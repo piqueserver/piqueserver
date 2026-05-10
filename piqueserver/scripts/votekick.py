@@ -151,7 +151,7 @@ def vote_yes(connection):
     votekick.vote(player)
 
 
-@command('tvk', admin_only=True)
+@command('tvk', 'togglevotekick', admin_only=True)
 def togglevotekick(connection, *args):
     """
     Toggles votekicking for a player or the whole server
