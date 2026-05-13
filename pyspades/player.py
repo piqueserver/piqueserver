@@ -103,6 +103,7 @@ class ServerConnection(BaseConnection):
         self.rapids = RateLimiter(RAPID_WINDOW_ENTRIES, MAX_RAPID_SPEED)
         self.client_info = {}
         self.proto_extensions = {}  # type: Dict[int, int]
+        self._enabled_ext_warned = False
         self.line_build_start_pos = None
 
     def on_connect(self) -> None:
@@ -144,12 +145,21 @@ class ServerConnection(BaseConnection):
         log.debug("received extinfo {extinfo} from {player}",
                   extinfo=self.proto_extensions,
                   player=self)
-        self._enforce_mandatory_extensions()
+        if self._enforce_mandatory_extensions():
+            return
+        self._warn_missing_enabled_extensions()
 
     def _missing_mandatory_extensions(self):
         return [
-            (ext_id, min_ver)
-            for ext_id, min_ver in self.protocol.mandatory_proto_extensions
+            (ext_id, min_ver, reason, name)
+            for ext_id, min_ver, reason, name in self.protocol.extensions.mandatory()
+            if self.proto_extensions.get(ext_id, -1) < min_ver
+        ]
+
+    def _missing_enabled_extensions(self):
+        return [
+            (ext_id, min_ver, reason, name)
+            for ext_id, min_ver, reason, name in self.protocol.extensions.enabled_only()
             if self.proto_extensions.get(ext_id, -1) < min_ver
         ]
 
@@ -164,14 +174,15 @@ class ServerConnection(BaseConnection):
         if not missing:
             return False
         log.info("{player} kicked: missing mandatory protocol extensions {missing}",
-                 player=self, missing=missing)
+                 player=self,
+                 missing=[(name, min_ver, reason)
+                          for _, min_ver, reason, name in missing])
         if EXTENSION_KICKREASON in self.proto_extensions:
             self.disconnect(
                 ERROR_KICKED,
                 reason="Missing mandatory client extension: " + ", ".join(
-                    "{} v{}".format(EXTENSION_NAMES.get(ext_id, "id %d" % ext_id),
-                                    min_ver)
-                    for ext_id, min_ver in missing
+                    "{} v{} ({})".format(name, min_ver, reason)
+                    for _, min_ver, reason, name in missing
                 ),
             )
         else:
@@ -181,6 +192,35 @@ class ServerConnection(BaseConnection):
             # this server don't agree on the protocol".
             self.disconnect(ERROR_WRONG_VERSION)
         return True
+
+    def _warn_missing_enabled_extensions(self) -> None:
+        """Tell the player about each ENABLED-but-missing extension once.
+
+        Only fires for ENABLED extensions, not MANDATORY ones (those caused
+        a kick instead). Sent once per connection; cheap if there's nothing
+        to warn about.
+        """
+        if self.local or self.disconnected or self._enabled_ext_warned:
+            return
+        missing = self._missing_enabled_extensions()
+        if not missing:
+            return
+        self._enabled_ext_warned = True
+        for ext_id, min_ver, reason, name in missing:
+            client_ver = self.proto_extensions.get(ext_id)
+            version_note = ""
+            if client_ver is not None:
+                version_note = " (your client: v{}, needed: v{})".format(
+                    client_ver, min_ver)
+            log.info("{player}: missing enabled extension {name!r}{ver} ({reason})",
+                     player=self, name=name, ver=version_note, reason=reason)
+            self.send_chat_warning(
+                'Heads up: this server uses the "{name}" protocol '
+                'extension ({reason}). Your client lacks it{ver}, so '
+                "related features won't work for you. Please update "
+                "your client, or open a ticket with its authors to add "
+                "support.".format(name=name, reason=reason,
+                                  ver=version_note))
 
     @register_packet_handler(loaders.ExistingPlayer)
     @register_packet_handler(loaders.ShortPlayerData)
@@ -201,6 +241,7 @@ class ServerConnection(BaseConnection):
         # (e.g. vanilla 0.75) — by now we've waited long enough for one.
         if self._enforce_mandatory_extensions():
             return
+        self._warn_missing_enabled_extensions()
 
         old_team = self.team
         team = self.protocol.teams[contained.team]
@@ -772,12 +813,12 @@ class ServerConnection(BaseConnection):
         # whether to kick them.
         skip_old_openspades = (contained.client == 'o'
                                and contained.version <= (0, 1, 3)
-                               and not self.protocol.mandatory_proto_extensions)
+                               and not self.protocol.extensions.mandatory())
         if skip_old_openspades:
             log.debug("not sending version request to OpenSpades <= 0.1.3")
         else:
             ext_info = loaders.ProtocolExtensionInfo()
-            ext_info.extensions = self.protocol.available_proto_extensions
+            ext_info.extensions = self.protocol.extensions.advertised()
             self.send_contained(ext_info)
         self.on_client_info()
 

@@ -812,7 +812,7 @@ class FeatureProtocol(ServerProtocol):
                     "map": map_name,
                     "game_mode": self.get_mode_name(),
                     "game_version": "0.75",
-                    "extensions": self.available_proto_extensions
+                    "extensions": self.extensions.advertised()
                 }
                 payload = json.dumps(entry).encode()
                 self.host.socket.send(address, payload)

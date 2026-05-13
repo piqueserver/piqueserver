@@ -27,7 +27,9 @@ import traceback
 from pyspades.protocol import BaseProtocol
 from pyspades.constants import (
     CTF_MODE, TC_MODE, GAME_VERSION, MIN_TERRITORY_COUNT, MAX_TERRITORY_COUNT,
-    UPDATE_FREQUENCY, UPDATE_FPS, NETWORK_FPS)
+    UPDATE_FREQUENCY, UPDATE_FPS, NETWORK_FPS,
+    EXTENSION_CHATTYPE, EXTENSION_KICKREASON)
+from pyspades.proto_extensions import ProtoExtensionRegistry
 from pyspades.types import IDPool
 from pyspades.master import MasterPool
 from pyspades.team import Team
@@ -85,12 +87,7 @@ class ServerProtocol(BaseProtocol):
     version = GAME_VERSION
     respawn_waves = False
     master_hosts: List[MasterHostDict]
-    # (extension_id, version) lists derived from the per-extension state
-    # configuration. available is what the server advertises to clients;
-    # mandatory is the subset clients must advertise back or be kicked.
-    # both default to empty so embedders/tests don't have to set them.
-    available_proto_extensions: List[Tuple[int, int]] = []
-    mandatory_proto_extensions: List[Tuple[int, int]] = []
+    extensions: ProtoExtensionRegistry
 
     def __init__(self, *arg, **kw):
         # +2 to allow server->master and master->server connection since enet
@@ -102,6 +99,14 @@ class ServerProtocol(BaseProtocol):
         self.entities = []
         self.players = {}
         self.player_ids = IDPool()
+
+        # defaults run before scripts so that scripts may upgrade an
+        # extension's state with mandate() without hitting a conflict.
+        self.extensions = ProtoExtensionRegistry()
+        self.extensions.enable(EXTENSION_KICKREASON,
+                               reason="QoL: structured kick messages")
+        self.extensions.enable(EXTENSION_CHATTYPE,
+                               reason="QoL: OpenSpades-style chat coloring")
 
         self._create_teams()
 
