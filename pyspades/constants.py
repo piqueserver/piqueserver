@@ -84,16 +84,6 @@ EXTENSION_NAMES = {
     EXTENSION_KICKREASON: "kick reason",
 }
 
-# protocol extensions piqueserver knows how to advertise, mapped to the
-# (extension_id, supported_version) the server speaks. consulted both for
-# building the advertised list and for enforcing the "required" state.
-KNOWN_PROTO_EXTENSIONS = {
-    "chat type": (EXTENSION_CHATTYPE, 1),
-    "kick reason": (EXTENSION_KICKREASON, 1),
-}
-
-PROTO_EXTENSION_STATES = ("enabled", "disabled", "required")
-
 CTF_MODE = 0
 TC_MODE = 1
 

@@ -56,9 +56,7 @@ from piqueserver.scheduler import Scheduler
 from piqueserver.utils import as_deferred, EndCall
 from piqueserver.bansubscribe import bans_config_urls
 from pyspades.bytes import NoDataLeft
-from pyspades.constants import (CTF_MODE, ERROR_SHUTDOWN, TC_MODE,
-                                KNOWN_PROTO_EXTENSIONS,
-                                PROTO_EXTENSION_STATES)
+from pyspades.constants import CTF_MODE, ERROR_SHUTDOWN, TC_MODE
 from pyspades.master import MAX_SERVER_NAME_SIZE
 from pyspades.server import ServerProtocol, Team
 from pyspades.tools import make_server_identifier
@@ -185,35 +183,6 @@ master_hosts = config.option("master_hosts", [
 ])
 
 
-def _default_proto_extensions():
-    return [[name, "enabled"] for name in KNOWN_PROTO_EXTENSIONS]
-
-
-def _validate_proto_extensions(value):
-    if not isinstance(value, list):
-        return False
-    seen = set()
-    for entry in value:
-        if not (isinstance(entry, list) and len(entry) == 2):
-            return False
-        name, state = entry
-        if not (isinstance(name, str) and isinstance(state, str)):
-            return False
-        if name not in KNOWN_PROTO_EXTENSIONS:
-            return False
-        if state not in PROTO_EXTENSION_STATES:
-            return False
-        if name in seen:
-            return False
-        seen.add(name)
-    return True
-
-
-proto_extensions_option = config.option(
-    'proto_extensions',
-    default=_default_proto_extensions(),
-    validate=_validate_proto_extensions)
-
 def ensure_dir_exists(filename: str) -> None:
     d = os.path.dirname(filename)
     os.makedirs(d, exist_ok=True)
@@ -306,22 +275,6 @@ class FeatureProtocol(ServerProtocol):
         self.advance_on_win = int(advance_on_win.get())
         self.win_count = itertools.count(1)
         self.bans = NetworkDict()
-
-        # extensions absent from the config default to "disabled" so that
-        # introducing a new one upstream doesn't silently switch it on for
-        # existing servers.
-        states = {name: "disabled" for name in KNOWN_PROTO_EXTENSIONS}
-        states.update(dict(proto_extensions_option.get()))
-        self.available_proto_extensions = [
-            KNOWN_PROTO_EXTENSIONS[name]
-            for name, state in states.items()
-            if state in ("enabled", "required")
-        ]
-        self.mandatory_proto_extensions = [
-            KNOWN_PROTO_EXTENSIONS[name]
-            for name, state in states.items()
-            if state == "required"
-        ]
 
         # attempt to load a saved bans list
         try:
