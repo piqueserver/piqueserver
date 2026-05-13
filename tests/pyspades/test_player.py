@@ -15,7 +15,7 @@ class BaseConnectionTest(unittest.TestCase):
     def test_team_join(self):
         prot = Mock()
         prot.team_class = Team
-        prot.required_proto_extensions = []
+        prot.mandatory_proto_extensions = []
         server.ServerProtocol._create_teams(prot)
         # Some places still use the old name
         prot.players = {}

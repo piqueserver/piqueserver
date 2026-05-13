@@ -87,10 +87,10 @@ class ServerProtocol(BaseProtocol):
     master_hosts: List[MasterHostDict]
     # (extension_id, version) lists derived from the per-extension state
     # configuration. available is what the server advertises to clients;
-    # required is the subset clients must advertise back or be kicked.
+    # mandatory is the subset clients must advertise back or be kicked.
     # both default to empty so embedders/tests don't have to set them.
     available_proto_extensions: List[Tuple[int, int]] = []
-    required_proto_extensions: List[Tuple[int, int]] = []
+    mandatory_proto_extensions: List[Tuple[int, int]] = []
 
     def __init__(self, *arg, **kw):
         # +2 to allow server->master and master->server connection since enet

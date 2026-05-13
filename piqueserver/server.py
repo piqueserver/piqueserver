@@ -317,7 +317,7 @@ class FeatureProtocol(ServerProtocol):
             for name, state in states.items()
             if state in ("enabled", "required")
         ]
-        self.required_proto_extensions = [
+        self.mandatory_proto_extensions = [
             KNOWN_PROTO_EXTENSIONS[name]
             for name, state in states.items()
             if state == "required"

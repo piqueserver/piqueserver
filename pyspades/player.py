@@ -144,31 +144,31 @@ class ServerConnection(BaseConnection):
         log.debug("received extinfo {extinfo} from {player}",
                   extinfo=self.proto_extensions,
                   player=self)
-        self._enforce_required_extensions()
+        self._enforce_mandatory_extensions()
 
-    def _missing_required_extensions(self):
+    def _missing_mandatory_extensions(self):
         return [
             (ext_id, min_ver)
-            for ext_id, min_ver in self.protocol.required_proto_extensions
+            for ext_id, min_ver in self.protocol.mandatory_proto_extensions
             if self.proto_extensions.get(ext_id, -1) < min_ver
         ]
 
-    def _enforce_required_extensions(self) -> bool:
-        """Kick the player if any required extension is missing.
+    def _enforce_mandatory_extensions(self) -> bool:
+        """Kick the player if any mandatory extension is missing.
 
         Returns True if a kick was issued.
         """
         if self.local or self.disconnected:
             return False
-        missing = self._missing_required_extensions()
+        missing = self._missing_mandatory_extensions()
         if not missing:
             return False
-        log.info("{player} kicked: missing required protocol extensions {missing}",
+        log.info("{player} kicked: missing mandatory protocol extensions {missing}",
                  player=self, missing=missing)
         if EXTENSION_KICKREASON in self.proto_extensions:
             self.disconnect(
                 ERROR_KICKED,
-                reason="Missing required client extension: " + ", ".join(
+                reason="Missing mandatory client extension: " + ", ".join(
                     "{} v{}".format(EXTENSION_NAMES.get(ext_id, "id %d" % ext_id),
                                     min_ver)
                     for ext_id, min_ver in missing
@@ -199,7 +199,7 @@ class ServerConnection(BaseConnection):
 
         # catches clients that never sent ProtocolExtensionInfo at all
         # (e.g. vanilla 0.75) — by now we've waited long enough for one.
-        if self._enforce_required_extensions():
+        if self._enforce_mandatory_extensions():
             return
 
         old_team = self.team
@@ -772,7 +772,7 @@ class ServerConnection(BaseConnection):
         # whether to kick them.
         skip_old_openspades = (contained.client == 'o'
                                and contained.version <= (0, 1, 3)
-                               and not self.protocol.required_proto_extensions)
+                               and not self.protocol.mandatory_proto_extensions)
         if skip_old_openspades:
             log.debug("not sending version request to OpenSpades <= 0.1.3")
         else:
