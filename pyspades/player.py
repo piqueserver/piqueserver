@@ -145,13 +145,14 @@ class ServerConnection(BaseConnection):
         log.debug("received extinfo {extinfo} from {player}",
                   extinfo=self.proto_extensions,
                   player=self)
-        # mandatory enforcement runs as early as we can confirm what the
-        # client speaks, so we kick before the player finishes loading.
-        # the soft-warn path is deferred until the player has actually
-        # joined a team or spectator -- chat sent mid-handshake gets lost
-        # in the loading-screen noise, and a toast firing before the
-        # player has any context is more confusing than useful.
-        self._enforce_mandatory_extensions()
+        # both the mandatory-kick and the soft-warn are deferred to
+        # on_new_player_recieved: clients (notably OpenSpades) discard
+        # ChatMessages received during the connect/map-loading phase,
+        # which means a kick-reason sent here never surfaces in the
+        # disconnect dialog. waiting until the team-join packet costs
+        # the rejected client a map download, but it's the only point
+        # we can be sure chat -- including the kick reason -- actually
+        # reaches the user.
 
     def _missing_mandatory_extensions(self):
         return [
