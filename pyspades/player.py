@@ -145,9 +145,13 @@ class ServerConnection(BaseConnection):
         log.debug("received extinfo {extinfo} from {player}",
                   extinfo=self.proto_extensions,
                   player=self)
-        if self._enforce_mandatory_extensions():
-            return
-        self._warn_missing_enabled_extensions()
+        # mandatory enforcement runs as early as we can confirm what the
+        # client speaks, so we kick before the player finishes loading.
+        # the soft-warn path is deferred until the player has actually
+        # joined a team or spectator -- chat sent mid-handshake gets lost
+        # in the loading-screen noise, and a toast firing before the
+        # player has any context is more confusing than useful.
+        self._enforce_mandatory_extensions()
 
     def _missing_mandatory_extensions(self):
         return [
