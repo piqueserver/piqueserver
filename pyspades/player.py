@@ -145,14 +145,18 @@ class ServerConnection(BaseConnection):
         log.debug("received extinfo {extinfo} from {player}",
                   extinfo=self.proto_extensions,
                   player=self)
-        # both the mandatory-kick and the soft-warn are deferred to
-        # on_new_player_recieved: clients (notably OpenSpades) discard
-        # ChatMessages received during the connect/map-loading phase,
-        # which means a kick-reason sent here never surfaces in the
-        # disconnect dialog. waiting until the team-join packet costs
-        # the rejected client a map download, but it's the only point
-        # we can be sure chat -- including the kick reason -- actually
-        # reaches the user.
+        # kick as soon as the handshake completes -- waiting until the
+        # team-join packet would let a misbehaving client occupy a slot
+        # indefinitely by simply never sending ExistingPlayer.
+        #
+        # caveat: OpenSpades (and probably other clients) only surface a
+        # kick-reason ChatMessage when received in the NetClientStatusConnected
+        # state, which it only reaches after StateData -- so a handshake-time
+        # kick will render as the generic "kicked from this server" dialog
+        # there even though the kick-reason packet is sent. clients that
+        # buffer chat earlier still get the reason. the soft-warn path stays
+        # deferred to on_new_player_recieved where chat is reliably visible.
+        self._enforce_mandatory_extensions()
 
     def _missing_mandatory_extensions(self):
         return [
