@@ -85,8 +85,6 @@ scripts = [
 # number of /login attempts allowed before players are auto-kicked (default: 1)
 login_retries = 3
 
-# per-extension state for the protocol extensions piqueserver knows about.
-# any known extension you don't list here is treated as "disabled".
 # MAP
 # maps listed in the rotation
 # these names are the name of the map vxl/txt files without the file extensions
