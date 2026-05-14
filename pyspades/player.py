@@ -218,7 +218,11 @@ class ServerConnection(BaseConnection):
                     client_ver, min_ver)
             log.info("{player}: missing enabled extension {name!r}{ver} ({reason})",
                      player=self, name=name, ver=version_note, reason=reason)
-            self.send_chat_warning(
+            # plain CHAT_SYSTEM rather than CHAT_WARNING: yellow toasts are
+            # disruptive at first spawn, especially when several extensions
+            # are missing -- chat-line delivery is less annoying and stays
+            # readable in scrollback.
+            self.send_chat(
                 'Heads up: this server uses the "{name}" protocol '
                 'extension ({reason}). Your client lacks it{ver}, so '
                 "related features won't work for you. Please update "
