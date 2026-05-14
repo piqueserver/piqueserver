@@ -198,11 +198,12 @@ class ServerConnection(BaseConnection):
         return True
 
     def _warn_missing_enabled_extensions(self) -> None:
-        """Tell the player about each ENABLED-but-missing extension once.
+        """Tell the player once about each ENABLED-but-missing extension.
 
-        Only fires for ENABLED extensions, not MANDATORY ones (those caused
-        a kick instead). Sent once per connection; cheap if there's nothing
-        to warn about.
+        Sends one short chat line per missing extension (name + truncated
+        reason + optional version note) followed by a single call-to-action
+        line, instead of a multi-line paragraph per extension. The full
+        reason is preserved in the server log for admin context.
         """
         if self.local or self.disconnected or self._enabled_ext_warned:
             return
@@ -210,25 +211,27 @@ class ServerConnection(BaseConnection):
         if not missing:
             return
         self._enabled_ext_warned = True
+        # chat lines wrap at MAX_CHAT_SIZE; budget the reason so each entry
+        # stays on a single line in typical cases.
+        reason_budget = 50
         for ext_id, min_ver, reason, name in missing:
             client_ver = self.proto_extensions.get(ext_id)
             version_note = ""
             if client_ver is not None:
-                version_note = " (your client: v{}, needed: v{})".format(
+                version_note = " [yours v{}, needs v{}]".format(
                     client_ver, min_ver)
             log.info("{player}: missing enabled extension {name!r}{ver} ({reason})",
                      player=self, name=name, ver=version_note, reason=reason)
-            # plain CHAT_SYSTEM rather than CHAT_WARNING: yellow toasts are
-            # disruptive at first spawn, especially when several extensions
-            # are missing -- chat-line delivery is less annoying and stays
-            # readable in scrollback.
+            if len(reason) > reason_budget:
+                short_reason = reason[:reason_budget - 3] + "..."
+            else:
+                short_reason = reason
             self.send_chat(
-                'Heads up: this server uses the "{name}" protocol '
-                'extension ({reason}). Your client lacks it{ver}, so '
-                "related features won't work for you. Please update "
-                "your client, or open a ticket with its authors to add "
-                "support.".format(name=name, reason=reason,
-                                  ver=version_note))
+                'Missing protocol extension: "{name}" ({reason}){ver}'
+                .format(name=name, reason=short_reason, ver=version_note))
+        self.send_chat(
+            "Update your client or open a ticket with its authors to "
+            "add support.")
 
     @register_packet_handler(loaders.ExistingPlayer)
     @register_packet_handler(loaders.ShortPlayerData)
