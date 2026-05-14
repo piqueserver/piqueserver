@@ -181,20 +181,14 @@ class ServerConnection(BaseConnection):
                  player=self,
                  missing=[(name, min_ver, reason)
                           for _, min_ver, reason, name in missing])
-        if EXTENSION_KICKREASON in self.proto_extensions:
-            self.disconnect(
-                ERROR_KICKED,
-                reason="Missing mandatory client extension: " + ", ".join(
-                    "{} v{} ({})".format(name, min_ver, reason)
-                    for _, min_ver, reason, name in missing
-                ),
-            )
-        else:
-            # vanilla and other clients without the kick-reason extension
-            # have no way to surface a custom string, so reuse the existing
-            # "wrong version" dialog — it already conveys "your client and
-            # this server don't agree on the protocol".
-            self.disconnect(ERROR_WRONG_VERSION)
+        reason = "Missing mandatory client extension: " + ", ".join(
+            "{} v{} ({})".format(name, min_ver, r)
+            for _, min_ver, r, name in missing
+        )
+        # piqueserver's kick() already handles the kick-reason extension
+        # and the wrong-version fallback; silent=True skips the "X was
+        # kicked" broadcast since the player has no name yet.
+        self.kick(reason, silent=True)
         return True
 
     def _warn_missing_enabled_extensions(self) -> None:
