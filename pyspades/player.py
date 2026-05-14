@@ -145,18 +145,13 @@ class ServerConnection(BaseConnection):
         log.debug("received extinfo {extinfo} from {player}",
                   extinfo=self.proto_extensions,
                   player=self)
-        # kick as soon as the handshake completes -- waiting until the
-        # team-join packet would let a misbehaving client occupy a slot
-        # indefinitely by simply never sending ExistingPlayer.
-        #
-        # caveat: OpenSpades (and probably other clients) only surface a
-        # kick-reason ChatMessage when received in the NetClientStatusConnected
-        # state, which it only reaches after StateData -- so a handshake-time
-        # kick will render as the generic "kicked from this server" dialog
-        # there even though the kick-reason packet is sent. clients that
-        # buffer chat earlier still get the reason. the soft-warn path stays
-        # deferred to on_new_player_recieved where chat is reliably visible.
-        self._enforce_mandatory_extensions()
+        # the actual mandatory-extension kick fires post-StateData (see
+        # send_map): OpenSpades discards ChatMessage packets received during
+        # the Connecting / ReceivingMap phases, so a kick-reason sent here
+        # never reaches the disconnect dialog. holding the kick until the
+        # client transitions to NetClientStatusConnected costs the rejected
+        # client a map download but is the only point where the reason
+        # actually shows up.
 
     def _missing_mandatory_extensions(self):
         return [
@@ -1341,6 +1336,14 @@ class ServerConnection(BaseConnection):
                 packet = enet.Packet(bytes(data), enet.PACKET_FLAG_RELIABLE)
                 self.peer.send(0, packet)
             self.saved_loaders = None
+            # the StateData we just queued transitions the client to
+            # NetClientStatusConnected, the first state where ChatMessage
+            # packets are honored as kick reasons. queueing the kick chat
+            # + DISCONNECT now means the client processes them in order
+            # (StateData -> Connected -> ChatMessage -> DISCONNECT), so the
+            # reason actually surfaces in the disconnect dialog.
+            if self._enforce_mandatory_extensions():
+                return
             self.on_join()
             return
         for _ in range(10):
