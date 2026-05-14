@@ -1,4 +1,4 @@
-# Copyright (c) Mathias Kaerlev 2011-2012.
+# Copyright (c) 2026 Francois ND and the Piqueserver Authors
 
 # This file is part of pyspades.
 
