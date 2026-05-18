@@ -145,13 +145,7 @@ class ServerConnection(BaseConnection):
         log.debug("received extinfo {extinfo} from {player}",
                   extinfo=self.proto_extensions,
                   player=self)
-        # the actual mandatory-extension kick fires post-StateData (see
-        # send_map): OpenSpades discards ChatMessage packets received during
-        # the Connecting / ReceivingMap phases, so a kick-reason sent here
-        # never reaches the disconnect dialog. holding the kick until the
-        # client transitions to NetClientStatusConnected costs the rejected
-        # client a map download but is the only point where the reason
-        # actually shows up.
+        self._enforce_mandatory_extensions()
 
     def _missing_mandatory_extensions(self):
         return [
@@ -170,7 +164,13 @@ class ServerConnection(BaseConnection):
     def _enforce_mandatory_extensions(self) -> bool:
         """Kick the player if any mandatory extension is missing.
 
-        Returns True if a kick was issued.
+        Returns True if a kick was issued. Uses ERROR_WRONG_VERSION rather
+        than ERROR_KICKED with a custom reason: the client hasn't reached
+        the state where it processes ChatMessage packets at this point in
+        the handshake, so any custom kick-reason text we sent would be
+        dropped on the floor. "Incompatible client protocol version" is
+        the next-best built-in dialog and accurately describes the
+        situation.
         """
         if self.local or self.disconnected:
             return False
@@ -181,14 +181,7 @@ class ServerConnection(BaseConnection):
                  player=self,
                  missing=[(name, min_ver, reason)
                           for _, min_ver, reason, name in missing])
-        reason = "Missing mandatory client extension: " + ", ".join(
-            "{} v{} ({})".format(name, min_ver, r)
-            for _, min_ver, r, name in missing
-        )
-        # piqueserver's kick() already handles the kick-reason extension
-        # and the wrong-version fallback; silent=True skips the "X was
-        # kicked" broadcast since the player has no name yet.
-        self.kick(reason, silent=True)
+        self.disconnect(ERROR_WRONG_VERSION)
         return True
 
     def _warn_missing_enabled_extensions(self) -> None:
@@ -1330,14 +1323,6 @@ class ServerConnection(BaseConnection):
                 packet = enet.Packet(bytes(data), enet.PACKET_FLAG_RELIABLE)
                 self.peer.send(0, packet)
             self.saved_loaders = None
-            # the StateData we just queued transitions the client to
-            # NetClientStatusConnected, the first state where ChatMessage
-            # packets are honored as kick reasons. queueing the kick chat
-            # + DISCONNECT now means the client processes them in order
-            # (StateData -> Connected -> ChatMessage -> DISCONNECT), so the
-            # reason actually surfaces in the disconnect dialog.
-            if self._enforce_mandatory_extensions():
-                return
             self.on_join()
             return
         for _ in range(10):
