@@ -164,13 +164,13 @@ class ServerConnection(BaseConnection):
     def _enforce_mandatory_extensions(self) -> bool:
         """Kick the player if any mandatory extension is missing.
 
-        Returns True if a kick was issued. Uses ERROR_WRONG_VERSION rather
-        than ERROR_KICKED with a custom reason: the client hasn't reached
-        the state where it processes ChatMessage packets at this point in
-        the handshake, so any custom kick-reason text we sent would be
-        dropped on the floor. "Incompatible client protocol version" is
-        the next-best built-in dialog and accurately describes the
-        situation.
+        Returns True if a kick was issued. Falls back to ERROR_WRONG_VERSION
+        because vanilla and v1 kick-reason clients do not process the
+        kick-reason ChatMessage during the handshake. For clients that
+        negotiated kick-reason v2 (see AOS extensions spec, packet 0xC2),
+        we additionally send a descriptive CHAT_SYSTEM reason before the
+        disconnect so the failure surfaces in the client UI instead of as
+        a generic "incompatible version" dialog.
         """
         if self.local or self.disconnected:
             return False
@@ -181,8 +181,39 @@ class ServerConnection(BaseConnection):
                  player=self,
                  missing=[(name, min_ver, reason)
                           for _, min_ver, reason, name in missing])
+        self._send_mandatory_kick_reason(missing)
         self.disconnect(ERROR_WRONG_VERSION)
         return True
+
+    def _send_mandatory_kick_reason(self, missing) -> None:
+        """Tell v2-aware clients exactly which extension(s) they lack.
+
+        Per the kick-reason v2 spec, v2 clients accept this packet in any
+        state and use its payload as the disconnect reason. v1 clients are
+        not required to process it pre-join, so we gate on v2.
+        """
+        if self.proto_extensions.get(EXTENSION_KICKREASON, 0) < 2:
+            return
+        parts = []
+        for ext_id, min_ver, _, name in missing:
+            client_ver = self.proto_extensions.get(ext_id)
+            if client_ver is None:
+                parts.append('"{name}" v{ver}+'.format(name=name, ver=min_ver))
+            else:
+                parts.append('"{name}" v{ver}+ (have v{have})'.format(
+                    name=name, ver=min_ver, have=client_ver))
+        prefix = ("Required extension: " if len(parts) == 1
+                  else "Required extensions: ")
+        suffix = ". Update your client."
+        body = ", ".join(parts)
+        budget = MAX_CHAT_SIZE - len(prefix) - len(suffix)
+        if budget > 3 and len(body) > budget:
+            body = body[:budget - 3] + "..."
+        msg = loaders.ChatMessage()
+        msg.player_id = 255
+        msg.chat_type = CHAT_SYSTEM
+        msg.value = (prefix + body + suffix)[:MAX_CHAT_SIZE]
+        self.send_contained(msg)
 
     def _warn_missing_enabled_extensions(self) -> None:
         """Tell the player once about each ENABLED-but-missing extension.

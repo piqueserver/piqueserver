@@ -104,7 +104,9 @@ class ServerProtocol(BaseProtocol):
         # extension's state with mandate() without hitting a conflict.
         self.extensions = ProtoExtensionRegistry()
         self.extensions.enable(EXTENSION_KICKREASON,
-                               reason="QoL: structured kick messages")
+                               reason=("QoL: structured kick messages, "
+                                       "v2 also during handshake/map transfer"),
+                               version=2)
         self.extensions.enable(EXTENSION_CHATTYPE,
                                reason="QoL: OpenSpades-style chat coloring")
 
