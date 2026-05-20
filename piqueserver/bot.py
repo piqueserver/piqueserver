@@ -35,6 +35,7 @@ Minimal example
 """
 
 import math
+import random
 from typing import List, Optional, Tuple, Union
 
 from pyspades import contained as loaders
@@ -47,11 +48,38 @@ from pyspades.constants import (
     DESTROY_BLOCK,
     GAME_VERSION,
     RIFLE_WEAPON,
+    SHOTGUN_WEAPON,
+    SMG_WEAPON,
     TORSO,
     UPDATE_FREQUENCY,
     WEAPON_KILL,
 )
 from pyspades.player import ServerConnection
+
+
+# ---------------------------------------------------------------------------
+# AoS 0.75 weapon spread and recoil
+# ---------------------------------------------------------------------------
+# Values mirror the v075 weapon classes in OpenSpades (Sources/Client/Weapon.cpp).
+# Spread is the per-axis magnitude of the unit-vector perturbation applied to
+# the shot direction.  Recoil is (yaw_random_magnitude, pitch_up, unused) in
+# radians, sampled once per shot.
+_WEAPON_SPREAD = {
+    RIFLE_WEAPON:   0.006,
+    SMG_WEAPON:     0.012,
+    SHOTGUN_WEAPON: 0.024,
+}
+
+_WEAPON_RECOIL = {
+    RIFLE_WEAPON:   (0.0001,  0.05,   0.0),
+    SMG_WEAPON:     (0.00005, 0.0125, 0.0),
+    SHOTGUN_WEAPON: (0.0002,  0.1,    0.0),
+}
+
+# Player torso hitbox half-extents in voxels (horizontal x vertical), used to
+# decide whether a spread-perturbed shot still intersects the target.
+_HIT_HALF_WIDTH = 0.42
+_HIT_HALF_HEIGHT = 1.0
 
 
 # ---------------------------------------------------------------------------
@@ -403,27 +431,101 @@ class Bot:
     # Combat
     # ------------------------------------------------------------------
 
-    def shoot_at(self, target) -> None:
+    def shoot_at(self, target) -> bool:
         """
-        Deal weapon damage to ``target`` (server-authoritative hit).
+        Fire one shot at ``target``, respecting AoS 0.75 spread and recoil.
 
-        Damage is calculated from the weapon's damage model and applied
-        through the normal ``hit()`` path, which handles friendly-fire rules,
-        ``on_hit`` hooks, and kill/respawn logic.  No shot packet is sent to
-        clients — the damage and any resulting kill packet are broadcast as
-        usual.
+        Spread is rolled per-shot from the weapon's 0.75 spread value
+        (``_WEAPON_SPREAD``) and doubled while the bot is moving, matching
+        vanilla and OpenSpades behaviour.  The roll converts the angular
+        perturbation into a lateral miss at target distance; the shot lands
+        only if both the horizontal and vertical miss fall inside the torso
+        hitbox.  On a hit, damage flows through the normal ``hit()`` path so
+        friendly-fire rules, ``on_hit`` hooks, and kill/respawn logic all
+        apply.
+
+        Recoil is always applied (hit or miss): the bot's orientation pitches
+        up by the weapon's vertical kick and yaws by a random component, so
+        the recoil is visible in the next ``WorldUpdate`` broadcast and
+        affects any subsequent shot that fires before the bot re-aims.
+
+        Returns ``True`` if the shot landed, ``False`` otherwise.
         """
         conn = self.connection
         if not conn.hp or target.hp is None or target.world_object is None:
+            return False
+        if conn.world_object is None:
+            return False
+
+        spread = _WEAPON_SPREAD.get(conn.weapon, 0.0)
+        # Movement doubles spread (vanilla AoS / OpenSpades behaviour).
+        if self._walk_state and any(self._walk_state[:4]):
+            spread *= 2.0
+
+        hit = self._roll_spread(target, spread)
+        if hit:
+            dmg = conn.weapon_object.get_damage(
+                TORSO,
+                conn.world_object.position,
+                target.world_object.position,
+            )
+            target.hit(dmg, conn, WEAPON_KILL)
+
+        self._apply_recoil(_WEAPON_RECOIL.get(conn.weapon, (0.0, 0.0, 0.0)))
+        return hit
+
+    def _roll_spread(self, target, spread: float) -> bool:
+        """
+        Decide whether a shot with angular ``spread`` still strikes ``target``.
+
+        Samples two independent ``(rand - rand) * spread`` perturbations — one
+        for horizontal, one for vertical — and scales them by the distance to
+        the target to get a lateral miss in voxels.  Returns ``True`` when
+        both components land inside the torso hitbox.
+        """
+        if spread <= 0.0:
+            return True
+        dist = self.distance_to(target)
+        if dist <= 0.0 or dist == float('inf'):
+            return True
+        miss_h = (random.random() - random.random()) * spread * dist
+        miss_v = (random.random() - random.random()) * spread * dist
+        return abs(miss_h) < _HIT_HALF_WIDTH and abs(miss_v) < _HIT_HALF_HEIGHT
+
+    def _apply_recoil(self, recoil: Tuple[float, float, float]) -> None:
+        """
+        Kick the bot's orientation by ``recoil = (yaw_mag, pitch_up, _)``.
+
+        Pitch climbs by ``pitch_up`` radians; yaw shifts by a uniform sample
+        in ``[-yaw_mag, +yaw_mag]``.  The new orientation is renormalised and
+        written back, so the next 30 Hz ``WorldUpdate`` carries the recoiled
+        aim to clients.
+        """
+        rec_yaw, rec_pitch, _ = recoil
+        if rec_yaw == 0.0 and rec_pitch == 0.0:
             return
+        conn = self.connection
         if conn.world_object is None:
             return
-        dmg = conn.weapon_object.get_damage(
-            TORSO,
-            conn.world_object.position,
-            target.world_object.position,
+        ox, oy, oz = conn.world_object.orientation.get()
+        horizontal = math.sqrt(ox * ox + oy * oy)
+        # AoS convention: +z is down, so pitching up decreases z.
+        pitch = math.atan2(-oz, horizontal)
+        yaw = math.atan2(oy, ox)
+        pitch += rec_pitch
+        yaw += (random.random() * 2.0 - 1.0) * rec_yaw
+        # Clamp pitch to keep the orientation a valid unit vector.
+        max_pitch = math.pi / 2.0 - 1e-3
+        if pitch > max_pitch:
+            pitch = max_pitch
+        elif pitch < -max_pitch:
+            pitch = -max_pitch
+        cos_p = math.cos(pitch)
+        conn.world_object.set_orientation(
+            cos_p * math.cos(yaw),
+            cos_p * math.sin(yaw),
+            -math.sin(pitch),
         )
-        target.hit(dmg, conn, WEAPON_KILL)
 
     def throw_grenade(
         self,
