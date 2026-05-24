@@ -227,6 +227,7 @@ class FeatureProtocol(ServerProtocol):
     command_antispam = False
 
     planned_map = None
+    _advancing = False
 
     map_info = None
     spawns = None
@@ -523,6 +524,9 @@ class FeatureProtocol(ServerProtocol):
             self.planned_map = next(self.map_rotator)
         planned_map = self.planned_map
         self.planned_map = None
+        # Set _advancing up front so FeatureProtocol.on_game_end skips its
+        # own advance/restart branch when end_game() fires below.
+        self._advancing = True
         self.on_advance(planned_map)
 
         async def do_advance():
@@ -537,6 +541,10 @@ class FeatureProtocol(ServerProtocol):
                 log.info("advancing to map '{name}'",
                          name=planned_map.full_name)
 
+            # Fire on_game_end just before the map swap, so scripts that
+            # save final state or stop per-game loops see the actual end
+            # of the game rather than the start of the countdown.
+            self.end_game()
             await self.set_map_name(planned_map)
 
         return ensureDeferred(do_advance())
@@ -858,6 +866,10 @@ class FeatureProtocol(ServerProtocol):
     # events
 
     def on_map_change(self, the_map: VXLData) -> None:
+        # The next start_game must happen after the advance is finished,
+        # so clear the flag before any map hooks (or the start_game call
+        # below) run.
+        self._advancing = False
         self.set_fog_color(
             getattr(self.map_info.info, 'fog', self.default_fog)
         )
@@ -866,16 +878,27 @@ class FeatureProtocol(ServerProtocol):
         if map_on_map_change is not None:
             map_on_map_change(self, the_map)
 
+        self.start_game()
+
     def on_map_leave(self):
         map_on_map_leave = self.map_info.on_map_leave
         if map_on_map_leave is not None:
             map_on_map_leave(self)
 
     def on_game_end(self):
+        # advance_rotation already fired on_game_end and is taking care
+        # of loading the next map — don't kick off a second advance or
+        # restart the round in place.
+        if self._advancing:
+            return
+        advancing = False
         if self.advance_on_win <= 0:
             self.irc_say('Round ended!', me=True)
         elif next(self.win_count) % self.advance_on_win == 0:
             self.advance_rotation('Game finished!')
+            advancing = True
+        if not advancing:
+            self.start_game()
 
     def on_advance(self, map_name: str) -> None:
         pass

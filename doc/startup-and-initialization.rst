@@ -104,11 +104,28 @@ Games are defined by the game mode. They usually represent a period of time
 where two teams compete for points and end with one team winning or losing, or
 some other condition such as a time limit being hit.
 
-There is currently no hook for when the game starts. However, existing modes
-assume it starts with the ``on_map_change`` call.
+The protocol exposes two paired lifecycle hooks, ``on_game_start`` and
+``on_game_end``. Triggering goes through the guarded helpers
+``protocol.start_game()`` and ``protocol.end_game()``, which ensure each hook
+fires at most once per game — ``on_game_end`` will never be invoked twice for
+the same game, even if multiple end conditions race.
 
-When a game ends, the game mode will call ``on_game_end`` to notify any other
-scripts and possibly trigger a map change.
+``on_game_start`` is fired:
+
+- after a new map finishes loading (at the end of ``on_map_change``), even
+  when the map change was forced via ``/advancemap``, ``/loadmap``, or the
+  time limit expiring;
+- when a game ends on the current map and a new round begins without a map
+  change.
+
+``on_game_end`` is fired whenever the active game ends, so scripts can rely
+on it for cleanup or deallocation. It fires:
+
+- when the game mode signals that the current game has concluded (via
+  ``protocol.end_game()``), which may in turn trigger a map change;
+- when an advance is forced externally by the time limit expiring,
+  ``/advancemap``, or ``/loadmap`` — fired after the 10-second
+  countdown, just before the next map is loaded.
 
 Player Lifecycle
 ----------------
