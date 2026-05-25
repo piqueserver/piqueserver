@@ -684,23 +684,28 @@ class Bot:
             p2 = target
         return math.sqrt(sum((a - b) ** 2 for a, b in zip(p1, p2)))
 
-    def get_enemies(self) -> list:
+    def get_enemies(self, enemies: Optional[list] = None) -> list:
         """
-        Return all living, non-bot players on the opposing team.
+        Return all living players on the opposing team — bots included.
 
-        Excludes: spectators, dead players, players with no ``world_object``,
-        and other bots.
+        Excludes only dead players and players with no ``world_object``.
+        Iterates the opposing team directly via ``team.other.get_players()``
+        rather than the full server roster — cheaper on populated servers.
+
+        ``enemies`` may be passed as a pre-filtered list, in which case this
+        method acts as a filter over that list.  Other ``get_enemies_*``
+        helpers (introduced later) compose around the same shape so chained
+        queries don't re-walk the player table.
         """
+        if enemies is not None:
+            return [p for p in enemies if p.hp and p.world_object is not None]
         conn = self.connection
-        if conn.team is None or conn.team.spectator:
+        team = conn.team
+        if team is None or team.spectator or team.other is None:
             return []
         return [
-            p for p in self.protocol.players.values()
-            if not getattr(p, 'is_bot', False)
-            and p.team is not conn.team
-            and not p.team.spectator
-            and p.hp
-            and p.world_object is not None
+            p for p in team.other.get_players()
+            if p.hp and p.world_object is not None
         ]
 
     def closest(self, players: list):
