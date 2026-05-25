@@ -42,6 +42,7 @@ from pyspades import contained as loaders
 from pyspades import world
 from pyspades.common import Vertex3
 from pyspades.constants import (
+    ARMS,
     BUILD_BLOCK,
     CHAT_ALL,
     CHAT_TEAM,
@@ -49,6 +50,8 @@ from pyspades.constants import (
     FOG_DISTANCE,
     GAME_VERSION,
     GRENADE_TOOL,
+    HEAD,
+    LEGS,
     MELEE_DISTANCE,
     RIFLE_WEAPON,
     SHOTGUN_WEAPON,
@@ -107,6 +110,21 @@ _WEAPON_RANGE = {
     SMG_WEAPON:     64.0,
     SHOTGUN_WEAPON: 32.0,
 }
+
+# Vertical (z) offset from the player's stored position to each hitbox center.
+# AoS player.position is at the HEAD; +z points down, so torso/legs are below.
+# Matches the offsets used in Character.validate_hit (world.pyx).
+_BODY_PART_Z = {
+    HEAD:  0.0,
+    TORSO: 0.9,
+    ARMS:  0.9,
+    LEGS:  1.8,
+}
+
+# Body parts probed by ``visible_body_parts``, ordered head-first so the
+# highest-damage shot wins when several parts are exposed.  ARMS is omitted
+# because its hitbox z matches the torso — the raycast result is identical.
+_VISIBILITY_PARTS = (HEAD, TORSO, LEGS)
 
 
 # ---------------------------------------------------------------------------
@@ -211,11 +229,13 @@ class Bot:
 
     Quick reference
     ---------------
-    Positioning     move_to(x, y, z), look_toward(target), set_walk(...)
+    Positioning     move_to(x, y, z), look_toward(target), set_walk(...),
+                    aim_at(dt, reactivity, target, body_part)
     Combat          shoot_at(target), throw_grenade(fuse, velocity)
     Building        build_block(x, y, z), destroy_block(x, y, z)
     Communication   chat(message, global_message)
-    Queries         can_see(target), distance_to(target), closest(players),
+    Queries         can_see(target), visible_body_parts(target),
+                    distance_to(target), closest(players),
                     get_enemies(), get_enemies_in_range(...),
                     get_enemies_visible(...)
     Lifecycle       remove()
@@ -403,6 +423,80 @@ class Bot:
         if length < 0.001:
             return
         conn.world_object.set_orientation(dx / length, dy / length, 0.0)
+
+    def aim_at(
+        self,
+        dt: float,
+        reactivity: float,
+        target: Union[int, object],
+        body_part: Optional[int] = None,
+    ) -> bool:
+        """
+        Smoothly rotate the bot's aim toward ``target``.
+
+        Frame-rate independent: the blend factor is ``1 - exp(-reactivity * dt)``,
+        so ``reactivity`` is a stable 1/second time constant — higher values
+        snap faster, ``0`` freezes the aim, and a large value approaches an
+        instant snap.  Compose with ``shoot_at`` to make the recoil kick
+        visible: recoil pitches the orientation up, the next ``aim_at`` tick
+        pulls it back down toward the target.
+
+        Parameters
+        ----------
+        dt:
+            Time step in seconds (typically the ``dt`` passed to ``think``).
+        reactivity:
+            Aim responsiveness in 1/s.  Useful range ≈ 2 (sluggish) to 30
+            (near-snap).
+        target:
+            A player/connection object (with ``world_object``) **or** a
+            player ID.  Returns ``False`` if the target can't be resolved.
+        body_part:
+            ``HEAD`` / ``TORSO`` / ``ARMS`` / ``LEGS`` from
+            ``pyspades.constants``.  ``None`` (default) auto-picks the
+            highest-damage visible part via ``visible_body_parts`` —
+            head first, then torso, then legs.  When the target is
+            fully behind cover the orientation is left unchanged and
+            ``False`` is returned (nothing to aim at).  Pass an explicit
+            part to override the auto-pick (e.g. force a leg shot).
+
+        Returns ``True`` if the orientation was updated, ``False`` otherwise.
+        """
+        conn = self.connection
+        if conn.world_object is None or not conn.hp:
+            return False
+        if isinstance(target, int):
+            target = self.protocol.players.get(target)
+        if target is None or getattr(target, 'world_object', None) is None:
+            return False
+
+        if body_part is None:
+            visible = self.visible_body_parts(target)
+            if not visible:
+                return False
+            body_part = visible[0]
+
+        tx, ty, tz = target.world_object.position.get()
+        tz += _BODY_PART_Z.get(body_part, _BODY_PART_Z[TORSO])
+
+        bx, by, bz = conn.world_object.position.get()
+        dx, dy, dz = tx - bx, ty - by, tz - bz
+        length = math.sqrt(dx * dx + dy * dy + dz * dz)
+        if length < 1e-3:
+            return False
+        desired = (dx / length, dy / length, dz / length)
+
+        ox, oy, oz = conn.world_object.orientation.get()
+        # Exponential smoothing — frame-rate independent.
+        blend = 1.0 - math.exp(-max(reactivity, 0.0) * max(dt, 0.0))
+        nx = ox + (desired[0] - ox) * blend
+        ny = oy + (desired[1] - oy) * blend
+        nz = oz + (desired[2] - oz) * blend
+        norm = math.sqrt(nx * nx + ny * ny + nz * nz)
+        if norm < 1e-3:
+            return False
+        conn.world_object.set_orientation(nx / norm, ny / norm, nz / norm)
+        return True
 
     def set_walk(
         self,
@@ -678,21 +772,40 @@ class Bot:
     # Queries
     # ------------------------------------------------------------------
 
-    def can_see(self, target) -> bool:
+    def visible_body_parts(self, target) -> Tuple[int, ...]:
         """
-        ``True`` if this bot has line-of-sight to ``target``.
+        Return the body parts of ``target`` visible from this bot, ordered
+        head-first.  Each entry is one of ``HEAD`` / ``TORSO`` / ``LEGS``.
 
-        Uses the Cython/C++ ``Character.can_see()`` voxel raycast — fast
-        enough to call each tick for a small number of targets.
-        ``target`` must have a ``world_object`` attribute.
+        Useful when a target is partially behind cover — the bot can still
+        engage whichever part is exposed.  ``ARMS`` is omitted because its
+        hitbox shares the torso z and would always duplicate the torso
+        result; ``MELEE`` is not a hit region in this sense.
+
+        Three raycasts per call (one per distinct z).  Pair with
+        ``get_enemies_in_range`` first to keep the candidate set small.
         """
         conn = self.connection
         if conn.world_object is None:
-            return False
+            return ()
         if not hasattr(target, 'world_object') or target.world_object is None:
-            return False
-        p2 = target.world_object.position
-        return bool(conn.world_object.can_see(p2.x, p2.y, p2.z))
+            return ()
+        tx, ty, tz = target.world_object.position.get()
+        wo = conn.world_object
+        return tuple(
+            part for part in _VISIBILITY_PARTS
+            if wo.can_see(tx, ty, tz + _BODY_PART_Z[part])
+        )
+
+    def can_see(self, target) -> bool:
+        """
+        ``True`` if any of the target's head, torso, or legs is in line-of-sight.
+
+        Delegates to ``visible_body_parts`` so a target with only its legs
+        exposed (or only its head poking over cover) is still considered
+        visible — a single head-only raycast would miss them.
+        """
+        return bool(self.visible_body_parts(target))
 
     def distance_to(
         self, target: Union[object, Tuple[float, float, float]]
