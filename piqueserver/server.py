@@ -57,7 +57,8 @@ from piqueserver.utils import as_deferred, EndCall
 from piqueserver.bansubscribe import bans_config_urls
 from pyspades.bytes import NoDataLeft
 from pyspades.constants import (CTF_MODE, ERROR_SHUTDOWN, TC_MODE,
-                                EXTENSION_CHATTYPE, EXTENSION_KICKREASON)
+                                EXTENSION_CHATTYPE, EXTENSION_KICKREASON,
+                                EXTENSION_PLAYERPROPERTIES)
 from pyspades.master import MAX_SERVER_NAME_SIZE
 from pyspades.server import ServerProtocol, Team
 from pyspades.tools import make_server_identifier
@@ -277,6 +278,7 @@ class FeatureProtocol(ServerProtocol):
         self.bans = NetworkDict()
 
         self.available_proto_extensions = [
+            (EXTENSION_PLAYERPROPERTIES, 1),
             (EXTENSION_CHATTYPE, 1),
             (EXTENSION_KICKREASON, 1),
         ]
