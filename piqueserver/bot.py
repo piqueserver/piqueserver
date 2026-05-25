@@ -46,13 +46,18 @@ from pyspades.constants import (
     CHAT_ALL,
     CHAT_TEAM,
     DESTROY_BLOCK,
+    FOG_DISTANCE,
     GAME_VERSION,
+    GRENADE_TOOL,
+    MELEE_DISTANCE,
     RIFLE_WEAPON,
     SHOTGUN_WEAPON,
     SMG_WEAPON,
+    SPADE_TOOL,
     TORSO,
     UPDATE_FREQUENCY,
     WEAPON_KILL,
+    WEAPON_TOOL,
 )
 from pyspades.player import ServerConnection
 
@@ -80,6 +85,28 @@ _WEAPON_RECOIL = {
 # decide whether a spread-perturbed shot still intersects the target.
 _HIT_HALF_WIDTH = 0.42
 _HIT_HALF_HEIGHT = 1.0
+
+# ---------------------------------------------------------------------------
+# Effective combat ranges (in voxels)
+# ---------------------------------------------------------------------------
+# Only combat-capable tools/weapons appear here — the block tool is not in
+# the table because you cannot kill anyone with blocks, so its "range" has
+# no meaning for target selection.  A missing entry yields a 0-reach
+# fallback in ``get_enemies_in_range`` (the returned list is empty), which
+# is the correct answer when the bot is currently holding a non-combat tool.
+#
+# Weapon entries reflect the distance at which AoS 0.75 spread still lands
+# a torso hit on a stationary target; the GRENADE_TOOL value is a practical
+# throw distance.
+_TOOL_RANGE = {
+    SPADE_TOOL:   float(MELEE_DISTANCE),
+    GRENADE_TOOL: 24.0,
+}
+_WEAPON_RANGE = {
+    RIFLE_WEAPON:   FOG_DISTANCE,
+    SMG_WEAPON:     64.0,
+    SHOTGUN_WEAPON: 32.0,
+}
 
 
 # ---------------------------------------------------------------------------
@@ -188,8 +215,8 @@ class Bot:
     Combat          shoot_at(target), throw_grenade(fuse, velocity)
     Building        build_block(x, y, z), destroy_block(x, y, z)
     Communication   chat(message, global_message)
-    Queries         can_see(target), distance_to(target),
-                    get_enemies(), closest(players)
+    Queries         can_see(target), distance_to(target), closest(players),
+                    get_enemies(), get_enemies_in_range(...)
     Lifecycle       remove()
     """
 
@@ -707,6 +734,54 @@ class Bot:
             p for p in team.other.get_players()
             if p.hp and p.world_object is not None
         ]
+
+    def get_enemies_in_range(
+        self,
+        *,
+        weapon: Optional[int] = None,
+        tool: Optional[int] = None,
+        distance: Optional[float] = None,
+        enemies: Optional[list] = None,
+    ) -> list:
+        """
+        Return enemies within an effective combat range.
+
+        Range resolution (first match wins):
+
+        * ``distance``  — explicit voxel range
+        * ``weapon``    — ``RIFLE_WEAPON`` / ``SMG_WEAPON`` / ``SHOTGUN_WEAPON``
+        * ``tool``      — ``SPADE_TOOL`` / ``GRENADE_TOOL`` (combat tools only)
+        * none of the above — auto-detect from ``connection.tool`` (and
+          ``connection.weapon`` when the bot is currently holding a weapon).
+
+        Non-combat tools (e.g. the block tool) have no entry in the range
+        table and resolve to 0 — the returned list is empty, since the bot
+        cannot kill anyone with blocks.  Unknown weapons fall back to
+        ``FOG_DISTANCE`` (assume maximum engagement when in doubt).
+
+        ``enemies`` may be a pre-filtered list to avoid re-walking the roster.
+
+        This is a pure range filter — it does not check line-of-sight.  For
+        grenade safety (don't blow yourself up against a wall) chain with the
+        ``can_see`` raycast at the caller, e.g.::
+
+            for enemy in bot.get_enemies_in_range(tool=GRENADE_TOOL):
+                if bot.can_see(enemy):
+                    bot.throw_grenade(...)
+        """
+        if distance is None:
+            if weapon is not None:
+                distance = _WEAPON_RANGE.get(weapon, FOG_DISTANCE)
+            elif tool is not None:
+                distance = _TOOL_RANGE.get(tool, 0.0)
+            else:
+                conn = self.connection
+                if conn.tool == WEAPON_TOOL:
+                    distance = _WEAPON_RANGE.get(conn.weapon, FOG_DISTANCE)
+                else:
+                    distance = _TOOL_RANGE.get(conn.tool, 0.0)
+        candidates = self.get_enemies() if enemies is None else enemies
+        return [p for p in candidates if self.distance_to(p) <= distance]
 
     def closest(self, players: list):
         """
