@@ -216,7 +216,8 @@ class Bot:
     Building        build_block(x, y, z), destroy_block(x, y, z)
     Communication   chat(message, global_message)
     Queries         can_see(target), distance_to(target), closest(players),
-                    get_enemies(), get_enemies_in_range(...)
+                    get_enemies(), get_enemies_in_range(...),
+                    get_enemies_visible(...)
     Lifecycle       remove()
     """
 
@@ -782,6 +783,18 @@ class Bot:
                     distance = _TOOL_RANGE.get(conn.tool, 0.0)
         candidates = self.get_enemies() if enemies is None else enemies
         return [p for p in candidates if self.distance_to(p) <= distance]
+
+    def get_enemies_visible(self, enemies: Optional[list] = None) -> list:
+        """
+        Return enemies with line-of-sight from the bot.
+
+        Uses the engine's ``Character.can_see`` voxel raycast — fast enough
+        to call each tick for a small candidate set.  Pass an already-shrunk
+        list (e.g. via ``get_enemies_in_range``) to keep LOS work bounded on
+        large maps.
+        """
+        candidates = self.get_enemies() if enemies is None else enemies
+        return [p for p in candidates if self.can_see(p)]
 
     def closest(self, players: list):
         """
