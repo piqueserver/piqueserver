@@ -991,3 +991,43 @@ cdef class ProtocolExtensionInfo(Loader):
             writer.writeByte(ext[1])
 
 register_packet(ProtocolExtensionInfo)
+
+
+cdef class PacketPlayerProperties(Loader):
+    """Player Properties protocol extension (id 0).
+
+    Server-to-client packet carrying authoritative per-player stats
+    (HP, ammo, blocks, grenades, score). Sub-packet id 0 is the only
+    currently defined sub-type; the byte is preserved on read/write so
+    future sub-types can be dispatched by callers.
+    """
+    id = 64
+
+    cdef public:
+        unsigned int sub_id
+        unsigned int player_id, hp, blocks, grenades
+        unsigned int magazine_ammo, reserve_ammo
+        unsigned int score
+
+    cpdef read(self, ByteReader reader):
+        self.sub_id = reader.readByte(True)
+        self.player_id = reader.readByte(True)
+        self.hp = reader.readByte(True)
+        self.blocks = reader.readByte(True)
+        self.grenades = reader.readByte(True)
+        self.magazine_ammo = reader.readByte(True)
+        self.reserve_ammo = reader.readByte(True)
+        self.score = reader.readInt(True, False)
+
+    cpdef write(self, ByteWriter writer):
+        writer.writeByte(self.id, True)
+        writer.writeByte(self.sub_id, True)
+        writer.writeByte(self.player_id, True)
+        writer.writeByte(self.hp, True)
+        writer.writeByte(self.blocks, True)
+        writer.writeByte(self.grenades, True)
+        writer.writeByte(self.magazine_ammo, True)
+        writer.writeByte(self.reserve_ammo, True)
+        writer.writeInt(self.score, True, False)
+
+register_packet(PacketPlayerProperties, client=False)

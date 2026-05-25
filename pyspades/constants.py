@@ -74,9 +74,15 @@ ERROR_SHUTDOWN = 5
 ERROR_KICKED = 10
 ERROR_INVALID_NAME = 20
 
+EXTENSION_PLAYERPROPERTIES = 0
 EXTENSION_PLAYERLIMIT = 192
 EXTENSION_CHATTYPE = 193
 EXTENSION_KICKREASON = 194
+
+# Sub-ids for the Player Properties extension (packet id 64). Sub id 0 is
+# the only one currently defined; preserved on the wire so future sub-ids
+# can be dispatched by callers.
+PLAYERPROPERTIES_SUB_QUERY = 0
 
 CTF_MODE = 0
 TC_MODE = 1
