@@ -1377,6 +1377,41 @@ class ServerConnection(BaseConnection):
         self.send_contained(packet)
         return True
 
+    def broadcast_player_properties(self) -> bool:
+        """Broadcast this player's authoritative Player Properties
+        (extension 0) packet to every connected player that has
+        negotiated the extension, including this player.
+
+        Useful for keeping clients in sync with server state when their
+        local estimates would otherwise diverge -- notably BetterSpades,
+        which estimates other players' ammo and silently stops them
+        shooting at its guessed zero.
+
+        Values are read from current server-side state; nothing is
+        persisted or overridden. ``hp`` falls back to 0 when the player
+        is dead. Returns False if the player has no id yet or hasn't
+        fully joined (no weapon, blocks or grenades state).
+        """
+        if self.player_id is None:
+            return False
+        if (self.blocks is None or self.grenades is None
+                or self.weapon_object is None):
+            return False
+        packet = loaders.PlayerPropertiesV1()
+        packet.sub_id = 0
+        packet.player_id = self.player_id
+        packet.hp = 0 if self.hp is None else self.hp
+        packet.blocks = self.blocks
+        packet.grenades = self.grenades
+        packet.magazine_ammo = self.weapon_object.current_ammo
+        packet.reserve_ammo = self.weapon_object.current_stock
+        packet.score = self.kills
+        self.protocol.broadcast_contained(
+            packet,
+            rule=lambda p: EXTENSION_PLAYERPROPERTIES in p.proto_extensions,
+        )
+        return True
+
     def send_chat(self, value: str, global_message: bool = False, custom_type: int = CHAT_ALL) -> None:
         if self.deaf:
             return
