@@ -28,7 +28,7 @@ This module contains the definitions and registrations for the various packets u
 # speed up allocation for packets
 
 from pyspades.common import encode, decode
-from pyspades.constants import NEUTRAL_TEAM, CTF_MODE, TC_MODE
+from pyspades.constants import NEUTRAL_TEAM, CTF_MODE, TC_MODE, PACKET_EXT_BASE
 from pyspades.loaders cimport Loader
 from pyspades.bytes cimport ByteReader, ByteWriter
 from pyspades.packet import register_packet
@@ -993,15 +993,17 @@ cdef class ProtocolExtensionInfo(Loader):
 register_packet(ProtocolExtensionInfo)
 
 
-cdef class PacketPlayerProperties(Loader):
-    """Player Properties protocol extension (id 0).
+cdef class PlayerPropertiesV1(Loader):
+    """Player Properties protocol extension (id 0, v1).
 
     Server-to-client packet carrying authoritative per-player stats
     (HP, ammo, blocks, grenades, score). Sub-packet id 0 is the only
     currently defined sub-type; the byte is preserved on read/write so
     future sub-types can be dispatched by callers.
     """
-    id = 64
+    ext_id = 0
+    ext_version = 1
+    id = PACKET_EXT_BASE + ext_id
 
     cdef public:
         unsigned int sub_id
@@ -1030,4 +1032,4 @@ cdef class PacketPlayerProperties(Loader):
         writer.writeByte(self.reserve_ammo, True)
         writer.writeInt(self.score, True, False)
 
-register_packet(PacketPlayerProperties, client=False)
+register_packet(PlayerPropertiesV1, client=False)

@@ -1365,8 +1365,8 @@ class ServerConnection(BaseConnection):
         if explicit_score:
             self.kills = score
 
-        packet = loaders.PacketPlayerProperties()
-        packet.sub_id = PLAYERPROPERTIES_SUB_QUERY
+        packet = loaders.PlayerPropertiesV1()
+        packet.sub_id = 0
         packet.player_id = self.player_id
         packet.hp = hp
         packet.blocks = blocks
