@@ -252,8 +252,8 @@ class ServerProtocol(BaseProtocol):
             # Update world
             while (time.monotonic() - self.world_time) > UPDATE_FREQUENCY:
                 self.loop_count += 1
-                self.world.update(UPDATE_FREQUENCY)
                 try:
+                    self.world.update(UPDATE_FREQUENCY)
                     self.on_world_update()
                 except Exception:
                     traceback.print_exc()
