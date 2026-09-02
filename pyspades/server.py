@@ -85,6 +85,7 @@ class ServerProtocol(BaseProtocol):
     version = GAME_VERSION
     respawn_waves = False
     master_hosts: List[MasterHostDict]
+    _game_active = False
 
     def __init__(self, *arg, **kw):
         # +2 to allow server->master and master->server connection since enet
@@ -495,6 +496,25 @@ class ServerProtocol(BaseProtocol):
 
     def on_game_end(self):
         pass
+
+    def on_game_start(self):
+        pass
+
+    def start_game(self):
+        """Trigger ``on_game_start``, guarded so it fires at most once
+        between ``end_game`` calls."""
+        if self._game_active:
+            return
+        self._game_active = True
+        self.on_game_start()
+
+    def end_game(self):
+        """Trigger ``on_game_end``, guarded so it fires at most once
+        per active game."""
+        if not self._game_active:
+            return
+        self._game_active = False
+        self.on_game_end()
 
     def on_world_update(self):
         pass

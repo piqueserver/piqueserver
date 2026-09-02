@@ -123,7 +123,7 @@ class Territory(Flag):
         protocol.on_cp_capture(self)
         if team.score >= protocol.max_score:
             protocol.reset_game(territory=self)
-            protocol.on_game_end()
+            protocol.end_game()
         else:
             territory_capture.object_index = self.id
             territory_capture.state = self.team.id

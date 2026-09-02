@@ -907,7 +907,7 @@ class ServerConnection(BaseConnection):
         if (self.protocol.max_score not in (0, None) and
                 self.team.score >= self.protocol.max_score):
             self.protocol.reset_game(self)
-            self.protocol.on_game_end()
+            self.protocol.end_game()
         else:
             intel_capture = loaders.IntelCapture()
             intel_capture.player_id = self.player_id

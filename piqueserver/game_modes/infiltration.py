@@ -109,7 +109,7 @@ class DummyPlayer():
                 player.hp = None
                 if player.team is not None:
                     player.spawn()
-            self.protocol.on_game_end()
+            self.protocol.end_game()
         else:
             flag = self.team.other.set_flag()
             flag.update()
