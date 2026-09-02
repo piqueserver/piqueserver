@@ -1256,6 +1256,153 @@ class ServerConnection(BaseConnection):
         msg.value = reason[:MAX_CHAT_SIZE]
         self.send_contained(msg)
 
+    def send_player_properties(
+        self,
+        *,
+        hp: Optional[int] = None,
+        blocks: Optional[int] = None,
+        grenades: Optional[int] = None,
+        magazine_ammo: Optional[int] = None,
+        reserve_ammo: Optional[int] = None,
+        score: Optional[int] = None,
+    ) -> bool:
+        """Send this client an authoritative Player Properties (extension 0)
+        packet about itself, and persist any explicit overrides to the
+        player's server-side state.
+
+        Stats such as magazine/reserve ammo, blocks and grenades are private
+        per-player in AoS, so this helper only ever sends a player their own
+        properties.
+
+        Each field may be overridden via the matching keyword argument; any
+        field left as None is taken from the player's current state. If the
+        server has no current value (e.g. hp before spawn, ammo with no
+        weapon), the matching argument becomes mandatory and ValueError is
+        raised when omitted. Values outside the wire range (0..255 for
+        bytes, 0..2**32-1 for score) also raise ValueError.
+
+        Explicit overrides are written back to the player's server-side
+        attributes (``self.hp``, ``self.blocks``, ``self.grenades``,
+        ``self.weapon_object.current_ammo`` / ``.current_stock``,
+        ``self.kills``) so subsequent packets and snapshots reflect the
+        new values. Ammo overrides are only persisted when the player has
+        a weapon_object; without one, the wire emission still happens but
+        no server state can be updated for those fields.
+
+        Returns False if the client did not negotiate the extension or the
+        player has no id yet (handshake not complete).
+        """
+        if EXTENSION_PLAYERPROPERTIES not in self.proto_extensions:
+            return False
+        if self.player_id is None:
+            return False
+
+        explicit_hp = hp is not None
+        explicit_blocks = blocks is not None
+        explicit_grenades = grenades is not None
+        explicit_magazine = magazine_ammo is not None
+        explicit_reserve = reserve_ammo is not None
+        explicit_score = score is not None
+
+        if hp is None:
+            if self.hp is None:
+                raise ValueError(
+                    "hp must be provided: player has no current hp")
+            hp = self.hp
+        if blocks is None:
+            if self.blocks is None:
+                raise ValueError(
+                    "blocks must be provided: player has no current blocks")
+            blocks = self.blocks
+        if grenades is None:
+            if self.grenades is None:
+                raise ValueError(
+                    "grenades must be provided: player has no current grenades")
+            grenades = self.grenades
+        if magazine_ammo is None:
+            if self.weapon_object is None:
+                raise ValueError(
+                    "magazine_ammo must be provided: player has no weapon")
+            magazine_ammo = self.weapon_object.current_ammo
+        if reserve_ammo is None:
+            if self.weapon_object is None:
+                raise ValueError(
+                    "reserve_ammo must be provided: player has no weapon")
+            reserve_ammo = self.weapon_object.current_stock
+        if score is None:
+            score = self.kills
+
+        for name, value in (("hp", hp), ("blocks", blocks),
+                            ("grenades", grenades),
+                            ("magazine_ammo", magazine_ammo),
+                            ("reserve_ammo", reserve_ammo)):
+            if not 0 <= value <= 255:
+                raise ValueError(
+                    "{}={} out of range 0..255".format(name, value))
+        if not 0 <= score <= 0xFFFFFFFF:
+            raise ValueError(
+                "score={} out of range 0..2**32-1".format(score))
+
+        if explicit_hp:
+            self.hp = hp
+        if explicit_blocks:
+            self.blocks = blocks
+        if explicit_grenades:
+            self.grenades = grenades
+        if explicit_magazine and self.weapon_object is not None:
+            self.weapon_object.current_ammo = magazine_ammo
+        if explicit_reserve and self.weapon_object is not None:
+            self.weapon_object.current_stock = reserve_ammo
+        if explicit_score:
+            self.kills = score
+
+        packet = loaders.PlayerPropertiesV1()
+        packet.sub_id = 0
+        packet.player_id = self.player_id
+        packet.hp = hp
+        packet.blocks = blocks
+        packet.grenades = grenades
+        packet.magazine_ammo = magazine_ammo
+        packet.reserve_ammo = reserve_ammo
+        packet.score = score
+        self.send_contained(packet)
+        return True
+
+    def broadcast_player_properties(self) -> bool:
+        """Broadcast this player's authoritative Player Properties
+        (extension 0) packet to every connected player that has
+        negotiated the extension, including this player.
+
+        Useful for keeping clients in sync with server state when their
+        local estimates would otherwise diverge -- notably BetterSpades,
+        which estimates other players' ammo and silently stops them
+        shooting at its guessed zero.
+
+        Values are read from current server-side state; nothing is
+        persisted or overridden. ``hp`` falls back to 0 when the player
+        is dead. Returns False if the player has no id yet or hasn't
+        fully joined (no weapon, blocks or grenades state).
+        """
+        if self.player_id is None:
+            return False
+        if (self.blocks is None or self.grenades is None
+                or self.weapon_object is None):
+            return False
+        packet = loaders.PlayerPropertiesV1()
+        packet.sub_id = 0
+        packet.player_id = self.player_id
+        packet.hp = 0 if self.hp is None else self.hp
+        packet.blocks = self.blocks
+        packet.grenades = self.grenades
+        packet.magazine_ammo = self.weapon_object.current_ammo
+        packet.reserve_ammo = self.weapon_object.current_stock
+        packet.score = self.kills
+        self.protocol.broadcast_contained(
+            packet,
+            rule=lambda p: EXTENSION_PLAYERPROPERTIES in p.proto_extensions,
+        )
+        return True
+
     def send_chat(self, value: str, global_message: bool = False, custom_type: int = CHAT_ALL) -> None:
         if self.deaf:
             return
