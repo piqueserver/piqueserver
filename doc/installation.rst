@@ -1,7 +1,7 @@
 Installation
 ============
 
-.. note:: piqueserver only supports python 3.10 and above
+.. note:: piqueserver only supports python versions 3.10 to 3.14
 
 
 All platforms

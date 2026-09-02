@@ -20,8 +20,6 @@ The ByteReader/Bytewriter classes are used to read and write various data types
 from and to byte-like objects. This is used e.g. to read the contents of
 packets.
 """
-from libc.math cimport NAN
-
 cdef extern from "bytes_c.cpp":
     char read_byte(char * data)
     unsigned char read_ubyte(char * data)
@@ -143,7 +141,7 @@ cdef class ByteReader:
         else:
             return read_int(pos, big_endian)
 
-    cpdef float readFloat(self, bint big_endian = True) except? NAN:
+    cpdef float readFloat(self, bint big_endian = True) except? -1.0:
         """read four bytes of data as floating point number
 
         Arguments:

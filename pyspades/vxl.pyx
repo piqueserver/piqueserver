@@ -22,7 +22,7 @@ cdef tuple make_color_tuple(int color):
     b = color & 0xFF
     g = (color & 0xFF00) >> 8
     r = (color & 0xFF0000) >> 16
-    a = (((color & 0xFF000000) >> 24) / 128.0) * 255
+    a = int((((color & 0xFF000000) >> 24) / 128.0) * 255.0)
     return (r, g, b)
 
 cpdef inline int make_color(int r, int g, int b, int a = 255):
