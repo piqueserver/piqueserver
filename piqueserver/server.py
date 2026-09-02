@@ -56,8 +56,7 @@ from piqueserver.scheduler import Scheduler
 from piqueserver.utils import as_deferred, EndCall
 from piqueserver.bansubscribe import bans_config_urls
 from pyspades.bytes import NoDataLeft
-from pyspades.constants import (CTF_MODE, ERROR_SHUTDOWN, TC_MODE,
-                                EXTENSION_CHATTYPE, EXTENSION_KICKREASON)
+from pyspades.constants import CTF_MODE, ERROR_SHUTDOWN, TC_MODE
 from pyspades.master import MAX_SERVER_NAME_SIZE
 from pyspades.server import ServerProtocol, Team
 from pyspades.tools import make_server_identifier
@@ -183,6 +182,7 @@ master_hosts = config.option("master_hosts", [
     {'host': 'master2.aos.coffee', 'port': 32886},
 ])
 
+
 def ensure_dir_exists(filename: str) -> None:
     d = os.path.dirname(filename)
     os.makedirs(d, exist_ok=True)
@@ -275,11 +275,6 @@ class FeatureProtocol(ServerProtocol):
         self.advance_on_win = int(advance_on_win.get())
         self.win_count = itertools.count(1)
         self.bans = NetworkDict()
-
-        self.available_proto_extensions = [
-            (EXTENSION_CHATTYPE, 1),
-            (EXTENSION_KICKREASON, 1),
-        ]
 
         # attempt to load a saved bans list
         try:
@@ -770,7 +765,7 @@ class FeatureProtocol(ServerProtocol):
                     "map": map_name,
                     "game_mode": self.get_mode_name(),
                     "game_version": "0.75",
-                    "extensions": self.available_proto_extensions
+                    "extensions": self.extensions.advertised()
                 }
                 payload = json.dumps(entry).encode()
                 self.host.socket.send(address, payload)

@@ -102,6 +102,7 @@ class ServerConnection(BaseConnection):
         self.respawn_time = protocol.respawn_time
         self.client_info = {}
         self.proto_extensions = {}  # type: Dict[int, int]
+        self._enabled_ext_warned = False
         self.line_build_start_pos = None
 
     def on_connect(self) -> None:
@@ -143,6 +144,111 @@ class ServerConnection(BaseConnection):
         log.debug("received extinfo {extinfo} from {player}",
                   extinfo=self.proto_extensions,
                   player=self)
+        self._enforce_mandatory_extensions()
+
+    def _missing_mandatory_extensions(self):
+        return [
+            (ext_id, min_ver, reason, name)
+            for ext_id, min_ver, reason, name in self.protocol.extensions.mandatory()
+            if self.proto_extensions.get(ext_id, -1) < min_ver
+        ]
+
+    def _missing_enabled_extensions(self):
+        return [
+            (ext_id, min_ver, reason, name)
+            for ext_id, min_ver, reason, name in self.protocol.extensions.enabled_only()
+            if self.proto_extensions.get(ext_id, -1) < min_ver
+        ]
+
+    def _enforce_mandatory_extensions(self) -> bool:
+        """Kick the player if any mandatory extension is missing.
+
+        Returns True if a kick was issued. Falls back to ERROR_WRONG_VERSION
+        because vanilla and v1 kick-reason clients do not process the
+        kick-reason ChatMessage during the handshake. For clients that
+        negotiated kick-reason v2 (see AOS extensions spec, packet 0xC2),
+        we additionally send a descriptive CHAT_SYSTEM reason before the
+        disconnect so the failure surfaces in the client UI instead of as
+        a generic "incompatible version" dialog.
+        """
+        if self.local or self.disconnected:
+            return False
+        missing = self._missing_mandatory_extensions()
+        if not missing:
+            return False
+        log.info("{player} kicked: missing mandatory protocol extensions {missing}",
+                 player=self,
+                 missing=[(name, min_ver, reason)
+                          for _, min_ver, reason, name in missing])
+        self._send_mandatory_kick_reason(missing)
+        self.disconnect(ERROR_WRONG_VERSION)
+        return True
+
+    def _send_mandatory_kick_reason(self, missing) -> None:
+        """Tell v2-aware clients exactly which extension(s) they lack.
+
+        Per the kick-reason v2 spec, v2 clients accept this packet in any
+        state and use its payload as the disconnect reason. v1 clients are
+        not required to process it pre-join, so we gate on v2.
+        """
+        if self.proto_extensions.get(EXTENSION_KICKREASON, 0) < 2:
+            return
+        parts = []
+        for ext_id, min_ver, _, name in missing:
+            client_ver = self.proto_extensions.get(ext_id)
+            if client_ver is None:
+                parts.append('"{name}" v{ver}+'.format(name=name, ver=min_ver))
+            else:
+                parts.append('"{name}" v{ver}+ (have v{have})'.format(
+                    name=name, ver=min_ver, have=client_ver))
+        prefix = ("Required extension: " if len(parts) == 1
+                  else "Required extensions: ")
+        suffix = ". Update your client."
+        body = ", ".join(parts)
+        budget = MAX_CHAT_SIZE - len(prefix) - len(suffix)
+        if budget > 3 and len(body) > budget:
+            body = body[:budget - 3] + "..."
+        msg = loaders.ChatMessage()
+        msg.player_id = 255
+        msg.chat_type = CHAT_SYSTEM
+        msg.value = (prefix + body + suffix)[:MAX_CHAT_SIZE]
+        self.send_contained(msg)
+
+    def _warn_missing_enabled_extensions(self) -> None:
+        """Tell the player once about each ENABLED-but-missing extension.
+
+        Sends one short chat line per missing extension (name + truncated
+        reason + optional version note) followed by a single call-to-action
+        line, instead of a multi-line paragraph per extension. The full
+        reason is preserved in the server log for admin context.
+        """
+        if self.local or self.disconnected or self._enabled_ext_warned:
+            return
+        missing = self._missing_enabled_extensions()
+        if not missing:
+            return
+        self._enabled_ext_warned = True
+        # chat lines wrap at MAX_CHAT_SIZE; budget the reason so each entry
+        # stays on a single line in typical cases.
+        reason_budget = 50
+        for ext_id, min_ver, reason, name in missing:
+            client_ver = self.proto_extensions.get(ext_id)
+            version_note = ""
+            if client_ver is not None:
+                version_note = " [yours v{}, needs v{}]".format(
+                    client_ver, min_ver)
+            log.info("{player}: missing enabled extension {name!r}{ver} ({reason})",
+                     player=self, name=name, ver=version_note, reason=reason)
+            if len(reason) > reason_budget:
+                short_reason = reason[:reason_budget - 3] + "..."
+            else:
+                short_reason = reason
+            self.send_chat(
+                'Missing protocol extension: "{name}" ({reason}){ver}'
+                .format(name=name, reason=short_reason, ver=version_note))
+        self.send_chat(
+            "Update your client or open a ticket with its authors to "
+            "add support.")
 
     @register_packet_handler(loaders.ExistingPlayer)
     @register_packet_handler(loaders.ShortPlayerData)
@@ -158,6 +264,12 @@ class ServerConnection(BaseConnection):
                 player=self
             )
             return
+
+        # catches clients that never sent ProtocolExtensionInfo at all
+        # (e.g. vanilla 0.75) — by now we've waited long enough for one.
+        if self._enforce_mandatory_extensions():
+            return
+        self._warn_missing_enabled_extensions()
 
         old_team = self.team
         team = self.protocol.teams[contained.team]
@@ -716,11 +828,17 @@ class ServerConnection(BaseConnection):
 
         # send extension info to clients that support this packet.
         # skip openspades <= 0.1.3 https://github.com/piqueserver/piqueserver/issues/504
-        if contained.client == 'o' and contained.version <= (0, 1, 3):
+        # unless the server requires extensions, in which case those clients
+        # also need a chance to advertise what they support before we decide
+        # whether to kick them.
+        skip_old_openspades = (contained.client == 'o'
+                               and contained.version <= (0, 1, 3)
+                               and not self.protocol.extensions.mandatory())
+        if skip_old_openspades:
             log.debug("not sending version request to OpenSpades <= 0.1.3")
         else:
             ext_info = loaders.ProtocolExtensionInfo()
-            ext_info.extensions = self.protocol.available_proto_extensions
+            ext_info.extensions = self.protocol.extensions.advertised()
             self.send_contained(ext_info)
         self.on_client_info()
 
