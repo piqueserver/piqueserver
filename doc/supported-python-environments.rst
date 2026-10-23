@@ -1,7 +1,7 @@
 Supported Python environments
 =============================
 
-Piqueserver supports the following Versions of CPython: 3.7, 3.8, 3.9, 3.10 and 3.11
+Piqueserver supports the following Versions of CPython: 3.10, 3.11, 3.12, 3.13 and 3.14
 
 Migration from Python 2 to Python 3
 -----------------------------------

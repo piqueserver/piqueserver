@@ -1,4 +1,4 @@
-FROM python:3.12-alpine AS stage-setup
+FROM python:3.14-alpine AS stage-setup
 
 # Create the virtualenv
 WORKDIR /app
@@ -14,7 +14,7 @@ COPY piqueserver/ ./piqueserver
 COPY pyproject.toml setup.py ./
 RUN STDCPP_STATIC=1 /app/venv/bin/pip install .
 
-FROM python:3.12-alpine AS stage-runtime
+FROM python:3.14-alpine AS stage-runtime
 COPY --from=stage-setup /app /app
 
 # Expose the server port

@@ -134,8 +134,11 @@ def main():
         # support adding file readers
         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
     from twisted.internet import asyncioreactor
-    asyncioreactor.install(asyncio.get_event_loop())
+    asyncioreactor.install(loop)
 
     from piqueserver.config import config, TOML_FORMAT, JSON_FORMAT
 

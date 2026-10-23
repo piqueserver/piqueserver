@@ -18,11 +18,10 @@
 from pyspades.common cimport allocate_memory
 
 cdef tuple make_color_tuple(int color):
-    cdef int r, g, b, a
+    cdef int r, g, b
     b = color & 0xFF
     g = (color & 0xFF00) >> 8
     r = (color & 0xFF0000) >> 16
-    a = (((color & 0xFF000000) >> 24) / 128.0) * 255
     return (r, g, b)
 
 cpdef inline int make_color(int r, int g, int b, int a = 255):
